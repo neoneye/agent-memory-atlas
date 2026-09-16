@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 527 reports.**
+**This page covers all 528 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4566,3 +4566,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, Rust, version 2.7.12, 57,134 lines with 287 test functions, a C FFI, snapshot migrations for five prior formats, and a design stated against shared NFS, concurrent writers and sub-millisecond recall. Memories are Sparse Distributed Representations, 64 active bits of 16,384 — rare in this corpus.
 - Study when: you have a scoring pipeline where some states must be excluded rather than down-weighted, or you call a cosine threshold a contradiction detector.
 - Do not copy when: you need one ordered, chained history across writers, or a write-time refusal rather than a later sweep. Two marks: trust state, audit log.
+
+### [`mnemonic`](../systems/mnemonic/)
+- Best idea: **the recall returns the count of what it suppressed.** `suppressedGlobalCount` for the weak global matches the project gate withheld, `widenedScope` when the gate lifted on an empty admitted pool, and "weak global matches suppressed" in the response text. A retrieval that quietly drops candidates below a threshold leaves its reader unable to distinguish "nothing matched" from "something matched and I decided against it"; two fields the filter already knew fix that.
+- Biggest risk: **the scope argument runs opposite to the expectation, and supersession only steepens a curve.** `gateActive = scope === undefined && project !== undefined`, with the comment "[e]xplicit scopes run fully ungated" — omitting the scope is the stricter path and passing one removes the gating, which is a relevance heuristic rather than a boundary. And `supersedes` is one of six relationship types whose effect is a shorter decay half-life, so a superseded note keeps coming back, ranked lower, until it fades — defensible, and not what a reader assuming "superseded means no longer returned" will expect.
+- Most reusable component: `provenance.ts` — a derived confidence with nothing hidden in an inline literal: role weights, a log-scaled centrality bonus with a ceiling, a permanence bonus, a ninety-day recency window, and named fallbacks keyed on days and centrality when the signals are thin.
+- Maturity impression: Apache-2.0, version 0.45.0, 62,345 lines of TypeScript with 1,686 test cases across eighty-eight files, integration tests driving the real MCP tool against a local embedding server, and read-only document sources that index another repository's markdown. Screening flags three auto-run surfaces, as an MCP server installed into a client will.
+- Study when: your retrieval filters candidates and returns no account of it, or you want a memory whose exit story is that the notes stay plain markdown you already have.
+- Do not copy when: you need supersession to withhold, or any epistemic state — the lifecycle is `temporary | permanent`, a retention genre. One mark: negative eval.

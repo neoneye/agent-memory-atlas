@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A markdown-and-git memory server
+whose project-scoped recall reports the count of weak global matches it
+suppressed and whether it had to widen — and where omitting the scope
+argument is the stricter path, because an explicit scope runs ungated.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="mnemonic — Agent Memory Atlas">
+    <meta property="og:description" content="A markdown-and-git memory
+server whose project-scoped recall reports the count of weak global
+matches it suppressed and whether it had to widen — and where omitting
+the scope argument is the stricter path, because an explicit scope runs
+ungated.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="mnemonic — Agent Memory Atlas">
+    <meta name="twitter:description" content="A markdown-and-git memory
+server whose project-scoped recall reports the count of weak global
+matches it suppressed and whether it had to widen — and where omitting
+the scope argument is the stricter path, because an explicit scope runs
+ungated.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>mnemonic — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "mnemonic",
+      "description": "A markdown-and-git memory server whose project-scoped recall reports the count of weak global matches it suppressed and whether it had to widen \u2014 and where omitting the scope argument is the stricter path, because an explicit scope runs ungated.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The recall says how much it held back</p>
+          <h1>mnemonic</h1>
+          <p class="document-deck">A markdown-and-git memory server
+whose project-scoped recall reports the count of weak global matches it
+suppressed and whether it had to widen — and where omitting the scope
+argument is the stricter path, because an explicit scope runs
+ungated.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/danielmarbach/mnemonic">
+              <span>Source</span>
+              <strong>danielmarbach/mnemonic</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/danielmarbach/mnemonic/commit/5fc9a5f5be70d25304b45c1af0b83b50d20b4590" title="5fc9a5f5be70d25304b45c1af0b83b50d20b4590">
+              <span>Analyzed revision</span>
+              <code>5fc9a5f5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/danielmarbach--mnemonic" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>danielmarbach--mnemonic</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>mnemonic is "[a] local MCP memory server backed by plain markdown
+files, synced via git. No database." Apache-2.0, TypeScript, version
+0.45.0, 62,345 lines with 1,686 test cases across eighty-eight test
+files. Memories are markdown with YAML frontmatter in a
+<code>.mnemonic/</code> directory committed alongside the code;
+embeddings are computed locally and gitignored; <code>remember</code>,
+<code>update</code> and <code>consolidate</code> each produce a semantic
+git commit, so the decision log travels in the same history as the work
+it describes.</p>
+<p>The thing worth taking from it is one line in the recall
+response.</p>
+<p><strong>The recall reports what it held back.</strong> Alongside the
+ranked matches it returns <code>suppressedGlobalCount</code> — weak
+global matches the project gate withheld — and
+<code>widenedScope</code>, set when the gate lifted because the admitted
+pool came back empty. The response text says it in words too: "weak
+global matches suppressed".</p>
+<p>A retrieval that silently drops candidates below a threshold is the
+norm here, and it produces a specific confusion for whoever is reading
+the results: nothing distinguishes <em>nothing matched</em> from
+<em>something matched and I decided against it</em>. Two counts fix
+that, and the tests assert them in both directions — in one case an
+off-topic global note is absent while the in-project note is present,
+<code>suppressedGlobalCount</code> is above zero and
+<code>widenedScope</code> is undefined; in the other, after the gate
+lifts, <code>widenedScope</code> is <code>true</code> and
+<code>suppressedGlobalCount</code> is undefined. That pairing — a
+must-not-retrieve assertion with its positive control on the line above,
+through the real tool surface — is the mark.</p>
+<p><strong>The scope argument runs the opposite way from the obvious
+one.</strong> The gate is:</p>
+<pre class="ts"><code>const gateActive = scope === undefined &amp;&amp; project !== undefined;</code></pre>
+<p>with the comment "[e]xplicit scopes run fully ungated." Omitting
+<code>scope</code> is the <em>stricter</em> path, because that is when
+the derived project scope applies and weak global matches are held back;
+passing a scope removes the gating. For a single-user local tool that is
+a defensible relevance decision, and it is worth naming because in most
+systems in this corpus an omitted scope is the permissive case. It is
+not an access boundary: nothing separates one caller from another, and a
+note in a shared <code>.mnemonic/</code> directory is readable by anyone
+with the repository — which is the point of committing it.</p>
+<p><strong>Confidence is derived, and the derivation is in the
+open.</strong> <code>provenance.ts</code> computes it from git history
+signals with every weight and threshold as a named constant: role
+weights (a summary counts more than a reference), a log-scaled
+centrality bonus with a ceiling, a permanence bonus, a recency term over
+a ninety-day window, plus fallbacks keyed on days and centrality when
+the signals are thin. Half-lives differ by kind — thirty days for
+temporary work, forty-five for temporary context, a year for permanent
+core — and a superseded note gets its own, shorter one.</p>
+<p>That last choice is the one to weigh. Supersession here <em>steepens
+a decay curve</em> rather than withholding the superseded note, so the
+older answer keeps coming back, ranked lower, until it decays out. Set
+against the systems in this corpus that mark a superseded memory and
+exclude it, this trades a guarantee for a gradient — deliberate, given
+that everything else is a gradient too, and the thing to know if you
+expected "superseded" to mean "no longer returned".</p>
+<p>One mark. <code>NoteLifecycle</code> is
+<code>temporary | permanent</code>, a retention genre rather than a
+belief state; the write record is git, which this atlas does not credit
+as an audit log because it lives outside the store and can be rewritten;
+and there is no tenancy to enforce.</p>
+<p>The exit story is stated as a feature and the format makes it true:
+"[i]f you stop using mnemonic, your notes remain plain markdown with
+YAML frontmatter. The knowledge you gather stays independent and remains
+yours." For a memory system, being uninstallable without loss is a real
+property, and one very few here can claim.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>note</strong> is a markdown file your repository
+carries.</p>
+<p>The <strong>project</strong> is where recall starts;
+<strong>global</strong> is where it looks next, and reluctantly.</p>
+<p>A <strong>suppressed match</strong> is a number in the response, not
+a silence.</p>
+<p><strong>Superseded</strong> means it fades faster, not that it stops
+coming back.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — omitting the scope argument is the stricter path — that is when the project gate applies — and whatever the gate withholds or widens is reported back in the response</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: omitting the scope argument is the stricter path — that is when the project gate applies — and whatever the gate withholds or widens is reported back in the response
+flowchart TB
+    W[&quot;remember · update · consolidate&quot;] --&gt; MD[(&quot;markdown + YAML frontmatter&lt;br/&gt;in .mnemonic/, committed to the repo&quot;)]
+    W --&gt; GIT[&quot;a semantic git commit per write —&lt;br/&gt;the decision log travels with the code&quot;]
+    MD --&gt; EMB[&quot;embeddings computed locally,&lt;br/&gt;gitignored&quot;]
+    Q[&quot;recall(query, cwd, scope?)&quot;] --&gt; GATE{&quot;gateActive =&lt;br/&gt;scope === undefined&lt;br/&gt;AND project !== undefined&quot;}
+    GATE --&gt;|&quot;scope omitted, project resolved&quot;| DERIVED[&quot;derived project scope:&lt;br/&gt;weak global matches held back&quot;]
+    GATE --&gt;|&quot;scope given&quot;| UNGATED[&quot;&#39;Explicit scopes run fully ungated&#39; —&lt;br/&gt;passing a scope REMOVES the gating&quot;]
+    DERIVED --&gt; POOL{&quot;admitted pool empty?&quot;}
+    POOL --&gt;|&quot;no&quot;| REPORT1[&quot;results + suppressedGlobalCount &gt; 0&lt;br/&gt;+ text: &#39;weak global matches suppressed&#39;&quot;]
+    POOL --&gt;|&quot;yes&quot;| WIDEN[&quot;gate lifts&quot;]
+    WIDEN --&gt; REPORT2[&quot;results + widenedScope = true,&lt;br/&gt;suppressedGlobalCount undefined&quot;]
+    UNGATED --&gt; ALL[&quot;everything ranked, nothing gated&quot;]
+    REPORT1 &amp; REPORT2 &amp; ALL --&gt; RANK[&quot;hybrid: semantic + exact match +&lt;br/&gt;one-hop relationship previews,&lt;br/&gt;optional score decomposition&quot;]
+    PROV[&quot;confidence derived from git signals:&lt;br/&gt;role weight · log-scaled centrality (capped) ·&lt;br/&gt;permanence · recency over 90 days ·&lt;br/&gt;named fallbacks when signals are thin&quot;] --&gt; RANK
+    SUP[&quot;a &#39;supersedes&#39; relationship&quot;] -.-&gt;|&quot;shortens the decay half-life —&lt;br/&gt;the superseded note keeps returning,&lt;br/&gt;ranked lower, until it fades&quot;| RANK</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/tools/recall.ts</code></td>
+<td>The recall tool, the gate, and the diagnostics it returns</td>
+</tr>
+<tr>
+<td><code>src/provenance.ts</code></td>
+<td>Derived confidence and decay half-lives, constants named</td>
+</tr>
+<tr>
+<td><code>src/structured-content.ts</code></td>
+<td>The note schema and its typed relationships</td>
+</tr>
+<tr>
+<td><code>src/storage.ts</code>, <code>src/vault.ts</code></td>
+<td>Files, frontmatter, and the vault layout</td>
+</tr>
+<tr>
+<td><code>src/document-*.ts</code></td>
+<td>Read-only document sources from other repositories</td>
+</tr>
+<tr>
+<td><code>src/tools/consolidate-helpers.ts</code></td>
+<td>Consolidation</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>src/tools/recall.ts:199-205</code> — the gate, and the comment
+that inverts the expectation.</p>
+<p><code>src/provenance.ts:8-42</code> — every weight, threshold and
+half-life, named.</p>
+<p><code>tests/recall-scope-gating.integration.test.ts:86-95</code> —
+the assertion pair, and the disclosure beside it.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Frontmatter carries a role — <code>summary</code>,
+<code>decision</code>, <code>plan</code>, <code>research</code>,
+<code>review</code>, <code>context</code>, <code>reference</code> — a
+lifecycle of temporary or permanent, tags, and typed relationships:
+<code>related-to</code>, <code>explains</code>, <code>example-of</code>,
+<code>supersedes</code>, <code>derives-from</code>,
+<code>follows</code>. The relationship vocabulary being closed, and
+<code>supersedes</code> being one of six rather than a status column, is
+what makes supersession a graph fact here rather than a lifecycle
+state.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid semantic and exact matching — the README is specific that
+exact matters for "names, identifiers, phrases, error codes, and
+versions", which is the case pure embeddings handle worst — with one-hop
+relationship previews on the top results and an optional score
+decomposition, so a ranking can be explained rather than only
+produced.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Three tools, one commit each. Because the store is the working tree,
+a write is visible in <code>git diff</code> before it is committed and
+in the history afterwards, which is a stronger inspection story than
+most databases offer, and is not an audit log in the sense this atlas
+uses: history outside the store can be rewritten.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A local MCP server over a Node process, with document sources that
+index another repository's markdown read-only alongside your own notes —
+so a dependency's docs become recallable without being editable.
+Screening flags three auto-run surfaces in the distribution, which is
+what an MCP server installed into a client looks like and is worth
+reading before installing.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The disclosure of suppression is the trust mechanism, and it is aimed
+at the right party: the model or person reading the results, who
+otherwise cannot tell a gate from an empty store.</p>
+<p>What is absent is any epistemic state. Nothing marks where a note
+came from beyond its role, nothing separates what a person decided from
+what a model summarised, and supersession is a gradient.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,686 test cases across eighty-eight files, including integration
+tests that drive the real MCP tool against a local embedding server.
+Nothing was installed or run for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Return the count of what you suppressed. Two fields — how many you
+held back, and whether you had to widen — turn an ambiguous empty-ish
+result into a legible one, and they cost nothing to compute because the
+filter already knew.</p>
+<p>Check which direction your scope argument runs. Here omitting it is
+stricter; elsewhere omitting it is permissive. Either is defensible and
+only one of them is what your caller assumed.</p>
+<p>Name every constant in a derived score. <code>provenance.ts</code> is
+readable precisely because the role weights, the centrality cap, the
+recency window and the fallback thresholds are all constants with names
+rather than numbers inline.</p>
+<p>And decide whether superseded means <em>ranked lower</em> or <em>not
+returned</em>. A shorter half-life is a real answer; so is exclusion;
+silently choosing the first while a reader assumes the second is where
+the surprise lives.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether a superseded note is ever excluded. The half-life shortens
+and a maintenance hint can suggest pruning; no read path was found that
+withholds it.</p>
+<p>What the document-source indexing does about staleness. External
+repositories are indexed read-only, and how a changed upstream is
+noticed was not traced.</p>
+<p>How confidence behaves in a shallow clone. Every signal is derived
+from git history, and the fallbacks are keyed on days and
+centrality.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/tools/recall.ts:199-205</code></td>
+<td>A gate that an explicit argument turns off</td>
+</tr>
+<tr>
+<td><code>src/tools/recall.ts:111</code></td>
+<td>The diagnostics the tool promises to return</td>
+</tr>
+<tr>
+<td><code>src/provenance.ts:8-42</code></td>
+<td>A derived confidence with nothing hidden in a literal</td>
+</tr>
+<tr>
+<td><code>tests/recall-scope-gating.integration.test.ts:86-95</code></td>
+<td>Absence, its control, and the disclosure</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/danielmarbach/mnemonic/commit/5fc9a5f5be70d25304b45c1af0b83b50d20b4590"><code class="commit-id" title="5fc9a5f5be70d25304b45c1af0b83b50d20b4590">5fc9a5f5…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: nine files scanned, three auto-run
+surfaces, one build-time execution point, one unpinned surface and two
+dependency files inside the seven-day cooldown. Nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
