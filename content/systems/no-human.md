@@ -7,9 +7,9 @@ page_kind: system
 source_name: "no-human-ai/no_human"
 source_url: https://github.com/no-human-ai/no_human
 archive_name: "no-human-ai--no_human"
-revision: aab935b6df7c7c350773c7712ed7daeb8c572e68
-revision_url: https://github.com/no-human-ai/no_human/commit/aab935b6df7c7c350773c7712ed7daeb8c572e68
-analyzed_at: 2026-09-06
+revision: 79564c7bcd62af83c25ba4dde0392c3ebcb306ca
+revision_url: https://github.com/no-human-ai/no_human/commit/79564c7bcd62af83c25ba4dde0392c3ebcb306ca
+analyzed_at: 2026-09-16
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "the archive that keeps its dedupe key | src/no_human/learning/queue.py:91-100,1246-1313, src/no_human/core/db.py:3407-3560,3938-3947, src/no_human/learning/retire.py:246-292 | a rejected proposal from a batch-driven origin — supervisor, history, curator, escalation, review_fail, tamper — is archived with `archived = 1` and its `file_path` dedupe key intact, so the next harvest's `memory_dedupe_key_exists` check finds the key and never re-proposes the lesson; `add_memory` returns None on a key hit; a proposal that fails an auto-activation screen is archived the same way; a rejection on any other origin — the outcome path's NULL, review and reply — deletes the row and its key, on the stated ground that those producers cannot regenerate without new evidence; `nh rules remove`, `nh skills remove` and the matching API routes call `delete_memory` on any row an id prefix resolves, outside the queue and without an audit row | tests/test_learning.py:240-330 (every origin declares a reject verb; reject uses the right verb per origin), tests/test_memory_retirement.py:148 (the sweep is idempotent and reversible)"
@@ -724,10 +724,10 @@ claim any of those, and its ledger says so on its face.
 
 ## Appendix: File Index
 
-- Size and screen: MIT; 1,456 commits between 21 June and 6 September 2026,
-  1,430 of them by one author under two names; 130,065 lines of Python under
-  `src/no_human/`, of which the learning package is 3,800 lines in twelve
-  modules and the orchestrator that injects it is a single 21,785-line file;
+- Size and screen: MIT; 1,619 commits between 21 June and 16 September 2026,
+  most by one author under two names; 145,320 lines of Python under
+  `src/no_human/`, of which the learning package is 3,811 lines in twelve
+  modules and the orchestrator that injects it is a single 24,725-line file;
   9,137 test functions in 437 files, 293 of them in seventeen files about the
   learning store. The screen found no auto-run surface in the tree; two
   `conftest.py` files execute on collection, six manifests were inside the
@@ -785,5 +785,7 @@ claim any of those, and its ledger says so on its face.
   (none).
 
 ## History
+
+**2026-09-16** — [`79564c7bcd62af83c25ba4dde0392c3ebcb306ca`](https://github.com/no-human-ai/no_human/commit/79564c7bcd62af83c25ba4dde0392c3ebcb306ca) — re-read at a commit dated 16 September 2026, 163 commits past the previous pin. All six marks re-tested and held, and the learning package they rest on barely moved: `scope.py` and `retire.py` are unchanged and `queue.py` gained thirty-one lines. The growth is elsewhere — `orchestrator.py` added about four thousand lines of test-run attribution, repro-round scoping, subagent definitions and worktree setup, none of it a memory read path. The self-documented split in `scope.py` is still real: the module keys storage and recall on `"prj:" + sha256(normalized remote URL)`, and `corrections.py` still treats the task's `repo_path` as the project, so cross-checkout recurrence counting remains divided as the module says. One discipline tightened on the task rows beside the lessons: `set_status` is now documented as the only writer of `status` and `update_task_config` the only writer of `config`, pinned by `test_update_task_never_moves_status`, after a general update was found silently dropping a status advance. Screened before reading: fourteen files scanned, two auto-run surfaces, three build-time execution points, two unpinned dependency surfaces and six dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-06** — [`aab935b6df7c7c350773c7712ed7daeb8c572e68`](https://github.com/no-human-ai/no_human/commit/aab935b6df7c7c350773c7712ed7daeb8c572e68) — first reading, at the head of `main`, 1,456 commits in. The screen found no auto-run surface; two `conftest.py` files execute on collection, six manifests were inside the seven-day cooldown, and nothing was installed or run. Six marks: `tombstone` for the archive that keeps its dedupe key against a batch producer, `trust_state` for the five flags the default query applies, `scope_enforced` for the remote-hash scope on the injection query, `audit_log` for `learning_events`, `human_review` for the Second brain pane and the CLI, `negative_eval` for the trigger, screen and pause cases with positive controls in the same case. `bitemporal` withheld: every timestamp is record time.
