@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 551 reports.**
+**This page covers all 552 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4758,3 +4758,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, Python, version 0.6.0, 5,774 lines over 36 files, on PyPI with a documentation site and CI, a deterministic merger beside an LLM one, and incremental index maintenance. No auto-run surfaces and nothing inside the cooldown at this pin.
 - Study when: your write path merges and somebody may later ask you to delete one document.
 - Do not copy when: a record needs to say how much it should be trusted. No marks.
+
+### [`yantrik-mind`](../systems/yantrik-mind/)
+- Best idea: **the audit exemption for the trusted caller, removed, with the argument written down.** Operator reads once sat outside the read ledger on "the trusted owner path"; the exemption is gone because "the operator's background lanes (dream/proactive/research/…) are exactly the cross-subject reads a purpose audit exists to catch, so a ledger blind to them would be theater. Every context is receipted now." Each receipt names who read, through which facade method, for what declared purpose, what they asked, how many results crossed and how many the purpose gate suppressed, hash-chained so any edit or reorder breaks every later value. Beside it, a dependency line carrying thirty lines of comment: `yantrikdb-core` is an exact pin on a published crate because a path dep into a sibling checkout "built the mind against whatever that tree happened to contain - it sat at 0.16.0 with uncommitted changes - so no one else could reproduce this build", and the later upgrade was justified by replaying `assert_belief_evidence` across the migration for "identical priors, posteriors and effective weights to six decimals".
+- Biggest risk: **the reproducibility argument was applied to one dependency and not the other three.** `yantrik-ml`, `yantrik-os` and `yantrik-chat` remain `path = "../yantrik-companion/crates/…"` — exactly the arrangement the comment directly above them rejects — so the build still needs a sibling checkout nobody else has. The same block's opening sentence still says "pinned to standalone yantrikdb 0.18.0" while the requirement below it reads `=0.21.2`; the move is documented further down, so it is a stale first line rather than a false claim, and it is the drift the block exists to prevent. There is no licence file. And what the store actually does — typed beliefs, Bayesian revision, contradiction detection — belongs to the engine rather than to this repository.
+- Most reusable component: the scope default. `Scope` is `Shared` or `Private(owner)`, and legacy untagged memory becomes private to the primary member "so pre-multi-user facts never leak to a later-added member" — the migration decision taken in the safe direction rather than the convenient one. Over it, four sensitivity classes with "default deny outside their allowed activities, whoever the fact belongs to", and a `Credentials` class that "a wildcard-class grant deliberately does NOT cover".
+- Maturity impression: no licence file, Rust, 203,205 lines over 226 files in nineteen crates, delegating storage to a published YantrikDB pin, with a red-team test demanding zero unauthorized hydrations on every read path and in every background lane. No auto-run surfaces at this pin; run detritus is committed, including two smoke databases' write-ahead files.
+- Study when: your audit exempts the owner, or your multi-user migration makes untagged rows shared.
+- Do not copy when: you need the belief model itself — that lives in the engine. Two marks: scope enforced, negative evals.
