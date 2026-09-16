@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 508 of 560 screened at the report's current pin.**
+**Progress: 509 of 561 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 52 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 221 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 308 |
-| Repositories with build-time execution (`EXEC`) | 372 |
+| Repositories with an auto-run surface (`RUNS`) | 222 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 309 |
+| Repositories with build-time execution (`EXEC`) | 373 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -91,6 +91,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`engram-alpha`](../../content/systems/engram-alpha.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/` |
 | [`engraphis`](../../content/systems/engraphis.md) | `.claude-plugin/`, `.githooks/` |
 | [`everos`](../../content/systems/everos.md) | `.claude/settings.json` |
+| [`fava-trails`](../../content/systems/fava-trails.md) | `.vscode/settings.json` |
 | [`fidelis`](../../content/systems/fidelis.md) | `server.json` |
 | [`fireweed-mcp`](../../content/systems/fireweed-mcp.md) | `server.json` |
 | [`gaius`](../../content/systems/gaius.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |

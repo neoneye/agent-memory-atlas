@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 560 reports.</strong></p>
+<p><strong>This page covers all 561 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21258,6 +21258,51 @@ to ship an automatic hook at all.</li>
 memory, an undo that runs itself, or a project boundary that holds when
 the caller says nothing. Four marks: mutation audit, review, trust
 state, negative eval.</li>
+</ul>
+<h3 id="fava-trails"><a
+href="../systems/fava-trails/"><code>fava-trails</code></a></h3>
+<ul>
+<li>Best idea: <strong>put the authority in the process and let the tool
+argument choose only a view.</strong> <code>governance.py</code> opens
+with "Tool arguments select a view; they never establish a caller's
+authority", and implements it by building the principal from
+<code>FAVA_TRAILS_AGENT_ID</code> and <code>FAVA_TRAILS_OPERATOR</code>
+in the server process's environment — so an <code>agent_id</code> a
+caller passes is a filter, never a claim. The authoring view raises
+<code>PermissionError</code> when the process has no configured identity
+rather than quietly narrowing to the default, which is the failure that
+returns a plausible smaller answer.</li>
+<li>Second idea: <strong>retire a record on approval, not on
+writing.</strong> <code>is_effectively_superseded</code> treats a
+backlink as retiring the predecessor only when the successor is itself
+approved, so a draft correction cannot blank the current answer while it
+waits for review.</li>
+<li>Biggest risk: <strong>the default reviewer is a model and nothing
+requires a human pass.</strong> <code>TrustResult.approval_kind</code>
+defaults to <code>llm_advisory</code>, the explicit <code>human</code>
+kind needs an operator-only endpoint, and an operator who never sets the
+flag runs a trail approved entirely by an LLM one-shot — correctly
+labelled in every record, and still the default. Beside it, a shared MCP
+endpoint is one identity boundary, which the project states twice and
+does not enforce at deployment.</li>
+<li>Most reusable component: the governed <code>Visibility</code> value
+— three modes, a principal that cannot be supplied, statuses restricted
+per mode, and a single <code>allows()</code> the read path calls before
+any scope or query filter, so an inadmissible record is never a
+candidate to be ranked or counted.</li>
+<li>Maturity impression: Apache-2.0, 435 commits, 14,496 lines of Python
+against 19,148 lines of tests holding 994 functions, thoughts stored as
+markdown in a Jujutsu repository whose raw output never reaches an
+agent, a documented lexical-substring retrieval baseline that says
+outright it is not a product claim, and three paper-derived protocols
+shipped as opt-in hook packages; four capability marks.</li>
+<li>Study when: you need a memory whose read scope cannot be
+self-asserted by the caller, or you are deciding what a correction
+should do to the record it replaces before anyone has accepted it.</li>
+<li>Do not copy when: you need a ranked or semantic recall — the matcher
+is lexical substring AND and the project says so — or a validity axis,
+since <code>created_at</code> is the only clock, or an append-only
+mutation log distinct from version-control history.</li>
 </ul>
         </article>
       </div>

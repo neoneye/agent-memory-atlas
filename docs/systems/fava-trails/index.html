@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Jujutsu-backed institutional
+record where every thought is a markdown file with a six-value lifecycle
+status, default recall returns only approved current records, and the
+identity a read is scoped to comes from the server process's environment
+rather than from anything the calling agent can say.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="FAVA
+Trails — Agent Memory Atlas">
+    <meta property="og:description" content="A Jujutsu-backed
+institutional record where every thought is a markdown file with a
+six-value lifecycle status, default recall returns only approved current
+records, and the identity a read is scoped to comes from the server
+process's environment rather than from anything the calling agent can
+say.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FAVA
+Trails — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Jujutsu-backed
+institutional record where every thought is a markdown file with a
+six-value lifecycle status, default recall returns only approved current
+records, and the identity a read is scoped to comes from the server
+process's environment rather than from anything the calling agent can
+say.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>FAVA Trails — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "FAVA Trails",
+      "description": "A Jujutsu-backed institutional record where every thought is a markdown file with a six-value lifecycle status, default recall returns only approved current records, and the identity a read is scoped to comes from the server process's environment rather than from anything the calling agent can say.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The tool argument picks a view, never an
+authority</p>
+          <h1>FAVA Trails</h1>
+          <p class="document-deck">A Jujutsu-backed institutional record
+where every thought is a markdown file with a six-value lifecycle
+status, default recall returns only approved current records, and the
+identity a read is scoped to comes from the server process's environment
+rather than from anything the calling agent can say.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MachineWisdomAI/fava-trails">
+              <span>Source</span>
+              <strong>MachineWisdomAI/fava-trails</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MachineWisdomAI/fava-trails/commit/10f689f7455c0c5c5898f2a2e6bc8cf4fe84a6d7" title="10f689f7455c0c5c5898f2a2e6bc8cf4fe84a6d7">
+              <span>Analyzed revision</span>
+              <code>10f689f7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/MachineWisdomAI--fava-trails" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>MachineWisdomAI--fava-trails</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>FAVA Trails — <em>Federated Agents Versioned Audit Trail</em> — is an
+Apache-2.0 MCP server that keeps an institutional record for agents as
+markdown files with YAML frontmatter inside a Jujutsu repository. 435
+commits, 14,496 lines of Python under <code>src/</code> against 19,148
+lines of tests in 41 files holding 994 test functions. Agents never see
+version-control commands: the jj backend states that <em>"raw jj stdout
+is NEVER returned to agents"</em> and everything passes through a
+semantic translation layer.</p>
+<p><strong>The design idea is in one line of
+<code>governance.py</code>'s docstring: "Tool arguments select a view;
+they never establish a caller's authority."</strong> A thought carries a
+six-value <code>validation_status</code> — draft, proposed, approved,
+rejected, error, tombstoned — and the default read returns approved
+records only. Two other views exist and neither is reachable by asking.
+<code>mode="authoring"</code> returns the configured agent's own drafts
+and raises <code>PermissionError</code> when the process has no
+configured identity; <code>mode="history"</code> selects lifecycle
+statuses and raises unless the process is operator-controlled. The
+identity itself comes from <code>FAVA_TRAILS_AGENT_ID</code> and
+<code>FAVA_TRAILS_OPERATOR</code> in the server process's environment,
+so a caller supplying an <code>agent_id</code> argument supplies a
+filter, not a claim.</p>
+<p>That earns four marks. <code>trust_state</code> for the status
+ladder, which withholds rather than ranks. <code>scope_enforced</code>
+for a read scope whose key cannot be self-asserted.
+<code>human_review</code> for an approval path gated on the operator
+flag, which stamps <code>approval.kind</code> as <code>human</code> and
+distinguishes it from the default <code>llm_advisory</code> verdict a
+model produces. And <code>negative_eval</code> for a governance suite
+that seeds a full cross-product of statuses and authors and then asserts
+exact counts against it.</p>
+<p>The most useful thing here for a reader building something else is
+not the lifecycle but the <em>shape of the boundary</em>: the authority
+lives in the process, the view lives in the argument, and the module
+that implements the split says so in its first line. Most systems in
+this corpus pass an identity in with the request and then try to
+validate it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A thought is a proposal that becomes part of the record only by being
+approved, and once approved it is frozen. <code>FROZEN_STATUSES</code>
+is <code>{approved, rejected, tombstoned}</code>, and
+<code>update_thought</code> refuses any of them — as it refuses a record
+whose <code>superseded_by</code> is set. A correction is therefore a new
+record that supersedes the old one, never an edit, which is what makes
+the trail an audit trail rather than a document with history
+attached.</p>
+<p>Supersession is where the design is most careful.
+<code>is_effectively_superseded</code> retires a record only when its
+successor is <em>approved</em>:</p>
+<pre class="python"><code>successor = records.get(key or &quot;&quot;)
+return successor is not None and successor.frontmatter.validation_status == ValidationStatus.APPROVED</code></pre>
+<p>So a draft replacement does not silently remove the current answer.
+Until somebody approves the replacement, the old record is still the
+record. The corpus has several stores where writing a successor hides
+the predecessor immediately; this one makes hiding a consequence of
+approval rather than of writing.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a thought is drafted, reviewed by a model or an operator, and only an approved record is visible to the default read — while an approved predecessor stays current until its replacement is itself approved</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a thought is drafted, reviewed by a model or an operator, and only an approved record is visible to the default read — while an approved predecessor stays current until its replacement is itself approved
+stateDiagram-v2
+    [*] --&gt; draft: save_thought&lt;br/&gt;agent_id from the process
+    draft --&gt; proposed: propose_truth&lt;br/&gt;with no trust gate result
+    draft --&gt; approved: trust gate verdict approve&lt;br/&gt;kind llm_advisory or human
+    draft --&gt; rejected: trust gate verdict reject
+    draft --&gt; error: trust gate verdict error
+    approved --&gt; [*]: the ONLY status&lt;br/&gt;governed recall returns
+    proposed --&gt; [*]: visible to its own author&lt;br/&gt;in authoring mode only
+    rejected --&gt; [*]: content frozen
+    tombstoned --&gt; [*]: content frozen,&lt;br/&gt;cannot be promoted
+    approved --&gt; superseded: an APPROVED successor&lt;br/&gt;retires it, a draft one does not</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One MCP server process per identity. <code>src/fava_trails/</code>
+holds the trail manager, the governance layer, the transaction layer,
+the trust gate, a hook pipeline, a jj backend, an HTTP runtime and a
+reader UI. Thoughts live under
+<code>trails/&lt;scope&gt;/thoughts/&lt;namespace&gt;/&lt;ulid&gt;.md</code>,
+where the namespace is routed from the thought's
+<code>source_type</code> by <code>NAMESPACE_ROUTES</code>: decisions to
+<code>decisions/</code>, observations, inferences and tool output to
+<code>observations/</code>, and user input to <code>preferences/</code>.
+Drafts sit in <code>drafts/</code> until promotion moves them.</p>
+<p>The MCP surface is classified rather than flat.
+<code>READ_ONLY_TOOLS</code> is seven — <code>conflicts</code>,
+<code>diff</code>, <code>get_thought</code>,
+<code>get_usage_guide</code>, <code>list_scopes</code>,
+<code>list_trails</code>, <code>recall</code>.
+<code>DESTRUCTIVE_TOOLS</code> is five — <code>change_scope</code>,
+<code>forget</code>, <code>rollback</code>, <code>supersede</code>,
+<code>update_thought</code> — and <code>OPEN_WORLD_TOOLS</code> names
+the ten that reach outside the current state. A client that honours MCP
+annotations can act on that classification without reading the
+implementation.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>save_thought</code> →
+<code>refuse_obvious_secret</code> on the content → a
+<code>ThoughtFrontmatter</code> with a ULID, the process's
+<code>agent_id</code>, and <code>validation_status = draft</code> →
+written under <code>drafts/</code>.</li>
+<li><strong>Review.</strong> <code>propose_truth</code> → trust gate
+policy resolved for the scope → a <code>TrustResult</code> carrying a
+reviewer, a verdict, reasoning and an <code>approval_kind</code>, or
+<code>None</code> → status set to approved, rejected or error from the
+verdict, or to <code>proposed</code> when there was no gate result
+(<code>src/fava_trails/trail.py:575-596</code>).</li>
+<li><strong>Persist.</strong> <code>persist_governance</code> takes the
+repository lock and an exclusive file lock, recovers any interrupted
+write, compares every record it is about to overwrite against the copy
+the reviewer saw, writes a journal holding the prior text, replaces the
+files and commits
+(<code>src/fava_trails/transactions.py:150-170</code>).</li>
+<li><strong>Read.</strong> <code>recall</code> →
+<code>visibility_from_arguments(arguments, runtime_principal())</code> →
+for each record, <code>visibility.allows(record, by_id)</code> before
+any scope or query filter runs
+(<code>src/fava_trails/trail.py:449-454</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>ThoughtFrontmatter</code>
+(<code>src/fava_trails/models.py:71-97</code>) carries a
+<code>schema_version</code>, a ULID <code>thought_id</code>, a
+<code>parent_id</code>, the supersession pair
+<code>superseded_by</code>/<code>superseded_scope</code> and its inverse
+<code>supersedes_id</code>/ <code>supersedes_scope</code>, an
+<code>agent_id</code>, a <code>confidence</code> float bounded to
+<code>[0,1]</code>, a <code>source_type</code>, a
+<code>validation_status</code>, an <code>intent_ref</code>, a
+<code>created_at</code>, a list of typed <code>relationships</code> —
+<code>DEPENDS_ON</code>, <code>REVISED_BY</code>,
+<code>AUTHORED_BY</code>, <code>REFERENCES</code>,
+<code>SUPERSEDES</code> — and a metadata block of project, branch, tags
+and a free <code>extra</code> dict. The body is the thought.</p>
+<p>Two things the model does not have are worth naming. There is
+<strong>no validity axis</strong>: <code>created_at</code> is the only
+timestamp on a thought, and a search of the package for
+<code>valid_from</code>, <code>valid_to</code>, <code>valid_at</code>,
+<code>occurred_at</code> and <code>as_of</code> returns nothing, so
+<code>bitemporal</code> is withheld — the record axis is the only clock.
+And <code>confidence</code> is a float that the read path never filters
+on; it is a number the author asserts, kept beside the status rather
+than standing in for it, which is the separation the
+<code>trust_state</code> mark exists to reward.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The matcher is lexical substring AND, and the project documents it as
+such. <code>docs/retrieval-baseline.md</code> gives the algorithm in
+five steps — lowercase the query, split on whitespace, build a
+searchable string from content, thought id, source type, agent id and
+the project, branch and tags metadata, keep a record only when
+<em>every</em> query token is a substring of it, and treat an empty
+query as matching everything the visibility allows. The document then
+says what it is not: <em>"This is <strong>lexical substring
+AND</strong>, not ranking, stemming, phrase search, or semantic
+similarity,"</em> and <em>"This is not a product claim about future
+search work,"</em> with an issue link.</p>
+<p>That is worth crediting on its own. The corpus is full of retrieval
+described in language that implies scoring; this one names the exact
+predicate, notes that <code>metadata.extra</code> is deliberately
+outside the searchable string, and observes that punctuation attached to
+a token is part of the token.</p>
+<p><strong>The ordering is the part that matters for the marks.</strong>
+<code>visibility.allows</code> runs first, before the scope filter and
+before the query match, so a record the caller may not see is never a
+candidate to be ranked, filtered or counted. There is no threshold to
+tune past it and no scoring stage in which a hidden record could
+reappear.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Promotion is transactional and optimistic rather than
+locked-optimistic-free. <code>propose_truth</code> captures the record
+it reviewed and passes it as <code>expected</code>;
+<code>persist_governance</code> re-reads each path and raises
+<em>"Thought changed during approval; re-review before retrying"</em> if
+the bytes differ, and <code>propose_truth</code> raises <em>"Thought
+changed during review; re-review before approval"</em> if the record
+moved between review and write. A stale approval cannot land on edited
+content, and <code>tests/test_governance.py:283</code> pins it.</p>
+<p>Approving a replacement does two writes in one transaction: the
+successor becomes approved, and the predecessor gains
+<code>superseded_by</code> and <code>superseded_scope</code>. Before
+that, the code refuses two competing approvals — <em>"Predecessor
+already has an approved replacement"</em> — and refuses an ambiguous
+predecessor — <em>"Replacement predecessor is missing or ambiguous"</em>
+— rather than guessing which record to retire.</p>
+<p><code>refuse_obvious_secret</code> runs on content at save and
+<code>refuse_obvious_secret_in_value</code> over the serialized record
+at promotion, so a credential pasted into a thought is refused at the
+boundary rather than committed and then regretted.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The server is MCP. <code>FAVA_TRAILS_AGENT_ID</code> is set by the
+operator on a dedicated process and a caller's <code>agent_id</code>
+must match it; the README states the consequence plainly — <em>"a shared
+endpoint is one identity boundary"</em> — and the retrieval-baseline
+document repeats that a shared filesystem or endpoint <em>"does not
+cryptographically isolate concurrent callers."</em> A report that has to
+state the limit of an identity boundary usually has to be told; this one
+states it twice, unprompted.</p>
+<p>A hook pipeline exposes <code>BeforeSave</code>,
+<code>AfterSave</code>, <code>BeforePropose</code>,
+<code>AfterPropose</code>, <code>AfterSupersede</code>,
+<code>OnRecall</code> and <code>OnStartup</code> events, and three
+paper-derived protocols ship as hook packages installed by
+<code>fava-trails protocol setup</code>: SECOM compression (<a
+href="https://arxiv.org/abs/2502.05589">arXiv:2502.05589</a>), ACE
+playbook reranking (<a
+href="https://arxiv.org/abs/2510.04618">arXiv:2510.04618</a>) and RLM
+MapReduce lifecycle hooks (<a
+href="https://arxiv.org/abs/2512.24601">arXiv:2512.24601</a>). They are
+implemented rather than declared — SECOM is 351 lines with
+<code>before_propose</code> and <code>before_save</code> handlers, ACE
+522 across its module and rule engine — and they are opt-in rather than
+default, which the report states because an unwired protocol directory
+is the shape this corpus most often finds.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded.</strong> Six stored values, of which
+exactly one is visible to the default read. <code>draft</code> and
+<code>proposed</code> are withheld from everyone but their own author,
+and <code>rejected</code>, <code>error</code> and
+<code>tombstoned</code> are withheld from everyone without an operator
+endpoint. A rejected thought is not ranked down; it is not there.</p>
+<p><strong>Scope enforced — awarded, and the producer test is the
+interesting part.</strong> The principal is built by
+<code>runtime_principal()</code> from two environment variables under a
+comment reading <em>"Configured by the operator on a dedicated process,
+never by a tool call"</em>, and <code>Visibility.allows</code> compares
+<code>fm.agent_id</code> against <code>self.principal.agent_id</code>
+for the authoring view. The committed case is explicit: with the process
+configured as <code>alice</code>, a <code>save_thought</code> passing
+<code>agent_id: "bob"</code> errors, and <code>get_thought</code>,
+<code>update_thought</code>, <code>propose_truth</code> and
+<code>supersede</code> against bob's draft all error with bob's content
+absent from the serialized response
+(<code>tests/test_governance.py:98-119</code>).</p>
+<p><strong>Human review — awarded, and the distinction it turns on is
+worth stating.</strong> The default reviewer is a model:
+<code>TrustResult.reviewer</code> is documented as
+<code>"llm-oneshot:&lt;model&gt;" or "human:&lt;user_id&gt;"</code> and
+<code>approval_kind</code> defaults to <code>llm_advisory</code>. An
+explicit human approval exists, and passing
+<code>approval="human"</code> is not enough —
+<code>tools/navigation.py:126-145</code> raises <em>"Explicit human
+approval requires an operator-controlled endpoint"</em> unless the
+process carries both the operator flag and an agent id, neither of which
+a tool call can set. The argument selects the path; the environment
+grants the authority. <code>tests/test_governance.py:292-306</code> runs
+the same call twice, failing without <code>FAVA_TRAILS_OPERATOR</code>
+and succeeding with it, then asserts the stored
+<code>approval.kind</code> is <code>human</code>.</p>
+<p>The honest limit is that the <em>default</em> is advisory and a model
+produces it. What the design gets right is refusing to blur them: the
+record says which kind of approval it was, so a reader of the trail can
+tell a model's verdict from a person's.</p>
+<p><strong>Negative eval — awarded.</strong>
+<code>tests/test_governance.py</code> seeds a full cross-product — two
+scopes, all six statuses, two authors, twenty-four records — and then
+asserts exact counts against it:
+<code>test_default_recall_only_current_approved</code> requires
+precisely two thoughts for one scope and four across two, and that the
+status set of what came back is exactly <code>{"approved"}</code>. It
+cannot pass on an empty result. Beside it,
+<code>test_direct_and_global_lookup_do_not_leak_hidden_records</code> is
+parametrized over all five non-approved statuses and asserts the
+record's <em>content string</em> is absent from the serialized response,
+for both the real scope and a nonexistent one — a leak assertion on the
+payload rather than on an id list.</p>
+<p><strong>Audit log — withheld, and the reason is a definitional
+boundary rather than an absence.</strong> Every governance mutation is a
+commit in the trail's own Jujutsu repository, with a message naming the
+thought and its new status, written inside a transaction that journals
+the prior text first. That is a real, durable, append-only record of
+what changed. The mark requires an append-only event record of memory
+mutations in the system's own store and explicitly does not count
+version-control history, and this atlas applied the same exclusion to <a
+href="../diffmem/">DiffMem</a>, which called it <em>"the purest
+case"</em>. FAVA is the second. The per-record <code>trust_gate</code>
+and <code>approval</code> blocks in the frontmatter are provenance on
+the row rather than a log, and the journal
+(<code>transactions.py:163-165</code>) is crash recovery, removed on
+success.</p>
+<p><strong>Tombstone — withheld.</strong> <code>tombstoned</code> is a
+terminal lifecycle state on a record: it freezes content and blocks
+promotion (<em>"Cannot promote a tombstoned thought"</em>), keyed on the
+thought id. The mark asks for a record keyed on the rejected
+<em>value</em> and consulted before a new write, so that the same
+content cannot return under a fresh id. <code>duplicates.py</code>
+hashes content, but its own first line scopes it out —
+<em>"Operator-only, exact-plan duplicate maintenance; never invoked by
+MCP tools."</em></p>
+<p><strong>What the transaction layer defends, and what it does
+not.</strong> <code>persist_governance</code> recovers an interrupted
+write on the next entry, holds an exclusive file lock, and fails a read
+that arrives mid-persistence rather than serving a torn view —
+<code>test_read_during_persistence_fails_closed_until_complete</code>
+and
+<code>test_process_death_mid_approval_keeps_old_view_and_recovers</code>,
+the latter killing a real subprocess. What it does not defend is the
+boundary the project names itself: a shared endpoint is one identity,
+and concurrent callers on it are not isolated from each other.</p>
+<p><strong>Egress is disclosed rather than assumed.</strong> When the
+trust gate sends a candidate to a model,
+<code>describe_trust_gate_egress</code> produces a notice naming the
+destination, the model and which fields are sent, <em>"never includes
+API keys, key file paths, or secret values"</em>, and the human-approval
+path emits its own notice saying no candidate content was transmitted. A
+review step that ships content off the machine is a privacy event, and
+this one announces itself.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>994 test functions across 41 files, 19,148 lines against 14,496 lines
+of source. <code>tests/test_governance.py</code> is the file to read: 22
+cases, almost all adversarial, named for the property each pins — that
+an unconfigured endpoint cannot widen visibility, that relationship
+expansion cannot reveal private or unselected authoring records, that a
+stale review cannot approve edited content, that MCP stamps the server
+identity and prevents forged provenance, and that a legacy backlink to
+an unapproved successor does not hide truth.</p>
+<p>The retrieval baseline in <code>docs/retrieval-baseline.md</code>
+with <code>tests/test_retrieval_baseline.py</code> beside it is a
+synthetic benchmark of the implemented matcher, and it is careful to be
+nothing more: it states the algorithm, states that it is not ranking or
+semantic similarity, and links the issue tracking future search
+work.</p>
+<p><strong>No paper describes this system.</strong> Three papers are
+cited and implemented as optional protocols, and those are other
+people's results applied here rather than claims about FAVA; a search
+for <code>arxiv</code>, <code>bibtex</code>, <code>@article</code>,
+<code>@misc</code>, <code>citation</code> and <code>doi.org</code>
+across the markdown, <code>.cff</code> and <code>.toml</code> files
+returns only those three plus their protocol READMEs, and
+<code>find . -iname 'CITATION*'</code> returns nothing. The README's own
+claims are about the release status of the governed-read model, not
+about measured performance.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Put the authority in the process and the view in the
+argument.</strong> One docstring line — <em>"Tool arguments select a
+view; they never establish a caller's authority"</em> — and a
+<code>runtime_principal()</code> that reads the environment is the whole
+mechanism. It costs less than validating a caller-supplied identity and
+cannot be argued with by a caller.</li>
+<li><strong>Make a mode that needs authority raise, not narrow.</strong>
+<code>Visibility.__post_init__</code> raises
+<code>PermissionError</code> for <code>authoring</code> without a
+configured identity and for <code>history</code> without an operator,
+rather than silently downgrading to the governed view. A silent
+downgrade would return a plausible, wrong, smaller answer.</li>
+<li><strong>Retire a record on approval, not on writing.</strong>
+<code>is_effectively_superseded</code> requires the successor to be
+approved, so a draft replacement cannot remove the current answer. The
+failure it avoids is a store that goes blank between a correction being
+drafted and being accepted.</li>
+<li><strong>Freeze content at the terminal statuses.</strong> Once
+approved, rejected or tombstoned, a record cannot be edited, so
+corrections are new records and the trail stays a trail.</li>
+<li><strong>Compare against what the reviewer saw.</strong> Carrying the
+reviewed copy into the write and refusing when the bytes changed turns
+an approval into a decision about a specific text rather than about an
+id.</li>
+<li><strong>Write down what your matcher actually is.</strong> The
+retrieval baseline document is a model: the exact predicate, what is
+excluded from it, and an explicit statement that it is not a product
+claim.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The default review is a model, and the record marks it
+<code>llm_advisory</code>. Nothing in the tree requires a human pass
+before a record becomes institutional, so an operator who never sets
+<code>FAVA_TRAILS_OPERATOR</code> runs a trail approved entirely by an
+LLM one-shot — correctly labelled, and still the default.</li>
+<li><code>confidence</code> is stored, bounded and never read on the
+retrieval path. It is either a field awaiting a consumer or
+documentation of the author's state at write time; the code does not say
+which.</li>
+<li>A shared MCP endpoint is one identity boundary, which the project
+states twice. What it means for a team is that per-agent isolation
+requires per-agent processes, and nothing in the tree enforces that
+deployment.</li>
+<li>The published PyPI release is 0.6.0 while the governed-read model
+described here is the unreleased 0.7.0 tree; the README says so and
+points at <code>fava-trails version</code>. A reader installing from
+PyPI today gets a different visibility model from the one this report
+analyses.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Governance: <code>src/fava_trails/governance.py</code> (140 lines —
+<code>Principal</code>, <code>runtime_principal</code>,
+<code>Visibility</code>, <code>is_effectively_superseded</code>).</li>
+<li>Trail manager: <code>src/fava_trails/trail.py</code> —
+<code>recall</code> (425-480), <code>get_thought</code> (297),
+<code>FROZEN_STATUSES</code> (305-309), <code>update_thought</code>
+(311), <code>propose_truth</code> (540-640), <code>forget</code> (647),
+<code>sync</code> (652), <code>rollback</code> (668).</li>
+<li>Transactions: <code>src/fava_trails/transactions.py:150-170</code> —
+<code>persist_governance</code>.</li>
+<li>Trust gate: <code>src/fava_trails/trust_gate.py</code> (587 lines) —
+<code>TrustResult</code> (253-266), egress disclosure (112-234),
+<code>review_thought</code> (477).</li>
+<li>Tools:
+<code>src/fava_trails/tools/{recall,thought,navigation}.py</code>; human
+approval at <code>navigation.py:126-145</code>.</li>
+<li>Model: <code>src/fava_trails/models.py</code> —
+<code>ValidationStatus</code> (43-50), <code>RelationshipType</code>
+(52-58), <code>ThoughtFrontmatter</code> (71-97),
+<code>NAMESPACE_ROUTES</code> (204-210).</li>
+<li>VCS: <code>src/fava_trails/vcs/jj_backend.py</code> — <em>"Raw jj
+stdout is NEVER returned to agents."</em></li>
+<li>Protocols:
+<code>src/fava_trails/protocols/{secom,ace,rlm}/</code>.</li>
+<li>Tests: <code>tests/test_governance.py</code> (429 lines, 22 cases),
+<code>tests/test_retrieval_baseline.py</code>.</li>
+<li>Docs: <code>docs/governed-recall.md</code>,
+<code>docs/retrieval-baseline.md</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &#39;valid_from\|valid_to\|valid_at\|occurred_at\|as_of&#39; --include=&#39;*.py&#39; src/   # 0: no validity axis, created_at is the only clock
+grep -rn &#39;confidence&#39; --include=&#39;*.py&#39; src/ | grep -iE &#39;filter|where|&gt;=|threshold&#39;    # 0: confidence is stored and never filtered on
+grep -riE &#39;arxiv|bibtex|@article|@misc|citation|doi\.org&#39; --include=&#39;*.md&#39; --include=&#39;*.cff&#39; --include=&#39;*.toml&#39; .  # 3 papers, all cited for optional protocols
+find . -iname &#39;CITATION*&#39; -not -path &#39;./.git/*&#39;                                       # 0
+grep -rn &#39;approval_kind&#39; --include=&#39;*.py&#39; src/                                        # 3 sites: the dataclass, the two stamps, and one producer of kind=&quot;human&quot;
+grep -rn &#39;duplicates&#39; --include=&#39;*.py&#39; src/ | grep -v &#39;duplicates.py&#39;                 # no MCP tool path reaches the content-hash utility</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/MachineWisdomAI/fava-trails/commit/10f689f7455c0c5c5898f2a2e6bc8cf4fe84a6d7"><code class="commit-id" title="10f689f7455c0c5c5898f2a2e6bc8cf4fe84a6d7">10f689f7…</code></a>
+— first reading, at the head of <code>main</code>, 435 commits in.
+Screened with <code>scripts/screen_repo.py</code> before any file was
+opened: one auto-run surface (<code>.vscode/settings.json</code>), two
+manifests inside the seven-day cooldown, one build-time execution path
+(<code>tests/conftest.py</code>, which runs on pytest collection), and
+two agent-directed files (<code>AGENTS.md</code>,
+<code>CLAUDE.md</code>) read as data. Nothing was installed, built or
+run — no <code>uv</code>, no <code>pytest</code>, no jj repository
+created. Four marks awarded; <code>audit_log</code> withheld on the
+version-control-history exclusion, following <a
+href="../diffmem/">DiffMem</a>, <code>tombstone</code> withheld because
+<code>tombstoned</code> is keyed on the record rather than the value,
+and <code>bitemporal</code> withheld because <code>created_at</code> is
+the only clock. Every figure here comes from reading the tree; the
+retrieval-baseline document is the project's own and is attributed as
+such.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

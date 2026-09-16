@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 560 reports.**
+**This page covers all 561 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4838,3 +4838,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, Rust, version 1.7.0, 121 commits since 17 March 2026, 17,313 lines across 56 files against 345 test attributes, one SQLite database with FTS5, a vector index and optional encryption, a CLI any agent calls over Bash, a Tauri desktop app, Docker packaging and a Homebrew tap. One auto-run surface, one build-time execution point and two dependency files inside the cooldown at this pin, read from a full clone so the ages are the project's own.
 - Study when: you are handing memory maintenance to a model and need to decide what it may destroy in one call, or you are weighing whether to ship an automatic hook at all.
 - Do not copy when: you need more than superseded-or-current on a memory, an undo that runs itself, or a project boundary that holds when the caller says nothing. Four marks: mutation audit, review, trust state, negative eval.
+
+### [`fava-trails`](../systems/fava-trails/)
+- Best idea: **put the authority in the process and let the tool argument choose only a view.** `governance.py` opens with "Tool arguments select a view; they never establish a caller's authority", and implements it by building the principal from `FAVA_TRAILS_AGENT_ID` and `FAVA_TRAILS_OPERATOR` in the server process's environment — so an `agent_id` a caller passes is a filter, never a claim. The authoring view raises `PermissionError` when the process has no configured identity rather than quietly narrowing to the default, which is the failure that returns a plausible smaller answer.
+- Second idea: **retire a record on approval, not on writing.** `is_effectively_superseded` treats a backlink as retiring the predecessor only when the successor is itself approved, so a draft correction cannot blank the current answer while it waits for review.
+- Biggest risk: **the default reviewer is a model and nothing requires a human pass.** `TrustResult.approval_kind` defaults to `llm_advisory`, the explicit `human` kind needs an operator-only endpoint, and an operator who never sets the flag runs a trail approved entirely by an LLM one-shot — correctly labelled in every record, and still the default. Beside it, a shared MCP endpoint is one identity boundary, which the project states twice and does not enforce at deployment.
+- Most reusable component: the governed `Visibility` value — three modes, a principal that cannot be supplied, statuses restricted per mode, and a single `allows()` the read path calls before any scope or query filter, so an inadmissible record is never a candidate to be ranked or counted.
+- Maturity impression: Apache-2.0, 435 commits, 14,496 lines of Python against 19,148 lines of tests holding 994 functions, thoughts stored as markdown in a Jujutsu repository whose raw output never reaches an agent, a documented lexical-substring retrieval baseline that says outright it is not a product claim, and three paper-derived protocols shipped as opt-in hook packages; four capability marks.
+- Study when: you need a memory whose read scope cannot be self-asserted by the caller, or you are deciding what a correction should do to the record it replaces before anyone has accepted it.
+- Do not copy when: you need a ranked or semantic recall — the matcher is lexical substring AND and the project says so — or a validity axis, since `created_at` is the only clock, or an append-only mutation log distinct from version-control history.
