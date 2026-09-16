@@ -7,12 +7,12 @@ page_kind: system
 source_name: "Goldentrii/AgentRecall-X"
 source_url: https://github.com/Goldentrii/AgentRecall-X
 archive_name: "Goldentrii--AgentRecall-X"
-revision: 270e7a47106537333133e85a3f98063e08ee7db2
-revision_url: https://github.com/Goldentrii/AgentRecall-X/commit/270e7a47106537333133e85a3f98063e08ee7db2
-analyzed_at: 2026-09-11
+revision: 4bed4dcc71af5801e635fdc6037fa59a95d2d25b
+revision_url: https://github.com/Goldentrii/AgentRecall-X/commit/4bed4dcc71af5801e635fdc6037fa59a95d2d25b
+analyzed_at: 2026-09-17
 capabilities: "trust_state, scope_enforced"
 capability_evidence:
-  trust_state: "the correction store | packages/core/src/tools-logic/check-action.ts:382 | `rec.authoritative !== false && rec.severity === \"p0\"` gates whether a record may override the model, with measured precision able to withdraw the flag | scripts/eval"
+  trust_state: "the correction store | packages/core/src/tools-logic/check-action.ts:374-382 | `rec.authoritative !== false && rec.severity === \"p0\" && !isNoiseCandidate(rec)` gates whether a record may override the model, and measured precision withdraws the veto in the gate itself — a record below 0.3 precision with three or more retrievals stops blocking while staying retrievable | scripts/eval"
   scope_enforced: "the correction store | packages/core/src/storage/corrections.ts | `project` on every record and in the read path, with a cross-project recurrence join added as a deliberate second pass | scripts/eval"
 stack_storage: "postgres, files"
 stack_retrieval: "lexical"
@@ -301,6 +301,29 @@ only for corrections. And `precision` demotes a rule that is not working. A
 system where high standing is granted, exercised, measured and then withdrawn is
 rare here; most stop after the second step.
 
+**The withdrawal is now in the gate itself rather than only in the reporting.**
+`check-action.ts:374-382` computes a noise predicate beside the override test —
+a record with a measured `precision` below 0.3 and at least three retrievals —
+and the blocking condition reads `authoritative !== false && severity === "p0"
+&& !isNoiseCandidate(rec)`. The comment states the failure it closes: a low-signal
+P0 that keeps firing without being heeded should not veto a legitimate plan. The
+shape is worth naming because it is uncommon — a stored status whose *effect* is
+conditioned on its own track record, so authority has to keep being earned by the
+record rather than only by the field. It is also the conservative direction: the
+demotion removes a veto and leaves the correction retrievable and advisory.
+
+Beside it, `corrections.ts` grew an outcome ledger and a retraction path —
+`recordOutcome`, `readOutcomeEventsByCorrection`, `runOutcomesRebuild`,
+`retractCorrection` — and a `reviewNoiseCorrections(project, { auto })` that
+returns the noise candidates as *suggestions* by default and only retracts them
+when automatic pruning is switched on, through `AR_CONSOLIDATE_AUTO=1` or an
+explicit flag, stamping the reason `auto-pruned: low signal (precision<0.3,
+retrieved≥3)`. Suggest-by-default with an opt-in to act is the right default for
+a pass that removes standing from a record a person wrote. Every one of the new
+functions takes `project` as its first argument and resolves through
+`projectSubPath`, so the scope predicate reaches the new surface rather than
+stopping at the paths that existed when the mark was awarded.
+
 Two risks follow from the design rather than from defects.
 
 **The veto is only as good as the matcher.** `check_action` matches by keyword
@@ -493,6 +516,8 @@ Run from the root of the checkout at the pinned commit.
 
 ## History
 
-**2026-09-11** — [`270e7a47106537333133e85a3f98063e08ee7db2`](https://github.com/Goldentrii/AgentRecall-X/commit/270e7a47106537333133e85a3f98063e08ee7db2) — re-read, 175 files and 25,149 insertions past the previous pin in a single commit, a large share of it dated build and review reports under `reports/`. **Both marks re-verified and unchanged**, with `capability_evidence` records added where the report had none; `check-action.ts:382` still gates the veto on `authoritative !== false` and a `p0` severity. **The outcome loop, which this report names as the risk the whole trust ladder rests on, is now instrumented.** The catch around outcome tracking in `session-end.ts` calls `recordHookFailure` into a JSONL health log, under a comment giving the incident behind it: a systemic failure *"silently meant every correction's heeded/recurred verdict for this session went unrecorded, with zero trace anywhere."* There are 43 such call sites across nine files. That does not make `heeded_count` less self-reported — it makes the absence of a report detectable, which is the difference between a loop that is wrong and a loop that is quietly not running. Also worth recording: the eval corpus is pinned by a `corpus_hash` over a canonical JSON tree at `n = 26`, `n_counted = 23`, and the baseline reports `denominators: {theoretical: 5, achievable: 4}` — separating what the benchmark could measure from what it did, which very few benchmarks in this corpus do. Screened before reading: fifteen findings; nothing was installed or run.
+**2026-09-17** — [`4bed4dcc71af5801e635fdc6037fa59a95d2d25b`](https://github.com/Goldentrii/AgentRecall-X/commit/4bed4dcc71af5801e635fdc6037fa59a95d2d25b) — re-read after 63 commits. Both anchored files moved and were re-derived. Both marks hold and both are stronger. The override gate at `check-action.ts:382` now carries a third condition, `!isNoiseCandidate(rec)`, so a P0 whose measured precision has fallen below 0.3 over at least three retrievals stops vetoing plans while remaining retrievable — the withdrawal the evidence record already claimed, moved out of the reporting and into the gate. `corrections.ts` grew 412 lines: an outcome ledger, a retraction path, and a noise review that suggests by default and prunes only under an explicit opt-in. Each new function takes `project` first and resolves through `projectSubPath`, so the scope predicate covers the new surface; that was checked per function rather than assumed. Both changes are written up in section 9. Nothing was installed, built or run.
+
+**2026-09-11** — [`4bed4dcc71af5801e635fdc6037fa59a95d2d25b`](https://github.com/Goldentrii/AgentRecall-X/commit/4bed4dcc71af5801e635fdc6037fa59a95d2d25b) — re-read, 175 files and 25,149 insertions past the previous pin in a single commit, a large share of it dated build and review reports under `reports/`. **Both marks re-verified and unchanged**, with `capability_evidence` records added where the report had none; `check-action.ts:382` still gates the veto on `authoritative !== false` and a `p0` severity. **The outcome loop, which this report names as the risk the whole trust ladder rests on, is now instrumented.** The catch around outcome tracking in `session-end.ts` calls `recordHookFailure` into a JSONL health log, under a comment giving the incident behind it: a systemic failure *"silently meant every correction's heeded/recurred verdict for this session went unrecorded, with zero trace anywhere."* There are 43 such call sites across nine files. That does not make `heeded_count` less self-reported — it makes the absence of a report detectable, which is the difference between a loop that is wrong and a loop that is quietly not running. Also worth recording: the eval corpus is pinned by a `corpus_hash` over a canonical JSON tree at `n = 26`, `n_counted = 23`, and the baseline reports `denominators: {theoretical: 5, achievable: 4}` — separating what the benchmark could measure from what it did, which very few benchmarks in this corpus do. Screened before reading: fifteen findings; nothing was installed or run.
 
 **2026-07-31** — [`a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd`](https://github.com/Goldentrii/AgentRecall-X/commit/a113cf692a08bed85d7c6eb35d1086dbd9a7a1fd) — first reading.
