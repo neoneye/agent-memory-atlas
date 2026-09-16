@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A PVLDB artifact whose reference
+substrate is a bitemporal belief ledger with signed evidence,
+tenant-scoped authorization and crypto-shredded payloads, shipped beside
+a harness that can recheck every printed figure without an API key.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Temvera — Agent Memory Atlas">
+    <meta property="og:description" content="A PVLDB artifact whose
+reference substrate is a bitemporal belief ledger with signed evidence,
+tenant-scoped authorization and crypto-shredded payloads, shipped beside
+a harness that can recheck every printed figure without an API key.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Temvera — Agent Memory Atlas">
+    <meta name="twitter:description" content="A PVLDB artifact whose
+reference substrate is a bitemporal belief ledger with signed evidence,
+tenant-scoped authorization and crypto-shredded payloads, shipped beside
+a harness that can recheck every printed figure without an API key.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Temvera — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Temvera",
+      "description": "A PVLDB artifact whose reference substrate is a bitemporal belief ledger with signed evidence, tenant-scoped authorization and crypto-shredded payloads, shipped beside a harness that can recheck every printed figure without an API key.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">It publishes the bypass that works, and a
+test asserts that it is the only one</p>
+          <h1>Temvera</h1>
+          <p class="document-deck">A PVLDB artifact whose reference
+substrate is a bitemporal belief ledger with signed evidence,
+tenant-scoped authorization and crypto-shredded payloads, shipped beside
+a harness that can recheck every printed figure without an API key.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/suanlab/temvera">
+              <span>Source</span>
+              <strong>suanlab/temvera</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/suanlab/temvera/commit/75243a3dbc3dfeda3613fb69e940c774f5ff4e5b" title="75243a3dbc3dfeda3613fb69e940c774f5ff4e5b">
+              <span>Analyzed revision</span>
+              <code>75243a3d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/suanlab--temvera" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>suanlab--temvera</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Temvera is "[t]emporal, provenance-aware memory infrastructure for AI
+agents" — Apache-2.0, Python, version 0.0.1, 11,702 lines across 93
+files, and the artifact behind a PVLDB Experiment, Analysis &amp;
+Benchmark paper whose title is a thesis this atlas has been testing one
+repository at a time:</p>
+<blockquote>
+<p><em>Temporal Fields Are Not Temporal Correctness: Measuring
+Bitemporal and Deletion Semantics in Deployed Agent Memory.</em></p>
+</blockquote>
+<p>The repository is two things at once. It is a measurement harness for
+deployed systems — with adapters for the graph and vector memories the
+paper compares — and it is a reference substrate implementing what the
+paper argues for: an append-only belief ledger with valid and
+transaction time, signed evidence, ranked authority, tenant-scoped
+authorization, and erasure by key destruction.</p>
+<p><strong>The single most unusual thing in the tree is that it
+publishes the bypass that works.</strong> <code>run_bypass_probes</code>
+returns four adversarial results, each carrying whether it activated and
+whether that activation was expected:</p>
+<pre class="python"><code>BypassResult(&quot;compromised_trusted_signer&quot;, compromised_allowed, True),
+BypassResult(&quot;cross_tenant_replay&quot;, cross_allowed, False),
+BypassResult(&quot;signed_claim_tamper&quot;, tampered_allowed, False),
+BypassResult(&quot;expired_signature_replay&quot;, expired_allowed, False),</code></pre>
+<p>Three must not activate. The fourth does, because a policy anchored
+on a signer's public key cannot survive that key being stolen, and the
+module's own docstring calls it "expected trust-root failure".
+<code>tests/test_bypass.py</code> then asserts that exactly one probe
+activated and that it is the one declared as a limitation — so a
+newly-working bypass fails the suite, and the admission cannot be
+quietly removed without the test noticing either.</p>
+<p><strong>The artifact discipline is the second thing.</strong> "Every
+number the paper reports is an aggregation over sealed per-case
+transcripts, so <strong>the whole paper can be checked without an API
+key, a database server, or a dataset download</strong>."
+<code>verify_paper_claims.py</code> pairs "each figure as printed in the
+paper with a recomputation from a sealed run, and fails if either half
+moves" — which catches a silently corrected number as readily as a
+corrupted run. Verification and regeneration are deliberately decoupled,
+"so you can confirm what we computed before deciding whether to re-run
+generation."</p>
+<p><strong>The bitemporal design is expressed as an interface rather
+than a schema.</strong> The <code>QuerySystem</code> protocol makes both
+instants mandatory —
+<code>query(subject, attribute, *, valid_at, transaction_at)</code> —
+and the baselines are then defined by which one they discard.
+<code>AppendOnlyBaseline</code> is built by filtering the event stream
+to <code>INGEST</code> only, so it "[i]gnore[s] revision, expiry, and
+purge operations"; the weaker comparators accept <code>valid_at</code>
+and execute <code>del valid_at</code> before answering. Every system in
+the comparison is handed the same two instants, and the ablation is what
+each one refuses to use.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>belief</strong> is an event, not a row, and it carries who
+asserted it.</p>
+<p>An <strong>authority</strong> is a rank, and below the minimum the
+evidence cannot act at all.</p>
+<p>A <strong>baseline</strong> is the oracle with one axis deleted,
+literally.</p>
+<p>A <strong>purge</strong> destroys a key and leaves a receipt; the
+ciphertext stays in history.</p>
+<p>A <strong>probe</strong> that works is published beside the ones that
+fail.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — beliefs are appended as events carrying an authority rank and a signed tenant envelope, the projection is rebuilt at a pair of instants, erasure destroys a per-belief key rather than rewriting history, and the adversarial probes include the one that succeeds</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: beliefs are appended as events carrying an authority rank and a signed tenant envelope, the projection is rebuilt at a pair of instants, erasure destroys a per-belief key rather than rewriting history, and the adversarial probes include the one that succeeds
+flowchart TB
+    IN[&quot;a claim arrives&quot;] --&gt; ENV[&quot;EvidenceEnvelope: belief + tenant +&lt;br/&gt;Ed25519 signature over it&quot;]
+    ENV --&gt; GATE{&quot;authorize_action(envelopes, *, tenant, at)&lt;br/&gt;tenant is keyword-only, no default&quot;}
+    GATE --&gt;|&quot;any envelope&#39;s tenant differs&quot;| R1[&quot;refused: cross-tenant evidence&quot;]
+    GATE --&gt;|&quot;belief not valid_at(action time)&quot;| R2[&quot;refused: evidence not valid at action time&quot;]
+    GATE --&gt;|&quot;no sources&quot;| R3[&quot;refused: missing source provenance&quot;]
+    GATE --&gt;|&quot;AUTHORITY_RANK below VERIFIED_TOOL&quot;| R4[&quot;refused: insufficient authority&lt;br/&gt;INFERRED=0 EXTERNAL=1 USER=2&lt;br/&gt;VERIFIED_TOOL=3 SYSTEM=4&quot;]
+    GATE --&gt;|&quot;signature fails&quot;| R5[&quot;refused: invalid signature&quot;]
+    GATE --&gt;|&quot;low authority laundered through&lt;br/&gt;a high-authority derivation&quot;| R6[&quot;refused: untrusted derivation lineage&quot;]
+    GATE --&gt;|&quot;all checks pass&quot;| OK[&quot;allowed&quot;]
+    OK --&gt; LEDGER[(&quot;append-only event ledger —&lt;br/&gt;append refuses a duplicate event_id&quot;)]
+    LEDGER --&gt; REBUILD[&quot;rebuild(transaction_at) → projection&lt;br/&gt;verify_rebuild re-derives it to check&quot;]
+    REBUILD --&gt; Q[&quot;QuerySystem.query(subject, attribute,&lt;br/&gt;*, valid_at, transaction_at)&quot;]
+    Q --&gt; ORACLE[&quot;the bitemporal oracle uses both&quot;]
+    Q --&gt; BASE[&quot;baselines: AppendOnly filters events to INGEST only;&lt;br/&gt;the weaker ones run &#39;del valid_at&#39; and answer&lt;br/&gt;from transaction time alone&quot;]
+    BASE -.-&gt;|&quot;every comparator gets the same two instants,&lt;br/&gt;so the ablation is what each refuses to use&quot;| ORACLE
+    PURGE[&quot;erasure&quot;] --&gt; PS[&quot;ProtectedEventStore: payload encrypted&lt;br/&gt;under a per-belief key&quot;]
+    PS --&gt; KILL[&quot;destroy the key, append&lt;br/&gt;destroyed_key_sha256 receipt&quot;]
+    KILL -.-&gt;|&quot;metadata, validity, lineage and ciphertext&lt;br/&gt;stay auditable; two-phase with a journal and&lt;br/&gt;recover_redactions for an interrupted purge&quot;| KEPT[&quot;history is not rewritten&quot;]
+    KILL -.-&gt;|&quot;nothing on the ingest path reads the receipts,&lt;br/&gt;so re-asserting an erased value is a new belief&quot;| NOTOMB[&quot;a deletion record, not a tombstone&quot;]
+    PROBES[&quot;run_bypass_probes()&quot;] --&gt; P1[&quot;cross_tenant_replay — must not activate&quot;]
+    PROBES --&gt; P2[&quot;signed_claim_tamper — must not activate&quot;]
+    PROBES --&gt; P3[&quot;expired_signature_replay — must not activate&quot;]
+    PROBES --&gt; P4[&quot;compromised_trusted_signer —&lt;br/&gt;ACTIVATES, expected_limitation=True&quot;]
+    P4 -.-&gt;|&quot;the test asserts exactly one probe activated&lt;br/&gt;and that it is the declared one, so a new bypass&lt;br/&gt;fails the build and the admission cannot be deleted&quot;| HONEST[&quot;the attack that works is published&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/temvera/model.py</code></td>
+<td>The belief, its two time axes, and the authority enum</td>
+</tr>
+<tr>
+<td><code>src/temvera/store.py</code></td>
+<td>The append-only ledger, rebuild, verify, and redaction</td>
+</tr>
+<tr>
+<td><code>src/temvera/protected_store.py</code></td>
+<td>Per-belief encryption and erasure by key destruction</td>
+</tr>
+<tr>
+<td><code>src/temvera/governance.py</code>,
+<code>security.py</code></td>
+<td>Signed envelopes, authority ranking, lineage laundering</td>
+</tr>
+<tr>
+<td><code>src/temvera/bypass.py</code></td>
+<td>Four adversarial probes, one of which is meant to succeed</td>
+</tr>
+<tr>
+<td><code>src/temvera/evaluation.py</code></td>
+<td>The oracle and the baselines defined against it</td>
+</tr>
+<tr>
+<td><code>experiments/</code>, <code>scripts/</code></td>
+<td>Sealed runs, and the scripts that recheck the paper from them</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>src/temvera/bypass.py:51-56</code> with
+<code>tests/test_bypass.py:8-11</code> — the published limitation, and
+the assertion that keeps it the only one.</p>
+<p><code>src/temvera/evaluation.py:14-24</code> — both instants made
+mandatory in the protocol, which is what makes the ablations
+comparable.</p>
+<p><code>src/temvera/evaluation.py:45-51</code> —
+<code>del valid_at</code>, an ablation written as one statement.</p>
+<p><code>src/temvera/governance.py:69-97</code> — six refusals in order,
+each with the reason it returns.</p>
+<p><code>src/temvera/protected_store.py:14-21</code> — keeping secrets
+out of Git history while leaving the ledger auditable.</p>
+<p><code>src/temvera/store.py:109-175</code> — a two-phase redaction
+with a recovery path.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <code>Belief</code> carries subject, attribute and value;
+<code>valid_from</code> and <code>valid_to</code> for world time;
+<code>recorded_at</code> and <code>last_confirmed_at</code> for the
+store's own time; an <code>Authority</code>; <code>sources</code>;
+<code>derived_from</code> lineage; a status; and a supersession link.
+<code>MemoryEvent</code> wraps it with an operation — ingest, revision,
+expiry, purge — and the ledger of events is the store, with the
+queryable projection rebuilt from it at a chosen transaction
+instant.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Exact, lexical and vector retrieval over the rebuilt projection, with
+calibrated fusion and reranking described in the research program. Every
+query takes both instants, so point-in-time retrieval is the default
+interface rather than an extra method.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingest is gated before it lands: signature, tenant, validity at
+action time, source presence, authority rank, and derivation lineage,
+each returning its own reason string. The ledger refuses a duplicate
+<code>event_id</code>. Revision and expiry are new events rather than
+edits, so the projection changes and the history does not.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A <code>temvera</code> CLI over both halves — <code>generate</code>
+and <code>benchmark</code> for the local deterministic substrate,
+<code>verify-artifacts</code> for the sealed runs — plus adapters for
+the external systems the paper measures. There is no server and no MCP
+surface; this is a research package.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The strong parts are the refusal-with-reason gate, the signed
+envelopes, the published bypass, and an erasure design that answers the
+usual objection to append-only storage in Git. The honest weak parts are
+stated by the project itself: no production readiness, a provisional
+API, and claims outside the frozen fixtures held as hypotheses.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Thirty sealed runs, 87 printed figures each paired with a
+recomputation, a deterministic test suite, and a lifecycle benchmark
+that the README is careful to call "a harness identifiability check, not
+a performance or novelty result." The forgetting evaluation adapts a
+public operation contract rather than inventing a private one.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Publish the probe that works. A suite of attacks that all fail is a
+suite that has not been pushed hard enough, and an expected-limitation
+flag with a test behind it is how you keep the admission from
+decaying.</p>
+<p>Make both instants mandatory in the query signature. If
+<code>as_of</code> is optional, most callers will omit it and the path
+will rot; if it is required, a system that ignores it has to say so with
+a statement you can point at.</p>
+<p>Separate verifying what was computed from re-running the computation.
+The first should need nothing but the repository.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the deletion receipts should be consulted on ingest. The
+paper is about deletion semantics, and the substrate's own erasure
+leaves a record that nothing reads back, so a value destroyed on Monday
+can be re-asserted on Tuesday without contradiction.</p>
+<p>Whether tenant scoping is meant to reach retrieval. It is enforced
+where evidence acts, which is the higher-stakes path, but a search that
+returns another tenant's belief without authorizing it has still
+disclosed it.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/temvera/bypass.py:51-56</code></td>
+<td>Four probes, and the one that is supposed to succeed</td>
+</tr>
+<tr>
+<td><code>tests/test_bypass.py:8-11</code></td>
+<td>The assertion that keeps the admission honest</td>
+</tr>
+<tr>
+<td><code>src/temvera/evaluation.py:14-51</code></td>
+<td>Two mandatory instants, and baselines that discard one</td>
+</tr>
+<tr>
+<td><code>src/temvera/governance.py:69-97</code></td>
+<td>Six refusals, each with its reason</td>
+</tr>
+<tr>
+<td><code>src/temvera/protected_store.py:14-21</code></td>
+<td>Erasure that survives an append-only history</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/suanlab/temvera/commit/75243a3dbc3dfeda3613fb69e940c774f5ff4e5b"><code class="commit-id" title="75243a3dbc3dfeda3613fb69e940c774f5ff4e5b">75243a3d…</code></a>
+— first reading, at a commit dated 13 September 2026. Screened before
+opening, from a shallow clone: four files scanned, no auto-run surfaces,
+no build-time execution points, one unpinned dependency surface and one
+dependency file inside the seven-day cooldown. <code>AGENTS.md</code>
+and <code>CLAUDE.md</code> are addressed to a reading agent and were
+recorded as data. Nothing was installed, built or run, and none of the
+paper's verification scripts were executed, so the artifact claims
+described here are read from the repository rather than reproduced.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

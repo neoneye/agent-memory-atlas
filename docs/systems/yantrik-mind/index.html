@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust companion over the
+YantrikDB belief engine whose own contribution is a purpose gate: scope
+and sensitivity stored on every belief, default-deny policies over them,
+and a receipt for every read including the operator's.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="yantrik-mind — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust companion over the
+YantrikDB belief engine whose own contribution is a purpose gate: scope
+and sensitivity stored on every belief, default-deny policies over them,
+and a receipt for every read including the operator's.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="yantrik-mind — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust companion over the
+YantrikDB belief engine whose own contribution is a purpose gate: scope
+and sensitivity stored on every belief, default-deny policies over them,
+and a receipt for every read including the operator's.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>yantrik-mind — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "yantrik-mind",
+      "description": "A Rust companion over the YantrikDB belief engine whose own contribution is a purpose gate: scope and sensitivity stored on every belief, default-deny policies over them, and a receipt for every read including the operator's.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Thirty lines of comment on one dependency
+line, because a path dep had been building it against whatever was lying
+around</p>
+          <h1>yantrik-mind</h1>
+          <p class="document-deck">A Rust companion over the YantrikDB
+belief engine whose own contribution is a purpose gate: scope and
+sensitivity stored on every belief, default-deny policies over them, and
+a receipt for every read including the operator's.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/yantrikos/yantrik-mind">
+              <span>Source</span>
+              <strong>yantrikos/yantrik-mind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/yantrikos/yantrik-mind/commit/97935b1e247167ac7d4fe192ec8a9a1966b26c49" title="97935b1e247167ac7d4fe192ec8a9a1966b26c49">
+              <span>Analyzed revision</span>
+              <code>97935b1e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yantrikos--yantrik-mind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>yantrikos--yantrik-mind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>yantrik-mind is "[a] ground-up Rust AI companion built on the
+YantrikDB typed-memory moat" — no licence file, 203,205 lines of Rust
+across 226 files in nineteen crates. Its claim is about the memory model
+rather than the assistant: "[i]t stores <em>beliefs</em> — typed,
+revisable nodes with Bayesian confidence scores, evidence trails, and
+contradiction edges — in YantrikDB's cognitive graph", and when two
+beliefs conflict "the companion asks rather than asserting either
+side."</p>
+<p>That model belongs to the engine. This report is about what the
+companion adds on top of it, and the addition is a <strong>purpose
+gate</strong>.</p>
+<p><strong>Scope is stored on the belief and the migration default fails
+safe.</strong> <code>Scope</code> is <code>Shared</code> or
+<code>Private(person_id)</code>, and the type's comment states the rule
+plainly — a fact "from one person must NEVER surface to another" — while
+the default for pre-existing data goes the careful way:
+"[l]egacy/untagged memory is private to them, so pre-multi-user facts
+never leak to a later-added member." Most systems make unlabelled rows
+visible to everyone, which is the same decision taken in the direction
+that is easier to ship.</p>
+<p><strong>Sensitivity is default-deny.</strong> Four classes carry
+purpose policies — "default deny outside their allowed activities,
+whoever the fact belongs to" — and <code>Credentials</code> is
+deliberately excluded from wildcard grants: "opening credentials takes
+an explicit credentials grant."</p>
+<p><strong>The audit has no exempt caller, and the reasoning for that is
+the best sentence in the tree.</strong> Operator reads were once outside
+the ledger, on the "trusted owner path". The exemption was removed:</p>
+<blockquote>
+<p>"the operator's background lanes (dream/proactive/research/…) are
+exactly the cross-subject reads a purpose audit exists to catch, so a
+ledger blind to them would be theater. Every context is receipted
+now."</p>
+</blockquote>
+<p>Each receipt records who read, through which facade method, for what
+declared purpose, what they asked, how many results crossed the
+boundary, and how many the gate suppressed — hash-chained so "[a]ny
+edit, reorder, or deletion of a middle line breaks every later chain
+value." It is a record of reads rather than of mutations, which is why
+it does not carry this atlas's audit mark, and it is the half of that
+pattern most systems do worse.</p>
+<p><strong>And a red-team test holds the whole arrangement.</strong>
+<code>purpose_gate_redteam_zero_unauthorized_hydrations</code> asserts
+"ZERO unauthorized hydrations across the cross-owner and sensitive-class
+corpora — on every read path, in every background lane."</p>
+<p><strong>The other thing to read here is a dependency line.</strong>
+<code>yantrikdb-core</code> carries about thirty lines of comment
+explaining why it is an exact version pin on a published crate rather
+than a path dependency — because a path dep into
+<code>../yantrikdb</code> "built the mind against whatever that tree
+happened to contain - it sat at 0.16.0 with uncommitted changes - so no
+one else could reproduce this build and it moved under us whenever
+someone worked there." The upgrade to a later engine is documented in
+the same block by re-checking the properties the pin was chosen for
+against the published crates, including replaying
+<code>assert_belief_evidence</code> across the migration for "identical
+priors, posteriors and effective weights to six decimals."</p>
+<p>The gap is that the argument stops at one line.
+<code>yantrik-ml</code>, <code>yantrik-os</code> and
+<code>yantrik-chat</code> are still path dependencies into a sibling
+workspace — the exact arrangement the comment above them rejects.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>belief</strong> lives in the engine; a
+<strong>scope</strong> and a <strong>sensitivity</strong> are what this
+layer puts on it.</p>
+<p>A <strong>purpose</strong> is declared by the reader and checked
+against the class.</p>
+<p>A <strong>suppression</strong> is counted, not silent.</p>
+<p>A <strong>receipt</strong> covers every read, including the
+owner's.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the belief store is delegated to a pinned engine while this layer adds a stored scope and sensitivity class, a default-deny purpose gate whose suppressions are counted, and a hash-chained receipt for every read with no exempt caller</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the belief store is delegated to a pinned engine while this layer adds a stored scope and sensitivity class, a default-deny purpose gate whose suppressions are counted, and a hash-chained receipt for every read with no exempt caller
+flowchart TB
+    TURN[&quot;a conversation turn&quot;] --&gt; CONS[&quot;consolidation into durable typed beliefs&quot;]
+    CONS --&gt; ENG[(&quot;YantrikDB — pinned as a PUBLISHED crate at an exact version:&lt;br/&gt;typed beliefs, Bayesian revision, evidence trails,&lt;br/&gt;contradiction edges&quot;)]
+    PIN[&quot;=0.21.2, not ^0.21, not a path dep&quot;] -.-&gt;|&quot;a path dep into ../yantrikdb &#39;built the mind against&lt;br/&gt;whatever that tree happened to contain - it sat at 0.16.0&lt;br/&gt;with uncommitted changes - so no one else could&lt;br/&gt;reproduce this build&#39;&quot;| ENG
+    PIN -.-&gt;|&quot;the upgrade was justified by replaying assert_belief_evidence&lt;br/&gt;across the migration: identical priors, posteriors and effective&lt;br/&gt;weights to six decimals, against both same-version controls&quot;| ENG
+    CONS --&gt; TAG[&quot;this layer tags each belief:&lt;br/&gt;Scope = Shared or Private(owner)&lt;br/&gt;Sensitivity = Ordinary, Health, Finance, Credentials&quot;]
+    TAG -.-&gt;|&quot;legacy untagged memory is private to the primary,&lt;br/&gt;&#39;so pre-multi-user facts never leak to a later-added member&#39;&quot;| SAFE[&quot;the migration default fails safe&quot;]
+    READ[&quot;a read, from a lane or from the owner&quot;] --&gt; FACADE[&quot;the memory facade&quot;]
+    FACADE --&gt; GATE{&quot;purpose gate: does this declared purpose&lt;br/&gt;clear this sensitivity class?&quot;}
+    GATE --&gt;|&quot;default deny outside the class&#39;s allowed activities,&lt;br/&gt;whoever the fact belongs to&quot;| DENY[&quot;suppressed&quot;]
+    GATE --&gt;|&quot;Credentials, under a wildcard grant&quot;| DENY2[&quot;still denied — it takes an&lt;br/&gt;explicit credentials grant&quot;]
+    GATE --&gt;|&quot;cleared&quot;| OUT[&quot;results cross the boundary&quot;]
+    DENY &amp; DENY2 &amp; OUT --&gt; REC[(&quot;receipts.jsonl — who read, which facade method,&lt;br/&gt;declared purpose, the query, how many crossed,&lt;br/&gt;how many were suppressed&quot;)]
+    REC -.-&gt;|&quot;chain = sha256(prev_chain ++ record), first off &#39;genesis&#39; —&lt;br/&gt;any edit, reorder or deletion breaks every later value&quot;| TAMPER[&quot;tamper-evident&quot;]
+    OPER[&quot;the operator&#39;s own lanes:&lt;br/&gt;dream, proactive, research&quot;] --&gt; FACADE
+    OPER -.-&gt;|&quot;these used to be exempt as &#39;the trusted owner path&#39;;&lt;br/&gt;the exemption was removed because they &#39;are exactly the&lt;br/&gt;cross-subject reads a purpose audit exists to catch,&lt;br/&gt;so a ledger blind to them would be theater&#39;&quot;| REC
+    TEST[&quot;purpose_gate_redteam_zero_unauthorized_hydrations&quot;] -.-&gt;|&quot;ZERO unauthorized hydrations across the cross-owner AND&lt;br/&gt;sensitive-class corpora, on every read path,&lt;br/&gt;in every background lane&quot;| GATE
+    PATHS[&quot;yantrik-ml, yantrik-os, yantrik-chat —&lt;br/&gt;still path deps into ../yantrik-companion&quot;] -.-&gt;|&quot;the argument that produced the engine pin&lt;br/&gt;was not applied to these three&quot;| ENG</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Cargo.toml:28-56</code></td>
+<td>The engine pin, and thirty lines on why it is what it is</td>
+</tr>
+<tr>
+<td><code>crates/mind-types/src/memory.rs</code></td>
+<td><code>Scope</code>, and the leak it exists to prevent</td>
+</tr>
+<tr>
+<td><code>crates/mind-types/src/purpose.rs</code></td>
+<td>Sensitivity classes and their default-deny policies</td>
+</tr>
+<tr>
+<td><code>crates/mind-memory/src/lib.rs</code></td>
+<td>The facade, the gate, and the red-team test</td>
+</tr>
+<tr>
+<td><code>crates/mind-memory/src/receipts.rs</code></td>
+<td>A hash-chained ledger with no exempt caller</td>
+</tr>
+<tr>
+<td><code>crates/mind-governance/</code>, <code>mind-evals/</code></td>
+<td>Egress and device policy, and the immune ledger the chain
+mirrors</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>Cargo.toml:28-56</code> — why the engine is a published pin,
+and what the upgrade had to prove.</p>
+<p><code>crates/mind-types/src/memory.rs:218-236</code> — a two-value
+scope and a safe legacy default.</p>
+<p><code>crates/mind-types/src/purpose.rs:140-153</code> — four classes,
+default deny, and one that wildcards cannot reach.</p>
+<p><code>crates/mind-memory/src/receipts.rs:1-14</code> — the exemption
+that was removed, and why.</p>
+<p><code>crates/mind-memory/src/lib.rs:7947-7966</code> — zero
+unauthorized hydrations, on every path, in every lane.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The belief itself — statement, polarity, weight, source event,
+provenance, and the engine's confidence, evidence and contradiction
+structure — belongs to YantrikDB and is described in <a
+href="../yantrikdb-engine/">YantrikDB Engine</a>. What this repository
+contributes to the unit is the pair of handling attributes: a scope
+naming whose fact it is, and a sensitivity class naming what may be done
+with it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Semantic recall blended with a confidence prior, through a facade
+that applies the scope filter and then the purpose gate, counting what
+it suppressed before anything crosses the boundary.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Conversation turns are consolidated into durable typed beliefs
+asserted through the engine's <code>assert_belief_evidence</code>.
+Contradiction detection belongs to the engine; this layer's stated
+behaviour on a conflict is to ask rather than to pick a side.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Nineteen crates covering agents, conversation, cortex, governance,
+identity, inference, instincts, perception, proactive lanes, recipes,
+tools and a world model, with client and deploy directories beside
+them.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The strong parts are the default-deny sensitivity policies, the safe
+legacy scope default, the unexempted read ledger and the red-team test.
+The weak parts are three path dependencies that undo the reproducibility
+the engine pin buys, an absent licence, and committed run artefacts
+including two smoke databases' write-ahead files.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A <code>mind-evals</code> crate with an immune ledger whose chain
+discipline the receipts module mirrors, plus in-tree adversarial tests —
+the purpose-gate red team over cross-owner and sensitive-class corpora,
+and a surprise-gift case the <code>Scope</code> type names directly.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Pin the engine you delegate to, exactly, on a published artifact —
+and write down why. The comment on that one line is worth more than most
+changelogs: it records the failure that produced the pin, the caret
+trap, the resolved checksum, and what the later upgrade had to
+prove.</p>
+<p>When you widen a data model to more than one owner, make the untagged
+rows private rather than shared. The convenient default is the one that
+leaks.</p>
+<p>Delete the audit exemption for the trusted caller. The lanes you
+trust are the ones that read across subjects, and a ledger without them
+measures the wrong half.</p>
+<p>Count your suppressions. A gate whose refusals are invisible cannot
+be told from a gate that never fired.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the three remaining path dependencies are intended. The
+argument against them is written directly above them, applied to a
+fourth, and a reader will wonder whether the other three were judged
+different or simply not revisited.</p>
+<p>Whether the read ledger will be joined by a mutation one. Everything
+about the receipts design — the chain, the removed exemption, the
+counted suppressions — would transfer to belief writes, and what changed
+a belief is currently the engine's business rather than this layer's
+record.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Cargo.toml:28-56</code></td>
+<td>Thirty lines on one dependency, and worth every one</td>
+</tr>
+<tr>
+<td><code>crates/mind-types/src/memory.rs:218-236</code></td>
+<td>A migration default chosen in the safe direction</td>
+</tr>
+<tr>
+<td><code>crates/mind-types/src/purpose.rs:140-153</code></td>
+<td>Default-deny classes, and one no wildcard covers</td>
+</tr>
+<tr>
+<td><code>crates/mind-memory/src/receipts.rs:1-14</code></td>
+<td>Why the trusted caller lost its exemption</td>
+</tr>
+<tr>
+<td><code>crates/mind-memory/src/lib.rs:7947-7966</code></td>
+<td>Zero unauthorized hydrations, stated as a test</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/yantrikos/yantrik-mind/commit/97935b1e247167ac7d4fe192ec8a9a1966b26c49"><code class="commit-id" title="97935b1e247167ac7d4fe192ec8a9a1966b26c49">97935b1e…</code></a>
+— first reading, at a commit dated 8 September 2026. Screened before
+opening, from a shallow clone: twenty-seven files scanned, no auto-run
+surfaces, two build-time execution points, no unpinned dependency
+surfaces and nothing inside the seven-day cooldown, with
+<code>Cargo.lock</code> tracked and unchanged for eight days. Reviewed
+<strong>without a licence file</strong>, so nothing here should be taken
+as a statement about reuse terms. The belief engine it delegates to is a
+published crate rather than a checkout and was not cloned for this
+reading; its model is covered separately. Nothing was installed, built
+or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

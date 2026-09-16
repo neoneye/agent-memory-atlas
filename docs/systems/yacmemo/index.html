@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Markdown memory server that
+refuses a near-duplicate title after normalising away the dates and -2
+suffixes an evasion would use, rate-limits its own override, hides
+nothing from search, and lets a person dismiss a collision warning so it
+stops appearing on every later hit.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="yacmemo — Agent Memory Atlas">
+    <meta property="og:description" content="A Markdown memory server
+that refuses a near-duplicate title after normalising away the dates and
+-2 suffixes an evasion would use, rate-limits its own override, hides
+nothing from search, and lets a person dismiss a collision warning so it
+stops appearing on every later hit.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="yacmemo — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Markdown memory server
+that refuses a near-duplicate title after normalising away the dates and
+-2 suffixes an evasion would use, rate-limits its own override, hides
+nothing from search, and lets a person dismiss a collision warning so it
+stops appearing on every later hit.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>yacmemo — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "yacmemo",
+      "description": "A Markdown memory server that refuses a near-duplicate title after normalising away the dates and -2 suffixes an evasion would use, rate-limits its own override, hides nothing from search, and lets a person dismiss a collision warning so it stops appearing on every later hit.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The duplicate guard strips the suffix you
+would rename around</p>
+          <h1>yacmemo</h1>
+          <p class="document-deck">A Markdown memory server that refuses
+a near-duplicate title after normalising away the dates and -2 suffixes
+an evasion would use, rate-limits its own override, hides nothing from
+search, and lets a person dismiss a collision warning so it stops
+appearing on every later hit.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/yachen4ever/yacmemo">
+              <span>Source</span>
+              <strong>yachen4ever/yacmemo</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/yachen4ever/yacmemo/commit/2440aa563e1474d5a07b16d052373c28ed8a4a7c" title="2440aa563e1474d5a07b16d052373c28ed8a4a7c">
+              <span>Analyzed revision</span>
+              <code>2440aa56…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yachen4ever--yacmemo" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>yachen4ever--yacmemo</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>yacmemo describes itself as a personal memory layer with API-level
+consistency guards — "markdown 为本、全本地、agent 无关"
+(Markdown-native, fully local, agent-agnostic). Version 0.2.0, MIT by
+metadata, 11,833 lines of which 4,764 are Python, with 95 test
+functions. Documentation and interface are in Chinese; the code comments
+are in English.</p>
+<p>The shape is one server process on the machine that holds the data,
+speaking streamable HTTP, with a separate MCP mount and store root per
+user. Any client — Claude Code, Codex, Cursor — joins by adding a URL,
+with nothing installed locally. Markdown files in a git repository are
+the only truth; SQLite and LanceDB are derived indexes under
+<code>.index/</code> that can be deleted and rebuilt.</p>
+<p>Three things make it worth reading.</p>
+<p><strong>The duplicate guard anticipates its own evasion.</strong>
+<code>memory_write</code> refuses a title that is a near-duplicate of an
+existing note — and the comparison runs on <code>normalize_title</code>,
+which first strips trailing dates, <code>-2</code>-style counters,
+<code>v1</code>, <code>更新</code> ("updated") and <code>（新）</code>
+("new"). The rename an agent would reach for to get a second copy in is
+precisely the transformation the normalizer collapses. The refusal names
+the near-matches with their similarity scores and says what to do
+instead: edit the existing note.</p>
+<p>The override is the better half. <code>force=true</code> writes
+anyway and records a <code>forced</code> event; but when forced writes
+in the last 24 hours reach a configured threshold, a second flag
+<code>force_confirm=true</code> becomes mandatory, with the comment
+naming the intent — "human-confirm semantics, deterministic and fully
+counted in guard_events". A bypass that is possible, counted and
+self-limiting is a materially different thing from a bypass that is
+free.</p>
+<p><strong>Nothing is hidden.</strong> There is no status, tier, score
+or expiry anywhere in the search path that withholds a note. When two
+notes collide, both are returned and the hit carries a warning naming
+the other:</p>
+<blockquote>
+<p>"⚠ 与 [[other]] 疑似重复（score …）— 建议读两篇后用 memory_edit 合并"
+<em>(suspected duplicate of [[other]] — read both, then merge with
+memory_edit)</em></p>
+</blockquote>
+<p>Most systems in this corpus resolve a contradiction by deciding which
+side wins and dropping the other. This one presents both and hands the
+judgement to the model reading the results — which is consistent with
+the other stated rule, that the memory subsystem contains no generative
+LLM: one 0.6B embedding call, and everything else deterministic string
+math.</p>
+<p><strong>A person's dismissal changes what later reads say.</strong> A
+collision carries a status of <code>open</code>, <code>resolved</code>
+or <code>dismissed</code>, validated against that whitelist and
+documented as a "human decision via WebUI/audit". Its only caller in the
+repository is the web console's <code>POST /api/{user}/collision</code>;
+no detector, scheduler or agent path sets it. And
+<code>Search._warnings_for</code> reads
+<code>collisions_for(path)</code> with the default
+<code>status="open"</code>, so once a person has judged a pair, the ⚠
+stops appearing on every future hit for that note. That is the mark: a
+human verdict, stored, consulted by the retrieval path.</p>
+<p>Where it is thinner is the record. Every write, edit, move and delete
+makes a git commit, so the memory repository is always clean and a
+mistaken deletion is recoverable — good practice, but git history is not
+an audit record this atlas credits, since it sits outside the store and
+can be rewritten by anyone holding the directory. The two SQLite records
+each cover a slice: <code>guard_events</code> holds refusals and forced
+bypasses only, and <code>call_log</code> is written by the MCP tool
+wrapper, so a note saved or deleted in the web console produces no row
+in it. It stores a summary of arguments rather than a before-image, and
+trims itself to 20,000 rows.</p>
+<p>The curator is honest about its own limits in the first line of its
+module — "periodic review -&gt; proposal report. Never auto-applies" —
+and the system keeps that promise completely: proposals are Markdown
+files in <code>curator/</code>, the WebUI lists them, and a person does
+the work by hand. That is the right default, and it also means the
+approval half of the loop lives outside the software.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>note</strong> is a Markdown file. Its
+<strong>title</strong> is its identity; its directory is only
+filing.</p>
+<p>A <strong>guard</strong> is a refusal at the API, not a warning in a
+report.</p>
+<p>A <strong>collision</strong> is a question the system asks and a
+person answers.</p>
+<p><strong>Git</strong> is the undo.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the write guard normalises away the suffixes an evasion would add, refuses, and counts the override; a person's verdict on a collision is what the search path reads</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the write guard normalises away the suffixes an evasion would add, refuses, and counts the override; a person&#39;s verdict on a collision is what the search path reads
+flowchart TB
+    W[&quot;memory_write(title, content,&lt;br/&gt;force, force_confirm)&quot;] --&gt; NORM[&quot;normalize_title: strip trailing dates,&lt;br/&gt;&#39;-2&#39; counters, &#39;v1&#39;, &#39;更新&#39;, &#39;（新）&#39;,&lt;br/&gt;punctuation and case&quot;]
+    NORM --&gt; SIM{&quot;title_similarity &gt;= threshold&lt;br/&gt;against every existing title?&quot;}
+    SIM --&gt;|&quot;no&quot;| OK[&quot;write the file&quot;]
+    SIM --&gt;|&quot;yes, force not set&quot;| REF[&quot;REFUSED — name the near-matches&lt;br/&gt;with scores, say to use memory_edit&lt;br/&gt;guard_events: kind=&#39;refused&#39;&quot;]
+    SIM --&gt;|&quot;yes, force=true&quot;| LADDER{&quot;forced writes in the last 24h&lt;br/&gt;&gt;= force_confirm_threshold?&quot;}
+    LADDER --&gt;|&quot;no&quot;| FORCED[&quot;write · guard_events: kind=&#39;forced&#39;&quot;]
+    LADDER --&gt;|&quot;yes, force_confirm not set&quot;| STOP[&quot;REFUSED — &#39;force 近 24 小时已被使用 N 次…&lt;br/&gt;需要人工确认&#39; (needs human confirmation)&quot;]
+    LADDER --&gt;|&quot;yes, force_confirm=true&quot;| FORCED
+    OK &amp; FORCED --&gt; IDX[&quot;index: SQLite FTS5 + LanceDB vectors&quot;]
+    OK &amp; FORCED --&gt; GIT[(&quot;git commit &#39;write: path&#39;&lt;br/&gt;— the only record covering&lt;br/&gt;every mutation, and it lives&lt;br/&gt;outside the store&quot;)]
+    IDX --&gt; D2[&quot;D2: incremental observation&lt;br/&gt;collision detection (vector)&quot;]
+    D2 --&gt; COLL[(&quot;collisions table:&lt;br/&gt;status open | resolved | dismissed&quot;)]
+    UI[&quot;a person, in the web console:&lt;br/&gt;POST /api/{user}/collision&quot;] --&gt;|&quot;the only caller of&lt;br/&gt;resolve_collision&quot;| COLL
+    COLL --&gt; SR{&quot;Search._warnings_for:&lt;br/&gt;collisions_for(path) — status defaults to &#39;open&#39;&quot;}
+    SR --&gt;|&quot;still open&quot;| WARN[&quot;hit carries ⚠ naming the other note&lt;br/&gt;— both notes are returned, always&quot;]
+    SR --&gt;|&quot;resolved or dismissed&quot;| CLEAN[&quot;hit carries no warning&quot;]
+    CUR[&quot;curator, weekly: review quality,&lt;br/&gt;write a proposal report&quot;] -.-&gt;|&quot;&#39;no write power over memories&#39; —&lt;br/&gt;a person executes it by hand&quot;| GIT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>store.py</code></td>
+<td>CRUD, the write guards, the topic registry, git snapshots</td>
+</tr>
+<tr>
+<td><code>detectors.py</code></td>
+<td>Title normalisation, D1 duplicate scan, D3 dangling links — no
+LLM</td>
+</tr>
+<tr>
+<td><code>index_db.py</code></td>
+<td>SQLite: notes, FTS, collisions, guard events, embedding cache</td>
+</tr>
+<tr>
+<td><code>search.py</code></td>
+<td>FTS5 trigram and vector, fused by RRF, warnings attached</td>
+</tr>
+<tr>
+<td><code>vector.py</code>, <code>embedding.py</code></td>
+<td>LanceDB and the single 0.6B embedding call</td>
+</tr>
+<tr>
+<td><code>curator.py</code></td>
+<td>The weekly quality review that only proposes</td>
+</tr>
+<tr>
+<td><code>webui/app.py</code></td>
+<td>The console: notes, search, audit, usage, health, config</td>
+</tr>
+<tr>
+<td><code>usage.py</code></td>
+<td>Per-call log for the MCP transports</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>detectors.py:14-43</code> — the suffix patterns and the
+similarity function. Read the patterns first; they are the design.</p>
+<p><code>store.py:151-198</code> — refusal, the confirmation ladder, and
+what gets counted.</p>
+<p><code>search.py:107-119</code> and <code>index_db.py:231-261</code> —
+the warning, and the human verdict that silences it.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A note is Markdown. The registry (<code>TOPICS.md</code>) names which
+topics are long-term, with active and archived sections;
+<code>PROFILE.md</code> carries preferences injected ahead of context.
+<code>journal/</code>, <code>archive/</code> and <code>curator/</code>
+are registration-free areas, and journal notes are exempt from the title
+guard — a deliberate carve-out, since a daily log is supposed to repeat
+its own titles.</p>
+<p>Observations are parsed from <code>- [category] text</code> lines,
+with GFM task items (<code>- [x]</code>) excluded so a checklist-heavy
+note does not manufacture collision noise. That exclusion is a small
+thing, and it is the kind of small thing that decides whether a detector
+is usable.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 trigram — which matters for Chinese, where word boundaries are
+not spaces — and vector search, fused by reciprocal rank. Then warnings
+are attached per hit.</p>
+<p>The absence is the point: no filter, no tier, no decay, no status
+that withholds. The README states it as a rule — the system never
+silently deletes or hides any memory — and the search path matches the
+claim.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Covered above. <code>memory_edit</code> requires its anchor string to
+be unique in the file and raises otherwise, so an edit cannot silently
+hit the wrong occurrence; <code>memory_edit_section</code> addresses a
+heading instead. Move refuses an existing target and re-indexes from the
+embedding cache rather than re-embedding.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One URL per user, streamable HTTP, stateless sessions, nothing
+installed on the client. For a person running several agents across
+several machines against one memory, this is the least-friction shape
+available, and it is why the guards have to live at the API: there is no
+client-side library to put them in.</p>
+<p>The web console covers browsing and editing notes, search, a two-mode
+audit (deterministic rules, and the curator's LLM review), the call log,
+health, and editing <code>config.toml</code> in the browser.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Path traversal is refused on title-to-path conversion and on move.
+The store takes an instance lock on every public method because the HTTP
+server runs sync MCP tools in a threadpool. Git commits every mutation
+and the repository is expected to stay clean, which is both the undo and
+a way to see what an agent did without giving the agent filesystem
+access.</p>
+<p>The gap to be aware of is the one named above: the complete record is
+git, and the in-store records each cover a slice.</p>
+<p>The README carries an AIGC labelling block in its front matter — a
+content producer and propagation id, as Chinese regulation asks for on
+AI-generated material.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>95 test functions across thirteen files covering the store, guards,
+git snapshots, detectors, topics, profile, search, the index, the
+curator, the server and the WebUI, with a v1 suite kept under
+<code>legacy/</code>. <code>docs/06-evaluation.md</code> exists; the
+evaluation it describes was not run here, and nothing is installed or
+executed by this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Normalise before you compare. A duplicate check that a trailing
+<code>-2</code> or a date defeats is a check against typos, not against
+duplication — and the suffix list in <code>detectors.py</code> is twenty
+lines that turn one into the other.</p>
+<p>Make the bypass count itself. <code>force</code> with a 24-hour
+counter and a second flag above a threshold gives you an escape hatch
+that stays an escape hatch. An uncounted override becomes the default
+path within a week.</p>
+<p>Consider not hiding. Presenting both sides of a contradiction with a
+marker, and letting the reading model judge, is a real alternative to
+picking a winner at write time — and it is only affordable because
+nothing here is lossy.</p>
+<p>Let a person's dismissal stick. A warning that reappears after it has
+been judged trains the reader to ignore warnings.</p>
+<p>And if you are relying on git as your audit trail, say so plainly and
+keep the in-store record honest about its scope. A table named for
+guards that holds only guard events is fine; a call log that misses the
+console's own writes is a gap worth closing.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether a proposal can ever be applied from inside the system. The
+curator will not, by design, and no route or command was found that
+executes one.</p>
+<p>What happens to a collision when the notes are merged.
+<code>remove_collisions_involving</code> clears rows on delete and move,
+and <code>prune_stale_collisions</code> drops rows whose notes are gone;
+whether an edit that resolves the overlap re-opens or clears the row was
+not traced.</p>
+<p>Whether the same fact under two unrelated titles is detected. The
+write guard is title-keyed; D2 works on observation lines, and how much
+of a note's body it covers was not established.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>yacmemo/detectors.py:14-43</code></td>
+<td>The suffix list, which is the whole idea</td>
+</tr>
+<tr>
+<td><code>yacmemo/store.py:151-198</code></td>
+<td>Refusal, the confirmation ladder, and what is counted</td>
+</tr>
+<tr>
+<td><code>yacmemo/search.py:107-119</code></td>
+<td>Both notes returned, one of them marked</td>
+</tr>
+<tr>
+<td><code>yacmemo/index_db.py:231-261</code></td>
+<td>The human verdict the search path reads</td>
+</tr>
+<tr>
+<td><code>yacmemo/curator.py:1-46</code></td>
+<td>A reviewer with no write power, and its review dimensions</td>
+</tr>
+<tr>
+<td><code>yacmemo/usage.py:1-34</code></td>
+<td>What the call log does and does not cover</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/yachen4ever/yacmemo/commit/2440aa563e1474d5a07b16d052373c28ed8a4a7c"><code class="commit-id" title="2440aa563e1474d5a07b16d052373c28ed8a4a7c">2440aa56…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: ten files scanned, no auto-run surfaces,
+two build-time execution points, two unpinned surfaces and five
+dependency files inside the seven-day cooldown. Nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

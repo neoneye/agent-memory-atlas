@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python memory library in the
+Mem0 shape — LLM fact extraction, batch conflict resolution into add,
+update and delete — that adds importance with YMYL decay immunity,
+retrieval confidence with abstention, and a write history a CI test
+holds complete, while its search reads across users whenever no user id
+is passed.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="widemem.ai — Agent Memory Atlas">
+    <meta property="og:description" content="A Python memory library in
+the Mem0 shape — LLM fact extraction, batch conflict resolution into
+add, update and delete — that adds importance with YMYL decay immunity,
+retrieval confidence with abstention, and a write history a CI test
+holds complete, while its search reads across users whenever no user id
+is passed.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="widemem.ai — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python memory library in
+the Mem0 shape — LLM fact extraction, batch conflict resolution into
+add, update and delete — that adds importance with YMYL decay immunity,
+retrieval confidence with abstention, and a write history a CI test
+holds complete, while its search reads across users whenever no user id
+is passed.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>widemem.ai — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "widemem.ai",
+      "description": "A Python memory library in the Mem0 shape \u2014 LLM fact extraction, batch conflict resolution into add, update and delete \u2014 that adds importance with YMYL decay immunity, retrieval confidence with abstention, and a write history a CI test holds complete, while its search reads across users whenever no user id is passed.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A corrections log beside the code</p>
+          <h1>widemem.ai</h1>
+          <p class="document-deck">A Python memory library in the Mem0
+shape — LLM fact extraction, batch conflict resolution into add, update
+and delete — that adds importance with YMYL decay immunity, retrieval
+confidence with abstention, and a write history a CI test holds
+complete, while its search reads across users whenever no user id is
+passed.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/remete618/widemem-ai">
+              <span>Source</span>
+              <strong>remete618/widemem-ai</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/remete618/widemem-ai/commit/fdf736fcf3a1d21e0984324bf0b03b93a6844c18" title="fdf736fcf3a1d21e0984324bf0b03b93a6844c18">
+              <span>Analyzed revision</span>
+              <code>fdf736fc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-15</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/remete618--widemem-ai" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>remete618--widemem-ai</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>widemem.ai is an Apache-2.0 Python memory library, version 1.6.0, 167
+commits since 8 March 2026, almost all by one author, about 6,900 lines
+in <code>widemem/</code> with 47 test files holding 584 test functions.
+Its core is the shape Mem0 popularized: an LLM extracts facts from text,
+related existing memories are fetched, and one batched LLM call decides
+for each fact whether to add it, update an existing memory, delete a
+contradicted one, or do nothing.</p>
+<p>On that base it adds judgements about what matters:</p>
+<ul>
+<li><strong>Importance from 0 to 10 with decay</strong>, exponential,
+linear or step.</li>
+<li><strong>YMYL</strong> — health, legal and financial content
+classified by regex and then by the LLM, given an importance floor of 8
+and exempt from decay and from <code>purge_expired()</code> unless the
+caller says otherwise.</li>
+<li><strong>Retrieval confidence</strong> — HIGH, MODERATE, LOW or NONE
+from similarity thresholds recalibrated for
+<code>text-embedding-3-small</code>, with <code>strict</code>,
+<code>helpful</code> and <code>creative</code> modes deciding whether to
+abstain, hedge or guess.</li>
+<li><strong>A facts, summaries and themes hierarchy</strong> with query
+routing.</li>
+</ul>
+<p>The engineering discipline is the more unusual part.
+<code>docs/HISTORY.md</code> is a public corrections log: on 2 September
+2026 it records that the claimed audit trail had missed four write
+paths, including <code>delete()</code>, and on 6 July that LoCoMo
+category labels had been transposed so a multi-hop claim was retracted.
+The fix for the first is a test that parses the source and fails if any
+method mutates the vector store without writing history.
+<code>tests/test_readme_claims.py</code> checks README statements
+against code. The LoCoMo harness refuses a judge equal to the answerer,
+keeps the adversarial category and scores it as abstention, and builds a
+full-context baseline.</p>
+<p>The weakness is the scope boundary, and it is asymmetric. The write
+pipeline treats candidate filtering as a trust boundary: an unscoped
+write sees only unscoped rows, and scope holds even if the vector store
+ignores filters. The search path applies <code>user_id</code> and
+<code>agent_id</code> only when they are passed
+(<code>widemem/core/memory.py:373-376</code>), so a search without a
+user id ranks every user's memories — and the MCP server's tools accept
+<code>user_id</code> as an optional argument from the model.</p>
+<p>Two marks: <code>audit_log</code>, <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory exists or it does not. Extraction produces candidate facts
+with an importance and a YMYL category; the batch resolver sees the
+facts beside the nearest five existing memories per fact and returns
+actions:</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — text becomes facts, one LLM call decides each fact's fate, every write lands in history, and the read path scores and may abstain</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: text becomes facts, one LLM call decides each fact&#39;s fate, every write lands in history, and the read path scores and may abstain
+flowchart TB
+    T[&quot;add(text, user_id?, agent_id?)&quot;] --&gt; SAN[&quot;sanitize prompt-injection patterns&quot;]
+    SAN --&gt; EX[&quot;LLM extraction:&lt;br/&gt;facts, importance, YMYL&quot;]
+    EX --&gt; CAND[&quot;top 5 neighbours per fact&lt;br/&gt;other users excluded, even unscoped&quot;]
+    CAND --&gt; BATCH[&quot;one LLM call:&lt;br/&gt;ADD, UPDATE, DELETE, NONE&quot;]
+    BATCH --&gt;|&quot;ADD&quot;| VS[(&quot;vector store rows&quot;)]
+    BATCH --&gt;|&quot;UPDATE overwrites&quot;| VS
+    BATCH --&gt;|&quot;DELETE contradicted&quot;| GONE[&quot;row removed&quot;]
+    BATCH --&gt; H[(&quot;history: action,&lt;br/&gt;old and new content, time&quot;)]
+    GONE --&gt; H
+    Q[&quot;search(query, user_id?)&quot;] --&gt;|&quot;filter only if passed&quot;| VS
+    VS --&gt; SCORE[&quot;similarity, BM25, importance,&lt;br/&gt;decay, YMYL immunity, TTL filter&quot;]
+    SCORE --&gt; CONF{&quot;confidence&lt;br/&gt;HIGH, MODERATE, LOW, NONE&quot;}
+    CONF --&gt;|&quot;strict mode, low&quot;| ABST[&quot;abstain&quot;]</code></pre></details></figure>
+<p>A contradiction is resolved by deletion: "I live in Boston" after "I
+live in San Francisco" removes or overwrites the old fact, and only the
+history row keeps it. Nothing records that a value was rejected, so a
+later extraction can write it again; <code>tombstone</code> is withheld.
+There is no candidate or verified state; <code>trust_state</code> is
+withheld.</p>
+<p>Every memory has <code>created_at</code> and <code>updated_at</code>
+as record time and an optional <code>event_time</code> parsed from a
+supplied timestamp or a leading date in the text.
+<code>time_after</code> and <code>time_before</code> filter on
+<code>created_at</code>
+(<code>widemem/retrieval/temporal.py:26-31</code>), and nothing holds a
+validity interval, so <code>bitemporal</code> is withheld.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>core/memory.py</code> (973 lines)</td>
+<td><code>WideMemory</code>: add, search, streaming search, pin, delete,
+purge, import and export, history</td>
+</tr>
+<tr>
+<td><code>core/pipeline.py</code> (366)</td>
+<td>Extraction, candidate retrieval, action execution</td>
+</tr>
+<tr>
+<td><code>conflict/batch_resolver.py</code> (411)</td>
+<td>The batched ADD/UPDATE/DELETE/NONE decision</td>
+</tr>
+<tr>
+<td><code>retrieval/</code></td>
+<td>BM25, hybrid fusion, temporal scoring and parsing, uncertainty,
+active retrieval, explanation, entity boost</td>
+</tr>
+<tr>
+<td><code>scoring/</code></td>
+<td>Importance, decay, topics, YMYL</td>
+</tr>
+<tr>
+<td><code>hierarchy/</code></td>
+<td>Summaries and themes, query router</td>
+</tr>
+<tr>
+<td><code>storage/vector/</code></td>
+<td>FAISS, Qdrant, pgvector</td>
+</tr>
+<tr>
+<td><code>storage/history.py</code></td>
+<td>SQLite history</td>
+</tr>
+<tr>
+<td><code>security/sanitizer.py</code></td>
+<td>Prompt-injection stripping</td>
+</tr>
+<tr>
+<td><code>server.py</code>, <code>mcp_server.py</code>,
+<code>integrations/langchain/</code></td>
+<td>Service surfaces</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to run:</strong> nothing beyond the process.
+<code>pip install widemem-ai[faiss]</code> gives FAISS plus SQLite under
+<code>~/.widemem/</code>; Qdrant and pgvector are optional.</li>
+<li><strong>Keys:</strong> extraction and resolution need an LLM —
+OpenAI, Anthropic or local Ollama — and embeddings can be local through
+sentence-transformers.</li>
+<li><strong>Hand-repairable:</strong> the history database is plain
+SQLite; the FAISS index and its metadata are not meant to be
+edited.</li>
+<li>A Dockerfile and a Railway configuration deploy the HTTP
+server.</li>
+</ul>
+<p>The screen of this checkout found no auto-running configuration, one
+build-time execution point (<code>tests/conftest.py</code>), one
+unpinned manifest, and a dependency surface changed inside the seven-day
+cooldown. Nothing was installed or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Add</strong> — <code>WideMemory.add</code>
+(<code>core/memory.py:138</code>) parses <code>event_time</code> and
+calls <code>MemoryPipeline.process</code>.</li>
+<li><strong>Candidates</strong> — <code>pipeline.py:140-185</code>:
+store filters only for concrete ids, then a per-row check that
+<code>metadata["user_id"] == user_id</code> and the agent id matches, so
+an unscoped call never receives a scoped row and a store that drops
+filters cannot widen scope.</li>
+<li><strong>Resolution and execution</strong> —
+<code>conflict/batch_resolver.py</code>;
+<code>pipeline._execute_actions</code> applies UPDATE
+(<code>:240</code>) and DELETE (<code>:290</code>) with history.</li>
+<li><strong>Search</strong> — <code>_search_ranked</code>
+(<code>core/memory.py:336</code>): optional filters, candidate
+collection, <code>score_and_rank</code> with TTL, YMYL and temporal
+handling, then confidence.</li>
+<li><strong>Confidence</strong> — <code>retrieval/uncertainty.py</code>:
+thresholds 0.60, 0.50 and 0.30, environment-overridable, plus
+frustration phrases such as "I told you".</li>
+<li><strong>History</strong> — <code>storage/history.py</code>;
+<code>WideMemory.get_history</code> (<code>:644</code>).</li>
+<li><strong>Retention</strong> — <code>purge_expired</code>
+(<code>:570</code>): YMYL rows kept unless <code>include_ymyl</code>,
+every removal through <code>delete()</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>Memory</code> (<code>core/types.py:64-78</code>):
+<code>id</code>, <code>content</code>, <code>user_id</code>,
+<code>agent_id</code>, <code>run_id</code>, <code>tier</code>,
+<code>importance</code>, <code>content_hash</code>,
+<code>ymyl_category</code>, <code>metadata</code>,
+<code>created_at</code>, <code>updated_at</code>,
+<code>event_time</code>, <code>entities</code>. The vector store holds
+the embedding with that metadata.</p>
+<p><code>history</code> (<code>storage/history.py:27-35</code>):
+<code>id</code>, <code>memory_id</code>, <code>action</code>,
+<code>old_content</code>, <code>new_content</code>,
+<code>timestamp</code>. There is no actor column, and the README says
+so: the log answers what changed and when, not who.</p>
+<p><strong>Scope</strong> is two optional string ids. The write path
+enforces them in code independent of the store; the read path passes
+them to the store when present and otherwise applies no filter. The HTTP
+and MCP surfaces take <code>user_id</code> as a request or tool
+argument. With the read boundary omittable and model-supplied,
+<code>scope_enforced</code> is withheld.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Candidates come from the vector store, fetched at a multiple of
+<code>top_k</code> that depends on the retrieval mode
+(<code>fast</code>, <code>balanced</code>, <code>deep</code>) and on
+whether <code>_adapt_scoring</code> judges the query similarity-first.
+Scoring combines similarity with BM25 when enabled, importance, a
+recency decay that YMYL rows are immune to, topic weights and entity
+boosts. <code>ttl_days</code> removes rows older than the window from
+results, except YMYL. Temporal phrases in the query become a soft boost
+window rather than a hard filter, so a misparse cannot empty the pool;
+explicit <code>time_after</code> and <code>time_before</code>
+filter.</p>
+<p>The hierarchy routes broad questions to summaries or themes and
+specific ones to facts. Active retrieval surfaces contradictions and can
+ask clarifying questions. Every result set carries a confidence level;
+in <code>strict</code> mode a low one yields an abstention instead of an
+answer.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>add()</code> is synchronous: sanitization, one extraction call,
+embedding, candidate search, one resolution call for all facts, then
+writes and history. The caller waits on two LLM calls, and the memory is
+searchable when <code>add</code> returns. Bulk paths write history in
+one transaction per batch.</p>
+<p>The resolver's DELETE is final in the store. An UPDATE overwrites
+content and keeps <code>created_at</code>, so TTL and recency still
+count from when the fact was first learned. Deduplication is by content
+hash before resolution.</p>
+<p>No background pass exists; hierarchy summaries are built when
+invoked.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Python API, a FastAPI HTTP server with an API-key policy, an MCP
+server with <code>widemem_add</code>, <code>widemem_search</code>,
+<code>widemem_delete</code>, <code>widemem_count</code>,
+<code>widemem_pin</code>, <code>widemem_export</code> and
+<code>widemem_health</code>, a LangChain <code>BaseRetriever</code>, a
+CLI and a Claude Code skill. The MCP tools accept an optional
+<code>user_id</code> from the model
+(<code>mcp_server.py:205-237</code>), which is where the read-path scope
+gap becomes a model-reachable one.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The write history is complete and guarded.</strong> After the
+September correction, every mutating method logs, and the source-walking
+test keeps it so. Content on both sides of an update and the content of
+a delete are recorded, so a deleted memory can be reconstructed from the
+log. There is no attribution.</p>
+<p><strong>Content is sanitized before prompts.</strong> Instruction
+overrides, fake system tags and similar patterns are stripped at
+extraction, resolution, summarization and answer time; the stripping is
+pattern-based and says so.</p>
+<p><strong>Claims are tested and corrected in public.</strong>
+<code>test_readme_claims.py</code> and the corrections log are uncommon,
+and they are why the audit gap and the LoCoMo label error are documented
+rather than latent.</p>
+<p><strong>Scope is asymmetric.</strong> The write path would not let
+another user's memory become an UPDATE or DELETE target; the read path
+would return it to an unscoped search.</p>
+<p><strong>Deletion loses the value.</strong> Contradiction handling
+keeps no superseded memory; the history row is the only place the old
+fact survives.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>584 test functions in 47 files</strong>, covering scoring and
+decay, YMYL, BM25 and fusion, hierarchy, abstention, the sanitizer,
+providers, the three vector backends, durability and concurrency, the
+server's auth policy, the MCP server, README claims, and the audit
+coverage ratchet.</p>
+<p>The retrieval exclusion case is
+<code>test_audit_regressions.py:368-374</code>: two memories for the
+same user are both older than <code>ttl_days</code>; the search asserts
+the YMYL one is present and the trivial one absent. The same file
+asserts another user's and another agent's rows never reach the conflict
+resolver (<code>:521</code>, <code>:546</code>, <code>:583</code>), the
+last with a store wrapper that ignores filters. That earns
+<code>negative_eval</code>.</p>
+<p><strong>Benchmarks.</strong> The README reports 55.15% on the full
+1,540-question LoCoMo with an independent GPT-4o judge (56.32%
+self-graded) at about 213 context tokens per query.
+<code>benchmark/HONEST_LOCOMO.md</code> sets the controls: a judge
+distinct from the answerer, the adversarial category included and scored
+as abstention, a full-context baseline, and a held-out conversation
+split for publishable numbers. The harness and split are committed; the
+result files behind 55.15% are not. The one committed result,
+<code>benchmark/results/mini_locomo_baseline.json</code>, is a
+50-question regression gate at an overall J of 40.0 with temporal at
+7.69, last touched by the 6 July label correction.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Enforce write-path scope in code, not in the store's
+filter.</strong> Check each candidate's ids after retrieval, and test it
+with a store that ignores filters.</li>
+<li><strong>Keep a history row for every mutation, and test for missing
+ones by walking the source.</strong></li>
+<li><strong>Exempt high-stakes facts from decay and retention by
+category</strong>, and make the exemption something a caller must
+explicitly override.</li>
+<li><strong>Return a confidence level with retrieval</strong> so the
+agent can abstain.</li>
+<li><strong>Publish corrections as a log</strong> and gate README claims
+with tests.</li>
+<li><strong>Refuse self-graded benchmarks</strong> and score
+unanswerable questions as abstention.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An optional read scope next to a strict write
+scope.</strong> The unscoped search is the one call that should have
+been refused or limited to unscoped rows, as the write path already
+does.</li>
+<li><strong>Deleting the contradicted fact.</strong> Supersede it, so
+the store — not only the log — can say what was believed before.</li>
+<li><strong>A headline benchmark number without its result files in the
+repository.</strong></li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a Python application with a known user id per call that
+wants a batteries-included memory with sensible priorities — a personal
+assistant, a support agent, anything where a medication must outlive a
+lunch order — and can live with an LLM on every write. Put the user id
+on every search yourself, or add the unscoped guard the write path
+already has; for MCP exposure, bind the user id server-side rather than
+from tool arguments.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Will unscoped search be limited to unscoped rows</strong>
+the way the write path is?</li>
+<li><strong>Where are the 55.15% LoCoMo result files?</strong> The
+README points to the website.</li>
+<li><strong>Will <code>HistoryEntry</code> gain an actor?</strong> The
+README claims test gates attribution until it does.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>widemem/core/memory.py</code>, <code>core/pipeline.py</code>,
+<code>core/types.py</code></li>
+<li><code>widemem/conflict/batch_resolver.py</code>,
+<code>conflict/prompts.py</code></li>
+<li><code>widemem/retrieval/temporal.py</code>,
+<code>uncertainty.py</code>, <code>bm25.py</code>,
+<code>hybrid.py</code>, <code>active.py</code></li>
+<li><code>widemem/scoring/ymyl.py</code>,
+<code>widemem/hierarchy/manager.py</code></li>
+<li><code>widemem/storage/history.py</code>,
+<code>storage/vector/{faiss,qdrant,pgvector}_store.py</code></li>
+<li><code>widemem/security/sanitizer.py</code>,
+<code>widemem/mcp_server.py</code>, <code>widemem/server.py</code></li>
+<li><code>docs/HISTORY.md</code>,
+<code>benchmark/HONEST_LOCOMO.md</code>,
+<code>benchmark/honest_core.py</code></li>
+<li><code>tests/test_audit_log_coverage.py</code>,
+<code>tests/test_audit_regressions.py</code>,
+<code>tests/test_readme_claims.py</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>rg -n "UPDATE history|DELETE FROM history" widemem</code> —
+none</li>
+<li><code>rg -n "valid_(from|until|to)" widemem</code> — none</li>
+<li><code>git ls-files benchmark/results</code> — only
+<code>mini_locomo_baseline.json</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-15</strong> — <a
+href="https://github.com/remete618/widemem-ai/commit/fdf736fcf3a1d21e0984324bf0b03b93a6844c18"><code class="commit-id" title="fdf736fcf3a1d21e0984324bf0b03b93a6844c18">fdf736fc…</code></a>
+— first reading, at a commit dated 14 September 2026. Screened before
+opening: no auto-running configuration, one build-time execution point,
+one unpinned manifest, one dependency surface inside the seven-day
+cooldown. Nothing was installed or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

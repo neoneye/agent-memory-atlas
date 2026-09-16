@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust search engine whose
+agent-memory API is a reserved index per namespace, with bitemporal
+graph edges whose identity is a hash of the source file's mtime — so an
+invalidation keyed on the edge id does not survive the file being saved
+again.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="XERJ — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust search engine whose
+agent-memory API is a reserved index per namespace, with bitemporal
+graph edges whose identity is a hash of the source file's mtime — so an
+invalidation keyed on the edge id does not survive the file being saved
+again.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="XERJ — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust search engine whose
+agent-memory API is a reserved index per namespace, with bitemporal
+graph edges whose identity is a hash of the source file's mtime — so an
+invalidation keyed on the edge id does not survive the file being saved
+again.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>XERJ — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "XERJ",
+      "description": "A Rust search engine whose agent-memory API is a reserved index per namespace, with bitemporal graph edges whose identity is a hash of the source file's mtime \u2014 so an invalidation keyed on the edge id does not survive the file being saved again.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Agent memory inside a search engine</p>
+          <h1>XERJ</h1>
+          <p class="document-deck">A Rust search engine whose
+agent-memory API is a reserved index per namespace, with bitemporal
+graph edges whose identity is a hash of the source file's mtime — so an
+invalidation keyed on the edge id does not survive the file being saved
+again.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/xerj-org/xerj">
+              <span>Source</span>
+              <strong>xerj-org/xerj</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/xerj-org/xerj/commit/f54eead8097fc234d0815ce245613870dcf22ffd" title="f54eead8097fc234d0815ce245613870dcf22ffd">
+              <span>Analyzed revision</span>
+              <code>f54eead8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-13</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/xerj-org--xerj" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>xerj-org--xerj</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>XERJ is a local search engine written in Rust — Apache-2.0, about
+380,000 lines across sixteen crates, shipping as a single static binary
+with an Elasticsearch-compatible HTTP surface. Agent memory is one API
+on that engine: <code>/_memory/{namespace}</code>, five endpoints,
+implemented in a 2,306-line adapter that does not re-implement search. A
+namespace is a reserved index (<code>.xerj-memory-{ns}</code>), so store
+and recall reuse the same BM25, <code>dense_vector</code> and
+metadata-filter paths the rest of the engine serves.</p>
+<p>That framing is the design's best idea and the source of its sharpest
+defect, and both are worth reading.</p>
+<p>The best idea is that memory built on a real search engine inherits
+things memory libraries usually reimplement badly. Recall has four modes
+— an explicit caller vector, server-side <code>semantic</code>
+embedding, plain BM25, and <code>hybrid: true</code> fusing the last two
+by reciprocal rank — and all four run offline, because the built-in
+embedder is lexical feature hashing rather than a model. A write is
+visible immediately: <code>IndexDocParams.refresh</code> is documented
+as "accepted without error; memtable is always visible", so there is no
+refresh lag between storing a memory and recalling it. And the tenant
+boundary is enforced where a search engine actually leaks, which is not
+at the memory API at all.</p>
+<p>The defect is in the graph layer above it. Edges between memories
+carry a genuine bitemporal record — <code>valid_at</code>,
+<code>invalid_at</code> and <code>created_at</code> as three separate
+fields, with the first two independently settable by the caller. Edge
+identity is <code>xxh3_128(src, type, dst, valid_at)</code>, and
+<code>valid_at</code> for a detector-taught edge is the source file's
+mtime. Invalidation, though, is keyed on the edge id:
+<code>DELETE /_graph/{brain}/link/{edge_id}</code>. Save the file again
+and the mtime changes, the hash changes, and the same
+<code>(src, type, dst)</code> claim is re-taught under an id the
+invalidation never covered. The record of the rejection survives; what
+it rejected comes back beside it.</p>
+<p>Four marks. <code>bitemporal</code> is earned on two clocks filled
+from different sources rather than from one <code>now</code>, which is
+the distinction the mark turns on. <code>scope_enforced</code> and
+<code>negative_eval</code> rest on the same test file, which is unusual
+enough to describe precisely in section 10. <code>audit_log</code> is
+earned on a hash-chained log that states its own coverage boundaries in
+its module doc. <code>tombstone</code>, <code>trust_state</code> and
+<code>human_review</code> are withheld, each for a reason given in
+section 9.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a document in an index named after its namespace. There
+is no extraction step, no consolidation pass, and no model in the write
+path: what the agent sends is what is stored, plus a
+<code>stored_at</code> timestamp. The only write-time judgement
+available is <code>dedup: true</code>, which probes for the single
+nearest existing memory and skips the write when its cosine score meets
+a threshold defaulting to 0.95 — returning
+<code>{created: false, deduplicated: true}</code> with the existing
+id.</p>
+<p>The epistemic machinery is not on the memories. It is on the
+<em>edges between them</em>, which is what makes this system worth
+reading beside simpler stores. An edge asserts that one node relates to
+another, from some instant onward, as judged by some detector, with
+evidence attached. It can later be judged to have stopped being true —
+soft-invalidated, never deleted, so a reader can still ask what the
+graph believed last Tuesday.</p>
+<p>Two clocks carry that. <code>valid_at</code> is when the fact became
+true; <code>created_at</code> is when the system recorded it. For an
+edge a detector taught, those come from different places:
+<code>valid_at</code> is the source file's mtime and
+<code>created_at</code> is the indexing run's wall clock. The autoindex
+module says so where it builds the document — <code>created_at_ms</code>
+is "the one non-deterministic field and never participates in
+<code>edge_id</code>". Invalidation adds the mirror pair:
+<code>invalid_at</code> is when the fact stopped being true,
+caller-settable; <code>expired_at</code> is always server now.</p>
+<p>The gap is that identity is derived from one of those clocks and
+invalidation is keyed on identity. An edge is
+<code>xxh3_128(src, type, dst, valid_at)</code>. Unlinking stamps
+<code>invalid_at</code> on that id. Re-detecting the same relationship
+from a file whose mtime has moved computes a different id, and the new
+edge is written with <code>invalid_at</code> omitted — which, by the
+module's own stated discipline, is the signal for "still valid".</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an edge's identity hashes the source file's mtime into itself, so a person's invalidation — keyed on that identity — stops applying the moment the file is saved again, and the same claim returns live beside the rejection that still describes the old id</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an edge&#39;s identity hashes the source file&#39;s mtime into itself, so a person&#39;s invalidation — keyed on that identity — stops applying the moment the file is saved again, and the same claim returns live beside the rejection that still describes the old id
+flowchart TD
+    F[&quot;a.md saved at mtime T1&quot;] --&gt; D[&quot;detector reads the file&quot;]
+    D --&gt; E1[&quot;edge id = hash of src, type, dst, T1&lt;br/&gt;valid_at = T1 (file mtime)&lt;br/&gt;created_at = run clock&lt;br/&gt;invalid_at omitted&quot;]
+    E1 --&gt; L[&quot;live: matched by as_of &gt;= T1&quot;]
+    L --&gt; U[&quot;person judges the claim wrong&lt;br/&gt;DELETE /_graph/b/link/{id}&quot;]
+    U --&gt; I[&quot;same document re-indexed&lt;br/&gt;invalid_at set, expired_at = now&lt;br/&gt;nothing is deleted&quot;]
+    I --&gt; H[&quot;excluded from ego and overview&lt;br/&gt;returned again by include_expired&quot;]
+    H --&gt; S[&quot;a.md saved again, mtime becomes T2&quot;]
+    S --&gt; D2[&quot;detector reads the file again&quot;]
+    D2 --&gt; E2[&quot;edge id = hash of src, type, dst, T2&lt;br/&gt;a DIFFERENT id&lt;br/&gt;invalid_at omitted again&quot;]
+    E2 --&gt; L2[&quot;live: the same claim, rejected once,&lt;br/&gt;asserted again under a new identity&quot;]
+    H -.-&gt;|&quot;the rejection is still on disk,&lt;br/&gt;keyed on an id nothing now produces&quot;| L2</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One static binary, no JVM, no second datastore.
+<code>xerj --data-dir ./data</code> starts a node; the memory API needs
+nothing else running. The sixteen crates split the engine
+(<code>xerj-engine</code>, <code>xerj-storage</code>,
+<code>xerj-fts</code>, <code>xerj-vector</code>,
+<code>xerj-query</code>) from the surfaces over it
+(<code>xerj-api</code>, <code>xerj-mcp</code>,
+<code>xerj-console-api</code>, <code>xerj-server</code>), and agent
+memory lives entirely in <code>xerj-api</code>:
+<code>memory_api.rs</code> (2,306 lines), <code>graph_api.rs</code>,
+<code>authz.rs</code> and <code>audit_mw.rs</code>.</p>
+<p>What an operator stands up is therefore a search node, with a search
+node's costs and a search node's operational surface. A namespace costs
+one index. The audit log is one bounded file in the data directory.
+Embedding is in-process and offline by default — the built-in embedder
+is lexical feature hashing, and the neural one is opt-in and downloads
+roughly 90 MB — so recall has no external dependency and no per-call
+cost to anything outside the box.</p>
+<p>Authorization is two layers, and the second one is the point.
+<code>auth_middleware</code> resolves an API key to a
+<code>Principal</code>; <code>authz_middleware</code> classifies the
+request path into a target and checks the privilege. A
+<code>Principal::Scoped</code> carries role descriptors naming index
+patterns. Because a namespace is an ordinary index with a leading
+<code>.</code>, the memory data is reachable through the generic
+ES-compat surface and the native router as well as through
+<code>/_memory</code>, and the authorization layer has to cover all of
+them — which is exactly what the test described in section 10 walks.</p>
+<p>The console is a separate application merged onto the engine routers
+<em>after</em> their layers are applied, so
+<code>authz_middleware</code> never runs on
+<code>/_xerj-console/*</code>. That is stated in the console test's own
+header, and the fix is in the proxy rather than in the middleware: the
+data-sources handlers refuse the reserved namespace themselves,
+returning the same <code>404</code> they give <code>.xerj_*</code>
+system indices so existence does not leak.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Store</strong> — <code>memory_api::store</code>
+(<code>:338</code>): validate the namespace, authorize
+<code>WriteIndex</code>, reject an entry with neither <code>text</code>
+nor <code>vector</code>, create the backing index lazily with a
+<code>dense_vector</code> sized to the supplied embedding, run the dedup
+probe when asked, then <code>es_compat::index_doc</code> with
+<code>{text, stored_at, metadata?, vector?}</code>.</li>
+<li><strong>Recall</strong> — <code>memory_api::recall</code>
+(<code>:530</code>): authorize <code>ReadIndex</code>; reject a body
+that is not exactly one of <code>vector</code> or <code>query</code>;
+resolve the fusion strategy; over-fetch when recency blending or graph
+blending is on; authorize the <em>edges</em> index separately when
+<code>graph</code> is present; fold a graph <code>restrict</code>
+expansion into the filter as an <code>ids</code> clause; then
+<code>es_compat::search</code>.</li>
+<li><strong>Namespace validation</strong> —
+<code>validate_namespace</code> (<code>:106</code>): lowercase, digits,
+<code>_</code>, <code>-</code> and <code>.</code> only, no
+<code>..</code>, 200 characters, and a refusal of any namespace ending
+<code>-edges</code>, because brain <code>B</code> keeps its edges in
+<code>.xerj-memory-{B}-edges</code> and a namespace called
+<code>kb-edges</code> would write memories into another brain's edge
+index.</li>
+<li><strong>Edge assertion</strong> — <code>graph_api::link</code>
+(<code>:407</code>): validate, authorize, reject self-edges, clamp
+<code>weight</code> and <code>confidence</code> to <code>[0, 1]</code>,
+parse <code>valid_at</code> and <code>created_at</code> independently,
+derive the id, write with
+<code>invalid_at</code>/<code>expired_at</code> omitted.</li>
+<li><strong>Edge invalidation</strong> — <code>graph_api::unlink</code>
+(<code>:567</code>): authorize before the existence probe so an
+unauthorized caller cannot tell "not yours" from "not there", read the
+document, refuse a second invalidation by reporting
+<code>already_invalid_at</code>, re-index the same id with the pair
+added.</li>
+<li><strong>Audit</strong> — <code>audit_mw::audit_middleware</code>
+(<code>:356</code>): classify the request, resolve the subject before
+the handler for a write and only on a 403 for a read, append op,
+subject, resource, outcome and note.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memory document is small and flat:</p>
+<pre class="json"><code>{ &quot;text&quot;: &quot;...&quot;, &quot;stored_at&quot;: 1757790000000, &quot;metadata&quot;: {...}, &quot;vector&quot;: [...] }</code></pre>
+<p><code>text</code> is mapped as <code>semantic_text</code>, so the
+engine auto-embeds it at ingest into a companion vector and server-side
+<code>semantic</code> recall works without the caller embedding
+anything. <code>metadata</code> is deliberately <em>not</em> explicitly
+mapped, so arbitrary agent-supplied keys are accepted. There is one
+timestamp. There is no namespace field on the document — the namespace
+is the index name — and no status, source, or confidence field of any
+kind.</p>
+<p>An edge document is where the modelling effort went:</p>
+<pre class="json"><code>{ &quot;edge_id&quot;: &quot;...&quot;, &quot;src&quot;: &quot;...&quot;, &quot;dst&quot;: &quot;...&quot;, &quot;type&quot;: &quot;mentions&quot;,
+  &quot;weight&quot;: 1.0, &quot;confidence&quot;: 0.95, &quot;detector&quot;: &quot;wikilink@1&quot;,
+  &quot;valid_at&quot;: 1753600000000, &quot;created_at&quot;: 1757790000000,
+  &quot;schema_version&quot;: 1, &quot;src_file&quot;: &quot;alpha.md&quot;,
+  &quot;evidence&quot;: { &quot;quote&quot;: &quot;...&quot;, &quot;source&quot;: &quot;alpha.md&quot;, &quot;offset&quot;: 0 } }</code></pre>
+<p>Three discipline decisions are worth copying.
+<code>invalid_at</code>, <code>expired_at</code> and
+<code>src_file</code> are <em>omitted</em> rather than set to null when
+unset, because omission lands the row in the doc-values null bitmap, and
+that bitmap is the "still valid" signal the hop reads. Scalars are plain
+strings and numbers rather than nested objects, so the prefilter rides
+doc values. And <code>schema_version</code> is on every row.</p>
+<p><code>confidence</code> is the field to look at twice. It is
+validated, clamped, stored and returned in the ego response. A tree-wide
+search for readers outside the writer, the autoindex and the MCP proxy
+returns nothing: no query filters on it, no ranking consults it, no
+threshold compares against it. The ranking uses <code>weight</code>.
+<code>confidence</code> is a number the system records and never acts
+on.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>_recall</code> rejects unknown keys with a 400 under
+<code>deny_unknown_fields</code>, and the comment says why: a typo'd key
+used to be silently ignored, degrading the request to a match-all that
+returned arbitrary memories at score 1.0. The same reasoning produced
+the hard 400 on a body with both <code>vector</code> and
+<code>query</code>, or neither. For a store an agent is meant to trust,
+turning a malformed recall into a refusal rather than into plausible
+noise is the correct trade.</p>
+<p>Four single modes, tried in order: an explicit <code>vector</code>
+runs kNN; <code>semantic: true</code> embeds <code>query</code>
+server-side with the same embedder used at store time; plain
+<code>query</code> runs BM25; and <code>hybrid: true</code> runs the
+BM25 and semantic legs over the same <code>query</code> and fuses them
+through the engine's <code>hybrid</code> query type, reciprocal rank by
+default or <code>fusion: "linear"</code> on request.
+<code>fusion: "learned"</code> is a 400 rather than a silent
+substitution of RRF, "because substituting RRF would misrepresent the
+ranking asked for".</p>
+<p><code>filter</code> is a standard ES clause applied as a
+<code>bool</code> filter, so it narrows without scoring.
+<code>recency_weight</code> blends
+<code>(1 - w) * norm_score + w * norm_recency</code> with both terms
+min-max normalised across the candidate set, and over-fetches
+<code>max(k * 4, 50)</code> candidates first — because a re-rank can
+only promote what was fetched.</p>
+<p>Graph coupling has two modes. <code>restrict</code> expands the seeds
+first and folds the reachable id set into the filter as an
+<code>ids</code> clause, capped at 10,000 so the prefilter stays
+bounded; recall itself is unchanged, it just runs over a graph-bounded
+universe. <code>blend</code> lets graph proximity pull related memories
+up, over the same widened candidate pool. Hops are capped at 1 or 2, and
+a 3-hop request returns a 400 carrying a fixed sentence about not being
+a graph database. A missing edges index is not an error — recall
+proceeds ungated and flags it in-band, so an agent can opt into graph
+recall before its first link exists.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are synchronous and singular. One <code>POST</code> stores one
+memory; there is no batching endpoint on the memory API, no queue, and
+no background consolidation pass that rewrites stored memories. The
+agent blocks for the duration of one index call.</p>
+<p>The lag before a memory is retrievable is zero, which is unusual for
+an ES-compatible surface and is stated in the parameter's own
+documentation: <code>refresh=true|wait_for</code> is "accepted without
+error; memtable is always visible". A memory stored in one turn is
+recallable in the next with no refresh call.</p>
+<p><code>dedup</code> is opt-in and best-effort by construction. Any
+probe error — an empty index, a schema mismatch — is treated as "no
+duplicate", so dedup never blocks a legitimate write. It is off by
+default so existing callers keep storing every entry.</p>
+<p>The background writer is the autoindex daemon, and it writes edges
+rather than memories. Eight deterministic detectors run with no model in
+the path; the same corpus produces a byte-identical edge set on every
+run given unchanged mtimes. The reconcile pass soft-invalidates edges
+taught by files that left the corpus and edges pointing at a superseded
+anchor, and a <code>#868</code> assertion pins that an unchanged file's
+own edges are left alone.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>xerj init</code> wires the node into Claude Code or Cursor in
+one command. The MCP server exposes eleven tools, six of them
+memory-shaped: <code>xerj_memory_store</code>,
+<code>xerj_memory_recall</code>, <code>xerj_brain_ego</code>,
+<code>xerj_brain_link</code>, <code>xerj_brain_unlink</code> and
+<code>xerj_brain_overview</code>.</p>
+<p>Two details of that surface matter. The namespace is a model-supplied
+argument on both memory tools — the model names the scope it reads and
+writes — and what keeps that honest is that the credential the MCP
+server holds constrains which namespaces the request can reach at all.
+The scope key is on the credential, not in the arguments, so a model
+that asks for someone else's namespace gets a 403 rather than their
+memories.</p>
+<p>The second is <code>xerj_brain_link</code>'s schema, which exposes
+<code>valid_at</code> to the model with the description "When the fact
+became true: epoch-ms number or RFC3339 string (default now). Part of
+the deterministic edge_id." It does not expose <code>created_at</code>;
+<code>build_brain_link</code> forwards exactly <code>evidence</code>,
+<code>weight</code>, <code>confidence</code> and <code>valid_at</code>.
+So through MCP the agent chooses when a fact became true and the server
+keeps when it was recorded — which is the clean division the bitemporal
+mark asks for, achieved by leaving one field out of a tool schema.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope — earned, and not on the partition.</strong> A
+namespace being its own index is a physical partition, which on its own
+is a different mechanism from this mark. The predicate is above it: all
+five <code>/_memory</code> handlers call
+<code>authorize_memory_namespace</code> first, and a wildcard read is
+expanded over the principal's visible set rather than refused. The
+module comment records why refusal was rejected — it "cost every
+legitimate <code>logs-*</code> grant" — and expanding is both usable and
+closed.</p>
+<p>Worth flagging for a reader who greps before running:
+<code>memory_api.rs</code>'s own "Authorization model" header says there
+is "<strong>no per-namespace authorization</strong>" and that any
+credential reaching the node can read and drop every namespace, pointing
+at "the deferred RBAC enforcement" as the fix. At this commit that
+paragraph understates the code beneath it — the five handlers authorize,
+the edges index is authorized separately for graph coupling, and the
+security-boundary suite asserts the denials with a minted non-admin key.
+An operator who reads the warning and deploys accordingly would be
+provisioning around a limitation that the tree no longer has.</p>
+<p><strong>Audit — earned, with the ring stated.</strong> Hash-chained,
+restart-surviving, <code>GET /_audit/_search</code> and
+<code>/_audit/_verify</code>. Reading the audit log gets its own op tag
+rather than the generic <code>search</code>, "a refused attempt to read
+the evidence is the denied read an auditor most wants to find, and it
+must not read like a denied data search". The module doc is candid about
+coverage: successful reads other than <code>_search</code> leave
+nothing, unauthenticated attempts are not recorded because the
+middleware runs inside authentication and otherwise anyone reaching the
+port could flush the ring, and nothing older than 4,096 entries
+survives.</p>
+<p>One imprecision. <code>_recall</code> is absent from
+<code>is_read_shaped</code>, so a recall falls into the mutating branch
+and takes an entry with op <code>memory.post</code> on resource
+<code>_memory</code> — the endpoint, not the namespace. The useful entry
+for the same request comes from <code>es_compat::search</code> instead,
+which appends <code>op: "search"</code> against the real
+<code>.xerj-memory-{ns}</code> index name. An auditor gets the
+namespace; they get it from the second entry, and the first spends a
+ring slot recording a read as a write.</p>
+<p><strong>Tombstone — withheld, and this is the report's main
+finding.</strong> The mark asks for a durable record of a rejected
+value, <em>keyed on the value</em>, so later extraction cannot re-assert
+it. <code>unlink</code> is keyed on the edge id, and the edge id is
+<code>xxh3_128(src, type, dst, valid_at)</code> where
+<code>valid_at</code> for a detector-taught edge is the source file's
+mtime. Save the file and the id changes. The invalidated row stays on
+disk, correct and queryable through <code>as_of</code>, describing an
+identity nothing will compute again, while the same
+<code>(src, type, dst)</code> claim is re-taught live beside it. A full
+re-detection has the same effect by a second route:
+<code>detect::assemble</code> builds each document with
+<code>invalid_at</code> omitted and writes it with a bulk
+<code>index</code> action, which is a full replace of whatever sat under
+that id. No test in the tree covers a manually unlinked edge surviving a
+re-index; the search is in the appendix.</p>
+<p>This is worth separating from the reconcile sweep, which is sound.
+Edges taught by a departed file, and edges pointing at a superseded
+anchor, <em>are</em> invalidated on a fresh run, with a test carrying an
+explicit fail-before note. The gap is specifically between a human
+judgement about a claim and an identity derived from a file's
+timestamp.</p>
+<p><strong>Trust state — withheld.</strong> <code>confidence</code> is a
+float, and a score is not a state; more to the point it is read by
+nothing, so it does not even rank. A tree-wide search for a discrete
+status on a memory or an edge returns only a console user account's
+<code>Pending</code>.</p>
+<p><strong>Human review — withheld.</strong> There is no approval
+surface. A search for <code>approve</code>, <code>adjudicat</code> and
+<code>curat</code> across the console source returns nothing, and the
+console's relationship to memory is the opposite of review: the
+data-sources proxy is required to refuse the reserved namespace
+outright.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>brain_is_a_security_boundary.rs</code> is 692 lines and is the
+artifact to read. Its header explains that it is "the inverted
+descendant of <code>brain_is_not_a_security_boundary.rs</code>, which
+pinned the measured fact that one did <em>not</em> exist" — a committed
+test that asserted the system's own absence of a boundary, later
+rewritten assertion by assertion into its opposite. The predecessor is
+not in the tree at this commit.</p>
+<p>Its reasoning about scope is the part worth stealing: "the exposure
+was never about the four <code>/_graph/*</code> handlers", because the
+edges live in an ordinary index that <code>IndexName::validate</code>
+admits, reachable through the ES-compat surface and the native router.
+"An access check on <code>/_graph/*</code> alone would have left all of
+that open — a boundary that only looks like one. So this test walks
+every door, and a fix that closes only some of them fails here." The
+doors include the percent-encoded spelling
+<code>/%2Exerj-memory-bob-edges/_search</code>, "in case the check
+compared raw path text".</p>
+<p>It is not vacuous, and the guard is structural.
+<code>seed_two_brains</code> writes a real edge into each of two brains
+and refreshes bob's backing index, so the row is demonstrably searchable
+before anything asserts it cannot be seen.
+<code>a_scoped_caller_retains_full_use_of_its_own_brain</code> is a
+dedicated positive control asserting alice's own edge comes back.
+<code>cat_indices_keeps_the_rows_it_should</code> asserts both halves at
+once: the caller's own index is present, <em>and</em> exactly one row
+was returned.</p>
+<p>One honest limit. The four wildcard assertions in section 2b are of
+the form <code>!resp.to_string().contains("bob")</code> with the status
+asserted 200, and no assertion in that loop that the expansion returned
+any of alice's own rows. An expansion that returned nothing would
+satisfy them. The positive control for that pruning path exists on
+<code>_cat/indices</code> rather than on <code>_search</code>.</p>
+<p><code>soft_invalidate_time_travel</code> is the bitemporal case and
+carries its own controls: the belief <em>before</em> the invalidation
+instant is asserted at four edges with
+<code>expired_excluded == 0</code>, the belief after at a specific
+three-id list with <code>expired_excluded == 1</code>, and
+<code>include_expired: true</code> returns the fourth carrying its pair.
+Fixture instants are pinned rather than <code>now</code> "so a link and
+the <code>as_of</code> that reads it back can never land in the same
+millisecond".</p>
+<p>The graph detectors carry a measurement rather than a benchmark
+score. Over 240 arXiv PDFs in 24 topic folders, the seven structural
+detectors produced 11,854 edges and <code>sharedterm</code> added 462,
+and the project reports that a random pair of those documents shares a
+top-level topic 17.0% of the time while <code>shared_term</code> links
+do so 35.9% — "about twice chance. Read that as the honest strength of
+the signal — useful, and no substitute for reading the evidence on the
+edge." The same passage instructs against overclaiming its own feature:
+"Describe it as shared vocabulary, never as semantic understanding."</p>
+<p>No paper describes XERJ. A search of the README and
+<code>docs/</code> for <code>arxiv</code>, <code>bibtex</code>,
+<code>@article</code>, <code>citation</code> and <code>doi.org</code>
+returns only the arXiv corpus the detectors were measured against, and
+there is no <code>CITATION.cff</code>. The suite was not run here: 21
+dependency manifests changed within the screening cooldown.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Two clocks from two sources.</strong> The reason the
+bitemporal record here is real and not decorative is that
+<code>valid_at</code> comes from the file's mtime and
+<code>created_at</code> from the run's clock. A schema with both columns
+filled from one <code>now</code> looks identical and answers
+nothing.</li>
+<li><strong>Leave the record clock out of the agent's tool
+schema.</strong> <code>xerj_brain_link</code> exposes
+<code>valid_at</code> and not <code>created_at</code>. The agent says
+when the fact became true; the server says when it heard. One omitted
+property enforces the division.</li>
+<li><strong>Walk every door, including the encoded spelling.</strong>
+The security test's premise — that the interesting surface is the
+generic one underneath, not the feature-named handler — generalises to
+any system whose memory is stored in something addressable by another
+name.</li>
+<li><strong>Refuse the malformed recall.</strong>
+<code>deny_unknown_fields</code> plus a hard 400 on an ambiguous body,
+adopted because the lenient version returned arbitrary memories at score
+1.0.</li>
+<li><strong>Omit rather than null.</strong> <code>invalid_at</code>
+absent puts the row in the null bitmap, which <em>is</em> the liveness
+signal, so the query needs no sentinel comparison.</li>
+<li><strong>Publish the signal's strength against chance.</strong> 35.9%
+versus 17.0% says more about whether to trust a <code>shared_term</code>
+edge than any pass/fail gate would.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Deriving identity from a mutable input, then keying
+rejection on identity.</strong> Everything about the invalidation design
+is right except what it is keyed to. Had <code>edge_id</code> excluded
+<code>valid_at</code>, or had invalidation been keyed on
+<code>(src, type, dst)</code>, the human judgement would have survived a
+file save.</li>
+<li><strong>Storing a confidence you never read.</strong> Validated,
+clamped, persisted, returned, and consulted by nothing.</li>
+<li><strong>Letting a module's authorization comment rot.</strong> Here
+it rotted in the safe direction — the doc is more pessimistic than the
+code — but a reader's deployment decisions come from that
+paragraph.</li>
+<li><strong>Classifying a read as a write by omission from a
+list.</strong> <code>_recall</code> missing from
+<code>is_read_shaped</code> costs a ring slot per recall on a
+4,096-entry log shared by the whole node.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take this if you already want a search engine. The memory API is a
+thin, well-made adapter over one, and the whole argument for it is that
+you avoid running a vector database next to your search stack — which is
+only a saving if the search stack was going to exist. Adopting a
+380,000-line Rust engine to get five memory endpoints is the wrong
+trade, and nothing in the repository argues otherwise.</p>
+<p>The fit is strongest for a single operator or a small team running
+one node over their own corpus, wanting recall that works offline with
+no embedding service and no refresh lag. It is good for multi-agent
+setups on one trust boundary, where namespaces separate agents and the
+credential model keeps them separated. Be more careful with mutually
+distrusting tenants: the enforcement is real and tested, but the console
+had to be fixed separately because it bypasses the middleware entirely,
+and that is the shape of a boundary that has to be maintained at every
+new surface rather than enforced in one place.</p>
+<p>Walk away if you need epistemic state on memories themselves. There
+is no status, no verification, no review, and no tombstone — the
+machinery for believing and un-believing things lives on the edges, and
+it is keyed on an identity that a text editor can change.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>A rejected claim returns under a new identity.</strong> The
+central finding, in section 9. Saving the source file re-teaches the
+edge with a new <code>edge_id</code>, and the <code>invalid_at</code>
+stamped on the old one does not apply to it.</li>
+<li><strong>A re-detection overwrites an invalidation outright.</strong>
+<code>detect::assemble</code> emits a full document with
+<code>invalid_at</code> omitted, written with a bulk <code>index</code>
+action. The <code>must_not exists invalid_at</code> query in the
+autoindex is a counting query for the CLI summary, not a guard on the
+write path.</li>
+<li><strong>The audit ring is shared and small.</strong> 4,096 entries
+for the whole node, with every recall taking one. A busy agent evicts
+the security events the log exists for.</li>
+<li><strong>No <code>fsync</code> per audit entry.</strong> Stated
+plainly by the module: the log survives a process restart including
+<code>kill -9</code>, and a machine power loss can take the unflushed
+tail. <code>sync_to_disk</code> exists for callers that want the
+barrier, and the API-key operations use it.</li>
+<li><strong><code>confidence</code> invites a trust decision the code
+does not make.</strong> A reader seeing <code>confidence: 0.4</code> on
+a <code>samedir</code> edge may reasonably assume something filters on
+it.</li>
+<li><strong>Memory deletion is hard deletion.</strong>
+<code>forget_one</code> deletes the document. Unlike the edges, there is
+no soft-delete and no <code>as_of</code> for memories — the bitemporal
+care stops at the graph layer.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the whole thing if a search node is already in your
+architecture; the memory API costs one index per namespace and nothing
+else to operate.</p>
+<p>Borrow the edge schema regardless of the rest. Three date fields with
+the omission discipline, a <code>schema_version</code>, evidence carried
+on the edge, and a detector tag is a good shape for any store that wants
+to answer what it believed at a past instant — provided you key identity
+and invalidation on the same thing, which is the one correction to make
+while copying.</p>
+<p>Borrow <code>brain_is_a_security_boundary.rs</code> as a template
+even if you never run XERJ. The question it asks — what else addresses
+this data, and does the check cover that name too — applies to every
+memory system that stores its data in something with a general-purpose
+API — a Postgres table, an S3 bucket, a shared vector collection.</p>
+<p>Build your own if memories need status, review, or a durable
+rejection. Adding those here means adding fields to a document the
+engine treats as arbitrary and a read path that filters on them, which
+is work against the grain of an adapter whose whole premise is that it
+does not re-implement search.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is the invalidation gap known? <code>edge_id</code> including
+<code>valid_at</code> is deliberate and documented — "a DIFFERENT
+<code>valid_at</code> creates a distinct edge (bi-temporal ...)" — so
+the behaviour follows from a decision that was made on purpose for a
+different reason. Whether the interaction with manual
+<code>unlink</code> was considered is not recorded in the tree.</li>
+<li>Will the stale authorization paragraph in <code>memory_api.rs</code>
+be corrected, and does anything in the project's process catch a module
+doc that describes a superseded posture?</li>
+<li>Is <code>confidence</code> intended for a future filter, or is it a
+field that outlived its purpose?</li>
+<li>Should <code>_recall</code> join <code>is_read_shaped</code>, given
+that the search handler already audits the same request against the more
+useful resource name?</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<p><strong>Memory API</strong></p>
+<ul>
+<li><code>engine/crates/xerj-api/src/memory_api.rs</code> — five
+endpoints, 2,306 lines (<code>:106</code> namespace validation,
+<code>:338</code> store, <code>:530</code> recall, <code>:1257</code>
+list, <code>:1348</code> forget, <code>:1392</code> drop)</li>
+<li><code>engine/crates/xerj-api/src/router.rs:885-891</code> — route
+mounting</li>
+</ul>
+<p><strong>Graph and bitemporal record</strong></p>
+<ul>
+<li><code>engine/crates/xerj-api/src/graph_api.rs</code>
+(<code>:178-195</code> edge id, <code>:214-216</code> mapping,
+<code>:407</code> link, <code>:567</code> unlink, <code>:1237</code> the
+<code>as_of</code> live slice)</li>
+<li><code>engine/crates/xerj-engine/src/graph.rs</code> — hop expansion,
+<code>:69</code> the hop cap sentence</li>
+<li><code>engine/crates/xerj-autoindex/src/detect/mod.rs</code>
+(<code>:44-56</code> edge id, <code>:319</code> the draft,
+<code>:560-585</code> assemble)</li>
+</ul>
+<p><strong>Authorization and audit</strong></p>
+<ul>
+<li><code>engine/crates/xerj-api/src/authz.rs</code>
+(<code>:140-200</code> reserved namespace, <code>:262-281</code> the
+brain and namespace decisions, <code>:588</code> reserved privileges,
+<code>:1277</code> the middleware)</li>
+<li><code>engine/crates/xerj-api/src/audit_mw.rs</code>
+(<code>:108</code> read-shaped ops, <code>:148</code> classify,
+<code>:351-403</code> the middleware)</li>
+<li><code>engine/crates/xerj-engine/src/audit.rs</code>
+(<code>:1-60</code> the coverage statement, <code>:89</code> the
+capacity)</li>
+</ul>
+<p><strong>Tests</strong></p>
+<ul>
+<li><code>engine/crates/xerj-api/tests/brain_is_a_security_boundary.rs</code></li>
+<li><code>engine/crates/xerj-console-api/tests/console_cannot_read_a_brain.rs</code></li>
+<li><code>engine/crates/xerj-api/tests/snapshot_is_not_a_way_around_a_brain.rs</code>,
+<code>ml_datafeed_cannot_read_a_brain.rs</code>,
+<code>audit_records_writes_and_who.rs</code>,
+<code>scoped_keys_get_intact_responses.rs</code></li>
+<li><code>engine/crates/xerj-api/src/graph_api.rs:1687</code> —
+<code>soft_invalidate_time_travel</code></li>
+<li><code>engine/crates/xerj-autoindex/src/incremental_reconcile_http_tests.rs:3843</code></li>
+</ul>
+<p><strong>Docs</strong></p>
+<ul>
+<li><code>docs/recipes/agentic-memory.md</code>,
+<code>docs/SECOND_BRAIN.md</code>,
+<code>docs/design/SECOND_BRAIN_SPEC.md</code></li>
+</ul>
+<h3 id="commands-behind-the-absence-claims">Commands behind the absence
+claims</h3>
+<pre class="sh"><code>grep -rn &#39;confidence&#39; engine/crates --include=&#39;*.rs&#39; \
+  | grep -v &#39;graph_api.rs\|autoindex\|/tests/\|xerj-mcp&#39;
+grep -rni &#39;trust_state|&quot;verified&quot;|&quot;approved&quot;|&quot;pending&quot;|&quot;rejected&quot;|review_status&#39; \
+  engine/crates --include=&#39;*.rs&#39; | grep -v &#39;/tests/&#39;
+grep -rni &#39;approve\|adjudicat\|curat&#39; engine/crates/xerj-console-api/src --include=&#39;*.rs&#39;
+grep -rni &#39;tombstone\|do not re-add\|never re-assert\|deny.?list\|blocklist&#39; \
+  engine/crates/xerj-api/src/memory_api.rs engine/crates/xerj-api/src/graph_api.rs
+grep -rni &#39;unlink.*re-?index\|re-?index.*unlink\|manual.*invalid\|hand-invalidat&#39; \
+  engine/crates --include=&#39;*.rs&#39;
+grep -rn &#39;invalid_at\|expired_at&#39; engine/crates/xerj-autoindex/src --include=&#39;*.rs&#39;
+grep -rn -i &#39;arxiv\|bibtex\|@article\|@misc\|citation\|doi\.org&#39; README.md docs/*.md CITATION.cff
+find . -name &#39;brain_is_not_a_security_boundary*&#39; -not -path &#39;./engine/target/*&#39;</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-13</strong> — <a
+href="https://github.com/xerj-org/xerj/commit/f54eead8097fc234d0815ce245613870dcf22ffd"><code class="commit-id" title="f54eead8097fc234d0815ce245613870dcf22ffd">f54eead8…</code></a>
+— first reading. Screened first: 21 dependency manifests inside the
+7-day cooldown (the tree was committed the same day), two
+<code>build.rs</code> files cargo executes at build time, and two
+uninstalled git hooks. Nothing was installed and no suite was run. Four
+marks. <code>bitemporal</code> is earned on two clocks filled from
+different sources — <code>valid_at</code> from the source file's mtime,
+<code>created_at</code> from the indexing run — rather than from a
+single <code>now</code>, with <code>as_of</code> applied as a range
+filter on the read path and a test that asserts the belief both before
+and after an invalidation instant. <code>scope_enforced</code> is earned
+on the authorization predicate above the per-namespace index rather than
+on the partition itself: a wildcard read is expanded over the
+principal's visible set instead of refused. <code>negative_eval</code>
+is earned on four suites asserting one tenant's memory does not come
+back through any other door, with a separate positive control.
+<code>audit_log</code> is earned on a hash-chained
+<code>audit.jsonl</code> whose module states its own coverage
+boundaries. <code>tombstone</code> is withheld because invalidation is
+keyed on an <code>edge_id</code> derived from the source file's mtime,
+so saving the file re-teaches the same claim under an id the
+invalidation does not cover. <code>trust_state</code> is withheld
+because <code>confidence</code> is a float that no query reads.
+<code>human_review</code> is withheld because there is no approval
+surface and the console is required to refuse the memory namespace
+outright.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

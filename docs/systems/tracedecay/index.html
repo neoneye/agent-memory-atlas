@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust semantic code-intelligence
+daemon whose fact store ranks on a feedback-moved trust score and
+filters below it, proposes every deletion — dedup, hygiene and
+supersession alike — as a review-required candidate nothing applies
+without an explicit flag, and hard-deletes by stated policy, with twelve
+committed memory-eval scenarios each citing the upstream it was adapted
+from.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="TraceDecay — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust semantic
+code-intelligence daemon whose fact store ranks on a feedback-moved
+trust score and filters below it, proposes every deletion — dedup,
+hygiene and supersession alike — as a review-required candidate nothing
+applies without an explicit flag, and hard-deletes by stated policy,
+with twelve committed memory-eval scenarios each citing the upstream it
+was adapted from.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TraceDecay — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust semantic
+code-intelligence daemon whose fact store ranks on a feedback-moved
+trust score and filters below it, proposes every deletion — dedup,
+hygiene and supersession alike — as a review-required candidate nothing
+applies without an explicit flag, and hard-deletes by stated policy,
+with twelve committed memory-eval scenarios each citing the upstream it
+was adapted from.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>TraceDecay — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "TraceDecay",
+      "description": "A Rust semantic code-intelligence daemon whose fact store ranks on a feedback-moved trust score and filters below it, proposes every deletion \u2014 dedup, hygiene and supersession alike \u2014 as a review-required candidate nothing applies without an explicit flag, and hard-deletes by stated policy, with twelve committed memory-eval scenarios each citing the upstream it was adapted from.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Proposals a person applies, and a delete
+that is final</p>
+          <h1>TraceDecay</h1>
+          <p class="document-deck">A Rust semantic code-intelligence
+daemon whose fact store ranks on a feedback-moved trust score and
+filters below it, proposes every deletion — dedup, hygiene and
+supersession alike — as a review-required candidate nothing applies
+without an explicit flag, and hard-deletes by stated policy, with twelve
+committed memory-eval scenarios each citing the upstream it was adapted
+from.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ScriptedAlchemy/tracedecay">
+              <span>Source</span>
+              <strong>ScriptedAlchemy/tracedecay</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ScriptedAlchemy/tracedecay/commit/61ca3b08987be59acf01b0f1ec124ca78ea2fea8" title="61ca3b08987be59acf01b0f1ec124ca78ea2fea8">
+              <span>Analyzed revision</span>
+              <code>61ca3b08…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ScriptedAlchemy--tracedecay" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ScriptedAlchemy--tracedecay</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>TraceDecay is semantic code intelligence for coding agents: a Rust
+daemon that builds a local graph of a repository so an agent can ask for
+symbols, callers and impact radius instead of grepping, with a fact
+store attached for project memory. MIT, version 0.0.74, 10,937 commits
+since 6 June 2026, 483,833 lines of Rust across the binary and its
+crates against 125,958 lines of integration tests. Storage is local
+libSQL, and the README's framing is "[f]ewer tokens • fewer tool calls •
+local by default".</p>
+<p>The memory subsystem is 5,755 lines in
+<code>tracedecay-runtime-core</code>, and two things about it are worth
+reading.</p>
+<p><strong>Every deletion is a proposal.</strong> The hygiene module
+states its own boundary: the rules are "conservative, rule-based checks
+— no model is ever invoked from Rust", and standalone TraceDecay only
+<em>rejects</em> secret-like writes and <em>proposes</em> hygiene
+deletions in a dry-run plan; any LLM review of those proposals lives in
+a wrapper layer, with capabilities reporting
+<code>llm_curation: false</code> in the core. The dashboard's
+supersession analysis emits <code>"recommended_op": "delete"</code>
+alongside <code>"review_required": true</code>,
+<code>"status": "candidate"</code> and a reason that ends "confirm which
+fact is current before applying". The CLI states the contract in its
+help text: "Curation defaults to a dry-run preview; nothing is deleted
+without <code>--apply</code>."</p>
+<p><strong>The eval suite is committed and attributed.</strong> Twelve
+scenarios in <code>eval/scenarios/</code> each declare a well-behaved
+path and a violation with a stated expectation.
+<code>memory-no-pollution</code> is titled "Transient run noise must not
+become facts" and guards that a throwaway token produces no fact "while
+genuinely durable decisions still can" — a positive control and a
+must-not in one file. Alongside it: secret rejection,
+supersede-without-duplicate, curation conservatism, skip-local, and five
+ranking scenarios. Each carries an <code>adapted_from</code> naming the
+upstream project, its licence and the exact commit —
+<code>memory-no-pollution</code> credits <a href="../mnemon/">mnemon</a>
+at <code>41a9612</code> under Apache-2.0. Borrowing another project's
+eval and saying so at that grain is rarer here than it should be.</p>
+<p>What the store does not do is model belief. A <code>FactRecord</code>
+has no status. It has a <code>trust_score</code> that starts at 0.5 and
+moves only on explicit feedback — +0.05 helpful, −0.10 unhelpful,
+clamped to [0,1] — and retrieval filters below a minimum that defaults
+to 0.3. That is a real filter on a stored value, which is more than most
+confidence scores earn, but it is a continuous score rather than a
+discrete state, so a fact that is simply <em>wrong</em> needs three
+unhelpful votes before it stops being retrieved, and nothing
+distinguishes wrong from unhelpful.</p>
+<p>Supersession exists as vocabulary rather than as mechanism.
+<code>FactRelationKind</code> has <code>Supports</code>,
+<code>Contradicts</code>, <code>Supersedes</code> and
+<code>DerivedFrom</code>, constrained at the database with a
+<code>CHECK</code>, and the dashboard's curate API accepts them. But the
+curation planner cannot emit a supersede <em>operation</em>: the
+changelog records an "[a]rchive-semantics purge" whose stated policy is
+that "deleted memories are permanently hard-deleted", with the archive
+and supersede ops removed because "neither planner can produce them; the
+curate ops contract is delete/merge only". So a supersedes edge is
+whatever a caller asserts, and the read path ranks on trust and recency
+rather than on it.</p>
+<p>That policy has a consequence the atlas asks about everywhere: a hard
+delete leaves nothing behind. The cascade is careful and pinned by a
+store-level test — the fact row, its FTS mirror row, its entity links
+and its feedback events — but there is no record that a fact was
+rejected, so nothing stops the same content arriving again tomorrow.</p>
+<p>Two marks: <code>human_review</code>, <code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>fact</strong> is content with a category, tags, extracted
+entities, a trust score and counters. It has no state; its standing is a
+number.</p>
+<p><strong>Feedback</strong> is the only thing that moves trust: helpful
+<code>+0.05</code>, unhelpful <code>−0.10</code>, clamped. A bucket
+label — low, medium, high — is derived for display at 0.3 and 0.75.</p>
+<p>A <strong>relation</strong> joins two facts as supports, contradicts,
+supersedes or derived-from, with its own confidence and source.</p>
+<p><strong>Curation</strong> is a plan: dedup merges, hygiene deletions
+and supersession candidates, each with a confidence and a review flag,
+applied only on request.</p>
+<p>A <strong>store</strong> is a database file — one per project, plus a
+per-profile <code>user-memory.db</code> for conversations with no
+project. Separation is by file, not by predicate.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — nothing is deleted without an explicit apply; trust is the only thing that gates retrieval, and a delete leaves no record</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: nothing is deleted without an explicit apply; trust is the only thing that gates retrieval, and a delete leaves no record
+flowchart TB
+    AGENT[&quot;agent via MCP fact_store&quot;] --&gt; ADD[&quot;add fact&quot;]
+    ADD --&gt; HYG{&quot;hygiene: secret-like?&lt;br/&gt;rule-based, no model in Rust&quot;}
+    HYG --&gt;|&quot;yes&quot;| REJ[&quot;write rejected&quot;]
+    HYG --&gt;|&quot;no&quot;| F[(&quot;FactRecord&lt;br/&gt;content, category, tags, entities,&lt;br/&gt;trust_score = 0.5, counters,&lt;br/&gt;no status&quot;)]
+    FB[&quot;feedback&quot;] --&gt; DELTA[&quot;helpful +0.05&lt;br/&gt;unhelpful -0.10&lt;br/&gt;clamped to 0..1&quot;]
+    DELTA --&gt; F
+    Q[&quot;search&quot;] --&gt; FTS[&quot;FTS candidates + similarity&quot;]
+    F --&gt; FTS
+    FTS --&gt; FLOOR{&quot;trust_score &gt;= min_trust&lt;br/&gt;default 0.3&quot;}
+    FLOOR --&gt;|&quot;below&quot;| GONE[&quot;not returned&quot;]
+    FLOOR --&gt;|&quot;at or above&quot;| OUT[&quot;ranked and returned&quot;]
+    REL[(&quot;fact relations&lt;br/&gt;supports / contradicts /&lt;br/&gt;supersedes / derived_from&lt;br/&gt;DB CHECK constrained&quot;)] -.-&gt;|&quot;asserted by a caller;&lt;br/&gt;the read path does not act on it&quot;| F
+    CUR[&quot;tracedecay memory curate&quot;] --&gt; PLAN[(&quot;dry-run plan&lt;br/&gt;dedup merges, hygiene deletions,&lt;br/&gt;supersession candidates&quot;)]
+    F --&gt; PLAN
+    PLAN --&gt; FLAG[&quot;each candidate:&lt;br/&gt;review_required = true,&lt;br/&gt;status = candidate,&lt;br/&gt;&#39;confirm which fact is current&#39;&quot;]
+    FLAG --&gt; PERSON{&quot;person: --apply,&lt;br/&gt;or the dashboard panel&quot;}
+    PERSON --&gt;|&quot;no&quot;| NOOP[&quot;nothing changes&quot;]
+    PERSON --&gt;|&quot;yes&quot;| HARD[&quot;hard delete cascade:&lt;br/&gt;fact row, FTS mirror,&lt;br/&gt;entity links, feedback events&quot;]
+    HARD -.-&gt;|&quot;no record kept&quot;| REWRITE[&quot;the same content can be written again&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/tracedecay-runtime-core/src/memory/</code></td>
+<td>The fact store: <code>store.rs</code>, <code>retrieval.rs</code>,
+<code>trust.rs</code>, <code>hygiene.rs</code>,
+<code>entities.rs</code>, <code>similarity.rs</code>,
+<code>diff.rs</code>, <code>types.rs</code>, <code>user.rs</code></td>
+</tr>
+<tr>
+<td><code>crates/tracedecay-dashboard-api/</code></td>
+<td><code>memory_curate.rs</code> and <code>memory_analysis.rs</code> —
+the proposal surface behind the dashboard</td>
+</tr>
+<tr>
+<td><code>crates/tracedecay-runtime-core/src/db/migrations.rs</code></td>
+<td>The schema, including the relation <code>CHECK</code> and the
+archive-column cleanup</td>
+</tr>
+<tr>
+<td><code>src/</code></td>
+<td>The CLI, daemon, MCP server, extraction workers, branch handling,
+automation</td>
+</tr>
+<tr>
+<td><code>eval/scenarios/</code>, <code>tests/memory_suite/</code></td>
+<td>Twelve attributed memory scenarios and the runner</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>Suites per area — memory, graph, storage, mcp, dashboard, agent,
+hermes</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>memory/types.rs:94-180</code> — the fact and the four relation
+kinds.</li>
+<li><code>memory/trust.rs:1-45</code> — the deltas, the clamp and the
+buckets.</li>
+<li><code>memory/retrieval.rs:40-120</code> — where
+<code>min_trust</code> gates the result set.</li>
+<li><code>memory/hygiene.rs:1-9</code> — reject on write, propose on
+delete, no model here.</li>
+<li><code>dashboard-api/memory_analysis.rs:600-636</code> — the
+supersession candidate.</li>
+<li><code>db/migrations.rs:702</code> — the relation <code>CHECK</code>
+constraint.</li>
+<li><code>src/cli/help.rs:466-479</code> — the dry-run contract in the
+user-facing text.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The counters are the interesting part: <code>retrieval_count</code>,
+<code>access_count</code>, <code>helpful_count</code>,
+<code>unhelpful_count</code>, <code>last_retrieved_at</code>,
+<code>last_recalled_at</code>, <code>last_feedback_at</code>. TraceDecay
+records not just that a fact exists but how it has been used and judged,
+and the ranking scenarios in the eval suite
+(<code>memory-ranking-retrieval-reinforcement</code>,
+<code>memory-ranking-feedback-promotes</code>) test that those signals
+move results.</p>
+<p>What is absent is any field that says a fact is retracted, pending or
+superseded. The four relation kinds could carry that meaning and the
+read path does not consult them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Full-text candidates are fetched at five times the limit, fused with
+a similarity pass over a wider list, and filtered on category and
+<code>min_trust</code>. The default floor of 0.3 means an untouched fact
+at 0.5 is visible and one voted down three times is not.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The hygiene gate refuses secret-like content at the write,
+deterministically. Facts arrive from the agent through
+<code>fact_store</code>, or as proposals from the automation loop's
+memory curator, which is explicitly a review-and-validate path rather
+than a direct writer.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server whose code tools are the headline —
+<code>tracedecay_context</code>, <code>tracedecay_search</code>,
+<code>tracedecay_callers</code>, <code>tracedecay_impact</code> — with
+<code>fact_store</code> beside them, plus a CLI, a daemon and a local
+dashboard for the graph, memory curation, session analytics and
+cost.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Hard delete is a stated policy, not an oversight.</strong>
+The changelog records the archive feature being purged and the ops
+contract narrowed to delete and merge, with permanent deletion as the
+policy. The cascade is pinned by a test, which is the right way to hold
+a destructive path. What it costs is the tombstone: nothing records that
+a fact was rejected, so the dedup and hygiene work is repeatable rather
+than durable, and an agent that re-derives the same transient noise
+writes it again.</p>
+<p><strong>Trust is a score, not a state.</strong> It filters, which
+matters, and it is moved only by explicit feedback rather than by
+inference — a deliberate choice. But three unhelpful votes are needed
+before a fact disappears, and a fact that is flatly wrong is
+indistinguishable from one that was merely unhelpful.</p>
+<p><strong>The model is kept out of the Rust path.</strong> Hygiene is
+rule-based and says so, capabilities report
+<code>llm_curation: false</code>, and the LLM review loop is a separate,
+opt-in step (<code>--llm</code>, <code>--llm-ops</code>). For a system
+that deletes, that separation is the conservative choice.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>125,958 lines of integration tests across suites per area, plus
+benches and benchmark data. The memory-eval suite is the part to copy:
+scenario files with a schema version, a stable contract marker, a setup,
+a deterministic well-behaved path, a violation with a declared
+expectation, and an <code>adapted_from</code> line naming the upstream,
+its licence and its commit. The runner asserts the well-behaved end
+state before running the violation, so a scenario cannot pass by
+breaking both halves.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make every deletion a proposal with the review flag in the
+payload.</strong> <code>"review_required": true</code> and
+<code>"status": "candidate"</code> travelling with the recommended op
+means no consumer can mistake the plan for a decision.</li>
+<li><strong>Say where the model is not.</strong> "[N]o model is ever
+invoked from Rust", with a capability flag reporting it, tells an
+operator exactly what the core will do on its own.</li>
+<li><strong>Attribute an adapted eval to its source and commit.</strong>
+Each scenario names the project it came from, the licence and the
+sha.</li>
+<li><strong>Pin the destructive cascade with a test.</strong> If delete
+is permanent, the test that enumerates every table it must touch is the
+only thing standing between a policy and an orphan.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Hard-deleting without a record when a curator will run
+again.</strong> The same content arrives tomorrow and the same work is
+done twice, with no memory that a person already said no.</li>
+<li><strong>Declaring relation kinds the read path ignores.</strong>
+<code>supersedes</code> is in the type, the parser and the database
+CHECK; nothing in retrieval consults it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reach for this if you want a local code-intelligence graph with a
+modest fact store attached, and you value a curator that never acts
+alone. Look elsewhere if you need rejected memories to stay rejected, or
+a read path that knows a fact has been superseded.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should the read path act on a <code>supersedes</code> relation, or
+should the kind be removed from the vocabulary until it does?</li>
+<li>With hard delete as policy, is a rejection record — content hash and
+reason, no payload — compatible with the intent, so that curation does
+not re-propose what a person already declined?</li>
+<li>The trust floor treats wrong and unhelpful alike. Is a separate
+negative signal planned?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/tracedecay-runtime-core/src/memory/types.rs</code></td>
+<td>The fact and relation model</td>
+</tr>
+<tr>
+<td><code>.../memory/trust.rs</code></td>
+<td>The bounded score and its deltas</td>
+</tr>
+<tr>
+<td><code>.../memory/retrieval.rs</code></td>
+<td>The trust floor on the read path</td>
+</tr>
+<tr>
+<td><code>.../memory/hygiene.rs</code></td>
+<td>What the core will and will not do alone</td>
+</tr>
+<tr>
+<td><code>crates/tracedecay-dashboard-api/src/memory_analysis.rs</code></td>
+<td>Supersession as a review-required candidate</td>
+</tr>
+<tr>
+<td><code>crates/tracedecay-runtime-core/src/db/migrations.rs</code></td>
+<td>The relation CHECK and the archive purge</td>
+</tr>
+<tr>
+<td><code>eval/scenarios/</code></td>
+<td>Twelve attributed memory scenarios</td>
+</tr>
+<tr>
+<td><code>tests/memory_suite/memory_eval_test.rs</code></td>
+<td>The runner and its two-phase assertion</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/ScriptedAlchemy/tracedecay/commit/61ca3b08987be59acf01b0f1ec124ca78ea2fea8"><code class="commit-id" title="61ca3b08987be59acf01b0f1ec124ca78ea2fea8">61ca3b08…</code></a>
+— first reading, at a commit dated 15 September 2026, scoped to the
+memory subsystem rather than the code graph. Screened before opening,
+from a shallow clone: sixty-eight files, three auto-run surfaces (a
+<code>.githooks/</code> directory, a <code>.gitmodules</code> and an MCP
+server manifest), nine build-time execution points, three unpinned
+surfaces, forty-nine dependency files inside the cooldown, and
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> read as data. The
+<code>codegraph</code> submodule was not fetched. Nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

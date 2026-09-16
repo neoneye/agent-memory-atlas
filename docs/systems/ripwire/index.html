@@ -106,7 +106,8 @@ symbol it names.">
     <main>
       <section class="document-hero">
         <div class="document-hero-inner">
-          <p class="eyebrow">An accepted finding, ratcheted</p>
+          <p class="eyebrow">Heal the two sidecars, and every consumer
+is rename-aware</p>
           <h1>ripwire</h1>
           <p class="document-deck">A C++ code-context engine whose
 memory is two committed sidecars — a ledger of deliberately accepted
@@ -120,14 +121,14 @@ rewrite; and a field-notes file surfaced beside the symbol it names.</p>
               <strong>redhat-et/ripwire</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/redhat-et/ripwire/commit/8c20e10856d347206ccbd52fd1b83d90c5cbb5e3" title="8c20e10856d347206ccbd52fd1b83d90c5cbb5e3">
+            <a class="meta-pill revision-pill" href="https://github.com/redhat-et/ripwire/commit/f8e6087cc1dae2b438b3a69ccc8a4b53c19314cd" title="f8e6087cc1dae2b438b3a69ccc8a4b53c19314cd">
               <span>Analyzed revision</span>
-              <code>8c20e108…</code>
+              <code>f8e6087c…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-08</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/redhat-et--ripwire" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -152,40 +153,41 @@ rewrite; and a field-notes file surfaced beside the symbol it names.</p>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>ripwire is a code-context engine for coding agents — Apache-2.0,
-1,917 commits between 31 July and 8 September 2026, 156,391 lines of
-C++23 across 156 files under <code>src/</code>, with 559 gate scripts
-named by its own regression runner and all 559 resolving to a file. Ten
-commit identities appear, of which one accounts for 1,895 of them. The
-screen found two auto-run surfaces — an MCP manifest and a hooks
-directory — and four unpinned surfaces; nothing was installed or run,
-and the read was made from a full clone.</p>
+2,896 commits between 31 July and 16 September 2026, 172,653 lines of
+C++23 across 167 files under <code>src/</code>, with 618 gate scripts
+named by the loop in its own regression runner and all 618 resolving to
+a file. Twenty commit identities appear, of which one accounts for 1,903
+of them. The screen found two auto-run surfaces — an MCP manifest and a
+hooks directory — and four unpinned surfaces; nothing was installed or
+run, and the read was made from a full clone.</p>
 <p><strong>Most of the tool is out of this atlas's scope, and two files
 in it are squarely in.</strong> The call graph, the ranking and the
 lenses are a code index, and a code index is a projection of source that
 cannot turn out to be false. What this report is about is the pair of
-committed sidecars beside them: <code>.ripwire_quality_acks</code>, 955
-rows recording findings a person or an agent deliberately accepted, and
-<code>.ripwire_notes</code>, a field-notes file whose entries are
-surfaced beside the symbol they name. Both hold judgements that can be
-wrong, both survive every session, and both can be corrected.</p>
+committed sidecars beside them: <code>.ripwire_quality_acks</code>,
+1,310 rows recording findings a person or an agent deliberately
+accepted, and <code>.ripwire_notes</code>, a field-notes file whose
+entries are surfaced beside the symbol they name. Both hold judgements
+that can be wrong, both survive every session, and both can be
+corrected.</p>
 <p><strong>The ack ledger is a ratchet, and that is the idea worth
 carrying.</strong> A row is
 <code>ack &lt;kind&gt; &lt;16-hex key&gt; &lt;magnitude&gt; [cid=…] [by=…] &lt;reason&gt;</code>,
 and the whole mechanism is one comparison
-(<code>src/quality.h:4899-4903</code>):</p>
+(<code>src/quality.h:5798-5802</code>):</p>
 <pre class="cpp"><code>const auto it = acks.find( ackMapKey( ackKindToken( r ), r.key ) );
 return ( it != acks.end() &amp;&amp; r.now &lt;= it-&gt;second.ackNow ) ? &amp;it-&gt;second : nullptr;</code></pre>
 <p>An ack accepts a finding <strong>at the size it was accepted
 at</strong>. The moment the finding worsens past that magnitude it
 reappears, which the source states as the contract — <em>"an ack accepts
 a finding AT its acked size, never a blank check"</em>
-(<code>src/quality.h:3940</code>). Suppression is disclosed rather than
+(<code>src/quality.h:4838</code>). Suppression is disclosed rather than
 silent: the report header carries an <code>acked</code> count. And the
 contract has been defended against its own degenerate case: a finding
 whose magnitude is zero would make the test <code>0 &lt;= 0</code> and
 suppress forever, <em>"a permanent blank check, which the ack contract
 explicitly promises never to be"</em>
-(<code>src/quality.h:3694-3696</code>), so the kind token is qualified
+(<code>src/quality.h:4592-4594</code>), so the kind token is qualified
 by origin to keep that from happening.</p>
 <p><strong>Two marks.</strong> <code>human_review</code> on a ledger the
 project keeps committed precisely so that a change in what is suppressed
@@ -201,7 +203,7 @@ ledger looks like the mark: durable, committed, consulted before the
 tool speaks again, with a magnitude floor that stops it being a blanket.
 Three things decide against it. The key is a location —
 <code>fnv1a64(relative path \0 scope \0 symbol name)</code>
-(<code>src/quality.h:565-573</code>) — so it identifies <em>where</em> a
+(<code>src/quality.h:733-740</code>) — so it identifies <em>where</em> a
 finding was, not <em>what</em> was rejected. What the row records is an
 <strong>accepted</strong> finding rather than a rejected value; it
 suppresses a warning about code that stays. And it is consulted when a
@@ -210,18 +212,63 @@ prevents the same code being written again. The near-miss is written up
 in section 9 because the one part of the mechanism that <em>is</em>
 value-keyed — the <code>cid</code> content hash — is used with an
 unusual precision the mark's own definition is about.</p>
-<p><strong>Four findings sit against the design.</strong> The location
-key does not survive a move, and the project measured that against its
-own history rather than asserting it. The comment reports that
-<code>git mv</code> destroys them, and that across fifty-nine canonical
-ids, the same number of path-qualified keys and four clone groups, not
-one survived (<code>src/quality.h:4694-4700</code>). A stale ack is
-classified into three reasons and never acted on. The notes store has
+<p><strong>The location key does not survive a move, and the repair is
+the thing to take away.</strong> The project measured the damage against
+its own history rather than asserting it: on a commit where ten headers
+moved into <code>src/infra/</code> with not one byte of code changed,
+not one of the fifty-nine canonical ids survived, nor any of the
+fifty-nine path-qualified keys, nor any of the four clone groups — and
+in the source's own words, <em>"[e]very ack recorded against those
+symbols died, along with the reason someone wrote for accepting each
+one"</em> (<code>src/quality.h:5300-5303</code>). The obvious fix —
+teach every baseline lookup and the ratchet to try an alias — is
+rejected in the same comment, and the reason is an argument about
+<em>where</em> a repair belongs:</p>
+<blockquote>
+<p>"means touching nine call sites inside computeDelta plus
+applyAckRatchet, each an independent chance to get the direction
+backwards. The repair actually taken is the opposite: leave every
+consumer alone and REKEY THE TWO SIDECARS FORWARD into the identity the
+current tree uses, once, before anything reads them."</p>
+</blockquote>
+<p><code>healIdentity</code> runs that pre-pass and
+<code>remapAckIdentity</code> rewrites the ledger inside it, by the
+git-recorded rename map first and scrubbed-content-hash equality second.
+Because the baseline snapshot and the ack ledger are the only two things
+carrying a stale identity, healing them makes <code>computeDelta</code>,
+the ratchet, the stale-ack classifier and the <code>--quality-ack</code>
+writer rename-aware with no edit at all. It is wired on four paths — two
+in <code>src/verbs_quality.h</code>, the history walk at
+<code>:907</code>, and the MCP delta at <code>src/mcpverbs.h:3401</code>
+— and it is self-healing, because <code>--quality-ack</code> writes the
+rekeyed rows back, so a rescued ack stops depending on the replay.</p>
+<p><strong>The rescue discloses which route saved each row, and that is
+the honest part.</strong> <code>AckRescueRoute</code> is kept per ack
+rather than as a total, on a stated argument:</p>
+<blockquote>
+<p>"your ack survived because git recorded the rename" and "because the
+body is byte-for-byte the same after scrubbing" are different claims
+with different trust, and collapsing them would hide which one the tool
+actually relied on.</p>
+</blockquote>
+<p>The boundary is pinned by a gate rather than by the comment.
+<code>identitycheck.sh</code> holds three claims <em>"none of which may
+be traded for either of the others"</em>: an ack survives a file rename,
+staged or committed; an ack survives a pure move git records no rename
+for, via scrubbed-content equality including a re-indent — with the
+measurement that motivates the scrub, 37.3% survival on raw body hashes
+under a four-space re-indent against 100% on byte-identical moves; and
+an ack does <strong>not</strong> survive a real change, because identity
+that follows a rename <em>"must not become identity that follows a
+rewrite — that would turn the ratchet into the blank check its own
+contract forbids."</em></p>
+<p><strong>Three findings sit against the design.</strong> A stale ack
+is classified into three reasons and never acted on. The notes store has
 none of the ack side's protections — no rescue route, no write lock —
-and its single committed row is out of date, with nothing in the format
-able to say so. And the MCP verb advertised as <em>"most relevant memory
-notes / docs for a task"</em> (<code>src/mcp.h:62</code>) does not read
-the notes store at all.</p>
+and nothing in its format can say a row has gone out of date. And the
+MCP verb advertised as <em>"most relevant memory notes / docs for a
+task"</em> (<code>src/mcp.h:65</code>) does not read the notes store at
+all.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory here is <strong>a judgement about a place in the
 code</strong>, and there are two kinds.</p>
@@ -322,7 +369,7 @@ that follows a rename must not become identity that follows a rewrite;
 that is the blank check the ack contract forbids"</em>
 (<code>:4673-4675</code>).</li>
 <li><strong>Apply the ratchet.</strong> <code>findSuppressingAck</code>
-(<code>:4899-4903</code>) and <code>applyAckRatchet</code>
+(<code>:5798-5802</code>) and <code>applyAckRatchet</code>
 (<code>:4907-4918</code>).</li>
 <li><strong>Write an ack.</strong> <code>--quality-ack[=REASON]</code>
 (<code>src/cli.h:2667</code>, <code>:4506</code>) implies the delta,
@@ -350,11 +397,11 @@ emits per-target rows with a dangling flag.</li>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>An <strong>ack row</strong>: a kind token, the 16-hex key, the
 accepted magnitude, an optional <code>cid</code>, an optional
-<code>by</code> scope and a reason to end of line. Of the 955 committed
-rows, 629 carry a content id and 180 carry a scope, all of the latter
-with the same value. The kind distribution is led by short-horizon churn
-(297), new-symbol api-surface (141) and api-surface (124). Magnitudes
-run from 0 — 142 rows — to 1,731.</p>
+<code>by</code> scope and a reason to end of line. Of the 1,310
+committed rows, 925 carry a content id and 202 carry a scope. The kind
+distribution is led by short-horizon churn (439), new-symbol api-surface
+(202), api-surface (160) and duplication (139). Magnitudes run from 0 —
+211 rows — to 1,731.</p>
 <p>A <strong>note</strong>: a target, a date taken from git's committer
 clock, the text, and optionally the HEAD sha and branch. One row is
 committed.</p>
@@ -391,7 +438,7 @@ unique, and is otherwise classified stale and left in place. And because
 the rescue routes were added after most of the ledger was written, the
 source is explicit that they <em>"can never rescue the 443 rows already
 committed here, and the report says so"</em>
-(<code>src/quality.h:4668-4669</code>).</p>
+(<code>src/quality.h:5567</code>).</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Both stores are written by command-line verbs only — no MCP verb
 writes either — and both are sorted on every write so that two branches
@@ -438,7 +485,7 @@ The adjudication is <code>--quality-ack</code>: a finding is looked at
 and accepted at a magnitude with a reason, and the verdict is committed
 to a file the project keeps in version control for exactly this reason —
 <em>"the ack file is committed precisely so a change in what is
-suppressed is reviewable"</em> (<code>src/quality.h:4033</code>). The
+suppressed is reviewable"</em> (<code>src/quality.h:4931</code>). The
 inspection is <code>--notes</code>, which recomputes the live target set
 so a person can see what has gone dangling, described in the source as
 <em>"listed here so the human can prune it"</em>
@@ -447,8 +494,8 @@ action: pruning a note and retiring a stale ack are manual file edits,
 and the source records what that costs — <em>"A past round hand-retired
 109 such dead rows out of this repo's own committed acks file — a whole
 session of manual audit for a question the tool could answer in one
-pass"</em> (<code>src/quality.h:4925-4927</code>). No CI job reads
-either sidecar.</p>
+pass"</em> (<code>src/quality.h:5825</code>). No CI job reads either
+sidecar.</p>
 <p><strong>Negative evaluation — awarded.</strong> The notes case is the
 strongest shape this mark takes: a note is written against a target that
 does not exist, the listing is asserted to show it as dangling and to
@@ -498,13 +545,20 @@ is the argument for the content-hash rescue route, and it is in a
 comment above the code that implements it. Reporting the survival rate
 of your own identity scheme, in the negative, is the thing to copy
 here.</p>
-<p><strong>One live memory that is wrong.</strong> The single committed
-field note, dated 23 August, says a claim in the README is not enforced
-and names what would close it. The gate was widened on 6 September and
-the README now passes; the note's target still resolves, so it is not
-dangling, and nothing marks it superseded. The one row in the notes
-store is out of date, which is precisely the class of failure the ack
-side built its stale classification to catch.</p>
+<p><strong>One live memory that is wrong.</strong> The notes store holds
+two rows. One, dated 23 August, says the README's single gate-count
+claim <em>"is NOT enforced"</em> by <code>test/manifestcheck.sh</code>
+and names the fix: cover README.md in the <code>gateCountClaims</code>
+arm. That fix landed — <code>gateCountSites</code> names
+<code>docs/EVALS.md</code>, <code>README.md</code> and the deck, the
+count is generated by <code>docs/gatecount_build.py</code> and gated
+twice over — so the note describes a gap that is closed. Its target
+resolves, so <code>--notes</code> does not flag it dangling, and no
+field in the format can mark it superseded. The store has no way to say
+that one of its two memories has stopped being true, which is precisely
+the class of failure the ack side built its stale classification to
+catch, and the contrast is the sharper for sitting in the same
+repository.</p>
 <p><strong>And the verb named for memory does not read it.</strong>
 <code>src/mcp.h:62</code> advertises <code>memory_recall</code> as
 returning <em>"most relevant memory notes / docs for a task, full
@@ -515,9 +569,15 @@ taking the tool list at face value would never reach the field notes;
 they arrive only as riders on other verbs.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>559 gate scripts are named by the regression runner and all 559
-resolve to a file, alongside 169 C++ harnesses and per-language fixture
-corpora, in a test tree of 1,347 files.</p>
+<p>618 gate scripts are named by the loop in
+<code>test/regression.sh</code> and all 618 resolve to a file, alongside
+206 C++ harnesses and per-language fixture corpora, in a test tree of
+1,599 files. The count is itself a build product:
+<code>docs/gatecount_build.py</code> derives it from that loop and
+rewrites all eight published sites, and
+<code>test/gatecountcheck.sh</code> gates the agreement — two
+independent derivations of the same number, after a round where a deck
+published a count its own instrument had never read.</p>
 <p><code>docs/EVALS.md</code> is 12,678 lines and opens with a
 provenance rule: every number names the instrument that produced it, the
 corpus it ran on and the file that pins it. The localization and
@@ -588,7 +648,7 @@ reviewable artifact rather than a suppression comment, and if the
 ratchet's discipline — accept a number, not a warning — is what you want
 from it. The ack mechanism is worth reading whatever you are building.
 Wrong as a general memory: retrieval is exact-match on a path, there is
-no status, no validity and no scope, and the notes half is one row with
+no status, no validity and no scope, and the notes half is two rows with
 none of the ack half's care.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
@@ -605,7 +665,7 @@ current key fragile under a move.</li>
 The name says it does.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>Path</th>
@@ -616,82 +676,88 @@ The name says it does.</li>
 <tbody>
 <tr>
 <td><code>src/quality.h</code></td>
-<td>6,078</td>
-<td><code>pathQualifiedKey</code> (565), the content hash (828-898), the
-ack record and map key (3945-3969), the ratchet contract (3934-3941),
-the zero-magnitude guard (3694-3696), the reader (4193-4251), the write
-lock (4255-4345), the writer (4351-4391), <code>remapAckIdentity</code>
-(4677-4755), the survival measurement (4694-4700),
-<code>findSuppressingAck</code> (4899-4903), <code>StaleAckWhy</code>
-(4936-4941)</td>
+<td>7,142</td>
+<td><code>pathQualifiedKey</code> (733), the scrubbed body and its hash
+(1379, 1446), the zero-magnitude guard (4592-4594), the ratchet contract
+(4838), the ack record and map key (4843-4862), the reader (5084-5092),
+the survival measurement and the repair argument (5300-5320),
+<code>AckRescueRoute</code> and <code>AckRemap</code> (5544-5556),
+<code>remapAckIdentity</code> (5576), <code>healIdentity</code>
+(5716-5754), <code>findSuppressingAck</code> and
+<code>applyAckRatchet</code> (5798-5810), <code>StaleAckWhy</code>
+(5859)</td>
 </tr>
 <tr>
 <td><code>src/verbs_quality.h</code></td>
-<td>—</td>
-<td>The delta basis and both ack reads (191, 251), the rubber-stamp
-guard (401-441), the row build and write (1141-1157)</td>
+<td>2,084</td>
+<td>Both ack reads (201, 262), the healing call sites (202, 263, 907),
+the ack write (860)</td>
 </tr>
 <tr>
 <td><code>src/notes.h</code></td>
-<td>—</td>
-<td>The note record (67-74), the path (107-116), the reader (305-354),
-the writer (374-388, the truncating stream at 379), <code>addNote</code>
-(394-416), the index (424-458)</td>
+<td>501</td>
+<td>The note record, the path, the reader and the writer; the dangling
+entry that <em>"stays dangling, which --notes already reports"</em>
+(365)</td>
 </tr>
 <tr>
 <td><code>src/serialize.h</code></td>
-<td>7,479</td>
-<td><code>renderNoteChildren</code> (471-489) and the two lookup keys
-(503-511)</td>
+<td>8,192</td>
+<td><code>renderNoteChildren</code> and the two lookup keys</td>
 </tr>
 <tr>
 <td><code>src/main.cpp</code></td>
-<td>4,062</td>
-<td><code>resolveNoteAddTarget</code> (606-670), the note write (786),
-the <code>--notes</code> listing (798-860)</td>
+<td>4,823</td>
+<td>The note write path and the <code>--notes</code> listing, with the
+prune rationale at 724</td>
 </tr>
 <tr>
 <td><code>src/mcp.h</code>, <code>src/mcpverbs.h</code></td>
-<td>—, 4,824</td>
-<td>Thirty-one verbs; the <code>memory_recall</code> description
-(mcp.h:62) and the read-only ack access (mcpverbs.h:3138)</td>
+<td>—, 5,126</td>
+<td><code>kMcpVerbTable</code> with thirty-one verbs (mcp.h:58), the
+<code>memory_recall</code> description (mcp.h:65), and the healing call
+on the delta path (mcpverbs.h:3401)</td>
 </tr>
 <tr>
 <td><code>src/recall.h</code></td>
 <td>—</td>
 <td>Lexical search over markdown documents; no reference to the notes
-store</td>
+store, its loader or its record type</td>
 </tr>
 <tr>
 <td><code>.ripwire_quality_acks</code></td>
-<td>955 rows</td>
-<td>The committed ledger; 629 rows carry a content id, 180 a scope</td>
+<td>1,310 rows</td>
+<td>The committed ledger; 925 rows carry a content id, 202 a scope</td>
 </tr>
 <tr>
 <td><code>.ripwire_notes</code></td>
-<td>1 row</td>
+<td>3 rows</td>
 <td>The committed field notes</td>
 </tr>
 <tr>
-<td><code>test/notescheck.sh</code>,
-<code>test/identitycheck.sh</code></td>
-<td>—</td>
-<td>The dangling-note exclusion (149-159) and the rename and rewrite
-arms (111-125, 195-199)</td>
+<td><code>test/identitycheck.sh</code></td>
+<td>230</td>
+<td>The three claims that may not be traded for one another, on a
+synthetic git repository</td>
+</tr>
+<tr>
+<td><code>test/notescheck.sh</code></td>
+<td>422</td>
+<td>The dangling-note exclusion with its positive control (150-170)</td>
 </tr>
 <tr>
 <td><code>docs/EVALS.md</code>, <code>docs/LINEAGE.md</code></td>
-<td>12,678, 348</td>
+<td>—</td>
 <td>The evaluation record with its withdrawn-claims section, and the
 lineage table</td>
 </tr>
 <tr>
 <td><code>test/</code></td>
-<td>1,347 files</td>
-<td>559 named gates, 169 C++ harnesses, fixture corpora</td>
+<td>1,599 files</td>
+<td>618 named gates, 206 C++ harnesses, fixture corpora</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><strong>Searches recorded for the negative claims</strong></p>
 <pre class="sh"><code>rg -niE &#39;valid_from|valid_to|validity time|transaction_time|as_of|bitemporal&#39; src/   # 0; control: 17 hits for &#39;date&#39; in notes.h
 rg -niE &#39;append-only|audit_log|event log&#39; src/                                       # 2, both prose declining the pattern
@@ -702,8 +768,29 @@ rg -niE &#39;cid|remap|alias|rename|heal&#39; src/notes.h                       
 rg -n &#39;acks.erase&#39; src/quality.h                                                     # 2, both inside the re-key move, never a retirement
 rg -n &#39;writeAckRecords|addNote\(&#39; src/                                               # writes only from CLI paths; no MCP verb writes either store</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/redhat-et/ripwire/commit/f8e6087cc1dae2b438b3a69ccc8a4b53c19314cd"><code class="commit-id" title="f8e6087cc1dae2b438b3a69ccc8a4b53c19314cd">f8e6087c…</code></a>
+— re-read at a commit dated 16 September 2026, 979 commits past the
+previous pin, at version 0.6.1. The identity repair is the substantive
+change: rather than teaching nine call sites to try an alias, a
+<code>healIdentity</code> pre-pass rekeys the baseline snapshot and the
+ack ledger forward into the current tree's identity before anything
+reads them, through the git-recorded rename map and then
+scrubbed-content-hash equality, with the rescue route kept per row and
+<code>--quality-ack</code> writing the healed rows back.
+<code>identitycheck.sh</code> pins three claims that may not be traded
+for one another, including that an ack must not survive a rewrite. Both
+marks re-tested and held, with the negative-eval record re-grounded on
+that gate alongside the dangling-note case. The ledger has grown to
+1,310 rows and the named gate list to 618. <code>memory_recall</code>
+still does not read the notes store: <code>src/recall.h</code> carries
+96 case-insensitive matches for "note", every one of them prose or an
+unrelated identifier, and none naming the store, its loader or its
+record type. Screened before reading: two auto-run surfaces, four
+unpinned dependency surfaces, none inside the seven-day cooldown.
+Nothing was installed, built or run.</p>
 <p><strong>2026-09-08</strong> — <a
-href="https://github.com/redhat-et/ripwire/commit/8c20e10856d347206ccbd52fd1b83d90c5cbb5e3"><code>8c20e10856d347206ccbd52fd1b83d90c5cbb5e3</code></a>
+href="https://github.com/redhat-et/ripwire/commit/8c20e10856d347206ccbd52fd1b83d90c5cbb5e3"><code class="commit-id" title="8c20e10856d347206ccbd52fd1b83d90c5cbb5e3">8c20e108…</code></a>
 — first reading, at the head of <code>main</code>, on a commit from the
 same day. Screened before anything was read: two auto-run surfaces (an
 MCP manifest and a hooks directory), four unpinned surfaces, no

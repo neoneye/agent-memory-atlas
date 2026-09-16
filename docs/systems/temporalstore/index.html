@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust storage engine with a
+token-budgeted context pack on top, whose world-time validity field no
+writer ever sets, whose scope rule has one flag-gated call site, and
+whose headline token saving is measured against a corpus no arm in the
+experiment read.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="TemporalStore — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust storage engine with
+a token-budgeted context pack on top, whose world-time validity field no
+writer ever sets, whose scope rule has one flag-gated call site, and
+whose headline token saving is measured against a corpus no arm in the
+experiment read.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TemporalStore — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust storage engine with
+a token-budgeted context pack on top, whose world-time validity field no
+writer ever sets, whose scope rule has one flag-gated call site, and
+whose headline token saving is measured against a corpus no arm in the
+experiment read.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>TemporalStore — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "TemporalStore",
+      "description": "A Rust storage engine with a token-budgeted context pack on top, whose world-time validity field no writer ever sets, whose scope rule has one flag-gated call site, and whose headline token saving is measured against a corpus no arm in the experiment read.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The benchmark names its own confound, then
+keeps the number</p>
+          <h1>TemporalStore</h1>
+          <p class="document-deck">A Rust storage engine with a
+token-budgeted context pack on top, whose world-time validity field no
+writer ever sets, whose scope rule has one flag-gated call site, and
+whose headline token saving is measured against a corpus no arm in the
+experiment read.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/matrixarkai/TemporalStore">
+              <span>Source</span>
+              <strong>matrixarkai/TemporalStore</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/matrixarkai/TemporalStore/commit/5eb2c9145d83ca851ef91a0dfe1639e92664303f" title="5eb2c9145d83ca851ef91a0dfe1639e92664303f">
+              <span>Analyzed revision</span>
+              <code>5eb2c914…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/matrixarkai--TemporalStore" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>matrixarkai--TemporalStore</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>TemporalStore is "[o]pen-source temporal infrastructure for LLM
+memory" — Apache-2.0, Rust, workspace version 0.1.0, 646,492 lines
+across Rust, Python and TypeScript of which 318,314 are the main Rust
+crate, with 2,404 test functions, Rust and Python SDKs, Claude and Codex
+plugins, and a Redis-compatible RESP surface. Its argument is
+consolidation: grounding an agent usually means running a vector
+database, a feature store, a counter tier, a stream pipeline and a
+bespoke memory service, and this collapses them into one time-aware
+engine.</p>
+<p>Most of the tree is a distributed storage engine — WAL,
+append-structured page store, block store, Raft, rebalancing, shared
+object storage — and it is built with care. The memory layer sits on top
+in about eleven thousand lines: ingest events, extract entities and
+summaries, embed, and return a ranked token-budgeted ContextPack.</p>
+<p>The ranking has the best-argued constant in this reading. Lexical
+scores are mapped into the same micros scale as cosine similarity,
+saturating at half the cosine ceiling, and the comment says why:</p>
+<blockquote>
+<p>"Kept below the 1_000_000 ceiling a perfect cosine match reaches so
+that, in a MIXED store, a strong semantic (embedded) match still
+outranks a purely lexical one, while un-embedded nodes remain rankable
+(never a flat 0) instead of collapsing to recency order."</p>
+</blockquote>
+<p>A store where some rows are embedded and some are not is the normal
+state of any system with a backfill, and "collapsing to recency order"
+is precisely what happens when un-embedded rows score zero. This engine
+names the hazard and prices around it.</p>
+<p>The same habit shows in a comment on a boolean, explaining why it is
+defaulted explicitly rather than with a bare
+<code>#[serde(default)]</code>: an absent field decoding to
+<code>false</code> here "means 'the payload is elsewhere' and sends a
+reader to an <code>external_object_uri</code> that such a record does
+not carry. This type's own <code>Default</code> says true, and decoding
+it should not disagree with constructing it."</p>
+<p>No marks, and the reasons are all in one place — a schema caught
+mid-migration, with filters still reading fields the writers stopped
+filling.</p>
+<p><strong><code>valid_until_ms</code> has no writer.</strong> It is the
+field that would close a world-time window on a memory, and the schema
+comment reads "Deprecated hot-schema field: reserves this field" —
+naming no replacement, unlike the neighbouring deprecated fields, which
+point at <code>status_hash</code>, source indexes and link sidecars.
+Every constructor in the repository sets it to <code>0</code>. Meanwhile
+<code>context_event_matches_filter</code> still tests it:</p>
+<pre class="rust"><code>if event.valid_until_ms != 0 &amp;&amp; event.valid_until_ms &lt;= as_of {
+    return false;
+}</code></pre>
+<p>For any record this code writes, that branch cannot fire. The status
+check three lines above it has the same shape: it reads the in-row
+<code>status</code>, which is also deprecated and
+<code>skip_serializing</code>, after status filtering moved to the
+<code>status_hash</code> secondary index that the write path populates
+and validation requires. Neither is broken behaviour in the live path —
+it is residue, and the residue is in the one function a reader would
+open to learn what retrieval excludes.</p>
+<p><strong>Two time columns, one used.</strong>
+<code>ContextEvent</code> carries <code>event_time_ms</code> and
+<code>ingestion_time_ms</code>, which is the raw material for a second
+temporal axis. But <code>primary_time_ms()</code> returns ingestion time
+whenever it is set, and that is what the <code>as_of</code> comparison
+uses — so an as-of read answers what had <em>arrived</em> by a moment,
+not what was <em>true</em> at it. The columns are there; the read
+collapses them.</p>
+<p><strong>Scope is a string the caller may omit.</strong>
+<code>context_scope_descriptor</code> parses an owner scope into one of
+six layers with a precedence rank, and
+<code>context_scope_matches</code> is a real visibility rule — a
+<code>global</code> candidate matches everyone, and an
+<code>agent</code>-layer request also matches <code>user</code> and
+<code>workspace</code>. It has one call site in the repository, in skill
+lookup, behind <code>owner_scope_filter_enabled</code>, which is defined
+as:</p>
+<pre class="rust"><code>let owner_scope_filter_enabled = !request.owner_scope.trim().is_empty();</code></pre>
+<p>An empty scope turns the filter off rather than narrowing to nothing.
+The ContextPack retrieval path does not consult the rule at all.
+Isolation there is <code>context_tenant_hash</code>, built from
+<code>account_id:tenant_id</code> on the caller's own request, with
+<code>acct_local</code> and <code>tenant_local_agent</code> substituted
+when either is empty — so it is a caller-supplied partition key with a
+shared default, which is the pattern this atlas does not count as
+enforcement. No test in the tree asserts that one tenant cannot read
+another's events.</p>
+<p><strong>The benchmark is unusually candid and still prints the
+flattering number.</strong> Its headline row says the model works from
+1,698,940 tokens under local replay against ~1,333 for the managed pack:
+99.92% fewer. The reproduce section passes
+<code>--baseline-max-input-tokens 8000</code>, and a note explains why —
+the OSS reader's window is 4,096, and feeding the full corpus would take
+"hours per query and past the timeout — without the model attending to
+more than its window anyway" — ending with the sentence that settles
+it:</p>
+<blockquote>
+<p>"The saving headline is still computed against the full corpus."</p>
+</blockquote>
+<p>So the denominator is a corpus no arm read. The comparison that was
+actually run is ~1,333 tokens against 7,879, which the table reports on
+its own row as 83% fewer, and which is the number the experiment
+supports. Quality was graded with the baseline seeing a recency slice —
+a limitation the document identifies in italics as the wrong way to
+grade, in a different context, three paragraphs earlier.</p>
+<p>That combination is worth naming precisely, because it is not
+concealment. The document records a shipped ingestion bug that "lost
+~35% of real local context", explains a methodology error it corrected,
+and closes with a scope note admitting it has no skills tier and that
+"adoption claims should be scoped to memory + resources, not skills".
+Very few projects in this corpus write that sentence. The gap is between
+what the prose concedes and what the headline keeps, and it would close
+by promoting the 83% row.</p>
+<p>One practical note for a reader wanting to check any of it: the
+corpus is the author's own local Codex and Claude history, so the
+reproduce command runs against the reader's history rather than the
+published one. Two JSON result files ship in the tree.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An <strong>event</strong> lands on a node's timeline with two
+timestamps.</p>
+<p>A <strong>pack</strong> is what fits in a budget, ranked.</p>
+<p>A <strong>tenant</strong> is whatever the caller said it was.</p>
+<p><strong>Validity</strong> is a column with no writer.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — both timestamps are stored, but the as-of comparison uses ingestion time when present, and the validity branch beside it reads a field every constructor sets to zero</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: both timestamps are stored, but the as-of comparison uses ingestion time when present, and the validity branch beside it reads a field every constructor sets to zero
+flowchart TB
+    ING[&quot;ingest: ContextEvent&quot;] --&gt; COLS[(&quot;event_time_ms — when it happened&lt;br/&gt;ingestion_time_ms — when it arrived&lt;br/&gt;confidence · importance · text · vector&quot;)]
+    COLS --&gt; DEP[&quot;valid_until_ms — &#39;Deprecated hot-schema&lt;br/&gt;field: reserves this field&#39;,&lt;br/&gt;skip_serializing, set to 0&lt;br/&gt;by every constructor in the tree&quot;]
+    COLS --&gt; SIDX[&quot;status_hash — the live status filter,&lt;br/&gt;a secondary index the write path fills&lt;br/&gt;and validation requires&quot;]
+    COLS --&gt; OLD[&quot;status (in-row) — deprecated,&lt;br/&gt;skip_serializing&quot;]
+    COLS --&gt; PT{&quot;primary_time_ms()&quot;}
+    PT --&gt;|&quot;ingestion_time_ms != 0&quot;| ARR[&quot;use arrival time&quot;]
+    PT --&gt;|&quot;else&quot;| EVT[&quot;use event time&quot;]
+    ARR &amp; EVT --&gt; FILT[&quot;context_event_matches_filter:&lt;br/&gt;primary_time_ms() &gt; as_of → drop&quot;]
+    DEP -.-&gt;|&quot;read under #[allow(deprecated)];&lt;br/&gt;cannot fire for anything&lt;br/&gt;this code writes&quot;| FILT
+    OLD -.-&gt;|&quot;same&quot;| FILT
+    FILT --&gt; RANK[&quot;rank: lexical micros and cosine micros&lt;br/&gt;merged on one scale, lexical saturating&lt;br/&gt;at half the cosine ceiling&quot;]
+    RANK --&gt; PACK[&quot;ContextPack, token-budgeted&quot;]
+    SCOPE[&quot;context_scope_matches —&lt;br/&gt;global matches everyone;&lt;br/&gt;agent also matches user and workspace&quot;] --&gt;|&quot;one call site&quot;| SKILL[&quot;skill lookup only,&lt;br/&gt;gated on a non-empty owner_scope&quot;]
+    SCOPE -.-&gt;|&quot;never consulted&quot;| RANK
+    TEN[&quot;context_tenant_hash(request.scope):&lt;br/&gt;sha256(&#39;account_id:tenant_id&#39;),&lt;br/&gt;empty → &#39;acct_local:tenant_local_agent&#39;&quot;] --&gt; RANK</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>engine/</code></td>
+<td>The temporal index, command validation, context reads</td>
+</tr>
+<tr>
+<td><code>wal.rs</code>, <code>block_store/</code>,
+<code>shared_store.rs</code></td>
+<td>Durability and the page store</td>
+</tr>
+<tr>
+<td><code>raft.rs</code>, <code>rebalance.rs</code>,
+<code>data_node/</code></td>
+<td>Replication and clustering</td>
+</tr>
+<tr>
+<td><code>proxy/</code></td>
+<td>The RESP surface and tenancy hashing</td>
+</tr>
+<tr>
+<td><code>context_workflow/</code></td>
+<td>Ingest, extraction, embedding, query, skills, resources</td>
+</tr>
+<tr>
+<td><code>sdk/</code>, <code>integrations/</code></td>
+<td>Rust and Python SDKs, Claude and Codex plugins</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>context_workflow.rs:24-40</code> — the lexical-to-cosine scale
+mapping and its argument.</p>
+<p><code>types.rs:323-380</code> — the event schema, its deprecations,
+and <code>primary_time_ms</code>.</p>
+<p><code>engine/context.rs:388-419</code> — what a filtered read
+actually excludes.</p>
+<p><code>context_workflow.rs:275-352</code> — the scope descriptor and
+the visibility rule.</p>
+<p><code>docs/benchmarks/README.md:73-91</code> — the reproduce command
+and the footnote under it.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>An event, a node, a segment, an entity, a summary. Confidence and
+importance are floats used as filter floors — continuous weights, not
+states, so nothing here is epistemic in the sense this atlas marks.
+Resource lifecycle records do carry <code>stale</code> and
+<code>deleted</code> booleans, but their readers are the refresh
+scheduler and two count fields in a report; no retrieval path consults
+them.</p>
+<p>The embedding lives inline on the event, with a measured argument for
+the choice: every vector is one-to-one with its owner, so a separate
+record "costs a key, a BlockAddress and a page to store something with
+exactly one owner", and the text is about 3% of a fetch already paid
+for. A record written before that change "decodes with no vector and
+simply counts as un-embedded until the backfill re-embeds it" — which is
+exactly the mixed-store condition the ranking constant was tuned
+for.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical and cosine scores merged on one micros scale, chunked
+embedding lookups at a thousand refs so "a namespace with more nodes
+than the cap is still fully scored instead of silently falling back to
+lexical ranking", and a token budget with a reservable fraction for the
+current session.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingest, extract, embed inline, and mark dirty on failure with a
+reason code the drainer ignores — "[p]urely diagnostic; the drainer
+treats every pending marker identically" — which is the honest way to
+ship a field you have not yet acted on.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Plugins for Claude and Codex, agent hooks, two SDKs, and a RESP
+surface that existing Redis clients can speak today. The consolidation
+pitch is strongest here: one endpoint for memory, feature aggregates and
+control state is a real operational simplification whatever one
+concludes about the memory semantics.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Durability is the strong suit — WAL, checksums, crash-safe reload,
+fault injection, a flush gate, durability metrics. What is absent is
+memory-level trust: no provenance class, no supersession, no retraction,
+no record of what a memory said before it changed, and no assertion
+anywhere that a tenant cannot see another's events.</p>
+<p><code>ContextPackAudit</code> records what a pack was assembled from,
+which is a retrieval audit rather than a mutation record, and a useful
+one — it is the artifact that lets somebody ask later why a particular
+answer had the context it did.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>2,404 test functions, with the engine suite alone running to tens of
+thousands of lines. The benchmark documentation is discussed above; the
+short version is that its methodology notes are more careful than its
+headline table, and the two disagree by an order of magnitude.</p>
+<p>Nothing was built or run for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Scale your lexical and vector scores onto one axis deliberately, and
+write down the ceiling you chose. A mixed store is the normal state, and
+un-embedded rows scoring zero silently becomes recency ranking.</p>
+<p>Delete a deprecated field from the filter when you deprecate it. A
+predicate on a column nothing writes is worse than no predicate, because
+a reader auditing what recall excludes will believe it.</p>
+<p>Decide which clock an as-of read means. Two timestamp columns and a
+helper that prefers one of them is a bitemporal store that answers only
+transaction-time questions.</p>
+<p>Make an empty scope narrow, not widen. <code>!scope.is_empty()</code>
+as the gate turns a forgotten parameter into an unfiltered read.</p>
+<p>And put the number your experiment supports in the headline row. The
+83% comparison here is real, measured and good; the 99.92% divides by a
+corpus nothing read, and the document already knows it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether world-time validity is coming back. The field reserves itself
+and names no successor, while the neighbouring deprecations each point
+at one.</p>
+<p>Whether tenancy is enforced above this layer. The hash is
+caller-supplied here and the comment points at a Python control plane
+that computes the same digest; what authenticates the caller's claim to
+a tenant was not traced.</p>
+<p>What the LoCoMo and LongMemEval hit@k figures rest on. They appear on
+the project's site; the artifacts in the tree cover the local three-arm
+sweep.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/temporalstore-rust/src/context_workflow.rs:24-40</code></td>
+<td>The best-argued constant here</td>
+</tr>
+<tr>
+<td><code>crates/temporalstore-rust/src/types.rs:323-380</code></td>
+<td>Two clocks, and four deprecated fields</td>
+</tr>
+<tr>
+<td><code>crates/temporalstore-rust/src/engine/context.rs:388-419</code></td>
+<td>A filter reading what nothing writes</td>
+</tr>
+<tr>
+<td><code>crates/temporalstore-rust/src/context_workflow/skill.rs:190-219</code></td>
+<td>A scope rule an empty string disables</td>
+</tr>
+<tr>
+<td><code>crates/temporalstore-rust/src/proxy/context.rs:182-195</code></td>
+<td>Tenancy from the caller, with a shared default</td>
+</tr>
+<tr>
+<td><code>docs/benchmarks/README.md:73-91</code></td>
+<td>The footnote that reprices the headline</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/matrixarkai/TemporalStore/commit/5eb2c9145d83ca851ef91a0dfe1639e92664303f"><code class="commit-id" title="5eb2c9145d83ca851ef91a0dfe1639e92664303f">5eb2c914…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: thirteen files scanned, two auto-run
+surfaces, two build-time execution points, no unpinned surfaces and
+seven dependency files inside the seven-day cooldown. Nothing was
+installed, built or run, and no benchmark was executed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

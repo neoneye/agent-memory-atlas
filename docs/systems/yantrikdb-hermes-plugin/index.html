@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Hermes Agent memory provider
+over an in-process YantrikDB engine that scopes every recall to a
+namespace derived from the agent and, optionally, the person talking to
+it, and adds conflicts, skills, triggers, hygiene and packs as tools;
+under owner scoping the shared-brain mirror and id-only forget both
+cross the person boundary the fleet view is refused for.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="yantrikdb-hermes-plugin — Agent Memory Atlas">
+    <meta property="og:description" content="A Hermes Agent memory
+provider over an in-process YantrikDB engine that scopes every recall to
+a namespace derived from the agent and, optionally, the person talking
+to it, and adds conflicts, skills, triggers, hygiene and packs as tools;
+under owner scoping the shared-brain mirror and id-only forget both
+cross the person boundary the fleet view is refused for.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="yantrikdb-hermes-plugin — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Hermes Agent memory
+provider over an in-process YantrikDB engine that scopes every recall to
+a namespace derived from the agent and, optionally, the person talking
+to it, and adds conflicts, skills, triggers, hygiene and packs as tools;
+under owner scoping the shared-brain mirror and id-only forget both
+cross the person boundary the fleet view is refused for.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>yantrikdb-hermes-plugin — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "yantrikdb-hermes-plugin",
+      "description": "A Hermes Agent memory provider over an in-process YantrikDB engine that scopes every recall to a namespace derived from the agent and, optionally, the person talking to it, and adds conflicts, skills, triggers, hygiene and packs as tools; under owner scoping the shared-brain mirror and id-only forget both cross the person boundary the fleet view is refused for.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Owner scoping with two exits</p>
+          <h1>yantrikdb-hermes-plugin</h1>
+          <p class="document-deck">A Hermes Agent memory provider over
+an in-process YantrikDB engine that scopes every recall to a namespace
+derived from the agent and, optionally, the person talking to it, and
+adds conflicts, skills, triggers, hygiene and packs as tools; under
+owner scoping the shared-brain mirror and id-only forget both cross the
+person boundary the fleet view is refused for.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/yantrikos/yantrikdb-hermes-plugin">
+              <span>Source</span>
+              <strong>yantrikos/yantrikdb-hermes-plugin</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/yantrikos/yantrikdb-hermes-plugin/commit/c301188e624561b36b25f1b30b0698cfa5b754b1" title="c301188e624561b36b25f1b30b0698cfa5b754b1">
+              <span>Analyzed revision</span>
+              <code>c301188e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yantrikos--yantrikdb-hermes-plugin" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>yantrikos--yantrikdb-hermes-plugin</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>yantrikdb-hermes-plugin is the memory provider that connects <a
+href="../hermes-agent/">Hermes Agent</a> to the <a
+href="../yantrikdb/">YantrikDB</a> engine. It is MIT, version 0.25.0,
+124 commits since 15 April 2026, about 8,700 lines of Python and 485
+tests. Since version 0.2 the engine runs in process by default, with no
+server. It is the canonical distribution: Hermes no longer merges memory
+providers upstream.</p>
+<p>The engine supplies recall with scoring reasons, consolidation,
+conflict detection and entity relations. The plugin adds the Hermes
+side:</p>
+<ul>
+<li>a namespace per agent and, optionally, per person;</li>
+<li>automatic turn sync with a conservative extraction pass;</li>
+<li>prefetch and a pre-compression injection so constraints survive long
+sessions;</li>
+<li>skills with an outcome ledger, tasks, triggers, hygiene, knowledge
+gaps and mountable knowledge packs, all as tools.</li>
+</ul>
+<p>Scope is taken from the host, not the model. The namespace is the
+configured base plus the agent workspace and identity Hermes reports,
+and every engine call that reads or maintains memory passes it.
+<strong>Owner scoping</strong> adds a shard per person for shared
+gateways, group chats and family bots, resolving platform user ids
+through an identity map. The plugin treats that boundary seriously: the
+<code>yantrikdb_fleet</code> tool, which lists sibling namespaces,
+refuses to run under owner scoping because "siblings are people
+there".</p>
+<p>Two other paths cross the same boundary.</p>
+<ul>
+<li><strong>The shared brain.</strong>
+<code>shared_brain_namespace</code> mirrors every explicit
+<code>remember</code> into one namespace that every session recalls.
+Nothing refuses it under owner scoping, so one person's remembered facts
+become every other person's recall.</li>
+<li><strong>Forget and conflict resolution.</strong>
+<code>yantrikdb_forget</code> and
+<code>yantrikdb_resolve_conflict</code> act on an id alone. Ids arrive
+in recall results from the base namespace, shared groups and the shared
+brain, so one person's agent can delete memory that every person
+reads.</li>
+</ul>
+<p>Two marks: <code>scope_enforced</code>,
+<code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Hermes calls a <strong>memory provider</strong> at session start,
+before each turn (prefetch), after each turn (sync), before compression,
+and whenever the model calls one of its tools.</p>
+<p>The provider holds one <strong>effective namespace</strong> for the
+session and a list of <strong>fallback namespaces</strong> it also
+reads:</p>
+<ul>
+<li>legacy per-actor namespaces, when an identity map merged actors into
+one owner;</li>
+<li>shared group spaces the owner belongs to;</li>
+<li>the base namespace, for memory written before owner scoping was
+switched on;</li>
+<li>the shared brain, when configured;</li>
+<li>the namespaces of mounted knowledge packs.</li>
+</ul>
+<p>Writes go only to the effective namespace — except that explicit
+remembers are also mirrored to the shared brain.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — owner scoping shards writes per person, but the shared-brain mirror and id-only forget reach across the shards</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: owner scoping shards writes per person, but the shared-brain mirror and id-only forget reach across the shards
+flowchart TB
+    HERMES[&quot;Hermes session&lt;br/&gt;workspace, identity, platform user&quot;] --&gt; NS[&quot;effective namespace&lt;br/&gt;base:workspace:identity[:owner:alice]&quot;]
+    REM[&quot;yantrikdb_remember (alice)&quot;] --&gt; NS
+    REM --&gt;|&quot;shared_brain_namespace set&quot;| BRAIN[(&quot;shared brain namespace&lt;br/&gt;source=agent:name&quot;)]
+    SYNC[&quot;sync_turn&quot;] --&gt; NS
+    SYNC --&gt; EXTR[&quot;extracted candidates&lt;br/&gt;certainty ≤ 0.4&quot;]
+    RECALL[&quot;yantrikdb_recall (bob)&quot;] --&gt; BOBNS[(&quot;base:…:owner:bob&quot;)]
+    RECALL --&gt; FALL[&quot;fallbacks: legacy actors, shared groups,&lt;br/&gt;base namespace, shared brain, packs&quot;]
+    BRAIN --&gt; FALL
+    FALL --&gt; RESULTS[&quot;deduplicated results with rid&lt;br/&gt;+ why_retrieved&quot;]
+    BOBNS --&gt; RESULTS
+    RESULTS --&gt;|&quot;rid&quot;| FORGET[&quot;yantrikdb_forget(rid)&lt;br/&gt;no namespace check&quot;]
+    FORGET --&gt; BRAIN
+    FLEET[&quot;yantrikdb_fleet&quot;] --&gt;|&quot;owner_scoping on&quot;| REFUSED[&quot;refused: siblings are people&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>yantrikdb/__init__.py</code></td>
+<td>The <code>YantrikDBMemoryProvider</code>: configuration schema,
+namespace and owner scope, prefetch and sync, tool schemas and handlers,
+packs, constitution, skills, recall feedback</td>
+</tr>
+<tr>
+<td><code>yantrikdb/client.py</code></td>
+<td>Configuration, the HTTP client, error types and circuit-breaker
+plumbing</td>
+</tr>
+<tr>
+<td><code>yantrikdb/embedded.py</code></td>
+<td>The in-process client over the engine's Python binding</td>
+</tr>
+<tr>
+<td><code>yantrikdb/extractor.py</code>, <code>embedders.py</code></td>
+<td>The cheap extraction pass and embedder selection</td>
+</tr>
+<tr>
+<td><code>yantrikdb/cli.py</code>, <code>ui.py</code></td>
+<td>The installer and a read-only local constellation page</td>
+</tr>
+<tr>
+<td><code>benchmarks/</code>, <code>tests/comparison/</code></td>
+<td>Recall, determinism, encryption and idle-CPU checks and a comparison
+gate</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>Install:</strong>
+<code>pip install yantrikdb-hermes-plugin</code>,
+<code>yantrikdb-hermes install</code>, then select the provider in
+<code>hermes memory setup</code>.</li>
+<li><strong>Backends:</strong> embedded (default, a local database file)
+or a YantrikDB HTTP server for high-availability clusters.</li>
+<li><strong>Hand-repairable:</strong> through the engine's own tools and
+the plugin's hygiene report; the database is not plain text.</li>
+</ul>
+<p>The screen of this checkout found no auto-run surface, two build-time
+execution points (test <code>conftest.py</code> files), one unpinned
+surface and <code>pyproject.toml</code> inside the seven-day cooldown.
+Nothing was installed, built or run.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Namespace</strong> — <code>__init__.py:1202-1216</code>
+<code>_derive_namespace</code>, <code>:1750-1766</code> owner shard and
+shared group namespaces.</li>
+<li><strong>Owner resolution</strong> — <code>:1057-1200</code>: actor
+id, conversation id, identity map, group map,
+<code>_derive_owner_scope</code>.</li>
+<li><strong>Recall</strong> — <code>:2627-2740</code>
+<code>_do_recall</code>, through <code>_recall_with_base_fallback</code>
+(<code>:1987-2015</code>) and <code>_fallback_recall_namespaces</code>
+(<code>:1950-1971</code>).</li>
+<li><strong>Remember and mirror</strong> — <code>:2548-2602</code>:
+write to the effective namespace, then to the shared brain when set
+(<code>:2580-2598</code>).</li>
+<li><strong>Forget and resolve</strong> — <code>:2741-2747</code> and
+<code>:2772-2796</code>, calling <code>client.forget(rid)</code> and
+<code>client.resolve_conflict(conflict_id, …)</code>, which the embedded
+client forwards to the engine by id (<code>embedded.py:691-698</code>,
+<code>:793</code>).</li>
+<li><strong>Fleet refusal</strong> — <code>:3272-3281</code>.</li>
+<li><strong>Turn sync</strong> — <code>:2220-2320</code>: verbatim user
+message, extraction with <code>source=extracted</code> and low
+certainty, the confirmation carve-out.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is the engine's memory. The plugin sets
+<code>importance</code> (estimated from the text when not given),
+<code>domain</code>, <code>source</code>, <code>certainty</code> for
+extracted facts, and metadata carrying the session id and, under owner
+scoping, the owner, actor, channel and conversation. Relations,
+conflicts, tasks and triggers are engine records. Skills are memories
+with a definition and outcomes recorded against them. A local JSON
+ledger counts how often each memory was surfaced and reinforced, and
+turns that into a recall boost.</p>
+<p><code>source=extracted</code> and certainty are provenance and a
+weight. Extracted facts are filtered from default recall because of
+their source, not a belief status, so <code>trust_state</code> is
+withheld. The plugin keeps no rejected-value record, no validity axis
+and no mutation log, so <code>tombstone</code>, <code>bitemporal</code>
+and <code>audit_log</code> are withheld. The engine's own properties are
+described in the YantrikDB report.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Scoped recall.</strong> The provider recalls from its
+effective namespace, then from each fallback namespace with the same
+query, deduplicates and re-ranks, adds a reinforcement boost from the
+feedback ledger, and returns each result with its <code>rid</code> and
+<code>why_retrieved</code> reasons. Extracted low-certainty candidates
+are left out unless the call asks for them.</p>
+<p><strong>Prefetch and pre-compression.</strong> Before a turn the
+provider recalls in the background for the upcoming query. Before Hermes
+compresses the conversation it injects the highest-salience memories so
+constraints stated early survive.</p>
+<p><strong>What crosses owners.</strong></p>
+<ul>
+<li>The <strong>base namespace</strong> is recalled by default when
+owner scoping is on (<code>include_base_namespace_recall</code>,
+<code>client.py:245</code>). That is by design, for memory written
+before scoping, but it means scoping does not isolate that memory until
+the option is turned off.</li>
+<li>The <strong>shared brain</strong> receives a copy of every explicit
+remember from every session (<code>__init__.py:2580-2598</code>) and is
+recalled by every session (<code>:1961-1964</code>). The fleet tool's
+comment states the failure this creates: handing one user a view of
+everyone else's memory is "the identity-contamination failure that
+scoping exists to prevent". <code>initialize</code> does not clear the
+shared brain when owner scoping is on, and
+<code>_shared_brain_namespace</code> does not check it.</li>
+</ul>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Turn sync</strong> stores the user message verbatim when
+enabled and extracts small fact candidates from it. It extracts from the
+assistant's prior turn only when the user replied with a bare
+confirmation, so the agent's own prose becomes a candidate only with the
+user's assent.</p>
+<p><strong>Explicit remember</strong> writes with scope metadata and
+mirrors to the shared brain, tagging the copy with the contributing
+agent and origin namespace.</p>
+<p><strong>Forget and resolve act by id.</strong>
+<code>_do_forget</code> passes the rid straight to the client, and the
+embedded client calls the engine's <code>forget(rid)</code> with no
+namespace. Conflict resolution passes a conflict id and an optional
+winner the same way. Any rid a session has seen — including ones
+recalled from the base namespace, a shared group or the shared brain —
+can be forgotten from that session. Under owner scoping, one person's
+agent can delete memory that is part of every person's recall. Remember,
+relate, think, conflicts and knowledge gaps all pass the namespace;
+these two do not.</p>
+<p><strong>Hygiene</strong> lists low-usefulness and stale candidates
+and recommends actions, without deleting.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<ul>
+<li><strong>23 tools:</strong> remember, recall, forget, think,
+conflicts, resolve_conflict, relate, stats, the four trigger tools,
+skill search, define and outcome, observability, extraction stats,
+hygiene, knowledge gaps, recent turns, fleet, packs and tasks.</li>
+<li><strong>System prompt block</strong> with the constitution file,
+mounted pack rules and recent skills.</li>
+<li><strong>Packs</strong> are sealed bundles of rules and knowledge
+mounted read-only into recall.</li>
+<li><strong>Local UI</strong> at <code>127.0.0.1:8767</code>, a
+single-page view of the substrate that only serves GET requests.</li>
+</ul>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>A circuit breaker</strong> stops memory calls from blocking
+turns after repeated backend failures, and background work runs on
+threads.</p>
+<p><strong>The contract gate</strong> runs the public client against the
+real engine and treats each case as all or nothing, gating
+engine-dependent cases on feature probes rather than version
+strings.</p>
+<p><strong>Owner isolation is partial,</strong> as sections 6 and 7
+describe. The two exits sit beside a tool that is refused for the same
+reason.</p>
+<p><strong>Injection.</strong> User messages are stored verbatim, and
+pack rules enter the system prompt; the constitution and packs are
+author-controlled files.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>485 tests cover the provider, owner scoping and its fallbacks, the
+embedded and HTTP clients, packs, fleet, delegation, extraction, the
+adaptive budget and version-specific features, with integration and
+comparison suites. None was run for this report.</p>
+<p><strong>Negative retrieval.</strong>
+<code>tests/test_semantic_contract.py:81</code> asserts, on the real
+engine, that one tenant's secret never appears in another's recall
+beside its own, and <code>:92</code> does the same for knowledge gaps.
+That earns <code>negative_eval</code>.
+<code>tests/test_fleet.py:57</code> asserts the fleet tool refuses under
+owner scoping. No test combines owner scoping with a shared brain, or
+forgets across owners.</p>
+<p><strong>Benchmarks.</strong>
+<code>benchmarks/run_recall_bench.py</code> runs a committed
+<code>dataset.json</code>; <code>VERIFICATION.md</code> records two live
+end-to-end runs against Hermes with transcripts.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Derive the namespace from the host session,</strong> never
+from a tool argument.</li>
+<li><strong>Carry legacy namespaces forward</strong> when an identity
+map merges actors, so turning scoping on does not orphan old
+memory.</li>
+<li><strong>Extract from the agent's prose only on user
+assent.</strong></li>
+<li><strong>Refuse a cross-scope view outright</strong> and say why, as
+the fleet tool does.</li>
+<li><strong>A semantic contract suite on the real engine,</strong> all
+or nothing per case.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Shared namespaces that are not re-checked against a stricter
+scope</strong> turned on later.</li>
+<li><strong>Id-only deletion</strong> in a store that serves several
+scopes.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a Hermes Agent user who wants self-maintaining memory with
+conflicts, explanations and skills, in process with no server, for one
+person or several agents. For a gateway serving several people, owner
+scoping works as long as the shared brain stays unset, base recall is
+disabled once old memory is migrated, and forget is not relied on to
+respect owners.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><strong>Should owner scoping disable or shard the shared
+brain,</strong> as it refuses the fleet view?</li>
+<li><strong>Should forget and resolve check that the rid belongs to the
+session's readable namespaces?</strong></li>
+<li><strong>Should base-namespace recall default off</strong> once
+scoping is enabled on a fresh store?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><code>yantrikdb/__init__.py</code>,
+<code>yantrikdb/client.py</code>, <code>yantrikdb/embedded.py</code>,
+<code>yantrikdb/extractor.py</code>, <code>yantrikdb/ui.py</code></li>
+<li><code>tests/test_semantic_contract.py</code>,
+<code>tests/test_provider.py</code>,
+<code>tests/test_fleet.py</code></li>
+<li><code>VERIFICATION.md</code>, <code>benchmarks/</code></li>
+</ul>
+<p><strong>Searches behind the absence claims</strong></p>
+<ul>
+<li><code>grep -n "owner_scoping" yantrikdb/__init__.py</code> — checked
+in initialise, fallback helpers and fleet; not in
+<code>_shared_brain_namespace</code> or <code>_do_remember</code></li>
+<li><code>sed -n 2741,2747p yantrikdb/__init__.py</code> —
+<code>forget(rid)</code> with no namespace</li>
+<li><code>grep -n "def do_POST\|def do_DELETE" yantrikdb/ui.py</code> —
+no match; the UI is read-only</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/yantrikos/yantrikdb-hermes-plugin/commit/c301188e624561b36b25f1b30b0698cfa5b754b1"><code class="commit-id" title="c301188e624561b36b25f1b30b0698cfa5b754b1">c301188e…</code></a>
+— first reading, at a commit dated 14 September 2026. Screened before
+opening: no auto-run surface, two build-time execution points, one
+unpinned surface, and one dependency file inside the cooldown. Nothing
+was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

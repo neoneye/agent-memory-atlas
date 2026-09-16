@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A deterministic MCP server holding
+workflow state — tasks, decisions, artifacts, blockers and their edges —
+in one SQLite graph per project root, where a read defaults to the
+current git branch and a write defaults the column to main, so on a
+detached HEAD the two halves disagree and both do it silently.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="state-memory-mcp — Agent Memory Atlas">
+    <meta property="og:description" content="A deterministic MCP server
+holding workflow state — tasks, decisions, artifacts, blockers and their
+edges — in one SQLite graph per project root, where a read defaults to
+the current git branch and a write defaults the column to main, so on a
+detached HEAD the two halves disagree and both do it silently.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="state-memory-mcp — Agent Memory Atlas">
+    <meta name="twitter:description" content="A deterministic MCP server
+holding workflow state — tasks, decisions, artifacts, blockers and their
+edges — in one SQLite graph per project root, where a read defaults to
+the current git branch and a write defaults the column to main, so on a
+detached HEAD the two halves disagree and both do it silently.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>state-memory-mcp — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "state-memory-mcp",
+      "description": "A deterministic MCP server holding workflow state \u2014 tasks, decisions, artifacts, blockers and their edges \u2014 in one SQLite graph per project root, where a read defaults to the current git branch and a write defaults the column to main, so on a detached HEAD the two halves disagree and both do it silently.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Two halves that disagree about a detached
+HEAD</p>
+          <h1>state-memory-mcp</h1>
+          <p class="document-deck">A deterministic MCP server holding
+workflow state — tasks, decisions, artifacts, blockers and their edges —
+in one SQLite graph per project root, where a read defaults to the
+current git branch and a write defaults the column to main, so on a
+detached HEAD the two halves disagree and both do it silently.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/putervision/state-memory-mcp">
+              <span>Source</span>
+              <strong>putervision/state-memory-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/putervision/state-memory-mcp/commit/5af4bc3d3609335a120f0b4a269540e18e3091a8" title="5af4bc3d3609335a120f0b4a269540e18e3091a8">
+              <span>Analyzed revision</span>
+              <code>5af4bc3d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/putervision--state-memory-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>putervision--state-memory-mcp</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>state-memory-mcp is a "zero-infrastructure, deterministic" MCP server
+giving coding assistants a SQLite graph for workflow state: tasks,
+decisions, artifacts, plans, blockers and their relationships. MIT,
+version 1.2.1, 47 commits since 7 July 2026, 34,549 lines of TypeScript
+against 114 test files. There is no model in the loop — the determinism
+claim is the product.</p>
+<p>The schema is well matched to its queries. <code>nodes</code> carries
+a type, a <code>status</code>, a <code>project</code> and a
+<code>git_branch</code>, with composite indexes on
+<code>(project, git_branch)</code>, <code>(project, type)</code> and
+<code>(project, status)</code> — the three combinations the read path
+actually issues. <code>edges</code> carries the same project and branch.
+<code>events</code> records every mutation with
+<code>before_state</code> and <code>after_state</code>, the entity and
+the session, which earns the one mark here: a node's history is
+reconstructible from the log rather than from the node. Updates take an
+<code>expected_version</code>, so a concurrent edit is detected rather
+than silently overwritten.</p>
+<p>The finding is about the branch, and it is worth stating carefully
+because it is the third variation on this theme the atlas has
+recorded.</p>
+<p>On the read path, <code>queries.ts</code> computes
+<code>params.git_branch !== undefined ? params.git_branch : getCurrentBranch()</code>
+and then, unless the value is the literal <code>'*'</code>, appends
+<code>AND git_branch = ?</code>. On the write path, a node's
+<code>git_branch</code> comes from the caller, and the column default is
+<code>'main'</code>.</p>
+<p><code>getCurrentBranch()</code> shells out to
+<code>git branch --show-current</code>, which prints nothing on a
+detached HEAD, so the function returns <code>null</code>. The read
+therefore binds <code>null</code> into <code>git_branch = ?</code>, and
+in SQLite a comparison against <code>NULL</code> is never true: the
+query matches no rows. A write made in the same state, with no branch
+passed, is stored as <code>main</code>.</p>
+<p>So during a rebase, a bisect, or a CI checkout of a commit, work is
+recorded under <code>main</code> and reads for it return nothing — and
+neither half says so. The read looks like an empty graph, not like a
+failed branch detection. This fails <em>closed</em>, which is the safer
+of the two directions and the opposite of the branch bug this atlas
+recorded in <a href="../dsh-mnemon/">dsh-mnemon</a>, where scoped
+entries were projected everywhere instead. But silence is the shared
+problem: an agent that asks for its state and is told there is none will
+proceed as if there were none.</p>
+<p>A smaller inconsistency sits beside it. The changeset surface filters
+with <code>!filterBranch || n.git_branch === filterBranch</code> — an
+absent branch means <em>no filtering</em> — while the main query treats
+an absent branch as <em>the current branch</em>. Two surfaces, two
+readings of the same missing argument.</p>
+<p><code>scope_enforced</code> is withheld for a different reason: the
+<code>project</code> is resolved to a directory that selects which
+SQLite file to open, so it is a physical partition rather than a
+predicate on a row, and the branch is a filter a caller may set to
+<code>'*'</code> at will. One mark: <code>audit_log</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>node</strong> is a unit of workflow state — task, decision,
+artifact, plan, blocker — with a status, a project, a branch, metadata
+and tags.</p>
+<p>An <strong>edge</strong> is a typed relationship between two nodes,
+unique on <code>(source, target, type)</code>, cascading on delete.</p>
+<p>A <strong>project</strong> is a resolved directory. It chooses the
+database file.</p>
+<p>A <strong>branch</strong> is a column, compared on read against
+whatever <code>getCurrentBranch()</code> returns — or against
+<code>'*'</code> to mean all.</p>
+<p>An <strong>event</strong> is the record of one mutation, with the
+state before and after.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — on a detached HEAD the read binds NULL and matches nothing while the write takes the column default main, and neither reports it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: on a detached HEAD the read binds NULL and matches nothing while the write takes the column default main, and neither reports it
+flowchart TB
+    AGENT[&quot;Cursor / Claude Code / Copilot&quot;] --&gt; TOOL[&quot;MCP tool&quot;]
+    TOOL --&gt; PROJ[&quot;resolveProjectRoot(project, cwd)&quot;]
+    PROJ --&gt; DB[(&quot;one SQLite file per project root&lt;br/&gt;nodes, edges, sessions,&lt;br/&gt;events, snapshots, blackboard&quot;)]
+    TOOL --&gt; W[&quot;create / update node&quot;]
+    W --&gt; VER{&quot;expected_version matches?&quot;}
+    VER --&gt;|&quot;no&quot;| CONFLICT[&quot;refused&quot;]
+    VER --&gt;|&quot;yes&quot;| NODE[(&quot;node: type, title, status,&lt;br/&gt;project, git_branch, tags&quot;)]
+    W -.-&gt;|&quot;no git_branch supplied&quot;| DEF[&quot;column DEFAULT &#39;main&#39;&quot;]
+    DEF --&gt; NODE
+    NODE --&gt; EV[(&quot;events: event_type, entity,&lt;br/&gt;before_state, after_state,&lt;br/&gt;session_id, timestamp&quot;)]
+    TOOL --&gt; R[&quot;query&quot;]
+    R --&gt; BR{&quot;params.git_branch given?&quot;}
+    BR --&gt;|&quot;yes&quot;| USEP[&quot;use it&quot;]
+    BR --&gt;|&quot;no&quot;| GCB[&quot;getCurrentBranch()&lt;br/&gt;git branch --show-current&quot;]
+    GCB --&gt;|&quot;on a branch&quot;| NAME[&quot;&#39;feature/x&#39;&quot;]
+    GCB --&gt;|&quot;detached HEAD&quot;| NULLV[&quot;null&quot;]
+    USEP --&gt; STAR{&quot;value === &#39;*&#39;?&quot;}
+    NAME --&gt; STAR
+    NULLV --&gt; STAR
+    STAR --&gt;|&quot;yes&quot;| NOFILTER[&quot;no branch clause&quot;]
+    STAR --&gt;|&quot;no&quot;| CLAUSE[&quot;AND git_branch = ?&quot;]
+    CLAUSE --&gt;|&quot;bound value is null&quot;| NONE[&quot;SQLite: never true&lt;br/&gt;returns nothing, silently&quot;]
+    CLAUSE --&gt; DB
+    CS[&quot;changeset surface&quot;] -.-&gt;|&quot;absent branch = NO filter&lt;br/&gt;(disagrees with the query path)&quot;| DB</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/engine/migrations.ts</code></td>
+<td>The schema: nodes, edges, sessions, events, snapshots,
+blackboard</td>
+</tr>
+<tr>
+<td><code>src/engine/db.ts</code></td>
+<td><code>resolveProjectRoot</code> and the per-project database
+handling</td>
+</tr>
+<tr>
+<td><code>src/engine/queries.ts</code></td>
+<td>The read path and its branch clause</td>
+</tr>
+<tr>
+<td><code>src/engine/changeset.ts</code></td>
+<td>The changeset view and its different branch rule</td>
+</tr>
+<tr>
+<td><code>src/engine/staleness.ts</code></td>
+<td>Staleness, which falls back to <code>'*'</code> explicitly</td>
+</tr>
+<tr>
+<td><code>src/engine/advisor.ts</code></td>
+<td>Tool parameter contracts, required versus optional</td>
+</tr>
+<tr>
+<td><code>src/utils/git.ts</code></td>
+<td><code>getCurrentBranch</code>, its cache and its fallbacks</td>
+</tr>
+<tr>
+<td><code>src/handlers/</code>, <code>src/tools/</code></td>
+<td>MCP handlers, batch operations, tool definitions</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>src/engine/migrations.ts:19-60</code> — nodes, edges and the
+composite indexes.</li>
+<li><code>:129-147</code> — the event log and its indexes.</li>
+<li><code>src/engine/queries.ts:70-80</code> — the branch clause, and
+where <code>null</code> enters.</li>
+<li><code>src/utils/git.ts:50-66</code> — the detection and its
+<code>null</code> return.</li>
+<li><code>src/engine/staleness.ts:63</code> — the one place
+<code>|| '*'</code> is written explicitly.</li>
+<li><code>src/engine/changeset.ts:147-155</code> — the other branch
+rule.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Workflow state rather than claims: the unit is a task or a decision
+with a status, not an assertion with a confidence or a validity. That
+places it at the edge of this atlas's scope, and it earns its place
+because decisions persist across sessions, carry typed relationships,
+and are scoped by branch — the same questions the rest of the corpus
+faces, asked of a different payload.</p>
+<p>The <code>blackboard</code> table is worth noting as a shared scratch
+surface beside the graph.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Filtered graph queries: project first, then branch unless waived with
+<code>'*'</code>, then type, status and tags, with a traversal algorithm
+option for related nodes. The composite indexes match these shapes,
+which is more care than most SQLite-backed stores in this corpus
+take.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Create and update through MCP tools, individually or batched, with
+<code>expected_version</code> guarding an update against a concurrent
+change. Every mutation appends an event carrying both sides.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server aimed at Cursor, Claude Code, Gemini and Copilot, with
+an <code>mcpb</code> bundle, a manifest, a CLI and a
+project-instructions template. The screen found four auto-run surfaces —
+a Cursor MCP config, a Cursor rules directory, a Copilot instructions
+file and the server manifest — which is the shape of a tool meant to be
+installed into several hosts at once.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The detached-HEAD behaviour is the thing to fix and the thing to
+learn from. Three details compound: detection returns <code>null</code>
+rather than raising; the read binds that <code>null</code> into an
+equality comparison that SQLite can never satisfy; and the write, given
+no branch, takes a column default that names a specific branch rather
+than recording the unknown. Any one of the three alone would be
+recoverable. Together they produce a store that quietly answers "nothing
+here" while quietly filing new work under <code>main</code>.</p>
+<p>The contrast with the other branch-scoping failure in this corpus is
+instructive. <a href="../dsh-mnemon/">dsh-mnemon</a> failed open —
+branch-scoped entries were projected onto every branch. This one fails
+closed. Failing closed is better, and it is still wrong to do it
+silently: the correct behaviour is to say the branch could not be
+determined.</p>
+<p>The project scope deserves a plain statement too.
+<code>resolveProjectRoot</code> picks a file; there is no predicate
+inside a store, so anything sharing a project root shares
+everything.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>114 test files against 34,549 lines of source — a good ratio, and the
+reason to expect the branch behaviour is tested for the ordinary case.
+Nothing found here exercises a detached HEAD, which is consistent with a
+bug that survives in a well-tested repository: the state is awkward to
+set up and easy to forget.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Record both sides of every mutation.</strong>
+<code>before_state</code> and <code>after_state</code> in one event row
+make a node's history reconstructible without versioning the node.</li>
+<li><strong>Index the combinations you actually query.</strong>
+<code>(project, git_branch)</code>, <code>(project, type)</code>,
+<code>(project, status)</code> rather than three single-column
+indexes.</li>
+<li><strong>Take an <code>expected_version</code> on update.</strong> It
+is the cheapest way to turn a lost update into a visible conflict.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Binding a nullable detection result into an equality
+comparison.</strong> <code>git_branch = NULL</code> is not "unknown
+branch", it is "no rows", and SQL will not tell you which you
+meant.</li>
+<li><strong>A column default that names a real branch.</strong>
+Defaulting to <code>'main'</code> records a claim about where work
+happened that nothing verified.</li>
+<li><strong>Two surfaces reading an absent argument
+differently.</strong> Here one means "the current branch" and the other
+means "every branch".</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reach for this if you want deterministic, local workflow state shared
+across several coding hosts, and you work on named branches. Check the
+detached-HEAD path before using it inside a rebase, a bisect or CI.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should <code>getCurrentBranch()</code> returning <code>null</code>
+raise, or map to <code>'*'</code> as <code>staleness.ts</code> already
+does, rather than reaching the query as <code>null</code>?</li>
+<li>Should the <code>git_branch</code> column default to something that
+means "unknown" rather than to <code>main</code>?</li>
+<li>Should the changeset surface adopt the main query's rule for an
+absent branch, or the other way round?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/engine/migrations.ts</code></td>
+<td>The schema and the indexes</td>
+</tr>
+<tr>
+<td><code>src/engine/queries.ts</code></td>
+<td>The branch clause and the null path</td>
+</tr>
+<tr>
+<td><code>src/utils/git.ts</code></td>
+<td>Detection, cache, and the <code>null</code> return</td>
+</tr>
+<tr>
+<td><code>src/engine/staleness.ts</code></td>
+<td>The one explicit <code>'*'</code> fallback</td>
+</tr>
+<tr>
+<td><code>src/engine/changeset.ts</code></td>
+<td>The second, different branch rule</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/putervision/state-memory-mcp/commit/5af4bc3d3609335a120f0b4a269540e18e3091a8"><code class="commit-id" title="5af4bc3d3609335a120f0b4a269540e18e3091a8">5af4bc3d…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: eight files, four auto-run surfaces (a
+Cursor MCP config, a Cursor rules directory, a Copilot instructions file
+and an MCP server manifest), one build-time execution point, one
+unpinned surface, two dependency files inside the cooldown, and
+<code>CLAUDE.md</code> read as data. Nothing was installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

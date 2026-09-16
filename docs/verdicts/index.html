@@ -14036,38 +14036,65 @@ stored, or a memory larger than what fits in a prompt.</li>
 href="../systems/ripwire/"><code>ripwire</code></a></h3>
 <ul>
 <li>Best idea: <strong>an acceptance that is a floor, not an
-exemption.</strong> An ack records the magnitude a quality finding was
-accepted at, and one comparison — the finding stays suppressed while it
-is at or below that magnitude — brings it back the moment it worsens,
-with the count of what was suppressed disclosed in the report
-header.</li>
-<li>Second idea: <strong>a content hash that follows a rename and
-refuses to follow a rewrite.</strong> The scrubbed body hash re-files an
-ack when the symbol moved and deliberately does not match when the body
-changed, on the stated rule that identity following a rename must not
-become identity following a rewrite.</li>
-<li>Biggest risk: <strong>the key is a location, and the project
-measured what that costs.</strong> An ack is keyed on the path, scope
-and symbol name, and <code>git mv</code> destroys it — across fifty-nine
-identities on their own history, not one survived, a number they
-published in a comment above the rescue route they built because of it.
-A stale ack is classified into three reasons and never acted on.</li>
-<li>Most reusable component: the ratchet plus its zero-magnitude guard —
-a finding with no magnitude would make the comparison trivially true,
-which the source names as the permanent blank check the contract
-forbids.</li>
+exemption.</strong> An ack records the magnitude a quality finding had
+when somebody accepted it, and <code>findSuppressingAck</code>
+suppresses only while <code>r.now &lt;= ackNow</code> — so the finding
+returns the moment it worsens past what was actually agreed to. The
+contract is stated in the source as <em>"an ack accepts a finding AT its
+acked size, never a blank check"</em>, and it has been defended against
+its own degenerate case: a finding with no magnitude would make the test
+<code>0 &lt;= 0</code> and suppress forever, so the kind token is
+qualified by origin to stop it.</li>
+<li>Second idea: <strong>repair a broken identity where it is stored,
+not where it is read.</strong> The ack key is a path, scope and symbol
+name, so a move destroys it. The obvious fix is to teach every consumer
+to try an alias, and the source rejects it in as many words — <em>"nine
+call sites inside computeDelta plus applyAckRatchet, each an independent
+chance to get the direction backwards"</em>. What it does instead is
+rekey the two sidecars forward into the current tree's identity, once,
+before anything reads them, which makes the delta, the ratchet, the
+stale-ack classifier and the ack writer rename-aware with no edit at
+all, and it is self-healing because <code>--quality-ack</code> writes
+the rekeyed rows back. Any store whose keys can go stale can copy the
+shape.</li>
+<li>Third idea: <strong>disclose which rescue saved each row.</strong>
+<code>AckRescueRoute</code> is kept per ack rather than as a total,
+because <em>"your ack survived because git recorded the rename" and
+"because the body is byte-for-byte the same after scrubbing" are
+different claims with different trust, and collapsing them would hide
+which one the tool actually relied on.</em></li>
+<li>Biggest risk: <strong>the notes half has none of the ack half's
+care, and cannot say so.</strong> Two committed rows, no rescue route,
+no write lock — and one of them describes a gap the project has since
+closed, with its target still resolving so <code>--notes</code> does not
+flag it dangling and no field able to mark it superseded. The ack side
+built a stale classification for exactly this failure; the notes side
+has nothing. A stale ack, meanwhile, is classified into three reasons
+and disclosed but never acted on, so it keeps suppressing. And the verb
+advertised as returning <em>"most relevant memory notes / docs for a
+task"</em> does not read the notes store at all.</li>
+<li>Most reusable component: the gate that pins the <em>boundary</em> of
+the rescue rather than its success. <code>identitycheck.sh</code> holds
+three claims <em>"none of which may be traded for either of the
+others"</em> — an ack survives a rename, an ack survives a pure move via
+scrubbed-content equality, and an ack does <strong>not</strong> survive
+a real change, because identity that follows a rename <em>"must not
+become identity that follows a rewrite"</em>. It runs on a synthetic git
+repository so it never depends on the project's own debt.</li>
 <li>Maturity impression: Apache-2.0 from Red Hat's emerging-technologies
-organisation, 1,917 commits over 39 days with one author at 98.9%,
-156,391 lines of C++23, 559 gate scripts that all resolve to a file, and
-a 12,678-line evaluation document with a section listing the claims the
-project has withdrawn and why; two of seven capability marks.</li>
+organisation, version 0.6.1, 2,896 commits over 47 days from twenty
+identities of which one accounts for 1,903, 172,653 lines of C++23
+across 167 files, an MCP server of thirty-one verbs, and a test tree of
+1,599 files holding 618 named gates and 206 C++ harnesses — with the
+published gate count itself a build product gated by two independent
+derivations. Two auto-run surfaces and four unpinned dependency surfaces
+at this pin.</li>
 <li>Study when: you want accepted technical debt to be a reviewable
-committed artifact rather than a suppression comment, or you are solving
-the problem of keeping a judgement attached to code that moves.</li>
+committed artifact rather than a suppression comment, or you have a key
+that can go stale and are deciding where to repair it.</li>
 <li>Do not copy when: you need retrieval by content, a status on what is
-stored, validity time, or a notes half with the care the ack half has —
-it has no rescue route, no write lock, and one committed row that is
-already out of date.</li>
+stored, validity time, or a notes half that can tell you one of its rows
+has stopped being true. Two marks: review, negative eval.</li>
 </ul>
 <h3 id="openmasq"><a
 href="../systems/openmasq/"><code>openmasq</code></a></h3>
