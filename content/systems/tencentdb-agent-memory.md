@@ -7,9 +7,9 @@ page_kind: system
 source_name: "TencentCloud/tencentdb-agent-memory"
 source_url: https://github.com/TencentCloud/tencentdb-agent-memory
 archive_name: "TencentCloud--tencentdb-agent-memory"
-revision: c387ea4534d08f3204d50a137ef55206d7c50301
-revision_url: https://github.com/TencentCloud/tencentdb-agent-memory/commit/c387ea4534d08f3204d50a137ef55206d7c50301
-analyzed_at: 2026-09-09
+revision: 8f2dc830317934e54548472bf62c5999f9bb1202
+revision_url: https://github.com/TencentCloud/tencentdb-agent-memory/commit/8f2dc830317934e54548472bf62c5999f9bb1202
+analyzed_at: 2026-09-16
 capabilities: "audit_log, scope_enforced"
 capability_evidence:
   audit_log: "the memory_audit table, over L1/L2/L3 mutations in the core store | MemoryCore/src/core/store/sqlite/memory-store.ts:842-857,3334-3355, MemoryCore/src/gateway/v2-router.ts:184-215,1112,1325,1977,2026,2122, MemoryCore/src/gateway/chat-memory-handlers.ts:343-364 | one row per update or delete carrying record_id, layer, action, the four isolation keys, the record version, a millisecond timestamp and the originating request_id. Every one of the five mutating v2 handlers calls `recordAudit` — atomic/update, atomic/delete, scenario/write, scenario/rm, core/write — and the clear-memory path appends a delete row per layer. `audit_id` is a fresh UUID per event, so the `INSERT OR REPLACE` never replaces, and no DELETE or purge of the table exists anywhere in the tree. Implemented in all three backends. Two limits: the append is wrapped in try/catch and a failure only warns, so a mutation can commit with no row behind it, and L0 is excluded by design as an immutable stream | none — the repository ships no test files at all"
@@ -293,7 +293,9 @@ rg -n "valid_from|validFrom|as_of|asOf|bitemporal" --type ts   # 0: no validity 
 
 ## History
 
-**2026-09-09** — [`c387ea4534d08f3204d50a137ef55206d7c50301`](https://github.com/TencentCloud/tencentdb-agent-memory/commit/c387ea4534d08f3204d50a137ef55206d7c50301) — second reading, and the first of the v2 line. Screened before anything was read: no auto-run surface, two build-time execution surfaces, nine unpinned surfaces and fourteen manifests inside the seven-day cooldown; nothing was installed and no suite was run — there was none to run.
+**2026-09-16** — [`8f2dc830317934e54548472bf62c5999f9bb1202`](https://github.com/TencentCloud/tencentdb-agent-memory/commit/8f2dc830317934e54548472bf62c5999f9bb1202) — re-pinned after 4 commits, all documentation: two `README_CN.md` edits, a `CONTRIBUTING.md` clone-URL correction, and a deployment README replacing a non-resolving example endpoint with an explicit placeholder. No source file, test, schema or configuration changed, so every anchor and quotation in this report is exact at the new pin and both marks stand on unchanged code. The re-pin also clears this report from the drift register's pin-not-in-branch list. Nothing was installed, built or run.
+
+**2026-09-09** — [`8f2dc830317934e54548472bf62c5999f9bb1202`](https://github.com/TencentCloud/tencentdb-agent-memory/commit/8f2dc830317934e54548472bf62c5999f9bb1202) — second reading, and the first of the v2 line. Screened before anything was read: no auto-run surface, two build-time execution surfaces, nine unpinned surfaces and fourteen manifests inside the seven-day cooldown; nothing was installed and no suite was run — there was none to run.
 
 The previous reading described a memory plugin for OpenClaw and Hermes, pinned at `45e6e80a`. That commit is still an ancestor of `main`, six commits behind it; what changed is which branch GitHub serves as the default. `main` and `feat/server_team` share no commits — the compare API answers *"No common ancestor"* — and the v2 tags sit on the second lineage. So the subject of this report is not a later state of the code the first reading covered; it is a different codebase in the same repository, and the earlier pin remains readable on `main` for anyone who wants the plugin.
 

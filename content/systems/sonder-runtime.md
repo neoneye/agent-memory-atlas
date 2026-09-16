@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Krilliac/Sonder-runtime"
 source_url: https://github.com/Krilliac/Sonder-runtime
 archive_name: "Krilliac--Sonder-runtime"
-revision: cd40b944bb029e20ae0c480a5a4ed9c9d9c6a190
-revision_url: https://github.com/Krilliac/Sonder-runtime/commit/cd40b944bb029e20ae0c480a5a4ed9c9d9c6a190
-analyzed_at: 2026-09-13
+revision: 1a41a88d2442302421e1cf8c0893ca3edef537ee
+revision_url: https://github.com/Krilliac/Sonder-runtime/commit/1a41a88d2442302421e1cf8c0893ca3edef537ee
+analyzed_at: 2026-09-16
 capabilities: "trust_state, scope_enforced, audit_log, negative_eval, tombstone"
 capability_evidence:
   trust_state: "the lesson, moved by outcome statistics rather than by a writer | retriever.py:390 (`lesson_quarantine`), :309 (`band_loss_rate`), :372 (`_attribution`) | a lesson is active, quarantined or on probation, and the transition is computed rather than set: `lesson_quarantine` tests a loss run against the base rate for the lesson`s own retrieval-frequency band, `_attribution` deduplicates blame across lessons that were co-retrieved, and a later positive outcome rehabilitates. Quarantined lessons are dropped before ranking rather than down-weighted | tests/test_retriever.py:343 `test_positive_outcome_rehabilitates_quarantined_lesson`, and :274 for the lexical-fallback interaction"
@@ -702,6 +702,8 @@ self-modifying agent around them.
 - `tests/test_lesson_pruner.py`, `tests/test_memory_store.py` — tombstones written without lesson text; purged when their source interaction is deleted.
 
 ## History
+
+**2026-09-16** — [`1a41a88d2442302421e1cf8c0893ca3edef537ee`](https://github.com/Krilliac/Sonder-runtime/commit/1a41a88d2442302421e1cf8c0893ca3edef537ee) — re-pinned after 1 commit. It touches fifteen files and none of them is anchored here: the change isolates nightly workspace paths, retires a stale CI recovery workflow, and adjusts the runtime payload and system-profile ownership. `retriever.py`, `grounded_extraction.py`, `adapters/memory_store.py` and all five cited test files are byte-identical, so every anchor, line number and quotation in this report is exact at the new pin and all five marks stand on unchanged code. Nothing was installed, built or run.
 
 **2026-09-13** — [`cd40b944bb029e20ae0c480a5a4ed9c9d9c6a190`](https://github.com/Krilliac/Sonder-runtime/commit/cd40b944bb029e20ae0c480a5a4ed9c9d9c6a190) — 333 commits and about 163,000 added lines past the previous pin, and **the mechanism this report is named for is byte-identical**: `retriever.py` and `reflection.py` are unchanged, and `band_loss_rate` (:309), `_attribution` (:372) and `lesson_quarantine` (:390) all resolve to the same line numbers they were cited at. All five marks re-verified at the new pin.
 

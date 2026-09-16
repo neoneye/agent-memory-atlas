@@ -7,9 +7,9 @@ page_kind: system
 source_name: "buiilding/Windie-Sandbox"
 source_url: https://github.com/buiilding/Windie-Sandbox
 archive_name: "buiilding--Windie-Sandbox"
-revision: b8e9cc9283bb45ec5d151491440e02b25addc256
-revision_url: https://github.com/buiilding/Windie-Sandbox/commit/b8e9cc9283bb45ec5d151491440e02b25addc256
-analyzed_at: 2026-09-09
+revision: bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d
+revision_url: https://github.com/buiilding/Windie-Sandbox/commit/bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d
+analyzed_at: 2026-09-16
 capabilities: "human_review, negative_eval"
 stack_storage: "sqlite"
 stack_retrieval: ""
@@ -507,7 +507,9 @@ point of view, gone.
 
 ## History
 
-**2026-09-09** — [`b8e9cc9283bb45ec5d151491440e02b25addc256`](https://github.com/buiilding/Windie-Sandbox/commit/b8e9cc9283bb45ec5d151491440e02b25addc256) — second reading, 64 commits on: 269 files, 22,589 insertions, of which 3,366 land in the store and operation paths the appendix names. Screened before reading: one auto-run surface, no build-time execution, two unpinned surfaces with a `Cargo.lock` eight days old; nothing was installed and no suite was run.
+**2026-09-16** — [`bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d`](https://github.com/buiilding/Windie-Sandbox/commit/bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d) — re-pinned after 7 commits. None of the anchored files changed: `src/operation/message.rs`, `src/store/message.rs`, `src/store/session.rs` and `src/store/tests.rs` are all byte-identical, so both marks rest on unchanged code and every line number here is exact. The window touches the HTTP API and its runtime-access module, the CLI, config, dev and tray-notification paths, terminal output, seven package icons, the architecture documentation and a vendored inspector. Nothing was installed, built or run.
+
+**2026-09-09** — [`bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d`](https://github.com/buiilding/Windie-Sandbox/commit/bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d) — second reading, 64 commits on: 269 files, 22,589 insertions, of which 3,366 land in the store and operation paths the appendix names. Screened before reading: one auto-run surface, no build-time execution, two unpinned surfaces with a `Cargo.lock` eight days old; nothing was installed and no suite was run.
 
 Both marks hold and both evidence records are re-anchored. The `human_review` record named `src/operation/message.rs` for all three mutations; at this commit that file is the edit entry point and the implementations live in `src/store/message.rs`, so the record names both layers with line numbers. `ensure_message_mutation_allowed` still guards every one. The `negative_eval` record gains its lines: `loads_path_to_message` at `:732` with the `assert_ne!` at `:764`, and the equivalent assertion across a forked conversation at `:2861`.
 
@@ -515,7 +517,7 @@ A mark was examined and withheld, and the reason is worth recording because the 
 
 New beside it: `src/store/runtime_access.rs`, a durable record of the one hosted account paired with a local runtime, whose header states the boundary plainly — the runtime "remains entirely local, but its API is reachable from the hosted Inspector". That is an authorization record over the runtime rather than a scope key filtering memory reads, so it moves no mark either. Most of the remaining commit range is an architecture-documentation rewrite.
 
-**2026-08-10** — [`90f949b88be84243a79691b0183a0693641df4d8`](https://github.com/buiilding/Windie-Sandbox/commit/b8e9cc9283bb45ec5d151491440e02b25addc256)
+**2026-08-10** — [`90f949b88be84243a79691b0183a0693641df4d8`](https://github.com/buiilding/Windie-Sandbox/commit/bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d)
 — first reading. Screened before reading: 1 auto-run surface (`.gitmodules`,
 declaring three submodules owned by the same account, one of them tracking a
 `dev` branch), 0 build-time exec surfaces and no `build.rs` anywhere in the tree,

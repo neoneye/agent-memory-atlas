@@ -110,14 +110,14 @@ implementation of memory a human adjudicates before it takes effect.</p>
               <strong>npc-worldwide/npcpy</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/npc-worldwide/npcpy/commit/5c9d84801ab039c1f44fa918323ff5368330837b" title="5c9d84801ab039c1f44fa918323ff5368330837b">
+            <a class="meta-pill revision-pill" href="https://github.com/npc-worldwide/npcpy/commit/26fc78b5c578b85d4552eabfb0f195cc806927e5" title="26fc78b5c578b85d4552eabfb0f195cc806927e5">
               <span>Analyzed revision</span>
-              <code>5c9d8480…</code>
+              <code>26fc78b5…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-13</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/npc-worldwide--npcpy" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -207,7 +207,7 @@ memory.</p>
 with no way to say "not now" gets answered carelessly, and the loop
 treats deferral as a distinct outcome in its statistics rather than as a
 skip.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — only human-approved memories are read by context assembly, and a rejection is recorded so extraction never proposes it again</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: only human-approved memories are read by context assembly, and a rejection is recorded so extraction never proposes it again
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — only human-approved memories are read by context assembly; a rejection is recorded on the row and nothing consults it, so the same sentence extracted again returns as a fresh candidate</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: only human-approved memories are read by context assembly; a rejection is recorded on the row and nothing consults it, so the same sentence extracted again returns as a fresh candidate
 stateDiagram-v2
     [*] --&gt; pending_approval: background extraction&lt;br/&gt;from conversation
     pending_approval --&gt; human_approved: reviewer presses a
@@ -215,7 +215,7 @@ stateDiagram-v2
     pending_approval --&gt; human_rejected: reviewer presses r
     pending_approval --&gt; pending_approval: skip or defer&lt;br/&gt;asked again next session
     human_approved --&gt; [*]: the ONLY status&lt;br/&gt;build_context reads
-    human_rejected --&gt; [*]: recorded, and never&lt;br/&gt;consulted by extraction again</code></pre></details></figure>
+    human_rejected --&gt; [*]: recorded on the row,&lt;br/&gt;and never read back</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A JSON-backed store per directory plus a knowledge graph, and no
 service to run. The memory processor uses a <code>queue</code> and a
@@ -405,8 +405,24 @@ whether graph concepts inherit the approval gate was not traced.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/npc-worldwide/npcpy/commit/26fc78b5c578b85d4552eabfb0f195cc806927e5"><code class="commit-id" title="26fc78b5c578b85d4552eabfb0f195cc806927e5">26fc78b5…</code></a>
+— re-pinned after 9 commits.
+<code>npcpy/memory/knowledge_store.py</code> and
+<code>tests/test_memory_processor.py</code> are byte-identical, so both
+marks rest on unchanged code; <code>serve.py</code> gained four net
+lines around line 4,980, in the streaming endpoint rather than the
+memory routes. The two anchored lines were checked directly and hold the
+same code — the <code>status="human-approved"</code> read at
+<code>:1656</code> and <code>approve_memories()</code>, which shifted to
+<code>:5875</code>. One correction independent of the drift: this
+report's diagram caption said a rejection stops extraction proposing the
+same memory again, which is the opposite of what section 1 establishes
+and of what the code does. The caption and the diagram's terminal label
+now say what the body says — the rejection is recorded on the row and
+nothing reads it back. Nothing was installed, built or run.</p>
 <p><strong>2026-09-13</strong> — <a
-href="https://github.com/npc-worldwide/npcpy/commit/5c9d84801ab039c1f44fa918323ff5368330837b"><code class="commit-id" title="5c9d84801ab039c1f44fa918323ff5368330837b">5c9d8480…</code></a>
+href="https://github.com/npc-worldwide/npcpy/commit/26fc78b5c578b85d4552eabfb0f195cc806927e5"><code class="commit-id" title="26fc78b5c578b85d4552eabfb0f195cc806927e5">26fc78b5…</code></a>
 — re-read, 61 commits past the previous pin.
 <code>npcpy/memory/knowledge_store.py</code> was substantially
 rewritten, 202 lines added against 162 removed of 364, and both marks
