@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 534 reports.**
+**This page covers all 535 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4622,3 +4622,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, Python, 138,183 lines with 2,905 test functions across 179 files, a one-way CQRS split, a Dung grounded-semantics solver, and five demotion outcomes each carrying whether it is conclusive under a paragraph stating what re-derivation cannot establish — "reproducibility and fidelity, not world truth, causal validity or transfer".
 - Study when: you are about to build a promotion or consolidation path, or you have one already and no way for a promoted claim to notice it stopped being true.
 - Do not copy when: you need a store an agent writes to during a session. No marks — the statuses are computed from the argument edge set rather than stored, which is a statement about the mark definitions rather than about the work.
+
+### [`neoth`](../systems/neoth/)
+- Best idea: **a fact gets a table, not a threshold.** "[S]liding 'if importance ≥ 0.95 treat as fact' is the failure mode this module exists to prevent." Operator-asserted ground truth lives in its own store with its own scoring path — "no Hebbian decay, no FORGET_FLOOR sweep, no consolidation pass" — promoted and revoked only by explicit command, and ordered ahead of every episodic row "so a stale Hebbian-decayed memory cannot overwrite an operator ground truth". Beside it, a contradiction detector that refuses to flag a refinement: "'nas at X' vs 'nas at X primary' is NOT flagged", and that demotes the lower-credibility side by corroborating sources rather than the older one.
+- Biggest risk: **scale, and a log that is durability rather than accountability.** 1,119,998 lines of Rust with `neothd` alone at 1,002,851 in one crate, of which the memory subsystem is under five per cent. `scope` is a column on every ground-truth row with no predicate on the recall path, so it tags rather than isolates. The write-ahead log is single-writer, append-only, fdatasync'd and 0600 — durability, not a mutation record with an actor and an action — so "who changed this fact" is answered by timestamps and the contradiction ledger.
+- Most reusable component: `groundtruth.rs`'s header and `surface_for_recall` together — the named failure mode, the exemption from every sweep, the six-value state, and a recall gate that is narrow by default and widened only by an argument. Beside them `consent.rs`, whose grants are marker files under canonical-origin sets so "endpoint A never authorizes endpoint B" and an operator can audit them with `ls`.
+- Maturity impression: dual MIT and Apache-2.0, Rust, 15,232 test functions in the daemon crate, a GUI, bridges, a WASM plugin sandbox, a migration tool, an in-tree evaluation harness for memory, and a signed-release public key in the repository root.
+- Study when: you are about to treat a high importance score as a fact, or your contradiction detector fires on refinements.
+- Do not copy when: you need isolation between scopes or a record of who changed a fact. One mark: trust state.

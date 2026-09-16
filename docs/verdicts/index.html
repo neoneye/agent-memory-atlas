@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 534 reports.</strong></p>
+<p><strong>This page covers all 535 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19945,6 +19945,44 @@ it stopped being true.</li>
 session. No marks — the statuses are computed from the argument edge set
 rather than stored, which is a statement about the mark definitions
 rather than about the work.</li>
+</ul>
+<h3 id="neoth"><a href="../systems/neoth/"><code>neoth</code></a></h3>
+<ul>
+<li>Best idea: <strong>a fact gets a table, not a threshold.</strong>
+"[S]liding 'if importance ≥ 0.95 treat as fact' is the failure mode this
+module exists to prevent." Operator-asserted ground truth lives in its
+own store with its own scoring path — "no Hebbian decay, no FORGET_FLOOR
+sweep, no consolidation pass" — promoted and revoked only by explicit
+command, and ordered ahead of every episodic row "so a stale
+Hebbian-decayed memory cannot overwrite an operator ground truth".
+Beside it, a contradiction detector that refuses to flag a refinement:
+"'nas at X' vs 'nas at X primary' is NOT flagged", and that demotes the
+lower-credibility side by corroborating sources rather than the older
+one.</li>
+<li>Biggest risk: <strong>scale, and a log that is durability rather
+than accountability.</strong> 1,119,998 lines of Rust with
+<code>neothd</code> alone at 1,002,851 in one crate, of which the memory
+subsystem is under five per cent. <code>scope</code> is a column on
+every ground-truth row with no predicate on the recall path, so it tags
+rather than isolates. The write-ahead log is single-writer, append-only,
+fdatasync'd and 0600 — durability, not a mutation record with an actor
+and an action — so "who changed this fact" is answered by timestamps and
+the contradiction ledger.</li>
+<li>Most reusable component: <code>groundtruth.rs</code>'s header and
+<code>surface_for_recall</code> together — the named failure mode, the
+exemption from every sweep, the six-value state, and a recall gate that
+is narrow by default and widened only by an argument. Beside them
+<code>consent.rs</code>, whose grants are marker files under
+canonical-origin sets so "endpoint A never authorizes endpoint B" and an
+operator can audit them with <code>ls</code>.</li>
+<li>Maturity impression: dual MIT and Apache-2.0, Rust, 15,232 test
+functions in the daemon crate, a GUI, bridges, a WASM plugin sandbox, a
+migration tool, an in-tree evaluation harness for memory, and a
+signed-release public key in the repository root.</li>
+<li>Study when: you are about to treat a high importance score as a
+fact, or your contradiction detector fires on refinements.</li>
+<li>Do not copy when: you need isolation between scopes or a record of
+who changed a fact. One mark: trust state.</li>
 </ul>
         </article>
       </div>

@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first personal AI daemon
+whose operator-asserted ground truth lives in its own decay-immune table
+rather than above an importance threshold, surfaces before any episodic
+row, and drops out of recall when a contradiction flags it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="NEOTH — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first personal AI
+daemon whose operator-asserted ground truth lives in its own
+decay-immune table rather than above an importance threshold, surfaces
+before any episodic row, and drops out of recall when a contradiction
+flags it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NEOTH — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first personal AI
+daemon whose operator-asserted ground truth lives in its own
+decay-immune table rather than above an importance threshold, surfaces
+before any episodic row, and drops out of recall when a contradiction
+flags it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>NEOTH — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "NEOTH",
+      "description": "A local-first personal AI daemon whose operator-asserted ground truth lives in its own decay-immune table rather than above an importance threshold, surfaces before any episodic row, and drops out of recall when a contradiction flags it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A high importance score is not a fact, and
+the table says so</p>
+          <h1>NEOTH</h1>
+          <p class="document-deck">A local-first personal AI daemon
+whose operator-asserted ground truth lives in its own decay-immune table
+rather than above an importance threshold, surfaces before any episodic
+row, and drops out of recall when a contradiction flags it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/The-Geek-Freaks/NEOTH">
+              <span>Source</span>
+              <strong>The-Geek-Freaks/NEOTH</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/The-Geek-Freaks/NEOTH/commit/c1f34a27f53fc75530620a50d61fc9b0aa20e759" title="c1f34a27f53fc75530620a50d61fc9b0aa20e759">
+              <span>Analyzed revision</span>
+              <code>c1f34a27…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/The-Geek-Freaks--NEOTH" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>The-Geek-Freaks--NEOTH</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>NEOTH is "[y]our private AI buddy" — a local-first personal AI daemon
+in Rust, dual MIT and Apache-2.0, 1,119,998 lines with 15,232 test
+functions in its daemon crate, offering "[o]ne memory. Three brain
+paths. Five memory tiers + your vault." It ships a GUI, bridges, a
+plugin SDK with a WASM sandbox, and a migration tool.</p>
+<p>The memory subsystem is 52,353 lines of that, and one module in it is
+built against a mistake this atlas withholds marks over again and again.
+Its header:</p>
+<blockquote>
+<p>"Sliding 'if importance ≥ 0.95 treat as fact' is the failure mode
+this module exists to prevent."</p>
+</blockquote>
+<p><strong>Ground truth is a table, not a threshold.</strong> Facts the
+operator stated explicitly live in <code>idx_groundtruth</code> with
+their own scoring path — "no Hebbian decay, no FORGET_FLOOR sweep, no
+consolidation pass" — promoted only by an explicit command and revoked
+by another. And they are placed rather than merely stored: surfaced "in
+every recall hit BEFORE any episodic row so a stale Hebbian-decayed
+memory cannot overwrite an operator ground truth."</p>
+<p>That is the correct structural answer to a problem most systems here
+solve with a number. An importance score is continuous, drifts with
+reinforcement, and offers no place to record that a person asserted
+something; a separate table with its own lifecycle does all three.</p>
+<p><strong>The state gates recall.</strong> <code>FactState</code> is
+<code>Raw | Candidate | Verified | Superseded | Contradicted | Deprecated</code>,
+and <code>surface_for_recall</code> emits
+<code>WHERE revoked_at IS NULL</code> plus
+<code>AND fact_state = 'verified'</code> unless a caller passes
+<code>include_unverified</code>. Narrow by default, widened by an
+argument, with revocation as a separate terminal condition — the shape
+this atlas marks.</p>
+<p><strong>Contradiction is what fills the withholding value, and it is
+carefully bounded.</strong> Two operator facts can disagree — the
+module's own examples are "the nas is at X" against "the nas is at Y",
+and "the vpn is up" against "the vpn is not up". The detector splits
+each statement at the first copula into a subject part and a value part,
+requires subject-Jaccard above a threshold, then fires on either a
+polarity difference — using bilingual English/German negation markers —
+or diverging value tokens. And the case it deliberately does not fire on
+is the one that matters:</p>
+<blockquote>
+<p>"a superset like 'nas at X' vs 'nas at X primary' is NOT flagged"</p>
+</blockquote>
+<p>A refinement is not a contradiction, and a detector that treats it as
+one produces a contradiction ledger nobody reads. When it does fire, it
+flags the <em>lower-credibility</em> fact — fewer corroborating sources
+by the store's source weight — rather than the older one, so recency
+does not decide.</p>
+<p><strong>Consent is a file the operator can list.</strong> Every
+remote provider route requires an explicit grant under
+<code>~/.neoth/consent/</code>, with canonical-origin grant sets so
+"endpoint A never authorizes endpoint B", in-process providers never
+gating, and Ollama treated as local on loopback but requiring the same
+origin-bound consent on LAN or public endpoints. The rationale for files
+over configuration is practical and good: markers "survive
+<code>neoth init</code> reconfigure passes that rewrite
+<code>freedom.yaml</code>, and they let the operator audit consent state
+with <code>ls ~/.neoth/consent/</code>."</p>
+<p>What to weigh. The scale is extraordinary — one crate of a million
+lines with a 22,382-line chat module — and the memory subsystem this
+report covers is under five per cent of it. <code>scope</code> is a
+column on a ground-truth row and no scope predicate appears on the
+recall path, so it tags rather than isolates. The contradiction core is
+token-Jaccard with an optional semantic lift, so it is a textual
+comparison with a structural split rather than a claim-level one, and
+its thresholds are constants. And the write-ahead log — single writer,
+<code>O_APPEND</code>, <code>fdatasync</code> per flush, mode 0600,
+rotation at 16 MiB or 24 hours — is a durability mechanism rather than a
+mutation record with an actor and an action, so the question "who
+changed this fact" is answered by <code>asserted_at</code>,
+<code>revoked_at</code> and the contradiction ledger rather than by a
+change log.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>fact</strong> is something the operator said, and it lives
+somewhere episodic memory cannot reach.</p>
+<p>A <strong>score</strong> is not a fact, and the table is the
+difference.</p>
+<p>A <strong>contradiction</strong> demotes the side with fewer sources,
+not the older one.</p>
+<p>A <strong>refinement</strong> is not a contradiction.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — ground truth has its own table and scoring path so no importance threshold can promote an episodic memory into a fact, and recall surfaces only verified, unrevoked rows</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: ground truth has its own table and scoring path so no importance threshold can promote an episodic memory into a fact, and recall surfaces only verified, unrevoked rows
+flowchart TB
+    OP[&quot;the operator: neoth groundtruth add&quot;] --&gt; GT[(&quot;idx_groundtruth — statement · source ·&lt;br/&gt;scope · asserted_at · revoked_at ·&lt;br/&gt;fact_state · source_weight · confidence ·&lt;br/&gt;evidence · maturity · confirmed_count&quot;)]
+    EPI[(&quot;episodic tiers&quot;)] --&gt; DECAY[&quot;Hebbian decay · FORGET_FLOOR sweep ·&lt;br/&gt;consolidation pass&quot;]
+    DECAY -.-&gt;|&quot;none of these touch ground truth —&lt;br/&gt;&#39;no Hebbian decay, no FORGET_FLOOR sweep,&lt;br/&gt;no consolidation pass&#39;&quot;| GT
+    THRESH[&quot;&#39;if importance &gt;= 0.95 treat as fact&#39;&quot;] -.-&gt;|&quot;&#39;the failure mode this module&lt;br/&gt;exists to prevent&#39;&quot;| GT
+    CD[&quot;contradiction detection over operator facts&quot;] --&gt; SPLIT[&quot;split each statement at the first copula:&lt;br/&gt;SUBJECT part · VALUE part&quot;]
+    SPLIT --&gt; S1{&quot;subject-Jaccard &gt;= threshold?&quot;}
+    S1 --&gt;|&quot;no&quot;| NONE[&quot;not a pair&quot;]
+    S1 --&gt;|&quot;yes&quot;| S2{&quot;polarity differs (bilingual negation markers)&lt;br/&gt;OR value tokens diverge?&quot;}
+    S2 --&gt;|&quot;value is a SUPERSET —&lt;br/&gt;&#39;nas at X&#39; vs &#39;nas at X primary&#39;&quot;| NOTFLAG[&quot;NOT flagged — a refinement&lt;br/&gt;is not a contradiction&quot;]
+    S2 --&gt;|&quot;yes&quot;| LEDGER[(&quot;idx_contradictions&quot;)]
+    LEDGER --&gt; DEMOTE[&quot;flag the LOWER-credibility fact&lt;br/&gt;(fewer corroborating sources by&lt;br/&gt;source_weight) as FactState::Contradicted&lt;br/&gt;— not the older one&quot;]
+    DEMOTE --&gt; GT
+    GT --&gt; RECALL{&quot;surface_for_recall&quot;}
+    RECALL --&gt;|&quot;default&quot;| NARROW[&quot;WHERE revoked_at IS NULL&lt;br/&gt;AND fact_state = &#39;verified&#39;&quot;]
+    RECALL --&gt;|&quot;include_unverified passed&quot;| WIDE[&quot;the caller widens deliberately&quot;]
+    NARROW --&gt; ORDER[&quot;surfaced BEFORE any episodic row,&lt;br/&gt;&#39;so a stale Hebbian-decayed memory cannot&lt;br/&gt;overwrite an operator ground truth&#39;&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory/groundtruth.rs</code></td>
+<td>The fact table, its states, and the recall gate</td>
+</tr>
+<tr>
+<td><code>memory/contradiction.rs</code></td>
+<td>Subject/value split, polarity, the ledger, demotion</td>
+</tr>
+<tr>
+<td><code>memory/forget.rs</code>, <code>decay_task.rs</code>,
+<code>consolidation_sweep.rs</code></td>
+<td>The episodic lifecycle ground truth is exempt from</td>
+</tr>
+<tr>
+<td><code>memory/drift.rs</code>, <code>compaction_guard.rs</code>,
+<code>eval_harness.rs</code></td>
+<td>Drift, compaction safety, evaluation</td>
+</tr>
+<tr>
+<td><code>wal/writer.rs</code></td>
+<td>Durability: one writer, append-only, fdatasync, 0600</td>
+</tr>
+<tr>
+<td><code>consent.rs</code></td>
+<td>Origin-bound grants before any outbound route</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>SRC/neothd/src/memory/groundtruth.rs:1-14</code> — the failure
+mode, named, and the structural answer.</p>
+<p><code>SRC/neothd/src/memory/groundtruth.rs:635-653</code> — narrow by
+default, widened by an argument.</p>
+<p><code>SRC/neothd/src/memory/contradiction.rs:1-18</code> — what
+counts as a disagreement, and what does not.</p>
+<p><code>SRC/neothd/src/consent.rs:1-14</code> — grants as files, and
+why not configuration.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Five tiers plus a vault; the tier read here is ground truth, whose
+row carries a source constrained at insert time "so the audit trail
+stays clean", a scope, a source weight, a confidence, evidence, a
+maturity and a confirmed count. The confirmed count and source weight
+are what let contradiction demote by credibility rather than by
+recency.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid retrieval across tiers with ground truth placed ahead of
+episodic rows. The ordering is the mechanism: a fact that merely scored
+higher would still be competing with decayed episodic memories on one
+scale, and this takes it off that scale entirely.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Explicit promotion, explicit revocation, and a contradiction pass
+that writes a ledger row and a state rather than deleting either side.
+Nothing in the episodic lifecycle can promote into the fact table.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A daemon with bridges, a GUI, a WASM plugin sandbox, and consent
+gating between the local system and any cloud provider. The consent
+design's endpoint-awareness — loopback Ollama local, LAN and public not
+— is the kind of distinction that is usually collapsed.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The trust story is the separation: operator facts in their own table,
+exempt from the decay and forgetting that govern everything else,
+ordered ahead of it, and withheld when contradicted. The gap is a change
+record — the WAL gives durability rather than accountability.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>15,232 test functions in the daemon crate, with an evaluation harness
+inside the memory module itself. Nothing was built or run for this
+reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Do not let a threshold promote a memory into a fact. An importance
+score is continuous and drifts with reinforcement; if you want "the
+operator said so" to mean something, it needs a table, a lifecycle and a
+place in the ordering.</p>
+<p>Exempt facts from the sweeps explicitly. "No Hebbian decay, no
+FORGET_FLOOR sweep, no consolidation pass" is a sentence you should be
+able to write about your own fact store.</p>
+<p>Do not flag a refinement as a contradiction. "nas at X" against "nas
+at X primary" is the case that fills a contradiction ledger with noise,
+and excluding it is one condition.</p>
+<p>Demote by credibility, not recency. The newer statement is not the
+better supported one, and choosing by corroborating sources says which
+rule you are applying.</p>
+<p>And make consent something the operator can list. A marker file
+survives the reconfiguration that rewrites your config, and
+<code>ls</code> is an audit interface nobody has to build.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether scope is ever enforced. It is a column on every ground-truth
+row and no predicate on the recall path was found.</p>
+<p>What the other four tiers do with fact state. The gate read here is
+ground truth's; how the episodic tiers treat a contradicted subject was
+not traced.</p>
+<p>Whether the semantic lift changes the contradiction rate. It is
+optional over the Jaccard core, and no comparison was found.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SRC/neothd/src/memory/groundtruth.rs:1-14</code>,
+<code>:158-165</code></td>
+<td>A named failure mode and a six-value state</td>
+</tr>
+<tr>
+<td><code>SRC/neothd/src/memory/groundtruth.rs:635-653</code></td>
+<td>Narrow by default, widened on purpose</td>
+</tr>
+<tr>
+<td><code>SRC/neothd/src/memory/contradiction.rs:1-18</code></td>
+<td>A disagreement, and a refinement that is not one</td>
+</tr>
+<tr>
+<td><code>SRC/neothd/src/consent.rs:1-14</code></td>
+<td>Grants as files an operator can audit with <code>ls</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/The-Geek-Freaks/NEOTH/commit/c1f34a27f53fc75530620a50d61fc9b0aa20e759"><code class="commit-id" title="c1f34a27f53fc75530620a50d61fc9b0aa20e759">c1f34a27…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: thirty-four files scanned, no auto-run
+surfaces, two build-time execution points, no unpinned surfaces and
+twenty-eight dependency files inside the seven-day cooldown. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
