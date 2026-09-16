@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A continuity framework whose
+committed fixture is hashed before results are observed, whose pass
+condition pairs full recall of the latest claims with zero resurrections
+of superseded ones, and whose own result payload records that no truth
+was claimed.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="HOLO-Invariant — Agent Memory Atlas">
+    <meta property="og:description" content="A continuity framework
+whose committed fixture is hashed before results are observed, whose
+pass condition pairs full recall of the latest claims with zero
+resurrections of superseded ones, and whose own result payload records
+that no truth was claimed.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="HOLO-Invariant — Agent Memory Atlas">
+    <meta name="twitter:description" content="A continuity framework
+whose committed fixture is hashed before results are observed, whose
+pass condition pairs full recall of the latest claims with zero
+resurrections of superseded ones, and whose own result payload records
+that no truth was claimed.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>HOLO-Invariant — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "HOLO-Invariant",
+      "description": "A continuity framework whose committed fixture is hashed before results are observed, whose pass condition pairs full recall of the latest claims with zero resurrections of superseded ones, and whose own result payload records that no truth was claimed.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">It scores a naive baseline on its own
+benchmark, and says which metrics the baseline wins</p>
+          <h1>HOLO-Invariant</h1>
+          <p class="document-deck">A continuity framework whose
+committed fixture is hashed before results are observed, whose pass
+condition pairs full recall of the latest claims with zero resurrections
+of superseded ones, and whose own result payload records that no truth
+was claimed.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Deathburgerz013/HOLO-Invariant">
+              <span>Source</span>
+              <strong>Deathburgerz013/HOLO-Invariant</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Deathburgerz013/HOLO-Invariant/commit/2d36396a060f28ec68110f7697b893d2c8cff859" title="2d36396a060f28ec68110f7697b893d2c8cff859">
+              <span>Analyzed revision</span>
+              <code>2d36396a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Deathburgerz013--HOLO-Invariant" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Deathburgerz013--HOLO-Invariant</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>HOLO-Invariant is "AI continuity that preserves corrections instead
+of hiding them" — MIT, Python 3.10+, 91,867 lines across roughly two
+hundred modules with 1,603 test functions in 218 test files, and zero
+runtime dependencies. It is a framework for preserving, reconstructing
+and checking state across sessions, models, tools and execution
+environments.</p>
+<p>Its README states the contrast as a table, and every row is a failure
+this atlas reports somewhere: correction replaces history, the latest
+value hides its lineage, resume trusts supplied context, memory
+authority is implicit. Against each: correction becomes a verified
+relation, original and correction and target all stay inspectable,
+resume checks externally retained evidence, authority stays explicit and
+bounded.</p>
+<p><strong>The benchmark is the reason to read it.</strong> Five bounded
+metrics over one committed fixture:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Latest justified recall</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>Superseded resurrection count</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Uncertainty recall</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>Lineage recall</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>Stale continuation blocked</td>
+<td>true</td>
+</tr>
+</tbody>
+</table></div>
+<p>Four things make that table mean something. The fixture is public and
+hashed, and "fixes the target before results are observed". The
+condition schema is closed "so undeclared fields cannot alter the
+scoring contract" — a candidate cannot add a field that changes how it
+is scored. The reference result is "regenerated from the same committed
+fixture and condition on every change" in CI. And the comparison test
+asserts
+<code>holo_reference["fixture_hash"] == fixture["fixture_hash"]</code>
+before reading a single metric.</p>
+<p><strong>Then it scores the trivial alternative, and reports which
+metrics the trivial alternative wins.</strong> A plain latest-value
+store is run against the identical fixture, and the test records that it
+passes two of the five: its <code>latest_justified_recall</code> is 1.0,
+and its <code>superseded_resurrection_count</code> is 0 — "[i]t does not
+resurrect the overwritten value as current." It fails exactly three:
+uncertainty recall, lineage recall, and stale-continuation blocking. And
+the deltas are asserted to be <em>zero</em> on the two the baseline
+already wins, under a comment that states the claim in one sentence:</p>
+<blockquote>
+<p>"The difference is specifically uncertainty + lineage +
+stale-continuation behavior, not latest-value recall."</p>
+</blockquote>
+<p>This atlas has read a great many benchmarks. Very few name the
+metrics their baseline already passes. Doing so converts a five-for-five
+scoreboard into a narrow claim — <em>this system represents uncertainty,
+lineage, and staleness, and ordinary storage does not</em> — which is
+both smaller and worth something, because it can be checked and could
+have come out the other way.</p>
+<p>The pass condition is why this earns the negative-evaluation mark
+rather than just admiration.
+<code>passes_bounded_continuity_fixture</code> is</p>
+<pre class="python"><code>latest_recall == 1.0 and not resurrected and uncertainty_recall == 1.0
+and lineage_recall == 1.0 and stale_blocked</code></pre>
+<p>— a must-not-retrieve assertion (no superseded claim comes back as
+current) that cannot pass vacuously, because the same condition demands
+full recall of everything that <em>is</em> current. A store that
+returned nothing would fail the first clause. The control is in the pass
+condition itself.</p>
+<p><strong>The artifacts refuse to claim more than they show.</strong>
+Every result payload carries <code>truth_claimed: false</code> and
+<code>accepted: false</code>. The demo's description ends: "[i]t does
+not modify an existing chain or grant truth, acceptance, write, or
+execution authority." A correction is bound to one exact baseline
+transition candidate and sits at
+<code>READY_FOR_EXACT_TARGET_AUTHORIZATION</code> until authorized
+against that target — the same bind-to-one-operation property this atlas
+found in <a href="../anda-db/">Anda DB</a>'s approvals and <a
+href="../edda/">Edda</a>'s verdicts.</p>
+<p>What this is not: a memory an agent writes to. There is no store with
+a read path, no scoping over stored content, and no mutation record —
+the transitions are the subject. A reader arriving for a memory backend
+will find a scoring contract and a correction model, which is the
+valuable thing here and not the thing the category name suggests.</p>
+<p>And the metrics are bounded in the literal sense the code names them:
+five properties over one fixture of a chosen shape. Passing says the
+system represents uncertainty, lineage and stale continuation <em>on
+that fixture</em>; generalisation is the reader's inference and not the
+benchmark's claim — which <code>passes_bounded_continuity_fixture</code>
+concedes in its own identifier.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>correction</strong> is a relation, not a replacement.</p>
+<p>A <strong>fixture</strong> is hashed before anyone runs against
+it.</p>
+<p>A <strong>baseline</strong> is scored on the same target, and told
+what it won.</p>
+<p>A <strong>result</strong> records that it claimed no truth.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the pass condition pairs a must-not-resurrect assertion with full recall of current claims, and the naive baseline is scored on the same hash-pinned fixture</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the pass condition pairs a must-not-resurrect assertion with full recall of current claims, and the naive baseline is scored on the same hash-pinned fixture
+flowchart TB
+    FIX[(&quot;benchmarks/continuity-v1.fixture.json —&lt;br/&gt;public, hashed, &#39;fixes the target&lt;br/&gt;before results are observed&#39;&quot;)]
+    SCH[&quot;schemas/continuity-condition.schema.json —&lt;br/&gt;closed, &#39;so undeclared fields cannot&lt;br/&gt;alter the scoring contract&#39;&quot;]
+    FIX --&gt; SCORE{&quot;score a condition&quot;}
+    SCH --&gt; SCORE
+    SCORE --&gt; M1[&quot;latest_justified_recall&quot;]
+    SCORE --&gt; M2[&quot;superseded_resurrection_count&lt;br/&gt;= len(superseded_resurrected_as_current)&quot;]
+    SCORE --&gt; M3[&quot;uncertainty_recall&quot;]
+    SCORE --&gt; M4[&quot;lineage_recall&quot;]
+    SCORE --&gt; M5[&quot;stale_continuation_blocked&quot;]
+    M1 &amp; M2 &amp; M3 &amp; M4 &amp; M5 --&gt; PASS{&quot;passes_bounded_continuity_fixture =&lt;br/&gt;latest_recall == 1.0 AND not resurrected&lt;br/&gt;AND uncertainty_recall == 1.0&lt;br/&gt;AND lineage_recall == 1.0 AND stale_blocked&quot;}
+    PASS -.-&gt;|&quot;the must-not-resurrect clause cannot&lt;br/&gt;pass vacuously — the same condition&lt;br/&gt;demands full recall of what IS current&quot;| CTRL[&quot;the control is in the pass condition&quot;]
+    BASE[&quot;a naive latest-value store,&lt;br/&gt;scored on the IDENTICAL fixture&quot;] --&gt; SCORE
+    BASE --&gt; WINS[&quot;wins two metrics:&lt;br/&gt;latest_justified_recall = 1.0&lt;br/&gt;superseded_resurrection_count = 0&quot;]
+    BASE --&gt; LOSES[&quot;fails three:&lt;br/&gt;uncertainty_recall = 0.0&lt;br/&gt;lineage_recall = 0.0&lt;br/&gt;stale_continuation_blocked = false&quot;]
+    WINS -.-&gt;|&quot;deltas asserted to be exactly zero:&lt;br/&gt;&#39;the difference is specifically uncertainty +&lt;br/&gt;lineage + stale-continuation behavior,&lt;br/&gt;not latest-value recall&#39;&quot;| CLAIM[&quot;a narrow claim instead of&lt;br/&gt;a five-for-five scoreboard&quot;]
+    HASHCHK[&quot;the comparison asserts both results&lt;br/&gt;share a fixture_hash before reading a metric&quot;] --&gt; SCORE
+    OUT[&quot;every result payload:&lt;br/&gt;truth_claimed = false,&lt;br/&gt;accepted = false&quot;] --&gt; PASS
+    CORR[&quot;a correction&quot;] --&gt; CAND[&quot;bound to ONE exact baseline&lt;br/&gt;transition candidate —&lt;br/&gt;READY_FOR_EXACT_TARGET_AUTHORIZATION&quot;]
+    CAND --&gt;|&quot;authorized against that exact target&quot;| NEWBASE[&quot;becomes the baseline;&lt;br/&gt;original, correction and target&lt;br/&gt;all remain inspectable&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>holosim/continuity_baseline_benchmark.py</code></td>
+<td>The scorer, the metrics, the comparison</td>
+</tr>
+<tr>
+<td><code>holosim/spine_protocol.py</code></td>
+<td>The continuity protocol (1,641 lines)</td>
+</tr>
+<tr>
+<td><code>holosim/verified_claim_correction_transition.py</code></td>
+<td>A correction bound to one target</td>
+</tr>
+<tr>
+<td><code>holosim/invariant_catalog.py</code></td>
+<td>The declared invariants</td>
+</tr>
+<tr>
+<td><code>holosim/slot_merkle_sqlite.py</code></td>
+<td>Hashed slots over SQLite</td>
+</tr>
+<tr>
+<td><code>benchmarks/</code>, <code>schemas/</code></td>
+<td>The fixture, the closed condition schema, CI results</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>holosim/continuity_baseline_benchmark.py:153-190</code> — the
+five metrics and the pass condition that keeps one of them honest.</p>
+<p><code>tests/test_latest_value_continuity_baseline.py:75-150</code> —
+the baseline, what it wins, and the deltas asserted to zero.</p>
+<p><code>benchmarks/continuity-v1.fixture.json</code> — the target,
+fixed and hashed.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A claim with retained evidence, correction edges forming a lineage,
+and an uncertainty record. The model's commitment is that all three
+survive a correction: "[o]riginal, correction, and target remain
+inspectable."</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>None of its own. Reconstruction and checking rather than search.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A correction becomes a transition candidate bound to one exact
+baseline, held at <code>READY_FOR_EXACT_TARGET_AUTHORIZATION</code>
+until a typed authorization for that exact target arrives. Binding the
+authorization to the target is what stops one approval from licensing a
+different transition.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI and a system-neutral condition document, so another continuity
+system can be exported into the same shape and scored against the same
+fixture. That is an unusual offer — a benchmark designed to be run
+against its author's competitors on equal terms — and its value depends
+entirely on the fixture being fair, which is why the hash pinning and
+the baseline scoring matter as much as the metrics.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The trust story is methodological rather than architectural: the
+fixture, the closed schema, the CI regeneration, the baseline
+comparison, and the payload fields that decline to claim truth or
+acceptance.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,603 test functions across 218 files, including tests that assert
+the README's own table matches the regenerated reference result — so the
+published number cannot drift from the computed one. Nothing was
+installed or run for this reading; the numbers quoted are the committed
+ones.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Score the trivial alternative on your own benchmark, and publish what
+it wins. A metric the naive baseline already passes is a metric your
+system should not take credit for, and saying so is what turns a
+scoreboard into a claim.</p>
+<p>Hash the fixture and close the schema. "Fixes the target before
+results are observed" and "undeclared fields cannot alter the scoring
+contract" are two sentences that prevent most of the ways a benchmark
+stops being one.</p>
+<p>Put the control in the pass condition. Requiring full recall of
+current claims alongside zero resurrections means the negative half
+cannot be satisfied by a system that returns nothing.</p>
+<p>And let your artifacts say what they do not establish.
+<code>truth_claimed: false</code> in every result is a small field that
+keeps a downstream reader from importing a score as a verdict.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the authorization is human. Transitions are bound to an exact
+target and typed; who supplies the authorization was not traced.</p>
+<p>How the fixture was chosen. It is fixed and hashed, which makes it
+fair; whether its shape favours the model it was built alongside is a
+question the fixture cannot answer about itself.</p>
+<p>What the spine protocol contributes. At 1,641 lines it is the largest
+module and sits outside the benchmark path read here.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>holosim/continuity_baseline_benchmark.py:153-190</code></td>
+<td>Five metrics, and a pass condition that cannot be gamed by
+silence</td>
+</tr>
+<tr>
+<td><code>tests/test_latest_value_continuity_baseline.py:75-150</code></td>
+<td>A baseline scored honestly, including what it wins</td>
+</tr>
+<tr>
+<td><code>holosim/verified_claim_correction_transition.py:1-25</code></td>
+<td>A correction bound to one exact target</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/Deathburgerz013/HOLO-Invariant/commit/2d36396a060f28ec68110f7697b893d2c8cff859"><code class="commit-id" title="2d36396a060f28ec68110f7697b893d2c8cff859">2d36396a…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: four files scanned, no auto-run surfaces,
+no build-time execution points, one unpinned surface and one dependency
+file inside the seven-day cooldown. Nothing was installed, built or run,
+and no benchmark was executed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

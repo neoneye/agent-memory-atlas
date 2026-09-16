@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 531 reports.**
+**This page covers all 532 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4598,3 +4598,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0, Python 3.12+, 269,603 lines with 6,388 test functions, PostgreSQL 16 with pg_trgm, a Redis 7 event bus, a streamable-HTTP MCP server, Claude Code hooks, and an ontology kept as a reviewed catalog because types "stop being invented inline by each parser".
 - Study when: your extractors each pick their own confidence number, or you store a corroboration flag that a later source would falsify.
 - Do not copy when: you need isolation between agents, or a read that refuses weak evidence rather than ranking it. Two marks: trust state, audit log.
+
+### [`holo-invariant`](../systems/holo-invariant/)
+- Best idea: **it scores the trivial alternative on its own benchmark and reports what the alternative wins.** A plain latest-value store, run against the identical hash-pinned fixture, passes two of the five metrics — latest-justified recall 1.0 and zero superseded resurrections — and the test asserts those deltas are exactly zero under a comment stating the claim: "[t]he difference is specifically uncertainty + lineage + stale-continuation behavior, not latest-value recall." That converts a five-for-five scoreboard into a narrow claim that could have come out otherwise.
+- Biggest risk: **it is not a memory an agent writes to.** There is no store with a read path, no scoping over stored content and no mutation record — transitions are the subject. The metrics are also bounded literally: five properties over one fixture of a chosen shape, so passing establishes the behaviour on that fixture and generalisation is the reader's inference, which `passes_bounded_continuity_fixture` concedes in its own name. At 91,867 lines with a vocabulary of its own, the cost of entry is high relative to the five metrics at the centre.
+- Most reusable component: the benchmark contract — a public fixture that "fixes the target before results are observed", a closed condition schema "so undeclared fields cannot alter the scoring contract", a CI-regenerated reference, a `fixture_hash` equality asserted before any metric is read, and result payloads carrying `truth_claimed: false` and `accepted: false`.
+- Maturity impression: MIT, Python 3.10+, 91,867 lines with 1,603 test functions across 218 files, zero runtime dependencies, tests that assert the README's own table matches the regenerated result so the published number cannot drift from the computed one.
+- Study when: you are publishing a memory benchmark, or you want a worked model of correction as a relation rather than a replacement.
+- Do not copy when: you need a store. One mark, negative eval: the pass condition requires no superseded claim to return as current **and** full recall of what is current, so the negative half cannot be satisfied by returning nothing.

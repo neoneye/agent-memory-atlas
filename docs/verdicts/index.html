@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 531 reports.</strong></p>
+<p><strong>This page covers all 532 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19820,6 +19820,44 @@ falsify.</li>
 <li>Do not copy when: you need isolation between agents, or a read that
 refuses weak evidence rather than ranking it. Two marks: trust state,
 audit log.</li>
+</ul>
+<h3 id="holo-invariant"><a
+href="../systems/holo-invariant/"><code>holo-invariant</code></a></h3>
+<ul>
+<li>Best idea: <strong>it scores the trivial alternative on its own
+benchmark and reports what the alternative wins.</strong> A plain
+latest-value store, run against the identical hash-pinned fixture,
+passes two of the five metrics — latest-justified recall 1.0 and zero
+superseded resurrections — and the test asserts those deltas are exactly
+zero under a comment stating the claim: "[t]he difference is
+specifically uncertainty + lineage + stale-continuation behavior, not
+latest-value recall." That converts a five-for-five scoreboard into a
+narrow claim that could have come out otherwise.</li>
+<li>Biggest risk: <strong>it is not a memory an agent writes
+to.</strong> There is no store with a read path, no scoping over stored
+content and no mutation record — transitions are the subject. The
+metrics are also bounded literally: five properties over one fixture of
+a chosen shape, so passing establishes the behaviour on that fixture and
+generalisation is the reader's inference, which
+<code>passes_bounded_continuity_fixture</code> concedes in its own name.
+At 91,867 lines with a vocabulary of its own, the cost of entry is high
+relative to the five metrics at the centre.</li>
+<li>Most reusable component: the benchmark contract — a public fixture
+that "fixes the target before results are observed", a closed condition
+schema "so undeclared fields cannot alter the scoring contract", a
+CI-regenerated reference, a <code>fixture_hash</code> equality asserted
+before any metric is read, and result payloads carrying
+<code>truth_claimed: false</code> and <code>accepted: false</code>.</li>
+<li>Maturity impression: MIT, Python 3.10+, 91,867 lines with 1,603 test
+functions across 218 files, zero runtime dependencies, tests that assert
+the README's own table matches the regenerated result so the published
+number cannot drift from the computed one.</li>
+<li>Study when: you are publishing a memory benchmark, or you want a
+worked model of correction as a relation rather than a replacement.</li>
+<li>Do not copy when: you need a store. One mark, negative eval: the
+pass condition requires no superseded claim to return as current
+<strong>and</strong> full recall of what is current, so the negative
+half cannot be satisfied by returning nothing.</li>
 </ul>
         </article>
       </div>
