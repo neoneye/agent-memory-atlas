@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 522 reports.</strong></p>
+<p><strong>This page covers all 523 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19457,6 +19457,45 @@ what happens when the user ignores it, or you want a cognition loop
 whose speak-or-not decision is readable arithmetic.</li>
 <li>Do not copy when: you need the memory semantics — those live in the
 engine crate this repository points at. No marks.</li>
+</ul>
+<h3 id="huiran-cerebro"><a
+href="../systems/huiran-cerebro/"><code>huiran-cerebro</code></a></h3>
+<ul>
+<li>Best idea: <strong>mark the duplicate, keep the first writer, and
+offer a dry run.</strong> Fragments whose content Jaccard crosses a
+threshold have the later one set <code>status='merged'</code> —
+不删原文, the text is not deleted — while the earlier survives as
+信息源, the information source. Every recall path selects
+<code>WHERE status='active'</code>, so a merged fragment leaves
+retrieval without leaving the store, and <code>dry_run</code> returns
+the candidate pairs with their similarity scores before anything is
+written.</li>
+<li>Biggest risk: <strong>no tests anywhere, under a pass that rewrites
+rows in place.</strong> No test directory, no test file; the two
+<code>tools/_*_smoke.py</code> scripts check without asserting. The
+dedup is also a full pairwise scan of every active fragment with a
+Python Jaccard per pair, and because it reads only active rows a merged
+fragment is never compared against again — so re-adding the same text
+creates a fresh active row the next pass must merge all over. The mark
+records a decision and nothing consults it at write time.</li>
+<li>Most reusable component: <code>dedupe_fragments</code> in its
+entirety — twenty-eight lines carrying the survivor rule, the
+mark-not-delete rule and the dry run, with the reasoning in the
+docstring rather than in a commit message.</li>
+<li>Maturity impression: MIT, version 1.5.0, Python 3.10+, 4,582 lines
+in a handful of modules, a single SQLite file with FTS5 trigram
+tokenisation and a reserved embedding table, an MCP server with a
+written Doubao integration guide, a web console, a <code>doctor</code>
+command, and a version constant a script syncs the README badge to.
+Windows-oriented: batch launchers, and a delete that moves a directory
+to the recycle bin through <code>SHFileOperationW</code>.</li>
+<li>Study when: you are writing a de-duplication pass and have not
+decided which side survives, or you want a small worked example of a
+status that withholds without deleting.</li>
+<li>Do not copy when: you need the predicate enforced —
+<code>status='active'</code> is repeated at four call sites and
+<code>namespace</code> emits nothing when omitted. One mark: trust
+state.</li>
 </ul>
         </article>
       </div>

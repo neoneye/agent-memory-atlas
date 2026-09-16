@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 522 reports.**
+**This page covers all 523 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4526,3 +4526,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: GPL-3.0, Rust with a Slint UI, 181,759 lines with 753 test functions, sixteen application binaries, a uniform `yos describe` / `yos act` control surface over a unix socket, and an output sanitizer that redacts sensitive fragments from model responses before display. The engine it depends on is Apache-2.0.
 - Study when: you are building anything proactive and have not decided what happens when the user ignores it, or you want a cognition loop whose speak-or-not decision is readable arithmetic.
 - Do not copy when: you need the memory semantics — those live in the engine crate this repository points at. No marks.
+
+### [`huiran-cerebro`](../systems/huiran-cerebro/)
+- Best idea: **mark the duplicate, keep the first writer, and offer a dry run.** Fragments whose content Jaccard crosses a threshold have the later one set `status='merged'` — 不删原文, the text is not deleted — while the earlier survives as 信息源, the information source. Every recall path selects `WHERE status='active'`, so a merged fragment leaves retrieval without leaving the store, and `dry_run` returns the candidate pairs with their similarity scores before anything is written.
+- Biggest risk: **no tests anywhere, under a pass that rewrites rows in place.** No test directory, no test file; the two `tools/_*_smoke.py` scripts check without asserting. The dedup is also a full pairwise scan of every active fragment with a Python Jaccard per pair, and because it reads only active rows a merged fragment is never compared against again — so re-adding the same text creates a fresh active row the next pass must merge all over. The mark records a decision and nothing consults it at write time.
+- Most reusable component: `dedupe_fragments` in its entirety — twenty-eight lines carrying the survivor rule, the mark-not-delete rule and the dry run, with the reasoning in the docstring rather than in a commit message.
+- Maturity impression: MIT, version 1.5.0, Python 3.10+, 4,582 lines in a handful of modules, a single SQLite file with FTS5 trigram tokenisation and a reserved embedding table, an MCP server with a written Doubao integration guide, a web console, a `doctor` command, and a version constant a script syncs the README badge to. Windows-oriented: batch launchers, and a delete that moves a directory to the recycle bin through `SHFileOperationW`.
+- Study when: you are writing a de-duplication pass and have not decided which side survives, or you want a small worked example of a status that withholds without deleting.
+- Do not copy when: you need the predicate enforced — `status='active'` is repeated at four call sites and `namespace` emits nothing when omitted. One mark: trust state.

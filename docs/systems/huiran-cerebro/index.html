@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single-file personal memory hub
+whose deduplication marks the later of two near-identical fragments
+merged rather than deleting it, keeps the earlier one as the source, and
+offers a dry run that returns the pairs before anything changes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Huiran-cerebro — Agent Memory Atlas">
+    <meta property="og:description" content="A single-file personal
+memory hub whose deduplication marks the later of two near-identical
+fragments merged rather than deleting it, keeps the earlier one as the
+source, and offers a dry run that returns the pairs before anything
+changes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Huiran-cerebro — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single-file personal
+memory hub whose deduplication marks the later of two near-identical
+fragments merged rather than deleting it, keeps the earlier one as the
+source, and offers a dry run that returns the pairs before anything
+changes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Huiran-cerebro — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Huiran-cerebro",
+      "description": "A single-file personal memory hub whose deduplication marks the later of two near-identical fragments merged rather than deleting it, keeps the earlier one as the source, and offers a dry run that returns the pairs before anything changes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The duplicate is retired, the first writer
+is kept</p>
+          <h1>Huiran-cerebro</h1>
+          <p class="document-deck">A single-file personal memory hub
+whose deduplication marks the later of two near-identical fragments
+merged rather than deleting it, keeps the earlier one as the source, and
+offers a dry run that returns the pairs before anything changes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/qilunuojiang9-hue/Huiran-cerebro">
+              <span>Source</span>
+              <strong>qilunuojiang9-hue/Huiran-cerebro</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/qilunuojiang9-hue/Huiran-cerebro/commit/08644a7edd1bff64ba46177d069287cb1daaad7a" title="08644a7edd1bff64ba46177d069287cb1daaad7a">
+              <span>Analyzed revision</span>
+              <code>08644a7e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/qilunuojiang9-hue--Huiran-cerebro" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>qilunuojiang9-hue--Huiran-cerebro</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Huiran-cerebro (赛博大脑, "cyber brain") is a personal and team
+memory hub and knowledge-base engine — MIT, Python 3.10+, version 1.5.0,
+4,582 lines across a handful of modules, one SQLite file with no service
+dependency. Its stated goal is to settle an AI's memory and knowledge
+into a local, searchable, conversable private knowledge base, and it
+ships an MCP server with a written integration guide for Doubao, a web
+console, and Windows batch launchers.</p>
+<p>The engine is four layers in one file: a knowledge base of documents
+and chunks, memory fragments, a typed entity graph, and an AI
+conversation log, retrieved by FTS5 with trigram tokenisation — the
+right choice for Chinese, which has no spaces to tokenise on — fused
+with <code>bge-small-zh-v1.5</code> embeddings by reciprocal rank.</p>
+<p>The mechanism worth the visit is the deduplication, and it makes two
+good decisions in one docstring:</p>
+<blockquote>
+<p>"重复碎片合并：内容 Jaccard &gt;= threshold 的碎片，标记后写者
+status='merged'（不删原文）。
+保留先创建者（信息源），后写者合并到它。"</p>
+<p><em>Merge duplicate fragments: for fragments whose content Jaccard is
+at or above the threshold, mark the later writer
+<code>status='merged'</code> (do not delete the text). Keep the first
+creator as the information source; the later writer is merged into
+it.</em></p>
+</blockquote>
+<p><strong>It marks rather than deletes</strong>, so the duplicate stays
+inspectable and the merge is reversible — and because every recall path
+selects <code>WHERE status='active'</code>, the marked row leaves
+retrieval without leaving the store. That is the trust-state mark, and
+it is the whole of it: a stored discrete status, set by a real
+mechanism, read by the paths that matter.</p>
+<p><strong>And it keeps the earlier fragment</strong>, on the stated
+ground that the first writer is the information source. Last-write-wins
+is the default almost everywhere, and it is the wrong default when the
+later copy is a restatement of the earlier one rather than a correction
+of it.</p>
+<p>A <code>dry_run</code> flag returns the candidate pairs with their
+similarity scores and changes nothing, so the threshold can be tuned
+against real data before it is applied to it. Small, and more than many
+larger systems here offer.</p>
+<p>What to weigh against that. <strong>There are no tests</strong> — no
+test directory, no test file, and the two <code>tools/_*_smoke.py</code>
+scripts are smoke checks rather than assertions — under a pass that
+rewrites rows in place. The dedup is a full pairwise scan of every
+active fragment with a Python Jaccard per pair, so its cost grows with
+the square of the store. And because the scan reads only active rows, a
+merged fragment is never compared against again: re-adding the same text
+creates a fresh active row that the next pass must merge all over again.
+The mark records a decision; nothing consults it when the next write
+arrives, so it is a retirement rather than a refusal.</p>
+<p><code>namespace</code> exists on fragments and entities with a
+<code>default</code> value, and is passed as an optional argument that
+emits no predicate when omitted — so it separates nothing unless a
+caller asks it to.</p>
+<p>Two details for a reader coming from elsewhere. The delete helper is
+Windows-only, calling <code>SHFileOperationW</code> with
+<code>FOF_ALLOWUNDO</code> so a removed directory lands in the recycle
+bin rather than vanishing — a thoughtful default that does not exist on
+other platforms. And the README carries a section explicitly addressed
+to LLM readers, alongside an <code>llms.txt</code>, which is worth
+knowing when an agent summarises this project from its own documentation
+rather than from its code.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>fragment</strong> is a small remembered thing, and it is
+either active or it has been merged into an earlier one.</p>
+<p><strong>Merged</strong> means retired from recall, not gone.</p>
+<p>The <strong>first writer wins</strong>, because the first writer is
+the source.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the dedup pass marks the later of two near-identical fragments merged and keeps its text, and every recall path's status='active' predicate is what removes it from results</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the dedup pass marks the later of two near-identical fragments merged and keeps its text, and every recall path&#39;s status=&#39;active&#39; predicate is what removes it from results
+flowchart TB
+    W[&quot;add a fragment — CLI, web console, or MCP&quot;] --&gt; ROW[(&quot;memory_fragments:&lt;br/&gt;type · subject · content · entities ·&lt;br/&gt;tags · status=&#39;active&#39; · source_ref ·&lt;br/&gt;importance · namespace&quot;)]
+    DED[&quot;dedupe_fragments(threshold, dry_run)&quot;] --&gt; SCAN[&quot;read every row WHERE status=&#39;active&#39;&lt;br/&gt;AND length(content) &gt;= 8, oldest id first&quot;]
+    SCAN --&gt; PAIR{&quot;pairwise: identical content,&lt;br/&gt;or Jaccard &gt;= threshold?&quot;}
+    PAIR --&gt;|&quot;no&quot;| KEEP[&quot;both stay active&quot;]
+    PAIR --&gt;|&quot;yes, dry_run&quot;| CAND[&quot;return the pair with its score;&lt;br/&gt;change nothing&quot;]
+    PAIR --&gt;|&quot;yes&quot;| MARK[&quot;UPDATE the LATER row:&lt;br/&gt;status=&#39;merged&#39;&lt;br/&gt;— &#39;不删原文&#39;, the text is not deleted;&lt;br/&gt;the first creator is kept as the source&quot;]
+    MARK --&gt; ROW
+    ROW --&gt; R{&quot;recall · list · summary · relations&quot;}
+    R --&gt;|&quot;every path&quot;| F[&quot;WHERE status=&#39;active&#39;&quot;]
+    F --&gt; OUT[&quot;results: FTS5 trigram +&lt;br/&gt;bge-small-zh embeddings, fused by RRF&quot;]
+    MARK -.-&gt;|&quot;merged rows are excluded from the&lt;br/&gt;next scan, so re-adding the same text&lt;br/&gt;makes a new active row the next pass&lt;br/&gt;must merge again&quot;| SCAN
+    NS[&quot;namespace — default &#39;default&#39;,&lt;br/&gt;an optional argument&quot;] -.-&gt;|&quot;omitted ⇒ no predicate emitted&quot;| R</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cyber_brain.py</code></td>
+<td>The schema, the store, search, recall, dedup, summaries</td>
+</tr>
+<tr>
+<td><code>web_ui.py</code></td>
+<td>The browser console</td>
+</tr>
+<tr>
+<td><code>mcp_server.py</code></td>
+<td>The MCP surface</td>
+</tr>
+<tr>
+<td><code>session_log.py</code>, <code>summarize.py</code>,
+<code>daily_brief.py</code></td>
+<td>Session capture, rolling summaries, a daily brief</td>
+</tr>
+<tr>
+<td><code>doctor.py</code>, <code>tools/check_version.py</code></td>
+<td>Diagnostics, and a version badge kept in sync</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>cyber_brain.py:832-859</code> — the dedup, its docstring, and
+its dry run.</p>
+<p><code>cyber_brain.py:189-206</code> — the fragment schema and the
+status index.</p>
+<p><code>cyber_brain.py:708</code>, <code>:779</code>,
+<code>:807</code>, <code>:1173</code> — the four places the predicate is
+repeated.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Fragments carry a type, a subject, entities, tags, a status, a source
+reference, an embedding state, an importance and a namespace. Content
+items carry more: a status of draft or done, a version and a parent id
+forming a revision chain, a source type, a source tag and an
+<code>authorization_ref</code> defaulting to <code>manual</code> —
+provenance fields that are recorded and, as far as this reading found,
+not yet consulted by a read.</p>
+<p>Rolling summaries carry a scope key and a checkpoint version, which
+is how the system keeps a compacted account of a long stretch without
+losing the fragments underneath it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 trigram and embeddings fused by reciprocal rank, with the
+active-status predicate repeated at each site rather than centralised —
+four copies of one rule, which is the shape that drifts. A
+retrieval-audit table records what was asked and in what mode.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Direct inserts; dedup is an explicit pass rather than a write-time
+check. That ordering is the trade-off: writes stay cheap and
+unconditional, and duplicates accumulate until someone runs the
+pass.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server with a document walking through connecting Doubao, plus
+a web console and CLI. <code>add_content</code> takes a status
+defaulting to <code>draft</code>, so an agent's write lands as a draft
+unless it says otherwise — a small default in the right direction.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The merge-not-delete rule is the substance. Beyond it: a
+<code>doctor</code> command, a version constant with a script that syncs
+the README badge to it, and a recycle-bin delete on Windows.</p>
+<p>The absence to weigh is testing. A pass that rewrites status in
+place, over a store whose whole value is that nothing was lost, is the
+code most in need of a test that a merged fragment is absent from recall
+and its content still in the table.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>None found. Two smoke scripts under <code>tools/</code> exercise the
+frontend and the graph without asserting outcomes. Nothing was installed
+or run for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Mark, do not delete, and say so in the docstring. A duplicate marked
+<code>merged</code> with its text intact can be reviewed, reversed and
+counted; a deleted one cannot.</p>
+<p>Decide which side of a duplicate survives, and write down why. "Keep
+the first creator, it is the information source" is a rule a reader can
+argue with, which is more than a silent last-write-wins offers.</p>
+<p>Ship the dry run with the destructive pass, not after it. Returning
+the candidate pairs and their scores is what makes a threshold
+tunable.</p>
+<p>And put the status predicate in one place. Four copies of
+<code>status='active'</code> is four chances for the next read path to
+forget it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether <code>authorization_ref</code> and <code>source_tag</code>
+are consulted anywhere. Both are written with defaults and no reader was
+found.</p>
+<p>What <code>embedding_state</code> gates. It defaults to
+<code>disabled</code> on every fragment, and how the embedding path
+treats that was not traced.</p>
+<p>Whether a merged fragment can be restored. The row and its text
+survive; no command to set the status back was found.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cyber_brain.py:832-859</code></td>
+<td>Mark rather than delete, keep the first writer, and a dry run</td>
+</tr>
+<tr>
+<td><code>cyber_brain.py:189-206</code></td>
+<td>The fragment, and the index the predicate needs</td>
+</tr>
+<tr>
+<td><code>cyber_brain.py:78-101</code></td>
+<td>Provenance fields on a content item, awaiting a reader</td>
+</tr>
+<tr>
+<td><code>tools/recycle_delete.py</code></td>
+<td>A delete that lands in the recycle bin, on one platform</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/qilunuojiang9-hue/Huiran-cerebro/commit/08644a7edd1bff64ba46177d069287cb1daaad7a"><code class="commit-id" title="08644a7edd1bff64ba46177d069287cb1daaad7a">08644a7e…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: two files scanned, no auto-run surfaces,
+no build-time execution points, one unpinned surface and one dependency
+file inside the seven-day cooldown. Nothing was installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
