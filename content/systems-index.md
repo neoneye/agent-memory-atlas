@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **515 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **516 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -290,6 +290,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/lemmalog/"><span class="az-id">Lemmalog</span><span class="az-what">The transaction clock that is set to the valid clock</span><code class="az-repo">JordyZomer/lemmalog</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/lethe/"><span class="az-id">Lethe</span><span class="az-what">Verified forgetting, signed</span><code class="az-repo">deeplethe/lethe</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/letta/"><span class="az-id">Letta</span><span class="az-what">An agent runtime it archived</span><code class="az-repo">letta-ai/letta</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/levh/"><span class="az-id">LEVH</span><span class="az-what">The gate refuses to decide, and says so in a table</span><code class="az-repo">ali-ulu/levh</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/lightmem/"><span class="az-id">LightMem</span><span class="az-what">Compress before you store, consolidate while you sleep</span><code class="az-repo">zjunlp/LightMem</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/linggen-memory/"><span class="az-id">Linggen Memory</span><span class="az-what">The default account filter is a closed one</span><code class="az-repo">linggen/linggen-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/livingfeed/"><span class="az-id">LivingFeed</span><span class="az-what">Forgetting as a feature, in Korean</span><code class="az-repo">showjihyun/livingfeed</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>

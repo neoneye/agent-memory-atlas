@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 515 reports.**
+**This page covers all 516 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4470,3 +4470,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT by `pyproject.toml` metadata with no licence file in the tree, version 0.2.0, 11,833 lines with 95 test functions across thirteen files, a v1 suite kept under `legacy/`, eight documentation chapters, a Vue console and a systemd-timer curator. Documentation and interface in Chinese, code comments in English.
 - Study when: you are writing a de-duplication guard and want to see one that assumes an adversary, or you want a worked example of surfacing a contradiction instead of resolving it.
 - Do not copy when: you need an audit trail inside the store, or scope as a predicate rather than a directory per user. One mark, human review: a collision's `open | resolved | dismissed` status is set only by the console's own route, and the search path reads it at its default so a person's verdict silences the warning for good.
+
+### [`levh`](../systems/levh/)
+- Best idea: **a refusal to store and a refusal to judge take different paths.** The admission gate returns admit, redact, review or reject, and its docstring insists the last two not share a path — reject is the gate deciding (too short, near-exact duplicate, nothing lost), review is the gate declining to decide, "which is exactly the case where the difference may be the part worth keeping". `held_memories` is the store behind that third answer, and the schema comment names the defect: "Without it the verdict had no store behind it and the content was dropped, which is the one thing a memory layer must not do quietly."
+- Biggest risk: **nothing shipped can drain the queue.** Admit and discard are reachable from one HTTP route each — no CLI command, no MCP tool, and the React console shows the backlog only as a count — so deciding a candidate means calling the API by hand with an id no client lists. Capture, connector sync and export all print the held total, and the librarian raises a finding when it piles up whose own text says these candidates never enter memory at all if nobody decides. A watcher warning about a queue the product gives no way to empty.
+- Most reusable component: the admit path's ordering, with its comment — the held row is closed only after the new memory exists, "[i]f the store above raises, the candidate stays 'held' and can be retried -- losing it here would reintroduce exactly the bug this table was added to fix" — plus the compare-and-set that makes a second decision return `already_decided`.
+- Maturity impression: AGPL-3.0-or-later, Python, version 2.31.0 on PyPI, 54,347 lines with 896 test functions across ninety-six files, an MCP server, an HTTP API, a React console, connectors for five sources, and a schema file whose table comments state what each table refuses to do. Comments in English and Turkish.
+- Study when: you are designing an admission filter and have only two outcomes, or you want an example of a decay model where negative feedback weakens stability without resetting the clock.
+- Do not copy when: you need scope enforced by the store — `project` is an optional argument to recall — or a record of what a memory said before an edit. One mark, human review.
