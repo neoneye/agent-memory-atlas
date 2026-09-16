@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 548 reports.**
+**This page covers all 549 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4734,3 +4734,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, TypeScript, 132,835 lines over 393 files, a git tree of semantic HTML with a rebuildable SQLite index, four fused retrieval arms, seventeen curation phases, fifteen MCP tools, installers for four hosts with SHA-256 receipts, and an OpenSSF Scorecard badge. No auto-run surfaces at this pin, and eighteen dependency files inside the cooldown.
 - Study when: your scope filter is assembled per retrieval arm, or your empty results cannot say why they are empty.
 - Do not copy when: your audit has to survive a rewritten history. Four marks: trust state, bitemporal, review, negative evals.
+
+### [`bwmem`](../systems/bwmem/)
+- Best idea: **a migration header that states the question the old schema could not answer.** `007_bi_temporal_facts.sql` opens with it: the table already had validity bounds, and "[w]hat was missing is the second time axis — WHEN WE CHANGED OUR BELIEF — distinct from when something was true. Without this you can't honestly answer 'what did we believe about X on date Y' — you can only answer 'what was true on date Y.'" It defines each new column in a line, writes the composed predicate out, and ships `getFactsAsOf(userId, asOfValidTime, asOfTxnTime)` with both instants defaulting to now — so the ordinary read and the historical read are one code path with different arguments, and the historical one cannot rot while the current one keeps working.
+- Biggest risk: **the corrections log holds both values in the clear and nothing purges it.** `fact_corrections` records `old_value` and `new_value`, which is exactly what makes "how did we come to believe what we believe" answerable, and exactly what a user's erasure request now has to reach in two places — the opposite trade from the one Verimem argues for, taken without the purge path that would settle it. Nothing is keyed on a rejected value either, so a corrected fact can be re-extracted from a later message and written back as active. There is no person in the loop at all: corrections come from extraction and contradiction detection, and the `reason` column is populated with one of two fixed strings.
+- Most reusable component: the status enforcement. `fact_status` is constrained by a database `CHECK` to four values, every read filters to `active`, and the partial index is built `ON facts(user_id, category) WHERE fact_status = 'active'` — so the active set is the read set in the query planner as well as in the predicate. The temporary-fact expiry rides in the same clause, `NOT (fact_type = 'temporary' AND valid_until IS NOT NULL AND valid_until <= NOW())`, so an expired fact is withheld before any sweep gets round to marking it.
+- Maturity impression: AGPL-3.0, TypeScript, version 0.11.2, 17,259 lines over 105 files on PostgreSQL with pgvector, Redis and optional Neo4j, extracted from a longer-running agent system. No auto-run surfaces at this pin; the committed tests are unit-level, with no store-level assertion that a superseded or another user's fact fails to come back.
+- Study when: your as-of read is a separate method from your ordinary one, or your status vocabulary lives only in application code.
+- Do not copy when: your audit log has to survive an erasure request. Four marks: trust state, bitemporal, scope enforced, mutation audit.

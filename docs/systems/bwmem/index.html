@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A per-user memory SDK on Postgres
+whose facts carry both time axes, whose four-value status keeps three of
+them out of every read, and whose corrections table records the old
+value, the new one and why.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="bwmem — Agent Memory Atlas">
+    <meta property="og:description" content="A per-user memory SDK on
+Postgres whose facts carry both time axes, whose four-value status keeps
+three of them out of every read, and whose corrections table records the
+old value, the new one and why.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="bwmem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A per-user memory SDK on
+Postgres whose facts carry both time axes, whose four-value status keeps
+three of them out of every read, and whose corrections table records the
+old value, the new one and why.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>bwmem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "bwmem",
+      "description": "A per-user memory SDK on Postgres whose facts carry both time axes, whose four-value status keeps three of them out of every read, and whose corrections table records the old value, the new one and why.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The migration that added the second time
+axis says what question the first one could not answer</p>
+          <h1>bwmem</h1>
+          <p class="document-deck">A per-user memory SDK on Postgres
+whose facts carry both time axes, whose four-value status keeps three of
+them out of every read, and whose corrections table records the old
+value, the new one and why.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Bitwarelabscom/bwmem">
+              <span>Source</span>
+              <strong>Bitwarelabscom/bwmem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Bitwarelabscom/bwmem/commit/a0f7c194121f7b89afa0439bcca44c86d66d0e99" title="a0f7c194121f7b89afa0439bcca44c86d66d0e99">
+              <span>Analyzed revision</span>
+              <code>a0f7c194…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Bitwarelabscom--bwmem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Bitwarelabscom--bwmem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>bwmem is a "Memory SDK for AI chatbots" giving "your bot persistent,
+per-user memory: bi-temporal facts, semantic search, emotional capture,
+contradiction detection, quality scoring, session-texture carryover,
+held intentions, knowledge graph, and multi-stage consolidation."
+AGPL-3.0, TypeScript, version 0.11.2, 17,259 lines across 105 files, on
+PostgreSQL with pgvector, Redis, and optionally Neo4j. It is extracted
+from Luna, the vendor's longer-running agent system.</p>
+<p><strong>The document worth reading is a migration.</strong>
+<code>007_bi_temporal_facts.sql</code> opens by stating what the schema
+could not do before it:</p>
+<blockquote>
+<p>"The facts table already has valid_from / valid_until (when a fact
+was true in the world) and supersedes_id (lineage). What was missing is
+the second time axis — WHEN WE CHANGED OUR BELIEF — distinct from when
+something was true. Without this you can't honestly answer 'what did we
+believe about X on date Y' — you can only answer 'what was true on date
+Y.'"</p>
+</blockquote>
+<p>It then defines each column in a single line, writes out the composed
+query, and <code>getFactsAsOf(userId, asOfValidTime, asOfTxnTime)</code>
+implements it with both instants defaulting to now. That default is the
+part that matters: the ordinary read and the historical read are the
+same function with different arguments, so the historical path cannot
+quietly break while the current one keeps working — the failure the
+atlas found two reports into this same family.</p>
+<p><strong>The status vocabulary is enforced by the database.</strong>
+<code>fact_status</code> is constrained to <code>active</code>,
+<code>overridden</code>, <code>superseded</code> and
+<code>expired</code>, every read filters to <code>active</code>, and the
+partial index is built <code>WHERE fact_status = 'active'</code> — so
+the active set is the read set in the planner as well as in the
+predicate. A superseded fact keeps its row, its lineage and its place in
+the bitemporal history while leaving what the bot is handed.</p>
+<p><strong>Scope is the other thing done without a gap.</strong>
+<code>user_id</code> is stored on every fact, is the first bound
+parameter of every read, and is a required argument with no unscoped
+variant; the indexes are keyed on it. Migration 007 adds
+<code>intent_id</code> beside it for facts that belong to one
+conversation thread "and should not bleed into the user's general
+facts."</p>
+<p><strong>The trade to notice is in the corrections log.</strong>
+<code>fact_corrections</code> records <code>old_value</code> and
+<code>new_value</code> in the clear, which is exactly what makes "how
+did we come to believe what we believe" answerable — and exactly what <a
+href="../verimem/">Verimem</a>, read a report earlier, argues an
+immutable log must never contain, because it turns erasure into a
+contradiction. Both positions are defensible; what bwmem does not have
+is a purge path that reaches both tables.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>fact</strong> is per-user, keyed, and never deleted.</p>
+<p>A <strong>status</strong> is one of four, and only one of them is
+readable.</p>
+<p>A <strong>correction</strong> writes a row saying what the value was,
+what it became, and why.</p>
+<p>An <strong>as-of read</strong> is the ordinary read with two instants
+supplied.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — facts carry validity bounds and transaction bounds on the same row, every read is scoped to a user and filtered to the active status, and a supersession writes both a status change and a corrections row in one transaction</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: facts carry validity bounds and transaction bounds on the same row, every read is scoped to a user and filtered to the active status, and a supersession writes both a status change and a corrections row in one transaction
+flowchart TB
+    MSG[&quot;a message&quot;] --&gt; EX[&quot;background extraction:&lt;br/&gt;fact key, value, category, type,&lt;br/&gt;valid_from / valid_until&quot;]
+    EX --&gt; NEW[(&quot;facts: user_id · intent_id · fact_key · fact_value&lt;br/&gt;valid_from · valid_until — when it was TRUE&lt;br/&gt;recorded_at · superseded_at — when we BELIEVED it&lt;br/&gt;fact_status · supersedes_id · override_priority&quot;)]
+    CHK[&quot;CHECK (fact_status IN (&#39;active&#39;,&#39;overridden&#39;,&#39;superseded&#39;,&#39;expired&#39;))&quot;] --&gt; NEW
+    CONTRA[&quot;contradiction detection over&lt;br/&gt;ACTIVE values for the same key,&lt;br/&gt;correlated on f.user_id = c.user_id&quot;] --&gt; SUP
+    SUP{&quot;a correction&quot;} --&gt; S1[&quot;UPDATE facts SET fact_status = ...,&lt;br/&gt;superseded_at = NOW()&quot;]
+    SUP --&gt; S2[&quot;INSERT INTO fact_corrections&lt;br/&gt;user_id · fact_key · old_value · new_value ·&lt;br/&gt;correction_type · reason&quot;]
+    S1 &amp; S2 -.-&gt;|&quot;one client transaction, and there is no&lt;br/&gt;DELETE FROM facts anywhere in the tree&quot;| KEPT[&quot;the row keeps its lineage&lt;br/&gt;and leaves the read set&quot;]
+    S2 -.-&gt;|&quot;old and new values in the clear —&lt;br/&gt;what makes the lineage answerable, and what&lt;br/&gt;makes an erasure reach two tables&quot;| TRADE[&quot;the opposite trade from a hash-only chain&quot;]
+    NEW --&gt; READ[&quot;every read: WHERE user_id = $1&lt;br/&gt;AND fact_status = &#39;active&#39;&quot;]
+    READ -.-&gt;|&quot;userId is a required first argument on every&lt;br/&gt;public read; no unscoped variant exists, and the&lt;br/&gt;indexes are keyed (user_id, …)&quot;| SCOPED[&quot;the scope is the plan, not a post-filter&quot;]
+    READ --&gt; TEMP[&quot;AND NOT (fact_type = &#39;temporary&#39;&lt;br/&gt;AND valid_until &lt;= NOW())&quot;]
+    TEMP -.-&gt;|&quot;a temporary fact past its window is withheld&lt;br/&gt;before any sweep marks it expired&quot;| SAFE[&quot;expiry does not wait for a job&quot;]
+    ASOF[&quot;getFactsAsOf(userId, asOfValidTime, asOfTxnTime)&lt;br/&gt;both default to now&quot;] --&gt; P1[&quot;recorded_at at or before txn instant,&lt;br/&gt;and superseded_at null or after it&quot;]
+    ASOF --&gt; P2[&quot;valid_from null or at or before valid instant,&lt;br/&gt;and valid_until null or after it&quot;]
+    P1 &amp; P2 -.-&gt;|&quot;&#39;what we believed at txn_time&lt;br/&gt;about state at valid_time&#39;&quot;| ANS[&quot;the ordinary read IS the historical read,&lt;br/&gt;so the historical path cannot rot alone&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/db/migrations/</code></td>
+<td>The schema, with the reasoning in the migration headers</td>
+</tr>
+<tr>
+<td><code>src/memory/facts.service.ts</code></td>
+<td>Writes, supersession, the corrections row, the as-of read</td>
+</tr>
+<tr>
+<td><code>src/memory/contradiction.service.ts</code></td>
+<td>Held contradictions over active values for one user</td>
+</tr>
+<tr>
+<td><code>src/memory/quality-scorer.service.ts</code></td>
+<td>Response scoring against what the store holds</td>
+</tr>
+<tr>
+<td><code>src/consolidation/</code></td>
+<td>The multi-stage background passes</td>
+</tr>
+<tr>
+<td><code>src/graph/</code></td>
+<td>Optional Neo4j sync, non-blocking and counted on failure</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>src/db/migrations/007_bi_temporal_facts.sql:1-27</code> — the
+problem, the four columns, and the composed query, before any DDL.</p>
+<p><code>src/memory/facts.service.ts:437-458</code> — both axes as
+parameters, each predicate commented with the question it answers.</p>
+<p><code>src/db/migrations/001_core.sql:49-50</code>, <code>:65</code> —
+a status constrained by the database and indexed on its own
+predicate.</p>
+<p><code>src/memory/facts.service.ts:590-621</code> — a supersession and
+its audit row in one transaction.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A fact carries a user, an optional intent, a key and value, a
+category and type, a confidence, an override priority, both validity
+bounds, both transaction bounds, a status and a lineage link. Messages,
+sessions, held intentions and emotional capture sit beside it, and
+<code>fact_corrections</code> records every belief change.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Full-text search with <code>to_tsquery</code> and semantic search
+over pgvector, both scoped to the user and filtered to active facts,
+with a temporary-fact expiry clause applied in the same predicate rather
+than depending on a sweep. A context builder assembles what reaches the
+prompt.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Messages are recorded, facts extracted in the background, and a
+conflicting value supersedes rather than overwrites: status and
+<code>superseded_at</code> on the old row, a new row with
+<code>supersedes_id</code>, and a corrections row naming both values.
+Graph sync is fire-and-forget with a counter on failure, so the optional
+service cannot block a write.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An SDK rather than a server: record messages, build context, inject
+into the prompt. A Docker compose file brings up Postgres, Redis and
+Neo4j for local use.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The strong parts are the two axes with one read path, a status the
+database constrains, and a user scope no read omits. The gaps are a
+corrections log that stores plaintext values with no purge that reaches
+it, no value-keyed record to stop a corrected fact being re-extracted,
+no person anywhere in the loop, and tests that stop at the unit
+level.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Vitest unit tests over SQL shape, context formatting, consolidation
+gating, contradiction handling and embedding behaviour. There is no
+store-level case asserting that a superseded fact or another user's fact
+fails to come back, which for a design that rests on exactly those two
+predicates would be the cheapest assertion to add.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Write the migration header the way this one is written. Stating the
+question the old schema could not answer, before the DDL, is what makes
+a second time axis a decision rather than two more columns.</p>
+<p>Default both as-of parameters to now. If the historical read is a
+separate method, it will break separately and later.</p>
+<p>Constrain the status in the database and index on the predicate you
+filter with. It makes the active set the read set in two places instead
+of one.</p>
+<p>Decide whether your audit log may hold values, and know what you are
+trading. In the clear it answers how a belief formed; hashed or omitted
+it keeps erasure possible. Either is defensible; having neither answer
+is not.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether an erasure path is planned that reaches
+<code>fact_corrections</code>. The facts table is append-only by design
+and the corrections table holds the same values, so a user's request to
+be forgotten currently has two places to go and one mechanism.</p>
+<p>Whether the <code>reason</code> column is meant to carry an
+explanation. It is populated with one of two fixed strings today, and a
+column named <code>reason</code> in an audit log invites a reader to
+expect the sentence somebody wrote.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/db/migrations/007_bi_temporal_facts.sql:1-27</code></td>
+<td>The clearest statement of why one time axis is not enough</td>
+</tr>
+<tr>
+<td><code>src/memory/facts.service.ts:437-458</code></td>
+<td>One read path serving both the current and the historical
+question</td>
+</tr>
+<tr>
+<td><code>src/db/migrations/001_core.sql:49-50</code>,
+<code>:65</code></td>
+<td>A status the database enforces and the index agrees with</td>
+</tr>
+<tr>
+<td><code>src/memory/facts.service.ts:590-621</code></td>
+<td>A supersession and its audit row, in one transaction</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/Bitwarelabscom/bwmem/commit/a0f7c194121f7b89afa0439bcca44c86d66d0e99"><code class="commit-id" title="a0f7c194121f7b89afa0439bcca44c86d66d0e99">a0f7c194…</code></a>
+— first reading, at a commit dated 12 September 2026. Screened before
+opening, from a shallow clone: no auto-run surfaces, one build-time
+execution point, one unpinned dependency surface and two dependency
+files inside the seven-day cooldown, with <code>package-lock.json</code>
+present. Nothing was installed, built or run; no PostgreSQL, Redis or
+Neo4j was started, so the SQL described here is read from the migrations
+and the service source rather than executed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

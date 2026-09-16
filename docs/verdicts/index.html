@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 548 reports.</strong></p>
+<p><strong>This page covers all 549 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20585,6 +20585,54 @@ dependency files inside the cooldown.</li>
 your empty results cannot say why they are empty.</li>
 <li>Do not copy when: your audit has to survive a rewritten history.
 Four marks: trust state, bitemporal, review, negative evals.</li>
+</ul>
+<h3 id="bwmem"><a href="../systems/bwmem/"><code>bwmem</code></a></h3>
+<ul>
+<li>Best idea: <strong>a migration header that states the question the
+old schema could not answer.</strong>
+<code>007_bi_temporal_facts.sql</code> opens with it: the table already
+had validity bounds, and "[w]hat was missing is the second time axis —
+WHEN WE CHANGED OUR BELIEF — distinct from when something was true.
+Without this you can't honestly answer 'what did we believe about X on
+date Y' — you can only answer 'what was true on date Y.'" It defines
+each new column in a line, writes the composed predicate out, and ships
+<code>getFactsAsOf(userId, asOfValidTime, asOfTxnTime)</code> with both
+instants defaulting to now — so the ordinary read and the historical
+read are one code path with different arguments, and the historical one
+cannot rot while the current one keeps working.</li>
+<li>Biggest risk: <strong>the corrections log holds both values in the
+clear and nothing purges it.</strong> <code>fact_corrections</code>
+records <code>old_value</code> and <code>new_value</code>, which is
+exactly what makes "how did we come to believe what we believe"
+answerable, and exactly what a user's erasure request now has to reach
+in two places — the opposite trade from the one Verimem argues for,
+taken without the purge path that would settle it. Nothing is keyed on a
+rejected value either, so a corrected fact can be re-extracted from a
+later message and written back as active. There is no person in the loop
+at all: corrections come from extraction and contradiction detection,
+and the <code>reason</code> column is populated with one of two fixed
+strings.</li>
+<li>Most reusable component: the status enforcement.
+<code>fact_status</code> is constrained by a database <code>CHECK</code>
+to four values, every read filters to <code>active</code>, and the
+partial index is built
+<code>ON facts(user_id, category) WHERE fact_status = 'active'</code> —
+so the active set is the read set in the query planner as well as in the
+predicate. The temporary-fact expiry rides in the same clause,
+<code>NOT (fact_type = 'temporary' AND valid_until IS NOT NULL AND valid_until &lt;= NOW())</code>,
+so an expired fact is withheld before any sweep gets round to marking
+it.</li>
+<li>Maturity impression: AGPL-3.0, TypeScript, version 0.11.2, 17,259
+lines over 105 files on PostgreSQL with pgvector, Redis and optional
+Neo4j, extracted from a longer-running agent system. No auto-run
+surfaces at this pin; the committed tests are unit-level, with no
+store-level assertion that a superseded or another user's fact fails to
+come back.</li>
+<li>Study when: your as-of read is a separate method from your ordinary
+one, or your status vocabulary lives only in application code.</li>
+<li>Do not copy when: your audit log has to survive an erasure request.
+Four marks: trust state, bitemporal, scope enforced, mutation
+audit.</li>
 </ul>
         </article>
       </div>
