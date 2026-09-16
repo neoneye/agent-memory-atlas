@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 533 reports.**
+**This page covers all 534 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4614,3 +4614,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 375,155 lines of TypeScript across a dozen packages with 290 test files, a frozen-harness evaluation that verifies the pinned commit's tree and blob hashes before scoring, a coordinator, peer-to-peer replication and a viewer server. Eight unpinned dependency surfaces at this pin, and the README discloses that observer processing "can incur costs or consume plan usage".
 - Study when: you have a read boundary enforced by convention and want it enforced by a type, or you are about to claim your memory improves outcomes.
 - Do not copy when: you need the attribution taxonomy to describe what the system records today. One mark: scope enforced.
+
+### [`tessellum`](../systems/tessellum/)
+- Best idea: **the demotion path shipped before the promotion path it guards.** "[A] promoted claim that stops being true has no way to notice on its own, so a promotion path without a demotion path is a mechanism for entrenching whatever was believed first — … the one the memory literature documents most consistently — which is why this gate ships ahead of consolidation rather than beside it." The protocol blinds the claim by construction (the request type "has nowhere to put" its text or id), pins the checking model with `model_id` and `frozen_at` so it cannot "certify itself", and decides by token overlap because "a demotion nobody can recompute is a demotion nobody can appeal". Its first trigger fires when a claim stops regenerating from its own sources "even with no attack against it anywhere in the log".
+- Biggest risk: **it is not an agent-memory store, and its own README says so.** A reader arriving for a memory backend finds a knowledge-construction system whose unit is an authored note. Two limits it states about itself matter too: the dialectic cycle by default "treats two arguments as conflicting when their claims are worded differently", with evidence-based incompatibility an opt-in mode, so the default conflict detector is textual; and each cycle is labelled on its own, "so a later argument does not yet overturn an earlier cycle's verdict".
+- Most reusable component: the missing-data inversion. The entrance's conservative bound applied at the exit "would let a hole in the log lower the count and demote a sound claim", so the exit fires conclusively only on the optimistic bound and an inconclusive finding is "withheld — quarantined, never retracted". A conservative bound is safe admitting and dangerous removing, and almost nothing else in this corpus notices that the direction has to flip.
+- Maturity impression: MIT, Python, 138,183 lines with 2,905 test functions across 179 files, a one-way CQRS split, a Dung grounded-semantics solver, and five demotion outcomes each carrying whether it is conclusive under a paragraph stating what re-derivation cannot establish — "reproducibility and fidelity, not world truth, causal validity or transfer".
+- Study when: you are about to build a promotion or consolidation path, or you have one already and no way for a promoted claim to notice it stopped being true.
+- Do not copy when: you need a store an agent writes to during a session. No marks — the statuses are computed from the argument edge set rather than stored, which is a statement about the mark definitions rather than about the work.

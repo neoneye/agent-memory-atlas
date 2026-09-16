@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A typed-note knowledge system
+whose re-derivation gate hides a promoted claim from the model asked to
+reproduce it, pins that model so it cannot certify itself, decides by
+arithmetic, and quarantines rather than retracts when the finding is
+inconclusive.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Tessellum — Agent Memory Atlas">
+    <meta property="og:description" content="A typed-note knowledge
+system whose re-derivation gate hides a promoted claim from the model
+asked to reproduce it, pins that model so it cannot certify itself,
+decides by arithmetic, and quarantines rather than retracts when the
+finding is inconclusive.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tessellum — Agent Memory Atlas">
+    <meta name="twitter:description" content="A typed-note knowledge
+system whose re-derivation gate hides a promoted claim from the model
+asked to reproduce it, pins that model so it cannot certify itself,
+decides by arithmetic, and quarantines rather than retracts when the
+finding is inconclusive.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Tessellum — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Tessellum",
+      "description": "A typed-note knowledge system whose re-derivation gate hides a promoted claim from the model asked to reproduce it, pins that model so it cannot certify itself, decides by arithmetic, and quarantines rather than retracts when the finding is inconclusive.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A promotion path without a demotion path
+entrenches whatever was believed first</p>
+          <h1>Tessellum</h1>
+          <p class="document-deck">A typed-note knowledge system whose
+re-derivation gate hides a promoted claim from the model asked to
+reproduce it, pins that model so it cannot certify itself, decides by
+arithmetic, and quarantines rather than retracts when the finding is
+inconclusive.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/TianpeiLuke/Tessellum">
+              <span>Source</span>
+              <strong>TianpeiLuke/Tessellum</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/TianpeiLuke/Tessellum/commit/6e167169c18e697d50a7045db6f6dce6279ece3f" title="6e167169c18e697d50a7045db6f6dce6279ece3f">
+              <span>Analyzed revision</span>
+              <code>6e167169…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/TianpeiLuke--Tessellum" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>TianpeiLuke--Tessellum</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Tessellum is "[t]yped atomic notes in a graph — a Zettelkasten that
+scales" — MIT, Python, 138,183 lines with 2,905 test functions across
+179 test files. Its unit is a <em>tessellum</em>, a small mosaic tile: a
+note small enough to make one point and tagged with what kind of point
+it makes. Underneath is a one-way CQRS split — the authored notes are
+the source of truth, the searchable index is a projection rebuilt from
+them, "and changes only ever flow one way — from the notes to the index,
+never back". On top is a dialectic cycle that turns an observation into
+competing arguments, records where they conflict, names which part of
+the losing argument broke, and emits a revised rule, with a Dung
+grounded-semantics solver deciding which arguments survive.</p>
+<p>It says in its second sentence that it "is a knowledge-construction
+system, not an agent-memory store". It is in this atlas because it keeps
+claims that can turn out to be false and gives them an identity a
+correction can name — which is this atlas's scope rule — and because of
+one module.</p>
+<p><strong>The demotion gate.</strong> Its header states the finding
+this atlas's own corpus keeps producing, and states it better:</p>
+<blockquote>
+<p>"Promotion turns an episodic derivation into durable knowledge; a
+promoted claim that stops being true has no way to notice on its own, so
+a promotion path without a demotion path is a mechanism for entrenching
+whatever was believed first. That is not a hypothetical failure mode —
+it is the one the memory literature documents most consistently — which
+is why this gate ships ahead of consolidation rather than beside
+it."</p>
+</blockquote>
+<p>Shipping the demotion path <em>before</em> the promotion path it
+guards is the ordering decision, and almost nothing in this corpus made
+it.</p>
+<p>The gate scores an abstraction for <em>truth</em> rather than
+usefulness — "systems that abstract memory score an abstraction for
+<em>utility</em> (was it recalled? did it help?) and none of them scores
+a produced abstraction for <em>truth</em>" — through a blinded protocol
+in three parts, each closing a way the test could cheat:</p>
+<p><strong>Suppress.</strong> The gate "hands over neither its text nor
+its id. <code>ReDerivationRequest</code> has nowhere to put them, and
+<code>require_suppression</code> refuses a caller who smuggles the claim
+into the question or cites the claim's own rendering as its own source."
+The blinding is a property of the request type, not a convention — the
+same discipline <a href="../codemem/">codemem</a> applies by subtracting
+a flag from a context.</p>
+<p><strong>Freeze the model.</strong> An explicit <code>model_id</code>
+and <code>frozen_at</code>, enforced, because "[a] model that re-tunes
+on the corpus it is checking would eventually regenerate its own
+promoted claim from the promotion, and the gate would certify
+itself."</p>
+<p><strong>Decide by arithmetic.</strong> A token-overlap ratio against
+a floor, and every trigger likewise, because "[a] model must never
+decide the verdict: a demotion nobody can recompute is a demotion nobody
+can appeal."</p>
+<p><strong>Three triggers, and the first is the one nothing else looks
+for.</strong> <code>rederivation_failure</code> fires when the frozen
+model does not regenerate the claim from its cited sources "<strong>even
+with no attack against it anywhere in the log</strong>". Every
+argumentation-driven system in this corpus notices a claim when
+something argues against it; this one notices a claim that quietly
+stopped following from its own evidence. <code>contradiction</code>
+fires when the computed status flips out of answerable — "[n]early free:
+status is a pure function of the edge set".
+<code>independence_below_floor</code> fires when the origin-distinct
+contexts behind a claim fall under a floor.</p>
+<p><strong>The entrance and the exit used to measure different things
+under one name.</strong> The independence trigger counted
+<em>episodes</em> while the promotion gate counted <em>origin-distinct
+contexts</em> — "the entrance strict, the exit lax" — and both now
+consume one measurement function. A field measured one way on the way in
+and another on the way out is a defect this atlas has found repeatedly;
+here it is named and closed.</p>
+<p><strong>And the missing-data convention inverts between them, which
+is the subtle part.</strong> Applying the entrance's conservative lower
+bound at the exit "would let a hole in the log lower the count and
+<strong>demote a sound claim</strong>". So the exit fires conclusively
+only when the <em>optimistic</em> bound misses the floor; where the
+floor is missed only because origins are unreported, the finding is
+inconclusive and the claim is "<strong>withheld</strong> — quarantined,
+never retracted". A conservative bound is safe admitting and dangerous
+removing, and the direction has to flip. Very few systems notice that,
+and this one has a named rule for it.</p>
+<p><strong>Five outcomes, each carrying whether it is
+conclusive</strong>, under a paragraph that refuses to overstate what
+the method can show:</p>
+<blockquote>
+<p>"collapsing every finding into 'the claim is false' overstates what
+this protocol can establish: a frozen model can reproduce a source's
+<strong>error</strong> perfectly consistently, and it can fail to
+reproduce one of <strong>several legitimate</strong> abstractions of the
+same sources. Re-derivation tests <strong>reproducibility and
+fidelity</strong>, not world truth, causal validity or transfer."</p>
+</blockquote>
+<p><code>failed_reproduction</code> and <code>grounding_failure</code>
+are conclusive; <code>stale_evidence</code> and
+<code>surviving_contradiction</code> depend — the latter "conclusive
+once the labelling <strong>settles</strong> against the claim; a live
+undecided dispute (Dung <code>undec</code>) has settled nothing"; and
+<code>failed_generalisation</code> is never conclusive, because two
+legitimate abstractions of the same sources can disagree.</p>
+<p>No marks. The statuses here are computed from the argument edge set
+rather than stored, the scope is one knowledge base, and the atlas's
+marks attach to a store's read path. That is a statement about the mark
+definitions, not about the quality of what is here.</p>
+<p>Two limits the project states about itself are worth carrying out. By
+default the dialectic cycle "treats two arguments as conflicting when
+their claims are worded differently", with evidence-based
+incompatibility and attack direction an opt-in mode — so the default
+conflict detector is textual, which is exactly the failure <a
+href="../chitta-field/">chitta-field</a>'s claim-centric detector is
+built to avoid, and this project ships the better mode behind a flag
+while saying which is the default. And each cycle is labelled on its
+own, "so a later argument does not yet overturn an earlier cycle's
+verdict" — a stated boundary on how far a verdict travels.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>note</strong> makes one point and says what kind of point
+it is.</p>
+<p>A <strong>promotion</strong> must have an exit before it is allowed
+an entrance.</p>
+<p>A <strong>re-derivation</strong> asks a blinded, pinned model to
+rebuild the claim from the claim's own sources — and counts tokens, not
+opinions.</p>
+<p><strong>Inconclusive</strong> means quarantine, not retraction.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the gate blinds the claim by construction, pins the model so it cannot certify itself, and decides arithmetically — and an inconclusive finding quarantines rather than retracts</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the gate blinds the claim by construction, pins the model so it cannot certify itself, and decides arithmetically — and an inconclusive finding quarantines rather than retracts
+flowchart TB
+    OBS[&quot;an observation&quot;] --&gt; CYCLE[&quot;dialectic cycle: competing arguments,&lt;br/&gt;a counter, a revised rule;&lt;br/&gt;Dung grounded semantics labels survivors&quot;]
+    CYCLE --&gt; DERIV[&quot;an episodic derivation&quot;]
+    DERIV --&gt; PROMO{&quot;promotion gate — counts&lt;br/&gt;ORIGIN-DISTINCT contexts&quot;}
+    PROMO --&gt; CLAIM[(&quot;a promoted, durable claim&quot;)]
+    CLAIM --&gt; GATE[&quot;the re-derivation gate:&lt;br/&gt;REQUIRED AND SCHEDULED,&lt;br/&gt;and it shipped BEFORE promotion&quot;]
+    GATE --&gt; S1[&quot;1. SUPPRESS — ReDerivationRequest&lt;br/&gt;&#39;has nowhere to put&#39; the claim&#39;s text or id;&lt;br/&gt;a caller smuggling it into the question,&lt;br/&gt;or citing the claim&#39;s own rendering, is refused&quot;]
+    S1 --&gt; S2[&quot;2. FREEZE — explicit model_id + frozen_at,&lt;br/&gt;because a model re-tuned on the corpus&lt;br/&gt;&#39;would eventually regenerate its own promoted&lt;br/&gt;claim from the promotion, and the gate&lt;br/&gt;would certify itself&#39;&quot;]
+    S2 --&gt; S3[&quot;3. ARITHMETIC — token-overlap against a floor;&lt;br/&gt;&#39;a demotion nobody can recompute&lt;br/&gt;is a demotion nobody can appeal&#39;&quot;]
+    S3 --&gt; TRIG{&quot;three independent triggers&quot;}
+    TRIG --&gt;|&quot;rederivation_failure&quot;| T1[&quot;the claim did not come back out of its&lt;br/&gt;own sources — EVEN WITH NO ATTACK&lt;br/&gt;anywhere in the log&quot;]
+    TRIG --&gt;|&quot;contradiction&quot;| T2[&quot;computed status flipped out of answerable&lt;br/&gt;— status is a pure function of the edge set&quot;]
+    TRIG --&gt;|&quot;independence_below_floor&quot;| T3[&quot;origin-distinct contexts fell under the floor&lt;br/&gt;— the SAME measurement the entrance used,&lt;br/&gt;after the two measured different quantities&lt;br/&gt;under one name&quot;]
+    T1 &amp; T2 &amp; T3 --&gt; CONV{&quot;missing-data convention INVERTS at the exit&quot;}
+    CONV --&gt;|&quot;optimistic bound misses the floor&quot;| CONC[&quot;conclusive — demote&quot;]
+    CONV --&gt;|&quot;floor missed only because origins&lt;br/&gt;are unreported&quot;| QUAR[&quot;inconclusive — WITHHELD,&lt;br/&gt;quarantined, never retracted&lt;br/&gt;(the entrance&#39;s conservative bound here&lt;br/&gt;would demote a sound claim)&quot;]
+    CONC &amp; QUAR --&gt; FIVE[&quot;five outcomes, each carrying conclusiveness:&lt;br/&gt;failed_reproduction · grounding_failure (yes) ·&lt;br/&gt;stale_evidence · surviving_contradiction (depends) ·&lt;br/&gt;failed_generalisation (never)&quot;]
+    FIVE -.-&gt;|&quot;&#39;Re-derivation tests reproducibility and fidelity,&lt;br/&gt;not world truth, causal validity or transfer&#39;&quot;| LIMIT[&quot;what the protocol cannot establish&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dks/demotion.py</code></td>
+<td>The re-derivation gate, its triggers and outcomes (3,027 lines)</td>
+</tr>
+<tr>
+<td><code>dks/consolidation.py</code></td>
+<td>Promotion, and the shared origin-distinct measurement</td>
+</tr>
+<tr>
+<td><code>dks/core.py</code>, <code>dks/query_protocol.py</code></td>
+<td>The dialectic cycle and the abstaining query</td>
+</tr>
+<tr>
+<td><code>composer/digestion.py</code></td>
+<td>Turning a source document into typed notes</td>
+</tr>
+<tr>
+<td><code>runtime/store.py</code>,
+<code>runtime/admission.py</code></td>
+<td>The note store and its admission quarantine</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>src/tessellum/dks/demotion.py:1-100</code> — read the module
+docstring end to end; it is the report.</p>
+<p><code>src/tessellum/dks/consolidation.py</code> —
+<code>measure_origin_distinct</code>, the one measurement both gates now
+consume.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Typed atomic notes with a Building-Block type system, linked into
+Folgezettel trails that "record how one idea led to the next". Claims
+promoted out of the dialectic cycle carry their cited sources, which is
+what makes re-derivation possible at all: a claim with no usable
+evidence produces <code>grounding_failure</code> rather than a pass.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid keyword and vector search over the projection. The query
+protocol abstains with <code>status_not_answerable</code> rather than
+returning a claim whose argument labelling does not support it — an
+abstention, not a filter, and computed rather than stored.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Author or digest; the index follows. The CQRS direction is the
+invariant: "the notes you author are the source of truth, the searchable
+index is a projection rebuilt from them, and changes only ever flow one
+way".</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Python package and CLI, for humans and agents both. It does not
+present itself as a memory an agent writes to during a session, and the
+report should not either.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The gate is the trust story, and its most valuable property is
+epistemic modesty expressed as structure: five outcomes with
+conclusiveness attached, a stated list of what re-derivation does not
+establish, and an inconclusive branch that quarantines. A system that
+can distinguish "this is false" from "I could not tell" is doing
+something most of this corpus does not attempt.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>2,905 test functions across 179 files. Nothing was installed or run
+for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Build the demotion path before the promotion path. A promoted claim
+cannot notice that it stopped being true, so an entrance without an exit
+entrenches whatever was believed first — and the ordering here, exit
+first, is the concrete form of taking that seriously.</p>
+<p>Blind the test by construction. If the request type has nowhere to
+put the claim, no reviewer has to check that nobody leaked it.</p>
+<p>Pin the model that checks your model. One that re-tunes on the corpus
+it audits will eventually reproduce the claim from the promotion and
+certify itself.</p>
+<p>Decide with arithmetic. "A demotion nobody can recompute is a
+demotion nobody can appeal" is the argument for a token-overlap floor
+over a judge.</p>
+<p>Invert the missing-data convention between your entrance and your
+exit. A conservative bound is safe when admitting and dangerous when
+removing, and using the same one in both directions demotes sound claims
+on a gap in the log.</p>
+<p>And attach conclusiveness to every finding. "I could not tell" is a
+real answer and collapsing it into "false" is how a correction mechanism
+starts causing the errors it was built to catch.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether a quarantined claim ever returns. The inconclusive branch
+withholds rather than retracts; the path back was not traced.</p>
+<p>How the opt-in evidence-based conflict mode performs against the
+textual default. The project ships both and names which is the default;
+no comparison was found.</p>
+<p>What the labelling boundary costs in practice. Each cycle is labelled
+on its own, so a later argument does not reach back into an earlier
+verdict.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/tessellum/dks/demotion.py:1-100</code></td>
+<td>The best statement of the correction problem in this corpus, and a
+protocol for it</td>
+</tr>
+<tr>
+<td><code>src/tessellum/dks/consolidation.py</code></td>
+<td>One measurement for both gates, after they disagreed</td>
+</tr>
+<tr>
+<td><code>src/tessellum/dks/query_protocol.py:208</code></td>
+<td>An abstention rather than an answer</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/TianpeiLuke/Tessellum/commit/6e167169c18e697d50a7045db6f6dce6279ece3f"><code class="commit-id" title="6e167169c18e697d50a7045db6f6dce6279ece3f">6e167169…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: four files scanned, no auto-run surfaces,
+no build-time execution points, one unpinned surface and two dependency
+files inside the seven-day cooldown. Nothing was installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
