@@ -7,15 +7,15 @@ page_kind: system
 source_name: "mnemosyne-oss/mnemosyne"
 source_url: https://github.com/mnemosyne-oss/mnemosyne
 archive_name: "mnemosyne-oss--mnemosyne"
-revision: b922da1f72777eeb57723ec64e5e6db615348858
-revision_url: https://github.com/mnemosyne-oss/mnemosyne/commit/b922da1f72777eeb57723ec64e5e6db615348858
-analyzed_at: 2026-08-27
+revision: 3bb08dd79da10f630c0fdab4b5e11b9d0b948249
+revision_url: https://github.com/mnemosyne-oss/mnemosyne/commit/3bb08dd79da10f630c0fdab4b5e11b9d0b948249
+analyzed_at: 2026-09-16
 capabilities: "tombstone, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
-  tombstone: "the memory store — supersession keyed so a re-extracted fact finds the superseded row | mnemosyne/core/beam.py | `invalidate(memory_id, replacement_id)` at :4593 sets `superseded_by` when a replacement is given and `valid_until` to the current time when it is not; the dedup lookup finds the superseded row, bumps its mention count and does not re-assert it | tests/ — committed cases exercise supersession; no test asserts the re-extraction path itself"
-  bitemporal: "the memory store — validity columns beside record time | mnemosyne/core/beam.py | `valid_from_msg_idx` and `valid_to_msg_idx` on the memory row (:963, :964) alongside `version_id`, `previous_value` and `source_memory_id`, so when a fact held is tracked separately from when it was written | tests/ — read rather than run"
+  tombstone: "the memory store — supersession keyed so a re-extracted fact finds the superseded row | mnemosyne/core/beam.py | `invalidate(memory_id, replacement_id)` at :6116 sets `superseded_by` when a replacement is given and `valid_until` to the current time when it is not; the dedup lookup finds the superseded row, bumps its mention count and does not re-assert it | tests/ — committed cases exercise supersession; no test asserts the re-extraction path itself"
+  bitemporal: "the memory store — validity columns beside record time | mnemosyne/core/beam.py | `valid_from_msg_idx` and `valid_to_msg_idx` on the memory row (:1531, :1532) alongside `version_id`, `previous_value` and `source_memory_id`, so when a fact held is tracked separately from when it was written | tests/ — read rather than run"
   scope_enforced: "recall — a session and user key applied on the read path | mnemosyne/core/beam.py | the recall queries filter on the session and user key rather than tagging rows with it | tests/test_batch_transaction_owner_726.py"
-  audit_log: "the store — an append-only record of what consolidation did | mnemosyne/core/beam.py | `consolidation_log` created at :1070, written by the consolidation passes | tests/ — committed cases assert log rows"
+  audit_log: "the store — an append-only record of what consolidation did | mnemosyne/core/beam.py | `consolidation_log` created at :1638, written by the consolidation passes | tests/ — committed cases assert log rows"
   negative_eval: "recall, as committed cases | tests/ | committed cases assert particular material must not come back: `test_recall_precision_regressions.py` asserts what must not appear among the top results for fifteen natural-language queries, `test_sessions_cross_session_and_sibling_databases_are_isolated` asserts a warmed enhanced-recall entry is served to neither another session on the same database nor a same-named session on a sibling file while the warming session's repeat call is asserted to hit, and owner-scoped batch isolation and dry-run imports assert nothing is written | tests/test_recall_precision_regressions.py, tests/test_enhanced_recall_cache.py, tests/test_batch_transaction_owner_726.py, tests/test_file_import_dry_run.py"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -850,6 +850,8 @@ connected.
 - `_benchmarks/`, `docs/beam-benchmark.md`
 
 ## History
+
+**2026-09-16** — [`3bb08dd79da10f630c0fdab4b5e11b9d0b948249`](https://github.com/mnemosyne-oss/mnemosyne/commit/3bb08dd79da10f630c0fdab4b5e11b9d0b948249) — re-read at a commit dated 16 September 2026, 100 commits past the previous pin. `mnemosyne/core/beam.py` — the single file four of the five marks rest on — grew from about 9,900 lines to 12,308, adding 2,853 and removing 509, so every anchor was re-derived rather than carried: `invalidate` is at :6116, the validity columns at :1531-1532 and `consolidation_log` at :1638. All five marks held, and three mechanisms are better defended than they were. `invalidate` now refuses a memory that would supersede itself, and takes SQLite's write lock before validating the replacement so that *"another connection cannot delete a replacement between validation and the link update"* — a gap between the check and the write, closed. The replacement lookup carries the scope predicate itself, `WHERE id = ? AND (session_id = ? OR scope = 'global')`. And the supersession filter now has partial indexes built on it. `_find_duplicate` remains content-keyed and status-agnostic, which is what makes the tombstone work: a re-asserted fact finds the superseded row instead of writing a new one. The dedup-update path additionally clears `consolidated_at` and refreshes veracity, each with its reason recorded — an already-consolidated row that a user re-asserts was being permanently skipped. Screened before reading, from a full clone: one auto-run surface, two build-time execution points, four unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-08-27** — [`b922da1f72777eeb57723ec64e5e6db615348858`](https://github.com/mnemosyne-oss/mnemosyne/commit/b922da1f72777eeb57723ec64e5e6db615348858) — 88 commits on. All five marks re-verified and none moved; `trust_tier` still has twenty-five occurrences and no read path, so `trust_state` stays withheld for the same reason. The central finding holds: `degrade_episodic` has no caller outside its own tests.
 

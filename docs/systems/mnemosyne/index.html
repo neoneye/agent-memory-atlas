@@ -115,14 +115,14 @@ is the primary key.</p>
               <strong>mnemosyne-oss/mnemosyne</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/mnemosyne-oss/mnemosyne/commit/b922da1f72777eeb57723ec64e5e6db615348858" title="b922da1f72777eeb57723ec64e5e6db615348858">
+            <a class="meta-pill revision-pill" href="https://github.com/mnemosyne-oss/mnemosyne/commit/3bb08dd79da10f630c0fdab4b5e11b9d0b948249" title="3bb08dd79da10f630c0fdab4b5e11b9d0b948249">
               <span>Analyzed revision</span>
-              <code>b922da1f…</code>
+              <code>3bb08dd7…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-27</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mnemosyne-oss--mnemosyne" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -1059,6 +1059,32 @@ threat model</li>
 <li><code>_benchmarks/</code>, <code>docs/beam-benchmark.md</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/mnemosyne-oss/mnemosyne/commit/3bb08dd79da10f630c0fdab4b5e11b9d0b948249"><code class="commit-id" title="3bb08dd79da10f630c0fdab4b5e11b9d0b948249">3bb08dd7…</code></a>
+— re-read at a commit dated 16 September 2026, 100 commits past the
+previous pin. <code>mnemosyne/core/beam.py</code> — the single file four
+of the five marks rest on — grew from about 9,900 lines to 12,308,
+adding 2,853 and removing 509, so every anchor was re-derived rather
+than carried: <code>invalidate</code> is at :6116, the validity columns
+at :1531-1532 and <code>consolidation_log</code> at :1638. All five
+marks held, and three mechanisms are better defended than they were.
+<code>invalidate</code> now refuses a memory that would supersede
+itself, and takes SQLite's write lock before validating the replacement
+so that <em>"another connection cannot delete a replacement between
+validation and the link update"</em> — a gap between the check and the
+write, closed. The replacement lookup carries the scope predicate
+itself,
+<code>WHERE id = ? AND (session_id = ? OR scope = 'global')</code>. And
+the supersession filter now has partial indexes built on it.
+<code>_find_duplicate</code> remains content-keyed and status-agnostic,
+which is what makes the tombstone work: a re-asserted fact finds the
+superseded row instead of writing a new one. The dedup-update path
+additionally clears <code>consolidated_at</code> and refreshes veracity,
+each with its reason recorded — an already-consolidated row that a user
+re-asserts was being permanently skipped. Screened before reading, from
+a full clone: one auto-run surface, two build-time execution points,
+four unpinned dependency surfaces and none inside the seven-day
+cooldown. Nothing was installed, built or run.</p>
 <p><strong>2026-08-27</strong> — <a
 href="https://github.com/mnemosyne-oss/mnemosyne/commit/b922da1f72777eeb57723ec64e5e6db615348858"><code class="commit-id" title="b922da1f72777eeb57723ec64e5e6db615348858">b922da1f…</code></a>
 — 88 commits on. All five marks re-verified and none moved;
