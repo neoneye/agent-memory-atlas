@@ -7,9 +7,9 @@ page_kind: system
 source_name: "The-825/breadcrumbs"
 source_url: https://github.com/The-825/breadcrumbs
 archive_name: "The-825--breadcrumbs"
-revision: ec38f156aac78174901c6aae2e63e0aa7be3878b
-revision_url: https://github.com/The-825/breadcrumbs/commit/ec38f156aac78174901c6aae2e63e0aa7be3878b
-analyzed_at: 2026-08-27
+revision: bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73
+revision_url: https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73
+analyzed_at: 2026-09-16
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
@@ -1113,6 +1113,8 @@ teams have never asked about the memory they already have.
 - `.github/workflows/automerge.yml`, `ci-kit/workflows/greenlight_tiers.py` — the label gate and the diff tiers that decide when it applies
 
 ## History
+
+**2026-09-16** — [`bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73`](https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73) — re-read at a commit dated 14 September 2026, 29 commits past the previous pin. The change to `templates/ledger-tools/` is purely additive: `memory_engine.py`, `retrieval_exam.py` and `scoped_context.py` are byte-identical, so all seven marks and every line number behind them stand unchanged. What arrived beside them is `shared_work_checkpoint.py`, 1,244 lines with a 338-line JSON Schema and a fixture, storing bounded control evidence in an adopter-owned JSONL file and stating its own limits in the docstring: it holds no prompts, transcripts, provider output, personal records or credentials, makes no network call, and does not *"push, approve, merge, or deploy."* Its epistemic rule is the part worth naming — *"[a] requested or configured model is not observed evidence"*, and *"[s]essions that do not call this tool remain uninstrumented and cannot be claimed as checkpointed"*, so the artefact refuses to speak for what it did not see. Its `--selftest` carries twenty-four checks that are mostly refusals with a positive control beside them: an unknown observed model, a configured model substituted for the observed one, and a stale plan revision each have to raise, and a session without a receipt has to come back unclaimable. Screened before reading, from a full clone: no auto-run surface, no build-time execution point, no unpinned dependency surface and nothing inside the seven-day cooldown; two agent-addressed instruction files were recorded as data. Nothing was installed, built or run.
 
 **2026-08-27** — [`ec38f156aac78174901c6aae2e63e0aa7be3878b`](https://github.com/The-825/breadcrumbs/commit/ec38f156aac78174901c6aae2e63e0aa7be3878b) — re-pinned thirteen commits on. Screened again: no auto-run surface, no build-time execution, no unpinned surface; nothing was installed and nothing was run. `scope_enforced` is added, to seven.
 
