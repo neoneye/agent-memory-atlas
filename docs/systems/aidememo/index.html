@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust working memory for coding
+agents where a mutation cannot reach any backend without a server-owned
+authorization, and the audit row committed beside it takes its tenant
+and actor from the server rather than the request.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AideMemo — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust working memory for
+coding agents where a mutation cannot reach any backend without a
+server-owned authorization, and the audit row committed beside it takes
+its tenant and actor from the server rather than the request.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AideMemo — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust working memory for
+coding agents where a mutation cannot reach any backend without a
+server-owned authorization, and the audit row committed beside it takes
+its tenant and actor from the server rather than the request.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AideMemo — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AideMemo",
+      "description": "A Rust working memory for coding agents where a mutation cannot reach any backend without a server-owned authorization, and the audit row committed beside it takes its tenant and actor from the server rather than the request.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The client says which project it wants; the
+type refuses to carry that claim into the store</p>
+          <h1>AideMemo</h1>
+          <p class="document-deck">A Rust working memory for coding
+agents where a mutation cannot reach any backend without a server-owned
+authorization, and the audit row committed beside it takes its tenant
+and actor from the server rather than the request.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/taeyun16/aidememo">
+              <span>Source</span>
+              <strong>taeyun16/aidememo</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/taeyun16/aidememo/commit/58b803cc6b717fbf6559303e0d3f08e8b75673d4" title="58b803cc6b717fbf6559303e0d3f08e8b75673d4">
+              <span>Analyzed revision</span>
+              <code>58b803cc…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/taeyun16--aidememo" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>taeyun16--aidememo</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AideMemo is "[p]ortable working memory for coding agents and
+orchestrators" — MIT or Apache-2.0, Rust, version 0.1.0, 95,480 lines
+across 135 files in thirteen crates, shipping "[o]ne Rust binary. One
+embedded store. A code-first SDK, MCP tools, CLI, and native
+bindings."</p>
+<p><strong>The mechanism to take away is where the project id comes
+from.</strong> Almost every multi-tenant store in this corpus accepts
+the caller's word for which tenant or project a write belongs to, and
+then relies on a predicate somebody remembered to add. AideMemo makes
+that impossible to express:</p>
+<blockquote>
+<p>"Command paired with server-owned authorization context."</p>
+<p>"Returns <code>DomainError::ProjectScopeMismatch</code> when the
+untrusted envelope selects a different project."</p>
+</blockquote>
+<p><code>AuthorizedCommand::authorize</code> is the only constructor,
+and it compares the server's <code>ProjectAuthorization</code> against
+the envelope's <code>project_id</code> before producing anything. The
+enforcement then rides the type: <code>MutationCommand</code> — the
+single argument <code>CommandStore::execute</code> accepts — holds an
+<code>AuthorizedCommand&lt;()&gt;</code> as a field, so a backend
+adapter cannot be handed a mutation whose scope came from the request.
+There is no unscoped path to forget, because there is no unscoped value
+to pass.</p>
+<p><strong>The audit row follows the same rule, and it is
+transactional.</strong> The storage contract is stated on
+<code>MutationCommand</code> itself: adapters "persist its canonical
+fingerprint, resource mutation, receipt, change entry, and audit entry
+in one transaction." An <code>AuditEntry</code> is "[i]mmutable audit
+record committed with a mutation and its receipt", and the two fields a
+reader should check are annotated with their provenance rather than
+their contents — <code>tenant_id</code> is the "[s]erver-derived
+tenant", <code>actor_id</code> the "[s]erver-derived actor provenance".
+What is recorded is who the server determined acted, not who the request
+said did.</p>
+<p><strong>Two smaller lines carry the same instinct.</strong>
+<code>ActorKind</code> distinguishes <code>Human</code> — "[i]nteractive
+person" — from <code>Agent</code>, "[n]amed coding or reasoning agent
+profile", and <code>Service</code>, so the audit can say what kind of
+thing made a change and not only which identifier. And on the tenant
+record, <code>display_name</code> carries the annotation
+<code>"Human-readable label; never used for authorization"</code>, which
+closes the rename-widens-access bug in advance.</p>
+<p><strong>What is absent is any judgement about the memories
+themselves.</strong> <code>RecordStatus</code> is <code>Active</code>,
+<code>Suspended</code>, <code>Archived</code>, and it governs accounts
+rather than claims: a suspended record "does not grant access or accept
+mutations", an archived project is "read-only and retained for export or
+audit". Nothing in the model says a stored fact is doubtful, superseded
+or wrong, and the only time fields are <code>created_at_ms</code>,
+<code>updated_at_ms</code> and a revision — a version chain over write
+time with no second axis.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>command</strong> is authorized before it is a command.</p>
+<p>A <strong>scope</strong> is what the server decided, never what the
+envelope asked for.</p>
+<p>An <strong>audit row</strong> commits with the mutation or the
+mutation does not commit.</p>
+<p>A <strong>deletion</strong> is a tombstone replicas receive, not a
+row that vanishes.</p>
+<p>A <strong>status</strong> describes the account, not the claim.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a client envelope is bound to a server-owned authorization before it can become a mutation, the type carrying that binding is the only thing a backend accepts, and the audit row with its server-derived tenant and actor commits in the same transaction as the change</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a client envelope is bound to a server-owned authorization before it can become a mutation, the type carrying that binding is the only thing a backend accepts, and the audit row with its server-derived tenant and actor commits in the same transaction as the change
+flowchart TB
+    CLIENT[&quot;a client envelope: project_id, command_id,&lt;br/&gt;precondition, payload — UNTRUSTED&quot;] --&gt; AUTHZ{&quot;AuthorizedCommand::authorize(&lt;br/&gt;server ProjectAuthorization, envelope)&quot;}
+    SERVER[&quot;the server&#39;s own ProjectAuthorization&quot;] --&gt; AUTHZ
+    AUTHZ --&gt;|&quot;authorization.project_id() != envelope.project_id&quot;| REJECT[&quot;DomainError::ProjectScopeMismatch&lt;br/&gt;naming requested AND authorized&quot;]
+    AUTHZ --&gt;|&quot;they agree&quot;| AC[&quot;AuthorizedCommand — the only way&lt;br/&gt;a scope becomes trusted&quot;]
+    AC --&gt; MC[&quot;MutationCommand carries AuthorizedCommand&lt;br/&gt;as a FIELD, plus fingerprint, resource,&lt;br/&gt;change operation and canonical body&quot;]
+    MC -.-&gt;|&quot;CommandStore::execute accepts only this type,&lt;br/&gt;so no adapter can be handed a mutation&lt;br/&gt;whose project came from the caller&quot;| TYPED[&quot;the scope rule is a type, not a convention&quot;]
+    MC --&gt; TX{&quot;one transaction, per the storage contract&quot;}
+    TX --&gt; R1[(&quot;canonical resource: ProjectScope · revision ·&lt;br/&gt;Present body or Deleted tombstone&quot;)]
+    TX --&gt; R2[(&quot;receipt: command_id + fingerprint&quot;)]
+    TX --&gt; R3[(&quot;change entry — replicas follow by cursor&quot;)]
+    TX --&gt; R4[(&quot;AuditEntry — IMMUTABLE&quot;)]
+    R4 --&gt; F1[&quot;tenant_id: SERVER-DERIVED tenant&quot;]
+    R4 --&gt; F2[&quot;actor_id: SERVER-DERIVED actor provenance&quot;]
+    R4 --&gt; F3[&quot;project_seq · command_id · operation ·&lt;br/&gt;resource · committed_at_ms&quot;]
+    F1 &amp; F2 -.-&gt;|&quot;who changed a memory is not a string&lt;br/&gt;the caller supplied&quot;| HONEST[&quot;the audit cannot be authored by its subject&quot;]
+    R2 -.-&gt;|&quot;fingerprint rejects command-ID reuse with a&lt;br/&gt;different body, so a replay cannot overwrite&lt;br/&gt;what was audited&quot;| IDEM[&quot;idempotency with a tamper check&quot;]
+    ACTOR[&quot;ActorKind: Human, Agent, Service&quot;] -.-&gt;|&quot;provenance records WHAT KIND of thing acted,&lt;br/&gt;not only which id&quot;| F2
+    NAME[&quot;display_name: &#39;never used for authorization&#39;&quot;] -.-&gt;|&quot;a rename can never widen access&quot;| SERVER
+    STATUS[&quot;RecordStatus: Active, Suspended, Archived&quot;] -.-&gt;|&quot;governs the tenant, project or actor —&lt;br/&gt;never whether a stored claim is true&quot;| NOTS[&quot;no trust-state mark&quot;]
+    CONF[&quot;conformance.rs — one backend-neutral fixture&lt;br/&gt;every adapter must pass&quot;] -.-&gt;|&quot;the refusals are checked against each store&lt;br/&gt;rather than argued once in the abstraction&quot;| TX</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/aidememo-domain/command.rs</code></td>
+<td>Authorization binding, the mutation type, the audit record</td>
+</tr>
+<tr>
+<td><code>crates/aidememo-domain/conformance.rs</code></td>
+<td>The fixture every storage adapter must satisfy</td>
+</tr>
+<tr>
+<td><code>crates/aidememo-domain/record.rs</code></td>
+<td>Tenants, projects, actors, and what their statuses mean</td>
+</tr>
+<tr>
+<td><code>crates/aidememo-store-local</code>,
+<code>-store-postgres</code></td>
+<td>Two adapters behind one trait</td>
+</tr>
+<tr>
+<td><code>crates/aidememo-client</code></td>
+<td>The replica cache and its change cursor</td>
+</tr>
+<tr>
+<td><code>docs/MEASUREMENTS.md</code>, <code>benchmarks/</code></td>
+<td>The public measurement ledger and its evidence</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>crates/aidememo-domain/src/command.rs:190-213</code> — the only
+way a scope becomes trusted, and the error when it does not.</p>
+<p><code>:244-250</code> — the field that makes the rule unavoidable for
+every backend.</p>
+<p><code>:239-243</code> — the one-transaction storage contract, stated
+on the type it governs.</p>
+<p><code>:306-325</code> — an audit record whose tenant and actor are
+server-derived.</p>
+<p><code>crates/aidememo-domain/src/record.rs:18-28</code>,
+<code>:36</code> — actor kinds, and a display name barred from
+authorization.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A canonical resource keyed by tenant, project and resource reference,
+with a revision and a state that is either recursively key-sorted JSON
+or a durable deletion tombstone. Around it: commands with idempotency
+keys and canonical fingerprints, receipts, change entries with a project
+sequence, and immutable audit rows.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Facts, graph traversal and history over canonical state, with
+replicas following a change feed by cursor and a local cache
+materialising it. Cursor epoch and range mismatches are refused with
+named errors rather than silently reset.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every mutation carries an idempotency key and a fingerprint over "the
+real project, precondition, operation, and payload". A retry with the
+same id and the same body replays the stored receipt; a retry with the
+same id and a different body is rejected. The mutation, its receipt, its
+change entry and its audit row commit together.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One binary serving a CLI and an MCP surface over both stdio and HTTP,
+a Python agent SDK, and native bindings for Python, Node, Elixir and C —
+with a <code>COMPARE.md</code> that sets itself against mem0, Graphiti
+and Letta by name.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The strong parts are the type-enforced scope, the transactional and
+server-derived audit, the idempotency fingerprint, and a conformance
+fixture that holds every backend to the same observable outcomes. The
+absent part is any statement about the content: nothing marks a memory
+as stale, disputed or corrected, and there is no second time axis to ask
+what was true rather than what was written.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A backend-neutral conformance fixture that "describes outcomes, not
+I/O" and is run by each adapter, an identity conformance suite beside
+it, a benchmarks tree, and a public measurement ledger that states where
+durable numbers live and deliberately ignores raw scenario output
+"because it contains temporary paths and run-specific identifiers".</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Make the authorized scope a different type from the requested one. A
+predicate can be forgotten on one read path; a constructor that refuses
+a mismatched envelope cannot, and a store that only accepts the
+authorized type has no unscoped path left to audit.</p>
+<p>Derive the audit's actor on the server. An audit row whose actor
+field is filled in by the actor is a record of a claim, not of an
+act.</p>
+<p>Put the transactional requirement on the type the adapters implement.
+"Persist … in one transaction" written on the command struct is a
+contract every backend author reads; the same sentence in a README is
+one they may not.</p>
+<p>Annotate the fields that must never be used for authorization.
+<code>display_name: "never used for authorization"</code> costs nothing
+and forecloses a whole class of bug.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether a memory will ever carry a status of its own. Every guarantee
+here is about who may write and what was written; none is about whether
+what was written is still true, and a working memory for long-running
+agents eventually needs that vocabulary.</p>
+<p>Whether the conformance fixture will grow retrieval assertions. It is
+the right instrument, already run against every backend, and it
+currently checks that bad commands are refused rather than that
+withdrawn material stops coming back.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/aidememo-domain/src/command.rs:190-213</code></td>
+<td>A scope the caller cannot assert</td>
+</tr>
+<tr>
+<td><code>:244-250</code></td>
+<td>Why no backend can be handed an unscoped mutation</td>
+</tr>
+<tr>
+<td><code>:306-325</code></td>
+<td>An audit row whose actor is derived, not declared</td>
+</tr>
+<tr>
+<td><code>crates/aidememo-domain/src/record.rs:36</code></td>
+<td>One annotation that forecloses a class of bug</td>
+</tr>
+<tr>
+<td><code>crates/aidememo-domain/src/conformance.rs:1-6</code></td>
+<td>One fixture, every storage backend</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/taeyun16/aidememo/commit/58b803cc6b717fbf6559303e0d3f08e8b75673d4"><code class="commit-id" title="58b803cc6b717fbf6559303e0d3f08e8b75673d4">58b803cc…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: two auto-run surfaces, five build-time
+execution points, five unpinned dependency surfaces and twenty-seven
+dependency files inside the seven-day cooldown, with
+<code>Cargo.lock</code> present. <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> are addressed to a reading agent and were
+recorded as data. Nothing was installed, built or run, and no benchmark
+was reproduced — the measurement ledger is cited as the project's own
+record rather than as a verified result.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

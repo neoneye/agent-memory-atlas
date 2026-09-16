@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 555 reports.**
+**This page covers all 556 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4790,3 +4790,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, Python, 29,474 lines over 79 files in one offline SQLite file with BM25 and sqlite-vec, a CLI and MCP server, hooks for four coding agents, and hard gates that `exit:2` on force-push, unconfirmed live-trade and prod-delete. Four auto-run surfaces at this pin.
 - Study when: your cleanup pass can delete, or your one confidence number is doing two jobs.
 - Do not copy when: a person must stand between extraction and injection. Two marks: trust state, review.
+
+### [`aidememo`](../systems/aidememo/)
+- Best idea: **the scope a command runs under is a different type from the one the caller asked for.** `AuthorizedCommand` is "[c]ommand paired with server-owned authorization context", its only constructor returns `DomainError::ProjectScopeMismatch` "when the untrusted envelope selects a different project", and `MutationCommand` — the single thing `CommandStore::execute` accepts — carries an `AuthorizedCommand` as a field. So no backend adapter can be handed a mutation whose project came from the request: there is no unscoped value to pass and therefore no read or write path left to forget the predicate on. The audit follows the same rule and is transactional — adapters "persist its canonical fingerprint, resource mutation, receipt, change entry, and audit entry in one transaction", and the row's `tenant_id` is the "[s]erver-derived tenant" with `actor_id` the "[s]erver-derived actor provenance".
+- Biggest risk: **nothing in the model is about whether a memory is true.** `RecordStatus` — `Active`, `Suspended`, `Archived` — governs tenants, projects and actors rather than claims: suspended "does not grant access or accept mutations", archived is "read-only and retained for export or audit". There is no field marking a stored fact stale, disputed or corrected, and the only times are `created_at_ms`, `updated_at_ms` and a revision, so history is a version chain over write time with no second axis. The deletion tombstone is durable and replicated, which is right for convergence, and keyed on the resource rather than the value, so the same content can be written back with no record that it was removed.
+- Most reusable component: two annotations. `ActorKind` separates `Human` ("[i]nteractive person") from `Agent` ("[n]amed coding or reasoning agent profile") and `Service`, so provenance records what kind of thing acted and not merely which id — the distinction this atlas spends most of its review-mark judgements on. And `display_name` carries `"Human-readable label; never used for authorization"`, which forecloses the rename-widens-access bug before anyone writes it.
+- Maturity impression: MIT or Apache-2.0, Rust, version 0.1.0, 95,480 lines over 135 files in thirteen crates, one binary with CLI, MCP over stdio and HTTP, a Python agent SDK and bindings for Node, Elixir and C, two storage adapters behind one trait, and a backend-neutral conformance fixture each must pass. Two auto-run surfaces and twenty-seven dependency files inside the cooldown at this pin.
+- Study when: your tenant predicate is a `WHERE` clause somebody has to remember, or your audit's actor field is filled in by the actor.
+- Do not copy when: you need the store to say a memory has gone stale. Two marks: scope enforced, mutation audit.
