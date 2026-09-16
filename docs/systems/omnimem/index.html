@@ -118,14 +118,14 @@ propose-and-accept gate.</p>
               <strong>richarvey/OmniMem</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/richarvey/OmniMem/commit/50fde316a1fcdd53a75a66d982b7bdee987ba364" title="50fde316a1fcdd53a75a66d982b7bdee987ba364">
+            <a class="meta-pill revision-pill" href="https://github.com/richarvey/OmniMem/commit/6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29" title="6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29">
               <span>Analyzed revision</span>
-              <code>50fde316…</code>
+              <code>6aaee7e8…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-05</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/richarvey--OmniMem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -436,6 +436,24 @@ links; the suppression set that its abandonment may have written
 survives it, and the recall log (<code>log:recall:*</code>, 30-day TTL)
 still names the key.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>Two of the pipeline's smaller decisions are the honest
+kind.</strong> A search hit whose backing record is gone comes back as
+an id and a score with no fields, and <code>is_phantom</code> drops it —
+but the comment records the fix it rejected first, because the obvious
+test is wrong: <em>"[d]eliberately not 'content is empty': a project
+context saved with no description carries <code>content=""</code> and is
+a perfectly real record whose text lives in <code>current_state</code>,
+so testing content alone made every such project unrecallable and told
+the operator to run <code>reindex()</code>, which cannot help. Absence
+of every field is the honest signal."</em> A stale index producing
+ghosts, and a repair that would have deleted live records from the
+answer, both written down.</p>
+<p>The score cut is two numbers rather than one, on a stated limit of
+the model underneath: on <code>all-MiniLM-L6-v2</code> <em>"the honest
+answer is that relevant and irrelevant raw similarities OVERLAP, so no
+single cut is both"</em> sufficient and safe. A threshold justified by
+what the encoder cannot do is rarer than a threshold justified by a
+benchmark.</p>
 <p><code>recall</code> runs one pipeline
 (<code>recall.py:137-385</code>). Before the query is embedded,
 <code>warn_if_abandoned</code> scans a cached parse of every episodic
@@ -815,6 +833,27 @@ paper.</li>
 evaluation artifact.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/richarvey/OmniMem/commit/6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29"><code class="commit-id" title="6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29">6aaee7e8…</code></a>
+— re-read at a commit dated 15 September 2026, 36 commits past the
+previous pin. All four marks re-tested and held.
+<code>lifecycle.py</code>, the contradictions review surface and
+<code>test_recall.py</code> are unchanged, so the tombstone, review and
+negative-evaluation evidence stands as written. <code>recall.py</code>
+gained 243 lines and the scope predicate came with them rather than
+after them: <code>normalise_project_filter</code> is the one normaliser,
+<code>_build_filter_expr(namespace, project_filter)</code> builds the
+per-namespace expression, and <code>_candidate_k</code> widens the
+candidate pool when a filter will thin it. Two additions are recorded
+here for the first time — the <code>is_phantom</code> test that drops a
+hit whose backing record is gone, with the note explaining why the
+obvious <code>content == ""</code> test would have made every
+description-less project unrecallable, and the two-threshold score cut
+justified by the encoder's own overlap. Screened before reading, from a
+full clone: no auto-run surface, one build-time execution point, four
+unpinned dependency surfaces and one dependency file inside the
+seven-day cooldown; an agent-addressed instruction file was recorded as
+data. Nothing was installed, built or run.</p>
 <p><strong>2026-09-05</strong> — <a
 href="https://github.com/richarvey/OmniMem/commit/50fde316a1fcdd53a75a66d982b7bdee987ba364"><code class="commit-id" title="50fde316a1fcdd53a75a66d982b7bdee987ba364">50fde316…</code></a>
 — first reading, at the merge of the v6.4.x branch on the GitHub mirror.

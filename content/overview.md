@@ -8227,7 +8227,7 @@ Privacy/deletion:
 - [BasedHardware/omi](https://github.com/BasedHardware/omi) at [`f9e3d0e3dfb5bb0b38c19e33c2f1aa941b95e67a`](https://github.com/BasedHardware/omi/commit/f9e3d0e3dfb5bb0b38c19e33c2f1aa941b95e67a)
 - [kirodotdev/KiroCrew](https://github.com/kirodotdev/KiroCrew) at [`534b003ee9550ecfa83b8c8428794323a97ce9d9`](https://github.com/kirodotdev/KiroCrew/commit/534b003ee9550ecfa83b8c8428794323a97ce9d9)
 - [fpytloun/mnemory](https://github.com/fpytloun/mnemory) at [`c67b9167e18f1730786c07c48f883674425dd681`](https://github.com/fpytloun/mnemory/commit/c67b9167e18f1730786c07c48f883674425dd681)
-- [techtheist/engram](https://github.com/techtheist/engram) at [`9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357`](https://github.com/techtheist/engram/commit/9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357)
+- [techtheist/engram](https://github.com/techtheist/engram) at [`7fa2e462a4ecd4d13737630ebd0b58ce4cf8c330`](https://github.com/techtheist/engram/commit/7fa2e462a4ecd4d13737630ebd0b58ce4cf8c330)
 - [munch2u-a11y/Helix-AGI](https://github.com/munch2u-a11y/Helix-AGI) at [`7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5`](https://github.com/munch2u-a11y/Helix-AGI/commit/7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5)
 - [munch2u-a11y/AIMAOS](https://github.com/munch2u-a11y/AIMAOS) at [`0d8c58c2bee5addc72a13c5c95839635d809b5b0`](https://github.com/munch2u-a11y/AIMAOS/commit/0d8c58c2bee5addc72a13c5c95839635d809b5b0)
 - [Cedrick-Coto/Aeris](https://github.com/Cedrick-Coto/Aeris) at [`68a2bd6d11a12beab705ce400e5c3a052d7f71db`](https://github.com/Cedrick-Coto/Aeris/commit/68a2bd6d11a12beab705ce400e5c3a052d7f71db)
@@ -8309,7 +8309,7 @@ Privacy/deletion:
 - [rahulmranga/knowledge-worker](https://github.com/rahulmranga/knowledge-worker) at [`bbb46379be2a8c45b20627fba30ffb8c98d1adc1`](https://github.com/rahulmranga/knowledge-worker/commit/bbb46379be2a8c45b20627fba30ffb8c98d1adc1)
 - [rlabs-inc/memory-ts](https://github.com/rlabs-inc/memory-ts) at [`8fcadf6d8783869878a64d42aec3ed88f7f91a70`](https://github.com/rlabs-inc/memory-ts/commit/8fcadf6d8783869878a64d42aec3ed88f7f91a70)
 - [GoogleCloudPlatform/open-knowledge-format](https://github.com/GoogleCloudPlatform/open-knowledge-format) at [`ad30107c31c06aec8a7d5636e0d1058118604e6f`](https://github.com/GoogleCloudPlatform/open-knowledge-format/commit/ad30107c31c06aec8a7d5636e0d1058118604e6f)
-- [richarvey/OmniMem](https://github.com/richarvey/OmniMem) at [`50fde316a1fcdd53a75a66d982b7bdee987ba364`](https://github.com/richarvey/OmniMem/commit/50fde316a1fcdd53a75a66d982b7bdee987ba364)
+- [richarvey/OmniMem](https://github.com/richarvey/OmniMem) at [`6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29`](https://github.com/richarvey/OmniMem/commit/6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29)
 - [wikieden/tempomem](https://github.com/wikieden/tempomem) at [`92181fbbae7f5e66714aa5e91f61ba9558b1f1aa`](https://github.com/wikieden/tempomem/commit/92181fbbae7f5e66714aa5e91f61ba9558b1f1aa) — read only; nothing installed
 - [BJHYZJ/DovSG](https://github.com/BJHYZJ/DovSG) at [`b355987a1ca586f7756f025820fddc24166d75af`](https://github.com/BJHYZJ/DovSG/commit/b355987a1ca586f7756f025820fddc24166d75af) — read only; the six submodules were left uninitialised and the two committed shared objects were not inspected
 - [openmake/openmake_llm](https://github.com/openmake/openmake_llm) at [`9ffeca8c4c2bbad08864257ebb40b9998270ec52`](https://github.com/openmake/openmake_llm/commit/9ffeca8c4c2bbad08864257ebb40b9998270ec52) — read only; nine manifests inside the seven-day cooldown, nothing installed or run

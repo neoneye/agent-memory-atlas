@@ -7,9 +7,9 @@ page_kind: system
 source_name: "techtheist/engram"
 source_url: https://github.com/techtheist/engram
 archive_name: "techtheist--engram"
-revision: 9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357
-revision_url: https://github.com/techtheist/engram/commit/9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357
-analyzed_at: 2026-09-04
+revision: 7fa2e462a4ecd4d13737630ebd0b58ce4cf8c330
+revision_url: https://github.com/techtheist/engram/commit/7fa2e462a4ecd4d13737630ebd0b58ce4cf8c330
+analyzed_at: 2026-09-16
 capabilities: "trust_state, bitemporal, audit_log, human_review, negative_eval"
 capability_evidence:
   trust_state: "the node record and the suspects queue | crates/engram-core/src/schema.rs, engine.rs | three durable anchors on `nodes` — `confirmed_at` (*\"last deliberate act; the unapproved trust anchor\"*), `approved_at` (*\"last explicit approval; trust anchors here\"*) and `demoted_at` (*\"when contradicting evidence landed\"*) — plus `trust_override`, a pin that holds trust constant and turns decay off, and a `suspects.status` of suspected/confirmed/dismissed carrying an `nli_label` hint of contradiction/entailment/neutral beside it. Trust is computed at read time from the anchors rather than stored as a score | crates/engram-core/src/tests.rs `user_nodes_are_approved_on_creation_and_approve_restores_trust`, `claude_replaces_verdict_cannot_archive_a_pinned_node`, `decay_archives_only_stale_unapproved_claude_episodic_nodes`"
@@ -208,6 +208,33 @@ with a similarity, an optional local-NLI hint (`contradiction | entailment |
 neutral`) and a score whose column comment reads *"models don't validate"*. A
 suspect is `suspected`, then `confirmed` or `dismissed`, and the verdict
 vocabulary is `conflict`, `replaces`, `dismiss`.
+
+**There are two ways into that queue, and the second one reads titles because
+the measurement said to.** Above the similarity floor a pair is a look-alike and
+queues on similarity alone. Below it, down to a separate NLI floor, a logic
+layer reads *"the two bare TITLES"*, and a confident contradiction between
+titles that plausibly name the same subject queues too. The reason is stated as
+a number rather than an intuition: similarity alone *"cannot tell a
+contradiction from an agreeing restatement (MemStrata AUROC 0.59; the
+KnowledgeDrift gate probe reproduced it)"*, and on that same probe the titles
+separated the two *"far more sharply than the claim text (negation 0.99 vs
+0.61)"* — so the below-floor path deliberately drops the first body sentence the
+claim text appends, because it *"only dilutes what the titles say."* A
+reproduced published result, and a feature choice justified against it.
+
+The two dials are kept from contaminating each other. Only pairs the similarity
+path could have raised are allowed to inform the similarity dial, because
+letting the logic layer's verdicts into that fit *"would drag the floor toward
+the NLI band it never reads."* A calibration that learns from decisions its own
+mechanism could not have produced is a slow way to drift, and this one is fenced
+against it.
+
+**A tombstone is identified by role rather than by name.** The flag saying a
+node is a removal record *"rides on every surface"*, on the stated ground that
+*"a custom ontology can call its tombstone anything, and a reader skimming for X
+must not take \"Removed: X\" for a memory of X."* Making the meaning structural
+rather than lexical is what stops a renamed type from turning a deletion marker
+back into an assertion.
 
 The constants in that machine are per-graph, and two of them are fitted rather
 than chosen. `Engine::auto_tune` runs at every session boundary: dial one
@@ -1316,6 +1343,8 @@ which signals are allowed to change what an agent believes.
   `Created` with a `tombstoned` warning, never a refusal.
 
 ## History
+
+**2026-09-16** — [`7fa2e462a4ecd4d13737630ebd0b58ce4cf8c330`](https://github.com/techtheist/engram/commit/7fa2e462a4ecd4d13737630ebd0b58ce4cf8c330) — re-read at a commit dated 16 September 2026, eleven commits past the previous pin. All five marks re-tested and held. Release 0.9.4 adds a second route into the suspects queue and justifies it with a measurement rather than an intuition: below the similarity floor a logic layer reads the two bare titles, because similarity alone *"cannot tell a contradiction from an agreeing restatement (MemStrata AUROC 0.59; the KnowledgeDrift gate probe reproduced it)"*, and on that probe titles separated the two at 0.99 against 0.61 for the claim text. The two auto-tuned dials are fenced from each other — only pairs the similarity path could have raised may inform the similarity dial, since the logic layer's verdicts *"would drag the floor toward the NLI band it never reads."* And the removal flag is now carried as a role on every surface rather than as a type name, so a custom ontology renaming its tombstone cannot let a reader *"take \"Removed: X\" for a memory of X."* Screened before reading, from a full clone: three auto-run surfaces, no build-time execution point, three unpinned dependency surfaces and three dependency files inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
 **2026-09-04** — [`9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357`](https://github.com/techtheist/engram/commit/9a24db99dc140d6d9b8a22f4bf25b7c1d2f55357) — re-pinned the same day at release v0.9.2, three commits on. Screened again: three auto-run surfaces, five files inside the seven-day cooldown, two unpinned surfaces; nothing installed or run. v0.9.2 is the write-path half of the tombstone role: `write_warnings` reports any tombstone-role neighbour of a new note, across types, as `tombstoned` with the removal's reason; the delete mint carries the victim's body, tags and code refs by default and rehomes its `about` edges; `search` names its tombstone hits; `check_claim` gains a `retracted` bucket; the suspect recorder skips tombstones on both sides; and the assistant's bury gesture — author a `Tombstone`, `link` it `replaces` the victim — is documented and tested. `tombstone` stays withheld on the one clause the project declines by design: the write is created and never refused, so the record is consulted and the re-assertion is not prevented. The section 9 paragraph now names the two shapes already in the engine that would earn it. The benchmark paragraph in section 1 is rewritten around the eval README's *Against every baseline* table and its 22 August receipts; `bench-100.json` is kept as the 3 August first run where the shipped-row label appears, dated as such, and the corpus superlative is dropped. Sections 6 and 10 date the same file.
 

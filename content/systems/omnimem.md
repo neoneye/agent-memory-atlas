@@ -7,9 +7,9 @@ page_kind: system
 source_name: "richarvey/OmniMem"
 source_url: https://github.com/richarvey/OmniMem
 archive_name: "richarvey--OmniMem"
-revision: 50fde316a1fcdd53a75a66d982b7bdee987ba364
-revision_url: https://github.com/richarvey/OmniMem/commit/50fde316a1fcdd53a75a66d982b7bdee987ba364
-analyzed_at: 2026-09-05
+revision: 6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29
+revision_url: https://github.com/richarvey/OmniMem/commit/6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29
+analyzed_at: 2026-09-16
 capabilities: "tombstone, scope_enforced, human_review, negative_eval"
 capability_evidence:
   tombstone: "topic suppression, the suppressed form — a durable set consulted on every recall | mcp_server/memory/lifecycle.py:181-210, mcp_server/memory/recall.py:192,:216-221, mcp_server/tools/experience.py:97-108, mcp_server/tools/core.py:661-696 | `topics:suppressed` is a Valkey set of lowercased strings; `RecallPipeline.recall` fetches it once per call and drops any candidate whose content contains a suppressed string, before scoring. It is written by a person or an agent through `suppress_topic`, by the web UI's suppressions page, and automatically by `record_experience` when an approach is recorded as `abandoned` with effort 4 or 5 — the abandoned approach's name becomes the key. A re-remembered claim about a suppressed approach is stored and never surfaces, which is the read-path form; the key is a substring, so it hides every memory that mentions the word, including the one that recorded the abandonment | mcp_server/tests/test_recall.py `test_suppressed_topic_excluded` with `test_unsuppressed_topic_included` as the control; tests/test_lifecycle.py `test_suppress_and_list`, `test_is_topic_suppressed`"
@@ -277,6 +277,23 @@ that its abandonment may have written survives it, and the recall log
 (`log:recall:*`, 30-day TTL) still names the key.
 
 ## 6. Retrieval Mechanics
+
+**Two of the pipeline's smaller decisions are the honest kind.** A search hit
+whose backing record is gone comes back as an id and a score with no fields, and
+`is_phantom` drops it — but the comment records the fix it rejected first,
+because the obvious test is wrong: *"[d]eliberately not 'content is empty': a
+project context saved with no description carries `content=""` and is a
+perfectly real record whose text lives in `current_state`, so testing content
+alone made every such project unrecallable and told the operator to run
+`reindex()`, which cannot help. Absence of every field is the honest signal."*
+A stale index producing ghosts, and a repair that would have deleted live
+records from the answer, both written down.
+
+The score cut is two numbers rather than one, on a stated limit of the model
+underneath: on `all-MiniLM-L6-v2` *"the honest answer is that relevant and
+irrelevant raw similarities OVERLAP, so no single cut is both"* sufficient and
+safe. A threshold justified by what the encoder cannot do is rarer than a
+threshold justified by a benchmark.
 
 `recall` runs one pipeline (`recall.py:137-385`). Before the query is
 embedded, `warn_if_abandoned` scans a cached parse of every episodic row's
@@ -610,5 +627,7 @@ team that wants an agent's dead ends to stay dead can run it as it is.
 - `git ls-files | rg -i 'bench|eval'` — no benchmark or evaluation artifact.
 
 ## History
+
+**2026-09-16** — [`6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29`](https://github.com/richarvey/OmniMem/commit/6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29) — re-read at a commit dated 15 September 2026, 36 commits past the previous pin. All four marks re-tested and held. `lifecycle.py`, the contradictions review surface and `test_recall.py` are unchanged, so the tombstone, review and negative-evaluation evidence stands as written. `recall.py` gained 243 lines and the scope predicate came with them rather than after them: `normalise_project_filter` is the one normaliser, `_build_filter_expr(namespace, project_filter)` builds the per-namespace expression, and `_candidate_k` widens the candidate pool when a filter will thin it. Two additions are recorded here for the first time — the `is_phantom` test that drops a hit whose backing record is gone, with the note explaining why the obvious `content == ""` test would have made every description-less project unrecallable, and the two-threshold score cut justified by the encoder's own overlap. Screened before reading, from a full clone: no auto-run surface, one build-time execution point, four unpinned dependency surfaces and one dependency file inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
 **2026-09-05** — [`50fde316a1fcdd53a75a66d982b7bdee987ba364`](https://github.com/richarvey/OmniMem/commit/50fde316a1fcdd53a75a66d982b7bdee987ba364) — first reading, at the merge of the v6.4.x branch on the GitHub mirror. Screened first: no auto-run surface, one build-time execution path (a pytest `conftest.py`), three unpinned requirement files, nothing inside the seven-day cooldown, and a `CLAUDE.md` addressed to a reading agent, treated as data. Nothing was installed or run; the tests were read, not executed. Four marks — `tombstone` in the read-path form on topic suppression, `scope_enforced`, `human_review`, `negative_eval` — with `trust_state` withheld on a lifecycle that records visibility and never belief, `bitemporal` on an event axis used as a boost, and `audit_log` on a recall log that records reads. The findings recorded are the contradiction link that nothing clears, the archive reason that nothing stores, and the one flag that disables three checks.
