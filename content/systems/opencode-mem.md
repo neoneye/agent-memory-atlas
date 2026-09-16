@@ -7,9 +7,9 @@ page_kind: system
 source_name: "tickernelz/opencode-mem"
 source_url: https://github.com/tickernelz/opencode-mem
 archive_name: "tickernelz--opencode-mem"
-revision: d1d0eb01b5efed517da4ae31baa7666768e86cfe
-revision_url: https://github.com/tickernelz/opencode-mem/commit/d1d0eb01b5efed517da4ae31baa7666768e86cfe
-analyzed_at: 2026-08-26
+revision: 0c8ed7d54382d9225def8484d691182d46e8552d
+revision_url: https://github.com/tickernelz/opencode-mem/commit/0c8ed7d54382d9225def8484d691182d46e8552d
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "two layers — a per-scope database file and a predicate on every vector read | src/services/turso/shard-manager.ts:96-120,:295-340, src/services/turso/vector-search.ts:169,:246,:283,:392,:441,:505, src/services/memory-scope.ts:7-11 | memories for a scope live in their own libSQL file: `getShardPath(scope, scopeHash, shardIndex)` resolves `~/.opencode-mem/{user,project}s/…` under a hash `assertSafeScopeHash` requires to be sixteen lowercase hex characters, so a foreign scope is a different file rather than a different row-set. On top of that `container_tag = ?` is a predicate at seven sites in `vector-search.ts`, including the one that matters — the ANN join at :169, where `vector_top_k` returns rowids and the scope test is applied on the hydration, not left to the index. `resolveMemoryScope` has one widening mode, `all-projects`, which drops the predicate and walks both scopes' shards on purpose, with the reason recorded: user-scope memories *\\\"would be silently excluded if only project shards were walked\\\"* | tests/turso-vector-search.test.ts:72-101 asserts the emitted SQL keeps `vector_top_k` ahead of `memories` and that the filtered variant carries `m.container_tag = ?`"
@@ -380,6 +380,8 @@ insert `:330`, `cleanupOldChangelogs` `:340-357`)
 `tests/web-userprofile-xss.test.ts`, `tests/web-memorytype-xss.test.ts`
 
 ## History
+
+**2026-09-16** — [`0c8ed7d54382d9225def8484d691182d46e8552d`](https://github.com/tickernelz/opencode-mem/commit/0c8ed7d54382d9225def8484d691182d46e8552d) — re-read at a commit dated 2026-09-06, 17 commits past the previous pin. Both marks re-tested and held. `memory-scope.ts`, `vector-search.ts` and the cold-buffer isolation test are byte-identical, so the scope predicate and the case that pins it stand exactly as written; the only anchored file that moved is the Turso shard manager. Screened before reading: no auto-run surface, one build-time execution point, two unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-08-26** — [`d1d0eb01b5efed517da4ae31baa7666768e86cfe`](https://github.com/tickernelz/opencode-mem/commit/d1d0eb01b5efed517da4ae31baa7666768e86cfe) — re-pinned 37 commits on, at 533 commits since 23 December 2025 and roughly 29,500 lines of TypeScript. Screened again before reading: no auto-run surface, one build-time execution surface, two unpinned surfaces, two files inside the seven-day cooldown, and a `.husky/pre-commit` payload inert until something points `core.hooksPath` at it; `AGENTS.md` is addressed to a reading agent and was treated as data. Nothing was installed and no test was run.
 

@@ -7,9 +7,9 @@ page_kind: system
 source_name: openclaw/openclaw
 source_url: https://github.com/openclaw/openclaw
 archive_name: "openclaw--openclaw"
-revision: 6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8
-revision_url: https://github.com/openclaw/openclaw/commit/6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8
-analyzed_at: 2026-08-31
+revision: 5ed7eceb574fbb55e7c07d204db69def813a80f4
+revision_url: https://github.com/openclaw/openclaw/commit/5ed7eceb574fbb55e7c07d204db69def813a80f4
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, human_review"
 stack_storage: "files, sqlite, lancedb"
 stack_retrieval: "vector, lexical"
@@ -389,6 +389,18 @@ Without a memory API, an integrator must reverse the file format to read it and
 patch the host's source to fix it — the practical cost of a contract that covers
 capture and injection but not inspection or repair.
 
+**A forget now leaves a session tombstone, and nothing yet reads it on a
+write.** `memory_session_tombstones` is a `STRICT` table keyed on `session_id`
+with the `agent_id`, a `reason` and a creation time, created on demand and
+written by the forget path; `listMemorySessionTombstones` reads it back, always
+narrowed by `agent_id` and optionally by a set of session ids. Two things bound
+what it is worth. It is keyed on the session rather than on what the session
+said, so a claim from a forgotten session that arrives again by another route is
+not recognised. And a search of the tree finds its readers only in tests — the
+forget suite asserts the rows are written and that clearing removes them — with
+no path that consults the table before admitting a memory. It records that a
+session was forgotten; it does not yet enforce it.
+
 ## 9. Reliability, Safety, and Trust
 
 Strengths:
@@ -533,6 +545,8 @@ designed, and write the evaluation it never got.
 - Optional vector backend and envelope sanitization: `extensions/memory-lancedb/lancedb-store.ts`, `memory-capture-sanitization.ts`.
 
 ## History
+
+**2026-09-16** — [`5ed7eceb574fbb55e7c07d204db69def813a80f4`](https://github.com/openclaw/openclaw/commit/5ed7eceb574fbb55e7c07d204db69def813a80f4) — re-read at a commit dated 2026-09-16, roughly ten thousand commits past the previous pin. Both marks re-tested and held; the anchors were re-derived by name rather than by line, since three of the four files moved. `MemoryEntryOrigin` and its four origin classes now live in the plugin SDK rather than in the extension, and a `memory_session_tombstones` table records what a forget removed — keyed on the session and the agent, read back only by the forget tests, with no path consulting it before a memory is admitted. Screened before reading, from a clone deepened past the pin: two auto-run surfaces, four build-time execution points, one unpinned dependency surface and 203 dependency files inside the seven-day cooldown — the shape of a large monorepo under daily change rather than a finding about the memory code. Nothing was installed, built or run.
 
 **2026-08-31** — [`6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8`](https://github.com/openclaw/openclaw/commit/6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8) — second reading, and a substantial correction. Three published claims were wrong at the commit they described rather than overtaken by it. The report treated `memory-core` as a plugin contract of a few hundred lines and `memory-lancedb` as the memory system; at the previous pin `memory-core` was already 35,318 source lines holding the dreaming consolidation pass, the hybrid search manager, short-term promotion and session ingestion. It recorded `stack_retrieval: "vector"` and stated there was "no lexical arm"; `searchKeyword` and `searchPathKeyword` were present at that pin, both exported from `extensions/memory-core/src/memory/manager-search.ts` (`manager-search-orchestration.ts`, which carries them at this pin, did not exist at `570eab59`). And it withheld `human_review`; the `risk.level === "low"` gate, the withheld-digest text and the `status: "draft"` page were all present at that pin too. Storage is restated as markdown files indexed into per-agent SQLite, with LanceDB as one optional backend. Genuinely new upstream since `570eab59e7c7ce052f4550af7507e7dd77c73e11`: `memory_session_tombstones` and `memory-entry-origins.ts`, `forgetMemoryEntries` in `memory-forget.ts`, and the withheld-digest UI strings. `scope_enforced` holds. `tombstone` remains withheld — the new table is keyed on `session_id`, not on the value. `audit_log` and `negative_eval` were examined and withheld for the reasons in section 9a. Marks move from one to two. Two section 10 figures were also overstated in opposite directions and are corrected against `wc -l`: `memory-lancedb/index.test.ts` is 4,256 lines rather than 4,497, and the memory-core doctor contract — `doctor-contract-api.test.ts`, not the 341-line LanceDB file of the same name — is 2,814 rather than 2,530. Section 10 called the scope predicate verified by inspection alone; `index.test.ts:192-200` asserts that five filters shaped to escape the owner predicate all throw, so the untested case is narrower than stated — the positive cross-agent read, not the escape.
 

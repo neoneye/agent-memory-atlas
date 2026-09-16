@@ -7,13 +7,13 @@ page_kind: system
 source_name: "usememos/memos"
 source_url: https://github.com/usememos/memos
 archive_name: "usememos--memos"
-revision: 3d97b39f2d492e7dd1c887594dd4ec16ff54ee3f
-revision_url: https://github.com/usememos/memos/commit/3d97b39f2d492e7dd1c887594dd4ec16ff54ee3f
-analyzed_at: 2026-09-07
+revision: 14d3c689dd29f00b715a7850084fb8273644288e
+revision_url: https://github.com/usememos/memos/commit/14d3c689dd29f00b715a7850084fb8273644288e
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
-  scope_enforced: "creator, visibility and space as one SQL predicate on every memo list | store/db/sqlite/memo_access.go:12-40, store/db/sqlite/memo.go:166-167, server/router/api/v1/memo_access.go:67-84, server/router/api/v1/memo_service.go:77-99 | `sqliteMemoAccessPredicate` renders the caller's `MemoAccessScope` and `ListMemos` appends it to the WHERE clause before LIMIT and OFFSET, so a private memo of another user is neither returned nor counted; the MCP catalog forwards the caller's Authorization header to the same handlers (server/router/mcp/service.go:146, adapter.go:89) | store/test/memo_access_test.go:13-217 (two users; the viewer's list holds only public rows, archived rows stay author-only, a space memo's author gets no bypass) and server/access/memo_test.go:11-146 (the decision matrix, fail-closed on an invalid state)"
-  negative_eval: "a viewer's list is populated and the owner's private rows are absent from it | store/test/memo_access_test.go:13-68, server/access/memo_test.go:11-27 | `TestMemoAccessScopeUsesEachMemoAudience` seeds an owner's private memo, a public memo and two comments, lists as a second user and asserts the exact id set of the two public rows, then lists as the owner and asserts all four; `TestCheckMemoReadMemoLocalAudiences` asserts the private memo is denied to another user and allowed through a share id | store/test/memo_access_test.go:13-68 (the viewer's populated list with the private rows absent) and server/access/memo_test.go:11-27 (the positive control: the owner reads the private memo)"
+  scope_enforced: "creator, visibility and space as one SQL predicate on every memo list | store/db/sqlite/memo_access.go:12-40, store/db/sqlite/memo.go:166-167, server/api/v1/memo_access.go:67-84, server/router/api/v1/memo_service.go:77-99 | `sqliteMemoAccessPredicate` renders the caller's `MemoAccessScope` and `ListMemos` appends it to the WHERE clause before LIMIT and OFFSET, so a private memo of another user is neither returned nor counted; the MCP catalog forwards the caller's Authorization header to the same handlers (server/router/mcp/service.go:146, adapter.go:89) | store/test/memo_access_test.go:13-217 (two users; the viewer's list holds only public rows, archived rows stay author-only, a space memo's author gets no bypass) and server/access/memo_test.go:11-146 (the decision matrix, fail-closed on an invalid state)"
+  negative_eval: "a viewer's list is populated and the owner's private rows are absent from it | store/test/memo_access_test.go:13-68 | `TestMemoAccessScopeUsesEachMemoAudience` seeds an owner's private memo, a public memo and two comments, lists as a second user and asserts the exact id set of the two public rows, then lists as the owner and asserts all four; `TestCheckMemoReadMemoLocalAudiences` asserts the private memo is denied to another user and allowed through a share id | store/test/memo_access_test.go:13-68 (the viewer's populated list with the private rows absent) and server/access/memo_test.go:11-27 (the positive control: the owner reads the private memo)"
 stack_storage: "sqlite, postgres"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -487,5 +487,7 @@ surface and put the memory layer in front of it.
   not in the catalog.
 
 ## History
+
+**2026-09-16** — [`14d3c689dd29f00b715a7850084fb8273644288e`](https://github.com/usememos/memos/commit/14d3c689dd29f00b715a7850084fb8273644288e) — re-read at a commit dated 2026-09-16, 35 commits past the previous pin. Both marks re-tested and held. The API layer was restructured — `server/router/api/v1/` is now `server/api/v1/` and `server/access/` is gone — so two anchors were re-derived; `newMemoAccessScope` sits at the same offset in the moved file. The mechanism itself did not move: `store/db/sqlite/memo_access.go` is byte-identical, so `sqliteMemoAccessPredicate` still assembles the visibility and creator clauses, and `memo.go` still appends it whenever a find carries an access scope. The store-level negative test is also unchanged, keeping the assertion that a space without placement *"fails closed even for the author"* alongside empty viewer and anonymous result sets and a positive control that expects two rows. Screened before reading: no auto-run surface, no build-time execution point, one unpinned dependency surface and three dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-07** — [`3d97b39f2d492e7dd1c887594dd4ec16ff54ee3f`](https://github.com/usememos/memos/commit/3d97b39f2d492e7dd1c887594dd4ec16ff54ee3f) — first reading.

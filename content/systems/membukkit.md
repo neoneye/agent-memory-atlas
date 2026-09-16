@@ -7,9 +7,9 @@ page_kind: system
 source_name: "memseekai/membukkit"
 source_url: https://github.com/memseekai/membukkit
 archive_name: "memseekai--membukkit"
-revision: af1bf323a80901f58928189c16caa372191a1219
-revision_url: https://github.com/memseekai/membukkit/commit/af1bf323a80901f58928189c16caa372191a1219
-analyzed_at: 2026-08-29
+revision: ecd2cfe9731e2cb31eb61a428edf6aa4c6cce71a
+revision_url: https://github.com/memseekai/membukkit/commit/ecd2cfe9731e2cb31eb61a428edf6aa4c6cce71a
+analyzed_at: 2026-09-16
 capabilities: "human_review, negative_eval"
 capability_evidence:
   human_review: "the local GUI — fact-level inspection, source drill-down and adjudication | src/membukkit/service/local_app.py:452-503 | `GET /api/stores/{name}/facts` pages the store filtered by kind and topic bucket, `GET /api/stores/{name}/facts/{id}/source` resolves the fact back to the exact turn or chunk it came from through `doc_id` plus `source_ref`, and `DELETE /api/stores/{name}/facts/{id}` removes it through `MemorySystem.delete_facts` — dropping the verbatim turn behind it unless another fact still needs it, reviving whatever it had superseded, and returning a report carrying `revived`. It is adjudication after the fact rather than an approval gate before one, and nothing records who did it | tests/test_deletion.py"
@@ -332,5 +332,7 @@ persists the store. Nothing found here writes who deleted what, or when.
 | `tests/test_deletion.py`, `tests/test_bucket_control.py` | Revival on delete; the excluded-bucket leak test |
 
 ## History
+
+**2026-09-16** — [`ecd2cfe9731e2cb31eb61a428edf6aa4c6cce71a`](https://github.com/memseekai/membukkit/commit/ecd2cfe9731e2cb31eb61a428edf6aa4c6cce71a) — re-read at a commit dated 2026-09-02, 9 commits past the previous pin. Both marks re-tested and held; each anchored file has the same blob at both commits, so no line number moved. Screened before reading: no auto-run surface, no build-time execution point, one unpinned dependency surface and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-08-29** — [`af1bf323a80901f58928189c16caa372191a1219`](https://github.com/memseekai/membukkit/commit/af1bf323a80901f58928189c16caa372191a1219) — first reading, Apache-2.0, ~18,500 lines of Python under `src/` and 5,840 across 35 test files, two commits both dated 14 August 2026, which is a squashed public release rather than a history. Screened before reading: no auto-run surface, no build-time execution surface, one unpinned surface, and both lockfiles unchanged for fourteen days. Nothing was installed and nothing was run. Two marks. `human_review` rests on the GUI's fact listing, source drill-down and delete, the last of which revives what the deleted fact had superseded and reports it. `negative_eval` rests on an excluded topic bucket asserted not to contribute candidates, beside a committed case that excluding everything returns nothing rather than a full scan. `bitemporal` is withheld and the reason is section 5: `valid_to` is set to the replacement fact's own timestamp, so both ends of the interval are validity time and no fact row records when the store learned it. `scope_enforced` is withheld because the project says so itself — `subject` is stored and never filtered on, and one store is one memory. `trust_state` is withheld because `current`/`superseded`/`historical` is derived at read time rather than stored. `tombstone` and `audit_log` are absent: a deletion is a removal with no record keyed on the value, and no mutation log exists. The reading covers the storage backends, supersession, retrieval routing, the API surfaces and the benchmark recipes; the reranker weights, the deep-research agent and the evaluation harness were not traced.

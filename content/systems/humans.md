@@ -33,6 +33,15 @@ matrix:
 
 ## 1. Executive Summary
 
+**The repository this report describes is no longer reachable.**
+`munch2u-a11y/HUMANs` returns 404, with no redirect, so it was deleted or made
+private rather than renamed. The pinned commit survives because the atlas forked
+it first:
+[`agent-memory-atlas-archive/munch2u-a11y--HUMANs`](https://github.com/agent-memory-atlas-archive/munch2u-a11y--HUMANs)
+holds `a1c86c29` intact, so every line quoted below can still be checked — by
+that fork rather than by the original. The marks stand on code that exists at
+the commit they were tested against.
+
 HUMANs — *Habitus Unified Memory And Nervous System*, the package is
 `habitus_ai` — is a persistent local agent whose memory, drives and action
 selection live in one continuing process rather than in a prompt rebuilt each
@@ -437,5 +446,7 @@ rg -n -i 'arxiv|doi' README.md WHITEPAPER.md CITATION.cff             # none: no
 ```
 
 ## History
+
+**2026-09-16** — [`a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9`](https://github.com/munch2u-a11y/HUMANs/commit/a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9) — re-read attempted; the repository returns 404 with no redirect, so it was deleted or made private rather than renamed. The pin is unchanged because there is nothing newer to move to, and the commit is preserved in the atlas's archive fork, which is where a reader can now check the quotations. No mark was re-tested against a newer commit and none is withdrawn: the code each rests on still exists at this sha.
 
 **2026-09-08** — [`a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9`](https://github.com/munch2u-a11y/HUMANs/commit/a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9) — first reading, at the head of `main`, the third of three commits made on 7 September 2026. Screened first: no auto-run surface, one manifest with no lockfile, three build-time execution paths, one file inside the seven-day cooldown, `AGENTS.md` treated as data; nothing installed or run, the read made from a full clone. Two marks. The supersession producer was traced from the store's link to every caller of `remember` before the update column was written.

@@ -111,14 +111,14 @@ hand-tuned scorer over twenty-one English keyword regexes.</p>
               <strong>openclaw/openclaw</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/openclaw/openclaw/commit/6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8" title="6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8">
+            <a class="meta-pill revision-pill" href="https://github.com/openclaw/openclaw/commit/5ed7eceb574fbb55e7c07d204db69def813a80f4" title="5ed7eceb574fbb55e7c07d204db69def813a80f4">
               <span>Analyzed revision</span>
-              <code>6e79f2e4…</code>
+              <code>5ed7eceb…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-31</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/openclaw--openclaw" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -504,6 +504,20 @@ fail with EBUSY on Windows".</p>
 read it and patch the host's source to fix it — the practical cost of a
 contract that covers capture and injection but not inspection or
 repair.</p>
+<p><strong>A forget now leaves a session tombstone, and nothing yet
+reads it on a write.</strong> <code>memory_session_tombstones</code> is
+a <code>STRICT</code> table keyed on <code>session_id</code> with the
+<code>agent_id</code>, a <code>reason</code> and a creation time,
+created on demand and written by the forget path;
+<code>listMemorySessionTombstones</code> reads it back, always narrowed
+by <code>agent_id</code> and optionally by a set of session ids. Two
+things bound what it is worth. It is keyed on the session rather than on
+what the session said, so a claim from a forgotten session that arrives
+again by another route is not recognised. And a search of the tree finds
+its readers only in tests — the forget suite asserts the rows are
+written and that clearing removes them — with no path that consults the
+table before admitting a memory. It records that a session was
+forgotten; it does not yet enforce it.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>Strengths:</p>
@@ -690,6 +704,22 @@ formats they mirror?</li>
 <code>memory-capture-sanitization.ts</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/openclaw/openclaw/commit/5ed7eceb574fbb55e7c07d204db69def813a80f4"><code class="commit-id" title="5ed7eceb574fbb55e7c07d204db69def813a80f4">5ed7eceb…</code></a>
+— re-read at a commit dated 2026-09-16, roughly ten thousand commits
+past the previous pin. Both marks re-tested and held; the anchors were
+re-derived by name rather than by line, since three of the four files
+moved. <code>MemoryEntryOrigin</code> and its four origin classes now
+live in the plugin SDK rather than in the extension, and a
+<code>memory_session_tombstones</code> table records what a forget
+removed — keyed on the session and the agent, read back only by the
+forget tests, with no path consulting it before a memory is admitted.
+Screened before reading, from a clone deepened past the pin: two
+auto-run surfaces, four build-time execution points, one unpinned
+dependency surface and 203 dependency files inside the seven-day
+cooldown — the shape of a large monorepo under daily change rather than
+a finding about the memory code. Nothing was installed, built or
+run.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/openclaw/openclaw/commit/6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8"><code class="commit-id" title="6e79f2e47eb0dec1b3bade1c1376643bd2ca69d8">6e79f2e4…</code></a>
 — second reading, and a substantial correction. Three published claims
