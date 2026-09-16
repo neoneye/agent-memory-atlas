@@ -7,9 +7,9 @@ page_kind: system
 source_name: "codexofc/kept"
 source_url: https://github.com/codexofc/kept
 archive_name: "codexofc--kept"
-revision: 1de02b9c9fb06b9b3ce4f7711750412b13f14831
-revision_url: https://github.com/codexofc/kept/commit/1de02b9c9fb06b9b3ce4f7711750412b13f14831
-analyzed_at: 2026-09-11
+revision: 8177f2339f6235c083a9cfec3f96b40aaaa54189
+revision_url: https://github.com/codexofc/kept/commit/8177f2339f6235c083a9cfec3f96b40aaaa54189
+analyzed_at: 2026-09-17
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the generated per-project MEMORY.md a session loads | tests/hot.rs:20-37 (`strata_archived_and_shared_notes_are_rendered_in_order`), src/hot.rs:111-180 | the test writes four active notes and one archived note into a project, renders its hot index, asserts the active notes' sections appear in order and the shared note is listed, and asserts the archived `old.md` is absent while a line counts it — the exclusion beside a populated render, so a hot index that listed every note would fail | the same file"
@@ -152,4 +152,6 @@ rg -n "remove_file|fs::remove" src/main.rs                                      
 
 ## History
 
-**2026-09-11** — [`1de02b9c9fb06b9b3ce4f7711750412b13f14831`](https://github.com/codexofc/kept/commit/1de02b9c9fb06b9b3ce4f7711750412b13f14831) — first reading. Screened with `scripts/screen_repo.py`: no auto-running configuration and no build-time execution path; two manifests inside the seven-day cooldown and no unpinned surface. Nothing was built or run.
+**2026-09-17** — [`8177f2339f6235c083a9cfec3f96b40aaaa54189`](https://github.com/codexofc/kept/commit/8177f2339f6235c083a9cfec3f96b40aaaa54189) — re-pinned after 1 commit. Every anchored file in the repository is byte-identical at both commits — the hot-path source and its test, and the archived note the report quotes — so the mark stands on unchanged code. Nothing was installed, built or run.
+
+**2026-09-11** — [`8177f2339f6235c083a9cfec3f96b40aaaa54189`](https://github.com/codexofc/kept/commit/8177f2339f6235c083a9cfec3f96b40aaaa54189) — first reading. Screened with `scripts/screen_repo.py`: no auto-running configuration and no build-time execution path; two manifests inside the seven-day cooldown and no unpinned surface. Nothing was built or run.

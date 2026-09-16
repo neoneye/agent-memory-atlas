@@ -141,14 +141,14 @@ and the gates, not what the product does with them.</p>
               <strong>El-AI-Intelligence/engram-format</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/El-AI-Intelligence/engram-format/commit/5bb55f2c50e9de01852349930915e547b4dced17" title="5bb55f2c50e9de01852349930915e547b4dced17">
+            <a class="meta-pill revision-pill" href="https://github.com/El-AI-Intelligence/engram-format/commit/349fec44c48c7baad5e6f7616c9438925bb9f94d" title="349fec44c48c7baad5e6f7616c9438925bb9f94d">
               <span>Analyzed revision</span>
-              <code>5bb55f2c…</code>
+              <code>349fec44…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-06</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/El-AI-Intelligence--engram-format" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -556,6 +556,41 @@ kind of feedback a save tool should return — and must supply everything
 above it.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
+<p><strong>Two mechanisms arrived in this window that look like marks
+and are not, for reasons worth being precise about.</strong> Schema v8
+stores deletion tombstones in the vault database, and schema v9 adds an
+access audit ledger with revoked-since cursors. Both are real and both
+are well built; neither meets the definition it resembles.</p>
+<p>The <code>tombstones (id, deleted_at)</code> table exists so a
+deletion propagates: a <code>delete_without_tombstone</code> sibling
+applies a remote deletion that already originated elsewhere, and the
+local path commits the FTS cleanup, the row deletes and the tombstone in
+one transaction so <em>"a crash or an FTS failure can neither leave
+ghost search rows behind nor lose the tombstone"</em>
+(<code>src/store.rs:1632-1646</code>, <code>:1731-1750</code>). That is
+careful sync bookkeeping keyed on the row id. The atlas's
+<code>tombstone</code> mark asks for a record keyed on the
+<em>value</em> and consulted before a write, so that a rejected memory
+cannot return under a fresh id; this key cannot answer that question,
+because a re-captured memory gets a new id and never meets the table.
+The mark stays withheld, and the near-miss is closer than most.</p>
+<p>The access ledger is the sharper case. <code>AccessOp</code> is
+<code>Get</code>, <code>SearchHit</code> and <code>Export</code> — a
+record of what was <em>read</em>, with the ledger storing <em>"ids and
+hashes — never content"</em> (<code>src/store.rs:63-96</code>). The
+atlas's <code>audit_log</code> mark is a record of what
+<em>changed</em>, and expressly excludes retrieval logs, so a complete
+and disciplined read ledger earns nothing here. It is worth saying
+plainly that this is a limitation of the mark rather than of the design:
+for a store whose premise is verifiable privacy, knowing which memories
+were exported into a context window is the more load-bearing record, and
+the revoked-since cursor exists to answer <em>what did that client see
+before access was withdrawn</em>. The capability grid cannot express
+that; this paragraph is where it gets recorded.</p>
+<p>A third change in the window closes a real gap: deleting an engram
+now cascades to its consolidation outputs, links and embeddings, with a
+regression test. A deletion that leaves derived rows behind is the same
+defect as a tombstone nothing consults, one layer down.</p>
 <p><strong>Verifiable privacy is the claim, and it holds for what is
 here.</strong> The machine-key derivation, its threat model, the
 Argon2id parameters, the salt file, the legacy re-keying, the sync
@@ -767,8 +802,25 @@ internal caller);
 (none).</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/El-AI-Intelligence/engram-format/commit/349fec44c48c7baad5e6f7616c9438925bb9f94d"><code class="commit-id" title="349fec44c48c7baad5e6f7616c9438925bb9f94d">349fec44…</code></a>
+— re-read after 10 commits, through v0.1.6. <code>src/engram.rs</code>
+is byte-identical, so the quarantine constructor behind
+<code>trust_state</code> is unchanged; <code>src/store.rs</code> grew
+480 lines and <code>FORMAT.md</code> documents the two new schema
+versions. The mark still stands and no new mark is earned, which section
+9 now explains rather than leaving to the grid: schema v8's deletion
+tombstones are keyed on the row id for sync rather than on the value, so
+a re-captured memory never meets the table, and schema v9's access
+ledger records <code>get</code>, <code>search_hit</code> and
+<code>export</code> — a read log, which the <code>audit_log</code>
+definition excludes. Both are well built and the second is arguably the
+more useful record for a store whose premise is verifiable privacy; the
+report says so. A deletion cascade to consolidation outputs, links and
+embeddings also landed, with a regression test. Nothing was installed,
+built or run.</p>
 <p><strong>2026-09-06</strong> — <a
-href="https://github.com/El-AI-Intelligence/engram-format/commit/5bb55f2c50e9de01852349930915e547b4dced17"><code class="commit-id" title="5bb55f2c50e9de01852349930915e547b4dced17">5bb55f2c…</code></a>
+href="https://github.com/El-AI-Intelligence/engram-format/commit/349fec44c48c7baad5e6f7616c9438925bb9f94d"><code class="commit-id" title="349fec44c48c7baad5e6f7616c9438925bb9f94d">349fec44…</code></a>
 — first reading, at the head of <code>main</code>, three commits in, the
 day after the crate's only crates.io release. The screen found no
 auto-run surface; both manifests were inside the seven-day cooldown, and

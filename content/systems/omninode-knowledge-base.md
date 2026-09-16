@@ -7,9 +7,9 @@ page_kind: system
 source_name: "OmniNode-ai/knowledge-base"
 source_url: https://github.com/OmniNode-ai/knowledge-base
 archive_name: "OmniNode-ai--knowledge-base"
-revision: 5e32bc35dc5aec727799199c0991f3cb412cf7b4
-revision_url: https://github.com/OmniNode-ai/knowledge-base/commit/5e32bc35dc5aec727799199c0991f3cb412cf7b4
-analyzed_at: 2026-09-09
+revision: cb724907605ed9a1c6ba1b574168153080a0d2a7
+revision_url: https://github.com/OmniNode-ai/knowledge-base/commit/cb724907605ed9a1c6ba1b574168153080a0d2a7
+analyzed_at: 2026-09-17
 capabilities: "trust_state"
 capability_evidence:
   trust_state: "the per-type status enum, validated at CI | scripts/validate.py:386-425, schemas/frontmatter.schema.json | every artifact carries a `status` from a per-type enum, checked by `validate_frontmatter` against Pydantic models and by a generated JSON schema CI fails on if it drifts. At this commit the ledger holds 37 accepted, 20 proposed, 1 superseded and 1 emerging. The mark measures a discrete state that governs whether a record counts as settled — `proposed` and `superseded` are not the current answer to anything — and the honest limit is that this is a documentation repository: nothing retrieves from it at runtime, so the state governs a reader rather than filtering a query | tests/ runs the validator; no test asserts a superseded record is excluded from a result, because there is no result to exclude it from"
@@ -398,7 +398,9 @@ turns the project's philosophy from a paragraph into a property.
 
 ## History
 
-**2026-09-09** — [`5e32bc35dc5aec727799199c0991f3cb412cf7b4`](https://github.com/OmniNode-ai/knowledge-base/commit/5e32bc35dc5aec727799199c0991f3cb412cf7b4) — second reading, 52 commits on: 452 files and 162,080 insertions, most of it artifacts rather than machinery. Screened before reading: no auto-run surface, no build-time execution, no unpinned surface, nothing inside the cooldown — the cleanest screen in this corpus. Nothing was installed and no suite was run.
+**2026-09-17** — [`cb724907605ed9a1c6ba1b574168153080a0d2a7`](https://github.com/OmniNode-ai/knowledge-base/commit/cb724907605ed9a1c6ba1b574168153080a0d2a7) — re-pinned after 3 commits. The whole diff is documentation and one added line in `scripts/validate.py`; the frontmatter schema the mark rests on is unchanged, so the mark stands and every anchor here is exact at the new pin. Nothing was installed, built or run.
+
+**2026-09-09** — [`cb724907605ed9a1c6ba1b574168153080a0d2a7`](https://github.com/OmniNode-ai/knowledge-base/commit/cb724907605ed9a1c6ba1b574168153080a0d2a7) — second reading, 52 commits on: 452 files and 162,080 insertions, most of it artifacts rather than machinery. Screened before reading: no auto-run surface, no build-time execution, no unpinned surface, nothing inside the cooldown — the cleanest screen in this corpus. Nothing was installed and no suite was run.
 
 **The central finding holds and has widened.** ADR-0019 still states the rule — *"agents lie, and self-attestation is not proof"* — and `experiments/`, the directory that would hold the evidence artifacts an accepted claim is supposed to carry, still contains exactly a README and a template. Accepted records went from thirteen to **forty-four** across ADRs and pivots. No `evidence:` field anywhere in `adrs/` or `pivots/` carries a value. The repository's most load-bearing claim about itself has more instances than before and the same zero artifacts behind it.
 
@@ -408,4 +410,4 @@ The exemption is the good kind, and the distinction is worth drawing rather than
 
 The mark is unchanged, and its evidence record states the limit that matters for a documentation repository: the status enum governs a reader, not a query, because nothing retrieves from this store at runtime.
 
-**2026-08-12** — [`37f76b13827987823dd71ef7fe3c9358dbc06a41`](https://github.com/OmniNode-ai/knowledge-base/commit/5e32bc35dc5aec727799199c0991f3cb412cf7b4) — first reading. The screen found no auto-run surface, no build-time execution and a `uv.lock` unchanged for 81 days; `CLAUDE.md` is addressed to a reading agent and was read as data. Nothing was installed or run — the artifact counts, the status distribution, the empty directories and the duplicate `adr_id` come from reading the frontmatter of every file in the tree.
+**2026-08-12** — [`37f76b13827987823dd71ef7fe3c9358dbc06a41`](https://github.com/OmniNode-ai/knowledge-base/commit/cb724907605ed9a1c6ba1b574168153080a0d2a7) — first reading. The screen found no auto-run surface, no build-time execution and a `uv.lock` unchanged for 81 days; `CLAUDE.md` is addressed to a reading agent and was read as data. Nothing was installed or run — the artifact counts, the status distribution, the empty directories and the duplicate `adr_id` come from reading the frontmatter of every file in the tree.

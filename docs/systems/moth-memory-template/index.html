@@ -113,14 +113,14 @@ does not.</p>
               <strong>ScPlaceholder/MOTH-agent-memory-template</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd" title="9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd">
+            <a class="meta-pill revision-pill" href="https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/d4b404c39dca7e27bedb2269289896f162e5371d" title="d4b404c39dca7e27bedb2269289896f162e5371d">
               <span>Analyzed revision</span>
-              <code>9922f209…</code>
+              <code>d4b404c3…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-30</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ScPlaceholder--MOTH-agent-memory-template" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -213,7 +213,7 @@ name hit at 4. Running the comment's own example against the shipped
 scorer returns 0.0.</p>
 <p>One mark. 2,938 lines of standard-library Python, 2,145 lines of
 prose, 24 memory files across three corpora, pinned at <a
-href="https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd"><code class="commit-id" title="9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd">9922f209…</code></a>.</p>
+href="https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/d4b404c39dca7e27bedb2269289896f162e5371d"><code class="commit-id" title="d4b404c39dca7e27bedb2269289896f162e5371d">d4b404c3…</code></a>.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is one file holding one fact, and the format states why that
 constraint is load-bearing rather than stylistic: <em>"A file holding
@@ -359,6 +359,33 @@ strong claim from it, 'not wired' is a weak one."</em>
 <code>lint_prompts.py</code> catches build instructions that cannot be
 followed, and computes its own rule count rather than printing one,
 after a footer advertising six rules while seven ran.</p>
+<p><strong>And <code>wired.py</code> then caught itself returning a
+constant.</strong> Asked whether two newly added tools were hooked up,
+it answered <em>not wired in</em> — and so it did for
+<code>recall.py</code>, <code>memory_echo</code>, <code>findable</code>,
+<code>whereis</code> and <code>benchmark</code>. The verdict was
+identical for every input, because nothing in this repository imports
+anything: these are CLI tools driven by a prompt block, so an AST import
+walk has nothing to find and the weak half of its own stated asymmetry
+was the only half it could ever produce. The author's note is the part
+worth keeping — <em>"I nearly filed its constant as a defect in my own
+work. An instrument whose output does not vary with its input is not
+measuring."</em></p>
+<p>The repair is in the test rather than in the check. A CLI mode now
+asks whether any document instructs someone to <em>run</em> the tool,
+requiring an actual invocation rather than a prose mention, <strong>and
+the selftest asserts discrimination rather than correctness on one
+case</strong> — that the answer differs across inputs, which is the only
+assertion a constant cannot pass. Running it that way immediately
+surfaced two real orphans, <code>downstream_of.py</code> and
+<code>wide_sweep.py</code>: listed in the README, described, and invoked
+by no documented workflow.</p>
+<p>This is the same failure the atlas keeps finding in retrieval, one
+level up. A filter that excludes everything and a corpus that holds
+nothing return the same answer; a checker that fails everything and a
+repository that wires nothing return the same verdict. In both cases the
+fix is a control — something that must come back <em>different</em> —
+and a test that pins the difference rather than the value.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>Four fields and a body. <code>name</code> must equal the filename
 without <code>.md</code>, and the tools rely on it.
@@ -476,6 +503,33 @@ construction, which is consistent with a template a reader is meant to
 adapt.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
+<p><strong>Staleness is measured against the source, never against a
+stored timestamp.</strong> The two librarian tools added in this window
+— guidance, <em>what is the rule?</em>, and archive, <em>when did this
+last happen?</em> — answer freshness by comparing the index against the
+files it indexes rather than against a recorded run time, and the design
+note says why: <em>"an index that records when it last ran will report
+itself current while the world moves underneath it."</em> The
+consequence is stated in the same breath and is the reason it matters
+here rather than in a build tool: <em>"a stale index does not error, it
+returns nothing, and nothing is indistinguishable from 'there is no such
+memory'."</em> Four of four mutants are killed, including the one that
+makes <code>_newest_indexed</code> read its own mtime — which is exactly
+the implementation the principle forbids, pinned as a mutant rather than
+left to review.</p>
+<p><strong>Cap the reading, not the archive.</strong> The
+rolling-context tool's retention rule refuses keep-last-N on the grounds
+that it <em>"destroys data to enforce a limit the reader already
+enforces"</em>, and that its selector, oldest-first, is only safe while
+the directory stays homogeneous — which stopped being true in the
+author's own use, where a by-age rule would have taken a reading journal
+that happened to live in the snapshot folder. <code>--prune</code>
+therefore matches a dated <em>name</em> pattern, dry-runs, honours a
+<code>.keep</code>, and prints what it is not touching, with a selftest
+asserting that a non-snapshot survives at every retention setting
+including <code>keep=0</code>. A deletion rule keyed on a property the
+directory is not guaranteed to have is a data-loss bug waiting for the
+directory to change.</p>
 <p><strong>No provenance, no verification, no uncertainty.</strong> A
 memory says what it says. Nothing records where it came from, who wrote
 it, or whether anyone checked it, and the format is explicit that this
@@ -778,8 +832,19 @@ reproduction rate, and what was not verified.</li>
 optional-tier licence table.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/d4b404c39dca7e27bedb2269289896f162e5371d"><code class="commit-id" title="d4b404c39dca7e27bedb2269289896f162e5371d">d4b404c3…</code></a>
+— re-read after 8 commits. All three anchored files are byte-identical —
+the benchmark tool and both probe sets — so the mark stands on unchanged
+code. Three additions are written up: two librarian tools whose
+staleness is measured against the source rather than a recorded run
+time, a retention rule that caps the reading rather than the archive,
+and, in section 4, <code>wired.py</code> catching itself returning the
+same verdict for every input, with the repair placed in a selftest that
+asserts discrimination rather than correctness on one case. Nothing was
+installed, built or run.</p>
 <p><strong>2026-08-30</strong> — <a
-href="https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd"><code class="commit-id" title="9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd">9922f209…</code></a>
+href="https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/d4b404c39dca7e27bedb2269289896f162e5371d"><code class="commit-id" title="d4b404c39dca7e27bedb2269289896f162e5371d">d4b404c3…</code></a>
 — first reading, at the ninth commit of a repository whose first commit
 is dated the same day. Screening returned
 <strong><code>NOTHING SCANNED</code></strong> — no manifest, hook or

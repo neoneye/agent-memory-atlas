@@ -32,6 +32,20 @@ matrix:
 
 ## 1. Executive Summary
 
+> **The implementation described here was deleted upstream on 16 September
+> 2026.** Commit `ab1f18c`, *"Ref(Del): Total deletion of bases of project"*,
+> removed 16,809 lines across 130 files, leaving one `.csproj` under `src/` and
+> one under `tests/` and no source or test file at all. The author's reason is
+> the commit body: *"The reason is because the project have a bad implementation
+> and I dont understand how and why the project go and went to the actual project
+> status."* The documentation, the changelog and the architecture decision
+> records remain. This report is **not re-pinned**, because every section of it
+> describes code that the new head does not contain; it stays at
+> `68a2bd6d11a1`, where the engine, the memory store and the extractor tests it
+> cites all exist, and the archive fork holds that tree. The `negative_eval`
+> mark is retained on the same basis and scoped to that commit — the four
+> `DoesNotContain` assertions were verified there and the file is gone now.
+
 Aeris is a GPL-3.0 cognitive simulation engine in C# on .NET 10, built on an
 entity-component-system and documented in Spanish across nineteen design
 documents and ten architecture decision records. It is 6,472 lines of engine
@@ -514,6 +528,8 @@ longer contains this code; the archive fork does.
 | All eight package references exactly pinned | `grep -rn "PackageReference" --include="*.csproj" .` | 8 references, 8 with an exact `Version="..."` |
 
 ## History
+
+**2026-09-17** — re-read against the upstream head, `d94d63ba32cd`, three commits past this report's pin, and **not re-pinned**. `ab1f18c` deleted the project's entire implementation — 16,809 lines across 130 files — with the author's stated reason being that the implementation was bad and they did not understand how it had reached that state. What remains is two `.csproj` files, the documentation, the changelog and the ADRs; `SemanticExtractorTests.cs`, which carries this report's only mark, no longer exists. Re-pinning would point every section at a tree without the code it describes, so `revision` stays where it is and section 1 now opens with the removal. The mark is retained and scoped to the pin, following the same rule applied to Silica and Letta: the evidence was verified at that commit and the archive fork holds the tree. Nothing was installed, built or run.
 
 **2026-09-10** — re-read at the same pin, [`68a2bd6d11a12beab705ce400e5c3a052d7f71db`](https://github.com/Cedrick-Coto/Aeris/commit/68a2bd6d11a12beab705ce400e5c3a052d7f71db), because there is nothing to re-pin to: on 2026-08-11 the author deleted the implementation in [`ab1f18cd03a5c297e0b5ec9825d93b13096b8de5`](https://github.com/Cedrick-Coto/Aeris/commit/ab1f18cd03a5c297e0b5ec9825d93b13096b8de5) — 129 files, 16,729 lines — leaving the documentation and three empty project files. The pinned tree was read again from the atlas's archive fork, which preserves it, and **two of the three marks do not survive the reading**. `trust_state` fails the producer test: `BeliefStore.AddBelief` has no caller outside the test suite, `SemanticExtractor.cs:201` filters `Where(b => b.IsActive)` with nothing upstream to filter, and of the five `BeliefStatus` values only `Active` is assigned anywhere in the repository — in four test lines. `MemoryStore.AddMemory` is in the same position, so the first reading's *"Perception writes memories"* was wrong: `PerceptionSystem` publishes a `PerceptBatch`. `scope_enforced` is withdrawn on the scope rule — one list per entity is a partition, not a stored key applied as a filter — and the evidence line was wrong on its own terms as well: it cited `MemoryRetrievalSystem.cs`, which flattens `ltm.All` across every entity at `:32-40` and writes into a world-level `WorkingMemoryStore` of seven chunks. Three reads in `src/` pass an entity id, none of them on the retrieval path. `negative_eval` holds and is restated with the vacuity guard named — the pairing is across `:451-472` and `:475-492` rather than inside one case. The engine measures 6,472 lines, not the 16,719 first reported, which counted the tests and benchmarks inside it; the ADRs are ten, not eight. Recorded searches added, which the report shipped without.
 

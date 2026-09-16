@@ -7,9 +7,9 @@ page_kind: system
 source_name: "singnet/Omega"
 source_url: https://github.com/singnet/Omega
 archive_name: "singnet--Omega"
-revision: 7bab4b3e614fac56dbf5d21835f6d619cff60b41
-revision_url: https://github.com/singnet/Omega/commit/7bab4b3e614fac56dbf5d21835f6d619cff60b41
-analyzed_at: 2026-09-13
+revision: 78c6691abe6aef48abf052803d26247e5462e293
+revision_url: https://github.com/singnet/Omega/commit/78c6691abe6aef48abf052803d26247e5462e293
+analyzed_at: 2026-09-17
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the write path, asserted against a real model rather than a mock | Autotests/test_memory_no_autoremember.py, Autotests/test_memory_chromadb.py | `test_memory_no_autoremember` counts rows in ChromaDB, sends a fact-shaped statement that asks for nothing, and asserts the count did not grow — the agent *\"is allowed to acknowledge via (send ...) or even (pin ...), but must not write a ChromaDB vector unless it explicitly chose to\"*. It refuses to mock the model and says why: the question *\"does the agent voluntarily call remember on a fact-shaped sentence?\"* is *\"only meaningful with a real model\"*. `test_memory_chromadb` is the control on the same counter — after an explicit remember prompt the vector count must grow by at least one — so neither test can pass by the store being broken. This is the write-side form of the mark rather than a read-path exclusion | the two tests are the mechanism"
@@ -453,7 +453,9 @@ still running over there.
 
 ## History
 
-**2026-09-13** — [`7bab4b3e614fac56dbf5d21835f6d619cff60b41`](https://github.com/singnet/Omega/commit/7bab4b3e614fac56dbf5d21835f6d619cff60b41) — 130 commits past the previous pin. The repository moved from `asi-alliance/OmegaClaw-Core` to `singnet/Omega`, a transfer and a rename together, so the old path redirects rather than resolving; `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry follow it, and the archive fork was renamed to `agent-memory-atlas-archive/singnet--Omega`. The report's title and slug are unchanged pending a decision: the framework renamed itself, the change has reached the code but not all of the README, and [MetaClaw](../mettaclaw/) refers to this project by its former name in prose that describes the fork relationship.
+**2026-09-17** — [`78c6691abe6aef48abf052803d26247e5462e293`](https://github.com/singnet/Omega/commit/78c6691abe6aef48abf052803d26247e5462e293) — re-pinned after 2 commits. Both anchored test files are byte-identical at both commits, so the mark stands on unchanged code and every anchor here is exact at the new pin. Nothing was installed, built or run.
+
+**2026-09-13** — [`78c6691abe6aef48abf052803d26247e5462e293`](https://github.com/singnet/Omega/commit/78c6691abe6aef48abf052803d26247e5462e293) — 130 commits past the previous pin. The repository moved from `asi-alliance/OmegaClaw-Core` to `singnet/Omega`, a transfer and a rename together, so the old path redirects rather than resolving; `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry follow it, and the archive fork was renamed to `agent-memory-atlas-archive/singnet--Omega`. The report's title and slug are unchanged pending a decision: the framework renamed itself, the change has reached the code but not all of the README, and [MetaClaw](../mettaclaw/) refers to this project by its former name in prose that describes the fork relationship.
 
 `negative_eval` re-verified: `Autotests/test_memory_no_autoremember.py` is unchanged but for its own banner string, which prints `Omega` where it printed `OmegaClaw` — the rename reaching the test output is the clearest evidence it is real. `src/memory_export.py` and a 381-line test file add an operator-only memory export, off by default, to a fixed mount path, requiring an authenticated principal; section 8 records it. Its assertions are refusals on an egress path rather than on retrieval, so the mark is not widened.
 

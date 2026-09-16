@@ -7,9 +7,9 @@ page_kind: system
 source_name: "ScPlaceholder/MOTH-agent-memory-template"
 source_url: https://github.com/ScPlaceholder/MOTH-agent-memory-template
 archive_name: "ScPlaceholder--MOTH-agent-memory-template"
-revision: 9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd
-revision_url: https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd
-analyzed_at: 2026-08-30
+revision: d4b404c39dca7e27bedb2269289896f162e5371d
+revision_url: https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/d4b404c39dca7e27bedb2269289896f162e5371d
+analyzed_at: 2026-09-17
 capabilities: "negative_eval"
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -92,7 +92,7 @@ example against the shipped scorer returns 0.0.
 
 One mark. 2,938 lines of standard-library Python, 2,145 lines of prose, 24
 memory files across three corpora, pinned at
-[`9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd`](https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd).
+[`d4b404c39dca7e27bedb2269289896f162e5371d`](https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/d4b404c39dca7e27bedb2269289896f162e5371d).
 
 ## 2. Mental Model
 
@@ -237,6 +237,31 @@ one."* `coverage.py` walks the box list. `lint_prompts.py` catches build
 instructions that cannot be followed, and computes its own rule count rather than
 printing one, after a footer advertising six rules while seven ran.
 
+**And `wired.py` then caught itself returning a constant.** Asked whether two
+newly added tools were hooked up, it answered *not wired in* — and so it did for
+`recall.py`, `memory_echo`, `findable`, `whereis` and `benchmark`. The verdict
+was identical for every input, because nothing in this repository imports
+anything: these are CLI tools driven by a prompt block, so an AST import walk has
+nothing to find and the weak half of its own stated asymmetry was the only half
+it could ever produce. The author's note is the part worth keeping — *"I nearly
+filed its constant as a defect in my own work. An instrument whose output does
+not vary with its input is not measuring."*
+
+The repair is in the test rather than in the check. A CLI mode now asks whether
+any document instructs someone to *run* the tool, requiring an actual invocation
+rather than a prose mention, **and the selftest asserts discrimination rather
+than correctness on one case** — that the answer differs across inputs, which is
+the only assertion a constant cannot pass. Running it that way immediately
+surfaced two real orphans, `downstream_of.py` and `wide_sweep.py`: listed in the
+README, described, and invoked by no documented workflow.
+
+This is the same failure the atlas keeps finding in retrieval, one level up. A
+filter that excludes everything and a corpus that holds nothing return the same
+answer; a checker that fails everything and a repository that wires nothing
+return the same verdict. In both cases the fix is a control — something that must
+come back *different* — and a test that pins the difference rather than the
+value.
+
 ## 5. Memory Data Model
 
 Four fields and a body. `name` must equal the filename without `.md`, and the
@@ -352,6 +377,30 @@ adding another. Neither can refuse a write; both are advisory by construction,
 which is consistent with a template a reader is meant to adapt.
 
 ## 9. Reliability, Safety, and Trust
+
+**Staleness is measured against the source, never against a stored timestamp.**
+The two librarian tools added in this window — guidance, *what is the rule?*, and
+archive, *when did this last happen?* — answer freshness by comparing the index
+against the files it indexes rather than against a recorded run time, and the
+design note says why: *"an index that records when it last ran will report itself
+current while the world moves underneath it."* The consequence is stated in the
+same breath and is the reason it matters here rather than in a build tool: *"a
+stale index does not error, it returns nothing, and nothing is indistinguishable
+from 'there is no such memory'."* Four of four mutants are killed, including the
+one that makes `_newest_indexed` read its own mtime — which is exactly the
+implementation the principle forbids, pinned as a mutant rather than left to
+review.
+
+**Cap the reading, not the archive.** The rolling-context tool's retention rule
+refuses keep-last-N on the grounds that it *"destroys data to enforce a limit the
+reader already enforces"*, and that its selector, oldest-first, is only safe
+while the directory stays homogeneous — which stopped being true in the author's
+own use, where a by-age rule would have taken a reading journal that happened to
+live in the snapshot folder. `--prune` therefore matches a dated *name* pattern,
+dry-runs, honours a `.keep`, and prints what it is not touching, with a selftest
+asserting that a non-snapshot survives at every retention setting including
+`keep=0`. A deletion rule keyed on a property the directory is not guaranteed to
+have is a data-loss bug waiting for the directory to change.
 
 **No provenance, no verification, no uncertainty.** A memory says what it says.
 Nothing records where it came from, who wrote it, or whether anyone checked it,
@@ -595,4 +644,6 @@ carrying into any review.
 
 ## History
 
-**2026-08-30** — [`9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd`](https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/9922f209406e5c0bf9d2329dbe0a5d7f7d73f1fd) — first reading, at the ninth commit of a repository whose first commit is dated the same day. Screening returned **`NOTHING SCANNED`** — no manifest, hook or agent file at any path it knows — which is a finding rather than a pass, so the execution surface was read by hand: every import across the eleven tools is standard library, the only writes are into `tempfile` directories inside `--selftest` paths, and the only outbound request is a local Ollama call in the tool the README already labels MEASURED WEAK. On that basis the tools were run, and the numbers in sections 1, 6 and 10 were produced rather than quoted: all eight selftests pass, `--verify` returns 10/10 and 3/3 on both corpora, `--overlap` reproduces the README's 0-of-4 and 20-of-20, and `recall.score_file` returns 0.0 for the example `findable.py`'s comment says would be credited at 10x. One mark. `docs/BUILD_PROMPTS.md` was read in full on a second pass the same day: the twelve stages are not empty boxes but executed prompts with per-stage defect counts and, at stages 6 to 8, measured retrieval results — two of them REJECT — which sections 1, 6 and 10 now carry.
+**2026-09-17** — [`d4b404c39dca7e27bedb2269289896f162e5371d`](https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/d4b404c39dca7e27bedb2269289896f162e5371d) — re-read after 8 commits. All three anchored files are byte-identical — the benchmark tool and both probe sets — so the mark stands on unchanged code. Three additions are written up: two librarian tools whose staleness is measured against the source rather than a recorded run time, a retention rule that caps the reading rather than the archive, and, in section 4, `wired.py` catching itself returning the same verdict for every input, with the repair placed in a selftest that asserts discrimination rather than correctness on one case. Nothing was installed, built or run.
+
+**2026-08-30** — [`d4b404c39dca7e27bedb2269289896f162e5371d`](https://github.com/ScPlaceholder/MOTH-agent-memory-template/commit/d4b404c39dca7e27bedb2269289896f162e5371d) — first reading, at the ninth commit of a repository whose first commit is dated the same day. Screening returned **`NOTHING SCANNED`** — no manifest, hook or agent file at any path it knows — which is a finding rather than a pass, so the execution surface was read by hand: every import across the eleven tools is standard library, the only writes are into `tempfile` directories inside `--selftest` paths, and the only outbound request is a local Ollama call in the tool the README already labels MEASURED WEAK. On that basis the tools were run, and the numbers in sections 1, 6 and 10 were produced rather than quoted: all eight selftests pass, `--verify` returns 10/10 and 3/3 on both corpora, `--overlap` reproduces the README's 0-of-4 and 20-of-20, and `recall.score_file` returns 0.0 for the example `findable.py`'s comment says would be credited at 10x. One mark. `docs/BUILD_PROMPTS.md` was read in full on a second pass the same day: the twelve stages are not empty boxes but executed prompts with per-stage defect counts and, at stages 6 to 8, measured retrieval results — two of them REJECT — which sections 1, 6 and 10 now carry.

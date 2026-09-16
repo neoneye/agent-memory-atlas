@@ -7,9 +7,9 @@ page_kind: system
 source_name: "roandejager/Hillock"
 source_url: https://github.com/roandejager/Hillock
 archive_name: "roandejager--Hillock"
-revision: 5fdaeffe7dadee52a15cf1772b46013cc1af256a
-revision_url: https://github.com/roandejager/Hillock/commit/5fdaeffe7dadee52a15cf1772b46013cc1af256a
-analyzed_at: 2026-08-30
+revision: 94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244
+revision_url: https://github.com/roandejager/Hillock/commit/94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244
+analyzed_at: 2026-09-17
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the benchmark fixture and the gate metric | evaluate_hillock_PROTO_ish.py `generate_test_assets` (lines 77-86), `run_evaluation` | ten of the thirty generated questions carry `\"answerable\": False` and no expected triple, so the only correct behaviour is a refusal — a question about a person the corpus never mentions (`Where was Thomas Edison born?`), a predicate the subject does not carry (`What did Albert Einstein discover?`), a relation asked in the wrong direction (`Who cracked Enigma?`), and a bare identity probe (`Who is Turing?`). They are asserted against a real read path: `run_evaluation` ingests, queries each one, and counts a `HALLUCINATION_LEAK` whenever the gate admits a fact for a question that has no answer. Since v0.5 the run is unseeded — all three tables are dropped and the in-process HDC state, codebook and vocabulary book cleared — so a negative cannot be satisfied by a store that was never populated, and `verify_hillock.py`'s seventh check pins the seed-overlap arithmetic at four | the harness is the mechanism; no run output is committed, and `verify_hillock.py` check 8 computes how many negatives leak and asserts nothing with the number"
@@ -375,8 +375,10 @@ The hyperdimensional layer is the part to be most careful about, and not because
 
 ## History
 
+**2026-09-17** — [`94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244`](https://github.com/roandejager/Hillock/commit/94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244) — re-pinned after 1 commit. Both anchored files are byte-identical at both commits, so the mark stands on unchanged code and every anchor here is exact at the new pin. Nothing was installed, built or run.
 
-**2026-08-30** — [`5fdaeffe7dadee52a15cf1772b46013cc1af256a`](https://github.com/roandejager/Hillock/commit/5fdaeffe7dadee52a15cf1772b46013cc1af256a) — re-pinned four commits on, at v0.6.0 with HYDRA late interaction and an `hdc_reservoirs` blob table for multi-hop path vectors. The mark is unchanged at one: the benchmark fixture grew from thirty questions to thirty-two and still carries ten unanswerable ones, so `negative_eval` holds on the same basis.
+
+**2026-08-30** — [`94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244`](https://github.com/roandejager/Hillock/commit/94e6ae1be4b4a08ccb0bcd38559ab40dfe4b9244) — re-pinned four commits on, at v0.6.0 with HYDRA late interaction and an `hdc_reservoirs` blob table for multi-hop path vectors. The mark is unchanged at one: the benchmark fixture grew from thirty questions to thirty-two and still carries ten unanswerable ones, so `negative_eval` holds on the same basis.
 
 **`HDC_THRESHOLD` took its fifth value and nothing the report scores changed hands.** `0.42 → 0.78 → 0.68 → 0.72 → 0.55`, under a comment that has read *"Recalibrated gating threshold to eliminate hallucination leaks"* for the last two settings. The section 4 tables carry the new column: the four benchmark questions sit at `0.367`–`0.450` and block at `0.72` and at `0.55` alike, so a 0.17 move changed the verdict on none of them. The component-window table shifts by one — a three-component query now passes where it did not — and the README's advertised `0.42` still admits three of the four.
 

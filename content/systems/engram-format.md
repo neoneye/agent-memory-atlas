@@ -7,9 +7,9 @@ page_kind: system
 source_name: "El-AI-Intelligence/engram-format"
 source_url: https://github.com/El-AI-Intelligence/engram-format
 archive_name: "El-AI-Intelligence--engram-format"
-revision: 5bb55f2c50e9de01852349930915e547b4dced17
-revision_url: https://github.com/El-AI-Intelligence/engram-format/commit/5bb55f2c50e9de01852349930915e547b4dced17
-analyzed_at: 2026-09-06
+revision: 349fec44c48c7baad5e6f7616c9438925bb9f94d
+revision_url: https://github.com/El-AI-Intelligence/engram-format/commit/349fec44c48c7baad5e6f7616c9438925bb9f94d
+analyzed_at: 2026-09-17
 capabilities: "trust_state"
 capability_evidence:
   trust_state: "the imagined and grounded flags and the QuarantineFilter | src/store.rs:63-115, src/engram.rs:220-260, src/store.rs:1193-1213,1219-1339,1345-1368,1704-1765,1924-1965, FORMAT.md § 4.1 | a row is quarantined when `imagined = 1 AND grounded = 0`; `Engram::new_imagined` is the public constructor that produces that state and `write_curated` persists a grounding change without the capture gates; `QuarantineFilter::LiveOnly` adds `NOT (imagined = 1 AND grounded = 0)` to the filtered list, layer and content searches, and the same clause is unconditional in `search_related`'s vector fallback, `find_near_duplicates` and semantic-link generation; the unfiltered `search_by_content`, `list`, `vector_search` and `surface_relevant`, and the `MemoryBackend` adapter's `search`, apply no filter | src/store.rs:3146 (near-duplicates exclude a quarantined pair), :3328 (a live memory never links into quarantine and a quarantined one gains no links)"
@@ -368,6 +368,39 @@ should return — and must supply everything above it.
 
 ## 9. Reliability, Safety, and Trust
 
+**Two mechanisms arrived in this window that look like marks and are not, for
+reasons worth being precise about.** Schema v8 stores deletion tombstones in the
+vault database, and schema v9 adds an access audit ledger with revoked-since
+cursors. Both are real and both are well built; neither meets the definition it
+resembles.
+
+The `tombstones (id, deleted_at)` table exists so a deletion propagates: a
+`delete_without_tombstone` sibling applies a remote deletion that already
+originated elsewhere, and the local path commits the FTS cleanup, the row deletes
+and the tombstone in one transaction so *"a crash or an FTS failure can neither
+leave ghost search rows behind nor lose the tombstone"* (`src/store.rs:1632-1646`,
+`:1731-1750`). That is careful sync bookkeeping keyed on the row id. The atlas's
+`tombstone` mark asks for a record keyed on the *value* and consulted before a
+write, so that a rejected memory cannot return under a fresh id; this key cannot
+answer that question, because a re-captured memory gets a new id and never meets
+the table. The mark stays withheld, and the near-miss is closer than most.
+
+The access ledger is the sharper case. `AccessOp` is `Get`, `SearchHit` and
+`Export` — a record of what was *read*, with the ledger storing *"ids and hashes
+— never content"* (`src/store.rs:63-96`). The atlas's `audit_log` mark is a
+record of what *changed*, and expressly excludes retrieval logs, so a complete
+and disciplined read ledger earns nothing here. It is worth saying plainly that
+this is a limitation of the mark rather than of the design: for a store whose
+premise is verifiable privacy, knowing which memories were exported into a
+context window is the more load-bearing record, and the revoked-since cursor
+exists to answer *what did that client see before access was withdrawn*. The
+capability grid cannot express that; this paragraph is where it gets recorded.
+
+A third change in the window closes a real gap: deleting an engram now cascades
+to its consolidation outputs, links and embeddings, with a regression test. A
+deletion that leaves derived rows behind is the same defect as a tombstone
+nothing consults, one layer down.
+
 **Verifiable privacy is the claim, and it holds for what is here.** The
 machine-key derivation, its threat model, the Argon2id parameters, the salt
 file, the legacy re-keying, the sync cipher construction, the HMAC input, the
@@ -542,4 +575,6 @@ that is a different repository and it is not public.
 
 ## History
 
-**2026-09-06** — [`5bb55f2c50e9de01852349930915e547b4dced17`](https://github.com/El-AI-Intelligence/engram-format/commit/5bb55f2c50e9de01852349930915e547b4dced17) — first reading, at the head of `main`, three commits in, the day after the crate's only crates.io release. The screen found no auto-run surface; both manifests were inside the seven-day cooldown, and nothing was compiled or run. One mark, `trust_state`, for the imagined-and-ungrounded quarantine with a public producer and an unconditional filter on three read paths. `negative_eval` withheld on the emptiness shape of the two quarantine tests. `bitemporal` withheld: `occurred_at` is a second timestamp that nothing filters on. `scope_enforced`, `audit_log`, `human_review` and `tombstone` withheld: the scope columns are stored and unapplied, there is no mutation log, every surface is closed, and the sync tombstone is a delete marker.
+**2026-09-17** — [`349fec44c48c7baad5e6f7616c9438925bb9f94d`](https://github.com/El-AI-Intelligence/engram-format/commit/349fec44c48c7baad5e6f7616c9438925bb9f94d) — re-read after 10 commits, through v0.1.6. `src/engram.rs` is byte-identical, so the quarantine constructor behind `trust_state` is unchanged; `src/store.rs` grew 480 lines and `FORMAT.md` documents the two new schema versions. The mark still stands and no new mark is earned, which section 9 now explains rather than leaving to the grid: schema v8's deletion tombstones are keyed on the row id for sync rather than on the value, so a re-captured memory never meets the table, and schema v9's access ledger records `get`, `search_hit` and `export` — a read log, which the `audit_log` definition excludes. Both are well built and the second is arguably the more useful record for a store whose premise is verifiable privacy; the report says so. A deletion cascade to consolidation outputs, links and embeddings also landed, with a regression test. Nothing was installed, built or run.
+
+**2026-09-06** — [`349fec44c48c7baad5e6f7616c9438925bb9f94d`](https://github.com/El-AI-Intelligence/engram-format/commit/349fec44c48c7baad5e6f7616c9438925bb9f94d) — first reading, at the head of `main`, three commits in, the day after the crate's only crates.io release. The screen found no auto-run surface; both manifests were inside the seven-day cooldown, and nothing was compiled or run. One mark, `trust_state`, for the imagined-and-ungrounded quarantine with a public producer and an unconditional filter on three read paths. `negative_eval` withheld on the emptiness shape of the two quarantine tests. `bitemporal` withheld: `occurred_at` is a second timestamp that nothing filters on. `scope_enforced`, `audit_log`, `human_review` and `tombstone` withheld: the scope columns are stored and unapplied, there is no mutation log, every surface is closed, and the sync tombstone is a delete marker.

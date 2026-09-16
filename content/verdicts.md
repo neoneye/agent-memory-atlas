@@ -1539,6 +1539,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: a correction has to hold — nothing consults the value it replaced — or two people share an agent, since isolation here is one directory per agent and no user axis at all.
 
 ### [`aeris`](../systems/aeris/)
+- Status: the implementation was deleted upstream on 16 September 2026 — `ab1f18c`, "Total deletion of bases of project", removed 16,809 lines and left two `.csproj` files and the documentation. This entry describes the code at the pinned commit, which the archive fork holds.
 - Best idea: a validator that refuses to hand a language model the engine's own vocabulary — eighteen forbidden identifiers, a bare-entity-id check and a token budget, asserted by committed tests on the *serialized* projection rather than on the extractor's return value.
 - Biggest risk: nothing in the engine writes a memory or a belief. `AddMemory` and `AddBelief` are called only from tests, so decay, consolidation, retrieval and projection all run over a store an actual simulation leaves empty, and the belief-status model has no transition anywhere in the repository.
 - Most reusable component: `BeliefData` as a design — a five-value status enum where three values are ways of not being believed, a provenance enum running from direct observation to assumption, and two ids giving the belief a why and a why-not for eight bytes. Copy the shape, and wire the transitions this repository never did.
