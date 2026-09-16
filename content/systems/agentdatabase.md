@@ -7,9 +7,9 @@ page_kind: system
 source_name: "LinzeColin/AgentDatabase"
 source_url: https://github.com/LinzeColin/AgentDatabase
 archive_name: "LinzeColin--AgentDatabase"
-revision: 85d54d9a1da37e1819ffd085808f94bf278a122b
-revision_url: https://github.com/LinzeColin/AgentDatabase/commit/85d54d9a1da37e1819ffd085808f94bf278a122b
-analyzed_at: 2026-09-07
+revision: 8514923810b38b861aa308feca47f43df34f2a20
+revision_url: https://github.com/LinzeColin/AgentDatabase/commit/8514923810b38b861aa308feca47f43df34f2a20
+analyzed_at: 2026-09-16
 capabilities: "trust_state, bitemporal, audit_log, human_review, negative_eval"
 capability_evidence:
   trust_state: "the record status, gating what the agent boots with | OpenAIDatabase/data/memory/records/records-0001.jsonl, OpenAIDatabase/config/memory-forgetting-policy.json, OpenAIDatabase/scripts/build_memory_atlas_data.py:723 | `status` is `active | candidate | disputed | retired` and the live shard is populated across three of them — 6 active, 108 candidate, 84 retired out of 198. It is not decorative: the forgetting policy sets `\"eligible_statuses\": [\"active\"]` with `\"inactive_default\": \"exclude\"`, the atlas builder maps `{active: 1, candidate: 0, disputed: 0, retired: 0}` to a retrieval weight, and `data/memory/agent-memory.json` — the file the agent reads at boot — carries an `active_index` of exactly the 6 active records | OpenAIDatabase/tests/test_memory_lifecycle.py"
@@ -571,6 +571,8 @@ hundred records and nothing here addresses what happens three orders of magnitud
 | `OpenAIDatabase/data/WHERE_IS_THE_DATA.md`, `MIRROR_STATUS.json` | The signpost for the next agent, and its machine-readable twin |
 
 ## History
+
+**2026-09-16** — [`8514923810b38b861aa308feca47f43df34f2a20`](https://github.com/LinzeColin/AgentDatabase/commit/8514923810b38b861aa308feca47f43df34f2a20) — re-read at a commit dated 15 September 2026, 14 commits past the previous pin. A commit comparison across the range lists no anchored file among the changed ones, so every mark stands where it was tested and no line number moved. Screened before reading, from a full clone: one auto-run surface, 28 build-time execution points, 90 unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-07** — [`85d54d9a1da37e1819ffd085808f94bf278a122b`](https://github.com/LinzeColin/AgentDatabase/commit/85d54d9a1da37e1819ffd085808f94bf278a122b) — re-read after 167 commits. The memory runtime did not move: `git diff --stat` over `memory_lifecycle.py`, `memory_mutation.py`, `memory.py`, the forgetting policy, the records shard, the curation file, the gold set and the skills is empty; the shard still holds 198 records as 6 active, 108 candidate and 84 retired; `append_transition` is still called at `memory_mutation.py:482,511,535`; the 160 gold cases and their committed reports are unchanged; 236 Python files; still no licence file. What did change sits beside the store: a `memory_atlas_private` pipeline under `OpenAIDatabase/scripts/` that captures local agent state named in `ops/memory-atlas/source-registry.json` — the Codex state database among its sources — into an encrypted private mirror, with 489 lines added across nine files for backup and hygiene contracts (commits of 20 to 30 August 2026); two refreshes of the recurring-prompt analysis under `behavior_intelligence/` (25 August and 1 September 2026); and a `MemoryAtlas/` web application at the repository root. None of it is read by the query path. Every mark stands on the same evidence.
 

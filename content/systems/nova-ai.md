@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Whooptie/NOVA_AI"
 source_url: https://github.com/Whooptie/NOVA_AI
 archive_name: "Whooptie--NOVA_AI"
-revision: 5d9892522d1a275f70db5c2f7d6ec4c59487029d
-revision_url: https://github.com/Whooptie/NOVA_AI/commit/5d9892522d1a275f70db5c2f7d6ec4c59487029d
-analyzed_at: 2026-09-07
+revision: 4ad85507ab637897cd84abc891f733f2e7fab189
+revision_url: https://github.com/Whooptie/NOVA_AI/commit/4ad85507ab637897cd84abc891f733f2e7fab189
+analyzed_at: 2026-09-16
 capabilities: "tombstone, trust_state, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "concept graph, write path | core/semantic.py | add_sense tests status == rejected before the confidence/status branch and returns a blocked signal without touching the stored sense | tests/test_tombstone.py, test_add_sense_dedup_BLOKKEERT_rejected_status_BUG_32_FIX"
@@ -613,6 +613,8 @@ has yet written the delete.
 - Licence: `LICENSE.txt` ("Viewable, Not Reusable").
 
 ## History
+
+**2026-09-16** — [`4ad85507ab637897cd84abc891f733f2e7fab189`](https://github.com/Whooptie/NOVA_AI/commit/4ad85507ab637897cd84abc891f733f2e7fab189) — re-read at a commit dated 16 September 2026. The previous pin could not be compared against this one: the GitHub comparison refuses with a 422 because `5d989252` is no longer an ancestor of `main`, so the branch was rewritten rather than advanced — and the head moved again between two requests a minute apart, so the rewriting is ongoing. The pinned commit itself survives, both upstream by sha and in the atlas's archive fork, so the previous reading remains checkable. Against the new head the two anchored files show a 2,741-line diff that is not a change: `git diff -w --ignore-cr-at-eol` between the pins is empty, and `core/semantic.py` went from zero carriage returns to 2,496, so the whole difference is a conversion from LF to CRLF. The tombstone mechanism and its test are therefore identical in content, and all five marks hold verbatim. Screened before reading, from a full clone: no auto-run surface, two build-time execution points, one unpinned dependency surface and one dependency file inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-07** — [`5d9892522d1a275f70db5c2f7d6ec4c59487029d`](https://github.com/Whooptie/NOVA_AI/commit/5d9892522d1a275f70db5c2f7d6ec4c59487029d) — re-pinned eight commits on. On the memory path, `MemoryModule.search` and `query` read the `interactions_old` archive by default with an `include_archief` opt-out, and `get_stats` counts it (`core/memory.py`, ten cases in `tests/test_memory_archief_search.py`); a `core/last_context.py` module tracks the last concept a conversation resolved, the intent router grew by 476 lines, and a response-variant learner with a feedback log was added under `modules/response_learning/`. The committed state moved with use — `interactions.db`, the word-association map, the intent classifier. The concept graph, its statuses, tombstones and audit fields did not change; five marks stand on the same evidence. Screened before reading: no auto-run surface, two build-time execution points, nothing installed or run.
 

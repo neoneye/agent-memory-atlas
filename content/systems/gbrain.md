@@ -7,9 +7,9 @@ page_kind: system
 source_name: "garrytan/gbrain"
 source_url: https://github.com/garrytan/gbrain
 archive_name: "garrytan--gbrain"
-revision: ede85e2e8c510077e6505f1c30257dc64176361b
-revision_url: https://github.com/garrytan/gbrain/commit/ede85e2e8c510077e6505f1c30257dc64176361b
-analyzed_at: 2026-09-07
+revision: 668b9bac302705f3bca0ae4792a49fab0a79a74e
+revision_url: https://github.com/garrytan/gbrain/commit/668b9bac302705f3bca0ae4792a49fab0a79a74e
+analyzed_at: 2026-09-16
 capabilities: "trust_state, bitemporal, scope_enforced, human_review, negative_eval"
 capability_evidence:
   trust_state: "take_proposals.status | src/core/migrate.ts:3497-3527, src/core/take-proposals.ts:83-250, src/core/cycle/propose-takes.ts:902-951, src/commands/takes.ts:640-665 | a claim the propose_takes phase extracts lands as a `take_proposals` row with `status` in pending, accepted, rejected or superseded; only `acceptProposal` writes it into the page's takes fence and the `takes` table, so every read of takes — list, search, scorecard, synthesis evidence, hot-memory injection — is a read of accepted claims and a pending or rejected proposal reaches none of them; a page that yields no claims writes a rejected row so the next cycle is a cache hit rather than a live proposal | test/take-proposals.test.ts:109-310 (pending rows only are listed; accept promotes and stamps the row number; a double accept and a reject on an acted row refuse; concurrent accepts and rejects let exactly one win)"
@@ -574,6 +574,8 @@ writers and the consolidator only); `rg -n "status = 'pending'" src/core/take-pr
 (the compare-and-set in accept and reject).
 
 ## History
+
+**2026-09-16** — [`668b9bac302705f3bca0ae4792a49fab0a79a74e`](https://github.com/garrytan/gbrain/commit/668b9bac302705f3bca0ae4792a49fab0a79a74e) — re-read at a commit dated 16 September 2026, 8 commits past the previous pin. A commit comparison across the range lists no anchored file among the changed ones, so every mark stands where it was tested and no line number moved. Screened before reading, from a full clone: one auto-run surface, one build-time execution point, three unpinned dependency surfaces and three dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-07** — [`ede85e2e8c510077e6505f1c30257dc64176361b`](https://github.com/garrytan/gbrain/commit/ede85e2e8c510077e6505f1c30257dc64176361b) — 193 commits and 82 releases on, 0.42.76.0 to 0.48.3.0. Screened: a `.claude-plugin/` directory that runs on load, a `postinstall`, two manifests inside the cooldown; nothing installed or run. Three marks added and none removed. `trust_state` and `human_review` for the `take_proposals` queue, added 21 August 2026, which puts a person between the extractor and the takes table. `bitemporal` for the facts table's `valid_from` and `valid_until`, applied at read time since v0.47.10 of 1 September 2026 with history reads preserved. The facts hot-memory layer itself — the table, the verb, the decay, the classifier, the consolidator — dates from v0.31 of 9 May 2026 and was in the tree at the previous pin; the previous entry described only takes, and the body now covers both. The `until_date` finding narrowed: at both pins the only query comparing `since_date` at both ends is the scorecard's window, and `until_date` has no reader at all. BrainBench, MEMORY_VERBS and the ambient writeback are new since the pin and are described; the BrainBench scorecards, previously in a sibling repository, are a committed baseline here.
 
