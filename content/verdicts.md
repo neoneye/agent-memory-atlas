@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 539 reports.**
+**This page covers all 540 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4662,3 +4662,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, Python, version 2.4.1, 15,574 lines across 59 files, one SQLite file with sqlite-vec and FTS5, twenty-nine test modules including tests over its own process, and a 500-question LongMemEval-S run whose per-question records are committed so the published table can be recomputed rather than trusted. No auto-run surfaces at this pin.
 - Study when: you have columns named for two time axes, or a CI check you have never confirmed runs on the release path.
 - Do not copy when: you need erasure to survive the next extraction pass. Four marks: scope enforced, mutation audit, review, negative evals.
+
+### [`claudinio-brain`](../systems/claudinio-brain/)
+- Best idea: **the current-value read has no branch of its own.** `RecallQuery::for_when` builds one temporal predicate for every mode, and `Now` is not a separate arm but `AsOf(now)` — "the two cannot drift apart because there is only one arm". A store whose current-value query works while its as-of query is subtly wrong looks correct in daily use and fails on the one question it exists to answer; this shape makes that impossible rather than unlikely. Beside it, `retracted_at` is annotated "set when we learn it was NEVER true" and is a different column from `valid_to`, so a value that expired and a value that was wrong are not the same row state.
+- Biggest risk: **scope is stored, partitions the vector index, and is still an optional argument.** The read path takes `Option<String>` defaulting to `None`, so isolation depends on every caller remembering to ask; the exclusion form is a post-filter on the semantic channel, since a vec0 partition key "indexes equality and cannot express an exclusion". There is no mutation record beyond the fact table, and a retraction's reason is concatenated into `source` — the same free-text column naming who asserted the claim. Nothing is keyed on a rejected value: `live_facts` excludes retracted rows so they "must not influence where a new fact lands", so re-asserting a retracted value returns a fresh `created`.
+- Most reusable component: `brain lint`, "[w]hat the brain can see wrong with itself" — findings are structural defects where "the fact is stored, it is true, and retrieval still cannot use it", the motivating case is named (59 out of 69 `is_a` facts held a string where an entity belonged, so every voucher knew its class and none was reachable from it), and lint never writes: "repairing is a separate, explicit decision".
+- Maturity impression: MIT, Rust, version 0.3.0, 13,173 lines over 28 files, one SQLite file with FTS5 and a vec0 table, thirty-six integration test files, five scored eval suites plus a holdout "nothing is tuned against", and hook bundles for eight agent harnesses. Three auto-run surfaces at this pin, all of them plugin and hook manifests.
+- Study when: you have a now-read and an as-of-read written separately, or you store expiry and error in one column.
+- Do not copy when: you need namespace isolation the caller cannot forget. Four marks: bitemporal, trust state, review, negative evals.

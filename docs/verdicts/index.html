@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 539 reports.</strong></p>
+<p><strong>This page covers all 540 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20149,6 +20149,51 @@ surfaces at this pin.</li>
 you have never confirmed runs on the release path.</li>
 <li>Do not copy when: you need erasure to survive the next extraction
 pass. Four marks: scope enforced, mutation audit, review, negative
+evals.</li>
+</ul>
+<h3 id="claudinio-brain"><a
+href="../systems/claudinio-brain/"><code>claudinio-brain</code></a></h3>
+<ul>
+<li>Best idea: <strong>the current-value read has no branch of its
+own.</strong> <code>RecallQuery::for_when</code> builds one temporal
+predicate for every mode, and <code>Now</code> is not a separate arm but
+<code>AsOf(now)</code> — "the two cannot drift apart because there is
+only one arm". A store whose current-value query works while its as-of
+query is subtly wrong looks correct in daily use and fails on the one
+question it exists to answer; this shape makes that impossible rather
+than unlikely. Beside it, <code>retracted_at</code> is annotated "set
+when we learn it was NEVER true" and is a different column from
+<code>valid_to</code>, so a value that expired and a value that was
+wrong are not the same row state.</li>
+<li>Biggest risk: <strong>scope is stored, partitions the vector index,
+and is still an optional argument.</strong> The read path takes
+<code>Option&lt;String&gt;</code> defaulting to <code>None</code>, so
+isolation depends on every caller remembering to ask; the exclusion form
+is a post-filter on the semantic channel, since a vec0 partition key
+"indexes equality and cannot express an exclusion". There is no mutation
+record beyond the fact table, and a retraction's reason is concatenated
+into <code>source</code> — the same free-text column naming who asserted
+the claim. Nothing is keyed on a rejected value: <code>live_facts</code>
+excludes retracted rows so they "must not influence where a new fact
+lands", so re-asserting a retracted value returns a fresh
+<code>created</code>.</li>
+<li>Most reusable component: <code>brain lint</code>, "[w]hat the brain
+can see wrong with itself" — findings are structural defects where "the
+fact is stored, it is true, and retrieval still cannot use it", the
+motivating case is named (59 out of 69 <code>is_a</code> facts held a
+string where an entity belonged, so every voucher knew its class and
+none was reachable from it), and lint never writes: "repairing is a
+separate, explicit decision".</li>
+<li>Maturity impression: MIT, Rust, version 0.3.0, 13,173 lines over 28
+files, one SQLite file with FTS5 and a vec0 table, thirty-six
+integration test files, five scored eval suites plus a holdout "nothing
+is tuned against", and hook bundles for eight agent harnesses. Three
+auto-run surfaces at this pin, all of them plugin and hook
+manifests.</li>
+<li>Study when: you have a now-read and an as-of-read written
+separately, or you store expiry and error in one column.</li>
+<li>Do not copy when: you need namespace isolation the caller cannot
+forget. Four marks: bitemporal, trust state, review, negative
 evals.</li>
 </ul>
         </article>
