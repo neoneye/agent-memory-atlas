@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 521 reports.</strong></p>
+<p><strong>This page covers all 522 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19418,6 +19418,45 @@ ask the visibility question before ranking.</li>
 <li>Do not copy when: you want a memory an agent can write — by design
 it cannot. Five marks: trust state, scope enforced, bitemporal, audit
 log, negative eval.</li>
+</ul>
+<h3 id="yantrik-os"><a
+href="../systems/yantrik-os/"><code>yantrik-os</code></a></h3>
+<ul>
+<li>Best idea: <strong>being ignored raises the speaking
+threshold.</strong> <code>usefulness_pressure</code> "rises when outputs
+are ignored, raises threshold (more selective, NOT more spammy)" — one
+drive, one parenthesis, and a proactive assistant stops training its
+user to dismiss it. Beside it, a signal taxonomy that separates
+"insufficient data" from "nothing to say": uncertainty is its own type
+and it triggers fetching external information rather than a guess.</li>
+<li>Biggest risk: <strong>the durable memory is not in this
+repository.</strong> <code>yantrikdb-core</code> is a path dependency on
+<code>../yantrikdb/crates/yantrikdb-core</code>, a sibling checkout, so
+a reader cloning this tree gets the shell and the cognition loop and not
+the store beneath them. What the OS layer holds of its own is continuous
+throughout — drives, confidences, Welford baselines, per-source moving
+averages — with no stored discrete state withholding a record, no
+supersession, and consolidation deleting a stale expectation rather than
+retiring it, so having believed something does not outlive the
+belief.</li>
+<li>Most reusable component: <code>yantrik-brain</code> entire — 3,102
+lines of LLM-free cognition over a plain
+<code>rusqlite::Connection</code>: four signal types, four homeostatic
+drives, a tick that is arithmetic, and a nightly consolidation with a
+written checklist (prune expectations below 0.05 confidence unseen for
+sixty days, batch Welford corrections, curiosity TTLs from yield
+history).</li>
+<li>Maturity impression: GPL-3.0, Rust with a Slint UI, 181,759 lines
+with 753 test functions, sixteen application binaries, a uniform
+<code>yos describe</code> / <code>yos act</code> control surface over a
+unix socket, and an output sanitizer that redacts sensitive fragments
+from model responses before display. The engine it depends on is
+Apache-2.0.</li>
+<li>Study when: you are building anything proactive and have not decided
+what happens when the user ignores it, or you want a cognition loop
+whose speak-or-not decision is readable arithmetic.</li>
+<li>Do not copy when: you need the memory semantics — those live in the
+engine crate this repository points at. No marks.</li>
 </ul>
         </article>
       </div>

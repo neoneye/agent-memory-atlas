@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A desktop operating system whose
+shell is an agent, with an LLM-free cognition loop over four homeostatic
+drives — one of which raises the speaking threshold when its suggestions
+are ignored — and whose durable memory is a database crate that lives
+outside this repository.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Yantrik OS — Agent Memory Atlas">
+    <meta property="og:description" content="A desktop operating system
+whose shell is an agent, with an LLM-free cognition loop over four
+homeostatic drives — one of which raises the speaking threshold when its
+suggestions are ignored — and whose durable memory is a database crate
+that lives outside this repository.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Yantrik
+OS — Agent Memory Atlas">
+    <meta name="twitter:description" content="A desktop operating system
+whose shell is an agent, with an LLM-free cognition loop over four
+homeostatic drives — one of which raises the speaking threshold when its
+suggestions are ignored — and whose durable memory is a database crate
+that lives outside this repository.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Yantrik OS — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Yantrik OS",
+      "description": "A desktop operating system whose shell is an agent, with an LLM-free cognition loop over four homeostatic drives \u2014 one of which raises the speaking threshold when its suggestions are ignored \u2014 and whose durable memory is a database crate that lives outside this repository.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Being ignored makes it quieter, not
+louder</p>
+          <h1>Yantrik OS</h1>
+          <p class="document-deck">A desktop operating system whose
+shell is an agent, with an LLM-free cognition loop over four homeostatic
+drives — one of which raises the speaking threshold when its suggestions
+are ignored — and whose durable memory is a database crate that lives
+outside this repository.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/yantrikos/yantrik-os">
+              <span>Source</span>
+              <strong>yantrikos/yantrik-os</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/yantrikos/yantrik-os/commit/ec2e424f594b7f8e801526273a5e31506615b1ad" title="ec2e424f594b7f8e801526273a5e31506615b1ad">
+              <span>Analyzed revision</span>
+              <code>ec2e424f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yantrikos--yantrik-os" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>yantrikos--yantrik-os</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Yantrik OS is "[a]n AI-native desktop operating system where the AI
+<strong>is</strong> the shell" — GPL-3.0, Rust throughout with a Slint
+UI, 181,759 lines with 753 test functions, sixteen application binaries,
+local quantized models, no Electron and no Python runtime. Every app
+publishes its state and accepts actions over a unix socket, so
+"[a]nything a person can do from the keyboard, an agent can do through
+the same path": <code>yos describe shell</code>,
+<code>yos act shell open_app name=notes</code>.</p>
+<p>Its durable memory is not here. <code>yantrikdb-core</code> is a path
+dependency on <code>../yantrikdb/crates/yantrikdb-core</code> — a
+sibling checkout of the upstream database, which this atlas reads in its
+own right as <a href="../yantrikdb-engine/">YantrikDB Engine</a>. A
+reader cloning this repository alone gets the shell and the cognition
+loop, and not the store underneath them. The manifest is candid about
+why it is a dependency rather than a fork: "Upstream yantrikdb, not a
+vendored fork … the <code>package =</code> rename keeps every existing
+<code>use yantrikdb_core::…</code> call site compiling unchanged".</p>
+<p>What this tree contributes is the layer above: an LLM-free loop that
+decides when the machine should speak.</p>
+<p><strong>Four signal types and four drives.</strong> Every observation
+is classified as a prediction error (reality differs from what was
+expected), a tension (unresolved pressure building), an opportunity
+(favourable conditions), or an uncertainty — and uncertainty is the one
+that triggers fetching external information rather than guessing. Over
+them sit four homeostatic drives that "oscillate between satiation and
+hunger, controlling the system's rhythm and preventing both spam and
+stagnation": information hunger, novelty hunger, tension pressure, and
+one more that carries the best decision in the repository:</p>
+<blockquote>
+<p>"<code>usefulness_pressure</code>: rises when outputs are ignored,
+raises threshold (more selective, NOT more spammy)"</p>
+</blockquote>
+<p>A proactive assistant that becomes quieter the more it is ignored
+inverts the incentive almost every notification system encodes, and the
+parenthesis exists because the obvious implementation does the
+opposite.</p>
+<p>The tick is arithmetic, not a model call: update drives from recent
+events, collect candidates from wrapped instincts and native detectors,
+score them against signal type, drives and a per-source moving average,
+enrich the top few with cheap context, and apply a threshold the
+usefulness drive moves. The cortex above it — pulses from every tool
+call, a canonical entity graph across email, Jira, git, calendar,
+browser and filesystem, Welford baselines, a temporal pattern miner, and
+a reasoner that reflects roughly every four hours rather than every
+cycle — is explicit that it "does NOT call the LLM directly", emitting
+attention items the instinct pipeline packages.</p>
+<p><strong>Sleep is a real pass.</strong> Nightly consolidation, gated
+on long idle plus night-time, strengthens patterns that positive
+feedback confirmed, decays source weights for consistently poor
+outcomes, prunes expectations below 0.05 confidence unseen for sixty
+days, applies batch Welford corrections to baselines, recalculates
+curiosity source TTLs from yield history, and drops zero-confidence
+feedback entries. It reports what it did.</p>
+<p><strong>The module history is worth the detour.</strong> Those four
+brain modules used to live inside a vendored copy of the database crate,
+and the header says why they were moved:</p>
+<blockquote>
+<p>"which made them look like database code. They are not: they touch no
+YantrikDB type at all, only a plain <code>rusqlite::Connection</code>.
+Keeping them here lets Yantrik OS depend on the upstream yantrikdb
+release instead of maintaining a fork of it."</p>
+</blockquote>
+<p>A dependency reduced by noticing that the code inside it never
+touched its types.</p>
+<p>No marks, and the reason is structural rather than a criticism.
+Everything this layer stores of its own is continuous — drives,
+confidences, baselines, per-source moving averages. There is no stored
+discrete state that withholds a record from a read, no supersession or
+retraction, no mutation record, and no scope to enforce on a single-user
+desktop. Consolidation's answer to a stale expectation is deletion, so
+the fact of having believed something does not outlive the belief. The
+marks that could apply belong to the engine crate this repository points
+at.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>pulse</strong> is something that happened. An
+<strong>entity</strong> is what it was about.</p>
+<p>A <strong>signal</strong> is why it might matter, and there are four
+kinds.</p>
+<p>A <strong>drive</strong> is how badly the system wants to say
+something, and being ignored lowers it.</p>
+<p><strong>Sleep</strong> is when the confidences get corrected.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the brain tick is arithmetic, not a model call, and the usefulness drive raises the speaking threshold when suggestions are ignored rather than lowering it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the brain tick is arithmetic, not a model call, and the usefulness drive raises the speaking threshold when suggestions are ignored rather than lowering it
+flowchart TB
+    TOOLS[&quot;every tool call — email, Jira, git,&lt;br/&gt;calendar, browser, filesystem&quot;] --&gt; PULSE[(&quot;pulses — cheap event capture&quot;)]
+    PULSE --&gt; ENT[(&quot;entity graph: canonical entities&lt;br/&gt;and relationships across systems&quot;)]
+    ENT --&gt; LEARN[&quot;Welford baselines · temporal pattern miner ·&lt;br/&gt;a reasoner reflecting every ~4h,&lt;br/&gt;not every cycle&quot;]
+    LEARN --&gt; ATT[&quot;AttentionItems — the cortex does NOT&lt;br/&gt;call the LLM directly&quot;]
+    TICK[&quot;brain_tick()&quot;] --&gt; D1[&quot;1. update drives from recent events&quot;]
+    D1 --&gt; DRIVES[(&quot;information_hunger · novelty_hunger ·&lt;br/&gt;tension_pressure · usefulness_pressure&quot;)]
+    D1 --&gt; D2[&quot;2. collect candidates: wrapped instinct&lt;br/&gt;urges + native detectors&quot;]
+    ATT --&gt; D2
+    D2 --&gt; SIG{&quot;classify the signal&quot;}
+    SIG --&gt; PE[&quot;PredictionError — reality ≠ expected&quot;]
+    SIG --&gt; TEN[&quot;Tension — unresolved pressure building&quot;]
+    SIG --&gt; OPP[&quot;Opportunity — favourable conditions&quot;]
+    SIG --&gt; UNC[&quot;Uncertainty — insufficient data;&lt;br/&gt;triggers external fetching&lt;br/&gt;rather than a guess&quot;]
+    PE &amp; TEN &amp; OPP &amp; UNC --&gt; D3[&quot;3. score: signal × drives × source EMA&quot;]
+    D3 --&gt; D4[&quot;4. orient the top candidates&lt;br/&gt;(cheap context enrichment)&quot;]
+    D4 --&gt; D5{&quot;5. adaptive threshold,&lt;br/&gt;driven by usefulness_pressure&quot;}
+    D5 --&gt;|&quot;outputs being ignored →&lt;br/&gt;threshold RISES: &#39;more selective,&lt;br/&gt;NOT more spammy&#39;&quot;| QUIET[&quot;says less&quot;]
+    D5 --&gt;|&quot;above threshold&quot;| SPEAK[&quot;deliver an urge&quot;]
+    SLEEP[&quot;nightly consolidation — long idle + night&quot;] --&gt; C1[&quot;strengthen patterns positive feedback confirmed&quot;]
+    SLEEP --&gt; C2[&quot;decay source weights for poor outcomes&quot;]
+    SLEEP --&gt; C3[&quot;prune expectations &lt; 0.05 confidence&lt;br/&gt;unseen for 60+ days&quot;]
+    SLEEP --&gt; C4[&quot;batch Welford baseline corrections&quot;]
+    SLEEP --&gt; C5[&quot;recalculate curiosity TTLs from yield history&quot;]
+    DRIVES -.-&gt; SLEEP
+    DB[(&quot;durable memory: upstream yantrikdb,&lt;br/&gt;a path dependency on ../yantrikdb —&lt;br/&gt;not in this repository&quot;)] -.-&gt; ENT</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Crate</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>yantrik-brain</code></td>
+<td>The LLM-free loop: drives, detectors, curiosity, consolidation</td>
+</tr>
+<tr>
+<td><code>yantrik-companion-cortex</code></td>
+<td>Pulses, entity graph, baselines, patterns, reasoner</td>
+</tr>
+<tr>
+<td><code>yantrik-companion-instincts</code></td>
+<td>Dozens of named instincts, each proposing urges</td>
+</tr>
+<tr>
+<td><code>yantrik-companion-core</code></td>
+<td>Shared types, and the output sanitizer</td>
+</tr>
+<tr>
+<td><code>yantrik-shell-core</code>, <code>yantrik-ui-slint</code></td>
+<td>The shell and its UI</td>
+</tr>
+<tr>
+<td><code>yantrikdb-server</code>, <code>yantrik-mcp</code></td>
+<td>The database server wrapper and an MCP surface</td>
+</tr>
+<tr>
+<td><code>apps/</code></td>
+<td>Sixteen application binaries</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>crates/yantrik-brain/src/brain.rs:1-50</code> — the signal
+taxonomy, the drives, and the tick.</p>
+<p><code>crates/yantrik-brain/src/brain_consolidation.rs:1-37</code> —
+what sleep actually does.</p>
+<p><code>crates/yantrik-brain/src/lib.rs:1-18</code> — why these modules
+moved out of the database.</p>
+<p><code>crates/yantrik-companion-cortex/src/lib.rs:1-19</code> — four
+layers, and the boundary the cortex keeps.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Pulses, entities and relationships, baselines with running variance,
+expectations with confidences, curiosity sources with yields and TTLs,
+and a brain state holding drives and feedback. All of it is state the
+loop maintains for itself; the user's durable memories live in the
+engine crate.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>None of its own. The situation briefing is assembled from cortex
+state when attention fires; recall over stored memory belongs to the
+engine.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Incremental: a pulse per tool call, an entity update, a baseline
+correction. Consolidation is the only pass that removes anything, and it
+removes rather than retires.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The uniform control path is the interesting piece: every app
+publishes state and accepts actions on the same unix socket, so an agent
+drives the desktop through the documented surface a person uses rather
+than through synthesised input. For a system whose thesis is that the AI
+is the shell, making the shell describable is the load-bearing
+decision.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><code>sanitize.rs</code> scans model output for sensitive internal
+information and redacts fragments before display, logging when it fires,
+with a table of patterns including an SSH private key read attempt. That
+is output-side defence for a system that reads the user's whole machine,
+and it is the right place for it.</p>
+<p>What is absent at this layer is any epistemic record: nothing marks
+where a belief came from, nothing supersedes a wrong expectation rather
+than deleting it, and no log records what the loop concluded before it
+changed its mind.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>753 test functions across the crates and apps. Nothing was built or
+run for this reading, and no model was loaded.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Make being ignored raise the bar. One drive, one parenthesis — "more
+selective, NOT more spammy" — and a proactive system stops training its
+user to dismiss it.</p>
+<p>Separate "insufficient data" from "nothing to say". Uncertainty as
+its own signal type, wired to fetching rather than to guessing, is the
+distinction most assistants collapse.</p>
+<p>Reflect on a slower clock than you tick on. Every four hours for the
+expensive reasoner, every cycle for the arithmetic, is a ratio worth
+copying.</p>
+<p>And check whether the code inside your vendored fork touches the
+types it was vendored for. Here it did not, and noticing turned a fork
+back into a dependency.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether consolidation keeps any trace of what it pruned. The report
+counts expectations and baselines removed; nothing found preserves what
+they said.</p>
+<p>How the OS layer and the engine's own lifecycle states interact. The
+engine carries consolidation status and tombstones; whether the
+companion reads them was not traced.</p>
+<p>What the sibling checkout implies for distribution. The path
+dependency is explicit about tracking the upstream release, and how a
+packaged build resolves it was not established.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/yantrik-brain/src/brain.rs:1-50</code></td>
+<td>Four signals, four drives, and the one that inverts the usual
+incentive</td>
+</tr>
+<tr>
+<td><code>crates/yantrik-brain/src/brain_consolidation.rs:1-37</code></td>
+<td>A sleep cycle with a checklist</td>
+</tr>
+<tr>
+<td><code>crates/yantrik-brain/src/lib.rs:1-18</code></td>
+<td>Code that only looked like database code</td>
+</tr>
+<tr>
+<td><code>crates/yantrik-companion-cortex/src/lib.rs:1-19</code></td>
+<td>Four layers, and a boundary kept</td>
+</tr>
+<tr>
+<td><code>Cargo.toml:132-136</code></td>
+<td>Where the durable memory actually lives</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/yantrikos/yantrik-os/commit/ec2e424f594b7f8e801526273a5e31506615b1ad"><code class="commit-id" title="ec2e424f594b7f8e801526273a5e31506615b1ad">ec2e424f…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: seventy-two files scanned, no auto-run
+surfaces, twenty build-time execution points, no unpinned surfaces and
+fifty-one dependency files inside the seven-day cooldown. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

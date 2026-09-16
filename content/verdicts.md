@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 521 reports.**
+**This page covers all 522 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4518,3 +4518,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, Python 3.13+, 313,168 lines with 4,209 test functions across 244 files, ADRs, a threat model, a governance document, and comments that cite requirement ids and link the issues they closed — all at version 0.0.0 and self-labelled alpha.
 - Study when: you are writing a redaction or withholding path and have only tested that the content is absent, or you need a worked reason to ask the visibility question before ranking.
 - Do not copy when: you want a memory an agent can write — by design it cannot. Five marks: trust state, scope enforced, bitemporal, audit log, negative eval.
+
+### [`yantrik-os`](../systems/yantrik-os/)
+- Best idea: **being ignored raises the speaking threshold.** `usefulness_pressure` "rises when outputs are ignored, raises threshold (more selective, NOT more spammy)" — one drive, one parenthesis, and a proactive assistant stops training its user to dismiss it. Beside it, a signal taxonomy that separates "insufficient data" from "nothing to say": uncertainty is its own type and it triggers fetching external information rather than a guess.
+- Biggest risk: **the durable memory is not in this repository.** `yantrikdb-core` is a path dependency on `../yantrikdb/crates/yantrikdb-core`, a sibling checkout, so a reader cloning this tree gets the shell and the cognition loop and not the store beneath them. What the OS layer holds of its own is continuous throughout — drives, confidences, Welford baselines, per-source moving averages — with no stored discrete state withholding a record, no supersession, and consolidation deleting a stale expectation rather than retiring it, so having believed something does not outlive the belief.
+- Most reusable component: `yantrik-brain` entire — 3,102 lines of LLM-free cognition over a plain `rusqlite::Connection`: four signal types, four homeostatic drives, a tick that is arithmetic, and a nightly consolidation with a written checklist (prune expectations below 0.05 confidence unseen for sixty days, batch Welford corrections, curiosity TTLs from yield history).
+- Maturity impression: GPL-3.0, Rust with a Slint UI, 181,759 lines with 753 test functions, sixteen application binaries, a uniform `yos describe` / `yos act` control surface over a unix socket, and an output sanitizer that redacts sensitive fragments from model responses before display. The engine it depends on is Apache-2.0.
+- Study when: you are building anything proactive and have not decided what happens when the user ignores it, or you want a cognition loop whose speak-or-not decision is readable arithmetic.
+- Do not copy when: you need the memory semantics — those live in the engine crate this repository points at. No marks.
