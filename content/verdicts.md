@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 542 reports.**
+**This page covers all 543 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4686,3 +4686,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, Go with no third-party dependencies, 10,217 lines over 27 files, a CLI and an MCP server in one binary, a validator that runs over the project's own bundle in CI, and a linter for RFC 2119 modal prefixes in agent instructions. Two auto-run surfaces and two build-time execution points at this pin.
 - Study when: you are about to add a status vocabulary, or your memory files are symlinked at an agent's instruction file.
 - Do not copy when: you need a deprecated memory to stop being retrieved. One mark: mutation audit.
+
+### [`loreweave`](../systems/loreweave/)
+- Best idea: **the markdown is the record and the database is a replay.** "Fact lines in markdown are the durable record; DB fact rows are a replay", and "[r]ebuild wipes and replays ALL fact rows deterministically, so the index stays a pure cache of the vault." Every assertion appends `- [fact] Subject :: predicate :: Object {valid_from=…}` and every closure appends `- [invalidate] Subject :: predicate {valid_until=…}` to a dated file the user already owns, so a fact an agent got wrong is corrected by editing a line, and a mutation that never reached the journal does not survive a rebuild.
+- Biggest risk: **no scope of any kind, and no epistemic status separate from supersession.** Nothing on a fact carries a tenant, project or agent key and no read applies a scope predicate, so a vault is the only boundary. `source_type` is decided at write time — `stated`, `extracted`, `inferred` — printed in the CLI and used in one timeline heuristic, and withholds nothing; a reader would reasonably expect an inferred fact to be treated unlike a stated one, and nothing does. The MCP adjudication step is addressed to the model: `lore_propose_facts` says it "keeps judgement with you and out of the index", and the "you" reading that is an agent.
+- Most reusable component: `keyOf`, which refuses a subject that normalises to an empty key, with the reproduction in the comment above it — "`assert 🚀 status launched`, then `assert — status cancelled` reported 'superseded: launched', and `invalidate 🎯 status` closed the `—` fact. Three unrelated subjects contradicting one another through a key none of them had." The rule it lands on is the transferable part: "Refuse the key, name the value, and say why, so the caller can add a word to it."
+- Maturity impression: MIT, TypeScript, version 0.37.1, 19,552 lines over 100 files, SQLite over a markdown vault, a CLI and fifteen MCP tools, a vitest suite whose test names name the regression, and an eval directory running LoCoMo, LongMemEval, BEIR and a scale harness against a committed baseline. One auto-run surface at this pin.
+- Study when: your index holds anything the source of truth cannot regenerate, or your normalisation can produce an empty key.
+- Do not copy when: two agents must not see each other's facts. Three marks: bitemporal, mutation audit, review.

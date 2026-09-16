@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 542 reports.</strong></p>
+<p><strong>This page covers all 543 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20293,6 +20293,50 @@ and two build-time execution points at this pin.</li>
 files are symlinked at an agent's instruction file.</li>
 <li>Do not copy when: you need a deprecated memory to stop being
 retrieved. One mark: mutation audit.</li>
+</ul>
+<h3 id="loreweave"><a
+href="../systems/loreweave/"><code>loreweave</code></a></h3>
+<ul>
+<li>Best idea: <strong>the markdown is the record and the database is a
+replay.</strong> "Fact lines in markdown are the durable record; DB fact
+rows are a replay", and "[r]ebuild wipes and replays ALL fact rows
+deterministically, so the index stays a pure cache of the vault." Every
+assertion appends
+<code>- [fact] Subject :: predicate :: Object {valid_from=…}</code> and
+every closure appends
+<code>- [invalidate] Subject :: predicate {valid_until=…}</code> to a
+dated file the user already owns, so a fact an agent got wrong is
+corrected by editing a line, and a mutation that never reached the
+journal does not survive a rebuild.</li>
+<li>Biggest risk: <strong>no scope of any kind, and no epistemic status
+separate from supersession.</strong> Nothing on a fact carries a tenant,
+project or agent key and no read applies a scope predicate, so a vault
+is the only boundary. <code>source_type</code> is decided at write time
+— <code>stated</code>, <code>extracted</code>, <code>inferred</code> —
+printed in the CLI and used in one timeline heuristic, and withholds
+nothing; a reader would reasonably expect an inferred fact to be treated
+unlike a stated one, and nothing does. The MCP adjudication step is
+addressed to the model: <code>lore_propose_facts</code> says it "keeps
+judgement with you and out of the index", and the "you" reading that is
+an agent.</li>
+<li>Most reusable component: <code>keyOf</code>, which refuses a subject
+that normalises to an empty key, with the reproduction in the comment
+above it — "<code>assert 🚀 status launched</code>, then
+<code>assert — status cancelled</code> reported 'superseded: launched',
+and <code>invalidate 🎯 status</code> closed the <code>—</code> fact.
+Three unrelated subjects contradicting one another through a key none of
+them had." The rule it lands on is the transferable part: "Refuse the
+key, name the value, and say why, so the caller can add a word to
+it."</li>
+<li>Maturity impression: MIT, TypeScript, version 0.37.1, 19,552 lines
+over 100 files, SQLite over a markdown vault, a CLI and fifteen MCP
+tools, a vitest suite whose test names name the regression, and an eval
+directory running LoCoMo, LongMemEval, BEIR and a scale harness against
+a committed baseline. One auto-run surface at this pin.</li>
+<li>Study when: your index holds anything the source of truth cannot
+regenerate, or your normalisation can produce an empty key.</li>
+<li>Do not copy when: two agents must not see each other's facts. Three
+marks: bitemporal, mutation audit, review.</li>
 </ul>
         </article>
       </div>
