@@ -1,18 +1,26 @@
 # The second copy of the rule is the one that decides
 
-**Written 2026-09-16.** Prompted by re-reading twenty-four reports against their
-upstream repositories in one pass. The same underlying problem accounted for
-changes in seven of them, and it is not a bug class any of the atlas's capability
-marks can see: a rule that governs a memory — what may be read, what a row's
+**Written 2026-09-16, extended 2026-09-17.** Prompted by re-reading forty-odd
+reports against their upstream repositories in one pass. The same underlying
+problem accounted for changes in eight of them, and it is not a bug class any of
+the atlas's capability marks can see: a rule that governs a memory — what may be read, what a row's
 status is, whether the store opens — was written down in more than one place, and
 the copies diverged.
 
-Three of the seven are the failure. Caura's own comment records an earlier leak
+Four of the eight are the failure. Caura's own comment records an earlier leak
 that moved from one copy of a predicate to the next; SuperLocalMemory had a tier
 value reverted by the mirror of its own column; MentisDB had one of four load
 sites with the wrong policy, and three copies of one vocabulary that had drifted
-apart. In each case the copy that drifted was the one no test covered, and in two
-of the three it was the copy that decided the outcome.
+apart; Hermes Agent had twenty-four hand-rolled atomic writers, each missing a
+different part of the same durability rule, and six background writers that
+re-created a profile directory the user had deleted. In each case the copy that
+drifted was the one no test covered, and in three of the four it was the copy
+that decided the outcome.
+
+A note added after the first draft, from Hermes: the count can be large enough
+that *centralise it* stops being a refactor and becomes an audit. Twenty-four
+copies were not a lapse by one author; they were the natural result of a helper
+that was private, so each new caller wrote the nearest thing they could reach.
 
 The other four are answers, which is why they are worth reading together:
 centralise and enforce the centralisation (Caura), move the invariant to where
@@ -86,6 +94,29 @@ that the server's copy silently rejected two valid variants, `Goal` and
 `LLMExtracted` — a stored genre an agent could not name at the boundary that
 writes it. All three now delegate to one `FromStr`.
 
+## 3b. Twenty-four copies, each missing a different part
+
+[Hermes Agent][hermes] is the count at its largest. A persistence refactor
+replaced twenty-four separate hand-rolled atomic writers — temp file, then
+replace — with two canonical helpers, and the commit enumerates what the copies
+were individually missing: `fsync`, symlink preservation, a Windows-contention
+retry, an EXDEV/bind-mount fallback, mode preservation, interrupt-safe temp
+cleanup. Three of them, in session persistence, cron suggestions and shell hooks,
+were verbatim inlines of the private helper they should have been calling. Two
+modules had each grown their own directory-`fsync`.
+
+No single copy was wrong in the same way, which is the point: the rule was not
+forgotten, it was re-derived twenty-four times by people who each remembered a
+different subset of it. Durability written twenty-four times is durability that
+holds in whichever copy was written most recently.
+
+The same repository shows the sibling failure in the deletion direction. Deleting
+a named profile is a tombstone the project enforces for logging and state, and
+six background writers — the models cache, an ETag, a lifecycle ledger, OAuth
+tokens, a warm thread, the memory store — each created the profile directory with
+a bare `mkdir` immediately before writing, so a deleted profile reappeared behind
+the user. The rule existed; six writers did not go through it.
+
 ## 4. Where the invariant belongs
 
 [Utopia][utopia] assembles every temporal read predicate in exactly two modules,
@@ -143,3 +174,4 @@ holds a year later. Three checks are cheap:
 [lobu]: ../systems/lobu/
 [teamai]: ../systems/teamai-cli/
 [lorekit]: ../systems/lorekit/
+[hermes]: ../systems/hermes-agent/

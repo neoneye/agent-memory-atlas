@@ -7,9 +7,9 @@ page_kind: system
 source_name: NousResearch/hermes-agent
 source_url: https://github.com/NousResearch/hermes-agent
 archive_name: "NousResearch--hermes-agent"
-revision: 9e6c4100cbf5222fb473ecc2b51fd17874f6ee75
-revision_url: https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75
-analyzed_at: 2026-09-09
+revision: 8c8003f80b528377d4387b96faa2c00283168d68
+revision_url: https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -373,7 +373,9 @@ rg -n 'search_facts' .                                                          
 
 ## History
 
-**2026-09-09** — [`9e6c4100cbf5222fb473ecc2b51fd17874f6ee75`](https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75) — second reading, 14,909 commits past the previous pin, at the same commit as the [Hermes Agent](../hermes-agent/) report so the two describe one repository in one state. Screened again before reading: one auto-run surface, twenty-one build-time execution surfaces, five unpinned surfaces and twenty manifests inside the seven-day cooldown; nothing was installed and no suite was run. The plugin was compacted from roughly 2,000 lines to 912 with the mechanism intact — schema, trust deltas, fusion weights, the three write paths and the per-write bank rebuild are unchanged, and every file line count in section 3 is corrected.
+**2026-09-17** — [`8c8003f80b528377d4387b96faa2c00283168d68`](https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68) — re-pinned alongside [Hermes Agent](../hermes-agent/), which shares this repository, so the two reports stay on one commit. The plugin directory changed by seventeen lines across two files in 2,893 commits, and both are consolidations onto canonical helpers rather than changes to what this report describes. `save_config` replaced a hand-rolled read-modify-write of `config.yaml` — which ended in a bare `except Exception: pass`, so a failed config write said nothing — with the shared writer that holds the config lock, refuses in managed mode, strips defaults and replaces atomically. And the `hrr_vector` column addition moved from a raw `ALTER TABLE` onto `add_column_if_missing`. This report carries no capability marks, so there was nothing to re-derive; every other line in it is exact at the new pin. Nothing was installed, built or run.
+
+**2026-09-09** — [`8c8003f80b528377d4387b96faa2c00283168d68`](https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68) — second reading, 14,909 commits past the previous pin, at the same commit as the [Hermes Agent](../hermes-agent/) report so the two describe one repository in one state. Screened again before reading: one auto-run surface, twenty-one build-time execution surfaces, five unpinned surfaces and twenty manifests inside the seven-day cooldown; nothing was installed and no suite was run. The plugin was compacted from roughly 2,000 lines to 912 with the mechanism intact — schema, trust deltas, fusion weights, the three write paths and the per-write bank rebuild are unchanged, and every file line count in section 3 is corrected.
 
 One published strength was wrong at this commit and is removed. `rebuild_all_vectors()` no longer exists anywhere in the tree, so the report's claim of a deterministic wholesale recovery path — cited in section 9 and again under Steal — no longer holds. What survives is the weaker and still useful property: content is canonical, `update_fact` recomputes a fact's vector, and `_rebuild_bank` rebuilds a category from its members, but a store whose rows never got vectors has nothing to backfill them. A second claim is narrowed rather than corrected: section 1 called a downvoted fact permanently invisible, which section 4 of the same report already contradicted, since `list_facts` alone defaults `min_trust` to 0.0. The accurate version is that no recall path returns it and nothing surfaces it for the rating that would bring it back.
 

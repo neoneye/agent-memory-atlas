@@ -108,14 +108,14 @@ retrieval.</p>
               <strong>basicmachines-co/basic-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/basicmachines-co/basic-memory/commit/b04d1b6d8590ed23f5838ee2d2ca2a8c3358c209" title="b04d1b6d8590ed23f5838ee2d2ca2a8c3358c209">
+            <a class="meta-pill revision-pill" href="https://github.com/basicmachines-co/basic-memory/commit/3bf2d523c0a941f71cb144a5502e7557dd025d69" title="3bf2d523c0a941f71cb144a5502e7557dd025d69">
               <span>Analyzed revision</span>
-              <code>b04d1b6d…</code>
+              <code>3bf2d523…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-13</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/basicmachines-co--basic-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -262,6 +262,30 @@ entity, with resolution state.</li>
 Relations belong to the source note, an important rule for deletion and
 reconciliation.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><strong>The scope became a value the statement is compiled
+over.</strong> Three commits in this window moved search from filters
+that carried a project id to an explicit <code>ProjectScope</code>
+(<code>src/basic_memory/repository/search_scope.py</code>) — a frozen
+tuple of positive project ids, canonicalized by <code>of()</code> into
+sorted unique order so two scopes over the same projects compare equal,
+with <code>single()</code> as the scope every project-bound repository
+runs under. <code>predicate(column, params)</code> renders the SQL and
+binds the ids, with deterministic bind names so a statement that
+references the scope from several subqueries sends each id once.</p>
+<p>Two details in it are the kind worth copying. An empty scope renders
+<code>1 = 0</code> rather than an absent clause, so a scope naming
+nothing matches nothing — the same decision Caura states as a security
+rule and the inverse of the failure mode where an unset filter silently
+widens to everything. And the constructor rejects a <code>bool</code>,
+with the reason in the comment: <code>bool</code> is an <code>int</code>
+subclass in Python, so <code>True</code> would otherwise read as project
+1. That is a type-system accident quietly producing a cross-project
+read, and it is caught at construction rather than at the query.</p>
+<p>The FTS execution moved behind an <code>FtsBackend</code> protocol at
+the same time, binding the read path to the scope rather than to a
+backend-specific query string, and a new API path searches an explicit
+set of projects in one statement — which is the case the scope type
+exists for.</p>
 <p>Basic Memory supports:</p>
 <ul>
 <li>SQLite FTS5 or PostgreSQL <code>tsvector</code> full-text
@@ -424,8 +448,23 @@ corpus?</li>
 <li><code>test-int/</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/basicmachines-co/basic-memory/commit/3bf2d523c0a941f71cb144a5502e7557dd025d69"><code class="commit-id" title="3bf2d523c0a941f71cb144a5502e7557dd025d69">3bf2d523…</code></a>
+— re-read after 42 commits. Five of the seven anchored files are
+byte-identical, including the base repository and the accepted-note
+repositories that carry <code>scope_enforced</code>, the knowledge
+model, and the temporal module and its test behind
+<code>bitemporal</code>. Both marks hold.
+<code>temporal_filters.py</code> and <code>search_service.py</code>
+moved, and the reason is written up in section 6: search was refactored
+to compile over an explicit <code>ProjectScope</code> value rather than
+to carry a project id through filter arguments, with an empty scope
+rendering <code>1 = 0</code> and the constructor rejecting a
+<code>bool</code> because <code>True</code> would otherwise read as
+project 1. The evidence record now names that type alongside the
+base-class filter. Nothing was installed, built or run.</p>
 <p><strong>2026-09-13</strong> — <a
-href="https://github.com/basicmachines-co/basic-memory/commit/b04d1b6d8590ed23f5838ee2d2ca2a8c3358c209"><code class="commit-id" title="b04d1b6d8590ed23f5838ee2d2ca2a8c3358c209">b04d1b6d…</code></a>
+href="https://github.com/basicmachines-co/basic-memory/commit/3bf2d523c0a941f71cb144a5502e7557dd025d69"><code class="commit-id" title="3bf2d523c0a941f71cb144a5502e7557dd025d69">3bf2d523…</code></a>
 — re-read, 423 commits past the previous pin across 823 files.
 <code>bitemporal</code> is added as a second mark on a temporal layer
 that did not exist at the previous reading:

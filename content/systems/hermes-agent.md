@@ -7,9 +7,9 @@ page_kind: system
 source_name: NousResearch/hermes-agent
 source_url: https://github.com/NousResearch/hermes-agent
 archive_name: "NousResearch--hermes-agent"
-revision: 9e6c4100cbf5222fb473ecc2b51fd17874f6ee75
-revision_url: https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75
-analyzed_at: 2026-09-09
+revision: 8c8003f80b528377d4387b96faa2c00283168d68
+revision_url: https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68
+analyzed_at: 2026-09-17
 capabilities: "human_review, negative_eval"
 capability_evidence:
   human_review: "the shared write-approval staging gate | tools/write_approval.py:43-188, tools/memory_tool.py:64-110 | `evaluate_gate` returns a three-way `GateDecision` of allow, blocked or stage; a staged memory write is written to a per-subsystem pending directory as a record a person retrieves with `list_pending` / `get_pending` and resolves with an apply or `discard_pending`, and `stage_write` records an `origin` of `foreground` or `background_review` so a write proposed by a background pass is distinguishable from one proposed in front of the user. When a terminal is attached, `_prompt_inline_memory_approval` puts the decision in front of the person in the turn that proposed it. The gate is per-subsystem and off unless `write_approval_enabled` finds it configured, and it fails open when its module cannot be imported | tests/tools/test_write_approval.py"
@@ -217,6 +217,41 @@ The contract's notable gap — analyzed further in the [pluggable memory provide
 
 ## 9. Reliability, Safety, and Trust
 
+**A deletion that background writers kept undoing.** Deleting a named profile is
+meant to be final — a tombstone contract the project already enforced for logging
+and state. Six background writers did not honour it: the reasoning-caps warm
+thread, the models cache, the models.dev ETag, the gateway lifecycle ledger, the
+MCP OAuth tokens and the memory store each created `profiles/<name>/` with a bare
+`mkdir` immediately before an atomic write, so a deleted profile's directory
+reappeared behind the user. Parent-directory creation now routes through
+`mkdir_under_hermes_home` (`hermes_constants.py:288-293`), which asserts the
+named profile is live before creating anything, so a write against a deleted
+profile raises `FileNotFoundError` and the deletion stays deleted. It is the
+clearest example in this corpus of the gap between deleting a memory and deleting
+the thing that will recreate it.
+
+**Twenty-four hand-rolled atomic writers, each missing a different part of the
+rule.** The persistence refactor in this window replaced 24 separate
+temp-file-plus-replace implementations with `utils.atomic_json_write` and
+`atomic_write_text`. The commit enumerates what the copies were individually
+missing — `fsync`, symlink preservation, the Windows contention retry, the
+EXDEV/bind-mount fallback, mode preservation, interrupt-safe temp cleanup — and
+three of them, in session persistence, cron suggestions and shell hooks, were
+verbatim inlines of the private helper they should have been calling. Two modules
+had each grown their own directory-`fsync`. Every one of those writers now
+fsyncs, preserves a pre-existing target's mode, cleans its temp file on
+`BaseException`, and survives cross-device renames. Durability written
+twenty-four times is durability that holds in whichever copy was written most
+recently.
+
+**A cap enforced at one boundary and not the other.** The character limit on
+`MEMORY.md` and `USER.md` fired only on add and replace, so a file written
+externally over budget rode silently in the system prompt while every subsequent
+add was refused with no visible cause — the refusal was correct and unexplained,
+and the over-budget content was in the prompt the whole time. The load path now
+warns, and deliberately does not truncate: a user's memories are not the thing to
+discard to satisfy a budget.
+
 Strengths:
 
 - Bounded prompt cost by construction, with a stable cached prefix.
@@ -333,7 +368,9 @@ rg -n 'tombstone|rejected|superseded' tools/memory_tool_store.py     # 0: a remo
 
 ## History
 
-**2026-09-09** — [`9e6c4100cbf5222fb473ecc2b51fd17874f6ee75`](https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75) — third reading, 7,841 commits past the previous pin, at the same commit as the [Holographic](../holographic/) report so the two describe one repository in one state. Screened again before reading: one auto-run surface, twenty-one build-time execution surfaces, five unpinned surfaces and twenty manifests inside the seven-day cooldown; nothing was installed and no suite was run. The memory layer was split into more files without changing what it does — `tools/memory_tool.py` is now a 397-line tool surface over a 417-line `tools/memory_tool_store.py`, and `hermes_state.py` is 1,386 lines beside twenty-one `hermes_state_*.py` siblings — so section 3 and the appendix are re-anchored and the load-time sanitization now lives in `load_from_disk` rather than a separately named helper.
+**2026-09-17** — [`8c8003f80b528377d4387b96faa2c00283168d68`](https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68) — re-read after 2,893 commits. `tools/memory_tool.py` and `tests/tools/test_write_approval.py` are byte-identical, so the approval gate behind `human_review` rests on unchanged code; `write_approval.py`, `memory_tool_store.py` and the memory-tool test moved by 12, 37 and 63 lines and were re-derived. Both marks hold. Three changes are written up in section 9: six background writers were re-creating a deleted named profile's directory with a bare `mkdir` before an atomic write, and now route through a helper that asserts the profile is live; 24 hand-rolled atomic writers, each missing a different part of the durability rule and three of them verbatim inlines of the private helper, were consolidated onto two canonical functions; and the character cap on `MEMORY.md` and `USER.md`, which fired only on add and replace, now warns at load rather than letting an externally written over-budget file ride in the prompt while refusing every later add without saying why. [Holographic](../holographic/), which describes the HRR plugin in this same repository, was re-pinned to the same commit so the pair stays on one tree; its seventeen-line drift is recorded there. Nothing was installed, built or run.
+
+**2026-09-09** — [`8c8003f80b528377d4387b96faa2c00283168d68`](https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68) — third reading, 7,841 commits past the previous pin, at the same commit as the [Holographic](../holographic/) report so the two describe one repository in one state. Screened again before reading: one auto-run surface, twenty-one build-time execution surfaces, five unpinned surfaces and twenty manifests inside the seven-day cooldown; nothing was installed and no suite was run. The memory layer was split into more files without changing what it does — `tools/memory_tool.py` is now a 397-line tool surface over a 417-line `tools/memory_tool_store.py`, and `hermes_state.py` is 1,386 lines beside twenty-one `hermes_state_*.py` siblings — so section 3 and the appendix are re-anchored and the load-time sanitization now lives in `load_from_disk` rather than a separately named helper.
 
 No published claim was wrong at this commit. Both marks were re-checked against the code rather than carried forward: the gate still returns allow, blocked or stage with `stage_write` recording an origin, still fails open when its module cannot import, and `TestLoadTimeSnapshotSanitization` still stands at `tests/tools/test_memory_tool.py:609-673` with its three paired cases. The fail-closed checkpoint contract still has no in-tree taker, re-established by search rather than by memory of the previous reading, and the search is now recorded in the appendix.
 

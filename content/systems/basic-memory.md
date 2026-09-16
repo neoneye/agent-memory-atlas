@@ -7,13 +7,13 @@ page_kind: system
 source_name: "basicmachines-co/basic-memory"
 source_url: https://github.com/basicmachines-co/basic-memory
 archive_name: "basicmachines-co--basic-memory"
-revision: b04d1b6d8590ed23f5838ee2d2ca2a8c3358c209
-revision_url: https://github.com/basicmachines-co/basic-memory/commit/b04d1b6d8590ed23f5838ee2d2ca2a8c3358c209
-analyzed_at: 2026-09-13
+revision: 3bf2d523c0a941f71cb144a5502e7557dd025d69
+revision_url: https://github.com/basicmachines-co/basic-memory/commit/3bf2d523c0a941f71cb144a5502e7557dd025d69
+analyzed_at: 2026-09-17
 capabilities: "bitemporal, scope_enforced"
 capability_evidence:
   bitemporal: "authored valid time, separate from when the note was edited, and filtered on the read path | src/basic_memory/temporal.py:1-14, :506, :529-568, src/basic_memory/models/knowledge.py:103-106, :487-512, src/basic_memory/repository/temporal_filters.py:92, src/basic_memory/services/search_service.py:101-102 | the module states the distinction in its first paragraph: a decision effective from June 10 until the July 27 cutover is a statement about the world, *\"not a record of when the note was edited\"*. Record time is `Entity.created_at` and `updated_at`, both indexed for timeline queries; valid time is a `TemporalAssertion` parsed from the author's own markdown and projected into queryable scalar columns, with the markdown remaining the source of truth so reindexing reproduces it rather than becoming a second source. The read applies it: `search_service` passes `valid_at` and `valid_overlaps` into the query, and `temporal_filters` implements both through one predicate so they *\"cannot drift apart\"*. Bounds are canonicalized to fixed-width forms specifically so byte-lexicographic order is chronological order and the same SQL text works on SQLite and Postgres | tests/test_temporal.py, 1,679 lines"
-  scope_enforced: "every repository read — the project id applied as a filter in the base class, not per call site | src/basic_memory/repository/repository.py:66-75, :331, src/basic_memory/repository/accepted_note_repositories.py:30-56 | the shared `Repository` adds `Model.project_id == self.project_id` to the query rather than leaving each caller to remember it, and the repositories are constructed per project id, so entities, notes, observations and the temporal index all inherit one boundary from the same place. Routing carries the same key: `get_project_client()` resolves the requested project, picks local ASGI or cloud HTTP, authenticates at client creation and validates the project before yielding, and `project_id` disambiguates same-named projects across workspaces | the project-scope tests in the suite"
+  scope_enforced: "every repository read — the project id applied as a filter in the base class, not per call site | src/basic_memory/repository/repository.py:66-75, :331, src/basic_memory/repository/accepted_note_repositories.py:30-56, src/basic_memory/repository/search_scope.py:19-60 | the shared `Repository` adds `Model.project_id == self.project_id` to the query rather than leaving each caller to remember it, and the repositories are constructed per project id, so entities, notes, observations and the temporal index all inherit one boundary from the same place. Routing carries the same key: `get_project_client()` resolves the requested project, picks local ASGI or cloud HTTP, authenticates at client creation and validates the project before yielding, and `project_id` disambiguates same-named projects across workspaces. Search compiles the same boundary as a value rather than a filter argument: a `ProjectScope` of canonicalized positive ids whose predicate renders `1 = 0` when the scope is empty, so naming no project matches nothing | the project-scope tests in the suite"
 stack_storage: "sqlite, postgres, files"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -122,6 +122,29 @@ The database projects this into:
 Move operations preserve stable identity while changing location. Relations belong to the source note, an important rule for deletion and reconciliation.
 
 ## 6. Retrieval Mechanics
+
+**The scope became a value the statement is compiled over.** Three commits in
+this window moved search from filters that carried a project id to an explicit
+`ProjectScope` (`src/basic_memory/repository/search_scope.py`) — a frozen tuple
+of positive project ids, canonicalized by `of()` into sorted unique order so two
+scopes over the same projects compare equal, with `single()` as the scope every
+project-bound repository runs under. `predicate(column, params)` renders the SQL
+and binds the ids, with deterministic bind names so a statement that references
+the scope from several subqueries sends each id once.
+
+Two details in it are the kind worth copying. An empty scope renders `1 = 0`
+rather than an absent clause, so a scope naming nothing matches nothing — the
+same decision Caura states as a security rule and the inverse of the failure mode
+where an unset filter silently widens to everything. And the constructor rejects
+a `bool`, with the reason in the comment: `bool` is an `int` subclass in Python,
+so `True` would otherwise read as project 1. That is a type-system accident
+quietly producing a cross-project read, and it is caught at construction rather
+than at the query.
+
+The FTS execution moved behind an `FtsBackend` protocol at the same time, binding
+the read path to the scope rather than to a backend-specific query string, and a
+new API path searches an explicit set of projects in one statement — which is the
+case the scope type exists for.
 
 Basic Memory supports:
 
@@ -237,7 +260,9 @@ Do not choose it merely because Markdown feels simple. Bidirectional sync is not
 
 ## History
 
-**2026-09-13** — [`b04d1b6d8590ed23f5838ee2d2ca2a8c3358c209`](https://github.com/basicmachines-co/basic-memory/commit/b04d1b6d8590ed23f5838ee2d2ca2a8c3358c209) — re-read, 423 commits past the previous pin across 823 files. `bitemporal` is added as a second mark on a temporal layer that did not exist at the previous reading: `src/basic_memory/temporal.py` carries authored valid time as semantic data, separate from the entity's `created_at` and `updated_at`, and the module opens by drawing exactly that line — a decision effective from one date to another is a statement about the world rather than a record of when the note was edited. The author writes it in the markdown, a `TemporalAssertion` projects it into queryable columns while the markdown stays the source of truth, and `search_service` filters on `valid_at` and `valid_overlaps` through a single predicate in `temporal_filters`. Bounds are canonicalized to fixed-width lexical forms so byte order is chronological and one SQL text serves both SQLite and Postgres, pinned by a 1,679-line suite. `scope_enforced` stands and its evidence is now recorded: the project filter lives in the base repository rather than at each call site. Screened again first; nothing was installed and no suite was run.
+**2026-09-17** — [`3bf2d523c0a941f71cb144a5502e7557dd025d69`](https://github.com/basicmachines-co/basic-memory/commit/3bf2d523c0a941f71cb144a5502e7557dd025d69) — re-read after 42 commits. Five of the seven anchored files are byte-identical, including the base repository and the accepted-note repositories that carry `scope_enforced`, the knowledge model, and the temporal module and its test behind `bitemporal`. Both marks hold. `temporal_filters.py` and `search_service.py` moved, and the reason is written up in section 6: search was refactored to compile over an explicit `ProjectScope` value rather than to carry a project id through filter arguments, with an empty scope rendering `1 = 0` and the constructor rejecting a `bool` because `True` would otherwise read as project 1. The evidence record now names that type alongside the base-class filter. Nothing was installed, built or run.
+
+**2026-09-13** — [`3bf2d523c0a941f71cb144a5502e7557dd025d69`](https://github.com/basicmachines-co/basic-memory/commit/3bf2d523c0a941f71cb144a5502e7557dd025d69) — re-read, 423 commits past the previous pin across 823 files. `bitemporal` is added as a second mark on a temporal layer that did not exist at the previous reading: `src/basic_memory/temporal.py` carries authored valid time as semantic data, separate from the entity's `created_at` and `updated_at`, and the module opens by drawing exactly that line — a decision effective from one date to another is a statement about the world rather than a record of when the note was edited. The author writes it in the markdown, a `TemporalAssertion` projects it into queryable columns while the markdown stays the source of truth, and `search_service` filters on `valid_at` and `valid_overlaps` through a single predicate in `temporal_filters`. Bounds are canonicalized to fixed-width lexical forms so byte order is chronological and one SQL text serves both SQLite and Postgres, pinned by a 1,679-line suite. `scope_enforced` stands and its evidence is now recorded: the project filter lives in the base repository rather than at each call site. Screened again first; nothing was installed and no suite was run.
 
 **2026-08-06** — [`816accaa9befe8281668ba8819eaf74d11ce2385`](https://github.com/basicmachines-co/basic-memory/commit/816accaa9befe8281668ba8819eaf74d11ce2385) — 55 commits on, and the run of them worth naming is a concentrated hardening of the relation and observation write path: *reject stale relation writes*, *bound relation write statements*, *validate relation target identity*, *bound target identity reads*, *batch relation target resolution*, *separate bulk link resolution*, *lock entity before observation replacement*, *defer superseded vector generations*. Read together that is lost-update and staleness work on exactly the seam this report describes — the file-to-database reconciliation where a relation resolves against an entity that may have moved. MCP adopts FastMCP 4 beta. The markdown-as-canonical model and the rebuildable-projection claim are unchanged. `audit_log` re-checked and stays withheld: the *audit archive* in `hooks/` retires hook traces, and the file history that matters is git's, which the rubric excludes by name. Screened again: 3 auto-run surfaces (`.claude/settings.json`, `server.json`, `smithery.yaml`), 11 build-time exec paths, 2 dependency surfaces inside the cooldown, so nothing was installed.
 

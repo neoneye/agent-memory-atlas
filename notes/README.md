@@ -13,7 +13,8 @@ when the work happens.
   governing what may be read, what a row's status is, or whether the store opens
   was written down twice, and the copy nobody tested was the one that decided.
   Caura's structural test, SuperLocalMemory's mirror check, MentisDB's odd load
-  site out, and teamai-cli's useful inverse.
+  site out, Hermes Agent's twenty-four hand-rolled atomic writers, and
+  teamai-cli's useful inverse.
 - [2026-09-12-a-paper-derived-ontology-of-the-same-field.md](2026-09-12-a-paper-derived-ontology-of-the-same-field.md) —
   `Haiyoung/AgentMemoryAtlas`, an unrelated project sharing this one's name, maps
   the same field from 148 papers instead of from code. Seven probes against its

@@ -111,14 +111,14 @@ skills as procedural memory, and a pluggable provider interface.</p>
               <strong>NousResearch/hermes-agent</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75" title="9e6c4100cbf5222fb473ecc2b51fd17874f6ee75">
+            <a class="meta-pill revision-pill" href="https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68" title="8c8003f80b528377d4387b96faa2c00283168d68">
               <span>Analyzed revision</span>
-              <code>9e6c4100…</code>
+              <code>8c8003f8…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-09</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/NousResearch--hermes-agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -487,6 +487,43 @@ copy. There is no interface-level answer to "the user asked to be
 forgotten."</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
+<p><strong>A deletion that background writers kept undoing.</strong>
+Deleting a named profile is meant to be final — a tombstone contract the
+project already enforced for logging and state. Six background writers
+did not honour it: the reasoning-caps warm thread, the models cache, the
+models.dev ETag, the gateway lifecycle ledger, the MCP OAuth tokens and
+the memory store each created <code>profiles/&lt;name&gt;/</code> with a
+bare <code>mkdir</code> immediately before an atomic write, so a deleted
+profile's directory reappeared behind the user. Parent-directory
+creation now routes through <code>mkdir_under_hermes_home</code>
+(<code>hermes_constants.py:288-293</code>), which asserts the named
+profile is live before creating anything, so a write against a deleted
+profile raises <code>FileNotFoundError</code> and the deletion stays
+deleted. It is the clearest example in this corpus of the gap between
+deleting a memory and deleting the thing that will recreate it.</p>
+<p><strong>Twenty-four hand-rolled atomic writers, each missing a
+different part of the rule.</strong> The persistence refactor in this
+window replaced 24 separate temp-file-plus-replace implementations with
+<code>utils.atomic_json_write</code> and <code>atomic_write_text</code>.
+The commit enumerates what the copies were individually missing —
+<code>fsync</code>, symlink preservation, the Windows contention retry,
+the EXDEV/bind-mount fallback, mode preservation, interrupt-safe temp
+cleanup — and three of them, in session persistence, cron suggestions
+and shell hooks, were verbatim inlines of the private helper they should
+have been calling. Two modules had each grown their own
+directory-<code>fsync</code>. Every one of those writers now fsyncs,
+preserves a pre-existing target's mode, cleans its temp file on
+<code>BaseException</code>, and survives cross-device renames.
+Durability written twenty-four times is durability that holds in
+whichever copy was written most recently.</p>
+<p><strong>A cap enforced at one boundary and not the other.</strong>
+The character limit on <code>MEMORY.md</code> and <code>USER.md</code>
+fired only on add and replace, so a file written externally over budget
+rode silently in the system prompt while every subsequent add was
+refused with no visible cause — the refusal was correct and unexplained,
+and the over-budget content was in the prompt the whole time. The load
+path now warns, and deliberately does not truncate: a user's memories
+are not the thing to discard to satisfy a budget.</p>
 <p>Strengths:</p>
 <ul>
 <li>Bounded prompt cost by construction, with a stable cached
@@ -736,8 +773,29 @@ orchestration: <code>agent/memory_manager.py</code>.</li>
 rg -n &#39;audit&#39; tools/memory_tool_store.py tools/memory_tool.py        # 0: no log covers memory mutations
 rg -n &#39;tombstone|rejected|superseded&#39; tools/memory_tool_store.py     # 0: a remove writes no record</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68"><code class="commit-id" title="8c8003f80b528377d4387b96faa2c00283168d68">8c8003f8…</code></a>
+— re-read after 2,893 commits. <code>tools/memory_tool.py</code> and
+<code>tests/tools/test_write_approval.py</code> are byte-identical, so
+the approval gate behind <code>human_review</code> rests on unchanged
+code; <code>write_approval.py</code>, <code>memory_tool_store.py</code>
+and the memory-tool test moved by 12, 37 and 63 lines and were
+re-derived. Both marks hold. Three changes are written up in section 9:
+six background writers were re-creating a deleted named profile's
+directory with a bare <code>mkdir</code> before an atomic write, and now
+route through a helper that asserts the profile is live; 24 hand-rolled
+atomic writers, each missing a different part of the durability rule and
+three of them verbatim inlines of the private helper, were consolidated
+onto two canonical functions; and the character cap on
+<code>MEMORY.md</code> and <code>USER.md</code>, which fired only on add
+and replace, now warns at load rather than letting an externally written
+over-budget file ride in the prompt while refusing every later add
+without saying why. <a href="../holographic/">Holographic</a>, which
+describes the HRR plugin in this same repository, was re-pinned to the
+same commit so the pair stays on one tree; its seventeen-line drift is
+recorded there. Nothing was installed, built or run.</p>
 <p><strong>2026-09-09</strong> — <a
-href="https://github.com/NousResearch/hermes-agent/commit/9e6c4100cbf5222fb473ecc2b51fd17874f6ee75"><code class="commit-id" title="9e6c4100cbf5222fb473ecc2b51fd17874f6ee75">9e6c4100…</code></a>
+href="https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68"><code class="commit-id" title="8c8003f80b528377d4387b96faa2c00283168d68">8c8003f8…</code></a>
 — third reading, 7,841 commits past the previous pin, at the same commit
 as the <a href="../holographic/">Holographic</a> report so the two
 describe one repository in one state. Screened again before reading: one
