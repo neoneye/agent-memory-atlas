@@ -7,9 +7,9 @@ page_kind: system
 source_name: "OmniNode-ai/omniintelligence"
 source_url: https://github.com/OmniNode-ai/omniintelligence
 archive_name: "OmniNode-ai--omniintelligence"
-revision: ce104631eab515b58fd984b748c5157337ea0176
-revision_url: https://github.com/OmniNode-ai/omniintelligence/commit/ce104631eab515b58fd984b748c5157337ea0176
-analyzed_at: 2026-09-09
+revision: 5039c8a3b17f6e2468cbed764d3405d450cefb1f
+revision_url: https://github.com/OmniNode-ai/omniintelligence/commit/5039c8a3b17f6e2468cbed764d3405d450cefb1f
+analyzed_at: 2026-09-16
 capabilities: "trust_state, audit_log, human_review, negative_eval"
 capability_evidence:
   trust_state: "learned_patterns.status, filtered on the injection read path | deployment/database/migrations/005_create_learned_patterns.sql:36, src/omniintelligence/repositories/learned_patterns.repository.yaml:80,134,228 | the column is constrained to `candidate, provisional, validated, deprecated`, and three injection queries in the repository contract carry an explicit lifecycle filter marked in the YAML as OMN-1894 -- only injectable states are returned, so a candidate or deprecated pattern is withheld from a session rather than ranked below the others | tests/unit/repositories/test_contract_lifecycle_filter.py"
@@ -362,6 +362,8 @@ The uncomfortable judgement is about the gap between the design and its wiring. 
 - Self-documented wiring: `docs/reference/NODE_INVENTORY.md`.
 
 ## History
+
+**2026-09-16** — [`5039c8a3b17f6e2468cbed764d3405d450cefb1f`](https://github.com/OmniNode-ai/omniintelligence/commit/5039c8a3b17f6e2468cbed764d3405d450cefb1f) — re-read at a commit dated 2026-09-16, 11 commits past the previous pin. All four marks re-tested and held; each anchored file has the same blob at both commits, so no line number moved. Screened before reading: no auto-run surface, 29 build-time execution points, no unpinned dependency surface and one dependency file inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
 **2026-09-09** — [`ce104631eab515b58fd984b748c5157337ea0176`](https://github.com/OmniNode-ai/omniintelligence/commit/ce104631eab515b58fd984b748c5157337ea0176) — second reading, 59 commits along the default `dev` branch: 226 files, 23,928 insertions. Screened before reading; nothing was installed and no suite was run.
 

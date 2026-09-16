@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
 archive_name: "Daily-Nerd--daimon"
-revision: 8d66b441bbb98db53f6d586f025af7fcaeb0a7fd
-revision_url: https://github.com/Daily-Nerd/daimon/commit/8d66b441bbb98db53f6d586f025af7fcaeb0a7fd
-analyzed_at: 2026-09-08
+revision: 7a936f3ce69577996bba6e4308aab4f95114392e
+revision_url: https://github.com/Daily-Nerd/daimon/commit/7a936f3ce69577996bba6e4308aab4f95114392e
+analyzed_at: 2026-09-16
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "checkpoint store, forget path | plugin/daimon_briefing/cli/lifecycle.py | _cmd_forget appends a tombstone event carrying a content hash rather than the text, before the rewrite, so the rewrite's _drop_forgotten reads it; the supersede-candidate emitter skips values already in the ledger | plugin/tests/test_forget_refutations.py, plugin/tests/test_log_text_privacy.py"
@@ -879,6 +879,22 @@ currently only Claude Code supports — so outcome grounding is silently a no-op
 everywhere else, by design, since absence of evidence about the *host* is not
 evidence against the claim.
 
+**A human verdict now has to be made where a human can be.**
+`_human_cli_channel` returns *"the observed human channel, or refuse[s] an
+unattended write"* — and what it checks is `sys.stdin.isatty()`. With no
+terminal attached, the write does not proceed: the caller is told that the verb
+*"is a human verdict and requires an interactive terminal"* and is given the two
+honest ways forward, run it from a terminal, or declare what it actually is with
+`--by agent --evidence "<verbatim transcript quote>"`. The recorded source is
+then the observed channel rather than whatever the caller passed, the comment
+making the distinction explicit: the agent path writes `source="agent"`, *"NOT
+`args.status`/`"cli"`"*, and human writes carry the channel that was observed.
+
+Most systems in this corpus establish that a person approved something by
+accepting a flag that says so. This one asks whether anybody is there, treats
+the absence of a terminal as evidence that nobody is, and makes the alternative
+a declaration of agency with a quote attached.
+
 ## 9. Reliability, Safety, and Trust
 
 **Provenance** is the strongest axis. Transcript hash, per-message quote
@@ -1621,6 +1637,8 @@ they stop working.
   including `gate-491/measurements.json`, a committed refutation of a shipped feature
 
 ## History
+
+**2026-09-16** — [`7a936f3ce69577996bba6e4308aab4f95114392e`](https://github.com/Daily-Nerd/daimon/commit/7a936f3ce69577996bba6e4308aab4f95114392e) — re-read at a commit dated 2026-09-16, 44 commits past the previous pin. All six marks re-tested and held, and the review one is materially stronger: a human verdict is now refused unless `sys.stdin.isatty()`, so an unattended write cannot claim to be a person's, and the recorded source is the observed channel rather than a flag the caller set. The refutation path also gained several typed refusals. Screened before reading: three auto-run surfaces, three build-time execution points, one unpinned dependency surface and two dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-08** — [`8d66b441bbb98db53f6d586f025af7fcaeb0a7fd`](https://github.com/Daily-Nerd/daimon/commit/8d66b441bbb98db53f6d586f025af7fcaeb0a7fd) — re-pinned 41 commits on, through releases 0.38.1 to 0.42.0. Screened before reading: three auto-run surfaces, three build-time execution paths, one unpinned website manifest, two files inside the seven-day cooldown; nothing was installed, built or run, and the read was made from a full clone. No mark moved — six of seven, `bitemporal` still absent, and the grep for `valid_from`, `valid_to`, `valid_until`, `event_time`, `occurred_at` and `as_of` over the package still returns nothing.
 
