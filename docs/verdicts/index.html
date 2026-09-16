@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 511 reports.</strong></p>
+<p><strong>This page covers all 512 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18968,6 +18968,68 @@ an example of deciding when a computed value earns a write.</li>
 <li>Do not copy when: two statements of the same fact must be reconciled
 — exact-hash dedup does not see them, and nothing else here does either.
 No marks.</li>
+</ul>
+<h3 id="agent-memory-guard"><a
+href="../systems/agent-memory-guard/"><code>agent-memory-guard</code></a></h3>
+<ul>
+<li>Best idea: <strong>an agent's restatement of its own claim is not
+corroboration, and the code says why.</strong>
+<code>self_reinforcement.py</code> describes the self-poisoning loop
+better than anything else in this corpus — "an agent reads its own prior
+<code>agent_authored</code> memory, mildly elaborates on it, writes it
+back, then reads the elaborated version on the next turn and elaborates
+again. Over a few iterations a hallucination or attacker-suggestion is
+reinforced into a durable 'fact' the agent now relies on" — and enforces
+two rules per key: a cool-down on consecutive agent-authored writes, and
+a self-similarity rule under which a write resembling a recent
+agent-authored value "is treated as reinforcement of the previous write,
+not independent corroboration." The decisive clause is the decay: only a
+separate <code>external_tool</code> or <code>user_input</code> write
+weakens the loop, because corroboration must come from a <em>different
+source class</em>. The taxonomy behind it says which side of the
+boundary each value sits on — <code>external_tool</code> and
+<code>user_input</code> are "external inputs (untrusted by default)",
+<code>agent_authored</code> is "the self-poisoning surface".</li>
+<li>Biggest risk: <strong>the defence is off unless the integration
+labels its writes, and nothing says so.</strong>
+<code>source_class</code> is a parameter the calling code passes, the
+default is <code>UNKNOWN</code>, and the detector "[o]nly fires on
+writes whose source_class is AGENT_AUTHORED", returning early otherwise.
+The legacy fallback narrows it further — of the <code>source_type</code>
+values only <code>MODEL_INFERENCE</code> maps to
+<code>agent_authored</code>. A library wrapping a dictionary write
+cannot derive provenance, so this is a necessary design rather than a
+defect; it does mean the headline control is a property of the
+integration's discipline, and the more drop-in the integration the less
+likely every write carries a label. Separately, the standalone
+<code>scanner/rules.py</code> is sixty-three lines of regex whose
+unprotected-write rule matches a variable literally named
+<code>memory</code> or <code>state</code> and requires
+<code>guard.wrap|check|protect</code> on the <em>same line</em>, so a
+guard call one line above reads as a violation and any other variable
+name reads as safe — a reasonable smoke test that cannot support the
+conclusion its SARIF output implies. The README leads with PyPI download
+and clone counts under the OWASP name.</li>
+<li>Most reusable component: the source-class taxonomy plus the rule
+that corroboration must cross it. If your system extracts memories from
+its own output, this is the distinction that stops a hallucination
+becoming a fact by repetition — and the lesson for anyone implementing
+it is to make the provenance argument required rather than defaulted,
+because a defence keyed on a field nobody fills is off in every
+integration that forgot.</li>
+<li>Maturity impression: Apache-2.0, Python, version 0.3.2, 168 tests
+across seventeen files, with a LangChain adapter, an MCP server, a
+GitHub Action, semgrep rules and a benchmarks tree. Eleven detectors,
+one file each, with severities and block-or-flag actions and SIEM-shaped
+events. What is not present is a detection-rate evaluation against a
+labelled attack corpus, so no detector's precision or recall is
+established from the tree.</li>
+<li>Study when: you are enumerating what can go wrong with agent memory,
+or you extract memories from model output and have not yet decided what
+counts as a second source.</li>
+<li>Do not copy when: you wanted a memory store — this holds none, and
+it returns <code>Action.BLOCK</code> rather than blocking anything
+itself. No marks.</li>
 </ul>
         </article>
       </div>
