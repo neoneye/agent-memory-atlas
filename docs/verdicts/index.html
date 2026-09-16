@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 530 reports.</strong></p>
+<p><strong>This page covers all 531 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19782,6 +19782,44 @@ observed model and whether cost was measured or unmeasured.</li>
 or a gate an agent could satisfy by approving in advance.</li>
 <li>Do not copy when: you need to know who approved. One mark: audit
 log.</li>
+</ul>
+<h3 id="osiris"><a
+href="../systems/osiris/"><code>osiris</code></a></h3>
+<ul>
+<li>Best idea: <strong>a parser declares how it knew, and the confidence
+is derived from that.</strong> "[B]efore this module, every parser
+invented its own confidence number (0.4 → 0.99) with no shared meaning,
+so 'noise' was baked into the graph as fake-precise facts and nothing
+downstream could reason about <em>why</em> a node was believed." Now
+<code>confidence</code> is "a <em>projection</em> of the class, not a
+guess" — and CORROBORATED is the class no parser may claim: "computed at
+read time when ≥2 independent sources agree … Storing it would go stale
+the moment a third source lands."</li>
+<li>Biggest risk: <strong>the classes rank but never withhold, and
+nothing partitions the graph.</strong> A co-occurrence fact at 0.35
+comes back beside a self-declared one at 0.9, so a consumer that ignores
+the class sees peers and the protection lives in the reader. Agents,
+projects and threads are object types inside one graph rather than
+partitions of it, so isolation is the graph's shape and not a predicate
+a reader cannot omit. The base confidences are constants with an
+ordering and no stated derivation.</li>
+<li>Most reusable component: <code>parsers/evidence.py</code> — eighty
+lines carrying the class taxonomy, the projection, the strength
+ordering, and the rule that corroboration is recomputed rather than
+stored. Beside it, the within-source supersession rule that keeps one
+parser's self-correction from silencing an independent source, which is
+what makes read-time corroboration mean anything.</li>
+<li>Maturity impression: AGPL-3.0, Python 3.12+, 269,603 lines with
+6,388 test functions, PostgreSQL 16 with pg_trgm, a Redis 7 event bus, a
+streamable-HTTP MCP server, Claude Code hooks, and an ontology kept as a
+reviewed catalog because types "stop being invented inline by each
+parser".</li>
+<li>Study when: your extractors each pick their own confidence number,
+or you store a corroboration flag that a later source would
+falsify.</li>
+<li>Do not copy when: you need isolation between agents, or a read that
+refuses weak evidence rather than ranking it. Two marks: trust state,
+audit log.</li>
 </ul>
         </article>
       </div>

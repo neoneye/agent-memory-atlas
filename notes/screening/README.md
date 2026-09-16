@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 469 of 530 screened at the report's current pin.**
+**Progress: 470 of 531 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 198 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 282 |
-| Repositories with build-time execution (`EXEC`) | 345 |
+| Repositories with an auto-run surface (`RUNS`) | 199 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 283 |
+| Repositories with build-time execution (`EXEC`) | 346 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -173,6 +173,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`opensre`](../../content/systems/opensre.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
 | [`openviking`](../../content/systems/openviking.md) | `.claude-plugin/` |
 | [`origintrail-dkg`](../../content/systems/origintrail-dkg.md) | `.cursor/mcp.json`, `.cursor/rules/` |
+| [`osiris`](../../content/systems/osiris.md) | `.claude/settings.json`, `.githooks/`, `.mcp.json` |
 | [`ouroboros-agent-os`](../../content/systems/ouroboros-agent-os.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`ownmem`](../../content/systems/ownmem.md) | `.claude-plugin/` |
 | [`ox`](../../content/systems/ox.md) | `.claude-plugin/`, `.claude/settings.json`, `.opencode/` |

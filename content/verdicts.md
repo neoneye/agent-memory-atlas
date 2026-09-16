@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 530 reports.**
+**This page covers all 531 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4590,3 +4590,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT or Apache-2.0, Rust, version 0.6.2 on crates.io, 213,521 lines across a dozen crates with 3,518 test functions, bridges for four harnesses, a conductor for parallel agents, and a second-provider review flow that records the reviewed SHA, the observed model and whether cost was measured or unmeasured.
 - Study when: you have a hash chain you have never broken on purpose, or a gate an agent could satisfy by approving in advance.
 - Do not copy when: you need to know who approved. One mark: audit log.
+
+### [`osiris`](../systems/osiris/)
+- Best idea: **a parser declares how it knew, and the confidence is derived from that.** "[B]efore this module, every parser invented its own confidence number (0.4 → 0.99) with no shared meaning, so 'noise' was baked into the graph as fake-precise facts and nothing downstream could reason about *why* a node was believed." Now `confidence` is "a *projection* of the class, not a guess" — and CORROBORATED is the class no parser may claim: "computed at read time when ≥2 independent sources agree … Storing it would go stale the moment a third source lands."
+- Biggest risk: **the classes rank but never withhold, and nothing partitions the graph.** A co-occurrence fact at 0.35 comes back beside a self-declared one at 0.9, so a consumer that ignores the class sees peers and the protection lives in the reader. Agents, projects and threads are object types inside one graph rather than partitions of it, so isolation is the graph's shape and not a predicate a reader cannot omit. The base confidences are constants with an ordering and no stated derivation.
+- Most reusable component: `parsers/evidence.py` — eighty lines carrying the class taxonomy, the projection, the strength ordering, and the rule that corroboration is recomputed rather than stored. Beside it, the within-source supersession rule that keeps one parser's self-correction from silencing an independent source, which is what makes read-time corroboration mean anything.
+- Maturity impression: AGPL-3.0, Python 3.12+, 269,603 lines with 6,388 test functions, PostgreSQL 16 with pg_trgm, a Redis 7 event bus, a streamable-HTTP MCP server, Claude Code hooks, and an ontology kept as a reviewed catalog because types "stop being invented inline by each parser".
+- Study when: your extractors each pick their own confidence number, or you store a corroboration flag that a later source would falsify.
+- Do not copy when: you need isolation between agents, or a read that refuses weak evidence rather than ranking it. Two marks: trust state, audit log.
