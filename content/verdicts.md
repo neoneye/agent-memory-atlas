@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 488 reports.**
+**This page covers all 489 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4254,3 +4254,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 1.2.1, 238 commits since 16 July 2026, 33,465 lines of Python against 52,271 lines of tests, one local SQLite file with no network call, an MCP server and a `pctx` CLI, an Obsidian plugin, an OpenClaw plugin, and a committed eval suite with a fixture world and weighted rubrics.
 - Study when: you want an agent to hold relationship context locally with disclosure bounded by default.
 - Do not copy when: you need multi-principal scoping, or point-in-time reads over the validity periods it already stores.
+
+### [`state-memory-mcp`](../systems/state-memory-mcp/)
+- Best idea: **an event row that records both sides of every mutation.** `events` stores `event_type`, `entity_type`, `entity_id`, `before_state`, `after_state`, the session and a timestamp, indexed four ways, so a node's history is reconstructible from the log rather than from the node — and updates take an `expected_version`, turning a lost update into a visible conflict. The composite indexes match the queries actually issued rather than being one per column. One mark: `audit_log`.
+- Biggest risk: **the read and the write disagree about a detached HEAD, silently.** `git branch --show-current` prints nothing when HEAD is detached, so `getCurrentBranch()` returns `null`; the read path then appends `AND git_branch = ?` and binds that `null`, which SQLite never satisfies, so the query matches no rows. A write with no branch supplied takes the column default `'main'`. During a rebase, a bisect or a CI checkout, work is therefore filed under `main` while reads for it return nothing, and neither half reports it — an agent asking for its state is told there is none. It fails closed, unlike the branch bug in [dsh-mnemon](../systems/dsh-mnemon/), which projected scoped entries everywhere; failing closed is the better direction and still wrong to do in silence. A smaller inconsistency sits beside it: the changeset surface treats an absent branch as *no* filter while the main query treats it as *the current* branch.
+- Most reusable component: `expected_version` on update plus the before/after event row — together they make both concurrent edits and historical questions answerable without versioning the node itself.
+- Maturity impression: MIT, version 1.2.1, 47 commits since 7 July 2026, 34,549 lines of TypeScript against 114 test files, one SQLite file per resolved project root, no model in the loop, and an MCP surface aimed at Cursor, Claude Code, Gemini and Copilot with four auto-run install surfaces.
+- Study when: you want deterministic local workflow state shared across several coding hosts and you work on named branches.
+- Do not copy when: your agents run inside a rebase, a bisect or a CI checkout, or you need scoping inside a store rather than between directories.
