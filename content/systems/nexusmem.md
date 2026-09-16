@@ -7,9 +7,9 @@ page_kind: system
 source_name: "yaminbkk/NexusMem"
 source_url: https://github.com/yaminbkk/NexusMem
 archive_name: "yaminbkk--NexusMem"
-revision: f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7
-revision_url: https://github.com/yaminbkk/NexusMem/commit/f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7
-analyzed_at: 2026-09-07
+revision: 0003e2432ba7dd9c0e7dc4558fffed56235dcf95
+revision_url: https://github.com/yaminbkk/NexusMem/commit/0003e2432ba7dd9c0e7dc4558fffed56235dcf95
+analyzed_at: 2026-09-16
 capabilities: "tombstone, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "the deny list, consulted at every node-write seam | src/store/deny-list.ts, src/store/forget.ts, src/store/nodes.ts:89, src/store/reconcile.ts:93 | `nexusmem forget <value>` writes a `deny_list` row keyed on the value itself — literal or regex, with `ignore_case` and a free-text reason — and `upsertNodes` consults it per project before every insert, incrementing a `denied` counter and skipping the node, with `reconcile.ts` repeating the check on the project-id migration path so *\"a row denied here must never\"* re-enter. Over-broad patterns are refused up front: an empty literal, a regex that fails to compile, and a regex that matches the empty string. `--export`/`--import` carry the list between checkouts because the database is gitignored and never travels with a clone | tests/forget.test.ts:231 ingests a secret, confirms it is retrievable, forgets it, runs `sync --rebuild` over the untouched append-only hook log, then asserts the secret returns `[]` while a control command in the same log survives — and that `deny_list` still holds one row afterwards"
@@ -543,6 +543,33 @@ buffer CI logs if the hook ever runs there. The store's redaction pass is the
 only thing standing between a credential typed into a shell and that output, and
 the module that wrote it calls itself *"a safety net, not a guarantee."*
 
+## 9a-ante. A third axis, kept separate on purpose
+
+Schema v13 adds `capture_mode` and `source_ts` to `nodes`, and the migration
+says why the first could not be folded into the existing one: *"[t]he
+evidence-quality axis (`provenance`) cannot also say whether NexusMem saw an
+event happen or reconstructed it from an artifact that already existed at
+installation. Keep that as a separate field."* How good the evidence is, and
+whether the system witnessed it or inferred it after the fact, are different
+questions, and most stores in this corpus answer only the first.
+
+`source_ts` is nullable for a stated reason rather than for convenience — it is
+empty *"specifically when an artifact has no trustworthy content/event
+timestamp (untimestamped shell history and document filesystem mtimes)"*, and
+the older synthetic values *"remain only for internal ordering."* A column that
+admits when it does not know, beside one that admits its values were never
+really times, is the honest version of a backfill.
+
+**And the redaction that was wrong has been re-run over what it missed.**
+`scrub.ts` re-applies today's rules to rows written before the key/value rule
+and the shell `meta.command` fix landed — the remediation for secrets that
+reached `memory.db` under the old rules. Two bounds make it safe to run: each
+kind is scrubbed under *"exactly the profile its collector applies at ingest, so
+this never redacts more than a fresh sync would"*, and rows are updated in place
+so *"ids, links, trust state and reconcile keys are untouched."* A cleanup pass
+that cannot over-delete and cannot disturb identity is the shape this atlas
+keeps asking for.
+
 ## 9a. The two trust axes, and who is allowed to set them
 
 `provenance` says where a claim came from — `observed`, `authored`, `recorded`,
@@ -969,6 +996,8 @@ leaves no record that it happened.
   suggestion path and its memo
 
 ## History
+
+**2026-09-16** — [`0003e2432ba7dd9c0e7dc4558fffed56235dcf95`](https://github.com/yaminbkk/NexusMem/commit/0003e2432ba7dd9c0e7dc4558fffed56235dcf95) — re-read at a commit dated 12 September 2026, 55 commits past the previous pin. All six marks re-tested and held. Two additions are recorded above. Schema v13 puts `capture_mode` and `source_ts` on `nodes`, separating whether an event was witnessed from how good the evidence for it is, and making the timestamp nullable where an artifact has none worth trusting. And `scrub.ts` re-applies current redaction to rows written before the key/value rule and the shell `meta.command` fix, bounded so it can neither redact more than a fresh sync would nor disturb ids, links, trust state or reconcile keys. Screened before reading, from a full clone: one auto-run surface, one build-time execution point, two unpinned dependency surfaces and two dependency files inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
 **2026-09-07** — [`f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7`](https://github.com/yaminbkk/NexusMem/commit/f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7) — re-pinned forty commits on, release v0.10.3. Live bash and zsh hooks join the PowerShell one (`src/hooks/bash.ts`, `zsh.ts`; `reconcile.ts` recomputes natural keys per hook source); a git post-commit hook triggers `sync --auto` under a lock that skips when a sync is running (`src/hooks/git-post-commit.ts`, `src/cli/sync-lock.ts`); shell commands pass through `redact()` before their title and body reach the index (`src/collectors/shell-history.ts:76`); schema V12 adds `retrieved_count` and `last_retrieved_at`, bumped for packed nodes by both query pipelines and read by nothing in `rank.ts`; the MCP server gains `listStaleSuggestions` and `resolveStaleSuggestion`, the latter reusing `runMarkStale` for *accept* and the memo's dismiss for *dismiss* (`src/mcp/tools.ts`), which extends the `human_review` evidence to MCP; the benchmark grew a grep baseline. The deny list, the audit row, the project predicate and the as-of read did not move; six marks stand. Screened before reading: one auto-run surface (`server.json`), two manifests inside the seven-day cooldown, nothing installed or run.
 

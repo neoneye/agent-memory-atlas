@@ -114,14 +114,14 @@ rebuild it would otherwise be undone by.</p>
               <strong>yaminbkk/NexusMem</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/yaminbkk/NexusMem/commit/f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7" title="f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7">
+            <a class="meta-pill revision-pill" href="https://github.com/yaminbkk/NexusMem/commit/0003e2432ba7dd9c0e7dc4558fffed56235dcf95" title="0003e2432ba7dd9c0e7dc4558fffed56235dcf95">
               <span>Analyzed revision</span>
-              <code>f8d9c33c…</code>
+              <code>0003e243…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yaminbkk--NexusMem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -712,6 +712,35 @@ hook ever runs there. The store's redaction pass is the only thing
 standing between a credential typed into a shell and that output, and
 the module that wrote it calls itself <em>"a safety net, not a
 guarantee."</em></p>
+<h2 id="9a-ante-a-third-axis-kept-separate-on-purpose">9a-ante. A third
+axis, kept separate on purpose</h2>
+<p>Schema v13 adds <code>capture_mode</code> and <code>source_ts</code>
+to <code>nodes</code>, and the migration says why the first could not be
+folded into the existing one: <em>"[t]he evidence-quality axis
+(<code>provenance</code>) cannot also say whether NexusMem saw an event
+happen or reconstructed it from an artifact that already existed at
+installation. Keep that as a separate field."</em> How good the evidence
+is, and whether the system witnessed it or inferred it after the fact,
+are different questions, and most stores in this corpus answer only the
+first.</p>
+<p><code>source_ts</code> is nullable for a stated reason rather than
+for convenience — it is empty <em>"specifically when an artifact has no
+trustworthy content/event timestamp (untimestamped shell history and
+document filesystem mtimes)"</em>, and the older synthetic values
+<em>"remain only for internal ordering."</em> A column that admits when
+it does not know, beside one that admits its values were never really
+times, is the honest version of a backfill.</p>
+<p><strong>And the redaction that was wrong has been re-run over what it
+missed.</strong> <code>scrub.ts</code> re-applies today's rules to rows
+written before the key/value rule and the shell
+<code>meta.command</code> fix landed — the remediation for secrets that
+reached <code>memory.db</code> under the old rules. Two bounds make it
+safe to run: each kind is scrubbed under <em>"exactly the profile its
+collector applies at ingest, so this never redacts more than a fresh
+sync would"</em>, and rows are updated in place so <em>"ids, links,
+trust state and reconcile keys are untouched."</em> A cleanup pass that
+cannot over-delete and cannot disturb identity is the shape this atlas
+keeps asking for.</p>
 <h2 id="9a-the-two-trust-axes-and-who-is-allowed-to-set-them">9a. The
 two trust axes, and who is allowed to set them</h2>
 <p><code>provenance</code> says where a claim came from —
@@ -1222,6 +1251,22 @@ negative retrieval assertions; <code>prune-source.test.ts</code> and
 and its memo</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/yaminbkk/NexusMem/commit/0003e2432ba7dd9c0e7dc4558fffed56235dcf95"><code class="commit-id" title="0003e2432ba7dd9c0e7dc4558fffed56235dcf95">0003e243…</code></a>
+— re-read at a commit dated 12 September 2026, 55 commits past the
+previous pin. All six marks re-tested and held. Two additions are
+recorded above. Schema v13 puts <code>capture_mode</code> and
+<code>source_ts</code> on <code>nodes</code>, separating whether an
+event was witnessed from how good the evidence for it is, and making the
+timestamp nullable where an artifact has none worth trusting. And
+<code>scrub.ts</code> re-applies current redaction to rows written
+before the key/value rule and the shell <code>meta.command</code> fix,
+bounded so it can neither redact more than a fresh sync would nor
+disturb ids, links, trust state or reconcile keys. Screened before
+reading, from a full clone: one auto-run surface, one build-time
+execution point, two unpinned dependency surfaces and two dependency
+files inside the seven-day cooldown; an agent-addressed instruction file
+was recorded as data. Nothing was installed, built or run.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/yaminbkk/NexusMem/commit/f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7"><code class="commit-id" title="f8d9c33ce0ad0c79585e1a6d09ea965a6e9674b7">f8d9c33c…</code></a>
 — re-pinned forty commits on, release v0.10.3. Live bash and zsh hooks
