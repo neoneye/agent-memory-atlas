@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Mintplex-Labs/anything-llm"
 source_url: https://github.com/Mintplex-Labs/anything-llm
 archive_name: "Mintplex-Labs--anything-llm"
-revision: eb7df1e81c284236e1759ec7897904dc22a6704d
-revision_url: https://github.com/Mintplex-Labs/anything-llm/commit/eb7df1e81c284236e1759ec7897904dc22a6704d
-analyzed_at: 2026-09-07
+revision: 90108f98f29546dbe71df27a4da7aef302d48f08
+revision_url: https://github.com/Mintplex-Labs/anything-llm/commit/90108f98f29546dbe71df27a4da7aef302d48f08
+analyzed_at: 2026-09-17
 capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "userId and workspaceId as WHERE clauses on both read paths | server/models/memory.js:44-83, server/utils/memories/index.js:22-55, server/prisma/schema.prisma:431-446 | `forUserWorkspace` filters `userId`, `workspaceId` and `scope = 'workspace'`; `globalForUser` filters `userId` and `scope = 'global'`; `promptWithMemories` calls both with the chat's user and workspace and injects nothing else, so a workspace's facts never reach another workspace's prompt and one user's facts never reach another's; `migrateToMultiUser` reassigns rows with a null user to the admin when multi-user mode is entered | server/__tests__/models/memory.test.js:101-146 (both readers pass the scope clause to Prisma), :263-349 (promotion and demotion move a row between scopes under the limits)"
@@ -410,4 +410,6 @@ while memory is on.
 
 ## History
 
-**2026-09-07** — [`eb7df1e81c284236e1759ec7897904dc22a6704d`](https://github.com/Mintplex-Labs/anything-llm/commit/eb7df1e81c284236e1759ec7897904dc22a6704d) — first reading, at the head of `master`, five days after the last commit. Read from a shallow clone beside a blobless clone that supplied the history; screened, with a devcontainer, a `.gitmodules` and two VS Code files that run on open and many manifests inside the cooldown; nothing installed or run. One mark, `scope_enforced`, for user and workspace as filters on both readers. `human_review` withheld: the sidebar edits live rows and adjudicates no candidate. `negative_eval` withheld: the suite mocks the database and no case asserts an excluded row. `trust_state`, `tombstone`, `bitemporal` and `audit_log` withheld: a row has no state, deletion leaves no record, the only times are record times, and nothing logs a change.
+**2026-09-17** — [`90108f98f29546dbe71df27a4da7aef302d48f08`](https://github.com/Mintplex-Labs/anything-llm/commit/90108f98f29546dbe71df27a4da7aef302d48f08) — re-pinned after 41 commits. All three anchored files are byte-identical at both commits — the memory model, the memories utility and the model test — so the mark stands on unchanged code and every anchor here is exact at the new pin. Nothing was installed, built or run.
+
+**2026-09-07** — [`90108f98f29546dbe71df27a4da7aef302d48f08`](https://github.com/Mintplex-Labs/anything-llm/commit/90108f98f29546dbe71df27a4da7aef302d48f08) — first reading, at the head of `master`, five days after the last commit. Read from a shallow clone beside a blobless clone that supplied the history; screened, with a devcontainer, a `.gitmodules` and two VS Code files that run on open and many manifests inside the cooldown; nothing installed or run. One mark, `scope_enforced`, for user and workspace as filters on both readers. `human_review` withheld: the sidebar edits live rows and adjudicates no candidate. `negative_eval` withheld: the suite mocks the database and no case asserts an excluded row. `trust_state`, `tombstone`, `bitemporal` and `audit_log` withheld: a row has no state, deletion leaves no record, the only times are record times, and nothing logs a change.
