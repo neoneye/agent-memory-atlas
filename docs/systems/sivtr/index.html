@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust memory space over the
+terminal output, tool logs and prior agent sessions already on your
+disk, which detects credential-shaped strings on ingest and stores the
+finding rather than a copy, keeps the raw text local, and redacts only
+on the way out.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="sivtr — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust memory space over
+the terminal output, tool logs and prior agent sessions already on your
+disk, which detects credential-shaped strings on ingest and stores the
+finding rather than a copy, keeps the raw text local, and redacts only
+on the way out.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="sivtr — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust memory space over
+the terminal output, tool logs and prior agent sessions already on your
+disk, which detects credential-shaped strings on ingest and stores the
+finding rather than a copy, keeps the raw text local, and redacts only
+on the way out.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>sivtr — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "sivtr",
+      "description": "A Rust memory space over the terminal output, tool logs and prior agent sessions already on your disk, which detects credential-shaped strings on ingest and stores the finding rather than a copy, keeps the raw text local, and redacts only on the way out.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">It indexes the shape of your secrets, not
+the secrets</p>
+          <h1>sivtr</h1>
+          <p class="document-deck">A Rust memory space over the terminal
+output, tool logs and prior agent sessions already on your disk, which
+detects credential-shaped strings on ingest and stores the finding
+rather than a copy, keeps the raw text local, and redacts only on the
+way out.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Ariestar/sivtr">
+              <span>Source</span>
+              <strong>Ariestar/sivtr</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Ariestar/sivtr/commit/a26dc8a38b3eaa0e62e3e0ed128ad7fa25bd6b98" title="a26dc8a38b3eaa0e62e3e0ed128ad7fa25bd6b98">
+              <span>Analyzed revision</span>
+              <code>a26dc8a3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Ariestar--sivtr" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Ariestar--sivtr</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>sivtr — "一个面向智能体和人的统一的记忆空间", a unified memory space
+for agents and people — is Apache-2.0 Rust, version 0.7.1, 74,339 lines
+with 768 test functions, shipping a CLI, a VS Code extension, an MCP
+surface and a packaged skill.</p>
+<p>Its premise is that the memory already exists: "[d]evelopers and
+agents lose time reconstructing context that already exists locally:
+terminal failures, test output, tool logs, and previous AI sessions." So
+it syncs provider transcripts and terminal history into a SQLite archive
+and makes them searchable, rather than asking anyone to write memories
+down.</p>
+<p>Capturing your terminal into a searchable index has an obvious
+problem, and the way sivtr handles it is the reason to read it.</p>
+<p><code>privacy.rs</code> holds nine credential patterns — GitHub PATs,
+OpenAI keys, Slack tokens, AWS ids and secrets, JWTs, cookies, an
+assigned-secret heuristic, and its own token format — and a header that
+refuses to oversell them:</p>
+<blockquote>
+<p>"This module deliberately only removes high-signal credential
+formats. It is a reduction in accidental disclosure, not a security
+boundary: callers must still ask the user to review the resulting
+snapshot before publishing."</p>
+</blockquote>
+<p>That is a correctly scoped claim, which is rarer in this corpus than
+the feature it describes.</p>
+<p>The interesting part is what happens with the scan's two outputs.
+<code>redact_text_with_report</code> returns the redacted text
+<em>and</em> a report of what it found. On the publication and remote
+paths, the text is what gets used. On the ingest path,
+<code>replace_secret_findings</code> does this:</p>
+<pre><code>let (_, report) = crate::privacy::redact_text_with_report(&amp;record.combined_text())?;</code></pre>
+<p>It throws the redacted text away and keeps only the report, writing
+one <code>secret_findings</code> row per kind with an occurrence count.
+So the archive records that a session contains three GitHub-token-shaped
+strings, and does not store a copy of them — while the record itself
+stays in full, locally, because a terminal log with its credentials
+blanked out is often the log you needed.</p>
+<p>Detect on ingest, store the finding rather than the secret, redact on
+egress. Three decisions, each made separately, each defensible.</p>
+<p>The same discipline shows up in the schema comments, which are
+consistently about <em>not</em> storing things. Costs "are NOT stored:
+they are computed at read time from the embedded pricing snapshot, so a
+pricing refresh re-prices history without touching these rows." The
+terminal/agent kind "is not stored: it derives from the record ref."
+Every record is held twice on purpose — <code>blob</code> in full and
+<code>blob_light</code> with the part text stripped — so a listing never
+pays to read text it will not show.</p>
+<p>The gap is on the retrieval side, and it is a reproducibility gap
+rather than a correctness one. <code>search/eval.rs</code> is a proper
+IR harness: golden queries, metrics, and a stated policy that "ranking
+changes are gated on measurable improvement over a fixed baseline
+instead of feel." But no golden-query file and no frozen corpus are
+committed anywhere in the tree — the only committed snapshot is
+<code>pricing_snapshot.json.gz</code>. The baseline is whatever is on
+the machine running <code>sivtr eval</code>, so a ranking claim cannot
+be checked by a reader and a regression cannot be reproduced by a
+contributor.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>record</strong> is one terminal command or one agent turn:
+title, times, outcome, exit code, and its parts in a MessagePack
+blob.</p>
+<p>A <strong>session</strong> groups records from one provider, keyed by
+workspace and working directory.</p>
+<p>A <strong>finding</strong> is the shape of a secret — a kind and a
+count — not the secret.</p>
+<p>An <strong>origin</strong> is where memory comes from: a local
+workspace or a remote device mount, behind one display type so nothing
+above branches on which.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the same scan runs on both paths and its two outputs are used differently — ingest keeps the report and discards the redaction, egress keeps the redaction</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the same scan runs on both paths and its two outputs are used differently — ingest keeps the report and discards the redaction, egress keeps the redaction
+flowchart TB
+    SRC[&quot;local sources: terminal history,&lt;br/&gt;test output, tool logs,&lt;br/&gt;prior agent transcripts&quot;] --&gt; SYNC[&quot;sync — mtime + size gated;&lt;br/&gt;identical refs replace rows in place&quot;]
+    SYNC --&gt; REC[(&quot;records: blob (full) +&lt;br/&gt;blob_light (part text stripped)&lt;br/&gt;— a listing never pays for text&quot;)]
+    SYNC --&gt; SCAN[&quot;privacy::redact_text_with_report&lt;br/&gt;9 patterns: github_pat, openai_key,&lt;br/&gt;slack, aws id/secret, jwt, cookie,&lt;br/&gt;assigned_secret, sivtr_token&quot;]
+    SCAN --&gt;|&quot;ingest keeps the REPORT,&lt;br/&gt;discards the redacted text&quot;| FIND[(&quot;secret_findings:&lt;br/&gt;kind + occurrence count&lt;br/&gt;per session — the shape,&lt;br/&gt;never a copy&quot;)]
+    SCAN --&gt;|&quot;egress keeps the TEXT&quot;| PUB[&quot;publication.rs / remote:&lt;br/&gt;redacted title, labels, parts&quot;]
+    PUB --&gt; DRAFT[&quot;PublicationDraft.warning_count —&lt;br/&gt;risks needing MANUAL review&lt;br/&gt;counted before anything leaves&quot;]
+    HONEST[&quot;&#39;a reduction in accidental disclosure,&lt;br/&gt;not a security boundary: callers must&lt;br/&gt;still ask the user to review the&lt;br/&gt;resulting snapshot before publishing&#39;&quot;] -.-&gt; SCAN
+    REC --&gt; Q[&quot;BM25 over the record index&lt;br/&gt;+ optional embeddings&quot;]
+    WS[&quot;workspace_key filter applies&lt;br/&gt;only when non-empty —&lt;br/&gt;it narrows, it does not bound&quot;] -.-&gt; Q
+    Q --&gt; EVAL[&quot;search/eval.rs: golden queries,&lt;br/&gt;IR metrics, &#39;gated on measurable&lt;br/&gt;improvement … instead of feel&#39;&quot;]
+    EVAL -.-&gt;|&quot;no golden-query file and no&lt;br/&gt;frozen corpus committed —&lt;br/&gt;the baseline is your own machine&quot;| NOREPRO[&quot;a ranking claim cannot be&lt;br/&gt;checked by a reader&quot;]
+    DERIVE[&quot;schema comments, repeatedly:&lt;br/&gt;costs NOT stored, computed at read&lt;br/&gt;time from an embedded pricing&lt;br/&gt;snapshot · record kind derives&lt;br/&gt;from the ref&quot;] -.-&gt; REC</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/sivtr-core/src/privacy.rs</code></td>
+<td>Nine patterns, two outputs, and an honest header</td>
+</tr>
+<tr>
+<td><code>crates/sivtr-core/src/archive/schema.rs</code></td>
+<td>The tables, and comments about what is deliberately not stored</td>
+</tr>
+<tr>
+<td><code>crates/sivtr-core/src/archive/store.rs</code></td>
+<td>Sync, the workspace filter, and
+<code>replace_secret_findings</code></td>
+</tr>
+<tr>
+<td><code>crates/sivtr-core/src/publication.rs</code></td>
+<td>Redaction on egress and the manual-review risk count</td>
+</tr>
+<tr>
+<td><code>crates/sivtr-core/src/origin.rs</code></td>
+<td>Local workspaces and remote mounts behind one type</td>
+</tr>
+<tr>
+<td><code>crates/sivtr-core/src/search/</code></td>
+<td>BM25, filters, expansion, and the eval harness</td>
+</tr>
+<tr>
+<td><code>crates/sivtr-core/src/record/</code></td>
+<td>The work-record model and its refs</td>
+</tr>
+<tr>
+<td><code>editors/vscode</code>, <code>skills/sivtr-memory</code></td>
+<td>The other two surfaces</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>privacy.rs:1-6</code> for the claim, then
+<code>archive/store.rs:657-682</code> for what ingest does with the
+scan, then any of the <code>publication.rs</code> call sites for what
+egress does with it. Reading the three together is the design.</p>
+<p><code>archive/schema.rs:140-215</code> for the schema and its
+comments, which are worth reading as a set of decisions rather than as
+documentation.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A session carries provider, session id, source path, working
+directory and a normalised form of it, a workspace key, title, start and
+end, a record count, a project, a starred flag, mtime and size for sync
+gating, and a synced-at.</p>
+<p>A record carries a title, times, outcome, exit code and two blobs.
+The comment explains the pair: <code>blob</code> is the full MessagePack
+record, <code>blob_light</code> is "the metadata view with part text
+stripped (the light-load view)", and "[p]art text lives inside the blob,
+so a re-sync that produces identical refs simply replaces rows in
+place."</p>
+<p><code>secret_findings</code> is keyed
+<code>(session_row, kind)</code> with an occurrence count, and
+<code>ON DELETE CASCADE</code> from the session. On each sync the
+session's findings are deleted and rewritten, so the counts describe the
+current content rather than accumulating.</p>
+<p>There is no status, confidence, supersession or validity interval on
+a record, which follows from what a record is: an observation of
+something that actually happened, with an exit code. It is not a claim
+that can later be wrong. That is a coherent position, and it is why this
+report carries no marks — the atlas's questions about belief do not
+apply to a log, and the questions about scope are answered by "one
+person's machine".</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>BM25 over the record index with field selection and filters,
+expansion, an index cache, and optional embeddings in
+<code>record_embeddings</code> with an
+<code>embedding_generations</code> table so a model change can be
+tracked rather than silently mixed.</p>
+<p>The eval harness deserves credit for existing. A
+<code>GoldenQuery</code> names a query and the <code>relevant</code>
+records it should surface as whole <code>WorkRef</code> strings, and the
+module's stated purpose is to gate ranking changes on measurement. Most
+projects in this corpus that ship retrieval ship no way to tell whether
+a change made it better.</p>
+<p>Two things limit it. The corpus is not in the repository, so the
+numbers are personal. And <code>relevant</code> is the only labelled set
+— there is no <code>must_not_surface</code>, so the harness measures
+whether the right records come back and not whether a specific wrong one
+stays away. For a memory built out of terminal history, the second
+question has teeth: the failing command from a different project, the
+superseded fix, the log from the branch you abandoned.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingest is a sync from provider transcripts and terminal history,
+gated on mtime and size so an unchanged file is skipped, with identical
+refs replacing rows in place rather than duplicating.
+<code>usage_events</code> carries a <code>dedup_key</code> with a
+partial unique index that "collapses duplicate extraction across
+re-syncs", which is the same instinct applied to a different table.</p>
+<p>Nothing here writes a memory by hand, which is the point — the tool's
+claim is that the work already happened and the record already
+exists.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, an MCP surface, a VS Code extension, and a packaged
+<code>sivtr-memory</code> skill. An agent searches the same archive the
+person does, which is the "unified memory space" of the tagline and is a
+genuinely better answer than a separate agent memory that has to be told
+what the terminal did.</p>
+<p>The <code>Origin</code> registry is worth noting for anyone building
+the same shape: local workspaces and remote device mounts are both
+<code>Origin</code> with the same four fields, and "[k]ind-specific
+details (root paths, peer/share ids) never enter <code>Origin</code>" —
+the display layer never learns which kind it is holding, and only the
+resolution layer dispatches on <code>Reach</code>. Keeping the identity
+of a source separate from how to reach it is the distinction that lets a
+memory space span machines without every caller knowing it does.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The privacy story is the trust story and it is told accurately. The
+scan is best-effort, says so, and the publication path counts the risks
+that need manual review before a person confirms —
+<code>PublicationDraft::warning_count</code> sums the risks whose kind
+<code>is_manual_warning</code>, which is the number a confirmation
+prompt should be showing.</p>
+<p>The residual exposure is stated by the module itself and is worth
+restating plainly for a reader deciding whether to point this at their
+terminal: the archive holds the raw text, unredacted, including whatever
+the nine patterns did not match. That is the correct trade for a local
+index — a redacted log is often useless — and it means the SQLite file
+is as sensitive as the shell history it was built from, and should be
+treated that way.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>768 test functions, two DHAT and hot-path browse benchmarks, and the
+eval harness. <code>tests/</code> holds fixtures and an MCP
+session-recovery test.</p>
+<p>The gap named above is the one that matters: a harness whose corpus
+is not committed cannot gate a pull request, only a maintainer's local
+run. Committing a small synthetic corpus with labelled queries —
+including a few records that must <em>not</em> surface — would turn the
+existing code into something a contributor can be held to.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Separate the two outputs of a secret scan. The redacted text and the
+report of what was found are different products, and they belong on
+different paths: keep the report where the data lives, keep the
+redaction where the data leaves. sivtr writes this as one function
+returning a tuple and two call sites using opposite halves, which is
+about as clear as the idea can be expressed.</p>
+<p>Index the shape, not the secret. A row saying "this session contains
+three GitHub-token-shaped strings" is useful for triage, audit and
+warning a user, and carries none of the risk of storing the match.</p>
+<p>Say what your redactor is not. "[A] reduction in accidental
+disclosure, not a security boundary" is one sentence that prevents a
+category of misuse, and it costs nothing.</p>
+<p>Write the comment about what you deliberately did not store. "Costs
+are NOT stored: they are computed at read time from the embedded pricing
+snapshot, so a pricing refresh re-prices history without touching these
+rows" tells the next maintainer both the rule and the reason, and stops
+the denormalisation that would otherwise look like an optimisation.</p>
+<p>And if you build a retrieval eval, commit the corpus. A golden-query
+harness that runs against the developer's own machine measures something
+real and proves nothing to anyone else.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the secret findings are surfaced to the user. The table
+exists and the publication path counts risks; whether a user browsing a
+session is told it contains credentials was not traced.</p>
+<p>Whether a golden-query corpus exists outside the repository. The
+harness is built for one and the format is defined; nothing in the tree
+ships an instance.</p>
+<p>What the remote device mount implies for the privacy split. Ingest
+keeps raw text locally on the assumption that local is safe; a remote
+mount moves the boundary, and <code>src/remote/redact.rs</code>
+redacting on that path suggests the question was considered, but the
+interaction was not followed here.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/sivtr-core/src/privacy.rs</code></td>
+<td>Nine patterns, and a header that refuses to oversell them</td>
+</tr>
+<tr>
+<td><code>crates/sivtr-core/src/archive/store.rs:657-682</code></td>
+<td>The scan whose redaction is discarded and whose report is kept</td>
+</tr>
+<tr>
+<td><code>crates/sivtr-core/src/archive/schema.rs:140-215</code></td>
+<td>A schema commented with what it deliberately does not store</td>
+</tr>
+<tr>
+<td><code>crates/sivtr-core/src/publication.rs</code></td>
+<td>Redaction on egress, and the manual-review count</td>
+</tr>
+<tr>
+<td><code>crates/sivtr-core/src/origin.rs</code></td>
+<td>Source identity kept separate from how to reach it</td>
+</tr>
+<tr>
+<td><code>crates/sivtr-core/src/search/eval.rs</code></td>
+<td>A real IR harness with no committed corpus</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/Ariestar/sivtr/commit/a26dc8a38b3eaa0e62e3e0ed128ad7fa25bd6b98"><code class="commit-id" title="a26dc8a38b3eaa0e62e3e0ed128ad7fa25bd6b98">a26dc8a3…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: thirteen files scanned, no auto-run
+surfaces, one build-time execution point, two unpinned surfaces, seven
+dependency files inside the seven-day cooldown, and the
+<code>CLAUDE.md</code> and <code>AGENTS.md</code> read as data. Nothing
+was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

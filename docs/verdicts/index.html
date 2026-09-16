@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 502 reports.</strong></p>
+<p><strong>This page covers all 503 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18444,6 +18444,60 @@ decide what it may and may not do to state it did not create.</li>
 here has prose, two timestamps and nothing else: no status, no
 confidence, no source, no supersession pointer, and the link's
 <code>reason</code> is free text. No marks.</li>
+</ul>
+<h3 id="sivtr"><a href="../systems/sivtr/"><code>sivtr</code></a></h3>
+<ul>
+<li>Best idea: <strong>split the two outputs of a secret scan and send
+them down different paths.</strong>
+<code>privacy::redact_text_with_report</code> returns the redacted text
+and a report of what it found. On egress — <code>publication.rs</code>,
+the remote path — the text is what gets used. On ingest,
+<code>replace_secret_findings</code> writes
+<code>let (_, report) = ...</code>, discards the redacted text, and
+stores one <code>secret_findings</code> row per kind with an occurrence
+count. So the archive knows a session contains three GitHub-token-shaped
+strings and holds no copy of them, while the raw record stays local,
+because a terminal log with its credentials blanked out is usually the
+log you needed. Detect on ingest, index the shape not the secret, redact
+on the way out — three decisions made separately. The claim is scoped
+honestly too: the module says it "deliberately only removes high-signal
+credential formats" and is "a reduction in accidental disclosure, not a
+security boundary: callers must still ask the user to review the
+resulting snapshot before publishing."</li>
+<li>Biggest risk: <strong>the retrieval eval cannot be reproduced from
+the repository.</strong> <code>search/eval.rs</code> states its purpose
+exactly right — ranking changes "gated on measurable improvement over a
+fixed baseline instead of feel" — and defines golden queries with IR
+metrics. No golden-query file and no frozen corpus are committed
+anywhere in the tree; the only committed snapshot is the pricing table.
+So the baseline is whatever is on the maintainer's machine, a ranking
+claim cannot be checked by a reader, and a regression cannot be
+reproduced by a contributor. A <code>GoldenQuery</code> also labels only
+the records a query <em>should</em> surface — there is no
+must-not-surface set, which for a memory built from terminal history is
+the question with teeth: the failing command from another project, the
+superseded fix, the abandoned branch's log.</li>
+<li>Most reusable component: the schema comments, as a habit. "Costs are
+NOT stored: they are computed at read time from the embedded pricing
+snapshot, so a pricing refresh re-prices history without touching these
+rows"; the record kind "is not stored: it derives from the record ref";
+<code>blob_light</code> exists so a listing never pays for part text.
+Each states the rule and the reason where the next maintainer will be
+tempted to denormalise.</li>
+<li>Maturity impression: Apache-2.0, Rust, version 0.7.1, 74,339 lines
+with 768 test functions, shipping a CLI, a VS Code extension, an MCP
+surface and a packaged skill. <code>Origin</code> keeps a source's
+identity separate from how to reach it — "[k]ind-specific details (root
+paths, peer/share ids) never enter <code>Origin</code>" — so a memory
+space can span a local workspace and a remote device mount without
+callers learning which they hold.</li>
+<li>Study when: you are indexing material you did not author and cannot
+fully trust, and need a defensible position on credentials that does not
+make the archive useless.</li>
+<li>Do not copy when: you need memory that can be wrong — a record here
+is an observation with an exit code, carrying no status, confidence,
+supersession or validity interval, and the archive holds the raw text
+unredacted by design. No marks.</li>
 </ul>
         </article>
       </div>
