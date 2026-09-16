@@ -7,9 +7,9 @@ page_kind: system
 source_name: "openvurp/openvurp"
 source_url: https://github.com/openvurp/openvurp
 archive_name: "openvurp--openvurp"
-revision: e3fbf01d28b2e7a293a431c45cd96d45e609985c
-revision_url: https://github.com/openvurp/openvurp/commit/e3fbf01d28b2e7a293a431c45cd96d45e609985c
-analyzed_at: 2026-09-03
+revision: fc68e643e8df7282757af8af4d8d4adfb0975eb0
+revision_url: https://github.com/openvurp/openvurp/commit/fc68e643e8df7282757af8af4d8d4adfb0975eb0
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
@@ -839,5 +839,7 @@ grep -c 'def test_' tests/*.py | awk -F: '{s+=$2} END {print s}'
 ```
 
 ## History
+
+**2026-09-16** — [`fc68e643e8df7282757af8af4d8d4adfb0975eb0`](https://github.com/openvurp/openvurp/commit/fc68e643e8df7282757af8af4d8d4adfb0975eb0) — re-read at a commit dated 4 September 2026, 3 commits past the previous pin. The anchored files are untouched: the comparison lists ten changed files and none of them is an anchor. Spot-checking the scope producer confirms the ambient shape the report describes — `_SCOPE` is a contextvar set by `set_scope` and read by `current_scope`, with `scoped_dir` placing an agent's archive under it, so the scope travels with the call rather than being passed at each site. All marks hold. Screened before reading, from a full clone: no auto-run surface, no build-time execution point, two unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-03** — [`e3fbf01d28b2e7a293a431c45cd96d45e609985c`](https://github.com/openvurp/openvurp/commit/e3fbf01d28b2e7a293a431c45cd96d45e609985c) — first reading, at 32 commits, on a commit dated 3 September 2026. Screened before anything was read: **0 auto-run surfaces, 0 build-time execution paths, 2 unpinned manifests** (`pyproject.toml` and `channels/wa-bridge/package.json`, neither with a lockfile), both changed inside the seven-day cooldown, `pyproject.toml` on the day of the pinned commit. Nothing was installed and no `pip`, `npm`, `pytest` or `openvurp` command was run; the shell was blocked for part of the reading and the source was read file by file. Four marks: `scope_enforced` on the agent id as a directory resolved from a context variable on both arms; `audit_log` on the per-scope `events.jsonl` with `promotion` and `rollback` kinds and the `faded.jsonl` archive; `human_review` on the approval-gated `learning_promote` and `learning_rollback` in the default mode; `negative_eval` on the two-agent recall test with its positive control in the same case. `tombstone`, `trust_state` and `bitemporal` examined and withheld — the near-misses are named in sections 2 and 5. Three scope leaks on the learning side were established by reading the call graph from the page's direct-chat route, the daily-note writer and the Mirror's lesson reader; none is covered by a test.
