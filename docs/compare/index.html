@@ -45244,6 +45244,54 @@ shallow clone: three files, no auto-run surfaces, no build-time
 execution points, one unpinned surface and one dependency file inside
 the cooldown, plus <code>AGENTS.md</code> read as data; nothing was
 installed and nothing was run</li>
+<li><strong><code>mcn92/pikelet</code> was examined and has no report,
+because nothing that happens after the build can contradict what it
+holds.</strong> Apache-2.0 (Matthew Noonan), 61,585 lines of JavaScript,
+Rust and Python over 244 files at <a
+href="https://github.com/mcn92/pikelet/commit/9f81ad79a6d9b52bb956125c7271c89021588edb"><code class="commit-id" title="9f81ad79a6d9b52bb956125c7271c89021588edb">9f81ad79…</code></a>,
+created 20 April 2026. It compiles a corpus into a single self-contained
+<code>.pikelet</code> file — source text, semantic index, keyword index,
+query encoder, integrity commitments, retrieval calibration and
+evaluation fixtures in one artifact — served over HTTP Range reads from
+static storage and mounted for an agent as an MCP <code>search</code>
+tool. The exclusion is structural rather than incidental, and the
+project states it as a rule:
+<code>spec/SEARCH_ARTIFACT_CONTRACT.md:104-110</code> says an artifact
+"is immutable after publication", that readers "MUST NOT mutate artifact
+bytes as part of query execution", and that a producer superseding an
+old artifact emits one with "a new identity"; section 8 adds that
+"Immutability is a feature of the contract." The README draws the same
+boundary from inside, listing "your corpus has heavy online writes" and
+"you need transactional mutation" under <em>don't use it</em>. There is
+no write path to be wrong on a second reading, which is the
+document-index case this page's scope section excludes by name. Recorded
+rather than dropped for one reason. Its ablation experiment is the shape
+this atlas asks for and rarely finds: a pack was rebuilt byte-for-byte
+identical except for the record carrying one fact, the retrieval result
+moved from <code>matchQuality: strong</code> at confidence 0.915 to
+<code>none</code> at 0.136, a third pack changed the same source
+record's value and the grounded answer followed it. Two details make it
+worth citing. The README separates what is reproducible from what is not
+—
+<code>examples/05-one-file-search/web/public/reproduce-ablation.mjs</code>
+re-derives the retrieval-side numbers, while the paired model sessions
+are marked "a described observation rather than a reproducible result" —
+and it refuses the overclaim the experiment invites, stating that this
+"does <strong>not</strong> mean Pikelet can prevent an LLM from
+hallucinating." The limit on citing it as evidence is that the script
+prints rather than asserts, and the packs it reads are release assets
+rather than committed files, so the check does not fail in CI when the
+numbers move. The part that does run is the committed abstention
+fixture:
+<code>test/fixtures/encoder-conformance/abstention-golden.json</code>
+holds ten labelled queries, five of them labelled <code>none</code>,
+<code>test/complete_profile.mjs:848-856</code> requires all ten to
+reproduce their label and requires a query labelled <code>none</code> to
+return zero results, and that file is in the <code>npm test</code>
+chain. A ten-query set where the negatives must come back empty beside
+positives that must not is the store-level must-not-retrieve assertion
+this atlas looks for, built here for a search index rather than a
+memory.</li>
 <li><strong><a
 href="https://arxiv.org/abs/2609.11060">arXiv:2609.11060</a> was
 analysed and has no report: the mechanism is two prompt blocks and a
