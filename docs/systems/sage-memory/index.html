@@ -118,14 +118,14 @@ decides admission is one key applying three string heuristics.</p>
               <strong>l33tdawg/sage</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/l33tdawg/sage/commit/36b2252f11b540a6a3f275f2dced56466b45280f" title="36b2252f11b540a6a3f275f2dced56466b45280f">
+            <a class="meta-pill revision-pill" href="https://github.com/l33tdawg/sage/commit/b4f38e394c21136989cc15c1f548444a4c80a1c5" title="b4f38e394c21136989cc15c1f548444a4c80a1c5">
               <span>Analyzed revision</span>
-              <code>36b2252f…</code>
+              <code>b4f38e39…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-12</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/l33tdawg--sage" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -153,9 +153,9 @@ decides admission is one key applying three string heuristics.</p>
 href="../sage-novelty-gate/">SAGE Novelty Gate</a>, a mem0 fork from a
 different author. The two share nothing but the word.</p>
 <p>SAGE is a memory node built on a vendored CometBFT chain —
-Apache-2.0, 1,569 commits between 2 March and 12 September 2026 by nine
-authors, 213,191 lines of Go outside tests and outside the vendored
-consensus engine, beside 209,380 lines of tests holding 4,754 test
+Apache-2.0, 1,614 commits between 2 March and 16 September 2026 by nine
+authors, 218,303 lines of Go outside tests and outside the vendored
+consensus engine, beside 216,369 lines of tests holding 4,941 test
 functions. The screen found two auto-run surfaces, five build-time
 execution points and five unpinned surfaces; nothing was installed or
 run, and the read was made from a full clone. Storage is two tiers:
@@ -449,6 +449,43 @@ floor drops everything below the threshold <strong>across the whole
 candidate set</strong>, before the top-K trim. That ordering is the
 difference between a floor that means something and one that only prunes
 a page.</p>
+<p><strong>The floor now says how much it took.</strong> The ordering
+that makes the floor meaningful also makes it unanswerable from the
+caller's side: it removes a candidate on decayed confidence regardless
+of similarity, so a record that matches a query perfectly is unreachable
+by <em>any</em> phrasing if it sits below the node's threshold, and the
+response used to look exactly like a corpus that never held it. The
+incident behind the fix is written into the commit — a memory reachable
+by tag was invisible to semantic recall across four queries, because a
+node's floor of 85 sat above the 0.80 its records were written with,
+putting the whole observation tier out of reach.
+<code>QueryOptions.DecayFloorDropped</code>
+(<code>internal/store/store.go:120-130</code>) is an optional counter
+the store fills as it scans, both backends increment it
+(<code>internal/store/sqlite.go:2232</code>, <code>:2411</code>,
+<code>internal/store/postgres.go:1031</code>), and the REST layer
+reports it in the existing silent-hide envelope as
+<code>filtered.confidence_floor</code> and
+<code>filtered.hidden_by_confidence_floor</code> with
+<code>confidence_floor</code> added to the
+<code>X-SAGE-Filter-Applied</code> header
+(<code>api/rest/memory_handler.go:248-256</code>). The MCP recall
+returns the floor and, when it hid anything, a sentence naming the
+count, the floor, the remedy and the tier boundaries — <em>"a floor
+above 0.80 hides the observation tier and above 0.60 hides the inference
+tier"</em> (<code>internal/mcp/tools.go:1366-1371</code>).</p>
+<p>Two choices in that are worth separating from the disclosure itself.
+The floor is disclosed even when it removed nothing, on the stated
+grounds that this is what lets a caller trust an empty result — a field
+that appears only on bad news teaches a reader to infer from its
+absence, which is the same silence one layer up. And the counter is an
+opt-in sink rather than a return value: recall paths that serialize a
+response pass one, consensus paths leave it <code>nil</code>, so the
+deterministic replay path is not made to carry a number it would have to
+agree on. The same pass corrected a comment that misdescribed the filter
+— the default of 70 was documented as catching observations and
+inferences, when a record at 0.60 does not clear 0.70 and the inference
+tier is dropped.</p>
 <p>The per-record authorization pass runs after ranking and before the
 trim, and denied records <em>"consume no visible limit"</em> — so a
 caller who cannot read half a domain still gets a full page.</p>
@@ -592,7 +629,7 @@ Committing the run is to the project's credit; the documented make
 targets pass neither flag, so they reproduce neither file.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>4,754 test functions in 639 files and 209,380 lines, heaviest in
+<p>4,941 test functions in 680 files and 216,369 lines, heaviest in
 <code>internal/abci</code> (802), <code>internal/store</code> (747),
 <code>web</code> (710) and <code>api/rest</code> (557). The memory model
 itself — the decay and lifecycle arithmetic — has one test file of 149
@@ -713,9 +750,10 @@ ablation.</li>
 <tbody>
 <tr>
 <td><code>internal/memory/model.go</code></td>
-<td>328 (package)</td>
-<td><code>MemoryRecord</code> (39-73), the status, type and task enums
-(11-36); <code>validated</code> declared at 12 with no writer</td>
+<td>—</td>
+<td><code>MemoryRecord</code> (55-89), the status, type and task enums
+(22-48); <code>validated</code> declared at 27 with the comment that no
+production path writes it</td>
 </tr>
 <tr>
 <td><code>internal/memory/confidence.go</code></td>
@@ -751,23 +789,24 @@ candidate's id (341-348), the vote broadcast (354-375)</td>
 <tr>
 <td><code>internal/store/sqlite.go</code></td>
 <td>—</td>
-<td>The DDL (457-495) with the <code>content_hash</code> index (487),
-the vote, corroboration and challenge tables (530-564),
-<code>QuerySimilar</code> (2001-2162), the decay floor (2136-2141),
-<code>FindByContentHash</code> (4996),
-<code>RepairSelfDupRejected</code> (5035)</td>
+<td>The DDL (496-522) with the <code>content_hash</code> index (526),
+the vote, corroboration and challenge tables (569-603),
+<code>QuerySimilar</code> (2090), the decay floor and its dropped-count
+sink (2225-2234, 2405-2413), <code>FindByContentHash</code> (5093),
+<code>RepairSelfDupRejected</code> (5132)</td>
 </tr>
 <tr>
 <td><code>internal/store/postgres.go</code></td>
 <td>—</td>
-<td><code>FindByContentHash</code> (3141) on the same predicate; the
-migration that drops the committed-only partial index (466-474)</td>
+<td><code>FindByContentHash</code> (3147) on the same predicate; the
+decay floor's dropped-count sink (1031); the migration that drops the
+committed-only partial index (466-474)</td>
 </tr>
 <tr>
 <td><code>api/rest/memory_handler.go</code></td>
 <td>—</td>
-<td>Submit (1196-1635), query (1903-2040), the decay floor setup
-(1717-1723)</td>
+<td>The decay floor setup and its disclosure (1731-1739), the
+silent-hide envelope fields (248-256)</td>
 </tr>
 <tr>
 <td><code>api/rest/appv23_record_disclosure.go</code></td>
@@ -777,13 +816,13 @@ migration that drops the committed-only partial index (466-474)</td>
 <tr>
 <td><code>internal/mcp/tools.go</code></td>
 <td>—</td>
-<td>38 tools; <code>toolRemember</code> (750), the overlap guard (815,
-4177-4213), <code>toolRecall</code> (1081)</td>
+<td><code>toolRemember</code> (755), <code>toolRecall</code> (1092), the
+confidence-floor disclosure and its note (1281-1283, 1344-1371)</td>
 </tr>
 <tr>
 <td><code>web/handler.go</code></td>
 <td>—</td>
-<td>The operator gate (3558) and the challenge build (3575-3583)</td>
+<td>The operator gate and the challenge build (3580-3588)</td>
 </tr>
 <tr>
 <td><code>bench/results/</code></td>
@@ -805,8 +844,8 @@ LoCoMo n=1986 R@5 0.6394</td>
 </tr>
 <tr>
 <td>tests</td>
-<td>209,380 in 639 files</td>
-<td>4,754 test functions</td>
+<td>216,369 in 680 files</td>
+<td>4,941 test functions</td>
 </tr>
 </tbody>
 </table></div>
@@ -824,6 +863,32 @@ git merge-base --is-ancestor 23b45930b0dc097f56978a99f45a11c93571b60b HEAD      
 git diff --stat f2097605 23b45930                                                                    # 41 files, 6,609 lines present there and not here
 python3 -c &quot;import json; print(&#39;expand_n&#39; in json.load(open(&#39;bench/results/longmemeval-full-48e81ec.json&#39;)))&quot;  # False: the 0.9053 record has no expansion field</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/l33tdawg/sage/commit/b4f38e394c21136989cc15c1f548444a4c80a1c5"><code class="commit-id" title="b4f38e394c21136989cc15c1f548444a4c80a1c5">b4f38e39…</code></a>
+— third reading, 45 commits on, at v11.20.5. All six marks hold and none
+of the underlying mechanisms moved: the voter's dedup predicate, the two
+decision files and the ABCI application are byte-identical at both
+commits, so <code>tombstone</code> and <code>audit_log</code> needed no
+re-derivation. The store, the MCP tool surface, the memory model and the
+web handler did move, and every cited line in them was re-verified. The
+change worth the space is in section 6 — the decayed-confidence floor
+now reports what it removed, through an opt-in counter the store fills,
+a REST envelope field, a header and an MCP note that names the count,
+the floor and the tier boundaries. It is the right fix for a defect this
+atlas keeps finding in other form: a filter that is correct and silent,
+so an empty result and a filtered result are indistinguishable to the
+caller who has to decide whether to write the memory again. The commit
+records the incident that produced it and states, correctly, that the
+floor is disclosed even when it removed nothing. A comment in the same
+file was corrected with it — the default floor of 70 was documented as
+catching observations and inferences, and a record at 0.60 does not
+clear 0.70. Counts refreshed: 218,303 lines of the project's own Go
+beside 4,941 test functions in 680 files, 1,614 commits by nine authors,
+with the vendored CometBFT still a separate module and excluded from
+both. Re-screened at this commit: two auto-run surfaces, five build-time
+execution points, five floating versions, six manifests inside the
+cooldown. Nothing was installed, built or run, and the machine still
+carries no Go toolchain.</p>
 <p><strong>2026-09-12</strong> — <a
 href="https://github.com/l33tdawg/sage/commit/36b2252f11b540a6a3f275f2dced56466b45280f"><code class="commit-id" title="36b2252f11b540a6a3f275f2dced56466b45280f">36b2252f…</code></a>
 — second reading, ten commits on, at v11.19.20, on the day of the last

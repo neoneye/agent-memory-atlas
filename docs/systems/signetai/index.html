@@ -123,14 +123,14 @@ harnesses.</p>
               <strong>Signet-AI/signetai</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Signet-AI/signetai/commit/088e02e22d42142a12f133cb58ca1a0d48a201fe" title="088e02e22d42142a12f133cb58ca1a0d48a201fe">
+            <a class="meta-pill revision-pill" href="https://github.com/Signet-AI/signetai/commit/8cc644d8df5325759325a9abd9bdb62cf097e468" title="8cc644d8df5325759325a9abd9bdb62cf097e468">
               <span>Analyzed revision</span>
-              <code>088e02e2…</code>
+              <code>8cc644d8…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-12</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Signet-AI--signetai" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -637,6 +637,43 @@ dreaming operation the model marks <code>review_required</code> lands in
 a queue instead of the graph. <code>memory_store</code>'s own
 description tells the model that a structured payload is retained as
 evidence and <em>"is not applied to the graph from this tool"</em>.</p>
+<p><strong>The session-start injection now has a budget, and the
+delivery record is written after delivery rather than before
+it.</strong> What the hook puts in front of the model is bounded by
+three limits rather than by the recall's own result cap —
+<code>sessionContinuityMaxEntries</code> (15),
+<code>sessionContinuityMaxTokens</code> (3,000) and
+<code>sessionContinuityEntryMaxTokens</code> (250), each configurable
+and each clamped on read
+(<code>platform/daemon/src/hooks-config.ts:5-7</code>,
+<code>platform/daemon/src/hooks.ts:1102-1110</code>). Three details make
+it more than a <code>slice</code>.</p>
+<p>Predicted context is concatenated ahead of the recalled pool
+deliberately, with the reason in the comment — <em>"the bounded
+continuity section must not silently discard the feature whenever the
+main pool fills it"</em> — which is the failure a single budget over a
+merged list produces: the cheapest feature to lose is whichever sorts
+last, and it is lost invisibly. Then, if the rendered section does not
+survive the outer <code>maxInjectTokens</code> cap whole, it is
+re-rendered from an <em>empty</em> list rather than emitted in part,
+because <em>"a partially emitted continuity section cannot be claimed as
+delivered"</em> (<code>:1353-1359</code>). And the per-session dedupe is
+split across that boundary: candidates are read without claiming, and
+<code>claimRecallItemsAsync</code> runs only on the memories in the
+final assembled section, re-rendering if a concurrent request claimed
+one in between, <em>"so delivery and claim state remain aligned"</em>
+(<code>:1363-1376</code>). A memory is marked as already-shown only once
+it was actually shown — the ordering that keeps a truncated injection
+from burning a row for the rest of the session.</p>
+<p>The hook then logs <code>memoryCandidateCount</code>,
+<code>memoryCount</code>, <code>memoryOmittedCount</code>,
+<code>memoryClaimSuppressedCount</code>,
+<code>memoryTruncatedCount</code> and <code>memorySectionTokens</code>
+together (<code>:1383-1394</code>), so the gap between what recall found
+and what the model saw is recoverable. The honest limit is that this is
+a log line, not a field in the response: an operator reading the
+daemon's log can tell that eleven of twenty-six candidates were dropped;
+the agent consuming the injection cannot.</p>
 <p><strong>Injection is by hook where a harness has them and by plugin
 where it does not.</strong> Claude Code, Kimi Code and ForgeCode get
 hooks plus MCP; OpenCode, OpenClaw and Codex get native plugins; Hermes
@@ -1015,6 +1052,31 @@ grep -rn -i &#39;arxiv|bibtex|@article|@misc|CITATION|doi\.org&#39; README.md do
 find memorybench -name &#39;*result*&#39; -o -name &#39;*report*.json&#39; -o -name &#39;*run*.json&#39;    # 0 committed result artifacts; memorybench/.gitignore:5 ignores /data/
 grep -rn &quot;97\.6&quot; --include=&#39;*.md&#39; --include=&#39;*.json&#39; --include=&#39;*.ts&#39; .             # README.md:10,12,140 and web/docs benchmarking.md:17 — no data file</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/Signet-AI/signetai/commit/8cc644d8df5325759325a9abd9bdb62cf097e468"><code class="commit-id" title="8cc644d8df5325759325a9abd9bdb62cf097e468">8cc644d8…</code></a>
+— re-read after 41 commits, version 0.226.6. Thirteen of the sixteen
+anchored files were byte-identical at both commits, including every file
+behind <code>bitemporal</code>, <code>audit_log</code> and
+<code>human_review</code> and the temporal-edges migration; no migration
+was added. All five marks hold. The three that moved were re-read:
+<code>buildAgentScopeClause</code> is still the single scope predicate
+and is still bound conditionally, with <code>shouldEnforceScope</code>
+still returning false in the default <code>local</code> auth mode, so
+the mark's stated limit is unchanged. The change worth recording is in
+section 8 — the session-start hook grew a real injection budget, an
+all-or-nothing rule for the continuity section, and a
+claim-after-delivery ordering for the per-session dedupe. One negative
+claim was re-checked rather than carried: the report says no GitHub
+Actions workflow runs the cited test files, and the repository has 22
+workflows including one whose step reads <code>bun test</code> with no
+path. It is a folded scalar that continues onto four explicit file
+arguments, none of them a memory-search, memory-candidates or
+hooks-recall suite, so the claim stands. Test-file anchors in
+<code>memory-search.test.ts</code> moved and were re-derived from the
+case names. Re-screened at this commit from a full clone: one auto-run
+surface, five build-time execution paths, 31 floating versions, and 37
+manifests genuinely inside the cooldown — the first reading's 44 was a
+depth-1 artefact. Nothing was installed, built or run.</p>
 <p><strong>2026-09-12</strong> — <a
 href="https://github.com/Signet-AI/signetai/commit/088e02e22d42142a12f133cb58ca1a0d48a201fe"><code class="commit-id" title="088e02e22d42142a12f133cb58ca1a0d48a201fe">088e02e2…</code></a>
 — first reading. Screened with <code>scripts/screen_repo.py</code>

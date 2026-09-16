@@ -7,9 +7,9 @@ page_kind: system
 source_name: "RuneLind/muninn"
 source_url: https://github.com/RuneLind/muninn
 archive_name: "RuneLind--muninn"
-revision: d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736
-revision_url: https://github.com/RuneLind/muninn/commit/d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736
-analyzed_at: 2026-09-13
+revision: 17c7e58651e0a4c0220c1873d52018a64c410693
+revision_url: https://github.com/RuneLind/muninn/commit/17c7e58651e0a4c0220c1873d52018a64c410693
+analyzed_at: 2026-09-16
 capabilities: "trust_state, scope_enforced, human_review, negative_eval"
 capability_evidence:
   trust_state: "the wiki proposal, not the extracted memory | db/init.sql (`wiki_proposals`), src/db/wiki-proposals.ts, src/gardener/apply.ts | `wiki_proposals.status` is `draft|approved|applied|rejected|stale|error` with a `resolved_at` timestamp — a candidate a person approves or rejects, an applied state meaning it became a page, and `stale`, which `apply.ts` returns when `sha256(current) !== proposal.baseHash` because *\"the target file must be exactly as it was at draft time\"*. A partial unique index over `status IN ('draft','approved')` stops two live proposals for the same topic. The `memories` table carries no status column at all, so the mark covers the drafted-knowledge tier and not the extracted one | src/gardener/apply.test.ts"
@@ -330,6 +330,35 @@ naming the failure it prevents. A review surface that guards the direction which
 touches the filesystem, and stays out of the way of the direction that does not,
 has thought about what the guard is for.
 
+The approval card grew a correction worth naming, because it is a failure mode
+specific to review surfaces rather than to this one. The gate card renders a
+*"Wiring on approve"* preview — what the apply step will do if the reviewer says
+yes — and it computed the index line for every reviewable row. The apply step
+does not: `runWireStage` writes an index entry only when `proposal.mode ===
+"create"`, because a page was catalogued when it was created, so every update
+card promised a line that approval would never write. The fix reads mode first
+(`indexSkipFor`, `src/dashboard/routes/wiki-gardener-routes.ts:759-767`, applied
+at `:1231`) and suppresses the line rather than the label, with the reason in the
+docstring. The general point: a preview that is computed independently of the
+action it previews is a second implementation of that action, and it will drift
+from the first one. What made this one recoverable is that the preview and the
+apply step are both in the repository and both tested; a review surface whose
+promise lives only in a template has no way to notice.
+
+**Provenance arrived on the wiki tier, and muninn deliberately did not become its
+second writer.** A stamped page now carries four frontmatter keys — the agent
+sessions that produced it, a backfill date, Jira keys and pull requests
+(`src/wiki/provenance.ts`) — and the module states outright that *"muninn never
+WRITES these keys"*: one line-upsert implementation exists, in a sibling project,
+and muninn's own Link Jira action shells out to that CLI rather than grow a
+second writer, because *"two writers of one frontmatter line lose each other's
+appends."* That is the same interlock reasoning as the page-write lock beside it,
+applied to a field rather than a file. The cross-repo contract is handled
+honestly too: the stamp's shape is checked in on both sides byte for byte, each
+suite pins the half it owns, and one opportunistic test diffs the two when a
+sibling checkout happens to be present and skips otherwise — a machine without
+the sibling repository must not go red over a file it does not have.
+
 **Trust state — awarded, on the same tier and no other.** `draft → approved →
 applied`, with `rejected` and `stale` as terminal states and `resolved_at`
 recording the transition, is candidate/verified/rejected with an extra state for
@@ -537,6 +566,8 @@ it is a choice about which writes deserved governance, and it went the wrong way
 | `src/dashboard/routes/wiki-gardener-routes.ts` | The approve/reject surface and the guarded-versus-unguarded asymmetry |
 
 ## History
+
+**2026-09-16** — [`17c7e58651e0a4c0220c1873d52018a64c410693`](https://github.com/RuneLind/muninn/commit/17c7e58651e0a4c0220c1873d52018a64c410693) — re-read after 8 commits. Six of the seven anchored files were byte-identical at both commits, including the schema, the proposal store, the apply stage, `src/db/memories.ts` and both test files, so `trust_state`, `scope_enforced` and `negative_eval` needed no re-derivation. All four marks hold. The report's standing finding is unchanged: `src/db/memories.ts` still exposes no delete of any kind, so the extracted tier is still written by a model with no review and no way to remove a row. The one anchor that moved is the gardener route, and the change there is written up in section 9 — the approval card's preview promised an index line on updates that the apply step never writes. A new wiki-provenance layer landed beside it, also in section 9. Re-screened at this commit: one auto-run surface, no build-time execution, one floating version, one manifest inside the cooldown. Nothing was installed, no Postgres was started and no test was run.
 
 **2026-09-13** — [`d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736`](https://github.com/RuneLind/muninn/commit/d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736) — 90 commits and about 128,000 added lines, most of it a YouTube summarizer unrelated to memory. All four marks re-verified. The report's finding holds unchanged: `src/db/memories.ts` still exposes no delete of any kind — `saveMemory`, four read paths, an embedding backfill and statistics — so the extracted tier is still written by a model with no review and no way to remove a row, beside a wiki tier where every draft is proposed and applied under review.
 

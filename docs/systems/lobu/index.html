@@ -127,14 +127,14 @@ deletes.</p>
               <strong>lobu-ai/lobu</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/lobu-ai/lobu/commit/d3131ab5095e317f4222788273e39d761ae0474d" title="d3131ab5095e317f4222788273e39d761ae0474d">
+            <a class="meta-pill revision-pill" href="https://github.com/lobu-ai/lobu/commit/54e49072e4b2937f2ca0a6599269bdd3b959e7f9" title="54e49072e4b2937f2ca0a6599269bdd3b959e7f9">
               <span>Analyzed revision</span>
-              <code>d3131ab5…</code>
+              <code>54e49072…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-12</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/lobu-ai--lobu" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -163,11 +163,10 @@ event-sourced Postgres application: connector polls, webhooks, device
 signals, agent writes and tool invocations all land as immutable rows in
 one <code>events</code> table, get linked to a typed entity graph, and
 are served back through a remote MCP server that ChatGPT, Claude Code,
-Codex and Lobu's own persistent agents all query. Apache-2.0. 2,291
+Codex and Lobu's own persistent agents all query. Apache-2.0. 2,366
 TypeScript files and roughly 355,000 non-test lines across nineteen
-workspace packages, 279 migrations dating from 19 May 2026, 1,150 test
-files holding about 10,800 cases, and a release changelog running back
-to 18 March 2026.</p>
+workspace packages, 280 migrations dating from 19 May 2026, 1,208 test
+files, and a release changelog running back to 18 March 2026.</p>
 <p><strong>The scope predicate is the reason to read this
 repository.</strong> Every read seam that can surface connector-sourced
 data compiles its visibility clause in one place, from one value.
@@ -523,7 +522,7 @@ embedding available,
 <code>combined_score = COALESCE(text_rank * (1 - w) + best_sim * w, text_rank)</code>
 where <code>w</code> defaults to 0.6 and is clamped to
 <code>[0,1]</code>
-(<code>packages/server/src/utils/content-search/search-path.ts:269-287</code>).
+(<code>packages/server/src/utils/content-search/search-path.ts:271-304</code>).
 <code>text_rank</code> is <code>ts_rank_cd</code> over the generated
 tsvector plus a flat 1.0 bonus when the raw query appears as an ILIKE
 substring. <code>best_sim</code> is the maximum cosine over the event's
@@ -544,14 +543,14 @@ was hardcoded to 0.4 at the recall seam, so <em>"sweeping 0 → 1.0 never
 changed the result set, and the documented default was silently
 overridden"</em>; the fix passes <code>undefined</code> through so the
 one clamped copy in <code>search-path.ts</code> applies
-(<code>packages/server/src/tools/search.ts:875-886</code>).</p>
+(<code>packages/server/src/tools/search.ts:897-904</code>).</p>
 <p><strong>The transcript arm is much cruder than the events
 arm.</strong> <code>fetchConversationSnippets</code> tokenises the
 query, drops a stopword list and terms of three characters or fewer,
 keeps at most eight, and ANDs an <code>ILIKE '%term%'</code> per term
 over <code>channel_messages</code>, ordered by
 <code>occurred_at DESC</code> — no FTS index, no vector, no ranking
-(<code>packages/server/src/tools/search.ts:1020-1055</code>). It runs
+(<code>packages/server/src/tools/search.ts:1019-1055</code>). It runs
 only when the caller is an agent, and only over
 <code>(connection_id, channel_id)</code> pairs that agent is bound
 to.</p>
@@ -559,7 +558,7 @@ to.</p>
 predicate.</strong> <code>filterEntitiesByReadPolicy</code> runs
 <code>evaluateEntityMutation(action: 'read')</code> per distinct
 entity-type slug over the already-fetched rows
-(<code>packages/server/src/tools/search.ts:1395-1430</code>). It applies
+(<code>packages/server/src/tools/search.ts:1419-1455</code>). It applies
 only when the caller is an agent or an automation, and because it
 removes rows after the query, an agent's result page can come back
 shorter than the limit with no indication that a type was filtered.</p>
@@ -711,7 +710,7 @@ event carries a SHA-256 of sanitised arguments plus a preview redacted
 by four credential patterns applied <em>before</em> truncation —
 <em>"slicing first can split a quoted credential and the unbalanced
 quote defeats the pattern"</em>
-(<code>packages/server/src/tools/audit.ts:75-79</code>). What none of it
+(<code>packages/server/src/tools/audit.ts:86-89</code>). What none of it
 supports is uncertainty: there is no field on a memory that says
 "recorded, not believed". <code>entity_relationships.confidence</code>
 and <code>event_classifications.confidences</code> exist, are projected
@@ -727,6 +726,44 @@ and does withhold rows. But what it withholds them from is
 GitHub's access list current enough to rely on", which cannot turn out
 to be false about the memory. It belongs on the scope side of the line,
 and that is where it is credited.</p>
+<p><strong>The resource gate now quantifies over the whole linked set,
+and covers what the server itself wrote.</strong> The predicate used to
+admit a row when the caller was <code>member_of</code> <em>one</em> of
+the <code>$resource</code> entities the event linked to. It now compiles
+<code>NOT EXISTS (SELECT 1 FROM (linked resources) lr WHERE NOT (satisfied))</code>
+— universal, not existential — with the consequence stated in the
+header: <em>"A derived summary of two repos is readable only by a member
+of both — membership in one is not enough."</em> That is the right shape
+for a memory that is a <em>derivation</em>: an any-of gate over a
+summary hands the whole summary to someone entitled to half its inputs,
+and there is no way to redact the half they are not. The gate also
+stopped being about connectors. It is now connection-independent, so a
+server-authored <code>save_content</code> summary carrying resource
+stamps and a <code>NULL</code> connection is gated by those stamps
+exactly as a synced GitHub row is — which closes the seam where the
+system's own inferences would otherwise have escaped the fence its
+sources sit behind.</p>
+<p>The fail-closed edges moved the same direction. An unattributed row
+on a graphed connection no longer takes the legacy path — <em>"a missing
+stamp is not proof of workspace visibility"</em> — and every
+<code>member_of</code> edge must now carry an ownership claim, either
+<code>manual</code> or a connection whose ACL graph is currently
+enforced, with
+<code>db/migrations/20260827174500_index_live_relationship_claims.sql</code>
+tombstoning the legacy claimless edges so the <em>claim is absent</em>
+case cannot arise from history. The one arm that is deliberately
+freshness-independent is the approval card: an interaction event is
+readable by any organization member in every graph state, because hiding
+an approval when an ACL sync has stalled wedges the operation the
+approval gates. The header records the production incident that
+established it, and connector sync never writes
+<code>interaction_type</code>, so no synced content can ride that
+exemption.</p>
+<p>The gate's composition requirement is now written down as a warning
+rather than left to be inferred: soft-deleted connections are not fenced
+by this compiler, so it must always be composed behind
+<code>compileConnectionFkVisibility</code> — <em>"never use this
+compiler standalone."</em></p>
 <p><strong>The scope story's honest limits.</strong> The mark covers the
 read path. Background consolidation is a non-issue because there is
 none, but three other gaps are real.
@@ -795,17 +832,17 @@ vocabulary across <code>packages/server/src</code> and
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p><strong>The suite is large and the CI gate is unusually well
-defended.</strong> 1,150 test files and roughly 10,800 cases, 942 files
-of them in <code>packages/server</code>. Integration tests run against a
-real Postgres with pgvector in a service container, sharded three ways
-under Vitest with <code>pool: 'forks', singleFork: true</code>. The gate
-that matters is <code>scripts/assert-vitest-report-clean.mjs</code>:
-Vitest's exit code is not trusted, the JSON report is parsed, and the
-run fails unless it parses, reports zero failed tests and suites,
-<strong>and ran at least one test</strong> — <em>"zero tests ran —
-refusing to treat that as green."</em> The comment names the incident
-that produced it, a run that went green while printing "Test Files 5
-failed" because an <code>async-exit-hook</code> registered by importing
+defended.</strong> 1,208 test files, 990 of them in
+<code>packages/server</code>. Integration tests run against a real
+Postgres with pgvector in a service container, sharded three ways under
+Vitest with <code>pool: 'forks', singleFork: true</code>. The gate that
+matters is <code>scripts/assert-vitest-report-clean.mjs</code>: Vitest's
+exit code is not trusted, the JSON report is parsed, and the run fails
+unless it parses, reports zero failed tests and suites, <strong>and ran
+at least one test</strong> — <em>"zero tests ran — refusing to treat
+that as green."</em> The comment names the incident that produced it, a
+run that went green while printing "Test Files 5 failed" because an
+<code>async-exit-hook</code> registered by importing
 <code>embedded-postgres</code> overwrote the exit code. It is 59 lines,
 over half of them the docstring naming the incident it exists for, and
 it is worth copying verbatim.</p>
@@ -1074,6 +1111,31 @@ grep -rn &quot;watcher_window_field_feedback&quot; --include=&#39;*.ts&#39; pack
 grep -rn &quot;EMBEDDINGS_SERVICE_URL&quot; docker-compose.example.yml                    # unset in the compose example
 grep -rn &quot;deleteContent&quot; --include=&#39;*.ts&#39; packages/                             # reachable via sandbox/namespaces/knowledge.ts</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/lobu-ai/lobu/commit/54e49072e4b2937f2ca0a6599269bdd3b959e7f9"><code class="commit-id" title="54e49072e4b2937f2ca0a6599269bdd3b959e7f9">54e49072…</code></a>
+— re-read after 102 commits. Twelve of the seventeen anchored files were
+byte-identical at both commits and needed no re-reading — the baseline
+schema, the <code>save_memory</code> contract, the write path, the
+search parameters, the scope compiler, the connection-visibility
+compiler, the visibility assembly, the tool dispatcher and its
+constants, the mutation gate, the approval interceptor and the
+field-merge rule. The five that moved were re-read in full. All five
+marks hold, and the resource gate is materially stronger; that change is
+written up in section 9. Three corrections follow from it. The
+<code>compileResourceVisibility</code> evidence described an any-of
+membership test, which is now an all-of one, and described the gate as
+covering connector-sourced events, which it no longer is. And the
+<code>negative_eval</code> record cited the wrong positive control: the
+no-graph case it named as proving the predicate does not hide everything
+now asserts the opposite — stamped content fails closed without a fresh
+authority — so the control is the <code>toBe(true)</code> sitting beside
+the <code>toBe(false)</code> in the enforced case, which is the stronger
+form anyway because both run on the same result. Line anchors in
+sections 6 and 9 moved with their files. Re-screened at this commit:
+five auto-run surfaces, two build-time execution paths, 34 floating
+versions, twelve manifests inside the cooldown. Nothing was installed,
+built or run, and the <code>packages/owletto</code> submodule was again
+left uninitialised.</p>
 <p><strong>2026-09-12</strong> — <a
 href="https://github.com/lobu-ai/lobu/commit/d3131ab5095e317f4222788273e39d761ae0474d"><code class="commit-id" title="d3131ab5095e317f4222788273e39d761ae0474d">d3131ab5…</code></a>
 — first reading, at a commit dated 12 September 2026. Screened before

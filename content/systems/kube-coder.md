@@ -7,9 +7,9 @@ page_kind: system
 source_name: "imran31415/kube-coder"
 source_url: https://github.com/imran31415/kube-coder
 archive_name: "imran31415--kube-coder"
-revision: 351228ad8654dbca9392f44a7fcd2d84a291fbff
-revision_url: https://github.com/imran31415/kube-coder/commit/351228ad8654dbca9392f44a7fcd2d84a291fbff
-analyzed_at: 2026-09-13
+revision: a28896c936cf5adea2d1548a4d4a83d858120e00
+revision_url: https://github.com/imran31415/kube-coder/commit/a28896c936cf5adea2d1548a4d4a83d858120e00
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   scope_enforced: "the memory store, every retrieval arm | charts/workspace/memory/manager.py | search applies the namespaces allow-list and namespace_scope root to the FTS pass, the LIKE degradation and the ids loaded by _fetch_by_ids, so an out-of-scope hit cannot be fused back in | charts/workspace/tests/memory_scope_test.py"
@@ -211,6 +211,30 @@ Note also that identity is `(namespace, key)`, not content: a corrected fact
 written under a *different* key coexists with the old one, and nothing detects
 the contradiction.
 
+**The memory database can now be backed up, which it previously could not.**
+`memory.db` lives at `/home/dev/.claude-memory/memory.db` on the workspace home
+volume, and until v1.60 the chart's only protection was
+`helm.sh/resource-policy: keep`, which stops the project's own tooling from
+deleting the claim and does nothing about storage failure, node loss, a cluster
+rebuild or a stray `kubectl delete pvc`. `scripts/backup-user.sh` and
+`restore-user.sh` stream the volume through a helper pod, and three of their
+choices are worth separating from the feature. The archive is written to a
+`.part` file, verified end to end with `gzip -t` and a full `tar -t` — which pass
+only on a complete stream with its EOF blocks — and moved into place with a
+`.sha256` sidecar only then, *"so a truncated transfer never leaves a file that
+looks like a backup"*; that is the failure mode that makes an untested backup
+worse than none. A hot copy is the default and is documented as one, with
+`--quiesce` scaling the workspace to zero as *"the honest option"* that costs a
+restart — and the restore drill in `docs/BACKUP_RESTORE.md` names the specific
+thing a hot copy of this store can get wrong, a memory DB that opens as
+`database disk image is malformed`. And the archive carries live SSH keys and
+every persisted OAuth token, so the default sink is local, `0600` in a `0700`
+directory and gitignored, with `--encrypt-to` for anything else. The whole thing
+is a command an operator runs on a schedule they choose rather than a CronJob in
+the chart, and `scripts/backup_restore_test.sh` shims `kubectl` on `PATH` to run
+a full backup-restore round trip offline in CI, asserting the tree comes back
+byte-identical.
+
 ## 10. Tests, Evals, and Benchmarks
 
 223 test cases across nine memory test files: scope, lifecycle, the MCP surface,
@@ -323,6 +347,8 @@ library you would vendor on its own.
   `memory_pending_queue_test.py`, `memory_rollback_compat_test.py` and four more
 
 ## History
+
+**2026-09-16** — [`a28896c936cf5adea2d1548a4d4a83d858120e00`](https://github.com/imran31415/kube-coder/commit/a28896c936cf5adea2d1548a4d4a83d858120e00) — re-read after 18 commits, v1.62.0. Every anchored file is byte-identical at both commits — `charts/workspace/memory/manager.py`, both Python test files, and both files under `charts/workspace/web/src/routes/memory/` — and no file whose path contains `memory` or `embed` changed at all, so all four marks stand on unchanged code and the report's deletion finding is unaffected. The eighteen commits are a chat-surface consolidation, a mobile build fix and a dependency sweep, with one exception that belongs in a memory report and is written up in section 9: the workspace home volume, which is where `memory.db` lives, gained a backup and restore path and a documented drill, having previously had neither. Re-screened at this commit: one build-time execution path, two floating versions, two manifests inside the cooldown. Nothing was installed, built or run.
 
 **2026-09-13** — [`351228ad8654dbca9392f44a7fcd2d84a291fbff`](https://github.com/imran31415/kube-coder/commit/351228ad8654dbca9392f44a7fcd2d84a291fbff) — re-read, 40 commits past the previous pin, and the memory subsystem is unchanged. The range touches 101 files and adds 10,544 lines across the mobile client, the dashboard SPA, the hypervisor, the orchestrator and the skills set; not one changed path contains `memory`. All four files the marks rest on — `charts/workspace/memory/manager.py` for `scope_enforced` and `audit_log`, `charts/workspace/web/src/routes/memory/index.tsx` for `human_review`, and `charts/workspace/tests/memory_scope_test.py` for `negative_eval` — are byte-identical, checked by diff. All four marks stand. Screened again first: no auto-run surface, one build-time execution surface and two unpinned dependency surfaces; nothing was installed and no suite was run.
 

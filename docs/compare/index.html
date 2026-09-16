@@ -1323,7 +1323,7 @@ default machine the advertised unprompted recall returns nothing.</p>
 <p><strong><a href="../systems/lobu/">Lobu</a> puts the access rule in
 the query rather than in the store, and that is the whole
 design.</strong> One Postgres database with pgvector behind a remote MCP
-server, 279 migrations and roughly 355,000 non-test lines of TypeScript
+server, 280 migrations and roughly 355,000 non-test lines of TypeScript
 across nineteen packages. Connector polls, webhooks, device signals,
 agent writes and tool invocations all land as immutable rows in one
 events table; a typed entity graph and normalised identity claims sit
@@ -1333,18 +1333,20 @@ family is that one value — an authorization scope of organisation,
 principal and agent — compiles every read seam's visibility clause, and
 the third fragment mirrors the <em>source</em> system's own access
 control into SQL: a GitHub repo's collaborators, a Slack channel's
-members, joined as a membership edge at recall time. The enforcement
-split is three-state rather than two, so a connection whose ACL sync has
-gone stale matches neither the passthrough nor the membership branch and
-its rows are dropped — <em>"a stalled sync hides data, it does not leak
-it."</em> Correction is masking on an append-only log: a tombstone-typed
-row stamps the target as superseded, a view hides it from every recall
-arm, and one read path still reads the raw table, while nothing is keyed
-on the retired value, so the same text saved again is a new live head.
-The human layer lives on the entity graph instead — an agent's write to
-a human-owned field is blocked into a durable approval only a signed-in
-person can resolve, and a proposal whose value drifted since it was
-queued is skipped rather than applied.</p>
+members, joined as a membership edge at recall time. A connection whose
+ACL sync has gone stale matches neither the passthrough nor the
+membership branch and its rows are dropped rather than served on stale
+membership, and the membership test runs over the whole linked set
+rather than any one of it: a memory derived from two repositories is
+readable only by someone entitled to both. Correction is masking on an
+append-only log: a tombstone-typed row stamps the target as superseded,
+a view hides it from every recall arm, and one read path still reads the
+raw table, while nothing is keyed on the retired value, so the same text
+saved again is a new live head. The human layer lives on the entity
+graph instead — an agent's write to a human-owned field is blocked into
+a durable approval only a signed-in person can resolve, and a proposal
+whose value drifted since it was queued is skipped rather than
+applied.</p>
 <p><strong><a href="../systems/halofy/">Halofy</a> draws the same
 boundary from the other side: the key decides the scope, and the store
 never sees a namespace a caller chose.</strong> AGPL-3.0-or-later, about
@@ -5204,8 +5206,8 @@ it edits the governed file and consulted by nothing, which is one lookup
 short of a rejected-value tombstone.</p>
 <p><strong><a href="../systems/sage-memory/">SAGE</a> is the family's
 admission-by-vote store, and its status field withholds a memory rather
-than ranking it down.</strong> Apache-2.0, 1,569 commits since 2 March
-2026 by nine authors, 213,191 lines of Go beside 4,754 test functions,
+than ranking it down.</strong> Apache-2.0, 1,614 commits since 2 March
+2026 by nine authors, 218,303 lines of Go beside 4,941 test functions,
 on a vendored CometBFT chain. A submitted memory is written as
 <code>proposed</code> and every recall path hard-codes a committed
 status filter, so a memory nothing has voted on is not ranked low — it
@@ -28484,7 +28486,7 @@ candidate set before the top-K trim rather than after; a node that
 re-embeds rather than trusting a caller's vector; consensus-first write
 ordering with a single documented path into the serving store; a dedup
 that excludes the candidate's own row rather than every unaccepted row;
-4,754 test functions</td>
+4,941 test functions</td>
 <td>On the default install the vote is one validator key running three
 string heuristics, which the README's opening line states beside its
 consensus claim; the dedup is keyed on exact bytes, is a node-local
@@ -38970,7 +38972,7 @@ href="https://github.com/chaitanyagiri/munder-difflin/commit/bdf524ecfb319b4f10c
 <li><a
 href="https://github.com/imran31415/kube-coder">imran31415/kube-coder</a>
 at <a
-href="https://github.com/imran31415/kube-coder/commit/351228ad8654dbca9392f44a7fcd2d84a291fbff"><code class="commit-id" title="351228ad8654dbca9392f44a7fcd2d84a291fbff">351228ad…</code></a></li>
+href="https://github.com/imran31415/kube-coder/commit/a28896c936cf5adea2d1548a4d4a83d858120e00"><code class="commit-id" title="a28896c936cf5adea2d1548a4d4a83d858120e00">a28896c9…</code></a></li>
 <li><a
 href="https://github.com/munch2u-a11y/Cognitive-Spatial-Memory">munch2u-a11y/Cognitive-Spatial-Memory</a>
 at <a
@@ -40663,7 +40665,7 @@ unpinned surfaces, and both <code>package.json</code> and
 no container was built and no command from the tree was run</li>
 <li><a href="https://github.com/RuneLind/muninn">RuneLind/muninn</a> at
 <a
-href="https://github.com/RuneLind/muninn/commit/d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736"><code class="commit-id" title="d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736">d30b087c…</code></a>
+href="https://github.com/RuneLind/muninn/commit/17c7e58651e0a4c0220c1873d52018a64c410693"><code class="commit-id" title="17c7e58651e0a4c0220c1873d52018a64c410693">17c7e586…</code></a>
 — read only; one auto-run surface, no build-time execution, one unpinned
 surface, one dependency file inside the seven-day cooldown. Nothing was
 installed, no Postgres was started and no test was run</li>
@@ -41110,7 +41112,7 @@ href="https://github.com/krakozavr/MemContinuum/commit/e21bfa06c0201433742a657b2
 manifest can register), two dependency manifests inside the seven-day
 cooldown, nothing installed or run</li>
 <li><a href="https://github.com/l33tdawg/sage">l33tdawg/sage</a> at <a
-href="https://github.com/l33tdawg/sage/commit/36b2252f11b540a6a3f275f2dced56466b45280f"><code class="commit-id" title="36b2252f11b540a6a3f275f2dced56466b45280f">36b2252f…</code></a>
+href="https://github.com/l33tdawg/sage/commit/b4f38e394c21136989cc15c1f548444a4c80a1c5"><code class="commit-id" title="b4f38e394c21136989cc15c1f548444a4c80a1c5">b4f38e39…</code></a>
 — read only; two auto-run surfaces, five build-time execution points,
 five unpinned surfaces, six manifests inside the cooldown, nothing
 installed or run</li>
@@ -41297,15 +41299,15 @@ id recomputed in Python from the committed JSON</li>
 <li><a
 href="https://github.com/Signet-AI/signetai">Signet-AI/signetai</a> at
 <a
-href="https://github.com/Signet-AI/signetai/commit/088e02e22d42142a12f133cb58ca1a0d48a201fe"><code class="commit-id" title="088e02e22d42142a12f133cb58ca1a0d48a201fe">088e02e2…</code></a>
+href="https://github.com/Signet-AI/signetai/commit/8cc644d8df5325759325a9abd9bdb62cf097e468"><code class="commit-id" title="8cc644d8df5325759325a9abd9bdb62cf097e468">8cc644d8…</code></a>
 — read only; one auto-run surface in a committed <code>.githooks/</code>
 that the root <code>prepare</code> script would activate, five
-build-time execution paths, every manifest inside the cooldown only
-because the depth-1 clone dates each file to the pin, 31 unpinned
-surfaces in web, dashboard and template tooling, <code>AGENTS.md</code>
-and <code>CLAUDE.md</code> read as data; nothing installed, built or
-run, and the LongMemEval headline checked against the tree rather than
-recomputed, because no result artifact is committed</li>
+build-time execution paths, 37 manifests inside the cooldown on a full
+clone, 31 unpinned surfaces in web, dashboard and template tooling,
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> read as data; nothing
+installed, built or run, and the LongMemEval headline checked against
+the tree rather than recomputed, because no result artifact is
+committed</li>
 <li><a
 href="https://github.com/angelnicolasc/graymatter">angelnicolasc/graymatter</a>
 at <a
@@ -41339,13 +41341,13 @@ cooldown at eight days; nothing installed, built or run, and the
 concept-graph predicate shadowing reproduced by re-implementing the
 trigger table and its matching loop in a scratch script</li>
 <li><a href="https://github.com/lobu-ai/lobu">lobu-ai/lobu</a> at <a
-href="https://github.com/lobu-ai/lobu/commit/d3131ab5095e317f4222788273e39d761ae0474d"><code class="commit-id" title="d3131ab5095e317f4222788273e39d761ae0474d">d3131ab5…</code></a>
+href="https://github.com/lobu-ai/lobu/commit/54e49072e4b2937f2ca0a6599269bdd3b959e7f9"><code class="commit-id" title="54e49072e4b2937f2ca0a6599269bdd3b959e7f9">54e49072…</code></a>
 — read only; five auto-run surfaces read before anything else and all
 benign project-local guards, thirty-four manifests inside the cooldown
 and thirty-four unpinned surfaces, two build-time execution paths,
 <code>AGENTS.md</code> and <code>CLAUDE.md</code> treated as data;
 nothing installed, built or run, one submodule left uninitialised, and
-the live table set recomputed from the 279 migrations in Python rather
+the live table set recomputed from the 280 migrations in Python rather
 than read off the baseline dump</li>
 <li><a
 href="https://github.com/ChristopherKahler/base">ChristopherKahler/base</a>

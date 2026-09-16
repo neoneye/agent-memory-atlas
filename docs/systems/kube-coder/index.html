@@ -110,14 +110,14 @@ upsert clears the deletion flag it wrote.</p>
               <strong>imran31415/kube-coder</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/imran31415/kube-coder/commit/351228ad8654dbca9392f44a7fcd2d84a291fbff" title="351228ad8654dbca9392f44a7fcd2d84a291fbff">
+            <a class="meta-pill revision-pill" href="https://github.com/imran31415/kube-coder/commit/a28896c936cf5adea2d1548a4d4a83d858120e00" title="a28896c936cf5adea2d1548a4d4a83d858120e00">
               <span>Analyzed revision</span>
-              <code>351228ad…</code>
+              <code>a28896c9…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-13</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/imran31415--kube-coder" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -325,6 +325,35 @@ and is already keyed to the memory.</p>
 <p>Note also that identity is <code>(namespace, key)</code>, not
 content: a corrected fact written under a <em>different</em> key
 coexists with the old one, and nothing detects the contradiction.</p>
+<p><strong>The memory database can now be backed up, which it previously
+could not.</strong> <code>memory.db</code> lives at
+<code>/home/dev/.claude-memory/memory.db</code> on the workspace home
+volume, and until v1.60 the chart's only protection was
+<code>helm.sh/resource-policy: keep</code>, which stops the project's
+own tooling from deleting the claim and does nothing about storage
+failure, node loss, a cluster rebuild or a stray
+<code>kubectl delete pvc</code>. <code>scripts/backup-user.sh</code> and
+<code>restore-user.sh</code> stream the volume through a helper pod, and
+three of their choices are worth separating from the feature. The
+archive is written to a <code>.part</code> file, verified end to end
+with <code>gzip -t</code> and a full <code>tar -t</code> — which pass
+only on a complete stream with its EOF blocks — and moved into place
+with a <code>.sha256</code> sidecar only then, <em>"so a truncated
+transfer never leaves a file that looks like a backup"</em>; that is the
+failure mode that makes an untested backup worse than none. A hot copy
+is the default and is documented as one, with <code>--quiesce</code>
+scaling the workspace to zero as <em>"the honest option"</em> that costs
+a restart — and the restore drill in <code>docs/BACKUP_RESTORE.md</code>
+names the specific thing a hot copy of this store can get wrong, a
+memory DB that opens as <code>database disk image is malformed</code>.
+And the archive carries live SSH keys and every persisted OAuth token,
+so the default sink is local, <code>0600</code> in a <code>0700</code>
+directory and gitignored, with <code>--encrypt-to</code> for anything
+else. The whole thing is a command an operator runs on a schedule they
+choose rather than a CronJob in the chart, and
+<code>scripts/backup_restore_test.sh</code> shims <code>kubectl</code>
+on <code>PATH</code> to run a full backup-restore round trip offline in
+CI, asserting the tree comes back byte-identical.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p>223 test cases across nine memory test files: scope, lifecycle, the
@@ -449,6 +478,23 @@ negative suite, including the wildcard and prefix-sibling cases</li>
 <code>memory_rollback_compat_test.py</code> and four more</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/imran31415/kube-coder/commit/a28896c936cf5adea2d1548a4d4a83d858120e00"><code class="commit-id" title="a28896c936cf5adea2d1548a4d4a83d858120e00">a28896c9…</code></a>
+— re-read after 18 commits, v1.62.0. Every anchored file is
+byte-identical at both commits —
+<code>charts/workspace/memory/manager.py</code>, both Python test files,
+and both files under
+<code>charts/workspace/web/src/routes/memory/</code> — and no file whose
+path contains <code>memory</code> or <code>embed</code> changed at all,
+so all four marks stand on unchanged code and the report's deletion
+finding is unaffected. The eighteen commits are a chat-surface
+consolidation, a mobile build fix and a dependency sweep, with one
+exception that belongs in a memory report and is written up in section
+9: the workspace home volume, which is where <code>memory.db</code>
+lives, gained a backup and restore path and a documented drill, having
+previously had neither. Re-screened at this commit: one build-time
+execution path, two floating versions, two manifests inside the
+cooldown. Nothing was installed, built or run.</p>
 <p><strong>2026-09-13</strong> — <a
 href="https://github.com/imran31415/kube-coder/commit/351228ad8654dbca9392f44a7fcd2d84a291fbff"><code class="commit-id" title="351228ad8654dbca9392f44a7fcd2d84a291fbff">351228ad…</code></a>
 — re-read, 40 commits past the previous pin, and the memory subsystem is

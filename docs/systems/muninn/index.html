@@ -114,14 +114,14 @@ scores the retrieval both of them depend on.</p>
               <strong>RuneLind/muninn</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/RuneLind/muninn/commit/d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736" title="d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736">
+            <a class="meta-pill revision-pill" href="https://github.com/RuneLind/muninn/commit/17c7e58651e0a4c0220c1873d52018a64c410693" title="17c7e58651e0a4c0220c1873d52018a64c410693">
               <span>Analyzed revision</span>
-              <code>d30b087c…</code>
+              <code>17c7e586…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-13</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RuneLind--muninn" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -445,6 +445,38 @@ wiki"</em>, while approve is a compare-and-swap with a comment naming
 the failure it prevents. A review surface that guards the direction
 which touches the filesystem, and stays out of the way of the direction
 that does not, has thought about what the guard is for.</p>
+<p>The approval card grew a correction worth naming, because it is a
+failure mode specific to review surfaces rather than to this one. The
+gate card renders a <em>"Wiring on approve"</em> preview — what the
+apply step will do if the reviewer says yes — and it computed the index
+line for every reviewable row. The apply step does not:
+<code>runWireStage</code> writes an index entry only when
+<code>proposal.mode === "create"</code>, because a page was catalogued
+when it was created, so every update card promised a line that approval
+would never write. The fix reads mode first (<code>indexSkipFor</code>,
+<code>src/dashboard/routes/wiki-gardener-routes.ts:759-767</code>,
+applied at <code>:1231</code>) and suppresses the line rather than the
+label, with the reason in the docstring. The general point: a preview
+that is computed independently of the action it previews is a second
+implementation of that action, and it will drift from the first one.
+What made this one recoverable is that the preview and the apply step
+are both in the repository and both tested; a review surface whose
+promise lives only in a template has no way to notice.</p>
+<p><strong>Provenance arrived on the wiki tier, and muninn deliberately
+did not become its second writer.</strong> A stamped page now carries
+four frontmatter keys — the agent sessions that produced it, a backfill
+date, Jira keys and pull requests (<code>src/wiki/provenance.ts</code>)
+— and the module states outright that <em>"muninn never WRITES these
+keys"</em>: one line-upsert implementation exists, in a sibling project,
+and muninn's own Link Jira action shells out to that CLI rather than
+grow a second writer, because <em>"two writers of one frontmatter line
+lose each other's appends."</em> That is the same interlock reasoning as
+the page-write lock beside it, applied to a field rather than a file.
+The cross-repo contract is handled honestly too: the stamp's shape is
+checked in on both sides byte for byte, each suite pins the half it
+owns, and one opportunistic test diffs the two when a sibling checkout
+happens to be present and skips otherwise — a machine without the
+sibling repository must not go red over a file it does not have.</p>
 <p><strong>Trust state — awarded, on the same tier and no
 other.</strong> <code>draft → approved → applied</code>, with
 <code>rejected</code> and <code>stale</code> as terminal states and
@@ -718,6 +750,23 @@ asymmetry</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/RuneLind/muninn/commit/17c7e58651e0a4c0220c1873d52018a64c410693"><code class="commit-id" title="17c7e58651e0a4c0220c1873d52018a64c410693">17c7e586…</code></a>
+— re-read after 8 commits. Six of the seven anchored files were
+byte-identical at both commits, including the schema, the proposal
+store, the apply stage, <code>src/db/memories.ts</code> and both test
+files, so <code>trust_state</code>, <code>scope_enforced</code> and
+<code>negative_eval</code> needed no re-derivation. All four marks hold.
+The report's standing finding is unchanged:
+<code>src/db/memories.ts</code> still exposes no delete of any kind, so
+the extracted tier is still written by a model with no review and no way
+to remove a row. The one anchor that moved is the gardener route, and
+the change there is written up in section 9 — the approval card's
+preview promised an index line on updates that the apply step never
+writes. A new wiki-provenance layer landed beside it, also in section 9.
+Re-screened at this commit: one auto-run surface, no build-time
+execution, one floating version, one manifest inside the cooldown.
+Nothing was installed, no Postgres was started and no test was run.</p>
 <p><strong>2026-09-13</strong> — <a
 href="https://github.com/RuneLind/muninn/commit/d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736"><code class="commit-id" title="d30b087c728d6b1cd1fb1c9f8b3dbd2dd509a736">d30b087c…</code></a>
 — 90 commits and about 128,000 added lines, most of it a YouTube

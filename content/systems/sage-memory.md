@@ -7,17 +7,17 @@ page_kind: system
 source_name: "l33tdawg/sage"
 source_url: https://github.com/l33tdawg/sage
 archive_name: "l33tdawg--sage"
-revision: 36b2252f11b540a6a3f275f2dced56466b45280f
-revision_url: https://github.com/l33tdawg/sage/commit/36b2252f11b540a6a3f275f2dced56466b45280f
-analyzed_at: 2026-09-12
+revision: b4f38e394c21136989cc15c1f548444a4c80a1c5
+revision_url: https://github.com/l33tdawg/sage/commit/b4f38e394c21136989cc15c1f548444a4c80a1c5
+analyzed_at: 2026-09-16
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
-  tombstone: "the voter's dedup lookup matches a deprecated row's content hash, so rejected bytes cannot re-enter under a fresh memory id | internal/store/sqlite.go:4996, internal/store/postgres.go:3141, internal/store/store.go:414, internal/voter/decision.go:96-110, internal/voter/voter.go:341-348 | `FindByContentHash` selects `WHERE content_hash = ? AND memory_id != ? AND status != 'proposed'` over an index on `content_hash`; the voter passes the candidate's own id so a proposed memory never matches itself, other proposed rows are ignored so two in-flight copies do not veto each other, and every post-proposal status counts — committed, challenged and deprecated — so a memory the quorum rejected or an operator forgot keeps its bytes out of the store until a reinstate; the key is the SHA-256 of the exact content, so a one-character change is a new memory, and the lookup is a node-local opinion that fails open on a store error | internal/store/sqlite_repair_test.go `TestFindByContentHash_DedupPredicate` and `TestDedupPredicate_ThroughVoterDecide` (a deprecated row blocks the same bytes under a fresh id, a correction with new content passes), internal/voter/decision_test.go `TestDedupCheck_ExcludesCandidateOwnRow`, internal/store/postgres_hash_test.go"
-  trust_state: "five declared statuses, four with a producer, two of which withhold a memory from every agent-facing read | internal/memory/model.go:11-15, internal/store/sqlite.go:2037, internal/mcp/tools.go:1161, :1404, internal/abci/app.go:5350, :6597, :6624, :7367 | a memory is `proposed` when the submit transaction lands, becomes `committed` only when a validator vote reaches quorum, `deprecated` when the vote fails or a challenge succeeds, and `challenged` while an adjudication is open; the fifth declared value, `validated`, appears in the enum and the unwired lifecycle map and nothing writes it; every recall path hard-codes a committed status filter and the store turns it into `AND status IN ('committed','challenged')`, so a candidate and a rejected memory are both absent from retrieval rather than ranked low — the confidence float exists beside this and is used only for ordering and floors | internal/store/sqlite_disputed_test.go:172-188, api/rest/read_acl_parity_test.go, internal/abci tests (802 cases)"
-  scope_enforced: "a domain on every record, filtered in SQL and again per record against the caller's credential | internal/store/sqlite.go:2020, api/rest/appv23_record_disclosure.go:139-153, internal/appv23disclosure/disclosure.go:105-117, internal/abci/app.go:5128-5222 | `domain_tag` is a required column the write path validates against a registered domain list, the query adds `AND domain_tag = ?`, and a second pass authorizes each surviving record against the caller's credential for a read verb and drops the denied ones so that they consume none of the visible limit; six domains are seeded, any new one is auto-registered on first write, and app-v23 gives each agent an owned home domain | api/rest/read_acl_parity_test.go:365-389, api/rest/appv23_visible_pagination_test.go:298-397, internal/store/sqlite_authorized_recall_test.go"
-  audit_log: "append-only off-chain tables recording every vote, corroboration and challenge, beneath a signed transaction log | internal/store/sqlite.go:530-564, internal/abci/app.go:7377-7387, :6441-6604 | `validation_votes`, `corroborations` and `challenges` are written from the consensus path as buffered writes flushed at Commit, and the challenges table is described in the store as an append-only off-chain audit; each row's authority is the signed CometBFT transaction that produced it, so the record of who voted, who corroborated and who challenged a memory is the system's own store rather than an external history. One component is unwired: the table named `access_logs` has a producer reachable only from a transaction type nothing constructs | internal/abci tests (802 cases), internal/store tests (746)"
-  human_review: "an operator adjudicates a memory from the dashboard, and on a domain with two modify-verb holders the verdict only parks it | web/handler.go:3558-3583, :1360, internal/abci/app.go:7351-7399, web/static/js/app.js:8697-8724 | the CEREBRUM operator selects memories and confirms a delete, which builds a challenge transaction carrying the reason `deprecated by user in CEREBRUM` and broadcasts it; the operator route is loopback-restricted behind a passphrase, and where a domain has at least two holders of a modify verb the challenge moves the memory to `challenged` pending a second holder's confirmation or a reinstate rather than deprecating it outright | e2e Playwright specs (203, not wired to a runner), web tests (710)"
-  negative_eval: "a decayed memory asserted absent from a populated result beside two that survive, and a cross-domain leak test at the HTTP boundary | internal/store/decay_floor_test.go:47-68, api/rest/read_acl_parity_test.go:365-389 | three real rows are inserted and the query asserts the aged one dropped by the decay floor while the fresh one and the corroboration-boosted one are both present, so the exclusion cannot pass on an empty result; separately two public memories in different domains are seeded and a no-domain recall asserts the unreadable domain's content absent from the response body while the readable one is present | roughly 22 qualifying cases across read_acl_parity_test.go, confidence_decay_test.go, decay_floor_test.go, sqlite_authorized_recall_test.go, appv23_visible_pagination_test.go"
+  tombstone: "the voter's dedup lookup matches a deprecated row's content hash, so rejected bytes cannot re-enter under a fresh memory id | internal/store/sqlite.go:5093, internal/store/postgres.go:3147, internal/store/store.go:431, internal/voter/decision.go:96-110, internal/voter/voter.go:341-348 | `FindByContentHash` selects `WHERE content_hash = ? AND memory_id != ? AND status != 'proposed'` over an index on `content_hash`; the voter passes the candidate's own id so a proposed memory never matches itself, other proposed rows are ignored so two in-flight copies do not veto each other, and every post-proposal status counts — committed, challenged and deprecated — so a memory the quorum rejected or an operator forgot keeps its bytes out of the store until a reinstate; the key is the SHA-256 of the exact content, so a one-character change is a new memory, and the lookup is a node-local opinion that fails open on a store error | internal/store/sqlite_repair_test.go `TestFindByContentHash_DedupPredicate` and `TestDedupPredicate_ThroughVoterDecide` (a deprecated row blocks the same bytes under a fresh id, a correction with new content passes), internal/voter/decision_test.go `TestDedupCheck_ExcludesCandidateOwnRow`, internal/store/postgres_hash_test.go"
+  trust_state: "five declared statuses, four with a producer, two of which withhold a memory from every agent-facing read | internal/memory/model.go:23-27, internal/store/sqlite.go:2126, internal/mcp/tools.go:159, :1119, internal/abci/app.go:5350, :6597, :6624, :7367 | a memory is `proposed` when the submit transaction lands, becomes `committed` only when a validator vote reaches quorum, `deprecated` when the vote fails or a challenge succeeds, and `challenged` while an adjudication is open; the fifth declared value, `validated`, appears in the enum and the unwired lifecycle map and nothing writes it; every recall path hard-codes a committed status filter and the store turns it into `AND status IN ('committed','challenged')`, so a candidate and a rejected memory are both absent from retrieval rather than ranked low — the confidence float exists beside this and is used only for ordering and floors | internal/store/sqlite_disputed_test.go:172-188, api/rest/read_acl_parity_test.go, internal/abci tests (802 cases)"
+  scope_enforced: "a domain on every record, filtered in SQL and again per record against the caller's credential | internal/store/sqlite.go:2109, api/rest/appv23_record_disclosure.go:139-153, internal/appv23disclosure/disclosure.go:105-117, internal/abci/app.go:5128-5222 | `domain_tag` is a required column the write path validates against a registered domain list, the query adds `AND domain_tag = ?`, and a second pass authorizes each surviving record against the caller's credential for a read verb and drops the denied ones so that they consume none of the visible limit; six domains are seeded, any new one is auto-registered on first write, and app-v23 gives each agent an owned home domain | api/rest/read_acl_parity_test.go:365-389, api/rest/appv23_visible_pagination_test.go:298-397, internal/store/sqlite_authorized_recall_test.go"
+  audit_log: "append-only off-chain tables recording every vote, corroboration and challenge, beneath a signed transaction log | internal/store/sqlite.go:569-603, internal/abci/app.go:7377-7387, :6441-6604 | `validation_votes`, `corroborations` and `challenges` are written from the consensus path as buffered writes flushed at Commit, and the challenges table is described in the store as an append-only off-chain audit; each row's authority is the signed CometBFT transaction that produced it, so the record of who voted, who corroborated and who challenged a memory is the system's own store rather than an external history. One component is unwired: the table named `access_logs` has a producer reachable only from a transaction type nothing constructs | internal/abci tests (802 cases), internal/store tests (746)"
+  human_review: "an operator adjudicates a memory from the dashboard, and on a domain with two modify-verb holders the verdict only parks it | web/handler.go:3580-3588, :1360, internal/abci/app.go:7351-7399, web/static/js/app.js:3423, :3879 | the CEREBRUM operator selects memories and confirms a delete, which builds a challenge transaction carrying the reason `deprecated by user in CEREBRUM` and broadcasts it; the operator route is loopback-restricted behind a passphrase, and where a domain has at least two holders of a modify verb the challenge moves the memory to `challenged` pending a second holder's confirmation or a reinstate rather than deprecating it outright | e2e Playwright specs (203, not wired to a runner), web tests (710)"
+  negative_eval: "a decayed memory asserted absent from a populated result beside two that survive, and a cross-domain leak test at the HTTP boundary | internal/store/decay_floor_test.go:47-94, api/rest/read_acl_parity_test.go:365-389 | three real rows are inserted and the query asserts the aged one dropped by the decay floor while the fresh one and the corroboration-boosted one are both present, so the exclusion cannot pass on an empty result; separately two public memories in different domains are seeded and a no-domain recall asserts the unreadable domain's content absent from the response body while the readable one is present | roughly 22 qualifying cases across read_acl_parity_test.go, confidence_decay_test.go, decay_floor_test.go, sqlite_authorized_recall_test.go, appv23_visible_pagination_test.go"
 stack_storage: "sqlite, postgres, kv"
 stack_retrieval: "vector, lexical"
 stack_source: "reviewed"
@@ -31,7 +31,7 @@ matrix:
   integration: "38 MCP tools, 119 REST routes, a CEREBRUM dashboard of 65 more, a Python SDK, a desktop shell, a tray app, a libp2p relay as a separate module, and a federation layer that syncs memories between chains under explicit policy"
   background: "A voter loop polling every two seconds for proposed memories to vote on, the CometBFT block loop, federation sync, and an opt-in cleanup pass"
   trust: "Four produced statuses gating readability, a content-hash dedup that keeps a deprecated memory's bytes out, a caller-asserted confidence decaying on an exponential curve with a corroboration bonus, a per-domain decay rate, and a validator score table"
-  strengths: "A status ladder that genuinely withholds — a memory is unreadable until something votes it in; a decay floor applied across the whole candidate set before the top-K trim rather than after; a node that re-embeds rather than trusting a caller's vector; consensus-first write ordering with a single documented path into the serving store; a dedup that excludes the candidate's own row rather than every unaccepted row; 4,754 test functions"
+  strengths: "A status ladder that genuinely withholds — a memory is unreadable until something votes it in; a decay floor applied across the whole candidate set before the top-K trim rather than after; a node that re-embeds rather than trusting a caller's vector; consensus-first write ordering with a single documented path into the serving store; a dedup that excludes the candidate's own row rather than every unaccepted row; 4,941 test functions"
   risks: "On the default install the vote is one validator key running three string heuristics, which the README's opening line states beside its consensus claim; the dedup is keyed on exact bytes, is a node-local opinion that fails open on a store error, admits two identical proposals in flight at once, and does not run on the co-commit path; the MCP client silently drops a write at 60% word overlap before the chain sees it; two of the four papers rest on an experiment pipeline excluded from the tree, which the papers index states; `access_logs`, the lifecycle state machine, the `validated` status and the record validator all have no production caller"
 ---
 
@@ -41,10 +41,10 @@ The atlas carries a second, unrelated system of the same name: the
 [SAGE Novelty Gate](../sage-novelty-gate/), a mem0 fork from a different
 author. The two share nothing but the word.
 
-SAGE is a memory node built on a vendored CometBFT chain — Apache-2.0, 1,569
-commits between 2 March and 12 September 2026 by nine authors, 213,191 lines of
-Go outside tests and outside the vendored consensus engine, beside 209,380
-lines of tests holding 4,754 test functions. The screen found two auto-run
+SAGE is a memory node built on a vendored CometBFT chain — Apache-2.0, 1,614
+commits between 2 March and 16 September 2026 by nine authors, 218,303 lines of
+Go outside tests and outside the vendored consensus engine, beside 216,369
+lines of tests holding 4,941 test functions. The screen found two auto-run
 surfaces, five build-time execution points and five unpinned surfaces; nothing
 was installed or run, and the read was made from a full clone. Storage is two
 tiers: BadgerDB holds the consensus state covered by the application hash, and
@@ -306,6 +306,37 @@ threshold **across the whole candidate set**, before the top-K trim. That
 ordering is the difference between a floor that means something and one that
 only prunes a page.
 
+**The floor now says how much it took.** The ordering that makes the floor
+meaningful also makes it unanswerable from the caller's side: it removes a
+candidate on decayed confidence regardless of similarity, so a record that
+matches a query perfectly is unreachable by *any* phrasing if it sits below the
+node's threshold, and the response used to look exactly like a corpus that never
+held it. The incident behind the fix is written into the commit — a memory
+reachable by tag was invisible to semantic recall across four queries, because a
+node's floor of 85 sat above the 0.80 its records were written with, putting the
+whole observation tier out of reach. `QueryOptions.DecayFloorDropped`
+(`internal/store/store.go:120-130`) is an optional counter the store fills as it
+scans, both backends increment it (`internal/store/sqlite.go:2232`, `:2411`,
+`internal/store/postgres.go:1031`), and the REST layer reports it in the
+existing silent-hide envelope as `filtered.confidence_floor` and
+`filtered.hidden_by_confidence_floor` with `confidence_floor` added to the
+`X-SAGE-Filter-Applied` header (`api/rest/memory_handler.go:248-256`). The MCP
+recall returns the floor and, when it hid anything, a sentence naming the count,
+the floor, the remedy and the tier boundaries — *"a floor above 0.80 hides the
+observation tier and above 0.60 hides the inference tier"*
+(`internal/mcp/tools.go:1366-1371`).
+
+Two choices in that are worth separating from the disclosure itself. The floor
+is disclosed even when it removed nothing, on the stated grounds that this is
+what lets a caller trust an empty result — a field that appears only on bad news
+teaches a reader to infer from its absence, which is the same silence one layer
+up. And the counter is an opt-in sink rather than a return value: recall paths
+that serialize a response pass one, consensus paths leave it `nil`, so the
+deterministic replay path is not made to carry a number it would have to agree
+on. The same pass corrected a comment that misdescribed the filter — the default
+of 70 was documented as catching observations and inferences, when a record at
+0.60 does not clear 0.70 and the inference tier is dropped.
+
 The per-record authorization pass runs after ranking and before the trim, and
 denied records *"consume no visible limit"* — so a caller who cannot read half a
 domain still gets a full page.
@@ -446,7 +477,7 @@ targets pass neither flag, so they reproduce neither file.
 
 ## 10. Tests, Evals, and Benchmarks
 
-4,754 test functions in 639 files and 209,380 lines, heaviest in `internal/abci`
+4,941 test functions in 680 files and 216,369 lines, heaviest in `internal/abci`
 (802), `internal/store` (747), `web` (710) and `api/rest` (557). The memory
 model itself — the decay and lifecycle arithmetic — has one test file of 149
 lines.
@@ -552,22 +583,22 @@ dedup keeps its exact bytes out until a reinstate.
 
 | Path | Lines | What it holds |
 | --- | --- | --- |
-| `internal/memory/model.go` | 328 (package) | `MemoryRecord` (39-73), the status, type and task enums (11-36); `validated` declared at 12 with no writer |
+| `internal/memory/model.go` | — | `MemoryRecord` (55-89), the status, type and task enums (22-48); `validated` declared at 27 with the comment that no production path writes it |
 | `internal/memory/confidence.go` | — | The decay formula (38-59), per-domain rates (14-17), the open-task exemption (29-34) |
 | `internal/memory/lifecycle.go` | — | The transition map, documented as having zero production callers (10-13) |
 | `internal/voter/decision.go` | — | `DecideVerbose` (82-94), the three checks (96-139), the eight noise phrases (63-67), `MemoryID` on the input (38-41) |
 | `internal/voter/voter.go` | — | The two-second poll (156), `Decide` called with the candidate's id (341-348), the vote broadcast (354-375) |
 | `internal/abci/app.go` | 21,872 (pkg) | `processMemorySubmit` (4987), the consensus-first comment (5401), quorum (6441-6647), challenge (7351-7399) |
-| `internal/store/sqlite.go` | — | The DDL (457-495) with the `content_hash` index (487), the vote, corroboration and challenge tables (530-564), `QuerySimilar` (2001-2162), the decay floor (2136-2141), `FindByContentHash` (4996), `RepairSelfDupRejected` (5035) |
-| `internal/store/postgres.go` | — | `FindByContentHash` (3141) on the same predicate; the migration that drops the committed-only partial index (466-474) |
-| `api/rest/memory_handler.go` | — | Submit (1196-1635), query (1903-2040), the decay floor setup (1717-1723) |
+| `internal/store/sqlite.go` | — | The DDL (496-522) with the `content_hash` index (526), the vote, corroboration and challenge tables (569-603), `QuerySimilar` (2090), the decay floor and its dropped-count sink (2225-2234, 2405-2413), `FindByContentHash` (5093), `RepairSelfDupRejected` (5132) |
+| `internal/store/postgres.go` | — | `FindByContentHash` (3147) on the same predicate; the decay floor's dropped-count sink (1031); the migration that drops the committed-only partial index (466-474) |
+| `api/rest/memory_handler.go` | — | The decay floor setup and its disclosure (1731-1739), the silent-hide envelope fields (248-256) |
 | `api/rest/appv23_record_disclosure.go` | — | Per-record authorization (139-153) and the app-hash check (69) |
-| `internal/mcp/tools.go` | — | 38 tools; `toolRemember` (750), the overlap guard (815, 4177-4213), `toolRecall` (1081) |
-| `web/handler.go` | — | The operator gate (3558) and the challenge build (3575-3583) |
+| `internal/mcp/tools.go` | — | `toolRemember` (755), `toolRecall` (1092), the confidence-floor disclosure and its note (1281-1283, 1344-1371) |
+| `web/handler.go` | — | The operator gate and the challenge build (3580-3588) |
 | `bench/results/` | 4 files | LongMemEval n=500 R@5 0.9053 with no expansion field; the v7.1 run at 0.8927, ~25× latency, `expand_n: 3` and the reranker on; LoCoMo n=1986 R@5 0.6394 |
 | `papers/` | 4 PDFs | With Zenodo identifiers, checksums and the priority claim (README:30) |
 | `third_party/cometbft` | 116,822 | The vendored consensus engine, own module |
-| tests | 209,380 in 639 files | 4,754 test functions |
+| tests | 216,369 in 680 files | 4,941 test functions |
 
 **Searches recorded for the negative claims**
 
@@ -587,6 +618,8 @@ python3 -c "import json; print('expand_n' in json.load(open('bench/results/longm
 ```
 
 ## History
+
+**2026-09-16** — [`b4f38e394c21136989cc15c1f548444a4c80a1c5`](https://github.com/l33tdawg/sage/commit/b4f38e394c21136989cc15c1f548444a4c80a1c5) — third reading, 45 commits on, at v11.20.5. All six marks hold and none of the underlying mechanisms moved: the voter's dedup predicate, the two decision files and the ABCI application are byte-identical at both commits, so `tombstone` and `audit_log` needed no re-derivation. The store, the MCP tool surface, the memory model and the web handler did move, and every cited line in them was re-verified. The change worth the space is in section 6 — the decayed-confidence floor now reports what it removed, through an opt-in counter the store fills, a REST envelope field, a header and an MCP note that names the count, the floor and the tier boundaries. It is the right fix for a defect this atlas keeps finding in other form: a filter that is correct and silent, so an empty result and a filtered result are indistinguishable to the caller who has to decide whether to write the memory again. The commit records the incident that produced it and states, correctly, that the floor is disclosed even when it removed nothing. A comment in the same file was corrected with it — the default floor of 70 was documented as catching observations and inferences, and a record at 0.60 does not clear 0.70. Counts refreshed: 218,303 lines of the project's own Go beside 4,941 test functions in 680 files, 1,614 commits by nine authors, with the vendored CometBFT still a separate module and excluded from both. Re-screened at this commit: two auto-run surfaces, five build-time execution points, five floating versions, six manifests inside the cooldown. Nothing was installed, built or run, and the machine still carries no Go toolchain.
 
 **2026-09-12** — [`36b2252f11b540a6a3f275f2dced56466b45280f`](https://github.com/l33tdawg/sage/commit/36b2252f11b540a6a3f275f2dced56466b45280f) — second reading, ten commits on, at v11.19.20, on the day of the last commit. Screened again first: two auto-run surfaces (the `.claude/settings.json` hooks, whose commands name five scripts under `.claude/hooks/` that are not in the tree, and the MCP manifest), five build-time execution points, five unpinned surfaces, six manifests inside the seven-day cooldown; nothing was installed and no test was run, the read was made from a full clone, and the machine carries no Go toolchain. One mark moved, from withheld to awarded. `068566b4` widened the voter's dedup predicate from committed-only to *any other row that has left `proposed`*, threading the candidate's own id through `MemoryInput` so the v10.1 self-match cannot recur, and three committed cases pin it through the real store and the real decision; the section-9 near-miss on `FindByContentHash` is the `tombstone` evidence line, with the three limits the code states — exact-bytes key, a fail-open node-local opinion, and the co-commit path that never consults the voter — recorded beside it. Two criticisms went stale in one commit, `60c9a779`: the README's opening line, the skill file and the hooks document carry the one-validator qualification, and the papers index cites the root commit and states the excluded pipeline itself; the orphaned commit was re-fetched by sha and the 41-file, 6,609-line comparison reproduces. One published claim was wrong at the first pin and is corrected in section 9: the 0.9053 LongMemEval record carries no expansion field — only the v7.1 record does — so the reranked run was never a reranker ablation, which the project's bench README says as of this commit. The status enum's fifth value, `validated`, is recorded as declared with no writer. Every cited line in `internal/store/sqlite.go` and `internal/voter/decision.go` moved and was re-verified.
 
