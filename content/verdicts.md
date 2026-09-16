@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 514 reports.**
+**This page covers all 515 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4462,3 +4462,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, Python 3.12+, version 0.2.4, 10,249 lines with 297 test functions across thirty-six files, a numbered acceptance-test table in a published specification, a docs site, CI badges, and installers for four agent harnesses. The care in the contracts and the docstrings is well above the median here, which is what makes the unreachable update path surprising.
 - Study when: you want an index you can delete without losing memories, a store that reconciles hand edits instead of fighting them, or a worked example of proving memory activity in CI.
 - Do not copy when: corrections matter — there is no update, no content de-duplication, and `forget` is by a slug you must find first. One mark, negative eval, for a soft-forget test that pairs its must-not-retrieve assertion with the same query under `include_expired=True`. `valid_from` is stored on four surfaces and read by none.
+
+### [`yacmemo`](../systems/yacmemo/)
+- Best idea: **the duplicate guard normalises away the evasion before it compares.** `normalize_title` strips trailing dates, `-2`-style counters, `v1`, 更新 and （新） — so the rename an agent would use to get a second copy past the check is exactly what it collapses — and the refusal names the near-matches with their scores and says to edit instead. The override earns its place too: `force=true` is counted in `guard_events`, and once forced writes in the last 24 hours cross a threshold a second flag becomes mandatory, so the bypass is possible, visible and self-limiting.
+- Biggest risk: **no in-store record covers every mutation.** The complete log is git, which sits outside the store and can be rewritten by anyone holding the directory. `guard_events` holds refusals and forced bypasses only; `call_log` is written by the MCP tool wrapper, so a note saved or deleted through the web console produces no row in it, and what it does store is an argument summary rather than a before-image, trimmed to 20,000 rows.
+- Most reusable component: `detectors.py` entire — 120 lines of string math with no model in it: the suffix patterns, the similarity function, the pairwise audit scan, an observation parser that excludes GFM checkboxes so checklists do not manufacture noise, and a dangling-link scan that skips citation-shaped targets.
+- Maturity impression: MIT by `pyproject.toml` metadata with no licence file in the tree, version 0.2.0, 11,833 lines with 95 test functions across thirteen files, a v1 suite kept under `legacy/`, eight documentation chapters, a Vue console and a systemd-timer curator. Documentation and interface in Chinese, code comments in English.
+- Study when: you are writing a de-duplication guard and want to see one that assumes an adversary, or you want a worked example of surfacing a contradiction instead of resolving it.
+- Do not copy when: you need an audit trail inside the store, or scope as a predicate rather than a directory per user. One mark, human review: a collision's `open | resolved | dismissed` status is set only by the console's own route, and the search path reads it at its default so a person's verdict silences the warning for good.
