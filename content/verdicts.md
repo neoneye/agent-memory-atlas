@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 535 reports.**
+**This page covers all 536 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4630,3 +4630,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: dual MIT and Apache-2.0, Rust, 15,232 test functions in the daemon crate, a GUI, bridges, a WASM plugin sandbox, a migration tool, an in-tree evaluation harness for memory, and a signed-release public key in the repository root.
 - Study when: you are about to treat a high importance score as a fact, or your contradiction detector fires on refinements.
 - Do not copy when: you need isolation between scopes or a record of who changed a fact. One mark: trust state.
+
+### [`hungry-hippa`](../systems/hungry-hippa/)
+- Best idea: **it found that its own exclusion disclosure was an existence oracle, and wrote the finding into the test that guards it.** Recall returned `excluded=[{"item": "belief:B-0002", "reason": "other-actor"}]` for a topic matching a protected memory and `[]` for one matching nothing — "[t]hat difference answers 'does the operator hold a memory about X', and the row id leaks sequential identifiers." The read policy that followed states its rule: "[t]he operator and the runtime's own background work read everything; an untrusted caller reads only its own rows. Identity decides, never a label." And the score explanation "never contains memory content, so it cannot leak quarantined or otherwise unauthorized text".
+- Biggest risk: **the mutation log is enforced in code, not by triggers.** The schema says so and justifies it — richer context — and it means a new write path can omit the log without the database noticing; thirty-two call sites cover what exists today. Evidence kinds distinguish `user_explicit` from `agent_inference` and `derived_pattern` but nothing withholds on the distinction, `importance` and `confidence` both default to 0.5 so an unset value looks considered, and the test modules expose `run_all()` rather than pytest functions, so a plain `pytest` run covers less than the filenames promise.
+- Most reusable component: `policy.py`'s `may_read` with its rule written above it, and the retrieval pipeline's step six — partition by status and identity *before* ranking, so a withheld row never moves a number computed from the ranking.
+- Maturity impression: MIT, 15,028 lines of Python over local SQLite with reversible migrations carrying `up` and `down`, immutable evidence rows, a write quota whose breaches are themselves logged, a 901-line evaluation harness, and seventeen test modules named for the attacks they cover.
+- Study when: you return an exclusion list, an explain API, or anything else that tells a caller about records it cannot read.
+- Do not copy when: you need the mutation log guaranteed by the database. Two marks: trust state, scope enforced.

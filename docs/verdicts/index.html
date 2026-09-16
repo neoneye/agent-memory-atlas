@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 535 reports.</strong></p>
+<p><strong>This page covers all 536 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19983,6 +19983,46 @@ signed-release public key in the repository root.</li>
 fact, or your contradiction detector fires on refinements.</li>
 <li>Do not copy when: you need isolation between scopes or a record of
 who changed a fact. One mark: trust state.</li>
+</ul>
+<h3 id="hungry-hippa"><a
+href="../systems/hungry-hippa/"><code>hungry-hippa</code></a></h3>
+<ul>
+<li>Best idea: <strong>it found that its own exclusion disclosure was an
+existence oracle, and wrote the finding into the test that guards
+it.</strong> Recall returned
+<code>excluded=[{"item": "belief:B-0002", "reason": "other-actor"}]</code>
+for a topic matching a protected memory and <code>[]</code> for one
+matching nothing — "[t]hat difference answers 'does the operator hold a
+memory about X', and the row id leaks sequential identifiers." The read
+policy that followed states its rule: "[t]he operator and the runtime's
+own background work read everything; an untrusted caller reads only its
+own rows. Identity decides, never a label." And the score explanation
+"never contains memory content, so it cannot leak quarantined or
+otherwise unauthorized text".</li>
+<li>Biggest risk: <strong>the mutation log is enforced in code, not by
+triggers.</strong> The schema says so and justifies it — richer context
+— and it means a new write path can omit the log without the database
+noticing; thirty-two call sites cover what exists today. Evidence kinds
+distinguish <code>user_explicit</code> from <code>agent_inference</code>
+and <code>derived_pattern</code> but nothing withholds on the
+distinction, <code>importance</code> and <code>confidence</code> both
+default to 0.5 so an unset value looks considered, and the test modules
+expose <code>run_all()</code> rather than pytest functions, so a plain
+<code>pytest</code> run covers less than the filenames promise.</li>
+<li>Most reusable component: <code>policy.py</code>'s
+<code>may_read</code> with its rule written above it, and the retrieval
+pipeline's step six — partition by status and identity <em>before</em>
+ranking, so a withheld row never moves a number computed from the
+ranking.</li>
+<li>Maturity impression: MIT, 15,028 lines of Python over local SQLite
+with reversible migrations carrying <code>up</code> and
+<code>down</code>, immutable evidence rows, a write quota whose breaches
+are themselves logged, a 901-line evaluation harness, and seventeen test
+modules named for the attacks they cover.</li>
+<li>Study when: you return an exclusion list, an explain API, or
+anything else that tells a caller about records it cannot read.</li>
+<li>Do not copy when: you need the mutation log guaranteed by the
+database. Two marks: trust state, scope enforced.</li>
 </ul>
         </article>
       </div>

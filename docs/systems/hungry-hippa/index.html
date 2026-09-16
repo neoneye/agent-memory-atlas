@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local memory runtime whose
+retrieval reports each excluded item with a reason — and whose own test
+suite records the finding that, for an unauthorised caller, that report
+answered whether a memory about a topic exists at all.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Hungry
+Hippa — Agent Memory Atlas">
+    <meta property="og:description" content="A local memory runtime
+whose retrieval reports each excluded item with a reason — and whose own
+test suite records the finding that, for an unauthorised caller, that
+report answered whether a memory about a topic exists at all.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hungry
+Hippa — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local memory runtime
+whose retrieval reports each excluded item with a reason — and whose own
+test suite records the finding that, for an unauthorised caller, that
+report answered whether a memory about a topic exists at all.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Hungry Hippa — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Hungry Hippa",
+      "description": "A local memory runtime whose retrieval reports each excluded item with a reason \u2014 and whose own test suite records the finding that, for an unauthorised caller, that report answered whether a memory about a topic exists at all.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Telling the caller what it withheld was the
+leak</p>
+          <h1>Hungry Hippa</h1>
+          <p class="document-deck">A local memory runtime whose
+retrieval reports each excluded item with a reason — and whose own test
+suite records the finding that, for an unauthorised caller, that report
+answered whether a memory about a topic exists at all.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/TRUE-BLUE-INDUSTRIES/hungry-hippa">
+              <span>Source</span>
+              <strong>TRUE-BLUE-INDUSTRIES/hungry-hippa</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/TRUE-BLUE-INDUSTRIES/hungry-hippa/commit/e9254e8942bc7c04f15e40141588fc28907c5193" title="e9254e8942bc7c04f15e40141588fc28907c5193">
+              <span>Analyzed revision</span>
+              <code>e9254e89…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/TRUE-BLUE-INDUSTRIES--hungry-hippa" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>TRUE-BLUE-INDUSTRIES--hungry-hippa</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Hungry Hippa is "[o]ne memory. Any AI. Your machine." — MIT, Python,
+15,028 lines, a local SQLite store with an MCP surface so several AI
+clients read and write the same memory, and an explicit promise that the
+database is not uploaded anywhere. The schema calls itself a "Living
+Cortex": episodes, evidence, a graph, beliefs, procedures, vectors,
+consolidation, forgetting and retrieval, under reversible migrations
+that each carry an <code>up</code> and a <code>down</code>.</p>
+<p>For a project this size, the file list under <code>tests/</code> is
+the surprise: <code>test_existence_oracle.py</code>,
+<code>test_confused_deputy.py</code>,
+<code>test_injection_framing.py</code>,
+<code>test_trust_boundary.py</code>, <code>test_trust_token.py</code>,
+<code>test_quarantine_cli.py</code>, <code>test_supersession.py</code>,
+<code>test_provenance.py</code>, <code>test_file_permissions.py</code>,
+<code>test_resource_limits.py</code>. Attack classes named as
+filenames.</p>
+<p><strong>And one of them records a finding the project made against
+itself, which is the most useful thing in this report.</strong> Recall
+returns, alongside its results, a list of what it excluded and why — an
+item key and a reason such as <code>other-actor</code>. That is exactly
+the disclosure this atlas praised in <a href="../mnemonic/">mnemonic</a>
+a few reports ago: a retrieval that tells you what it held back. Here is
+what it also is, in the project's own words:</p>
+<blockquote>
+<p>"Finding: recall as an untrusted caller returned
+<code>excluded=[{"item": "belief:B-0002", "reason": "other-actor"}]</code>
+for a topic that matched a protected memory, and <code>[]</code> for a
+topic that matched nothing. That difference answers 'does the operator
+hold a memory about X', and the row id leaks sequential identifiers.
+Graph entity names were returned unfiltered too."</p>
+</blockquote>
+<p>The same feature is a courtesy to an authorised caller and an
+existence oracle to an unauthorised one. The difference is who is asking
+— which means the disclosure has to be conditioned on the answer to that
+question, and a system that returns one list to everybody has decided
+the question does not matter. Three separate leaks in one sentence: the
+presence, the sequential id, and the unfiltered entity names.</p>
+<p><strong>The read policy that followed states its rule rather than
+implying one.</strong></p>
+<blockquote>
+<p>"The operator and the runtime's own background work read everything;
+an untrusted caller reads only its own rows. Identity decides, never a
+label."</p>
+</blockquote>
+<p><code>may_read(item, actor_id, *, include_quarantined, identity)</code>
+returns <code>(allowed, reason)</code> for every row, ownership is
+<code>is_owner(actor, identity) or is_system_identity(identity)</code>,
+and the <code>actor_id</code> a caller passes cannot by itself grant
+anything. That last clause is the producer test this atlas looks for and
+rarely finds: several systems read this week accept an actor string and
+record it as though it were an identity.</p>
+<p><strong>The status partition runs before ranking.</strong>
+<code>episodes.status</code> is
+<code>active | archived | compressed | purged</code>, and step six of
+the pipeline — described in the module docstring as the "actor/status
+policy partition (quarantine + sensitivity)" — sends anything not
+<code>active</code> to the excluded list with its status as the reason,
+before the ranker sees it. Quarantined rows return only when a caller
+passes <code>include_quarantined</code>. Relationship reads carry the
+same predicate, and the context compiler prefers active over superseded
+on top. Partitioning before ranking is the placement <a
+href="../theurian/">theurian</a> argues for: a withheld row that reaches
+the ranker moves every number computed from the ranking.</p>
+<p><strong>And the explanation is built not to be a side
+channel.</strong> Scores are decomposable —
+<code>recall(..., explain=True)</code> returns the parts behind each
+item's score — and the docstring states the constraint: the explanation
+"never contains memory content, so it cannot leak quarantined or
+otherwise unauthorized text". A system that has just been bitten by an
+oracle in its exclusion list has gone and checked its explain path for
+the same shape.</p>
+<p>What to weigh. The mutation log is enforced in code rather than by
+database triggers — the schema says so and gives the reason, richer
+context — so a new write path can omit it and the database will not
+notice; thirty-two call sites cover what exists today. Evidence kinds
+distinguish <code>user_explicit</code> from <code>agent_inference</code>
+and <code>derived_pattern</code>, but nothing found withholds on that
+distinction, so provenance labels rather than gates.
+<code>importance</code> and <code>confidence</code> both default to 0.5,
+so an unset value looks like a considered middle. And the tests are
+<code>run_all()</code>-style modules returning result lists rather than
+pytest functions, so a plain <code>pytest</code> run exercises less than
+the filenames promise.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>status</strong> decides before a score does.</p>
+<p>An <strong>identity</strong> decides who may read; a
+<strong>label</strong> decides nothing.</p>
+<p>An <strong>exclusion list</strong> is a kindness to the authorised
+and an oracle to everyone else.</p>
+<p>An <strong>explanation</strong> must not carry what the policy
+withheld.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the status and identity partition runs before ranking, and the exclusion list it produces was itself the leak the project found and wrote into a test</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the status and identity partition runs before ranking, and the exclusion list it produces was itself the leak the project found and wrote into a test
+flowchart TB
+    Q[&quot;recall(query, actor_id, identity)&quot;] --&gt; P1[&quot;intent analysis: entity lookup +&lt;br/&gt;keyword and vector search in parallel&quot;]
+    P1 --&gt; P2[&quot;bounded graph traversal around&lt;br/&gt;matched entities&quot;]
+    P2 --&gt; PART{&quot;step 6: partition BEFORE ranking&quot;}
+    PART --&gt; ST{&quot;status == &#39;active&#39;?&quot;}
+    ST --&gt;|&quot;no&quot;| EXC[&quot;excluded: item + reason = the status&quot;]
+    ST --&gt;|&quot;yes&quot;| POL{&quot;policy.may_read(item, actor_id,&lt;br/&gt;include_quarantined, identity)&quot;}
+    POL -.-&gt;|&quot;&#39;The operator and the runtime&#39;s own&lt;br/&gt;background work read everything; an&lt;br/&gt;untrusted caller reads only its own rows.&lt;br/&gt;Identity decides, never a label.&#39;&quot;| RULE[&quot;is_owner(actor, identity)&lt;br/&gt;or is_system_identity(identity)&quot;]
+    POL --&gt;|&quot;denied&quot;| EXC
+    POL --&gt;|&quot;allowed&quot;| RANK[&quot;rank: salience × recency ×&lt;br/&gt;relevance × confidence&quot;]
+    RANK --&gt; COMP[&quot;context compiler: budget, dedupe,&lt;br/&gt;active-over-superseded&quot;]
+    COMP --&gt; OUT[&quot;a minimal context block&quot;]
+    EXC -.-&gt;|&quot;THE FINDING, in the project&#39;s own test:&lt;br/&gt;an untrusted caller got a reason for a topic&lt;br/&gt;that matched a protected memory and an empty&lt;br/&gt;list for one that matched nothing — &#39;that&lt;br/&gt;difference answers does the operator hold a&lt;br/&gt;memory about X&#39;, plus a sequential row id&quot;| ORACLE[&quot;the disclosure was the leak&quot;]
+    EXPL[&quot;recall(explain=True) —&lt;br/&gt;decomposable scores&quot;] -.-&gt;|&quot;&#39;never contains memory content, so it cannot&lt;br/&gt;leak quarantined or otherwise unauthorized text&#39;&quot;| SAFE[&quot;the same side channel, closed one layer up&quot;]
+    W[&quot;any mutation&quot;] --&gt; QUOTA[&quot;write_quota&quot;] --&gt; LOG[(&quot;mutation_log: ts · action ·&lt;br/&gt;target_kind · target_id · detail ·&lt;br/&gt;session_id — enforced in code, not by&lt;br/&gt;triggers, &#39;so the log carries rich context&#39;&quot;)]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema.py</code></td>
+<td>The Living Cortex schema and reversible migrations</td>
+</tr>
+<tr>
+<td><code>retrieval.py</code></td>
+<td>The pipeline, the partition, the explanation constraint</td>
+</tr>
+<tr>
+<td><code>policy.py</code></td>
+<td><code>may_read</code>, and identity over label</td>
+</tr>
+<tr>
+<td><code>db.py</code></td>
+<td><code>log_mutation</code>, and the write path</td>
+</tr>
+<tr>
+<td><code>forgetting.py</code>, <code>semantic.py</code>,
+<code>procedural.py</code>, <code>graph.py</code></td>
+<td>Sweeps, beliefs, procedures, relationships</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>Attack classes as filenames</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>tests/test_existence_oracle.py:1-10</code> — read this first;
+it is the report.</p>
+<p><code>src/hungry_hippa/policy.py:126-138</code> — the rule,
+stated.</p>
+<p><code>src/hungry_hippa/retrieval.py:1-16</code>,
+<code>:323-338</code> — partition before ranking, and an explanation
+that carries no content.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Episodes with outcome, importance, confidence, project, status and a
+reinforcement count; evidence with a kind spanning
+<code>user_explicit</code>, <code>document</code>,
+<code>tool_result</code>, <code>visual_observation</code>,
+<code>audio_observation</code>, <code>external_source</code>,
+<code>agent_inference</code> and <code>derived_pattern</code>; beliefs,
+procedures, relationships and vectors. Raw evidence rows are immutable,
+which is what makes supersession meaningful rather than cosmetic.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Covered above. The one addition: the ranking is "transparent and
+heuristic … so a learned policy can replace it later through the same
+interface" — a stated intention to keep the seam, which is how a
+heuristic stays replaceable instead of becoming load-bearing by
+accident.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A quota table gates writes, and a quota breach is itself logged
+(<code>write_quota_exceeded</code>) rather than silently dropped. Every
+mutation writes a log row with an action, a target and a session.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server over one local store, so several clients share a
+memory. That sharing is what makes the identity check load-bearing: the
+design's whole premise is several callers against one database.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The security work is the substance, and its best property is that the
+project found its own leak in a feature it had built for good reasons
+and wrote the finding down where the next reader will meet it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Seventeen test modules and a 901-line evaluation harness. The modules
+use a <code>run_all()</code> convention returning result records rather
+than pytest functions, so the harness rather than <code>pytest</code> is
+the entry point. Nothing was installed or run for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Condition your exclusion disclosure on who is asking. Telling a
+caller what you withheld is right for an authorised one and an existence
+oracle for everyone else, and one list for both decides that the
+distinction does not matter.</p>
+<p>Let identity decide, never a label. An <code>actor_id</code> a caller
+supplies is a claim; treating it as an identity is how the
+confused-deputy tests in this repository got their names.</p>
+<p>Partition before you rank. A withheld row that reaches the ranker
+changes every number computed from the ranking, even when its content
+never appears.</p>
+<p>Check your explain path for the leak you just fixed. A score
+decomposition that quotes content re-opens the channel the policy
+closed.</p>
+<p>And write the finding into the test. The docstring here explains what
+went wrong, with the actual payload, where whoever touches that code
+next will read it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether evidence kind ever gates. It distinguishes what a person said
+from what a model inferred and no read path was found that acts on
+it.</p>
+<p>How much of the suite a plain <code>pytest</code> run covers. The
+modules expose <code>run_all()</code> rather than test functions.</p>
+<p>Whether the entity names are filtered now. The finding names them as
+leaking; the fix path was not traced.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tests/test_existence_oracle.py:1-10</code></td>
+<td>A disclosure that was a leak, with the payload</td>
+</tr>
+<tr>
+<td><code>src/hungry_hippa/policy.py:126-138</code></td>
+<td>Identity decides, never a label</td>
+</tr>
+<tr>
+<td><code>src/hungry_hippa/retrieval.py:1-16</code></td>
+<td>A pipeline, and an explanation that carries no content</td>
+</tr>
+<tr>
+<td><code>src/hungry_hippa/schema.py:1-32</code></td>
+<td>Reversible migrations, immutable evidence, a mutation log</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/TRUE-BLUE-INDUSTRIES/hungry-hippa/commit/e9254e8942bc7c04f15e40141588fc28907c5193"><code class="commit-id" title="e9254e8942bc7c04f15e40141588fc28907c5193">e9254e89…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: two files scanned, no auto-run surfaces,
+no build-time execution points, one unpinned surface and one dependency
+file inside the seven-day cooldown. Nothing was installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
