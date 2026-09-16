@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 484 of 545 screened at the report's current pin.**
+**Progress: 485 of 546 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 207 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 295 |
-| Repositories with build-time execution (`EXEC`) | 353 |
+| Repositories with an auto-run surface (`RUNS`) | 208 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 296 |
+| Repositories with build-time execution (`EXEC`) | 354 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -227,6 +227,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`universal-memory-engine`](../../content/systems/universal-memory-engine.md) | `.claude-plugin/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |
 | [`velesdb`](../../content/systems/velesdb.md) | `.githooks/`, `server.json`, `smithery.yaml` |
 | [`veracium`](../../content/systems/veracium.md) | `server.json` |
+| [`verimem`](../../content/systems/verimem.md) | `.claude-plugin/`, `.claude/hooks/`, `.githooks/`, `hooks/`, `server.json` |
 | [`vestige`](../../content/systems/vestige.md) | `hooks/`, `server.json` |
 | [`vibe-cognition`](../../content/systems/vibe-cognition.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`vision-memory-mcp`](../../content/systems/vision-memory-mcp.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `server.json` |

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 545 reports.</strong></p>
+<p><strong>This page covers all 546 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20437,6 +20437,57 @@ Cypher itself. One auto-run surface at this pin.</li>
 <li>Do not copy when: you cannot run a Neo4j, or you need a tier that
 actually gates. Three marks: bitemporal, scope enforced, mutation
 audit.</li>
+</ul>
+<h3 id="verimem"><a
+href="../systems/verimem/"><code>verimem</code></a></h3>
+<ul>
+<li>Best idea: <strong>an audit chain that records the deletion and
+refuses to remember what was deleted.</strong> Every destructive
+operation appends one row to <code>audit_mutations</code> "INSIDE THE
+SAME TRANSACTION as the mutation itself", hash-chained so any edit or
+reorder is detectable, and <code>record_mutation</code> "never swallows"
+— a failure to record propagates rather than leaving an unrecorded
+deletion. The content rule is argued rather than assumed: "storing WHAT
+was deleted — even as a hash, brute-forceable on short text — inside an
+immutable chain makes GDPR Art.17 erasure a logical contradiction", so
+"[t]he chain proves THAT/WHO/WHEN/WHICH-RECORD, not what the record
+said." Both decisions are attributed to two independent adversarial
+reviews with the finding ids each answers.</li>
+<li>Biggest risk: <strong>scope lives in a string and is assembled
+outside the store.</strong> Multi-tenancy is "a ZERO-SCHEMA topic
+prefix" —
+<code>user:&lt;u&gt;/agent:&lt;a&gt;/run:&lt;r&gt;/&lt;base-topic&gt;</code>
+— and the functions that build the
+<code>topic LIKE '&lt;prefix&gt;%'</code> narrow are imported by
+<code>verimem/cli.py</code> rather than applied inside recall, so
+isolation holds on the command-line path and is the caller's
+responsibility everywhere else. The module declares its own collision
+too: "a legitimate topic that literally starts with <code>user:</code> /
+<code>agent:</code> / <code>run:</code> would be parsed as scoped".
+There is also only one time axis — <code>search_facts</code> takes an
+<code>as_of</code> over record time — and nothing is keyed on a rejected
+value, so a purged claim can be written again as a new fact.</li>
+<li>Most reusable component: the recall signature, where every route
+back to withheld material is a keyword somebody had to type —
+<code>include_superseded</code>, <code>include_orphaned</code>,
+<code>include_beliefs</code>, <code>min_status</code> — over a ranking
+clause that already reads
+<code>status NOT IN ('orphaned', 'quarantined', 'user_belief')</code>.
+Beside it, the documentation habit: the README's opening box carries its
+own correction, naming the version the old claim was true of, the
+function that caused it, the test that records the fix, and the sentence
+"[t]he fix shipped; the text did not follow it. Corrected here."</li>
+<li>Maturity impression: AGPL-3.0 with a paid commercial option, Python,
+version 0.7.7, 130,388 lines in the core package with 1,694 test files
+on SQLite, a local judge model fetched once for the admission gate, an
+MCP server, an SDK and a gateway. Five auto-run surfaces and two
+build-time execution points at this pin; nothing was installed or run
+and no model was fetched.</li>
+<li>Study when: you are about to put content into a tamper-evident log,
+or your recall defaults to showing everything.</li>
+<li>Do not copy when: you need tenant isolation the library enforces
+rather than the caller. Three marks: trust state, mutation audit,
+review.</li>
 </ul>
         </article>
       </div>

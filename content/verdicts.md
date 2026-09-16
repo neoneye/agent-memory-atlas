@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 545 reports.**
+**This page covers all 546 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4710,3 +4710,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, Rust, version 0.7.2, 20,225 lines over 24 files on Neo4j, shipped as a crate, an npm package, a Docker image and a bundled agent skill, with tests that assert properties of the generated Cypher itself. One auto-run surface at this pin.
 - Study when: an omitted scope argument in your system means "everything", or your correction edges are searchable.
 - Do not copy when: you cannot run a Neo4j, or you need a tier that actually gates. Three marks: bitemporal, scope enforced, mutation audit.
+
+### [`verimem`](../systems/verimem/)
+- Best idea: **an audit chain that records the deletion and refuses to remember what was deleted.** Every destructive operation appends one row to `audit_mutations` "INSIDE THE SAME TRANSACTION as the mutation itself", hash-chained so any edit or reorder is detectable, and `record_mutation` "never swallows" — a failure to record propagates rather than leaving an unrecorded deletion. The content rule is argued rather than assumed: "storing WHAT was deleted — even as a hash, brute-forceable on short text — inside an immutable chain makes GDPR Art.17 erasure a logical contradiction", so "[t]he chain proves THAT/WHO/WHEN/WHICH-RECORD, not what the record said." Both decisions are attributed to two independent adversarial reviews with the finding ids each answers.
+- Biggest risk: **scope lives in a string and is assembled outside the store.** Multi-tenancy is "a ZERO-SCHEMA topic prefix" — `user:<u>/agent:<a>/run:<r>/<base-topic>` — and the functions that build the `topic LIKE '<prefix>%'` narrow are imported by `verimem/cli.py` rather than applied inside recall, so isolation holds on the command-line path and is the caller's responsibility everywhere else. The module declares its own collision too: "a legitimate topic that literally starts with `user:` / `agent:` / `run:` would be parsed as scoped". There is also only one time axis — `search_facts` takes an `as_of` over record time — and nothing is keyed on a rejected value, so a purged claim can be written again as a new fact.
+- Most reusable component: the recall signature, where every route back to withheld material is a keyword somebody had to type — `include_superseded`, `include_orphaned`, `include_beliefs`, `min_status` — over a ranking clause that already reads `status NOT IN ('orphaned', 'quarantined', 'user_belief')`. Beside it, the documentation habit: the README's opening box carries its own correction, naming the version the old claim was true of, the function that caused it, the test that records the fix, and the sentence "[t]he fix shipped; the text did not follow it. Corrected here."
+- Maturity impression: AGPL-3.0 with a paid commercial option, Python, version 0.7.7, 130,388 lines in the core package with 1,694 test files on SQLite, a local judge model fetched once for the admission gate, an MCP server, an SDK and a gateway. Five auto-run surfaces and two build-time execution points at this pin; nothing was installed or run and no model was fetched.
+- Study when: you are about to put content into a tamper-evident log, or your recall defaults to showing everything.
+- Do not copy when: you need tenant isolation the library enforces rather than the caller. Three marks: trust state, mutation audit, review.
