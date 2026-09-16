@@ -46262,6 +46262,50 @@ chain. A ten-query set where the negatives must come back empty beside
 positives that must not is the store-level must-not-retrieve assertion
 this atlas looks for, built here for a search index rather than a
 memory.</li>
+<li><strong><code>veersaraf/forgetting-bench</code> was examined and has
+no report, because it measures the thing rather than being it — and its
+measurements are worth carrying anyway.</strong> MIT, Python, 3,304
+lines over 34 files at <a
+href="https://github.com/veersaraf/forgetting-bench/commit/12596f7d304e74f47500b77a0a7d4fb16f32a7d2"><code class="commit-id" title="12596f7d304e74f47500b77a0a7d4fb16f32a7d2">12596f7d…</code></a>,
+dated 4 September 2026. It is "[a] benchmark for whether agent memory
+<strong>forgets</strong> — not just whether it recalls", built on the
+observation that the mainstream libraries "are built and benchmarked
+around <strong>recall</strong>" while "the under-measured half of
+long-horizon memory is whether an agent <strong>forgets stale facts,
+resolves contradictions, and stays bounded</strong> over thousands of
+turns". A reference memory core ships with it, but it exists to be
+measured, which is what puts this here rather than in a report. Four
+things in it are worth a reader's time. The first is the design decision
+that keeps the contradiction metric from being a tautology: the memory
+core does not receive clean slot keys, it extracts
+<code>(entity, attribute)</code> from raw text with a trained tagger,
+and 40% of updates are deliberately phrased to defeat it — implicit or
+numeric updates like "Alice relocated to Denver" that never restate the
+attribute — while the metric is scored against ground truth the memory
+never sees. A benchmark whose contradiction rate reached zero "would be
+measuring its own plumbing, not memory quality". The second is the
+resulting floor: across keep-everything, last-write-wins, Ebbinghaus
+decay and a learned policy, the stale-fact contradiction rate bottoms
+out near 0.33 and no policy beats it, because extraction misses set it.
+The third is what decay actually buys over per-slot dedup, which is the
+mem0-style bar: not contradictions and not recall, which match within
+noise (0.319 against 0.330, and 0.668 against 0.670), but
+<strong>bounded memory</strong> — about 40% fewer entries and 42% fewer
+tokens, with the gap widening over the horizon, because last-write-wins
+"never forgets what it can't slot" and distractor noise therefore
+accumulates forever. The fourth is that forgetting is a frontier rather
+than a setting: sweeping the decay constant moves between 0.10
+contradictions at 0.50 recall and 0.67 recall at the 0.33 floor, and
+per-slot dedup is one fixed point on that curve. What earns the entry,
+beyond the numbers, is the reporting. The one result that flatters the
+worst policy is kept and explained rather than dropped — keep-everything
+"wins" precision and recall because "retaining every past value means
+old entries whose value coincidentally equals the current one get
+counted as correct hits", which is "hoarding, not skill", and is the
+same hoarding that gives it by far the worst contradiction rate. And the
+live adapters for the commercial libraries are marked "probed, not
+scored", with the scope of the claim stated plainly: "No claim here is a
+mem0 or Letta win."</li>
 <li><strong><a
 href="https://arxiv.org/abs/2609.11060">arXiv:2609.11060</a> was
 analysed and has no report: the mechanism is two prompt blocks and a
