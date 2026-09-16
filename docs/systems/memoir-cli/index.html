@@ -110,14 +110,14 @@ a verb a person can type.</p>
               <strong>camgitt/memoir</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/camgitt/memoir/commit/fb24c9b2e4a39bfd058d27d5757bfa781de58b51" title="fb24c9b2e4a39bfd058d27d5757bfa781de58b51">
+            <a class="meta-pill revision-pill" href="https://github.com/camgitt/memoir/commit/8de614336ec01582bf8ed97e3717714955653b37" title="8de614336ec01582bf8ed97e3717714955653b37">
               <span>Analyzed revision</span>
-              <code>fb24c9b2…</code>
+              <code>8de61433…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/camgitt--memoir" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -616,6 +616,20 @@ an adapter is a name, an icon, a source directory and a filter — which
 is why eleven tools are supported in 959 lines. The MCP server writes
 all output to stderr so it cannot corrupt JSON-RPC on stdout, which is a
 small thing that many MCP servers in this atlas get wrong.</p>
+<p><strong>A scope identity that collapsed, and the alias that keeps the
+old rows reachable.</strong> <code>projectIdentity</code> derives a
+<code>local:</code> id by hashing the path relative to home — and
+<code>path.relative(home, home)</code> is the empty string, so anyone
+running the agent from <code>~</code> was hashing <code>""</code>. The
+comment names the consequence: the home directory <em>"is a legitimate
+working root for people who run their agent from ~"</em>, and hashing
+the empty string <em>"gives every such user the same degenerate
+id"</em>. Distinct installations shared one scope. Home is now named
+<code>'~'</code> explicitly, and because the old rows were written under
+the degenerate id, <code>canonicalIdentity</code> aliases
+<code>sha256("")</code> back to the real home identity <em>"so they stay
+visible"</em> — the repair reaches the records the bug already produced
+rather than only the ones written after it.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>Concurrency is taken seriously and the reasoning is written down. The
@@ -868,6 +882,21 @@ writer? That needs the hosts running, not the repository.</li>
 <code>test-schema-migration.mjs</code>,
 <code>test-session-lock.mjs</code>.</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/camgitt/memoir/commit/8de614336ec01582bf8ed97e3717714955653b37"><code class="commit-id" title="8de614336ec01582bf8ed97e3717714955653b37">8de61433…</code></a>
+— re-read at a commit dated 9 September 2026, fifteen commits past the
+previous pin. All five marks re-tested and held, and the scope one is
+better defended than it was: <code>projectIdentity</code> used to hash
+<code>path.relative(home, absolute)</code>, which is the empty string
+when the working root <em>is</em> home, so everyone running the agent
+from <code>~</code> shared one degenerate <code>local:</code> id. Home
+is now named <code>'~'</code> explicitly, and
+<code>canonicalIdentity</code> aliases the old <code>sha256("")</code>
+id back to the real home identity so records written under the collision
+stay reachable. Screened before reading, from a full clone: one auto-run
+surface, one build-time execution point, one unpinned dependency surface
+and none inside the seven-day cooldown; an agent-addressed instruction
+file was recorded as data. Nothing was installed, built or run.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/camgitt/memoir/commit/fb24c9b2e4a39bfd058d27d5757bfa781de58b51"><code class="commit-id" title="fb24c9b2e4a39bfd058d27d5757bfa781de58b51">fb24c9b2…</code></a>
 — re-pinned twenty commits on, releases 3.13.0 to 3.15.0.

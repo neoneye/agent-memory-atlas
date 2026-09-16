@@ -7,9 +7,9 @@ page_kind: system
 source_name: "MythologIQ-Labs-LLC/agent-memory"
 source_url: https://github.com/MythologIQ-Labs-LLC/agent-memory
 archive_name: "MythologIQ-Labs-LLC--agent-memory"
-revision: 4b0ed7546fd8220a89eb9de8b800317f77bac823
-revision_url: https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/4b0ed7546fd8220a89eb9de8b800317f77bac823
-analyzed_at: 2026-09-07
+revision: 194b58ce3fd3f12c0060e71d3e6d20fce7e49bcf
+revision_url: https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/194b58ce3fd3f12c0060e71d3e6d20fce7e49bcf
+analyzed_at: 2026-09-16
 capabilities: "bitemporal, scope_enforced, audit_log, human_review, negative_eval, tombstone"
 capability_evidence:
   tombstone: "the reference adapter — a rejected-value registry consulted before admission | reference/agentmem_ref/runtime/adapter.py | `RejectedValueRegistry` in `core/readmission.py:149` with its `readmit` path for a deliberate reversal (:209), consulted by the adapter, which returns the refusal as `rejected_value_requires_reconciliation` (`runtime/adapter.py:324`) rather than a silent drop | reference/tests/"
@@ -137,6 +137,24 @@ The mechanism does what the docstring says. A purge that stops at the first hop 
 ### Authority — `policy.py`
 
 Five outcomes with a strictness ordering, so composing constraints takes a maximum rather than a vote. The separation the module exists to hold is that estimator confidence feeds *evidence quality* and never the outcome — which is the executable form of "uncertainty may propose, authority constrains", and is what stops a confident model from laundering its confidence into permission. `fixtures/authority-laundering.json` is named for the attack.
+
+ADR-038 adds a row the matrix did not have: `action_execution`, *"exercising
+authority already held to cause an externally meaningful action"*, graded from
+`ALLOW_WITH_LEDGER` at low risk through `REQUIRE_REVIEW` to
+`REQUIRE_EXTERNAL_VERIFICATION` at critical — and marked out as *"[n]ot a memory
+mutation"*, with the authority-class floors still applying independently. Acting
+on what you remember is governed on its own axis rather than folded into the
+axis about changing it.
+
+Beside it, a decision now carries the constraints that produced it. They are
+*"derived from the proposal rather than from the outcome, so a discharge cannot
+remove them"* — the guarantee that matters, because a constraint computed from
+the answer can be argued away by changing the answer. The comment then separates
+two obligations that share a name: *"`require_review` from a cell and
+`require_review` from the A4 floor are different obligations, and only the first
+is dischargeable on the action path."* A review requirement that came from the
+risk cell can be satisfied; one that came from the authority floor cannot, and
+collapsing the two would quietly turn the second into the first.
 
 ### Scope — `adapter.py`
 
@@ -275,6 +293,8 @@ Walk away if you want a store. The substrate is a dictionary, the retrieval is t
 - Validators: `scripts/validate_fixtures.py`, `validate_schemas.py`, `validate_doctrine_boundaries.py`.
 
 ## History
+
+**2026-09-16** — [`194b58ce3fd3f12c0060e71d3e6d20fce7e49bcf`](https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/194b58ce3fd3f12c0060e71d3e6d20fce7e49bcf) — re-read at a commit dated 12 September 2026, seven commits past the previous pin. All six marks re-tested and held. ADR-038 adds an `action_execution` row to the risk matrix, governing the exercise of authority already held as its own axis rather than as a memory mutation, and puts the active constraints on the decision itself — derived from the proposal so a discharge cannot remove them, and distinguishing a review obligation that came from a risk cell, which is dischargeable, from one that came from an authority floor, which is not. Screened before reading, from a full clone: one auto-run surface, one build-time execution point, three unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-07** — [`4b0ed7546fd8220a89eb9de8b800317f77bac823`](https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/4b0ed7546fd8220a89eb9de8b800317f77bac823) — re-pinned 53 commits on, version 0.2.0. `agentmem_ref` is restructured into seven subpackages — `contracts`, `core`, `crg`, `harness`, `memory`, `runtime`, `state` — with the old module paths kept as import shims, so every citation in this report moves: the adapter to `runtime/adapter.py`, PAMA to `core/policy.py`, receipts and portable evidence to `core/`, residue, substrate and projections to `state/`, deletion completeness to `memory/`, the rejected-value registry to `core/readmission.py`. ADR-037 (PRs #377 to #384) makes `require_review` fail closed once a remediation path exists: a refused proposal parks in `DurableDecisionRegistry` with its unmet criteria, evidence carries a class it cannot claim and a lineage it cannot escape, a bound human confirmation discharges, self-verification and unbound attestations are refused, and a parked proposal carries no standing authority; `test_verified_discharge.py` holds the twelve cases. Ledger session seals are anchored under `refs/seals/`. 1,124 tests, 98 doctrine documents. Six marks stand, `human_review` on wider evidence. Screened before reading: one auto-run surface (`.github/copilot-instructions.md`), three manifests inside the seven-day cooldown, nothing installed or run.
 

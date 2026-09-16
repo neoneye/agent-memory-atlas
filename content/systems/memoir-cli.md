@@ -7,9 +7,9 @@ page_kind: system
 source_name: "camgitt/memoir"
 source_url: https://github.com/camgitt/memoir
 archive_name: "camgitt--memoir"
-revision: fb24c9b2e4a39bfd058d27d5757bfa781de58b51
-revision_url: https://github.com/camgitt/memoir/commit/fb24c9b2e4a39bfd058d27d5757bfa781de58b51
-analyzed_at: 2026-09-07
+revision: 8de614336ec01582bf8ed97e3717714955653b37
+revision_url: https://github.com/camgitt/memoir/commit/8de614336ec01582bf8ed97e3717714955653b37
+analyzed_at: 2026-09-16
 capabilities: "tombstone, audit_log, human_review, negative_eval, scope_enforced"
 capability_evidence:
   tombstone: "the decision list — an absolute tombstone keyed on the decision text and sticky across replicas | src/commands/forget.js | `memoir forget \"substring\" [--purge]` resolves the decision and calls `hideDecision`, setting `hidden` and `hidden_at`; hiding is monotonic by spec, `--purge` redacts the text while keeping a sha256 identity, and `capDecisions` gives tombstones a budget separate from visible entries so a tombstone is not pruned away with ordinary rows | tests/ — the merge and validator cases; the forget verb was read rather than run"
@@ -477,6 +477,18 @@ are supported in 959 lines. The MCP server writes all output to stderr so it
 cannot corrupt JSON-RPC on stdout, which is a small thing that many MCP servers
 in this atlas get wrong.
 
+**A scope identity that collapsed, and the alias that keeps the old rows
+reachable.** `projectIdentity` derives a `local:` id by hashing the path
+relative to home — and `path.relative(home, home)` is the empty string, so
+anyone running the agent from `~` was hashing `""`. The comment names the
+consequence: the home directory *"is a legitimate working root for people who
+run their agent from ~"*, and hashing the empty string *"gives every such user
+the same degenerate id"*. Distinct installations shared one scope. Home is now
+named `'~'` explicitly, and because the old rows were written under the
+degenerate id, `canonicalIdentity` aliases `sha256("")` back to the real home
+identity *"so they stay visible"* — the repair reaches the records the bug
+already produced rather than only the ones written after it.
+
 ## 9. Reliability, Safety, and Trust
 
 Concurrency is taken seriously and the reasoning is written down. The lock covers
@@ -723,6 +735,8 @@ adopting any of the rest.
 `test-capture-quality.mjs`, `test-schema-migration.mjs`, `test-session-lock.mjs`.
 
 ## History
+
+**2026-09-16** — [`8de614336ec01582bf8ed97e3717714955653b37`](https://github.com/camgitt/memoir/commit/8de614336ec01582bf8ed97e3717714955653b37) — re-read at a commit dated 9 September 2026, fifteen commits past the previous pin. All five marks re-tested and held, and the scope one is better defended than it was: `projectIdentity` used to hash `path.relative(home, absolute)`, which is the empty string when the working root *is* home, so everyone running the agent from `~` shared one degenerate `local:` id. Home is now named `'~'` explicitly, and `canonicalIdentity` aliases the old `sha256("")` id back to the real home identity so records written under the collision stay reachable. Screened before reading, from a full clone: one auto-run surface, one build-time execution point, one unpinned dependency surface and none inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
 **2026-09-07** — [`fb24c9b2e4a39bfd058d27d5757bfa781de58b51`](https://github.com/camgitt/memoir/commit/fb24c9b2e4a39bfd058d27d5757bfa781de58b51) — re-pinned twenty commits on, releases 3.13.0 to 3.15.0. `src/memory/scope.js` adds a project identity and a visibility predicate that `searchMemories` and every session view apply, with a two-project recall case in `test-retrieval-index.mjs`, so `scope_enforced` is awarded; the same predicate reads `valid_from` and `valid_until`, which nothing writes. Beside it: a lexical index and a memory store with revalidation of changing sources, encrypted backups preserved across pushes, private project handoffs, a pinned block that parks a todo instead of evicting it (`parked_actions`, spec v0.1.2), `mergeSessions` passing unknown fields through, an events summary, and a work store with adversarial tests on symlinks, shell metacharacters, scope changes and repository hooks. The hidden tombstone, the union merge and the confirm step did not move; five marks. Screened before reading: one auto-run surface (`server.json`), two manifests inside the seven-day cooldown, nothing installed or run.
 
