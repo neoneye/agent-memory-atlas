@@ -38,6 +38,16 @@ matrix:
 
 ## 1. Executive Summary
 
+**The repository this report describes is no longer reachable.**
+`bobaba76/Argos` returns 404, and so does the GitHub API for it; there is no
+redirect, so this is a deletion or a switch to private rather than a rename. The
+pinned commit survives because the atlas forked the repository before it went:
+[`agent-memory-atlas-archive/bobaba76--Argos`](https://github.com/agent-memory-atlas-archive/bobaba76--Argos)
+holds `755f652a` intact, so every line quoted below can still be checked — by
+that fork rather than by the original. The marks stand for the same reason: the
+code they rest on exists, at the commit they were tested against. What a reader
+cannot do is see what happened next.
+
 Argos is **persistent memory for a Hermes agent** — a plugin for Nous
 Research's Hermes host with a standalone service behind it — and it is
 also a standalone memory server, because the same store answers an MCP
@@ -610,6 +620,8 @@ python3 -c "import json;print(sum(json.loads(l)['autoeval_label']['label'] for l
 ```
 
 ## History
+
+**2026-09-16** — [`755f652a5d1cff21b1a38c371f5790f79feb87af`](https://github.com/bobaba76/Argos/commit/755f652a5d1cff21b1a38c371f5790f79feb87af) — re-read attempted; `bobaba76/Argos` returns 404 from both the web and the API, with no redirect, so the repository was deleted or made private rather than renamed. The pin is unchanged because there is nothing newer to move to. The commit itself is preserved in the atlas's archive fork, [`agent-memory-atlas-archive/bobaba76--Argos`](https://github.com/agent-memory-atlas-archive/bobaba76--Argos), which is where a reader can now check the quotations; the source and revision links in this report keep naming the original, which is what they are a record of. No mark was re-tested against a newer commit and none is withdrawn: the code each one rests on still exists at this sha.
 
 **2026-09-07** — [`755f652a5d1cff21b1a38c371f5790f79feb87af`](https://github.com/bobaba76/Argos/commit/755f652a5d1cff21b1a38c371f5790f79feb87af) — re-pinned two commits on. `store_collections.py` adds scope-filtered, exhaustively listed collections behind the facade with 30 cases, `test_rpc_access_audit.py` adds 19 cases on forged confirmations and audited denials, and `stale_review_sweep.py` now re-reviews `reviewed_approved` and `pending_user_confirmation` candidates beside `pending`, which closes the open question this report carried about auto-approved candidates never confirmed. 152 test files, 2,803 test functions. Seven marks stand on the same evidence. Screened before reading: `requirements.txt` inside the seven-day cooldown, nothing installed or run.
 
