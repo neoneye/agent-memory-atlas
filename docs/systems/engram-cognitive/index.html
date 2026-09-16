@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single-file Python memory for
+agents with episodes, superseded facts, an entity graph and agent
+partitioning, whose published numbers are recomputed by a CI gate and
+whose gates are themselves pinned to the release workflow.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Engram
+Cognitive — Agent Memory Atlas">
+    <meta property="og:description" content="A single-file Python memory
+for agents with episodes, superseded facts, an entity graph and agent
+partitioning, whose published numbers are recomputed by a CI gate and
+whose gates are themselves pinned to the release workflow.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Engram
+Cognitive — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single-file Python
+memory for agents with episodes, superseded facts, an entity graph and
+agent partitioning, whose published numbers are recomputed by a CI gate
+and whose gates are themselves pinned to the release workflow.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Engram Cognitive — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Engram Cognitive",
+      "description": "A single-file Python memory for agents with episodes, superseded facts, an entity graph and agent partitioning, whose published numbers are recomputed by a CI gate and whose gates are themselves pinned to the release workflow.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Two time columns, one clock: the bitemporal
+test builds rows no shipped writer can produce</p>
+          <h1>Engram Cognitive</h1>
+          <p class="document-deck">A single-file Python memory for
+agents with episodes, superseded facts, an entity graph and agent
+partitioning, whose published numbers are recomputed by a CI gate and
+whose gates are themselves pinned to the release workflow.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/TAIPANBOX/engram">
+              <span>Source</span>
+              <strong>TAIPANBOX/engram</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/TAIPANBOX/engram/commit/c6d0d3f2aabcba6c96a7c4f503a2ccc9dabb74a9" title="c6d0d3f2aabcba6c96a7c4f503a2ccc9dabb74a9">
+              <span>Analyzed revision</span>
+              <code>c6d0d3f2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/TAIPANBOX--engram" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>TAIPANBOX--engram</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Engram is "[t]he SQLite of agent memory: embeddable, local-first,
+cognitively grounded" — Apache-2.0, version 2.4.1, 15,574 lines of
+Python across 59 files, one <code>.engram</code> file on disk holding
+episodes, facts, entities and a graph, with "no server, no Docker, and
+no API key required to write a memory."</p>
+<p>The shape is three planes over one SQLite file. Episodes are raw
+observations with a caller-settable timestamp, actors, tags and a
+decaying importance score. Facts are subject-predicate-object triples
+with validity columns, extracted by a <code>reflect()</code> pass the
+caller schedules rather than by the write. Entities and Hebbian-weighted
+edges sit beside both, so recall can walk to what a match is connected
+to and not only to what it resembles. <code>agent_id</code> partitions
+the episodic plane; the semantic plane is shared.</p>
+<p><strong>What is worth carrying away is how the project holds its own
+claims.</strong> Three scripts under <code>scripts/</code> enforce three
+invariants, and each is written as a paragraph of reasoning before a
+line of bash. <code>no-network-at-write.sh</code> walks the package's
+AST looking for a module-level import of any of nine network-capable
+modules, and says why it is not a regexp:</p>
+<blockquote>
+<p>"Uses Python's AST, not a regexp, because indentation is the entire
+distinction and a regexp would be fooled by an import inside a try block
+at module scope."</p>
+</blockquote>
+<p><code>local-first.sh</code> holds the install side, which "can break
+without a single import changing", by pinning the default dependency set
+to an allow-list of three and by running a full observe-and-recall cycle
+with socket creation made to raise — checked "by making socket creation
+raise rather than by watching traffic, so a call that would have
+connected fails loudly instead of passing quietly on a machine that
+happens to have no route." The same script records that this check
+corrected the invariant it was written to hold: with a cold cache,
+<code>observe()</code> does fetch a 64 MB ONNX model on first use, the
+README had said 23 MB, and the invariant's absolute phrasing "read as an
+absolute and was not one." It now promises "one fetch, then never
+again."</p>
+<p><code>readme-numbers.sh</code> recomputes the published recall table
+from the committed per-question records rather than trusting it, and
+explains why the project needed it: "engram's own release history is a
+sequence of fixes to published numbers. 2.4.1 shipped for no other
+reason than that the headline table still described the previous blend
+weights one release after they stopped being the default." The atlas has
+seen a documentation gate before, in <a
+href="../cortex-hypermnesia/">Cortex</a>. Engram adds the layer above
+it. <code>tests/test_gates_are_wired.py</code> asserts each gate script
+appears in <code>release.yml</code>, because <code>ci.yml</code>
+triggers on pushes and pull requests and a tag push triggers neither —
+so the workflow that built the wheel reaching PyPI ran ruff, mypy and
+pytest and none of the three gates. A gate, as that file puts it, "is
+only a gate where it is invoked."</p>
+<p><strong>The finding is one plane down.</strong> The
+<code>facts</code> table has four time columns —
+<code>valid_from</code>, <code>valid_to</code>,
+<code>recorded_at</code>, <code>superseded_at</code> — the schema of a
+bitemporal store. Both writers that exist set <code>valid_from</code>
+and <code>recorded_at</code> to the same <code>now</code>, and
+<code>close_fact</code> writes a single <code>now</code> into
+<code>valid_to</code> and <code>superseded_at</code> together. No public
+method accepts a validity time. What <code>get_facts_as_of</code> reads
+back is a version chain over write time wearing a valid-time query, and
+the suite that proves it passes because its helper writes rows directly
+with <code>recorded_at=valid_from</code>, a combination no shipped path
+produces. The bitemporal mark is withheld on that.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An <strong>episode</strong> is something that happened, timestamped
+by the caller if they are back-filling history.</p>
+<p>A <strong>fact</strong> is a triple that was true over an interval,
+closed when a newer extraction disagrees.</p>
+<p>An <strong>agent_id</strong> is a partition of the episodic plane,
+and nothing at all on the semantic one.</p>
+<p>A <strong>published number</strong> is recomputed from committed
+records on every push.</p>
+<p>A <strong>gate</strong> is only a gate in the workflow that invokes
+it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — episodes are partitioned by agent_id while facts are shared, and the four time columns on a fact are written from a single clock, so the as-of read is a version chain rather than a belief history</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: episodes are partitioned by agent_id while facts are shared, and the four time columns on a fact are written from a single clock, so the as-of read is a version chain rather than a belief history
+flowchart TB
+    OBS[&quot;observe(content, timestamp=…)&lt;br/&gt;caller may back-fill the period described&quot;] --&gt; EP[(&quot;episodes — agent_id, actors,&lt;br/&gt;salience, importance_score&quot;)]
+    OBS -.-&gt;|&quot;memory_written, only when&lt;br/&gt;events_path AND agent_id are set&quot;| LOG[(&quot;events.ndjson —&lt;br/&gt;append-only, prev_hash chain&quot;)]
+    EP --&gt; VEC[(&quot;vec_episodes — agent_id is a&lt;br/&gt;vec0 PARTITION KEY, not a join filter&quot;)]
+    EP --&gt; FTS[(&quot;fts_episodes — BM25&quot;)]
+    VEC &amp; FTS --&gt; BLEND[&quot;recall: 0.5 vector / 0.5 lexical,&lt;br/&gt;or spreading activation over edges&quot;]
+    SCOPE{&quot;agent_id = None if cross_agent&lt;br/&gt;else self._agent_id&quot;} --&gt; BLEND
+    BLEND --&gt; OUT[&quot;what the agent is handed —&lt;br/&gt;its own episodes unless it asks to widen&quot;]
+    EP --&gt; REFL[&quot;reflect(): the whole episode window&lt;br/&gt;since the last finished run, to an LLM&quot;]
+    REFL --&gt; F[(&quot;facts — subject, predicate, object&lt;br/&gt;valid_from · valid_to&lt;br/&gt;recorded_at · superseded_at&quot;)]
+    NOW[&quot;now = datetime.now(UTC)&quot;] -.-&gt;|&quot;written into valid_from&lt;br/&gt;AND recorded_at, together&quot;| F
+    NOW -.-&gt;|&quot;close_fact writes the same now into&lt;br/&gt;valid_to AND superseded_at&quot;| F
+    F --&gt; ASOF[&quot;get_facts_as_of(subject, T):&lt;br/&gt;valid_from &lt;= T AND (valid_to IS NULL OR valid_to &gt; T)&quot;]
+    ASOF -.-&gt;|&quot;one clock fed both axes, so this reads a&lt;br/&gt;version chain over write time — it cannot&lt;br/&gt;answer what the store BELIEVED at T&quot;| NOBI[&quot;no bitemporal mark&quot;]
+    TEST[&quot;tests/test_bitemporal.py:39-54&quot;] -.-&gt;|&quot;_make_fact sets recorded_at=valid_from&lt;br/&gt;and inserts directly: a row no&lt;br/&gt;shipped writer can produce&quot;| ASOF
+    FE[&quot;forget_entity(name) — GDPR erasure,&lt;br/&gt;crosses every agent in the file&quot;] --&gt; DEL[&quot;deletes episodes WHERE the name is in&lt;br/&gt;the caller-supplied actors JSON&quot;]
+    DEL -.-&gt;|&quot;an episode whose TEXT names the person&lt;br/&gt;but whose actors list omits them survives&quot;| REFL
+    REFL -.-&gt;|&quot;nothing is keyed on the deleted value,&lt;br/&gt;so the next pass can re-extract it&quot;| NOTOMB[&quot;no tombstone mark&quot;]
+    F --&gt; SHARED[&quot;facts carry no agent_id:&lt;br/&gt;shared across agents by decision,&lt;br/&gt;and fact_count refuses to hide it&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>engram/schema.py</code></td>
+<td>The six tables, and <code>agent_id</code> as a vec0 partition
+key</td>
+</tr>
+<tr>
+<td><code>engram/core.py</code></td>
+<td>The public surface, and where events are emitted</td>
+</tr>
+<tr>
+<td><code>engram/store.py</code></td>
+<td>Every SQL path, including the as-of reads</td>
+</tr>
+<tr>
+<td><code>engram/reflection.py</code></td>
+<td>Extraction, supersession, contradiction counting</td>
+</tr>
+<tr>
+<td><code>engram/events.py</code></td>
+<td>The NDJSON chain, and the rules that keep it off</td>
+</tr>
+<tr>
+<td><code>scripts/*.sh</code></td>
+<td>Three invariants, each with its argument written down</td>
+</tr>
+<tr>
+<td><code>tests/test_gates_are_wired.py</code></td>
+<td>That the gates run where the bytes ship</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>engram/core.py:336</code> —
+<code>agent_id = None if cross_agent else self._agent_id</code>, the one
+line the scope rests on.</p>
+<p><code>engram/core.py:377-392</code> and
+<code>engram/reflection.py:99-113</code> — the only two places a
+<code>Fact</code> is built, both stamping one <code>now</code> into two
+axes.</p>
+<p><code>engram/store.py:721-726</code> — <code>close_fact</code>,
+writing the same value into <code>valid_to</code> and
+<code>superseded_at</code>.</p>
+<p><code>engram/store.py:1235-1246</code> —
+<code>get_facts_as_of</code>, the valid-time query the write path never
+gives anything to distinguish.</p>
+<p><code>engram/events.py:188-204</code> —
+<code>resolve_events_path</code>, which returns <code>None</code> and
+disables the log unless a path or environment variable says
+otherwise.</p>
+<p><code>scripts/no-network-at-write.sh:1-45</code> — an invariant, its
+enforcement, and the argument for the shape of the check.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Six tables in one file. <code>episodes</code> (content, timestamp,
+actors, tags, salience, emotional valence, a <code>summary_of</code>
+list, importance score, agent_id), <code>facts</code> (triple, four time
+columns, confidence, <code>derived_from</code>,
+<code>extracted_by</code>), <code>entities</code>, <code>edges</code>
+(weighted, agent-scoped), <code>reflections</code> (one row per
+extraction run, with tokens and contradictions resolved), and
+<code>access_log</code> — which records reads, not writes, and so is the
+other half of the audit pattern rather than this one. Vectors live in a
+<code>vec_episodes</code> virtual table partitioned on agent_id,
+keywords in an FTS5 table.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three modes behind one call. Hybrid is the default at a 0.5/0.5
+blend, chosen by measurement rather than taste:
+<code>engram-bench longmemeval --sweep</code> scores every weighting in
+one pass, and 2.4.0 moved the default from 0.7/0.3 on the result that
+the middle leads all four metrics and "both ends of the range are
+clearly worse than the middle". The published table covers all 500
+LongMemEval-S questions over 246,738 ingested turns, with no model in
+the loop, and the per-question records are committed so a reader can
+recompute instead of trusting. The caveats travel with the numbers: the
+dataset flags no evidence turn at all for 21 questions, and more than
+one for 59% of them, "so counting a hit when any of them is retrieved is
+an upper bound on what the model was handed."</p>
+<p>Spreading activation walks Hebbian edges out from what matched.
+<code>as_of</code> restricts episodes to a timestamp, and resolves
+inside the KNN scan rather than after it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are local and immediate; nothing calls a model on the write
+path, and a CI gate holds that structurally. Extraction happens in
+<code>reflect()</code>, which windows off the last <em>completed</em>
+run so an aborted pass cannot advance the watermark past episodes it
+never processed, wraps the entire extract-insert-supersede-edge sequence
+in one transaction, and holds the store lock over the database work but
+never across the LLM call. A newer extraction closes every older active
+fact with the same subject and predicate; a same-object re-extraction
+closes silently as agreement, and only a differing object counts as a
+contradiction and emits an event.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Python library, an async wrapper, an <code>engram</code> CLI, and
+an MCP server exposing <code>remember</code>, <code>recall</code>,
+<code>why</code>, <code>forget</code> and <code>stats</code> with
+per-call <code>agent_id</code>. <code>reflect()</code> is deliberately
+not exposed as a tool — the pass that spends tokens and rewrites the
+semantic plane stays with the operator.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><code>why()</code> returns a fact's provenance episode by episode.
+The event log, when configured, chains each event to the last over a
+canonicalised body and advances only on a successful write. Encryption
+is available through SQLCipher with a <code>rekey()</code> method, and
+<code>backup()</code> is a separate path. Against that: the event log is
+off by default and off entirely on an unscoped instance,
+<code>emit</code> swallows its own failures, and
+<code>import_json</code> writes memories that no event records. Erasure
+is permanent and unprotected against re-derivation.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Twenty-nine test modules, several of which test the project's own
+process rather than its behaviour: that the gates run in the workflow
+that ships bytes, that the vendored event schema matches the contract
+the code speaks, and that the README's numbers are the ones the
+benchmark records produce. The multi-agent suite is the strongest single
+file — its lopsided fixtures exist because "[t]he old tests all used
+two-episode stores, where the global top-k trivially contains everything
+and the bug is invisible."</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Take the gate-wiring test. Most projects that write a CI check stop
+once it passes somewhere; this one asks which workflow actually
+publishes and checks the gate is in <em>that</em> one. The cost is a
+twenty-line test and the benefit is that a release cannot quietly skip
+the invariant.</p>
+<p>Take the allow-list over the denylist, and the reason given for
+it.</p>
+<p>And take the warning in the bitemporal columns. Four columns named
+for two axes do not make a store bitemporal — one clock feeding both is
+a version chain, and a test suite that constructs its own rows will not
+tell you which you have. The check is a producer test: find every writer
+of the validity field and ask whether any of them can set it to
+something other than the moment of writing.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether <code>valid_from</code> was meant to be caller-settable.
+<code>observe()</code> already takes a <code>timestamp</code> for
+exactly this reason on the episodic plane — "so
+<code>recall(as_of=…)</code> places the episode in the period it
+describes rather than the moment it was written" — and the fact writer
+has no equivalent. The gap looks like an omission rather than a
+decision.</p>
+<p>Whether <code>forget_entity</code> is meant to reach episodes that
+name a person without listing them as an actor. The docstring calls it
+GDPR right-to-be-forgotten, which is a claim about the person rather
+than about the actors column.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scripts/no-network-at-write.sh:1-45</code></td>
+<td>An invariant with its argument written above it</td>
+</tr>
+<tr>
+<td><code>scripts/local-first.sh:1-46</code></td>
+<td>A check that corrected the invariant it enforced</td>
+</tr>
+<tr>
+<td><code>tests/test_gates_are_wired.py:1-40</code></td>
+<td>That a gate runs where the bytes actually ship</td>
+</tr>
+<tr>
+<td><code>engram/core.py:336</code></td>
+<td>A stored scope key reaching the query, widened but never
+omitted</td>
+</tr>
+<tr>
+<td><code>engram/store.py:721-726</code>, <code>:1235-1246</code></td>
+<td>Two time axes, one clock, and the query that cannot tell</td>
+</tr>
+<tr>
+<td><code>tests/test_multiagent.py:474-529</code></td>
+<td>A must-not-retrieve assertion with its control beside it</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/TAIPANBOX/engram/commit/c6d0d3f2aabcba6c96a7c4f503a2ccc9dabb74a9"><code class="commit-id" title="c6d0d3f2aabcba6c96a7c4f503a2ccc9dabb74a9">c6d0d3f2…</code></a>
+— first reading, at a commit dated 13 September 2026. Screened before
+opening, from a shallow clone: three files scanned, no auto-run
+surfaces, no build-time execution points, one unpinned dependency
+surface and one dependency file inside the seven-day cooldown.
+<code>CLAUDE.md</code> is addressed to a reading agent and was recorded
+as data. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

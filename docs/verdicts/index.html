@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 538 reports.</strong></p>
+<p><strong>This page covers all 539 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20101,6 +20101,55 @@ auto-run surfaces and four build-time execution points at this pin.</li>
 correction instead of linking.</li>
 <li>Do not copy when: you need a person to approve what a model wrote.
 One mark: trust state.</li>
+</ul>
+<h3 id="engram-cognitive"><a
+href="../systems/engram-cognitive/"><code>engram-cognitive</code></a></h3>
+<ul>
+<li>Best idea: <strong>a test that the gates run in the workflow that
+ships the bytes.</strong> Three scripts hold three invariants, each
+written as an argument before a line of bash, and
+<code>tests/test_gates_are_wired.py</code> asserts each appears in
+<code>release.yml</code> — because <code>ci.yml</code> triggers on
+pushes and pull requests, a tag triggers neither, and so the workflow
+that built the wheel reaching PyPI ran none of them. "A gate is only a
+gate where it is invoked." The test refuses to parse the YAML on the
+ground that PyYAML is not a declared dependency, because "a test that
+quietly depends on somebody else's transitive install is the same class
+of defect as a gate that runs in one job".</li>
+<li>Biggest risk: <strong>four time columns fed by one clock.</strong>
+<code>facts</code> carries <code>valid_from</code>/<code>valid_to</code>
+beside <code>recorded_at</code>/<code>superseded_at</code>, both shipped
+writers stamp <code>valid_from</code> and <code>recorded_at</code> with
+the same <code>now</code>, and <code>close_fact</code> writes a single
+<code>now</code> into <code>valid_to</code> and
+<code>superseded_at</code> together. No public method accepts a validity
+time, so <code>get_facts_as_of</code> reads a version chain over write
+time and cannot answer what the store believed at a past moment. The
+suite that proves the query passes because its helper inserts rows
+directly with <code>recorded_at=valid_from</code> — a combination no
+shipped path produces. Erasure is the second gap:
+<code>forget_entity</code> matches the caller-supplied
+<code>actors</code> list, so an episode whose text names the person
+survives, and the next <code>reflect()</code> can re-extract the deleted
+fact with nothing keyed on the value to stop it.</li>
+<li>Most reusable component: <code>local-first.sh</code> — an allow-list
+of exactly three permitted default dependencies rather than a denylist,
+plus a full observe-and-recall cycle run with socket creation made to
+raise, "so a call that would have connected fails loudly instead of
+passing quietly on a machine that happens to have no route". The same
+script records that it corrected the invariant it was written to
+enforce.</li>
+<li>Maturity impression: Apache-2.0, Python, version 2.4.1, 15,574 lines
+across 59 files, one SQLite file with sqlite-vec and FTS5, twenty-nine
+test modules including tests over its own process, and a 500-question
+LongMemEval-S run whose per-question records are committed so the
+published table can be recomputed rather than trusted. No auto-run
+surfaces at this pin.</li>
+<li>Study when: you have columns named for two time axes, or a CI check
+you have never confirmed runs on the release path.</li>
+<li>Do not copy when: you need erasure to survive the next extraction
+pass. Four marks: scope enforced, mutation audit, review, negative
+evals.</li>
 </ul>
         </article>
       </div>

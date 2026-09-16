@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 538 reports.**
+**This page covers all 539 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4654,3 +4654,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 4.22.0, 274,911 lines of Python and Swift, fifty-four tools over one stdio server with per-host differences documented rather than discovered, an OpenSSF Best Practices badge, tests over the CI gates themselves, and a benchmark harness. Four auto-run surfaces and four build-time execution points at this pin.
 - Study when: your README advertises counts, or you delete on correction instead of linking.
 - Do not copy when: you need a person to approve what a model wrote. One mark: trust state.
+
+### [`engram-cognitive`](../systems/engram-cognitive/)
+- Best idea: **a test that the gates run in the workflow that ships the bytes.** Three scripts hold three invariants, each written as an argument before a line of bash, and `tests/test_gates_are_wired.py` asserts each appears in `release.yml` — because `ci.yml` triggers on pushes and pull requests, a tag triggers neither, and so the workflow that built the wheel reaching PyPI ran none of them. "A gate is only a gate where it is invoked." The test refuses to parse the YAML on the ground that PyYAML is not a declared dependency, because "a test that quietly depends on somebody else's transitive install is the same class of defect as a gate that runs in one job".
+- Biggest risk: **four time columns fed by one clock.** `facts` carries `valid_from`/`valid_to` beside `recorded_at`/`superseded_at`, both shipped writers stamp `valid_from` and `recorded_at` with the same `now`, and `close_fact` writes a single `now` into `valid_to` and `superseded_at` together. No public method accepts a validity time, so `get_facts_as_of` reads a version chain over write time and cannot answer what the store believed at a past moment. The suite that proves the query passes because its helper inserts rows directly with `recorded_at=valid_from` — a combination no shipped path produces. Erasure is the second gap: `forget_entity` matches the caller-supplied `actors` list, so an episode whose text names the person survives, and the next `reflect()` can re-extract the deleted fact with nothing keyed on the value to stop it.
+- Most reusable component: `local-first.sh` — an allow-list of exactly three permitted default dependencies rather than a denylist, plus a full observe-and-recall cycle run with socket creation made to raise, "so a call that would have connected fails loudly instead of passing quietly on a machine that happens to have no route". The same script records that it corrected the invariant it was written to enforce.
+- Maturity impression: Apache-2.0, Python, version 2.4.1, 15,574 lines across 59 files, one SQLite file with sqlite-vec and FTS5, twenty-nine test modules including tests over its own process, and a 500-question LongMemEval-S run whose per-question records are committed so the published table can be recomputed rather than trusted. No auto-run surfaces at this pin.
+- Study when: you have columns named for two time axes, or a CI check you have never confirmed runs on the release path.
+- Do not copy when: you need erasure to survive the next extraction pass. Four marks: scope enforced, mutation audit, review, negative evals.
