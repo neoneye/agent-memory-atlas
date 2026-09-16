@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 543 reports.**
+**This page covers all 544 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4694,3 +4694,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, TypeScript, version 0.37.1, 19,552 lines over 100 files, SQLite over a markdown vault, a CLI and fifteen MCP tools, a vitest suite whose test names name the regression, and an eval directory running LoCoMo, LongMemEval, BEIR and a scale harness against a committed baseline. One auto-run surface at this pin.
 - Study when: your index holds anything the source of truth cannot regenerate, or your normalisation can produce an empty key.
 - Do not copy when: two agents must not see each other's facts. Three marks: bitemporal, mutation audit, review.
+
+### [`temvera`](../systems/temvera/)
+- Best idea: **it publishes the bypass that works, and a test asserts it is the only one.** `run_bypass_probes` returns four adversarial results carrying whether each activated and whether that was expected. Three must not activate — cross-tenant replay, claim tampering, expired-signature replay — and `compromised_trusted_signer` does, flagged `expected_limitation=True`, because a policy anchored on a signer's key cannot survive that key being stolen. `tests/test_bypass.py` then asserts exactly one probe activated and that it is the declared one, so a newly-working bypass fails the build and the admission cannot be quietly deleted either. Beside it, the artifact discipline: every printed figure is paired with a recomputation from a sealed run and the check "fails if either half moves", with verification deliberately decoupled from regeneration so the paper can be rechecked "without an API key, a database server, or a dataset download".
+- Biggest risk: **a deletion record that nothing reads back, in a project whose paper is about deletion semantics.** Crypto-shredding makes an erased payload unrecoverable and appends a `destroyed_key_sha256` receipt, with a two-phase journal so an interrupted purge is finished rather than half-done — but no ingest path consults those receipts, so a value destroyed on Monday can be re-asserted on Tuesday with nothing to contradict it. Tenant scoping governs authorization rather than retrieval, so it decides whether evidence may act and not what a search returns. And the project states its own limits plainly: version 0.0.1, no production readiness claimed, a provisional API, and "[c]laims outside the frozen synthetic fixtures remain hypotheses".
+- Most reusable component: the query protocol that makes both instants mandatory — `query(subject, attribute, *, valid_at, transaction_at)` — with the baselines then defined by which axis they refuse. `AppendOnlyBaseline` is built by filtering the event stream to `INGEST` only, and the weaker comparators accept `valid_at` and execute `del valid_at` before answering. Every system in the comparison receives the same two instants, so the ablation is one statement and not a different harness.
+- Maturity impression: Apache-2.0, Python, version 0.0.1, 11,702 lines over 93 files, a PVLDB Experiment/Analysis/Benchmark artifact with thirty sealed runs and 87 verified figures, adapters for the external systems it measures, and no server or MCP surface. No auto-run surfaces at this pin.
+- Study when: your security suite passes entirely, or your `as_of` parameter is optional.
+- Do not copy when: you need something deployable. Five marks: trust state, bitemporal, scope enforced, mutation audit, negative evals.

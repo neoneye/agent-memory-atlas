@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 543 reports.</strong></p>
+<p><strong>This page covers all 544 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20337,6 +20337,57 @@ a committed baseline. One auto-run surface at this pin.</li>
 regenerate, or your normalisation can produce an empty key.</li>
 <li>Do not copy when: two agents must not see each other's facts. Three
 marks: bitemporal, mutation audit, review.</li>
+</ul>
+<h3 id="temvera"><a
+href="../systems/temvera/"><code>temvera</code></a></h3>
+<ul>
+<li>Best idea: <strong>it publishes the bypass that works, and a test
+asserts it is the only one.</strong> <code>run_bypass_probes</code>
+returns four adversarial results carrying whether each activated and
+whether that was expected. Three must not activate — cross-tenant
+replay, claim tampering, expired-signature replay — and
+<code>compromised_trusted_signer</code> does, flagged
+<code>expected_limitation=True</code>, because a policy anchored on a
+signer's key cannot survive that key being stolen.
+<code>tests/test_bypass.py</code> then asserts exactly one probe
+activated and that it is the declared one, so a newly-working bypass
+fails the build and the admission cannot be quietly deleted either.
+Beside it, the artifact discipline: every printed figure is paired with
+a recomputation from a sealed run and the check "fails if either half
+moves", with verification deliberately decoupled from regeneration so
+the paper can be rechecked "without an API key, a database server, or a
+dataset download".</li>
+<li>Biggest risk: <strong>a deletion record that nothing reads back, in
+a project whose paper is about deletion semantics.</strong>
+Crypto-shredding makes an erased payload unrecoverable and appends a
+<code>destroyed_key_sha256</code> receipt, with a two-phase journal so
+an interrupted purge is finished rather than half-done — but no ingest
+path consults those receipts, so a value destroyed on Monday can be
+re-asserted on Tuesday with nothing to contradict it. Tenant scoping
+governs authorization rather than retrieval, so it decides whether
+evidence may act and not what a search returns. And the project states
+its own limits plainly: version 0.0.1, no production readiness claimed,
+a provisional API, and "[c]laims outside the frozen synthetic fixtures
+remain hypotheses".</li>
+<li>Most reusable component: the query protocol that makes both instants
+mandatory —
+<code>query(subject, attribute, *, valid_at, transaction_at)</code> —
+with the baselines then defined by which axis they refuse.
+<code>AppendOnlyBaseline</code> is built by filtering the event stream
+to <code>INGEST</code> only, and the weaker comparators accept
+<code>valid_at</code> and execute <code>del valid_at</code> before
+answering. Every system in the comparison receives the same two
+instants, so the ablation is one statement and not a different
+harness.</li>
+<li>Maturity impression: Apache-2.0, Python, version 0.0.1, 11,702 lines
+over 93 files, a PVLDB Experiment/Analysis/Benchmark artifact with
+thirty sealed runs and 87 verified figures, adapters for the external
+systems it measures, and no server or MCP surface. No auto-run surfaces
+at this pin.</li>
+<li>Study when: your security suite passes entirely, or your
+<code>as_of</code> parameter is optional.</li>
+<li>Do not copy when: you need something deployable. Five marks: trust
+state, bitemporal, scope enforced, mutation audit, negative evals.</li>
 </ul>
         </article>
       </div>
