@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 537 reports.</strong></p>
+<p><strong>This page covers all 538 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20063,6 +20063,44 @@ not become a backlog.</li>
 you gate only the end of a validity window.</li>
 <li>Do not copy when: you need the approval to establish who approved.
 Three marks: trust state, bitemporal, scope enforced.</li>
+</ul>
+<h3 id="cortex-hypermnesia"><a
+href="../systems/cortex-hypermnesia/"><code>cortex-hypermnesia</code></a></h3>
+<ul>
+<li>Best idea: <strong>a CI gate over the documentation's own numbers,
+with a pinned exemption registry.</strong>
+<code>check_doc_claims.py</code> compares "every advertised count
+against the one place that owns it" and runs "at the point where the
+drift is introduced (every push and pull request), not at release time".
+A line stating a number that is not the advertised total declares
+<code>[not-a-count-claim: &lt;label&gt;]</code>, and "[t]he declared set
+is a registry: it is printed on every successful run and pinned by a
+test naming each member, so an exemption is added deliberately or not at
+all" — an escape hatch nobody can add quietly.</li>
+<li>Biggest risk: <strong>the draft queue looks like human review and is
+not.</strong> <code>wiki_curate</code> promotes pending drafts through
+<code>evaluate_draft</code>, described as pure logic, and the compile
+step publishes "every draft currently in status='approved'", so a
+model-written page is approved by an automated evaluation and
+<code>reviewed_at</code> records when rather than who. Scope is the
+other gap: a team-scope backfill is imported by the schema module and no
+scope predicate was traced on either recall path, so what separates one
+project's memories from another's is unestablished.</li>
+<li>Most reusable component: <code>CURRENT_MEMORIES_VIEW_DDL</code> —
+<code>SELECT * FROM memories WHERE superseded_by_id IS NULL</code>
+published under a name every read path joins, so opting in is a join and
+history stays reachable — and beside it the
+<code># source: ADR-NNNN</code> comment on each DDL block, which traces
+a column to the decision that added it.</li>
+<li>Maturity impression: MIT, version 4.22.0, 274,911 lines of Python
+and Swift, fifty-four tools over one stdio server with per-host
+differences documented rather than discovered, an OpenSSF Best Practices
+badge, tests over the CI gates themselves, and a benchmark harness. Four
+auto-run surfaces and four build-time execution points at this pin.</li>
+<li>Study when: your README advertises counts, or you delete on
+correction instead of linking.</li>
+<li>Do not copy when: you need a person to approve what a model wrote.
+One mark: trust state.</li>
 </ul>
         </article>
       </div>

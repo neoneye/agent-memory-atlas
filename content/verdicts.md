@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 537 reports.**
+**This page covers all 538 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4646,3 +4646,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, Rust, version 0.58.2, 138,872 lines with 605 test functions and an `eval/` directory, four independent surfaces (Tauri desktop, MCP stdio, loopback HTTP, CLI), OAuth connectors, and candidates that expire so an unruled queue does not become a backlog.
 - Study when: you match an access list you parsed somewhere else, or you gate only the end of a validity window.
 - Do not copy when: you need the approval to establish who approved. Three marks: trust state, bitemporal, scope enforced.
+
+### [`cortex-hypermnesia`](../systems/cortex-hypermnesia/)
+- Best idea: **a CI gate over the documentation's own numbers, with a pinned exemption registry.** `check_doc_claims.py` compares "every advertised count against the one place that owns it" and runs "at the point where the drift is introduced (every push and pull request), not at release time". A line stating a number that is not the advertised total declares `[not-a-count-claim: <label>]`, and "[t]he declared set is a registry: it is printed on every successful run and pinned by a test naming each member, so an exemption is added deliberately or not at all" — an escape hatch nobody can add quietly.
+- Biggest risk: **the draft queue looks like human review and is not.** `wiki_curate` promotes pending drafts through `evaluate_draft`, described as pure logic, and the compile step publishes "every draft currently in status='approved'", so a model-written page is approved by an automated evaluation and `reviewed_at` records when rather than who. Scope is the other gap: a team-scope backfill is imported by the schema module and no scope predicate was traced on either recall path, so what separates one project's memories from another's is unestablished.
+- Most reusable component: `CURRENT_MEMORIES_VIEW_DDL` — `SELECT * FROM memories WHERE superseded_by_id IS NULL` published under a name every read path joins, so opting in is a join and history stays reachable — and beside it the `# source: ADR-NNNN` comment on each DDL block, which traces a column to the decision that added it.
+- Maturity impression: MIT, version 4.22.0, 274,911 lines of Python and Swift, fifty-four tools over one stdio server with per-host differences documented rather than discovered, an OpenSSF Best Practices badge, tests over the CI gates themselves, and a benchmark harness. Four auto-run surfaces and four build-time execution points at this pin.
+- Study when: your README advertises counts, or you delete on correction instead of linking.
+- Do not copy when: you need a person to approve what a model wrote. One mark: trust state.

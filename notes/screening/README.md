@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 476 of 537 screened at the report's current pin.**
+**Progress: 477 of 538 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 201 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 289 |
-| Repositories with build-time execution (`EXEC`) | 349 |
+| Repositories with an auto-run surface (`RUNS`) | 202 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 290 |
+| Repositories with build-time execution (`EXEC`) | 350 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -69,6 +69,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`cortana`](../../content/systems/cortana.md) | `.githooks/` |
 | [`cortex`](../../content/systems/cortex.md) | `.github/copilot-instructions.md` |
 | [`cortex-engine`](../../content/systems/cortex-engine.md) | `.githooks/`, `hooks/` |
+| [`cortex-hypermnesia`](../../content/systems/cortex-hypermnesia.md) | `.claude-plugin/`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `server.json` |
 | [`csm`](../../content/systems/csm.md) | `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`ctx`](../../content/systems/ctx.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md` |
 | [`daimon`](../../content/systems/daimon.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |

@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local memory server for coding
+agents with no model in the retrieval loop, a current-memories view that
+hides superseded rows without deleting them, and a documentation-claims
+gate whose exemption list is itself pinned by a test.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cortex
+(Hypermnesia) — Agent Memory Atlas">
+    <meta property="og:description" content="A local memory server for
+coding agents with no model in the retrieval loop, a current-memories
+view that hides superseded rows without deleting them, and a
+documentation-claims gate whose exemption list is itself pinned by a
+test.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cortex
+(Hypermnesia) — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local memory server for
+coding agents with no model in the retrieval loop, a current-memories
+view that hides superseded rows without deleting them, and a
+documentation-claims gate whose exemption list is itself pinned by a
+test.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cortex (Hypermnesia) — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Cortex (Hypermnesia)",
+      "description": "A local memory server for coding agents with no model in the retrieval loop, a current-memories view that hides superseded rows without deleting them, and a documentation-claims gate whose exemption list is itself pinned by a test.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A CI gate fails the build when the README's
+numbers stop matching the repository</p>
+          <h1>Cortex (Hypermnesia)</h1>
+          <p class="document-deck">A local memory server for coding
+agents with no model in the retrieval loop, a current-memories view that
+hides superseded rows without deleting them, and a documentation-claims
+gate whose exemption list is itself pinned by a test.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/cdeust/Cortex">
+              <span>Source</span>
+              <strong>cdeust/Cortex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/cdeust/Cortex/commit/1e58077c1e80cae83618b6511f383bdc813f2f2c" title="1e58077c1e80cae83618b6511f383bdc813f2f2c">
+              <span>Analyzed revision</span>
+              <code>1e58077c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/cdeust--Cortex" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>cdeust--Cortex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cortex — published as <code>hypermnesia-mcp</code> — is "[m]emory for
+AI coding agents that you can hold accountable. Keep decisions, fixes
+and project context between sessions, and inspect what was retrieved."
+MIT, version 4.22.0, 274,911 lines of Python and Swift, a local SQLite
+file by default or PostgreSQL with pgvector, one stdio MCP server
+exposing fifty-four tools, an OpenSSF Best Practices badge and a
+bibliography the README counts.</p>
+<p>Its three claims are worth quoting because each is a constraint
+rather than a feature. Sovereign: "[n]o LLM in the retrieval loop, and
+nothing leaves localhost unless you configure an integration that does.
+Your project's memory is a file you own and can delete." Cross-platform:
+the same fifty-four tools on every supported host, and "[w]hat differs
+per host is stated there, not discovered after install."
+Eco-responsible: "[w]ork that never reaches a datacenter is work nobody
+has to power."</p>
+<p><strong>The documentation gate is the mechanism to take
+away.</strong> <code>check_doc_claims.py</code> is a CI gate whose job
+is that "the numbers the docs advertise must match the repository", and
+it runs where drift starts:</p>
+<blockquote>
+<p>"This gate closes that at the point where the drift is introduced
+(every push and pull request), not at release time. It compares every
+advertised count against the one place that owns it."</p>
+</blockquote>
+<p>Any project that advertises counts — tests, tools, supported hosts,
+references — accumulates stale numbers, because the number and the thing
+it counts live in different files and only one of them changes. Checking
+at release time catches it after a reviewer has already read the wrong
+figure; checking on every push means the figure and the repository
+cannot diverge in the first place.</p>
+<p>And the exemption story is the part most such gates get wrong. A line
+may legitimately state a number that is not the advertised total — the
+docstring's example is "12 tests skipped locally" — and rather than
+loosening the pattern, such a line declares
+<code>[not-a-count-claim: &lt;label&gt;]</code>:</p>
+<blockquote>
+<p>"The declared set is a registry: it is printed on every successful
+run and pinned by a test naming each member, so an exemption is added
+deliberately or not at all."</p>
+</blockquote>
+<p>Printed on every run, and pinned by a test that names each member. An
+escape hatch nobody can add quietly is the difference between a gate and
+a suggestion — the same shape as <a href="../yacmemo/">yacmemo</a>'s
+counted force override, applied to documentation.</p>
+<p><strong>Supersession is a view, not a delete.</strong>
+<code>memories.superseded_by_id</code> points at whatever replaced a
+row, and <code>current_memories</code> is published as
+<code>SELECT * FROM memories WHERE superseded_by_id IS NULL</code>. Both
+recall paths — the automatic recall hook and session start — join that
+view, so the corrected row keeps its place and its link to the
+correction while dropping out of what an agent is handed. That is the
+mark.</p>
+<p>The wiki layer above it carries three more status machines with
+<code>CHECK</code> constraints: concepts move through
+<code>candidate</code> and <code>saturating</code> (with a partial index
+on exactly those two, so the working set is indexed and the settled ones
+are not), drafts through
+<code>pending | approved | rejected | published</code>, and pages
+through
+<code>proposed | accepted | rejected | deprecated | superseded</code>
+with their own <code>superseded_by</code>. Drafts record the
+<code>synth_prompt</code> and <code>synth_model</code> that produced
+them, so a synthesised page can be traced to the prompt and the model
+behind it.</p>
+<p><strong>That draft queue looks like a human-review gate and is not
+one.</strong> <code>wiki_curate</code> evaluates pending drafts through
+<code>evaluate_draft</code>, described in the module as pure logic, and
+the compile step publishes "every draft currently in status='approved'".
+So promotion is an automated evaluation, and <code>reviewed_at</code>
+records when rather than who. The queue is a quality gate on synthesis,
+which is a useful thing, and it is not a person in the loop.</p>
+<p>Scope is the other gap. A team-scope backfill exists in the schema
+module, and no scope predicate was traced on either recall path, so what
+separates one project's memories from another's was not established by
+this reading. <code>confidence</code> on a draft defaults to 0.5, so an
+unset value looks like a considered middle. And the surface is large —
+fifty-four tools, a wiki subsystem, a homeostatic state table with its
+own fold log, Swift beside Python — with four auto-run surfaces and four
+build-time execution points at this pin, which is what a multi-host MCP
+bundle with installers looks like.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>memory</strong> is current until something supersedes it,
+and then it is still there.</p>
+<p>A <strong>draft</strong> is what a model wrote, with the prompt and
+model recorded.</p>
+<p>A <strong>number in the README</strong> is a claim the build
+checks.</p>
+<p>An <strong>exemption</strong> is a registry entry, printed and
+pinned.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — supersession is a link exposed as a view that both recall paths join, and the documentation's numbers are checked on every push with an exemption registry pinned by a test</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: supersession is a link exposed as a view that both recall paths join, and the documentation&#39;s numbers are checked on every push with an exemption registry pinned by a test
+flowchart TB
+    W[&quot;write a memory through one of 54 MCP tools&quot;] --&gt; M[(&quot;memories — with superseded_by_id&lt;br/&gt;referencing whatever replaced it&quot;)]
+    CORR[&quot;a correction&quot;] --&gt; SET[&quot;set superseded_by_id on the old row&quot;]
+    SET --&gt; M
+    M --&gt; VIEW[&quot;CREATE VIEW current_memories AS&lt;br/&gt;SELECT * FROM memories&lt;br/&gt;WHERE superseded_by_id IS NULL&quot;]
+    VIEW --&gt; R1[&quot;auto_recall: JOIN current_memories&quot;]
+    VIEW --&gt; R2[&quot;session_start: JOIN current_memories&quot;]
+    R1 &amp; R2 --&gt; AGENT[&quot;what the agent is given —&lt;br/&gt;no LLM in the retrieval loop,&lt;br/&gt;and inspectable afterwards&quot;]
+    M -.-&gt;|&quot;the superseded row keeps its place&lt;br/&gt;AND its link to the correction&quot;| KEPT[&quot;recoverable, not deleted&quot;]
+    SYN[&quot;wiki_synthesize — a model writes a draft&quot;] --&gt; D[(&quot;wiki.drafts: synth_prompt · synth_model ·&lt;br/&gt;confidence · status pending|approved|&lt;br/&gt;rejected|published · reviewed_at&quot;)]
+    D --&gt; CUR{&quot;wiki_curate: evaluate_draft (pure logic)&quot;}
+    CUR -.-&gt;|&quot;automated — reviewed_at records WHEN,&lt;br/&gt;not WHO; this is a quality gate&lt;br/&gt;on synthesis, not a person in the loop&quot;| NOTHR[&quot;no human-review mark&quot;]
+    CUR --&gt; PUB[&quot;compile publishes every draft&lt;br/&gt;currently in status=&#39;approved&#39;&quot;]
+    PUB --&gt; PAGES[(&quot;wiki.pages: proposed|accepted|rejected|&lt;br/&gt;deprecated|superseded, with superseded_by&quot;)]
+    DOC[&quot;scripts/check_doc_claims.py — a CI gate&quot;] --&gt; CHECK{&quot;every advertised count vs&lt;br/&gt;the one place that owns it&quot;}
+    CHECK --&gt;|&quot;mismatch&quot;| FAIL[&quot;the build fails, on every push and PR —&lt;br/&gt;&#39;not at release time&#39;&quot;]
+    CHECK --&gt;|&quot;a line states a number that is&lt;br/&gt;not the advertised total&quot;| EX[&quot;it declares [not-a-count-claim: label]&quot;]
+    EX -.-&gt;|&quot;&#39;a registry: printed on every successful run&lt;br/&gt;and pinned by a test naming each member,&lt;br/&gt;so an exemption is added deliberately&lt;br/&gt;or not at all&#39;&quot;| REG[&quot;an escape hatch nobody adds quietly&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mcp_server/infrastructure/pg_schema.py</code></td>
+<td>Memories, the current view, and the wiki tables</td>
+</tr>
+<tr>
+<td><code>mcp_server/hooks/auto_recall.py</code>,
+<code>session_start.py</code></td>
+<td>The two recall paths</td>
+</tr>
+<tr>
+<td><code>mcp_server/handlers/wiki_*.py</code></td>
+<td>Synthesis, curation, refinement, compilation</td>
+</tr>
+<tr>
+<td><code>scripts/check_doc_claims.py</code></td>
+<td>The documentation gate</td>
+</tr>
+<tr>
+<td><code>tests_py/</code></td>
+<td>Including tests over the gates themselves</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>scripts/check_doc_claims.py:1-20</code> — the gate, and the
+registry that keeps it one.</p>
+<p><code>mcp_server/infrastructure/pg_schema.py:81</code>,
+<code>:95-97</code> — a link and the view that uses it.</p>
+<p><code>mcp_server/infrastructure/pg_schema.py:219-265</code> — three
+status machines, with a partial index on the working set.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Memories with a supersession link; concepts, drafts, pages, claim
+events, links and citations in a <code>wiki</code> schema; a homeostatic
+state table with a fold log beside them. Every DDL block carries a
+<code># source: ADR-NNNN</code> comment, so a column traces to the
+decision that added it — an unusually direct answer to "why is this
+here".</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical, vector and graph, with no model in the loop and the
+current-memories join on both paths. The accountability claim rests on
+that combination: a deterministic retrieval whose result can be
+inspected afterwards is one a person can argue with.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Fifty-four tools over one stdio server, with corrections setting a
+link rather than rewriting a row.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One server, several hosts, and a table of per-host differences the
+README insists belongs there "not discovered after install". That
+sentence is a small promise about documentation that the doc-claims gate
+then enforces the numeric half of.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The trust mechanisms here are about the project's own claims as much
+as its memories: a gate over advertised counts, ADR references in the
+schema, and a retrieval with no model in it. What is not established is
+who approved a synthesised page, or what separates one scope from
+another.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A large <code>tests_py/</code> tree including tests over the CI gates
+themselves — a doc-claims test, a CI file-count test, a
+gate-completeness test — plus a benchmark harness. Nothing was installed
+or run for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Gate the numbers in your documentation on every push. A count and the
+thing it counts live in different files, and only one of them changes;
+checking at release time means a reviewer has already read the wrong
+figure.</p>
+<p>Make the exemption a registry, printed and pinned. An escape hatch
+that is enumerated, echoed on every successful run, and named by a test
+is one nobody adds without meaning to.</p>
+<p>Publish supersession as a view.
+<code>WHERE superseded_by_id IS NULL</code> behind a name means every
+read path opts in by joining, and the ones that need history can still
+see it.</p>
+<p>Index the working set, not the settled one. A partial index on
+<code>candidate</code> and <code>saturating</code> says what the query
+planner should care about.</p>
+<p>And record the prompt and the model on anything a model wrote.
+<code>synth_prompt</code> and <code>synth_model</code> on a draft are
+what let a later reader ask how a page came to exist.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>What separates one project's memories from another's. A team-scope
+backfill is imported by the schema module and no scope predicate was
+traced on the recall paths.</p>
+<p>Whether a person ever approves a draft. <code>evaluate_draft</code>
+is described as pure logic, and <code>reviewed_at</code> records a time
+rather than an actor.</p>
+<p>What the homeostatic fold log records. It has its own table beside
+the state and sits outside the paths read here.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scripts/check_doc_claims.py:1-20</code></td>
+<td>A gate over your own README, and a registry of exemptions</td>
+</tr>
+<tr>
+<td><code>mcp_server/infrastructure/pg_schema.py:81</code>,
+<code>:95-97</code></td>
+<td>Supersession as a link, published as a view</td>
+</tr>
+<tr>
+<td><code>mcp_server/infrastructure/pg_schema.py:219-265</code></td>
+<td>Drafts, pages, and the prompt behind a synthesised page</td>
+</tr>
+<tr>
+<td><code>mcp_server/handlers/wiki_curate.py:1-8</code></td>
+<td>Who curates, and it is not a person</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/cdeust/Cortex/commit/1e58077c1e80cae83618b6511f383bdc813f2f2c"><code class="commit-id" title="1e58077c1e80cae83618b6511f383bdc813f2f2c">1e58077c…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: twenty-five files scanned, four auto-run
+surfaces, four build-time execution points, no unpinned surfaces and
+four dependency files inside the seven-day cooldown. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
