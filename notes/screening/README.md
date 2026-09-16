@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 457 of 518 screened at the report's current pin.**
+**Progress: 458 of 519 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 194 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 270 |
-| Repositories with build-time execution (`EXEC`) | 336 |
+| Repositories with an auto-run surface (`RUNS`) | 195 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 271 |
+| Repositories with build-time execution (`EXEC`) | 337 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -145,6 +145,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`moltis`](../../content/systems/moltis.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`muninn`](../../content/systems/muninn.md) | `.claude/settings.json` |
 | [`muninndb`](../../content/systems/muninndb.md) | `.claude/hooks/`, `.claude/settings.json` |
+| [`mushroomdb`](../../content/systems/mushroomdb.md) | `.claude-plugin/`, `server.json` |
 | [`nanoclaw`](../../content/systems/nanoclaw.md) | `.claude/settings.json`, `.mcp.json` |
 | [`nemoclaw`](../../content/systems/nemoclaw.md) | `.gitmodules` |
 | [`neurakeep`](../../content/systems/neurakeep.md) | `server.json` |

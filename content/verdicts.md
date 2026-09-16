@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 518 reports.**
+**This page covers all 519 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4494,3 +4494,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, Rust, workspace version 0.1.0, 646,492 lines across three languages with 2,404 test functions, a WAL, Raft, shared-storage clustering, fault injection, two SDKs, plugins for Claude and Codex, and a RESP surface. The storage engineering is well ahead of the memory semantics above it.
 - Study when: you are merging lexical and vector scores into one ranking, or you want a worked example of consolidating a memory tier, a feature store and a counter tier behind one endpoint.
 - Do not copy when: you need epistemic state, supersession, or isolation the store enforces — the scope rule has one flag-gated call site and the tenant key comes from the caller's own request with a shared default. No marks. And read the benchmark's footnote before its table: the 99.92% saving divides by a corpus the baseline arm never read, which the document says outright, while the 83% row beside it is the measured result.
+
+### [`mushroomdb`](../systems/mushroomdb/)
+- Best idea: **every way the permission lookup can fail resolves to deny, and it is written at the top of the module.** "Empty role (no keys, no labels) = empty mask = sees nothing. Unknown role on a request = `Err` (never silently grant full access). Corrupt `roles.json` at open = roles poisoned." A caller's own mask can only intersect with the role's, a hidden key returns the same 404 as an absent one ("no oracle"), and history events naming a hidden endpoint are filtered because "[a] role token must not learn about hidden nodes via edge history events". Even the file-format version is an access decision: a sidecar using a narrowing field is deliberately unreadable by an older binary, because that binary "would resolve a narrowed role to its full label set".
+- Biggest risk: **the enforcement and the advertised surface are different surfaces.** The MCP server is JSON-RPC over stdio and its dispatch takes no identity at all, so `role` is an argument the caller picks — "[t]wo ways to ask the same restricted question". That is coherent for a local subprocess holding the database directory, and it means the tagline's "knows who's allowed to see it" describes the HTTP deployment with role-bound tokens, not the fifteen-tool surface the README leads with. The core is likewise explicit that history reads bypass masking and push the obligation to the caller; the HTTP layer discharges it, and any other embedder must remember to.
+- Most reusable component: `mask.rs` and `roles.rs` together — the never-widen intersection, the three deny-by-default failures, and the version bargain — alongside the rule engine's diff-apply, which guards the case that makes incremental derivation hard: edges still supported "for some other source — are not mistakenly retracted".
+- Maturity impression: MIT or Apache-2.0, version 0.6.8, explicitly pre-1.0 alpha, 177,137 lines across ten crates with 2,328 test functions, on crates.io, npm and PyPI, with a simulation harness, a benchmark crate and an adversarial RBAC-writes suite. The previous coding-assistant positioning is deprecated in 0.6.4 and removed in 0.7, still tested meanwhile.
+- Study when: you are writing role-scoped reads and want a worked example that covers the history endpoint, or you want derived relationships that retract themselves in the commit that invalidates them.
+- Do not copy when: you need epistemic state — an edge has a score and a rule, not a status, provenance class or validity window. Three marks: scope enforced, audit log, negative eval.

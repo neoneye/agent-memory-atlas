@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 518 reports.</strong></p>
+<p><strong>This page covers all 519 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19289,6 +19289,52 @@ shared default. No marks. And read the benchmark's footnote before its
 table: the 99.92% saving divides by a corpus the baseline arm never
 read, which the document says outright, while the 83% row beside it is
 the measured result.</li>
+</ul>
+<h3 id="mushroomdb"><a
+href="../systems/mushroomdb/"><code>mushroomdb</code></a></h3>
+<ul>
+<li>Best idea: <strong>every way the permission lookup can fail resolves
+to deny, and it is written at the top of the module.</strong> "Empty
+role (no keys, no labels) = empty mask = sees nothing. Unknown role on a
+request = <code>Err</code> (never silently grant full access). Corrupt
+<code>roles.json</code> at open = roles poisoned." A caller's own mask
+can only intersect with the role's, a hidden key returns the same 404 as
+an absent one ("no oracle"), and history events naming a hidden endpoint
+are filtered because "[a] role token must not learn about hidden nodes
+via edge history events". Even the file-format version is an access
+decision: a sidecar using a narrowing field is deliberately unreadable
+by an older binary, because that binary "would resolve a narrowed role
+to its full label set".</li>
+<li>Biggest risk: <strong>the enforcement and the advertised surface are
+different surfaces.</strong> The MCP server is JSON-RPC over stdio and
+its dispatch takes no identity at all, so <code>role</code> is an
+argument the caller picks — "[t]wo ways to ask the same restricted
+question". That is coherent for a local subprocess holding the database
+directory, and it means the tagline's "knows who's allowed to see it"
+describes the HTTP deployment with role-bound tokens, not the
+fifteen-tool surface the README leads with. The core is likewise
+explicit that history reads bypass masking and push the obligation to
+the caller; the HTTP layer discharges it, and any other embedder must
+remember to.</li>
+<li>Most reusable component: <code>mask.rs</code> and
+<code>roles.rs</code> together — the never-widen intersection, the three
+deny-by-default failures, and the version bargain — alongside the rule
+engine's diff-apply, which guards the case that makes incremental
+derivation hard: edges still supported "for some other source — are not
+mistakenly retracted".</li>
+<li>Maturity impression: MIT or Apache-2.0, version 0.6.8, explicitly
+pre-1.0 alpha, 177,137 lines across ten crates with 2,328 test
+functions, on crates.io, npm and PyPI, with a simulation harness, a
+benchmark crate and an adversarial RBAC-writes suite. The previous
+coding-assistant positioning is deprecated in 0.6.4 and removed in 0.7,
+still tested meanwhile.</li>
+<li>Study when: you are writing role-scoped reads and want a worked
+example that covers the history endpoint, or you want derived
+relationships that retract themselves in the commit that invalidates
+them.</li>
+<li>Do not copy when: you need epistemic state — an edge has a score and
+a rule, not a status, provenance class or validity window. Three marks:
+scope enforced, audit log, negative eval.</li>
 </ul>
         </article>
       </div>

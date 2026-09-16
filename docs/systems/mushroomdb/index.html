@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An embedded Rust graph where a
+relationship is a schema rule that derives and retracts its own edges
+with the evidence attached, and where a role-bound token's mask can only
+ever be narrowed — including on the history reads most systems forget to
+cover.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="mushroomdb — Agent Memory Atlas">
+    <meta property="og:description" content="An embedded Rust graph
+where a relationship is a schema rule that derives and retracts its own
+edges with the evidence attached, and where a role-bound token's mask
+can only ever be narrowed — including on the history reads most systems
+forget to cover.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="mushroomdb — Agent Memory Atlas">
+    <meta name="twitter:description" content="An embedded Rust graph
+where a relationship is a schema rule that derives and retracts its own
+edges with the evidence attached, and where a role-bound token's mask
+can only ever be narrowed — including on the history reads most systems
+forget to cover.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>mushroomdb — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "mushroomdb",
+      "description": "An embedded Rust graph where a relationship is a schema rule that derives and retracts its own edges with the evidence attached, and where a role-bound token's mask can only ever be narrowed \u2014 including on the history reads most systems forget to cover.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A hidden node answers exactly like a node
+that was never there</p>
+          <h1>mushroomdb</h1>
+          <p class="document-deck">An embedded Rust graph where a
+relationship is a schema rule that derives and retracts its own edges
+with the evidence attached, and where a role-bound token's mask can only
+ever be narrowed — including on the history reads most systems forget to
+cover.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MatthewSherlin/mushroomdb">
+              <span>Source</span>
+              <strong>MatthewSherlin/mushroomdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MatthewSherlin/mushroomdb/commit/4896a895fc2a7b6d11c80196a5c227e535611754" title="4896a895fc2a7b6d11c80196a5c227e535611754">
+              <span>Analyzed revision</span>
+              <code>4896a895…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/MatthewSherlin--mushroomdb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>MatthewSherlin--mushroomdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>mushroomdb is "[t]he graph that stays true — and knows who's allowed
+to see it": an embedded Rust graph database, MIT or Apache-2.0, version
+0.6.8 and explicitly pre-1.0 alpha, 177,137 lines across ten crates with
+2,328 test functions, distributed on crates.io, npm and PyPI, reachable
+as a Rust library, a Python module, a sidecar, or fifteen MCP tools.</p>
+<p>Its central idea is that a relationship is a schema declaration
+rather than a write. Declare a rule once, and every subsequent write
+derives the matching edges, maintains them, and
+<strong>retracts</strong> them when the rule stops matching — each edge
+carrying the rule, the score and the property values that produced it.
+So <code>explain_association</code> answers why two nodes are related
+with the evidence rather than an assertion, and deleting a rule "answers
+by retracting every edge it owns". A stale derivation disappears in the
+commit that invalidates it, not in a sweep afterwards, which is the
+failure mode of nearly every system here that derives edges from an LLM
+pass.</p>
+<p>The part that earns most of the marks is the access control, and it
+is the most carefully reasoned RBAC this atlas has read at this scale.
+The never-widen rule is three sentences at the top of
+<code>roles.rs</code>:</p>
+<blockquote>
+<p>"Empty role (no keys, no labels) = empty mask = sees nothing. Unknown
+role on a request = <code>Err</code> (never silently grant full access).
+Corrupt <code>roles.json</code> at open = roles poisoned … returns
+<code>Err</code> for any role name until the file is fixed and the DB
+re-opened."</p>
+</blockquote>
+<p>Every one of the three resolves to deny.
+<code>NodeMask::intersect</code> exists for exactly one purpose — "to
+enforce the never-widen rule when a role token also supplies a client
+mask: <code>effective = role_mask.intersect(&amp;client_mask)</code>" —
+so a caller's own mask can only narrow. The MCP namespace argument
+carries the same contract in its description: it "[i]ntersects with
+'role' and 'mask' — it can only narrow what they already allow".</p>
+<p>Two details show the thinking went further than the happy path. A
+hidden key returns the same 404 as a key that does not exist, under a
+comment saying why: "Hidden keys must respond identically to absent keys
+(no oracle)." And the history handler filters edge events whose other
+endpoint is hidden, because "[a] role token must not learn about hidden
+nodes via edge history events" — history being precisely where this kind
+of masking is usually forgotten, and where the core module warns it must
+be added: "this reads the WAL regardless of any role mask. Apply masking
+at the caller level."</p>
+<p>Even the file format version numbering is an access-control decision.
+A <code>roles.json</code> using <code>visible_where</code> or
+<code>namespaces</code> is deliberately not loadable by an older binary,
+because such a binary "would resolve a narrowed role to its full label
+set, so an unrecognised version poisons instead, which denies rather
+than over-grants". Very few projects think about what their own previous
+release would do with a file it half-understands.</p>
+<p><strong>The enforcement and the advertised surface are not the same
+surface.</strong> The MCP server is JSON-RPC over newline-delimited
+stdio, and <code>dispatch_call</code> takes no identity at all —
+<code>role</code> is an argument the caller passes, described in
+<code>tool_query</code> as one of "[t]wo ways to ask the same restricted
+question". For a local subprocess holding the database directory that is
+coherent: there is nothing to authenticate against, and the process
+could read the files anyway. But it means the tagline's second clause
+describes the HTTP deployment with role-bound bearer tokens, while the
+fifteen-tool MCP surface the README leads with is a way to preview a
+restricted view rather than a boundary around one. A reader wiring an
+agent to the MCP server should not read
+<code>query(role: "support")</code> as a control.</p>
+<p>The third mark is for the mask tests, which are the shape this atlas
+asks for and rarely finds:
+<code>masked_query_hides_nodes_and_their_edges</code> asserts the hidden
+node returns zero rows by key lookup and then, four lines later, that
+the unmasked query returns all three — and
+<code>masked_var_expand_blocks_hidden_intermediate</code> and
+<code>masked_shortest_path_blocks_hidden_intermediate</code> do the same
+for a hidden node in the middle of a traversal, each running the
+unmasked case first so the emptiness is attributable to the mask rather
+than to a query that stopped matching.</p>
+<p>What is not here is anything epistemic. An edge has a score and a
+rule; it has no status, no provenance class, no validity window and no
+notion of a claim somebody made. Time travel is
+<code>edges_at(key, commit)</code> over transaction time, bounded by a
+horizon the API reports honestly, with <code>CommitOutOfRange</code> for
+a read below it — version history rather than a second axis.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>rule</strong> is the relationship. Edges are its
+output.</p>
+<p><strong>Retraction</strong> is not deletion; it is the rule no longer
+holding.</p>
+<p>A <strong>mask</strong> is a set of nodes. It only ever gets
+smaller.</p>
+<p>A <strong>hidden node</strong> and a <strong>missing node</strong>
+answer identically, on purpose.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the role mask comes from the bearer token and a caller-supplied mask can only intersect with it; hidden nodes answer like absent ones, and history events naming a hidden endpoint are dropped</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the role mask comes from the bearer token and a caller-supplied mask can only intersect with it; hidden nodes answer like absent ones, and history events naming a hidden endpoint are dropped
+flowchart TB
+    W[&quot;upsert_entity / ingest_json&quot;] --&gt; RULES[&quot;rule engine: derive matching edges,&lt;br/&gt;retract the ones that no longer match —&lt;br/&gt;in the same commit&quot;]
+    RULES --&gt; EDGE[(&quot;edge carries the rule,&lt;br/&gt;the score and the values&lt;br/&gt;that produced it&quot;)]
+    RULES --&gt; WAL[(&quot;append-only WAL over&lt;br/&gt;mmapped snapshot sections&quot;)]
+    WAL --&gt; HIST[&quot;node_history · edge_history ·&lt;br/&gt;edges_at(key, commit)&quot;]
+    HIST --&gt;|&quot;below the floor&quot;| OOR[&quot;CommitOutOfRange —&lt;br/&gt;an error, not a partial answer&quot;]
+    HIST -.-&gt;|&quot;&#39;reads the WAL regardless of any&lt;br/&gt;role mask. Apply masking at&lt;br/&gt;the caller level.&#39;&quot;| CALLER
+    HTTP[&quot;HTTP request with a bearer token&quot;] --&gt; ID{&quot;AuthIdentity&quot;}
+    ID --&gt;|&quot;Role(name)&quot;| RM[&quot;mask_for_role(name)&quot;]
+    RM --&gt;|&quot;unknown role&quot;| ERR[&quot;Err — never a silent full grant&quot;]
+    RM --&gt;|&quot;empty role&quot;| NONE[&quot;empty mask — sees nothing&quot;]
+    RM --&gt;|&quot;corrupt roles.json&quot;| POISON[&quot;every role errs until fixed&quot;]
+    RM --&gt; EFF{&quot;caller also sent a mask?&quot;}
+    EFF --&gt;|&quot;yes&quot;| INT[&quot;effective = role_mask.intersect(client_mask)&lt;br/&gt;— narrows only&quot;]
+    EFF --&gt;|&quot;no&quot;| ROLE[&quot;the role mask&quot;]
+    INT &amp; ROLE --&gt; CALLER[&quot;masked read: a hidden key 404s exactly&lt;br/&gt;like an absent one (no oracle);&lt;br/&gt;edge events naming a hidden endpoint&lt;br/&gt;are filtered out&quot;]
+    CALLER --&gt; EDGE
+    MCP[&quot;MCP: JSON-RPC over stdio&quot;] --&gt; DISP[&quot;dispatch_call — takes no identity&quot;]
+    DISP --&gt;|&quot;&#39;role&#39; and &#39;mask&#39; are arguments:&lt;br/&gt;two ways to ask the same&lt;br/&gt;restricted question&#39;&quot;| PREVIEW[&quot;a restricted view the caller chose,&lt;br/&gt;not a boundary around the caller&quot;]
+    PREVIEW --&gt; EDGE</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Crate</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>core-api</code></td>
+<td>The public database, roles, masks, history, <code>what_if</code>
+(67,460 lines)</td>
+</tr>
+<tr>
+<td><code>cli</code></td>
+<td>Install, doctor, ingest-git, the skill and hooks (27,804)</td>
+</tr>
+<tr>
+<td><code>server</code></td>
+<td>HTTP with role tokens, and the stdio MCP surface (23,362)</td>
+</tr>
+<tr>
+<td><code>core-rules</code></td>
+<td>Rule evaluation, firing and retraction with provenance (17,803)</td>
+</tr>
+<tr>
+<td><code>core-query</code></td>
+<td>Query planning, traversal, the masked view (16,363)</td>
+</tr>
+<tr>
+<td><code>core-storage</code></td>
+<td>WAL, snapshots, the overlay-over-base views (10,873)</td>
+</tr>
+<tr>
+<td><code>sim-harness</code>, <code>core-bench</code></td>
+<td>Simulation and benchmarks</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>crates/core-api/src/roles.rs:1-36</code> — the never-widen rule
+and the version bargain, in one header.</p>
+<p><code>crates/server/src/http.rs:2020-2070</code> — masking a history
+read, including the part everybody forgets.</p>
+<p><code>crates/core-rules/src/engine.rs:83-104</code> — a fire or a
+retract, captured during a commit.</p>
+<p><code>crates/core-api/tests/mask.rs:15-175</code> — what a negative
+test looks like when it has a control.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Entities with properties; edges mostly derived. The storage view is
+an overlay-over-base arrangement where a V8 snapshot's archived columns
+and CSR topology are read zero-copy from the mmap and post-snapshot
+changes accumulate in an overlay, with "[t]ombstones in the overlay mask
+deleted-from-base entries" — a storage-level tombstone, not a
+memory-level one.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Cypher-shaped queries, similarity, hybrid search, variable-length
+expansion and shortest path, all running against a
+<code>GraphView</code> whose <code>mask</code> field is an
+<code>Option</code> — <code>None</code> meaning every node is visible.
+That default is the engine's internal one; on the HTTP path the mask
+arrives from the token, and the mask tests pin what happens when it does
+not: an empty mask hides everything, and unknown keys inside a mask are
+ignored rather than widening it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write fires the rules, and the rule engine diff-applies the desired
+edge set against provenance, with a comment guarding the subtle case —
+edges still supported "for some other source — are not mistakenly
+retracted". That is the hard part of incremental derivation and it is
+handled explicitly.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>npx mushroomdb install</code> writes a skill, an MCP server and
+session hooks in one command, and the four-call flow — upsert, rule,
+find, explain — is a genuinely small surface for a graph database. The
+deprecation note is unusually direct: the previous coding-assistant
+positioning, seven tools and three hooks, is deprecated in 0.6.4 and
+removed in 0.7, "[i]t still works and is still tested".</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Covered above. The one thing to carry away for a deployment: the RBAC
+guarantees described here are properties of the HTTP server with
+role-bound tokens. Embedded as a library or driven over stdio, the
+caller holds the whole graph, and every mask is advisory.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>2,328 test functions, including <code>rbac.rs</code>,
+<code>mask.rs</code>, <code>write_scopes.rs</code> and an adversarial
+RBAC-writes suite, plus a simulation harness and a benchmark crate.
+Nothing was built or run for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Make every failure of the permission lookup deny. Unknown role, empty
+role, corrupt file — three different bugs, one outcome, written at the
+top of the module so nobody has to infer it.</p>
+<p>Make hidden and absent indistinguishable. A different error for "you
+may not see this" is an oracle for what exists, and it takes one comment
+to remember.</p>
+<p>Remember the history endpoint. Masking the read path and forgetting
+the audit path is how the second one becomes the leak, and this project
+handles it by saying in the core that it does not, and handling it at
+the edge that can.</p>
+<p>Let the derivation retract itself. If a rule made an edge, the rule
+not matching should unmake it in the same commit; anything else leaves a
+graph asserting things its own rules no longer support.</p>
+<p>And ask what your previous release does with your next file format.
+Refusing to load is the right answer when the unknown field is one that
+narrows.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether an embedder other than the HTTP server masks history. The
+core points the obligation at the caller; the HTTP layer discharges it,
+and nothing enforces that a third embedder does.</p>
+<p>How far back history reaches in practice. Snapshot truncation bounds
+the live WAL, archives extend the floor, and the pruning policy was not
+traced.</p>
+<p>What replaces the deprecated door in 0.7. The seven code-graph tools
+and three hooks are removed next release, and the association surface is
+what remains.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/core-api/src/roles.rs:1-36</code></td>
+<td>Three failures, one outcome, and a version that refuses</td>
+</tr>
+<tr>
+<td><code>crates/core-api/src/mask.rs:94-107</code></td>
+<td>The intersection that cannot widen</td>
+</tr>
+<tr>
+<td><code>crates/server/src/http.rs:2025-2058</code></td>
+<td>No oracle, and a masked history</td>
+</tr>
+<tr>
+<td><code>crates/server/src/mcp.rs:204-237</code></td>
+<td>A dispatch with no identity in it</td>
+</tr>
+<tr>
+<td><code>crates/core-rules/src/engine.rs:83-104</code>,
+<code>:1045</code></td>
+<td>Fire, retract, and what must not be retracted</td>
+</tr>
+<tr>
+<td><code>crates/core-api/tests/mask.rs:15-175</code></td>
+<td>Negative assertions with their controls</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/MatthewSherlin/mushroomdb/commit/4896a895fc2a7b6d11c80196a5c227e535611754"><code class="commit-id" title="4896a895fc2a7b6d11c80196a5c227e535611754">4896a895…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: thirty-four files scanned, two auto-run
+surfaces, two build-time execution points, four unpinned surfaces and
+twenty-four dependency files inside the seven-day cooldown. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
