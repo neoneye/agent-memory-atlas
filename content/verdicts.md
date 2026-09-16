@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 485 reports.**
+**This page covers all 486 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4230,3 +4230,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, version 0.10.0, 277 commits since 29 July 2026, 26,504 lines of TypeScript against 11,889 lines across 38 test files, Bun and SQLite with FTS5 and an optional `sqlite-vec` peer, a Cloudflare D1 contract suite, an MCP server serving the reference server's nine tool names so a client can swap without noticing, and a README whose hero image publishes recall@1 falling from 0.880 to 0.246 as the store pools to 19,829 sessions.
 - Study when: you want deterministic self-hosted memory with real per-principal visibility and no provider to configure, and can accept lexical retrieval.
 - Do not copy when: your corpus will pool to tens of thousands of sessions and recall must hold there.
+
+### [`llm-memory-api`](../systems/llm-memory-api/)
+- Best idea: **deliberation with a database-constrained outcome.** The schema carries `discussions` with participants, ballots and votes, a `mode` of `realtime` or `async`, and an `outcome` checked against `consensus`, `deadlock`, `partial` or `abandoned` — so an unresolved argument between agents cannot be quietly recorded as agreement. Its permission rows also split `can_read`, `can_write` and `can_delete` rather than collapsing to a binary.
+- Biggest risk: **the fence is untested, and one of its eight call sites is wrong.** `getReadableNamespaces(actorId, actorName, actorType)` returns an array of permitted namespaces or `null` meaning "wildcard, no filtering needed". Seven callers pass three arguments; `routes/memory.js:48` passes two, so `actorName` receives the actor *type* — the implicit own-namespace grant then adds a namespace named `agent` or `user` instead of the caller's, the caller's own namespace is dropped from their own listing, and for a wildcard holder the next line calls `.includes` on `null` and throws. Nothing in the fifteen test files covers `namespace-permissions.js`, which is why it survived; `scope_enforced` is withheld for want of a producer test, and `negative_eval` for want of any must-not assertion.
+- Most reusable component: the three-way permission split with a `/` wildcard row, and note-level sharing kept beside it with a comment saying which complements which.
+- Maturity impression: MIT, 1,185 commits since 20 February 2026, 42,805 lines of JavaScript and Go outside `node_modules` against fifteen test files, a 2,024-line PostgreSQL schema covering actors, agents, keys, permissions, documents, chunks, chat, discussions, mail and MCP sessions, with an MCP server, a REST API, a web UI and self-hosting scripts.
+- Study when: multi-agent deliberation with recorded outcomes is the thing you need, and you will review the permission paths yourself.
+- Do not copy when: you need memory that models belief, validity or correction, or a fence with tests behind it.

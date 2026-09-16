@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Postgres memory and multi-agent
+collaboration service whose namespaces carry per-actor read, write and
+delete flags checked in application code behind a two-minute cache — and
+whose eight call sites for the readable-namespace filter include one
+that passes the actor's type where its name belongs, so that endpoint
+hides the caller's own namespace, exposes any namespace named after an
+actor type, and throws on a wildcard holder.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LLM Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A Postgres memory and
+multi-agent collaboration service whose namespaces carry per-actor read,
+write and delete flags checked in application code behind a two-minute
+cache — and whose eight call sites for the readable-namespace filter
+include one that passes the actor's type where its name belongs, so that
+endpoint hides the caller's own namespace, exposes any namespace named
+after an actor type, and throws on a wildcard holder.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LLM
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Postgres memory and
+multi-agent collaboration service whose namespaces carry per-actor read,
+write and delete flags checked in application code behind a two-minute
+cache — and whose eight call sites for the readable-namespace filter
+include one that passes the actor's type where its name belongs, so that
+endpoint hides the caller's own namespace, exposes any namespace named
+after an actor type, and throws on a wildcard holder.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LLM Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "LLM Memory",
+      "description": "A Postgres memory and multi-agent collaboration service whose namespaces carry per-actor read, write and delete flags checked in application code behind a two-minute cache \u2014 and whose eight call sites for the readable-namespace filter include one that passes the actor's type where its name belongs, so that endpoint hides the caller's own namespace, exposes any namespace named after an actor type, and throws on a wildcard holder.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A permission model with no test, and one
+call site wrong</p>
+          <h1>LLM Memory</h1>
+          <p class="document-deck">A Postgres memory and multi-agent
+collaboration service whose namespaces carry per-actor read, write and
+delete flags checked in application code behind a two-minute cache — and
+whose eight call sites for the readable-namespace filter include one
+that passes the actor's type where its name belongs, so that endpoint
+hides the caller's own namespace, exposes any namespace named after an
+actor type, and throws on a wildcard holder.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jeffdafoe/llm-memory-api">
+              <span>Source</span>
+              <strong>jeffdafoe/llm-memory-api</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jeffdafoe/llm-memory-api/commit/630843156595138031f13f1b559de541ad37aa97" title="630843156595138031f13f1b559de541ad37aa97">
+              <span>Analyzed revision</span>
+              <code>63084315…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jeffdafoe--llm-memory-api" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>jeffdafoe--llm-memory-api</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>LLM Memory is a self-hosted memory and multi-agent collaboration
+service: a PostgreSQL schema of 2,024 lines behind a Node API, an MCP
+server, a REST API and a web UI with a notes tree, presented as working
+with Claude Code, claude.ai, Cursor, Windsurf and any MCP client. MIT,
+1,185 commits since 20 February 2026, 42,805 lines of JavaScript and Go
+outside <code>node_modules</code> against 15 test files.</p>
+<p>What it attempts that few here do is <strong>deliberation</strong>.
+The schema carries <code>discussions</code> with
+<code>participants</code>, <code>ballots</code> and <code>votes</code>,
+a <code>mode</code> constrained to <code>realtime</code> or
+<code>async</code>, a <code>status</code> constrained to five values,
+and an <code>outcome</code> constrained to <code>consensus</code>,
+<code>deadlock</code>, <code>partial</code> or <code>abandoned</code>.
+Agents do not merely share a store; they can be made to argue toward a
+recorded conclusion, and the conclusion's shape is enforced by a
+database <code>CHECK</code>. That is a real idea, and the rest of this
+report should not obscure it.</p>
+<p>The memory model underneath is simpler than the collaboration model
+above it. A memory is a markdown document in a namespace, chunked for
+indexing. There is no status on it, no validity window, no supersession
+link and no record of a rejected value — correction is replacing the
+file and running a cleanup that takes the caller's list of valid source
+files as truth.</p>
+<p>Access control is the interesting mechanism, and it is where the
+reading turns. <code>namespace_permissions</code> gives each actor a row
+per namespace with separate <code>can_read</code>,
+<code>can_write</code> and <code>can_delete</code> flags, with
+<code>/</code> as a wildcard. The service exposes two shapes:
+<code>requireAccess</code>, which throws a 403 for a named namespace,
+and <code>getReadableNamespaces</code>, which returns the list a
+wildcard query should be filtered to — <strong>or <code>null</code>,
+meaning the actor holds the wildcard and no filtering is
+needed</strong>.</p>
+<p>That <code>null</code> is the hinge. Eight call sites use the
+function. Seven pass <code>(actorId, actorName, actorType)</code>. One —
+<code>node/api/src/routes/memory.js:48</code>, the ingest-status listing
+— passes <code>(actor.actorId, actor.actorType)</code>, two arguments
+where three are expected. The consequences are all visible in the
+function body:</p>
+<ul>
+<li><code>actorName</code> receives the <em>type</em> string, so the
+implicit grant
+<code>if (actorName &amp;&amp; !namespaces.includes(actorName)) namespaces.push(actorName)</code>
+adds a namespace named after the actor's type rather than the actor. Any
+namespace actually called <code>agent</code> or <code>user</code>
+becomes readable on that endpoint to every actor of that type.</li>
+<li>The caller's own namespace is therefore never added, so their own
+files are filtered out of their own listing.</li>
+<li>And the next line is <code>readable.includes(f.namespace)</code>.
+For an actor holding the wildcard, <code>getReadableNamespaces</code>
+returns <code>null</code>, and <code>null.includes</code> is a
+<code>TypeError</code> — a 500 where the answer should have been
+"everything".</li>
+</ul>
+<p>Two lines above, the same file calls <code>requireAccess</code> with
+all three arguments correctly, and thirty lines below, the search route
+calls <code>getReadableNamespaces</code> correctly. It is one line.</p>
+<p>The reason it is still there is the second finding: <strong>nothing
+tests the permission service</strong>. The 15 test files cover agents,
+simulations, the memory service, cleanup, the chunker, dream
+consolidation and four provider adapters.
+<code>namespace-permissions.js</code> has no test, so the arity is
+checked by nobody, and <code>scope_enforced</code> is withheld — the
+atlas requires a producer test on the fence, and this fence has
+none.</p>
+<p>A third thing to know before deploying: permissions are cached per
+actor for two minutes. A revocation is not effective until the cache
+expires, unless an admin route clears it — which the admin write paths
+do call, so the exposure is bounded to out-of-band changes.</p>
+<p>No marks.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An <strong>actor</strong> is a user or an agent, with API keys and
+permissions.</p>
+<p>A <strong>namespace</strong> is a string; an actor's permissions are
+rows keyed to it, with <code>/</code> meaning all. The namespace named
+after the actor is implicitly theirs.</p>
+<p>A <strong>document</strong> is markdown in a namespace, chunked into
+<code>memory_chunks</code>.</p>
+<p>A <strong>note</strong> has its own sharing, with specific actors or
+all actors, which the code says "[c]omplements
+namespace_permissions".</p>
+<p>A <strong>discussion</strong> is a deliberation: participants,
+ballots, votes, a mode, a timeout, and an outcome from four.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the readable-namespace filter is called correctly at seven sites and with two arguments at one, where null means wildcard and the next line calls .includes on it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the readable-namespace filter is called correctly at seven sites and with two arguments at one, where null means wildcard and the next line calls .includes on it
+flowchart TB
+    ACTOR[&quot;actor: user or agent&lt;br/&gt;API key&quot;] --&gt; REQ[&quot;REST route or MCP tool&quot;]
+    PERMS[(&quot;namespace_permissions&lt;br/&gt;actor_id, namespace,&lt;br/&gt;can_read / can_write / can_delete&lt;br/&gt;&#39;/&#39; = wildcard&quot;)] --&gt; CACHE[&quot;per-actor cache, 2 min TTL&quot;]
+    CACHE --&gt; NAMED{&quot;namespace named?&quot;}
+    REQ --&gt; NAMED
+    NAMED --&gt;|&quot;yes&quot;| RA[&quot;requireAccess(...)&lt;br/&gt;own namespace implicit,&lt;br/&gt;wildcard, then specific grant&quot;]
+    RA --&gt;|&quot;denied&quot;| F403[&quot;403&quot;]
+    RA --&gt;|&quot;allowed&quot;| READ[&quot;read the namespace&quot;]
+    NAMED --&gt;|&quot;no — wildcard query&quot;| GRN[&quot;getReadableNamespaces(actorId, actorName, actorType)&quot;]
+    GRN --&gt;|&quot;holds &#39;/&#39; read&quot;| NULLV[&quot;returns null&lt;br/&gt;= no filtering needed&quot;]
+    GRN --&gt;|&quot;otherwise&quot;| LIST[&quot;array of readable namespaces&lt;br/&gt;+ own namespace via actorName&quot;]
+    LIST --&gt; FILTER[&quot;filter results&quot;]
+    NULLV --&gt; FILTER
+    BAD[&quot;memory.js:48&lt;br/&gt;getReadableNamespaces(actorId, actorType)&quot;] --&gt; C1[&quot;actorName := actorType&lt;br/&gt;→ adds a namespace named &#39;agent&#39;/&#39;user&#39;&lt;br/&gt;→ own namespace never added&quot;]
+    BAD --&gt; C2[&quot;wildcard holder gets null&lt;br/&gt;→ readable.includes(...) throws&quot;]
+    DOC[(&quot;documents → memory_chunks&lt;br/&gt;no status, no validity,&lt;br/&gt;no supersession&quot;)] --&gt; FILTER
+    DISC[(&quot;discussions&lt;br/&gt;participants, ballots, votes&lt;br/&gt;outcome CHECK: consensus |&lt;br/&gt;deadlock | partial | abandoned&quot;)]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema.sql</code>, <code>migrations/</code></td>
+<td>The Postgres model — the fastest way to see what is stored</td>
+</tr>
+<tr>
+<td><code>node/api/src/services/namespace-permissions.js</code></td>
+<td>The fence: <code>hasAccess</code>, <code>requireAccess</code>,
+<code>getReadableNamespaces</code>, the cache</td>
+</tr>
+<tr>
+<td><code>node/api/src/services/note-permissions.js</code></td>
+<td>Per-note sharing, complementing namespaces</td>
+</tr>
+<tr>
+<td><code>node/api/src/routes/memory.js</code>,
+<code>documents.js</code>, <code>mcp.js</code>,
+<code>admin.js</code></td>
+<td>The read and write surfaces</td>
+</tr>
+<tr>
+<td><code>node/api/src/services/</code></td>
+<td>Chunker, embeddings, enrichment, cleanup, dream, discussion</td>
+</tr>
+<tr>
+<td><code>go/</code>, <code>node/client/</code></td>
+<td>Client-side pieces including the discussion launcher</td>
+</tr>
+<tr>
+<td><code>install.sh</code>, <code>deploy.sh</code>,
+<code>infrastructure/</code></td>
+<td>Self-hosting</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>node/api/src/services/namespace-permissions.js:42-104</code> —
+the whole fence, including the <code>null</code> convention and both
+implicit grants.</li>
+<li><code>node/api/src/routes/memory.js:40-54</code> — the correct
+<code>requireAccess</code> call and the incorrect
+<code>getReadableNamespaces</code> call, eight lines apart.</li>
+<li><code>node/api/src/routes/memory.js:76-81</code> — the same function
+called correctly.</li>
+<li><code>schema.sql:476-491</code> — discussions and their constrained
+outcomes.</li>
+<li><code>schema.sql:648-656</code> — the permission row.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Documents and chunks, with chat messages, notes, mail and discussions
+beside them. What is absent is the vocabulary this atlas asks about: no
+status, no trust level, no validity interval, no supersession edge, no
+record of a deleted value. A memory is a file; correcting it is editing
+the file; forgetting it is <code>cleanup</code> against a
+caller-supplied list of what is still valid.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Search is by meaning and keyword over chunks. A named namespace is
+checked with <code>requireAccess</code>; a wildcard query is narrowed
+with <code>getReadableNamespaces</code> and the filter is pushed into
+the query on the search path — which is the right shape, and is the call
+site that passes all three arguments.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes go through <code>requireAccess</code> with
+<code>'write'</code>, and deletes with <code>'delete'</code> — the
+three-way split is better than the read/write binary most systems here
+use. Admin routes rewrite an actor's permissions wholesale
+(<code>DELETE</code> then re-insert) and clear the cache afterwards.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server alongside the REST API, per-agent API keys, agent
+configuration and permission tables, and a discussion launcher on the
+client side. The multi-agent story — several agents in one store, able
+to convene — is the product's centre of gravity.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The three findings above are the substance, and their common cause is
+worth stating plainly rather than as three separate defects: the
+permission service is the security boundary of a multi-tenant memory,
+and it has no test. An arity mistake at one of eight call sites is
+exactly the class of error a single unit test over
+<code>getReadableNamespaces</code> would catch, and the same absence is
+why the <code>null</code>-means-wildcard convention is unsafe here in a
+way it would not be if the contract were pinned.</p>
+<p>The convention itself is the deeper issue. A function that returns
+<code>null</code> for "everything" and an array for "these" asks every
+caller to handle two shapes, and a caller that forgets gets a crash in
+the best case and an inverted rule in the worst. Systems in this corpus
+that got this right made the permissive case impossible to express: a
+fence that always returns a filter, never an absence.</p>
+<p>The two-minute permission cache is a smaller matter because the admin
+write paths clear it, but it means a permission changed outside those
+paths — direct SQL, another process — stays stale for that long.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>15 test files: agents, sims, soul and conversation distillation, the
+memory service, cleanup, chunker, dream and dream-shared-cron,
+virtual-agent rate limiting, and four provider adapters. Nothing covers
+namespaces, permissions, visibility or the MCP authorisation path. There
+is no eval suite and no must-not retrieval assertion, so
+<code>negative_eval</code> is withheld along with
+<code>scope_enforced</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Split read, write and delete into three flags.</strong> Most
+permission models in this corpus collapse to read/write, and deletion is
+the one that cannot be undone.</li>
+<li><strong>Constrain the outcome of a deliberation in the
+schema.</strong> <code>consensus</code>, <code>deadlock</code>,
+<code>partial</code>, <code>abandoned</code> as a <code>CHECK</code>
+means an unresolved discussion cannot be quietly recorded as
+agreement.</li>
+<li><strong>Keep note-level sharing beside namespace-level
+permission</strong>, and say in the code which complements which — the
+comment at the top of <code>note-permissions.js</code> does exactly
+that.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A permission helper that returns <code>null</code> for
+"allow everything".</strong> Every caller must then remember two shapes;
+here one forgot, and the failure is a crash for the most privileged
+caller.</li>
+<li><strong>Shipping the fence untested.</strong> The arity slip is
+trivial to make and trivial to catch; only one of those is true without
+a test.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reach for this if multi-agent deliberation with recorded outcomes is
+what you need and you will review the permission paths yourself. Look
+elsewhere if you need memory that models belief, validity or correction,
+or a fence with tests behind it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>memory.js:48</code> intended to pass
+<code>actorName</code>? The two lines around it suggest yes, and the fix
+is one argument.</li>
+<li>Should <code>getReadableNamespaces</code> return a sentinel rather
+than <code>null</code> — or always an array, with the wildcard expanded
+— so no caller can crash on the permissive case?</li>
+<li>The discussion machinery is the distinctive part. Are its outcomes
+read back into memory as claims, or do they stay in the discussion
+tables?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema.sql</code></td>
+<td>Every table, including discussions and their
+<code>CHECK</code>s</td>
+</tr>
+<tr>
+<td><code>node/api/src/services/namespace-permissions.js</code></td>
+<td>The fence and its two shapes</td>
+</tr>
+<tr>
+<td><code>node/api/src/routes/memory.js</code></td>
+<td>The correct and incorrect calls, eight lines apart</td>
+</tr>
+<tr>
+<td><code>node/api/src/services/note-permissions.js</code></td>
+<td>Per-note sharing</td>
+</tr>
+<tr>
+<td><code>node/api/src/services/discussion.js</code></td>
+<td>Deliberation</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/jeffdafoe/llm-memory-api/commit/630843156595138031f13f1b559de541ad37aa97"><code class="commit-id" title="630843156595138031f13f1b559de541ad37aa97">63084315…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: six files, no auto-run surfaces, no
+build-time execution points, one unpinned surface, three dependency
+files inside the cooldown, and <code>CLAUDE.md</code> read as data.
+Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
