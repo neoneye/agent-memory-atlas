@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 512 reports.**
+**This page covers all 513 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4446,3 +4446,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, Python, version 0.3.2, 168 tests across seventeen files, with a LangChain adapter, an MCP server, a GitHub Action, semgrep rules and a benchmarks tree. Eleven detectors, one file each, with severities and block-or-flag actions and SIEM-shaped events. What is not present is a detection-rate evaluation against a labelled attack corpus, so no detector's precision or recall is established from the tree.
 - Study when: you are enumerating what can go wrong with agent memory, or you extract memories from model output and have not yet decided what counts as a second source.
 - Do not copy when: you wanted a memory store — this holds none, and it returns `Action.BLOCK` rather than blocking anything itself. No marks.
+
+### [`a-memory`](../systems/a-memory/)
+- Best idea: **a missing argument means *keep what is stored*, not *use the default*.** A re-save that passes no `visibility` re-reads the stored flag first, so writing to a `hidden` key updates it without bringing it back — and the comment records the bug and the date that taught them: "a 'hidden' row re-saved with the same canonical key would otherwise be back to 'visible' — F1 sanitation, 2026-09-12". That one line is the difference between a quarantine and a suggestion, and most suppression flags in this corpus do not survive the next write.
+- Biggest risk: **the ledger and the interval chain are both advisory, and neither counts what it drops.** `_record_history` "[d]egrades to a warning so memory writes never fail on history"; `_record_temporal` is "advisory, never fails a save". Both sit under a bare exception handler, so a serialisation or disk failure leaves a gap in the audit record and a broken interval chain while the write succeeds, with nothing to reveal either afterwards. The policy is right and the implementation loses the evidence — counting the drops would fix it.
+- Most reusable component: the scope binding. `get_layer(layer_type, user_id)` hands back an object carrying its own predicate, `user_memory()` and `agent_memory()` name the two, and every core read begins `WHERE layer=? AND user_id=?`. Isolation a caller cannot forget to pass, which is the failure this atlas keeps finding in systems whose scope is an argument.
+- Maturity impression: MIT, Python, 66,891 lines with 281 test files and 1,606 test functions, on PyPI, with an MCP server, hooks, Alembic migrations, coverage reporting and an audit report in-tree. The F1, C8 and A2.2 labels in the comments index some review process that was not traced here.
+- Study when: you have a suppression or privacy flag and have not decided what a write with no flag means, or you want scope carried by the handle rather than the query.
+- Do not copy when: you need a second time axis — `valid_from` is the write instant on the same clock as `updated_at`, so the point-in-time read answers what the store held, never when anything was true. Three marks: trust state, scope enforced, audit log.

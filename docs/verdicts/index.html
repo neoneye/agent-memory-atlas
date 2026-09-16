@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 512 reports.</strong></p>
+<p><strong>This page covers all 513 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19030,6 +19030,48 @@ counts as a second source.</li>
 <li>Do not copy when: you wanted a memory store — this holds none, and
 it returns <code>Action.BLOCK</code> rather than blocking anything
 itself. No marks.</li>
+</ul>
+<h3 id="a-memory"><a
+href="../systems/a-memory/"><code>a-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>a missing argument means <em>keep what is
+stored</em>, not <em>use the default</em>.</strong> A re-save that
+passes no <code>visibility</code> re-reads the stored flag first, so
+writing to a <code>hidden</code> key updates it without bringing it back
+— and the comment records the bug and the date that taught them: "a
+'hidden' row re-saved with the same canonical key would otherwise be
+back to 'visible' — F1 sanitation, 2026-09-12". That one line is the
+difference between a quarantine and a suggestion, and most suppression
+flags in this corpus do not survive the next write.</li>
+<li>Biggest risk: <strong>the ledger and the interval chain are both
+advisory, and neither counts what it drops.</strong>
+<code>_record_history</code> "[d]egrades to a warning so memory writes
+never fail on history"; <code>_record_temporal</code> is "advisory,
+never fails a save". Both sit under a bare exception handler, so a
+serialisation or disk failure leaves a gap in the audit record and a
+broken interval chain while the write succeeds, with nothing to reveal
+either afterwards. The policy is right and the implementation loses the
+evidence — counting the drops would fix it.</li>
+<li>Most reusable component: the scope binding.
+<code>get_layer(layer_type, user_id)</code> hands back an object
+carrying its own predicate, <code>user_memory()</code> and
+<code>agent_memory()</code> name the two, and every core read begins
+<code>WHERE layer=? AND user_id=?</code>. Isolation a caller cannot
+forget to pass, which is the failure this atlas keeps finding in systems
+whose scope is an argument.</li>
+<li>Maturity impression: MIT, Python, 66,891 lines with 281 test files
+and 1,606 test functions, on PyPI, with an MCP server, hooks, Alembic
+migrations, coverage reporting and an audit report in-tree. The F1, C8
+and A2.2 labels in the comments index some review process that was not
+traced here.</li>
+<li>Study when: you have a suppression or privacy flag and have not
+decided what a write with no flag means, or you want scope carried by
+the handle rather than the query.</li>
+<li>Do not copy when: you need a second time axis —
+<code>valid_from</code> is the write instant on the same clock as
+<code>updated_at</code>, so the point-in-time read answers what the
+store held, never when anything was true. Three marks: trust state,
+scope enforced, audit log.</li>
 </ul>
         </article>
       </div>
