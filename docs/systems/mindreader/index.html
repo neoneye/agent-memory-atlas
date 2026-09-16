@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust MCP memory over Neo4j where
+the agent must deliberately curate what it keeps, visibility layers are
+checked on both endpoints of every relationship in Cypher, and the edges
+that record a correction are barred from search.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mindreader — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust MCP memory over
+Neo4j where the agent must deliberately curate what it keeps, visibility
+layers are checked on both endpoints of every relationship in Cypher,
+and the edges that record a correction are barred from search.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mindreader — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust MCP memory over
+Neo4j where the agent must deliberately curate what it keeps, visibility
+layers are checked on both endpoints of every relationship in Cypher,
+and the edges that record a correction are barred from search.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mindreader — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mindreader",
+      "description": "A Rust MCP memory over Neo4j where the agent must deliberately curate what it keeps, visibility layers are checked on both endpoints of every relationship in Cypher, and the edges that record a correction are barred from search.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Asking for no scope shows you the global
+layer, not everything</p>
+          <h1>Mindreader</h1>
+          <p class="document-deck">A Rust MCP memory over Neo4j where
+the agent must deliberately curate what it keeps, visibility layers are
+checked on both endpoints of every relationship in Cypher, and the edges
+that record a correction are barred from search.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/bnomei/mindreader">
+              <span>Source</span>
+              <strong>bnomei/mindreader</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/bnomei/mindreader/commit/d7d1bb39cfeb47a6cfa230511d98764437ad98ad" title="d7d1bb39cfeb47a6cfa230511d98764437ad98ad">
+              <span>Analyzed revision</span>
+              <code>d7d1bb39…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/bnomei--mindreader" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>bnomei--mindreader</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mindreader is an MCP memory server in Rust over Neo4j — MIT, version
+0.7.2, 20,225 lines across 24 files, published as a crate, an npm
+package and a Docker image. Its thesis is on the first line of the
+README and it is a refusal:</p>
+<blockquote>
+<p>"Mindreader gives AI agents a memory they must curate, not a history
+they can search."</p>
+</blockquote>
+<p>The argument is that most agent memory starts from an archive and
+asks how to retrieve the right passage later, where this one asks
+"[w]hat did this agent learn that is important enough to become durable
+knowledge?" Each memory is an explicit relationship —
+<code>project → uses → Neo4j</code> — and the consequences are stated as
+commitments: "<strong>No facts are captured secretly.</strong>
+Mindreader never listens to conversations or extracts facts on its own",
+and "<strong>Nothing is silently overwritten.</strong>"</p>
+<p><strong>The mechanism to take away is the scope default.</strong>
+Layer memberships are stored on nodes and edges, and the request carries
+a union of layer ids. What makes it unusual is what an empty request
+means:</p>
+<blockquote>
+<p>"Empty <code>scope</code> is global-only. Named ids form an OR
+union."</p>
+</blockquote>
+<p>Most systems in this corpus treat an omitted scope as
+<em>everything</em>, which is why the atlas keeps finding stores where
+forgetting the argument returns another project's memories. Here
+forgetting it returns the global layer and nothing else, so the accident
+is an under-answer rather than a leak. The predicate is thorough too:
+the visibility check is repeated for the subject, the relationship and
+the object, and again for the <code>ABOUT</code> anchor and its subject,
+because "[r]elationship visibility also requires visible endpoints
+(enforced in Cypher)."</p>
+<p><strong>The second thing worth copying is a one-line test.</strong>
+<code>SUPERSEDES</code> and <code>CONTRADICTS</code> are asserted
+<em>not</em> to be in <code>SEARCHABLE_RELATIONSHIPS</code>. The edges
+that record one fact replacing another are bookkeeping about the memory,
+not memory, and a store that let them surface as results would hand an
+agent the history of a correction as though it were the correction.</p>
+<p><strong>The gap is the epistemic vocabulary.</strong>
+<code>SpikeRank</code> grades a fact as <code>Signal</code>,
+<code>Pattern</code>, <code>Insight</code> or <code>Knowledge</code>,
+and its doc comment is precise about what that does: "Epistemic fact
+classification used in retrieval ranking (Knowledge highest)." It sorts.
+A lone unconfirmed <code>Signal</code> still comes back, below the
+better-founded facts — the same shape the atlas found one report earlier
+in <a href="../okf-agent-memory/">OKF Agent Memory</a>, where the only
+trust field retrieval consulted was one that promoted.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>fact</strong> is a relationship the agent chose to keep,
+not a passage it captured.</p>
+<p>A <strong>layer</strong> is a visibility membership, and asking for
+none shows you the global one.</p>
+<p>A <strong>retirement</strong> sets <code>validTo</code>; the row
+stays and points at its successor.</p>
+<p>A <strong>spike</strong> ranks how well-founded a fact is, and
+ranking is all it does.</p>
+<p>An <strong>Episode</strong> exists only when something actually
+changed.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — layer membership is checked on all three elements of an assertion in Cypher with an empty request meaning global-only, store retirement and world validity are separate properties, and every real mutation writes an Episode attributed to the tool</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: layer membership is checked on all three elements of an assertion in Cypher with an empty request meaning global-only, store retirement and world validity are separate properties, and every real mutation writes an Episode attributed to the tool
+flowchart TB
+    AGENT[&quot;the agent decides what is durable —&lt;br/&gt;nothing is captured secretly&quot;] --&gt; W[&quot;MCP write / withdraw / merge&quot;]
+    W --&gt; MUT{&quot;did the body change anything?&quot;}
+    MUT --&gt;|&quot;no-op&quot;| NONE[&quot;records no Episode and no graph change,&lt;br/&gt;so the log cannot be padded&quot;]
+    MUT --&gt;|&quot;a real change&quot;| G[(&quot;Neo4j: (s)-[r:ASSERTS]-&gt;(o)&lt;br/&gt;layers · spike · weight · validTo&lt;br/&gt;effectiveFrom · effectiveTo · effectiveQualified&quot;)]
+    MUT --&gt;|&quot;a real change&quot;| EP[(&quot;Episode node — IRI, timestamp,&lt;br/&gt;and the MCP tool that caused it&quot;)]
+    CORR[&quot;a correction&quot;] --&gt; RET[&quot;soft-retire: set validTo,&lt;br/&gt;point at the surviving IRI&quot;]
+    RET --&gt; G
+    RET -.-&gt;|&quot;the row stays; compatible facts coexist&lt;br/&gt;rather than being overwritten&quot;| KEPT[&quot;nothing is silently overwritten&quot;]
+    Q[&quot;recall with scope: [...]&quot;] --&gt; V{&quot;visibility, in Cypher&quot;}
+    V --&gt; V1[&quot;size(s.layers) = 0 OR any(layer IN s.layers WHERE layer IN $layers)&quot;]
+    V --&gt; V2[&quot;the same predicate on r&quot;]
+    V --&gt; V3[&quot;the same predicate on o&quot;]
+    V --&gt; V4[&quot;and again on the ABOUT anchor and its subject&quot;]
+    V1 &amp; V2 &amp; V3 &amp; V4 -.-&gt;|&quot;a relationship needs visible endpoints,&lt;br/&gt;so a hidden node cannot be reached&lt;br/&gt;through a visible edge&quot;| SAFE[&quot;no traversal leak&quot;]
+    EMPTY[&quot;scope: []&quot;] -.-&gt;|&quot;global-only, NOT everything —&lt;br/&gt;forgetting the argument under-answers&lt;br/&gt;instead of leaking&quot;| V
+    V --&gt; T{&quot;temporal&quot;}
+    T --&gt;|&quot;always&quot;| CUR[&quot;r.validTo IS NULL&quot;]
+    T --&gt;|&quot;$effectiveAt given&quot;| EFF[&quot;only facts with effectiveQualified = true,&lt;br/&gt;inside effectiveFrom .. effectiveTo&quot;]
+    EFF -.-&gt;|&quot;an assertion that never said when it was true&lt;br/&gt;drops out rather than being assumed&lt;br/&gt;to have held forever&quot;| CONS[&quot;the axes cannot be conflated&quot;]
+    CUR &amp; EFF --&gt; RANK[&quot;rank: spike tier, then weight, then score&quot;]
+    SPIKE[&quot;SpikeRank: Signal, Pattern, Insight, Knowledge&quot;] -.-&gt;|&quot;&#39;used in retrieval ranking&#39; — it sorts the&lt;br/&gt;answer, it does not withhold a fact&quot;| NOTS[&quot;no trust-state mark&quot;]
+    VOCAB[&quot;SEARCHABLE_RELATIONSHIPS&quot;] -.-&gt;|&quot;a test asserts SUPERSEDES and CONTRADICTS&lt;br/&gt;are NOT in it, so the record of a correction&lt;br/&gt;can never surface as content&quot;| RANK</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/layers.rs</code></td>
+<td>Layer-id validation and the visibility-union policy, in one
+place</td>
+</tr>
+<tr>
+<td><code>src/search.rs</code></td>
+<td>The Cypher that ranks, and the visibility predicate repeated across
+it</td>
+</tr>
+<tr>
+<td><code>src/graph.rs</code></td>
+<td>Bootstrap, writer order, Episode provenance, node serialization</td>
+</tr>
+<tr>
+<td><code>src/merge.rs</code></td>
+<td>Duplicate detection and soft retirement with expected-row
+assertions</td>
+</tr>
+<tr>
+<td><code>src/mutation.rs</code></td>
+<td>What counts as a change, and what a no-op must not record</td>
+</tr>
+<tr>
+<td><code>src/vocabulary.rs</code></td>
+<td>Which relationships may be searched, and the test that pins it</td>
+</tr>
+<tr>
+<td><code>src/semantic.rs</code></td>
+<td>Similarity fusion with a bounded, penalized structural context</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>src/layers.rs:1-6</code> — the visibility policy stated before
+any code implements it.</p>
+<p><code>src/search.rs:503-534</code> — the same predicate applied to
+subject, relationship, object and anchor, beside the
+<code>effectiveQualified</code> gate.</p>
+<p><code>src/vocabulary.rs:135-136</code> — two assertions that keep
+correction bookkeeping out of search.</p>
+<p><code>src/graph.rs:1195-1226</code> — an Episode, and the tool it is
+attributed to.</p>
+<p><code>src/mutation.rs:76</code> — what a no-op must not write.</p>
+<p><code>src/merge.rs:641-655</code> — a retirement that checks it
+affected exactly the number of relationships it expected, and fails
+loudly otherwise.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Entities and the <code>ASSERTS</code> relationships between them,
+each carrying layer memberships, a spike classification, a weight,
+<code>validTo</code> for store validity, and optional
+<code>effectiveFrom</code>/<code>effectiveTo</code> with an
+<code>effectiveQualified</code> flag. Classes and properties form a
+catalog forced to <code>layers = []</code> so the schema stays global.
+Episodes hang off mutations as provenance.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical and label matching fused with semantic similarity and a
+bounded structural context that is penalized rather than boosting
+evidence, ranked by spike tier, then weight, then score. Every leg
+carries the visibility predicate and the <code>validTo IS NULL</code>
+filter.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes arrive only through MCP tools and only for what the agent
+decides to keep. Corrections coexist with what they correct; withdrawal
+and duplicate merge soft-retire by setting <code>validTo</code> and
+recording the survivor. Merge operations count the rows they touched and
+raise when the count disagrees with what was planned — "duplicate
+retirement affected {retired} relationships; expected {expected}".</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One MCP server distributed as a Rust binary, a crate, an npm package
+and a Docker image, with a bundled agent skill and a
+<code>mcp.json</code>. Every tool defaults to a concise response "to
+minimize result tokens", with <code>detail:"detailed"</code> available
+when handles, memberships, ranking or audit metadata are needed.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The strong parts are the scope default, the endpoint-closure check,
+the correction edges kept out of search, and the row-count assertions on
+merges. The limits are that the layer check is visibility rather than
+authorization — no identity stands behind the requested union — and that
+the epistemic classification only sorts.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests live inline with the code, including assertions over the
+generated Cypher itself: that the query does not contain a particular
+label branch, that it does not use <code>collect(</code>, and that the
+searchable-relationship list excludes the correction edges. There is a
+CPU-hotspot benchmark. There are no committed must-not-retrieve cases at
+the store level, which is the piece that would turn those vocabulary
+assertions into a full guarantee.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Make an empty scope mean the narrowest view, not the widest. It
+converts the most common scope bug from a disclosure into a missing
+answer.</p>
+<p>Apply the visibility predicate to both endpoints as well as the edge.
+A relationship is reachable from either end, and checking only the edge
+leaves the other end reachable.</p>
+<p>Keep your supersession and contradiction edges out of search, and
+write the test that says so. They describe the memory rather than being
+it.</p>
+<p>Decide whether your epistemic tiers rank or withhold, and put the
+answer in the doc comment the way this one does. A reader who assumes
+the wrong one will trust a <code>Signal</code> as though it were
+<code>Knowledge</code>.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether an as-of query should fall back to current facts when nothing
+is qualified. The strict behaviour is defensible and the empty result is
+honest, but an agent asking what was true last March in a corpus with no
+effective bounds gets silence rather than an explanation.</p>
+<p>Whether layers are intended to carry any authorization weight. They
+are a caller-supplied union with no identity behind it, which is right
+for separating a project from a task and wrong for separating two
+tenants.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/layers.rs:1-6</code></td>
+<td>A scope default that narrows instead of widening</td>
+</tr>
+<tr>
+<td><code>src/search.rs:503-534</code></td>
+<td>One visibility predicate, applied everywhere it has to be</td>
+</tr>
+<tr>
+<td><code>src/vocabulary.rs:135-136</code></td>
+<td>Correction bookkeeping barred from search, by test</td>
+</tr>
+<tr>
+<td><code>src/mutation.rs:76</code></td>
+<td>Why a no-op must leave no trace</td>
+</tr>
+<tr>
+<td><code>src/domain.rs:469-478</code></td>
+<td>An epistemic classification that ranks rather than gates</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/bnomei/mindreader/commit/d7d1bb39cfeb47a6cfa230511d98764437ad98ad"><code class="commit-id" title="d7d1bb39cfeb47a6cfa230511d98764437ad98ad">d7d1bb39…</code></a>
+— first reading, at a commit dated 13 September 2026. Screened before
+opening, from a shallow clone: six files scanned, one auto-run surface,
+no build-time execution points, no unpinned surfaces and three
+dependency files inside the seven-day cooldown, with
+<code>Cargo.lock</code> present. <code>AGENTS.md</code> is addressed to
+a reading agent and was recorded as data. Nothing was installed, built
+or run, and no Neo4j server was started, so the Cypher described here is
+read from the source strings rather than executed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

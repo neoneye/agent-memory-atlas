@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 544 reports.**
+**This page covers all 545 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4702,3 +4702,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, Python, version 0.0.1, 11,702 lines over 93 files, a PVLDB Experiment/Analysis/Benchmark artifact with thirty sealed runs and 87 verified figures, adapters for the external systems it measures, and no server or MCP surface. No auto-run surfaces at this pin.
 - Study when: your security suite passes entirely, or your `as_of` parameter is optional.
 - Do not copy when: you need something deployable. Five marks: trust state, bitemporal, scope enforced, mutation audit, negative evals.
+
+### [`mindreader`](../systems/mindreader/)
+- Best idea: **an empty scope means global-only, not everything.** Layer memberships are stored on nodes and edges and "[e]mpty `scope` is global-only. Named ids form an OR union", so a caller who forgets the argument sees the global layer and nothing more — the inverse of the arrangement that produces most of this corpus's scope leaks, where an omitted scope quietly returns every tenant. The predicate is applied to the subject, the relationship and the object, and again to the `ABOUT` anchor and its subject, because "[r]elationship visibility also requires visible endpoints (enforced in Cypher)", so a hidden node cannot be reached through a visible edge. Beside it, a one-line test worth stealing: `SUPERSEDES` and `CONTRADICTS` are asserted *not* to be in `SEARCHABLE_RELATIONSHIPS`, so the edges recording that one fact replaced another can never surface as content.
+- Biggest risk: **the epistemic vocabulary ranks rather than withholds, and the code says so.** `SpikeRank` grades a fact `Signal`, `Pattern`, `Insight` or `Knowledge`, documented as an "[e]pistemic fact classification used in retrieval ranking (Knowledge highest)" — so a lone unconfirmed signal is sorted below better-founded facts and returned all the same. The point-in-time path has a quieter consequence: a fact enters an `$effectiveAt` answer only when `effectiveQualified` is true, and qualification is the agent's choice at write time, so an as-of query over a corpus where nobody set those bounds returns nothing rather than the current state. And the layer check is visibility rather than authorization: a caller-supplied union with no identity behind it, right for separating a project from a task and wrong for separating two tenants.
+- Most reusable component: the no-op rule. A mutation whose body changed nothing "must record no Episode or graph changes", so the presence of an Episode means a real change happened and repeated writes cannot pad the audit trail. Merge operations go further and assert the row count they affected, failing with "duplicate retirement affected {retired} relationships; expected {expected}" when the graph disagrees with the plan.
+- Maturity impression: MIT, Rust, version 0.7.2, 20,225 lines over 24 files on Neo4j, shipped as a crate, an npm package, a Docker image and a bundled agent skill, with tests that assert properties of the generated Cypher itself. One auto-run surface at this pin.
+- Study when: an omitted scope argument in your system means "everything", or your correction edges are searchable.
+- Do not copy when: you cannot run a Neo4j, or you need a tier that actually gates. Three marks: bitemporal, scope enforced, mutation audit.
