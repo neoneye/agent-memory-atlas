@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 546 reports.</strong></p>
+<p><strong>This page covers all 547 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20488,6 +20488,54 @@ or your recall defaults to showing everything.</li>
 <li>Do not copy when: you need tenant isolation the library enforces
 rather than the caller. Three marks: trust state, mutation audit,
 review.</li>
+</ul>
+<h3 id="anatid"><a
+href="../systems/anatid/"><code>anatid</code></a></h3>
+<ul>
+<li>Best idea: <strong>a test that parses every module and fails when a
+tenant or time predicate is written by hand.</strong> DuckDB "has no
+<code>AS OF SYSTEM TIME</code> and no row-level access control", so both
+are predicates the library compiles into every read, and "a read that
+forgets one of them returns another tenant's rows or a row that was not
+visible at the requested instant."
+<code>test_no_module_writes_the_visibility_predicate_by_hand</code>
+walks each module's AST, extracts its string literals with docstrings
+excluded and f-strings handled, and fails when a SQL-shaped literal
+contains <code>tenant_id = ?</code> — one parameterised test per module
+"so a failure names the file". The scope-predicate drift this atlas
+keeps reporting becomes a build failure rather than a review finding.
+Two smaller rules follow the same instinct: an accelerator "only ever
+narrows the candidate set", because "[a]n index built over current state
+cannot answer what was visible at an earlier instant"; and on the audit
+insert, the counterpart id "goes in a COLUMN, never into
+<code>reason</code>", because a hard forget "has to be able to find and
+delete every audit row that names an erased memory, and it cannot search
+free text for it."</li>
+<li>Biggest risk: <strong>time is the only axis of doubt.</strong> A
+memory is current or superseded and nothing records whether anyone
+checked it, so an unverified claim and a reviewed one differ only by a
+confidence number — in a system whose worked example is a withdrawn
+medical-device test, that is the gap a reader will feel first. Nothing
+is keyed on an erased value either, so re-asserting purged content
+produces an ordinary new memory. And the erasure hooks, which are the
+honest treatment of a hard problem, still only cover a table anatid has
+never heard of when whoever created it registers one.</li>
+<li>Most reusable component: <code>erasure.py</code>'s premise — that a
+purge has to reach the copies of a memory living outside the memory
+graph. It enumerates the bundled integration tables that hold the same
+text, including ones that are "counters today", covering them "on the
+same terms, so a column added later cannot quietly reopen the
+hole."</li>
+<li>Maturity impression: MIT, Python, version 0.4.3, 36,813 lines over
+44 files in one DuckDB file that SQL can read directly, with an MCP
+server, bundled agent integrations and a test suite whose negative
+assertions carry their controls in the same function. No auto-run
+surfaces at this pin.</li>
+<li>Study when: your scope predicate is held by convention, or your
+index answers a question instead of narrowing one.</li>
+<li>Do not copy when: you need a status that records judgement rather
+than time. Four marks: bitemporal, scope enforced, mutation audit,
+negative evals.</li>
 </ul>
         </article>
       </div>
