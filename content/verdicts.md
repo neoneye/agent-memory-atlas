@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 528 reports.**
+**This page covers all 529 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4574,3 +4574,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, version 0.45.0, 62,345 lines of TypeScript with 1,686 test cases across eighty-eight files, integration tests driving the real MCP tool against a local embedding server, and read-only document sources that index another repository's markdown. Screening flags three auto-run surfaces, as an MCP server installed into a client will.
 - Study when: your retrieval filters candidates and returns no account of it, or you want a memory whose exit story is that the notes stay plain markdown you already have.
 - Do not copy when: you need supersession to withhold, or any epistemic state — the lifecycle is `temporary | permanent`, a retention genre. One mark: negative eval.
+
+### [`nougenshards`](../systems/nougenshards/)
+- Best idea: **both guards argue against relying on them, in their own docstrings.** The command gate: "[t]his is a defense-in-depth speed-bump, NOT a security boundary … it can be trivially bypassed by obfuscation (encoding, indirection, aliases, etc.) and must never be relied upon as the sole protection against malicious input." The sandbox: "process-level isolation (no parent env, no shell), NOT a full security sandbox", refused for untrusted callers unless an operator sets an environment variable. Beside them, the capture ordering: redaction runs before hashing, embedding, indexing and encryption, "so neither SQLite nor an embedding blob preserves a recoverable copy of a leaked credential".
+- Biggest risk: **one local database that has ingested every AI tool's history off a machine, with no isolation inside it.** `domain_key` is derived from the working path on write but is an ordinary argument on read where `None` or `*` searches every domain, so it organises rather than isolates — and the product's premise, scanning for Claude, Gemini, Cursor and Codex traces, concentrates material that was previously scattered. Nothing is epistemic either: `sensitivity` changes how a body is stored, not whether it is returned, and no status withholds a shard. The licence is source-available and not open source — inspection and personal use granted, commercial use and competing hosted services prohibited.
+- Most reusable component: the capture ordering and the sensitivity contract together — including the stated edge, "[t]itles and tags stay plaintext: they are the only handle recall has on an encrypted shard, so keep identifying detail out of them" — and the `UNIQUE` constraint on the content hash, which puts de-duplication where a caller cannot skip it.
+- Maturity impression: version 1.3.1, 97,044 lines of Python with 1,491 test functions across 182 files, a CLI, an MCP server with a shim for both `mcp` package spellings, hooks, a Docker image and a hardening document. Built by Who Visions; the name is Haitian Creole for "we have".
+- Study when: you embed user content and have not decided where redaction sits in the pipeline, or you are importing another tool's history and must decide which timestamp to keep.
+- Do not copy when: you need isolation between domains rather than organisation. One mark, bitemporal: `timestamp` is event time and `learned_utc` is when this node learned it, filtered independently, with imported traces stamped at their true era rather than at migration time.

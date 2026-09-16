@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 528 reports.</strong></p>
+<p><strong>This page covers all 529 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19700,6 +19700,51 @@ plain markdown you already have.</li>
 <li>Do not copy when: you need supersession to withhold, or any
 epistemic state — the lifecycle is <code>temporary | permanent</code>, a
 retention genre. One mark: negative eval.</li>
+</ul>
+<h3 id="nougenshards"><a
+href="../systems/nougenshards/"><code>nougenshards</code></a></h3>
+<ul>
+<li>Best idea: <strong>both guards argue against relying on them, in
+their own docstrings.</strong> The command gate: "[t]his is a
+defense-in-depth speed-bump, NOT a security boundary … it can be
+trivially bypassed by obfuscation (encoding, indirection, aliases, etc.)
+and must never be relied upon as the sole protection against malicious
+input." The sandbox: "process-level isolation (no parent env, no shell),
+NOT a full security sandbox", refused for untrusted callers unless an
+operator sets an environment variable. Beside them, the capture
+ordering: redaction runs before hashing, embedding, indexing and
+encryption, "so neither SQLite nor an embedding blob preserves a
+recoverable copy of a leaked credential".</li>
+<li>Biggest risk: <strong>one local database that has ingested every AI
+tool's history off a machine, with no isolation inside it.</strong>
+<code>domain_key</code> is derived from the working path on write but is
+an ordinary argument on read where <code>None</code> or <code>*</code>
+searches every domain, so it organises rather than isolates — and the
+product's premise, scanning for Claude, Gemini, Cursor and Codex traces,
+concentrates material that was previously scattered. Nothing is
+epistemic either: <code>sensitivity</code> changes how a body is stored,
+not whether it is returned, and no status withholds a shard. The licence
+is source-available and not open source — inspection and personal use
+granted, commercial use and competing hosted services prohibited.</li>
+<li>Most reusable component: the capture ordering and the sensitivity
+contract together — including the stated edge, "[t]itles and tags stay
+plaintext: they are the only handle recall has on an encrypted shard, so
+keep identifying detail out of them" — and the <code>UNIQUE</code>
+constraint on the content hash, which puts de-duplication where a caller
+cannot skip it.</li>
+<li>Maturity impression: version 1.3.1, 97,044 lines of Python with
+1,491 test functions across 182 files, a CLI, an MCP server with a shim
+for both <code>mcp</code> package spellings, hooks, a Docker image and a
+hardening document. Built by Who Visions; the name is Haitian Creole for
+"we have".</li>
+<li>Study when: you embed user content and have not decided where
+redaction sits in the pipeline, or you are importing another tool's
+history and must decide which timestamp to keep.</li>
+<li>Do not copy when: you need isolation between domains rather than
+organisation. One mark, bitemporal: <code>timestamp</code> is event time
+and <code>learned_utc</code> is when this node learned it, filtered
+independently, with imported traces stamped at their true era rather
+than at migration time.</li>
 </ul>
         </article>
       </div>

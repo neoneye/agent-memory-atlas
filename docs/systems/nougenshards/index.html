@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A source-available local memory
+that harvests scattered AI traces into encrypted SQLite, keeps event
+time apart from the time this node learned something, and labels its
+sandbox and its command denylist as speed bumps rather than
+boundaries.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="NouGenShards — Agent Memory Atlas">
+    <meta property="og:description" content="A source-available local
+memory that harvests scattered AI traces into encrypted SQLite, keeps
+event time apart from the time this node learned something, and labels
+its sandbox and its command denylist as speed bumps rather than
+boundaries.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NouGenShards — Agent Memory Atlas">
+    <meta name="twitter:description" content="A source-available local
+memory that harvests scattered AI traces into encrypted SQLite, keeps
+event time apart from the time this node learned something, and labels
+its sandbox and its command denylist as speed bumps rather than
+boundaries.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>NouGenShards — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "NouGenShards",
+      "description": "A source-available local memory that harvests scattered AI traces into encrypted SQLite, keeps event time apart from the time this node learned something, and labels its sandbox and its command denylist as speed bumps rather than boundaries.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Both of its guards say in the code what
+they are not</p>
+          <h1>NouGenShards</h1>
+          <p class="document-deck">A source-available local memory that
+harvests scattered AI traces into encrypted SQLite, keeps event time
+apart from the time this node learned something, and labels its sandbox
+and its command denylist as speed bumps rather than boundaries.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Who-Visions/NouGenShards">
+              <span>Source</span>
+              <strong>Who-Visions/NouGenShards</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Who-Visions/NouGenShards/commit/73078c05b5a36ad04a2d63b9dd6d42fa7f912bd3" title="73078c05b5a36ad04a2d63b9dd6d42fa7f912bd3">
+              <span>Analyzed revision</span>
+              <code>73078c05…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Who-Visions--NouGenShards" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Who-Visions--NouGenShards</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>NouGenShards is "[p]ersistent local memory for AI assistants — so
+your best fixes, decisions, and context don't disappear between tools."
+Python, version 1.3.1, 97,044 lines with 1,491 test functions across 182
+test files, a CLI, an MCP server and a Docker image, built by Who
+Visions; the name is Haitian Creole, "Nou Gen" meaning "we have".</p>
+<p>Its central act is unusual in this corpus:
+<code>nougen brain scan</code> walks your machine for the traces other
+AI tools left behind — Claude, Gemini, Cursor, Codex — and imports them
+into local SQLite. Most systems here start empty and accumulate; this
+one starts by harvesting what already exists.</p>
+<p>The licence is source-available and not open source, stated plainly
+in the README: commercial use requires a subscription or written
+permission, redistribution for a fee and competing hosted services are
+prohibited, and "[v]iew the source code for inspection and learning
+purposes" is expressly granted.</p>
+<p><strong>Both of its guards say what they are not.</strong> The
+command gate:</p>
+<blockquote>
+<p>"This is a defense-in-depth speed-bump, NOT a security boundary. It
+is a best-effort denylist meant to catch obvious destructive commands
+and slow down accidents; it can be trivially bypassed by obfuscation
+(encoding, indirection, aliases, etc.) and must never be relied upon as
+the sole protection against malicious input."</p>
+</blockquote>
+<p>And the sandbox:</p>
+<blockquote>
+<p>"this is process-level isolation (no parent env, no shell), NOT a
+full security sandbox. Untrusted callers (MCP tools,
+<code>nougen ctx execute</code>) are refused unless the operator opts in
+with NOUGEN_ENABLE_SANDBOX=1."</p>
+</blockquote>
+<p>This atlas has reported regex denylists presented as guarantees more
+than once. This is the first whose author writes the argument against
+relying on it, in the docstring, above the code. The gate still
+normalises whitespace and case before matching so <code>rm   -rf</code>
+and <code>RM -RF</code> are caught — it does the job it claims, and
+claims only that job.</p>
+<p><strong>Redaction runs before the embedding, which is the ordering
+that matters.</strong> Capture redacts credential-shaped text from the
+title, content and every tag first, and the comment says why:</p>
+<blockquote>
+<p>"A shard is a durable publication surface. Redact credential-shaped
+text before hashing, embedding, indexing, or encryption so neither
+SQLite nor an embedding blob preserves a recoverable copy of a leaked
+credential."</p>
+</blockquote>
+<p>An embedding computed over a secret is a lossy but recoverable copy
+of it. Redacting after embedding — the common ordering, because
+redaction is usually bolted on later — leaves that copy in the vector
+column.</p>
+<p><strong>Encryption states its own edge.</strong> A shard's
+<code>sensitivity</code> is <code>normal</code>, <code>private</code> or
+<code>secret</code>; private and secret bodies are AES-256-GCM encrypted
+by a vault before they reach SQLite, "so personal-scope material
+(finances, health, identity documents) is not readable from the DB
+file". And immediately: "[t]itles and tags stay plaintext: they are the
+only handle recall has on an encrypted shard, so keep identifying detail
+out of them." A system that encrypts a body, names what it cannot
+encrypt, and tells the user what that implies for their titles.</p>
+<p>The mark is for the two clocks, declared in the migration that added
+the second one:</p>
+<blockquote>
+<p>"Bi-temporal (memmesh move, schema v4): <code>timestamp</code> is
+EVENT time (when it happened; original_timestamp wins), learned_utc is
+when THIS node stored it. retrieve(as_of=) filters on learned_utc;
+legacy rows are NULL and fall back to timestamp, their best available
+estimate."</p>
+</blockquote>
+<p><code>_apply_filters</code> takes <code>as_of</code>,
+<code>event_after</code> and <code>event_before</code> as independent
+parameters, so "what had I learned by March" and "what happened in
+March" are different questions with different answers. For a product
+whose first action is importing years of other tools' history, that
+separation is load-bearing rather than ornamental —
+<code>original_timestamp</code> stamps migrated content "at its TRUE era
+instead of migration time, so date-window queries and coverage
+histograms reflect when the experience actually happened", falling back
+to now with a warning rather than failing the write.</p>
+<p>What is not here: <code>domain_key</code> is derived from the working
+path on write but is an ordinary argument on read, where
+<code>None</code> or <code>*</code> searches every domain, so it
+organises rather than isolates. Nothing is epistemic —
+<code>sensitivity</code> changes how a body is stored, not whether it is
+returned; <code>utility_score</code> is a weight; no status withholds a
+shard. There is no mutation record.</p>
+<p>And the premise deserves a deliberate decision rather than a default:
+a single local database that has ingested every AI tool's history off
+one machine is a concentration of material that was previously
+scattered, which is the product's value and also its risk profile.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>shard</strong> is one unit of experience, hashed so the
+same trace cannot be imported twice.</p>
+<p><strong>When it happened</strong> and <strong>when I learned
+it</strong> are different columns and different filters.</p>
+<p>A <strong>guard</strong> here is a speed bump, and says so.</p>
+<p><strong>Redaction</strong> comes first, because everything downstream
+keeps a copy.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — capture redacts before hashing, embedding and encryption so no downstream copy survives; two clocks are stored and filtered independently</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: capture redacts before hashing, embedding and encryption so no downstream copy survives; two clocks are stored and filtered independently
+flowchart TB
+    SCAN[&quot;nougen brain scan — Claude · Gemini ·&lt;br/&gt;Cursor · Codex traces already on disk&quot;] --&gt; CAP[&quot;capture(title, content, tags,&lt;br/&gt;sensitivity, original_timestamp)&quot;]
+    CAP --&gt; RED[&quot;redact_content on title, content&lt;br/&gt;and every tag — FIRST&quot;]
+    RED --&gt;|&quot;&#39;so neither SQLite nor an embedding blob&lt;br/&gt;preserves a recoverable copy&lt;br/&gt;of a leaked credential&#39;&quot;| ORDER[&quot;then hash → embed → index → encrypt&quot;]
+    ORDER --&gt; SENS{&quot;sensitivity&quot;}
+    SENS --&gt;|&quot;normal&quot;| PLAIN[&quot;body stored plaintext&quot;]
+    SENS --&gt;|&quot;private · secret&quot;| ENC[&quot;AES-256-GCM before it reaches SQLite —&lt;br/&gt;titles and tags stay plaintext because&lt;br/&gt;they are recall&#39;s only handle&quot;]
+    PLAIN &amp; ENC --&gt; ROW[(&quot;shards: file_hash UNIQUE (a re-import&lt;br/&gt;is refused) · domain_key · utility_score ·&lt;br/&gt;timestamp · learned_utc · valid_until ·&lt;br/&gt;last_verified&quot;)]
+    ROW --&gt; F{&quot;_apply_filters&quot;}
+    F --&gt;|&quot;as_of&quot;| LEARNED[&quot;what this node had LEARNED by then&lt;br/&gt;— filters learned_utc&quot;]
+    F --&gt;|&quot;event_after / event_before&quot;| HAPPENED[&quot;when it actually happened&lt;br/&gt;— filters timestamp,&lt;br/&gt;original_timestamp wins on import&quot;]
+    F --&gt;|&quot;scope&quot;| DOM[&quot;domain_key — derived from the working&lt;br/&gt;path on write; on read, None or &#39;*&#39;&lt;br/&gt;searches every domain&quot;]
+    LEARNED &amp; HAPPENED &amp; DOM --&gt; OUT[&quot;hybrid lexical + embedding results,&lt;br/&gt;blended with the utility prior&quot;]
+    EXEC[&quot;agent asks to run code&quot;] --&gt; GATE{&quot;check_mutation_gate&quot;}
+    GATE -.-&gt;|&quot;&#39;a defense-in-depth speed-bump,&lt;br/&gt;NOT a security boundary … can be&lt;br/&gt;trivially bypassed by obfuscation&#39;&quot;| HONEST[&quot;the disclaimer is in the docstring&quot;]
+    GATE --&gt; SB{&quot;execute_sandboxed&quot;}
+    SB --&gt;|&quot;untrusted and NOUGEN_ENABLE_SANDBOX unset&quot;| REFUSE[&quot;refused by default&quot;]
+    SB -.-&gt;|&quot;&#39;process-level isolation (no parent env,&lt;br/&gt;no shell), NOT a full security sandbox&#39;&quot;| HONEST</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/nougen_shards/core.py</code></td>
+<td>The schema, capture, retrieval and the filters</td>
+</tr>
+<tr>
+<td><code>src/nougen_shards/gatekeeper.py</code></td>
+<td>The command denylist, and its disclaimer</td>
+</tr>
+<tr>
+<td><code>src/nougen_shards/nougen_sandbox.py</code></td>
+<td>Opt-in execution, and its disclaimer</td>
+</tr>
+<tr>
+<td><code>src/nougen_shards/private_vault.py</code></td>
+<td>AES-256-GCM for private and secret bodies</td>
+</tr>
+<tr>
+<td><code>src/nougen_shards/brain_scan/</code></td>
+<td>Harvesting other tools' traces, and redaction</td>
+</tr>
+<tr>
+<td><code>src/nougen_shards/mcp.py</code>, <code>cli.py</code></td>
+<td>The agent and human surfaces</td>
+</tr>
+<tr>
+<td><code>src/nougen_shards/handoff.py</code>,
+<code>nougenmsg.py</code></td>
+<td>Federation between nodes</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>src/nougen_shards/core.py:491-497</code> — two clocks, declared
+where the second was added.</p>
+<p><code>src/nougen_shards/core.py:1018-1046</code> — the sensitivity
+contract and the redaction ordering.</p>
+<p><code>src/nougen_shards/gatekeeper.py:1-26</code> — a denylist
+arguing against its own sufficiency.</p>
+<p><code>src/nougen_shards/nougen_sandbox.py:9-33</code> — execution off
+by default, with the reason.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A shard carries its timestamps, an event type, a title, content,
+tags, a utility prior seeded by the publisher, an access count, a
+<code>file_hash</code> with a UNIQUE constraint, a
+<code>domain_key</code> defaulting to <code>global</code>, a
+sensitivity, an embedding, and the verification pair. The uniqueness
+constraint on the hash is the dedup mechanism: re-running a scan cannot
+double-import a trace, enforced by the database rather than by a check
+the caller might skip.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid lexical and embedding retrieval blended with the utility
+prior, indexed on <code>(domain_key, utility_score DESC)</code>, with
+the three filters above applied to the fused candidates.
+<code>valid_until</code> and <code>last_verified</code> support a
+freshness question the retrieval can ask, set together by
+<code>mark_verified</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Redact, hash, embed, index, encrypt — in that order, stated as an
+ordering rather than left to the call sequence. An unparseable original
+timestamp logs a warning and falls back to now, which "never crashes a
+write": the right priority for an import that might be processing years
+of someone else's log formats.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, an MCP server with a compatibility shim for both the pre- and
+post-rename <code>mcp</code> package spellings, and hooks. Screening
+flags two auto-run surfaces and two build-time execution points, which
+is what a Docker-packaged tool with agent hooks looks like.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Covered above: redaction first, encryption by sensitivity with its
+limit stated, and two guards that describe themselves accurately. The
+absence is epistemic rather than operational — nothing distinguishes a
+fact a person stated from a line scraped out of a chat log, and every
+imported trace becomes a shard of the same kind.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,491 test functions across 182 files, including suites for the
+gatekeeper, the sandbox, federation tiering and the message envelope.
+Nothing was installed, built or run for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Redact before you embed. The order is the whole protection: an
+embedding of a secret is a recoverable copy, and redaction bolted on
+afterwards leaves it.</p>
+<p>Say what your guard is not. A denylist that documents its own
+bypassability is more useful than one presented as a boundary, because
+the next person to build on it will not mistake it for one.</p>
+<p>Keep event time when you import. A migration that stamps everything
+with the migration date destroys the only axis that made the imported
+history worth importing.</p>
+<p>Put the dedup in the schema. A <code>UNIQUE</code> on the content
+hash cannot be skipped by a caller who forgot to check.</p>
+<p>And if a title is the only handle on an encrypted body, tell the user
+that before they write the title.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the event axis survives every importer.
+<code>original_timestamp</code> is a parameter, and which of the
+scanners supply it was not traced.</p>
+<p>What federation sends. Nodes exchange messages through an envelope
+and a relay; whether encrypted bodies or their plaintext titles cross
+was not established.</p>
+<p>Whether anything distinguishes an imported trace from an authored
+shard. Both become rows of the same kind, and no provenance column was
+found.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/nougen_shards/core.py:491-497</code></td>
+<td>Two clocks, and which one <code>as_of</code> filters</td>
+</tr>
+<tr>
+<td><code>src/nougen_shards/core.py:1018-1046</code></td>
+<td>Sensitivity, and redaction before everything</td>
+</tr>
+<tr>
+<td><code>src/nougen_shards/gatekeeper.py:1-26</code></td>
+<td>A guard that argues against relying on it</td>
+</tr>
+<tr>
+<td><code>src/nougen_shards/nougen_sandbox.py:9-33</code></td>
+<td>Execution refused unless opted in</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/Who-Visions/NouGenShards/commit/73078c05b5a36ad04a2d63b9dd6d42fa7f912bd3"><code class="commit-id" title="73078c05b5a36ad04a2d63b9dd6d42fa7f912bd3">73078c05…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: twenty-two files scanned, two auto-run
+surfaces, two build-time execution points, four unpinned surfaces and
+nine dependency files inside the seven-day cooldown. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
