@@ -113,14 +113,14 @@ three of its four seeded judgements measurably did nothing.</p>
               <strong>Trustedwear-Tech/citra-decision-system</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6" title="3106ce5f122d00fe63b8ec9d445da771170fdcd6">
+            <a class="meta-pill revision-pill" href="https://github.com/Trustedwear-Tech/citra-decision-system/commit/6f200f2992291eda45c23d95c5e231b82e8f1cf3" title="6f200f2992291eda45c23d95c5e231b82e8f1cf3">
               <span>Analyzed revision</span>
-              <code>3106ce5f…</code>
+              <code>6f200f29…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-31</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Trustedwear-Tech--citra-decision-system" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -176,13 +176,23 @@ officers had overruled on 4 of every 10 cases it fired kept firing,
 merely ranked a little lower. Measured wrongness with no consequence is
 the same failure as knowledge that looks present and is not."</em></p>
 </blockquote>
-<p>Scope is the second mark and it is derived rather than declared. A
-clause fires when <code>scope_facets ⊆ case_facets</code>, written as
+<p>Scope is the second mark, and it is derived from what the officers
+marked rather than declared by the model. A clause fires when
+<code>scope_facets ⊆ case_facets</code>, written as
 <code>$setIsSubset</code> on the read query, and its facets are the
-<strong>intersection</strong> of the labels on every correction that
-formed it — floored so that corrections only combine when their facets
-overlap, which keeps a clause from being narrower than its own evidence
-agreed on.</p>
+<strong>intersection</strong> across the corrections that formed it —
+floored so that corrections only combine when their facets overlap,
+which keeps a clause from being narrower than its own evidence agreed
+on.</p>
+<p>What is intersected is the officer's choice where they made one:
+<code>set(c.get("scope_facets") or c.get("case_facets") or [])</code>.
+On the run card an officer may tick the facets a lesson is actually
+about, a subset of the case's own; when they do, that subset is what
+combines, and the comment gives the case it was written for — a
+correction whose officer unticked everything but the sourcing channel
+yields a judgement scoped to the channel rather than to the one file it
+happened to arrive on. When they tick nothing, the whole case signature
+is used, as before.</p>
 <p>Two things are unusual enough to name separately.</p>
 <p><strong>The store refuses an unprovenanced clause.</strong>
 <code>create_clause</code> raises rather than insert one that cites no
@@ -477,13 +487,10 @@ commit.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>1,688 Python test functions across 166 files, with 85 in
-<code>test_clause_store.py</code> and 24 in
-<code>test_judgement_hierarchy.py</code> covering the memory directly —
-1,137 of the 1,688 sit in <code>smart-app-service</code>. The suites
-were not run: eight dependency surfaces sat inside the seven-day
-freshness cooldown at this pin, so nothing here was installed or
-executed.</p>
+<p>1,431 Python test functions across 171 files cover the system, with
+<code>test_clause_store.py</code> and
+<code>test_judgement_hierarchy.py</code> covering the memory directly.
+The suites were not run; nothing here was installed or executed.</p>
 <p>The negative cases are the good ones.
 <code>test_judgement_hierarchy.py:462-486</code> creates a clause,
 asserts it exists with <code>sop_conflict</code> status, asserts
@@ -493,8 +500,32 @@ the clause returns to <code>active</code> — the positive control, the
 negative assertion and the restore over one fixture.
 <code>test_the_monitor_never_resurrects_a_curated_clause</code> runs the
 precision monitor over a hand-quarantined clause and asserts the hold
-survives.
-<code>test_dismissing_a_challenge_cannot_lift_an_admin_quarantine</code>
+survives. <strong>Two tests hold the project to its own claims rather
+than to its code.</strong>
+<code>test_reports_the_real_prompt_cost</code> runs thirty corrections
+against one clause and asserts <code>mean_prompt_words &lt; 100</code>,
+against a baseline the docstring names — the blob it replaced <em>"spent
+~1000 words on EVERY case regardless of relevance"</em> — so the saving
+is checked rather than asserted, and the docstring says which kind of
+saving it is: <em>"selection, not compression."</em> Beside it,
+<code>test_measures_statement_is_not_oversold</code> asserts that the
+evaluation's own prose still contains its disclaimers, by substring:
+<em>"NOT that the model would have decided differently"</em> and <em>"Do
+not report it as an accuracy number."</em> A committed test that the
+project has not oversold its own measurement is not something this atlas
+finds often.</p>
+<p>The prompt is treated as code in the same spirit. The block telling
+the model that the SOP is supreme was rewritten around an observed
+failure recorded in the comment above it: the model read <em>"the SOP
+does not mention this"</em> as <em>"the SOP forbids this"</em> and
+reported a judgement asking for <strong>more</strong> care as overridden
+by rule, on a named deployment. The replacement defines the word — a
+judgement conflicts <em>"only if following it would break the rule; more
+care, or a check the SOP is silent on, is NOT a conflict"</em> — and the
+comment notes the constraint it was written under, that <em>"every word
+here is paid on every run"</em> and the word-count test holds the whole
+block.</p>
+<p><code>test_dismissing_a_challenge_cannot_lift_an_admin_quarantine</code>
 documents a real laundering path — dismissing a challenge re-derived the
 tier from <code>support_count</code>, so challenge-then-dismiss promoted
 <strong>any</strong> parked clause to active, lifting an admin's hold —
@@ -629,6 +660,28 @@ the same retention rules as the case data?</li>
 <code>docs/Citra-Decision-Memory-Credit-Note.pdf</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/Trustedwear-Tech/citra-decision-system/commit/6f200f2992291eda45c23d95c5e231b82e8f1cf3"><code class="commit-id" title="6f200f2992291eda45c23d95c5e231b82e8f1cf3">6f200f29…</code></a>
+— re-read at a commit dated 9 September 2026, 134 commits past the
+previous pin. All five marks re-tested and held;
+<code>clause_store.py</code> moved twenty-three lines and
+<code>consolidation.py</code> eight, and both changes refine mechanisms
+the report already describes. A clause's facets are now intersected over
+<code>scope_facets or case_facets</code> per correction, so an officer
+who ticks a subset on the run card scopes the lesson to what they ticked
+rather than to the whole case signature. And the supremacy instruction
+was rewritten around a failure recorded in the comment above it — the
+model was reading silence in the SOP as prohibition and reporting a
+judgement that asked for more care as overridden — with the replacement
+defining what a conflict is. Two tests that hold the project to its own
+claims are recorded here for the first time:
+<code>test_reports_the_real_prompt_cost</code> pins the clause block
+under a 100-word mean against the ~1000-word blob it replaced, and
+<code>test_measures_statement_is_not_oversold</code> asserts the
+evaluation's own disclaimers are still in its prose. Screened before
+reading, from a full clone: no auto-run surface, eight build-time
+execution points and 27 unpinned dependency surfaces, none inside the
+seven-day cooldown. Nothing was installed, built or run.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6"><code class="commit-id" title="3106ce5f122d00fe63b8ec9d445da771170fdcd6">3106ce5f…</code></a>
 — same pin, three corrections. Section 4 and the <code>audit_log</code>

@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Trustedwear-Tech/citra-decision-system"
 source_url: https://github.com/Trustedwear-Tech/citra-decision-system
 archive_name: "Trustedwear-Tech--citra-decision-system"
-revision: 3106ce5f122d00fe63b8ec9d445da771170fdcd6
-revision_url: https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6
-analyzed_at: 2026-08-31
+revision: 6f200f2992291eda45c23d95c5e231b82e8f1cf3
+revision_url: https://github.com/Trustedwear-Tech/citra-decision-system/commit/6f200f2992291eda45c23d95c5e231b82e8f1cf3
+analyzed_at: 2026-09-16
 capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "mongo"
 stack_retrieval: "lexical"
@@ -69,11 +69,21 @@ a score, and the code here states that rule as a defect it had and fixed:
 > with no consequence is the same failure as knowledge that looks present and is
 > not."*
 
-Scope is the second mark and it is derived rather than declared. A clause fires
-when `scope_facets ⊆ case_facets`, written as `$setIsSubset` on the read query,
-and its facets are the **intersection** of the labels on every correction that
-formed it — floored so that corrections only combine when their facets overlap,
-which keeps a clause from being narrower than its own evidence agreed on.
+Scope is the second mark, and it is derived from what the officers marked rather
+than declared by the model. A clause fires when `scope_facets ⊆ case_facets`,
+written as `$setIsSubset` on the read query, and its facets are the
+**intersection** across the corrections that formed it — floored so that
+corrections only combine when their facets overlap, which keeps a clause from
+being narrower than its own evidence agreed on.
+
+What is intersected is the officer's choice where they made one:
+`set(c.get("scope_facets") or c.get("case_facets") or [])`. On the run card an
+officer may tick the facets a lesson is actually about, a subset of the case's
+own; when they do, that subset is what combines, and the comment gives the case
+it was written for — a correction whose officer unticked everything but the
+sourcing channel yields a judgement scoped to the channel rather than to the one
+file it happened to arrive on. When they tick nothing, the whole case signature
+is used, as before.
 
 Two things are unusual enough to name separately.
 
@@ -373,11 +383,9 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-1,688 Python test functions across 166 files, with 85 in `test_clause_store.py`
-and 24 in `test_judgement_hierarchy.py` covering the memory directly — 1,137 of
-the 1,688 sit in `smart-app-service`. The suites were
-not run: eight dependency surfaces sat inside the seven-day freshness cooldown at
-this pin, so nothing here was installed or executed.
+1,431 Python test functions across 171 files cover the system, with
+`test_clause_store.py` and `test_judgement_hierarchy.py` covering the memory
+directly. The suites were not run; nothing here was installed or executed.
 
 The negative cases are the good ones. `test_judgement_hierarchy.py:462-486`
 creates a clause, asserts it exists with `sop_conflict` status, asserts
@@ -386,6 +394,28 @@ then resolves the conflict and asserts the clause returns to `active` — the
 positive control, the negative assertion and the restore over one fixture.
 `test_the_monitor_never_resurrects_a_curated_clause` runs the precision monitor
 over a hand-quarantined clause and asserts the hold survives.
+**Two tests hold the project to its own claims rather than to its code.**
+`test_reports_the_real_prompt_cost` runs thirty corrections against one clause
+and asserts `mean_prompt_words < 100`, against a baseline the docstring names —
+the blob it replaced *"spent ~1000 words on EVERY case regardless of
+relevance"* — so the saving is checked rather than asserted, and the docstring
+says which kind of saving it is: *"selection, not compression."* Beside it,
+`test_measures_statement_is_not_oversold` asserts that the evaluation's own
+prose still contains its disclaimers, by substring: *"NOT that the model would
+have decided differently"* and *"Do not report it as an accuracy number."* A
+committed test that the project has not oversold its own measurement is not
+something this atlas finds often.
+
+The prompt is treated as code in the same spirit. The block telling the model
+that the SOP is supreme was rewritten around an observed failure recorded in the
+comment above it: the model read *"the SOP does not mention this"* as *"the SOP
+forbids this"* and reported a judgement asking for **more** care as overridden
+by rule, on a named deployment. The replacement defines the word — a judgement
+conflicts *"only if following it would break the rule; more care, or a check the
+SOP is silent on, is NOT a conflict"* — and the comment notes the constraint it
+was written under, that *"every word here is paid on every run"* and the
+word-count test holds the whole block.
+
 `test_dismissing_a_challenge_cannot_lift_an_admin_quarantine` documents a real
 laundering path — dismissing a challenge re-derived the tier from
 `support_count`, so challenge-then-dismiss promoted **any** parked clause to
@@ -490,6 +520,8 @@ holes the project has already had to close.
 - The reported run: `docs/Citra-Decision-Memory-Credit-Note.pdf`.
 
 ## History
+
+**2026-09-16** — [`6f200f2992291eda45c23d95c5e231b82e8f1cf3`](https://github.com/Trustedwear-Tech/citra-decision-system/commit/6f200f2992291eda45c23d95c5e231b82e8f1cf3) — re-read at a commit dated 9 September 2026, 134 commits past the previous pin. All five marks re-tested and held; `clause_store.py` moved twenty-three lines and `consolidation.py` eight, and both changes refine mechanisms the report already describes. A clause's facets are now intersected over `scope_facets or case_facets` per correction, so an officer who ticks a subset on the run card scopes the lesson to what they ticked rather than to the whole case signature. And the supremacy instruction was rewritten around a failure recorded in the comment above it — the model was reading silence in the SOP as prohibition and reporting a judgement that asked for more care as overridden — with the replacement defining what a conflict is. Two tests that hold the project to its own claims are recorded here for the first time: `test_reports_the_real_prompt_cost` pins the clause block under a 100-word mean against the ~1000-word blob it replaced, and `test_measures_statement_is_not_oversold` asserts the evaluation's own disclaimers are still in its prose. Screened before reading, from a full clone: no auto-run surface, eight build-time execution points and 27 unpinned dependency surfaces, none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-08-31** — [`3106ce5f122d00fe63b8ec9d445da771170fdcd6`](https://github.com/Trustedwear-Tech/citra-decision-system/commit/3106ce5f122d00fe63b8ec9d445da771170fdcd6) — same pin, three corrections. Section 4 and the `audit_log` evidence record asserted *"No `$pop`, no `$pull` on history, no `$slice` anywhere in the service"*. `$slice` appears six times — `fraud_checks.py:1003,1495,1542,1568` and `entity_links.py:210,215` — so the evidence was false as written even though the conclusion was not: none of the six touches the clause `history` array, `clause_store.py` carries no `$pop`, `$pull` or `$slice` at all, and it is the only writer of `smartapp_clauses` in the service. The claim is re-scoped to the store, and the capped `refs` arrays elsewhere (200 per entity link, 50 per fingerprint, with `ref_count` incrementing past the trim) are described as the contrast they are. Verifying that also turned up a second audit bypass beside `record_dissent`: `demo-data/tenants/acme-bank/scripts/memory_ab_dsa.py:134` and `memory_ab.py:55` set `status` directly on the collection, which is how the published A/B run toggled `C-002`. `audit_log` was re-checked in both directions and holds — the mark rests on a named append-only mutation record in the system's own store, which `set_status` and `reconcile_scope_families` provide; no mark moved. Second, section 1 read *"116,582 source lines in `smart-app-service` alone against 27,105 lines of tests there"*: both figures are correct but nested, not disjoint — the 116,582 counts all 239 `.py`/`.ts`/`.tsx` files including the 111 test files, leaving 89,477 lines outside `tests/`. Third, the test-function count was 1,679 across 169 files; an independent recount at this pin gives **1,688 `def test_` across 166 files**, 1,137 of them in `smart-app-service`.
 
