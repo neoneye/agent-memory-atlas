@@ -132,7 +132,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`magicore`](../../content/systems/magicore.md) | `.gitattributes` |
 | [`marsnme`](../../content/systems/marsnme.md) | `server.json` |
 | [`mastra-observational-memory`](../../content/systems/mastra-observational-memory.md) | `.claude/settings.json`, `.cursor/mcp.json`, `.opencode/` |
-| [`matrix-os`](../../content/systems/matrix-os.md) | `.claude/hooks/`, `.claude/settings.json` |
+| [`matrix-os`](../../content/systems/matrix-os.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json` |
 | [`mcp-memory-service`](../../content/systems/mcp-memory-service.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.gitattributes` |
 | [`mem0`](../../content/systems/mem0.md) | `.claude-plugin/`, `.gitmodules` |
 | [`mem9`](../../content/systems/mem9.md) | `.claude-plugin/` |

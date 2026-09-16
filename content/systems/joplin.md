@@ -7,9 +7,9 @@ page_kind: system
 source_name: "laurent22/joplin"
 source_url: https://github.com/laurent22/joplin
 archive_name: "laurent22--joplin"
-revision: 7e73a2a271a1f71a7877a972677b5d588241e552
-revision_url: https://github.com/laurent22/joplin/commit/7e73a2a271a1f71a7877a972677b5d588241e552
-analyzed_at: 2026-09-07
+revision: 981a03c5c9e88130bccff4db47c411d35ec7ae2c
+revision_url: https://github.com/laurent22/joplin/commit/981a03c5c9e88130bccff4db47c411d35ec7ae2c
+analyzed_at: 2026-09-17
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the scope and exclusion cases on the semantic index | packages/lib/services/ai/SearchService.test.ts:95-133, packages/lib/services/ai/EmbeddingIndexer.test.ts:113-170 | a search scoped to one notebook is queried by a note's own id so the result is guaranteed non-empty, with the comment that this makes the scope check non-vacuous, and every returned chunk must belong to that note; a tag scope returns only the tagged notes; a trashed note and a conflict note are saved, the indexer runs, and each has zero embeddings while the sibling case indexes a note end to end; a deleted and a locked note lose their vectors on the next maintenance | packages/lib/services/ai/EmbeddingIndexer.test.ts:70 (indexes a new note end to end), :88 (the more relevant note ranks first)"
@@ -464,4 +464,6 @@ offers switches, not scopes.
 
 ## History
 
-**2026-09-07** — [`7e73a2a271a1f71a7877a972677b5d588241e552`](https://github.com/laurent22/joplin/commit/7e73a2a271a1f71a7877a972677b5d588241e552) — first reading, at the head of `dev`, the day of release 3.7.16. Read from a shallow clone with the commit counts taken from the GitHub API; screened, with an `.envrc` and a VS Code settings file that run on open and many manifests inside the cooldown; nothing installed or run. One mark, `negative_eval`, for the scope and exclusion cases on the index. `scope_enforced` withheld: a notebook or tag is an optional filter. `audit_log` withheld: `revisions` collapses ten minutes and expires at ninety days, with no author. `human_review`, `trust_state`, `tombstone` and `bitemporal` withheld: edits apply as the tool runs, a note has no state, the trash is a soft delete of the note, and the only times are record times.
+**2026-09-17** — [`981a03c5c9e88130bccff4db47c411d35ec7ae2c`](https://github.com/laurent22/joplin/commit/981a03c5c9e88130bccff4db47c411d35ec7ae2c) — re-pinned after 71 commits. Both anchored test files are byte-identical at both commits, so the mark stands on unchanged code. In a repository this size a commit count says nothing about the memory subsystem; the blob hashes settle it. Nothing was installed, built or run.
+
+**2026-09-07** — [`981a03c5c9e88130bccff4db47c411d35ec7ae2c`](https://github.com/laurent22/joplin/commit/981a03c5c9e88130bccff4db47c411d35ec7ae2c) — first reading, at the head of `dev`, the day of release 3.7.16. Read from a shallow clone with the commit counts taken from the GitHub API; screened, with an `.envrc` and a VS Code settings file that run on open and many manifests inside the cooldown; nothing installed or run. One mark, `negative_eval`, for the scope and exclusion cases on the index. `scope_enforced` withheld: a notebook or tag is an optional filter. `audit_log` withheld: `revisions` collapses ten minutes and expires at ninety days, with no author. `human_review`, `trust_state`, `tombstone` and `bitemporal` withheld: edits apply as the tool runs, a note has no state, the trash is a soft delete of the note, and the only times are record times.

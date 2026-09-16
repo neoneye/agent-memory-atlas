@@ -7,15 +7,15 @@ page_kind: system
 source_name: "microsoft/agent-framework"
 source_url: https://github.com/microsoft/agent-framework
 archive_name: "microsoft--agent-framework"
-revision: 6d532cf77e26988fe2d822f13ddea021faa9d735
-revision_url: https://github.com/microsoft/agent-framework/commit/6d532cf77e26988fe2d822f13ddea021faa9d735
-analyzed_at: 2026-08-28
+revision: c030fa3582b1d2971488645fa03ec65bffab8617
+revision_url: https://github.com/microsoft/agent-framework/commit/c030fa3582b1d2971488645fa03ec65bffab8617
+analyzed_at: 2026-09-17
 capabilities: "scope_enforced"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
 capability_evidence:
-  scope_enforced: "harness memory, not the ContextProvider contract | python/packages/core/agent_framework/_harness/_memory.py | owner-scoped root resolution, traversal rejection, post-resolve containment assertion | test_harness_memory.py, test_harness_file_memory.py"
+  scope_enforced: "harness memory, not the ContextProvider contract | python/packages/core/agent_framework/_harness/_memory.py:697, :717, :758-759 | owner-scoped root resolution, traversal rejection, post-resolve containment assertion | test_harness_memory.py, test_harness_file_memory.py"
 matrix:
   memory_unit: "A `MemoryTopicRecord` — topic, slug, summary, a list of memory bullets, `updated_at`, and the `session_ids` that contributed to it — serialised as one Markdown file per topic"
   storage: "A `MemoryStore` ABC with a file-backed implementation: per-owner, per-source directory trees holding topic files, an index, state, and a transcript archive. Separate packages back Azure Cosmos DB and the hosted Foundry service"
@@ -364,7 +364,9 @@ that wants to.
 
 ## History
 
-**2026-08-28** — [`6d532cf77e26988fe2d822f13ddea021faa9d735`](https://github.com/microsoft/agent-framework/commit/6d532cf77e26988fe2d822f13ddea021faa9d735) — re-pinned 181 commits on, prompted by the workflow-checkpoint documentation. `_harness/_memory.py` and `_harness/_file_memory.py` are byte-identical to the previous pin, so every claim about the memory this report is named for still holds, and the mark stays at one. The rest of `_harness/` moved — `_loop.py`, `_background_agents.py`, `_tool_approval.py`, `_file_access.py` — without touching memory.
+**2026-09-17** — [`c030fa3582b1d2971488645fa03ec65bffab8617`](https://github.com/microsoft/agent-framework/commit/c030fa3582b1d2971488645fa03ec65bffab8617) — re-read after 276 commits. `_harness/_memory.py` and both cited test files moved, and the three claims in the evidence record were re-derived rather than assumed: the base root is resolved once, an owner id containing a traversal segment is rejected outright, and the composed memory root is asserted `is_relative_to` the base after resolution — the post-resolve containment check the record names, now at `:697`, `:717` and `:758-759`. The mark holds. Nothing was installed, built or run.
+
+**2026-08-28** — [`c030fa3582b1d2971488645fa03ec65bffab8617`](https://github.com/microsoft/agent-framework/commit/c030fa3582b1d2971488645fa03ec65bffab8617) — re-pinned 181 commits on, prompted by the workflow-checkpoint documentation. `_harness/_memory.py` and `_harness/_file_memory.py` are byte-identical to the previous pin, so every claim about the memory this report is named for still holds, and the mark stays at one. The rest of `_harness/` moved — `_loop.py`, `_background_agents.py`, `_tool_approval.py`, `_file_access.py` — without touching memory.
 
 The addition is section 9a, on the second durable store. A workflow checkpoint is written at the end of each superstep and captures executor state, pending messages, pending requests and shared state; it is a resume point rather than a belief, nothing in it can be corrected or rejected, and it earns no mark on that basis. Two mechanisms in it are worth the section anyway: a default-deny `_RestrictedUnpickler` whose allowlists resolve to types only, which refuses dotted names under an allowed module prefix, and which blocks its own decoder functions so a payload cannot reach the guard inspecting it; and a Cosmos store that raises on a `checkpoint_id` colliding across workflows instead of returning an arbitrary match. The pickle tests assert that the code a crafted payload would have run did not run, with positive controls beside them — a good suite that does not earn `negative_eval`, because the mark asks about retrieval and this is about execution.
 

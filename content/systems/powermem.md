@@ -32,6 +32,18 @@ matrix:
 
 ## 1. Executive Summary
 
+> **Renamed and re-architected upstream.** The repository
+> `oceanbase/powercontext` opens with *"PowerContext is the successor to
+> PowerMem"*, and this report has been read at its pin rather than its head since
+> that was established. Re-checked at the head on 17 September 2026, 348 commits
+> on: the Python package has moved from `src/powermem/` to `src/powercontext/`,
+> the storage adapter this report's mark rests on is gone, `_build_db_filters`
+> and `effective_filters` appear nowhere in the tree, and both cited test files
+> have been removed. Memory is now one artifact type under
+> `builtin/artifacts/memory/`, bound to a `scope_id` through a prompt context.
+> The pin therefore stays where the evidence was verified, and the archive fork
+> holds that tree.
+
 PowerMem is OceanBase's memory layer: LLM extraction into a vector store, hybrid
 vector/full-text/graph retrieval fused by reciprocal rank, an Ebbinghaus
 forgetting curve governing what stays reachable, and a two-layer "Experience +
@@ -503,6 +515,8 @@ comparison.
 | The succession is stated | `grep -n "successor" README.md` at head | *"PowerContext is the successor to PowerMem"* |
 
 ## History
+
+**2026-09-17** — re-checked against the upstream head, `69823b173860`, 348 commits past this report's pin, and **not re-pinned** — confirming the position this report and its verdict entry already took. What this check adds is the specifics: the package directory has moved from `src/powermem/` to `src/powercontext/`, `_build_db_filters` and `effective_filters` occur nowhere in the tree, and `tests/unit/test_agent_memory_search_filters.py` and `test_list_memory_filters.py` have both been removed, so the `scope_enforced` evidence has no successor to check rather than a relocated one. Memory in PowerContext is one artifact type under `builtin/artifacts/memory/`, bound to a `scope_id` through a prompt context rather than filtered on a user, agent and run triple — consistent with the verdict's existing note that the successor carries no `agent_id`. Nothing was installed, built or run.
 
 **2026-09-13** — the repository was renamed from `oceanbase/powermem` to `oceanbase/powercontext`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/oceanbase--powercontext` to match.
 
