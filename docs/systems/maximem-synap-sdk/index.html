@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The client SDKs for a hosted
+memory service, whose Python package enforces an identifier contract
+with a test that parses its own source to prove every public method
+taking a customer id checks it — and whose TypeScript package ships the
+same guard, five call sites, and no such test.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Maximem Synap
+SDK — Agent Memory Atlas">
+    <meta property="og:description" content="The client SDKs for a
+hosted memory service, whose Python package enforces an identifier
+contract with a test that parses its own source to prove every public
+method taking a customer id checks it — and whose TypeScript package
+ships the same guard, five call sites, and no such test.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Maximem Synap
+SDK — Agent Memory Atlas">
+    <meta name="twitter:description" content="The client SDKs for a
+hosted memory service, whose Python package enforces an identifier
+contract with a test that parses its own source to prove every public
+method taking a customer id checks it — and whose TypeScript package
+ships the same guard, five call sites, and no such test.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Maximem Synap SDK — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Maximem Synap SDK",
+      "description": "The client SDKs for a hosted memory service, whose Python package enforces an identifier contract with a test that parses its own source to prove every public method taking a customer id checks it \u2014 and whose TypeScript package ships the same guard, five call sites, and no such test.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The test that walks its own AST, and the
+SDK that doesn't have it</p>
+          <h1>Maximem Synap SDK</h1>
+          <p class="document-deck">The client SDKs for a hosted memory
+service, whose Python package enforces an identifier contract with a
+test that parses its own source to prove every public method taking a
+customer id checks it — and whose TypeScript package ships the same
+guard, five call sites, and no such test.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/maximem-ai/maximem_synap_sdk">
+              <span>Source</span>
+              <strong>maximem-ai/maximem_synap_sdk</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/maximem-ai/maximem_synap_sdk/commit/e0402c9c1fd4416cc76ee2efd3a95f412c85a509" title="e0402c9c1fd4416cc76ee2efd3a95f412c85a509">
+              <span>Analyzed revision</span>
+              <code>e0402c9c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/maximem-ai--maximem_synap_sdk" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>maximem-ai--maximem_synap_sdk</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This repository is the public client surface of Synap, a hosted
+memory service: Python and TypeScript SDKs, MCP servers, connectors and
+framework integrations, 82,093 lines, Apache-2.0, synced out of a
+private monorepo by a script the README names. The memory engine is not
+here. Nothing about how Synap stores, ranks, consolidates or forgets can
+be checked from this tree.</p>
+<p>What can be checked is the identifier contract, and it is worth the
+visit for two reasons that pull in opposite directions.</p>
+<p>The first is <code>scoping.py</code>, whose docstring is among the
+best short pieces of engineering writing in this atlas. It states the
+rule — on a B2C instance send <code>user_id</code> and nothing else; on
+B2B <code>customer_id</code> is required — notes that "[t]he server is
+authoritative and rejects independently", and then explains why a
+client-side check exists at all:</p>
+<blockquote>
+<p>"Before this, sending a customer_id on a B2C instance produced no
+exception anywhere: the write was filed under the customer, the read
+asked for the user, and both returned success. One client ran 4,634
+consecutive empty fetches across seven days without a single error to
+look at. An SDK that stays silent about a misuse it can see is not being
+permissive, it is hiding the bug."</p>
+</blockquote>
+<p>That is the scope-mismatch failure in its purest form: a write and a
+read using different keys, each individually successful, for a week.</p>
+<p>The guard's unknown case is equally well reasoned.
+<code>isolation</code> comes from <code>/api/v1/auth/whoami</code>, and
+<code>None</code> "means the server did not tell us … and it must mean
+'do nothing'", because guessing B2C would refuse a B2B client's
+mandatory field against every server not yet upgraded — "a far worse
+failure than the one it prevents." A fail-open branch with its
+justification attached.</p>
+<p>The second reason is what happens when that guard has to be applied
+at every call site, which is where the two SDKs diverge.</p>
+<p>Python does it structurally.
+<code>test_every_public_method_taking_a_customer_id_checks_it</code>
+parses the package's own source with <code>ast</code>, walks every
+class, collects every public method whose signature includes
+<code>customer_id</code>, and asserts each one calls the check. It
+carries an exemption list where each entry is justified in a comment —
+<code>grpc_client.py</code> is "transport, forwards what it was given";
+<code>anticipation_cache.py</code> is "cache key construction, never a
+caller's entry point" — and, crucially, a companion assertion:</p>
+<pre><code>def test_the_guard_is_not_vacuous():
+    assert _public_methods_taking_customer_id(), &quot;found no methods; the rule below would pass for the wrong reason&quot;</code></pre>
+<p>A coverage test that would pass on an empty set is not a coverage
+test. Almost nobody writes that second assertion.</p>
+<p>TypeScript ships the same <code>checkCustomerId</code>, wires it at
+five call sites, and has no such test. And the surfaces it misses are
+the two nearest the original incident. <code>user/interface.ts</code>
+takes <code>customer_id</code> or <code>customerId</code> from its
+options and forwards it as a query parameter with no check;
+<code>tool/as-tool.ts</code> — the path that hands an agent its memory
+tool — puts <code>customer_id</code> into three request bodies and calls
+the guard nowhere in the file. Python guards both.</p>
+<p>So the bug that cost 4,634 silent empty fetches is fixed in the SDK
+that has the test proving it is fixed, and still reachable from the one
+that does not.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An <strong>instance</strong> is B2C or B2B, and <code>whoami</code>
+says which.</p>
+<p>On <strong>B2C</strong>, <code>user_id</code> is the whole identity;
+a <code>customer_id</code> is a misunderstanding that the server will
+silently honour on write and ignore on read.</p>
+<p>The <strong>guard</strong> turns that into an exception at the call
+site.</p>
+<p>The <strong>coverage test</strong> is what makes the guard a property
+of the SDK rather than a habit of whoever last added a method.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the guard exists because a mismatched identifier failed silently in both directions; Python proves every call site applies it by parsing its own AST, and TypeScript has the same guard without the proof</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the guard exists because a mismatched identifier failed silently in both directions; Python proves every call site applies it by parsing its own AST, and TypeScript has the same guard without the proof
+flowchart TB
+    W[&quot;GET /api/v1/auth/whoami&quot;] --&gt; ISO{&quot;user_context_isolation&quot;}
+    ISO --&gt;|&quot;equals_customer (B2C)&quot;| B2C[&quot;user_id is the whole identity&quot;]
+    ISO --&gt;|&quot;B2B&quot;| B2B[&quot;customer_id REQUIRED&quot;]
+    ISO --&gt;|&quot;absent — server did not tell us&quot;| UNK[&quot;do nothing, deliberately:&lt;br/&gt;guessing B2C would refuse a B2B&lt;br/&gt;client against every un-upgraded&lt;br/&gt;server — &#39;a far worse failure&#39;&quot;]
+    BUG[&quot;the failure this prevents:&lt;br/&gt;write filed under the customer,&lt;br/&gt;read asked for the user,&lt;br/&gt;BOTH returned success —&lt;br/&gt;4,634 empty fetches over 7 days,&lt;br/&gt;no error to look at&quot;] -.-&gt; B2C
+    B2C --&gt; CHK[&quot;check_customer_id / checkCustomerId&quot;]
+    subgraph PY[&quot;Python SDK&quot;]
+        CHK --&gt; P[&quot;11 call sites: fetch · as_tool ·&lt;br/&gt;record_message · ingest_transcript ·&lt;br/&gt;context fetch · get_profile ·&lt;br/&gt;user/customer context · send_message&quot;]
+        P --&gt; AST[&quot;test_every_public_method_taking_a_customer_id_checks_it:&lt;br/&gt;parses its OWN ast, enumerates every public&lt;br/&gt;method with a customer_id arg, asserts each&lt;br/&gt;calls the check — justified exemption list —&quot;]
+        AST --&gt; VAC[&quot;+ test_the_guard_is_not_vacuous:&lt;br/&gt;&#39;found no methods; the rule below&lt;br/&gt;would pass for the wrong reason&#39;&quot;]
+    end
+    subgraph JS[&quot;TypeScript SDK&quot;]
+        CHK --&gt; J[&quot;5 call sites: context fetch ·&lt;br/&gt;conversation ×2 · memories.create ·&lt;br/&gt;create_from_file&quot;]
+        J --&gt; GAP[&quot;no coverage test&quot;]
+        GAP --&gt; MISS[&quot;user/interface.ts get_profile —&lt;br/&gt;forwards customer_id as a query param,&lt;br/&gt;unchecked&lt;br/&gt;tool/as-tool.ts — customer_id into three&lt;br/&gt;request bodies, unchecked&quot;]
+        MISS --&gt; STILL[&quot;the silent empty read is&lt;br/&gt;still reachable from JS&quot;]
+    end
+    ENGINE[(&quot;Synap service — hosted.&lt;br/&gt;Schema, ranking, consolidation&lt;br/&gt;and forgetting are not in&lt;br/&gt;this repository&quot;)] -.-&gt; CHK</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/sdks/maximem-synap/</code></td>
+<td>The Python SDK, including <code>scoping.py</code> and a 3,700-line
+<code>sdk.py</code></td>
+</tr>
+<tr>
+<td><code>packages/sdks/maximem-synap/tests/test_b2c_contract.py</code></td>
+<td>The contract, and the AST coverage test</td>
+</tr>
+<tr>
+<td><code>packages/sdks/maximem-synap-js/</code></td>
+<td>The TypeScript SDK</td>
+</tr>
+<tr>
+<td><code>packages/mcps/</code>, <code>packages/connectors/</code>,
+<code>packages/integrations/</code></td>
+<td>MCP servers, connectors, and a generated integration table</td>
+</tr>
+<tr>
+<td><code>skills/</code></td>
+<td>Packaged agent skills</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>packages/sdks/maximem-synap/maximem_synap/scoping.py:1-18</code>
+— the docstring. Read it whether or not you care about this product; it
+is a complete incident report in fourteen lines.</p>
+<p>Then <code>tests/test_b2c_contract.py:110-178</code> — the AST walk,
+the exemption list, the non-vacuity control, and a failure message that
+names file, line and consequence.</p>
+<p>Then
+<code>packages/sdks/maximem-synap-js/src/user/interface.ts:9-27</code>
+for the gap.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Not defined here. The SDKs address memories, conversations, user
+contexts, customer contexts and profiles as service resources; what a
+memory <em>is</em> on the other side of the HTTP boundary is not in this
+repository, and neither is the policy that decides what survives.</p>
+<p>That is why this report carries no marks rather than a judgement on
+the product. A client-side identifier check is not a stored scope key
+applied as a read filter — the docstring says as much, deferring to the
+server — and the contract tests assert that a guard raises, not that a
+store withholds a record from retrieval.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>fetch</code> on user, customer and conversation contexts, and
+an <code>as_tool</code> surface that gives an agent a retrieval tool
+bound to a scope. Ranking, recency and thresholds are the service's.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>memories.create</code>, <code>create_from_file</code>,
+<code>conversation.record_message</code> and
+<code>ingest_transcript</code>. Two of these are named in a test —
+<code>test_the_two_signatures_that_forced_the_wrong_shape_are_now_optional</code>
+— as having previously <em>required</em> a <code>customer_id</code>,
+which on a B2C instance forced every caller into the misuse the guard
+now rejects. A required argument that makes the wrong shape mandatory is
+a good example of a contract bug that no amount of caller discipline can
+fix, and pinning its removal in a test is the right way to keep it
+removed.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>MCP servers and a generated table of framework integrations; the
+<code>as_tool</code> path is how an agent gets a memory tool. That path
+being unguarded in the TypeScript SDK matters more than the others,
+because it is the one where the identifier is assembled once and then
+used by a model repeatedly without a human in the loop to notice that
+results are always empty.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The trust content is the contract and its enforcement, and the honest
+summary is that one language has it as a property and the other as a
+practice.</p>
+<p>The asymmetry is worth naming precisely because nothing about the
+TypeScript code is careless — it has the same guard function, a parallel
+test file covering the same five behaviours of that function, and a
+transport method wrapping it. What it lacks is the test that asks a
+different question: not "does the guard work?" but "is the guard applied
+everywhere it needs to be?" Those are different assertions, and only the
+second one scales past the day it was written.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>test_b2c_contract.py</code> covers the guard's behaviour in
+five modes — B2C refuses, B2C correct shape passes, B2B never refused,
+unknown mode never refuses, the error is a <code>ValueError</code> —
+then the SDK-level check, the <code>whoami</code> absent-field case, the
+two call-site tests and the signature regression.
+<code>b2c-contract.test.ts</code> covers the first five and stops.</p>
+<p>The README links to published benchmark results on the vendor's blog.
+Those were not read here, and nothing in this repository reproduces
+them.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Write the incident into the module. "One client ran 4,634 consecutive
+empty fetches across seven days without a single error to look at" does
+more to keep a guard alive through future refactors than any amount of
+"do not remove".</p>
+<p>Assert coverage, not just behaviour. A test that parses your own
+source and proves every entry point applies a rule is worth more than a
+hundred tests of the rule itself, because the rule was never the thing
+that broke — the missing call site was.</p>
+<p>Then assert the coverage test is not vacuous. An enumeration that
+silently returns an empty list turns a coverage assertion into a no-op,
+and the failure looks exactly like success.</p>
+<p>Fail open where you cannot know, and say why in the same place. The
+unknown isolation mode does nothing, deliberately, because the
+alternative breaks correct callers against older servers. That is a real
+trade and the code makes it legible.</p>
+<p>And if you ship the same contract in two languages, port the coverage
+test first. It is the only part that finds the call site you forgot.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the TypeScript gap is known. The Python exemption list shows
+the author thought carefully about which files need the check; nothing
+in the TypeScript tree records a decision either way about
+<code>get_profile</code> or <code>as-tool</code>.</p>
+<p>What the server does with a <code>customer_id</code> on a B2C
+instance now. The docstring describes the old behaviour — filed under
+the customer, invisible to the read — and says the server "rejects
+independently"; whether that rejection is an error or still a silent
+divergence is not observable from this repository.</p>
+<p>Everything about the store. Schema, ranking, consolidation,
+forgetting, provenance and deletion all live behind the API.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/sdks/maximem-synap/maximem_synap/scoping.py</code></td>
+<td>An incident report as a module docstring, and a justified
+fail-open</td>
+</tr>
+<tr>
+<td><code>packages/sdks/maximem-synap/tests/test_b2c_contract.py:110-178</code></td>
+<td>Coverage proved by AST walk, with a non-vacuity control</td>
+</tr>
+<tr>
+<td><code>packages/sdks/maximem-synap-js/src/scoping.ts</code></td>
+<td>The same guard, without the same proof</td>
+</tr>
+<tr>
+<td><code>packages/sdks/maximem-synap-js/src/user/interface.ts</code></td>
+<td><code>customer_id</code> forwarded as a query parameter,
+unchecked</td>
+</tr>
+<tr>
+<td><code>packages/sdks/maximem-synap-js/src/tool/as-tool.ts</code></td>
+<td>Three request bodies carrying <code>customer_id</code>,
+unchecked</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/maximem-ai/maximem_synap_sdk/commit/e0402c9c1fd4416cc76ee2efd3a95f412c85a509"><code class="commit-id" title="e0402c9c1fd4416cc76ee2efd3a95f412c85a509">e0402c9c…</code></a>
+— first reading, at a commit dated 14 September 2026. The repository
+states it is generated and synced out of a private monorepo, so the
+service behind these clients was not inspectable. Screened before
+opening, from a shallow clone: eighty-seven files scanned, no auto-run
+surfaces, twenty-two build-time execution points, thirty-one unpinned
+surfaces and thirty-six dependency files inside the seven-day cooldown.
+Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

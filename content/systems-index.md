@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **500 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **501 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -312,6 +312,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/mastra-observational-memory/"><span class="az-id">Mastra Observational Memory</span><span class="az-what">Observations, and a graph with a ceiling</span><code class="az-repo">mastra-ai/mastra</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/mateclaw/"><span class="az-id">MateClaw</span><span class="az-what">Scoped provider SPI</span><code class="az-repo">mateaix/mateclaw</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/matrix-os/"><span class="az-id">Matrix OS</span><span class="az-what">Nine regexes and no way back</span><code class="az-repo">HamedMP/matrix-os</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/maximem-synap-sdk/"><span class="az-id">Maximem Synap SDK</span><span class="az-what">The test that walks its own AST, and the SDK that doesn&#x27;t have it</span><code class="az-repo">maximem-ai/maximem_synap_sdk</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/mazemaker/"><span class="az-id">Mazemaker</span><span class="az-what">Validity on the edges, none on the claims</span><code class="az-repo">itsXactlY/mazemaker</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/mcp-memory-service/"><span class="az-id">MCP Memory Service</span><span class="az-what">Quarantine tags the contradiction and recall returns it anyway</span><code class="az-repo">doobidoo/mcp-memory-service</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/mcp-memory/"><span class="az-id">MCP-Memory</span><span class="az-what">A trust model written and never read</span><code class="az-repo">fellowgeek/mcp-memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>

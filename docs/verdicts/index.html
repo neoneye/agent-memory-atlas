@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 500 reports.</strong></p>
+<p><strong>This page covers all 501 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18330,6 +18330,62 @@ injection.</li>
 here have write-time categories and no way to be superseded or
 withdrawn, and <code>WriteFacts</code> truncates rather than appends. No
 marks.</li>
+</ul>
+<h3 id="maximem-synap-sdk"><a
+href="../systems/maximem-synap-sdk/"><code>maximem-synap-sdk</code></a></h3>
+<ul>
+<li>Best idea: <strong>assert that the guard is applied everywhere, not
+just that it works — then assert the assertion is not vacuous.</strong>
+<code>test_every_public_method_taking_a_customer_id_checks_it</code>
+parses the Python package's own source with <code>ast</code>, collects
+every public method whose signature includes a <code>customer_id</code>,
+and asserts each one calls the check, with an exemption list where every
+entry carries its justification (<code>grpc_client.py</code> is
+"transport, forwards what it was given";
+<code>anticipation_cache.py</code> is "cache key construction, never a
+caller's entry point"). Beside it sits
+<code>test_the_guard_is_not_vacuous</code>, whose message is the reason
+it exists: "found no methods; the rule below would pass for the wrong
+reason." A coverage test that silently enumerates nothing looks exactly
+like a passing one, and almost nobody writes the second assertion. The
+guard it protects is documented just as well — <code>scoping.py</code>'s
+docstring is a complete incident report: a <code>customer_id</code> on a
+B2C instance meant "the write was filed under the customer, the read
+asked for the user, and both returned success", and "[o]ne client ran
+4,634 consecutive empty fetches across seven days without a single error
+to look at."</li>
+<li>Biggest risk: <strong>the TypeScript SDK has the guard and not the
+proof.</strong> It ships the same <code>checkCustomerId</code>, a
+parallel test of that function's five behaviours, and five call sites —
+and no coverage test. The surfaces it misses are the two closest to the
+original incident: <code>user/interface.ts</code> reads
+<code>customer_id</code> or <code>customerId</code> from its options and
+forwards it as a query parameter without checking, and
+<code>tool/as-tool.ts</code> — the path that hands an agent its memory
+tool — puts <code>customer_id</code> into three request bodies with no
+check anywhere in the file. Python guards both. So the failure the
+module was written to prevent is fixed in the language that can prove it
+and still reachable from the other, and the <code>as_tool</code> path is
+the worst place for it, because there the identifier is assembled once
+and used repeatedly by a model with nobody watching the results come
+back empty.</li>
+<li>Most reusable component: the pair of tests. Port the coverage test
+before the guard when you ship a contract in two languages — it is the
+only part that finds the call site you forgot.</li>
+<li>Maturity impression: Apache-2.0, 82,093 lines of Python and
+TypeScript plus MCP servers, connectors and integrations, published to
+PyPI and npm. The README states it is generated and synced out of a
+private monorepo, and the memory engine is hosted: schema, ranking,
+consolidation, forgetting, provenance and deletion are all behind the
+API and none are inspectable here. A test also pins the removal of two
+signatures that used to <em>require</em> a <code>customer_id</code>,
+which on a B2C instance forced every caller into the misuse.</li>
+<li>Study when: you maintain an SDK whose misuse fails silently, or you
+want a worked example of proving call-site coverage rather than trusting
+it.</li>
+<li>Do not copy when: you are looking for a memory mechanism — this is
+the client surface, and the docstring itself defers to the server as
+authoritative. No marks.</li>
 </ul>
         </article>
       </div>
