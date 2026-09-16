@@ -110,14 +110,14 @@ decision rather than a flag.</p>
               <strong>moorcheh-ai/memanto</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/moorcheh-ai/memanto/commit/06615f09c536336e629e34589dc125495cba3109" title="06615f09c536336e629e34589dc125495cba3109">
+            <a class="meta-pill revision-pill" href="https://github.com/moorcheh-ai/memanto/commit/d453f66a91f730fc14e34f98d680b40c27d6e601" title="d453f66a91f730fc14e34f98d680b40c27d6e601">
               <span>Analyzed revision</span>
-              <code>06615f09…</code>
+              <code>d453f66a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/moorcheh-ai--memanto" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -393,6 +393,18 @@ memories after they land.</p>
 already present in a project, a web UI, and prebuilt integrations for
 Claude Code, CrewAI, LangGraph and Hermes. <code>agent_id</code> scopes
 every route.</p>
+<p><strong>Recall is now counted, and only counted.</strong>
+<code>log_memory_activity(op, agent_id, count)</code> is called on each
+recall path and on an answer, and what it records is the operation, the
+agent and how many memories came back — never which ones. That keeps it
+an access counter rather than a retrieval transcript, and it is not a
+mutation record, so it earns no mark here; what it is worth noting for
+is the failure rule. The function is <em>"[k]ept as a free function so
+call sites read as one line on the hot path and cannot accidentally
+propagate a telemetry failure into a memory operation,"</em> and it
+swallows every exception into a debug line. Telemetry that cannot take
+down the thing it measures is the right default, and stating it at the
+definition is how it survives a refactor.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>Strengths:</p>
@@ -533,6 +545,18 @@ detect</a>.</p>
 (<code>MOORCHEH_API_KEY</code>, <code>MOORCHEH_ONPREM_URL</code>).</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/moorcheh-ai/memanto/commit/d453f66a91f730fc14e34f98d680b40c27d6e601"><code class="commit-id" title="d453f66a91f730fc14e34f98d680b40c27d6e601">d453f66a…</code></a>
+— re-read at a commit dated 2026-09-16, 53 commits past the previous
+pin. Both marks re-tested and held. Recall now logs an activity event
+carrying the operation, the agent and a count — never which memories —
+so it is an access counter rather than a retrieval transcript and earns
+no mark; it is written as a free function that swallows its own failures
+so telemetry cannot take down a memory operation. Screened before
+reading, from a full clone: one auto-run surface, five build-time
+execution points, 19 unpinned dependency surfaces and two dependency
+files inside the seven-day cooldown. Nothing was installed, built or
+run.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/moorcheh-ai/memanto/commit/06615f09c536336e629e34589dc125495cba3109"><code class="commit-id" title="06615f09c536336e629e34589dc125495cba3109">06615f09…</code></a>
 — re-pinned 192 commits on, past v0.2.20. The <code>ttl_seconds</code>

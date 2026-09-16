@@ -104,14 +104,14 @@ that turns message streams into derived peer representations.</p>
               <strong>plastic-labs/honcho</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/plastic-labs/honcho/commit/be54355545b64ddb10203829d323861f52423685" title="be54355545b64ddb10203829d323861f52423685">
+            <a class="meta-pill revision-pill" href="https://github.com/plastic-labs/honcho/commit/210b56cf953fcf447ffafcb428d4b4f1823b83fd" title="210b56cf953fcf447ffafcb428d4b4f1823b83fd">
               <span>Analyzed revision</span>
-              <code>be543555…</code>
+              <code>210b56cf…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-05</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/plastic-labs--honcho" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -544,6 +544,25 @@ answer, and <code>source_ids</code> was already there.</p>
 </ul>
 <p>The system expects applications to store interaction history, then
 let Honcho reason in the background.</p>
+<p><strong>The reasoning tree became rows, and the workspace rides on
+each one.</strong> The <code>source_ids</code> array — a JSONB column
+with a GIN index for traversal — is now a <code>document_sources</code>
+join table, one row per edge with <code>derived_id</code>,
+<code>source_id</code>, a <code>position</code> and a
+<code>workspace_name</code>. A scope carried on every edge cannot be
+lost in a join the way a scope implied by a parent can, and the old
+column survives as <code>legacy_source_ids</code> behind a property shim
+while the backfill runs, so callers read <code>source_ids</code>
+unchanged until a follow-up migration drops it.</p>
+<p><strong>The list those rows are built from comes from a model, and is
+treated that way.</strong> <code>build_source_links</code> takes the
+<code>source_ids</code> the model emitted <em>and</em> the
+<code>workspace_name</code> from the caller — the scope is never read
+out of the model's output — and it filters each entry against a
+document-id pattern for a reason the docstring states plainly: the model
+<em>"occasionally emits timestamps or numeric refs under schema
+pressure."</em> Entries that are not shaped like document ids are
+dropped rather than stored and followed later.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>Strengths:</p>
@@ -780,6 +799,22 @@ root:</p>
 rg -n &#39;flush&#39; tests/unified/runner.py tests/unified/schema.py     # the dead knob is gone
 rg -rn -i &#39;audit|mutation_log|event_log&#39; src -l                   # config, prometheus, telemetry trace only</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/plastic-labs/honcho/commit/210b56cf953fcf447ffafcb428d4b4f1823b83fd"><code class="commit-id" title="210b56cf953fcf447ffafcb428d4b4f1823b83fd">210b56cf…</code></a>
+— re-read at a commit dated 2026-09-16, 31 commits past the previous
+pin. Both marks re-tested and held, and the scope one is better placed:
+the reasoning tree moved from a JSONB <code>source_ids</code> array to a
+<code>document_sources</code> join table whose every row carries the
+<code>workspace_name</code>, with the old column kept behind a property
+shim while the backfill runs. The list those rows are built from is the
+model's, and <code>build_source_links</code> takes the workspace from
+the caller rather than from that output and drops entries that are not
+shaped like document ids, because the model <em>"occasionally emits
+timestamps or numeric refs under schema pressure."</em> Screened before
+reading, from a full clone: two auto-run surfaces, 13 build-time
+execution points, six unpinned dependency surfaces and seven dependency
+files inside the seven-day cooldown. Nothing was installed, built or
+run.</p>
 <p><strong>2026-09-05</strong> — <a
 href="https://github.com/plastic-labs/honcho/commit/be54355545b64ddb10203829d323861f52423685"><code class="commit-id" title="be54355545b64ddb10203829d323861f52423685">be543555…</code></a>
 — 52 commits on, at 3.1.1 plus the Qdrant adapter. Screened again first:

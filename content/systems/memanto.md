@@ -7,9 +7,9 @@ page_kind: system
 source_name: moorcheh-ai/memanto
 source_url: https://github.com/moorcheh-ai/memanto
 archive_name: "moorcheh-ai--memanto"
-revision: 06615f09c536336e629e34589dc125495cba3109
-revision_url: https://github.com/moorcheh-ai/memanto/commit/06615f09c536336e629e34589dc125495cba3109
-analyzed_at: 2026-09-07
+revision: d453f66a91f730fc14e34f98d680b40c27d6e601
+revision_url: https://github.com/moorcheh-ai/memanto/commit/d453f66a91f730fc14e34f98d680b40c27d6e601
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, human_review"
 capability_evidence:
   scope_enforced: "agent_id on every route and on the session it binds | memanto/app/routes/memory.py:74-79,:377-382,:410-423, memanto/app/services/memory_read_service.py, memanto/app/services/namespace_service.py | every memory route takes `agent_id` as a path segment validated by `validate_safe_id`, `enforce_session_scope` refuses a session whose `agent_id` is not the route's, and reads and conflict reports are issued per agent through the backend namespace | none"
@@ -278,6 +278,17 @@ A FastAPI service with an MCP surface, a CLI that can detect agents already
 present in a project, a web UI, and prebuilt integrations for Claude Code,
 CrewAI, LangGraph and Hermes. `agent_id` scopes every route.
 
+**Recall is now counted, and only counted.** `log_memory_activity(op, agent_id,
+count)` is called on each recall path and on an answer, and what it records is
+the operation, the agent and how many memories came back — never which ones.
+That keeps it an access counter rather than a retrieval transcript, and it is
+not a mutation record, so it earns no mark here; what it is worth noting for is
+the failure rule. The function is *"[k]ept as a free function so call sites read
+as one line on the hot path and cannot accidentally propagate a telemetry
+failure into a memory operation,"* and it swallows every exception into a debug
+line. Telemetry that cannot take down the thing it measures is the right
+default, and stating it at the definition is how it survives a refactor.
+
 ## 9. Reliability, Safety, and Trust
 
 Strengths:
@@ -393,6 +404,8 @@ This lifecycle is generalized as [resolve, don't just detect](../../patterns/res
   `MOORCHEH_ONPREM_URL`).
 
 ## History
+
+**2026-09-16** — [`d453f66a91f730fc14e34f98d680b40c27d6e601`](https://github.com/moorcheh-ai/memanto/commit/d453f66a91f730fc14e34f98d680b40c27d6e601) — re-read at a commit dated 2026-09-16, 53 commits past the previous pin. Both marks re-tested and held. Recall now logs an activity event carrying the operation, the agent and a count — never which memories — so it is an access counter rather than a retrieval transcript and earns no mark; it is written as a free function that swallows its own failures so telemetry cannot take down a memory operation. Screened before reading, from a full clone: one auto-run surface, five build-time execution points, 19 unpinned dependency surfaces and two dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-07** — [`06615f09c536336e629e34589dc125495cba3109`](https://github.com/moorcheh-ai/memanto/commit/06615f09c536336e629e34589dc125495cba3109) — re-pinned 192 commits on, past v0.2.20. The `ttl_seconds` field is gone; a memory carries `status: active | expired` with `expired_at` and `expired_by`, expiry is a policy of per-type retention, rules and presets with a sweep and a separate purge window, `search_as_of` keeps since-expired memories and prefers the historical version over a later recreation, `source` became an open per-writer label, provenance survives an update, the export conforms to Open Knowledge Format v0.2, a Langfuse migration path and Claude Code, Cursor and Codex hooks were added, and session lifecycle locks are per agent. `scope_enforced` and `human_review` stand on the same evidence; `trust_state` stays withheld because a read returns expired rows by default, and `bitemporal` because the as-of read travels one axis. Screened before reading: one auto-run surface (`.gitattributes`), six build-time execution points, nothing installed or run.
 

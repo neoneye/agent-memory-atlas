@@ -7,9 +7,9 @@ page_kind: system
 source_name: plastic-labs/honcho
 source_url: https://github.com/plastic-labs/honcho
 archive_name: "plastic-labs--honcho"
-revision: be54355545b64ddb10203829d323861f52423685
-revision_url: https://github.com/plastic-labs/honcho/commit/be54355545b64ddb10203829d323861f52423685
-analyzed_at: 2026-09-05
+revision: 210b56cf953fcf447ffafcb428d4b4f1823b83fd
+revision_url: https://github.com/plastic-labs/honcho/commit/210b56cf953fcf447ffafcb428d4b4f1823b83fd
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "the collection key, and a second boundary inside a peer | src/models.py, src/utils/scopes.py, src/routers/scopes.py, src/dialectic/chat.py | `workspace_name` is a column on almost every table and a collection is keyed `(observer, observed, workspace_name)`, so every document read is bounded by who is observing whom. A **scope** adds a boundary one level down — a named grouping of member sessions inside a peer, implemented as a peer named `scope.<name>` that observes its members and never speaks. Passing `scope` to chat, representation, context or search swaps the observer to the scope peer, so recall comes from the `(scope_peer, P)` collection and message recall from the scope's membership. Identity requires both halves and neither is forgeable: the `scope.` prefix sits outside `RESOURCE_NAME_PATTERN` so no API-created peer can occupy the namespace, and the authoritative `{kind: scope}` marker lives in `internal_metadata`, which appears in no API schema | tests/unified/test_cases/scope_confines_recall.json, tests/routes/test_scope_reads.py, tests/routes/test_scope_route_policy.py, tests/dialectic/test_scope_preflight.py"
@@ -393,6 +393,22 @@ Agent-facing operations include:
 
 The system expects applications to store interaction history, then let Honcho reason in the background.
 
+**The reasoning tree became rows, and the workspace rides on each one.** The
+`source_ids` array — a JSONB column with a GIN index for traversal — is now a
+`document_sources` join table, one row per edge with `derived_id`, `source_id`,
+a `position` and a `workspace_name`. A scope carried on every edge cannot be
+lost in a join the way a scope implied by a parent can, and the old column
+survives as `legacy_source_ids` behind a property shim while the backfill runs,
+so callers read `source_ids` unchanged until a follow-up migration drops it.
+
+**The list those rows are built from comes from a model, and is treated that
+way.** `build_source_links` takes the `source_ids` the model emitted *and* the
+`workspace_name` from the caller — the scope is never read out of the model's
+output — and it filters each entry against a document-id pattern for a reason
+the docstring states plainly: the model *"occasionally emits timestamps or
+numeric refs under schema pressure."* Entries that are not shaped like document
+ids are dropped rather than stored and followed later.
+
 ## 9. Reliability, Safety, and Trust
 
 Strengths:
@@ -588,6 +604,8 @@ rg -rn -i 'audit|mutation_log|event_log' src -l                   # config, prom
 ```
 
 ## History
+
+**2026-09-16** — [`210b56cf953fcf447ffafcb428d4b4f1823b83fd`](https://github.com/plastic-labs/honcho/commit/210b56cf953fcf447ffafcb428d4b4f1823b83fd) — re-read at a commit dated 2026-09-16, 31 commits past the previous pin. Both marks re-tested and held, and the scope one is better placed: the reasoning tree moved from a JSONB `source_ids` array to a `document_sources` join table whose every row carries the `workspace_name`, with the old column kept behind a property shim while the backfill runs. The list those rows are built from is the model's, and `build_source_links` takes the workspace from the caller rather than from that output and drops entries that are not shaped like document ids, because the model *"occasionally emits timestamps or numeric refs under schema pressure."* Screened before reading, from a full clone: two auto-run surfaces, 13 build-time execution points, six unpinned dependency surfaces and seven dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-05** — [`be54355545b64ddb10203829d323861f52423685`](https://github.com/plastic-labs/honcho/commit/be54355545b64ddb10203829d323861f52423685) — 52 commits on, at 3.1.1 plus the Qdrant adapter. Screened again first: two auto-run surfaces (the `.vscode` files), twelve build-time execution points, six unpinned surfaces, a `CLAUDE.md` treated as data, and **four files inside the seven-day cooldown** — `pyproject.toml` and `uv.lock` changed the day of reading — so nothing was installed and no test was run. The mechanism is unchanged and the context is not: workspace-level chat with a fail-closed `scope` and a peer-card rule that drops cards under an allowlist; a Qdrant backend; a chunked backfill; and two silent-loss fixes, the collection deadlock that dropped batches until 2 September and the NUL byte that dropped observer batches until 31 August. Both marks hold, `audit_log` re-checked and withheld. **One thing published on 22 August rested on a case that could not pass:** `dream_knowledge_updates_and_patterns.json` asked for its representation with a session id, which narrowed the read to explicit level and excluded the observations it asserted on, and the whole unified suite had been skipped on merges to `main` since its gate job was added; both were fixed upstream on 26 August and 3 September and are recorded in section 10. The mark did not rest on that case alone — `scope_confines_recall.json` carried it and is unchanged. Also: the stack census promoted from seeded to reviewed with a lexical arm added for the ILIKE message search, and the deletion semantics rewritten from the code and the new documentation — sessions hard-cascade, conclusions soft-delete, peers and messages cannot be deleted.
 

@@ -7,9 +7,9 @@ page_kind: system
 source_name: "krakozavr/MemContinuum"
 source_url: https://github.com/krakozavr/MemContinuum
 archive_name: "krakozavr--MemContinuum"
-revision: 161f555d74d81532362a38e8f10657eac0c29e23
-revision_url: https://github.com/krakozavr/MemContinuum/commit/161f555d74d81532362a38e8f10657eac0c29e23
-analyzed_at: 2026-09-08
+revision: e21bfa06c0201433742a657b222ad40c8f4d95f4
+revision_url: https://github.com/krakozavr/MemContinuum/commit/e21bfa06c0201433742a657b222ad40c8f4d95f4
+analyzed_at: 2026-09-16
 capabilities: "trust_state, audit_log, human_review, negative_eval"
 capability_evidence:
   trust_state: "five authorities and five statuses collapsed into three enforcement classes that decide whether a violation blocks | memidx.py:3888-3889, :3918-3937, :4047-4134, memlint.py:671-697 | `CONSTRAINT_AUTHORITIES` is exactly `owner-verbatim` and `owner-ratified`; `HOLD_ELIGIBLE_AUTHORITIES` is `reviewer-finding`, `code-derived` and `agent-inference`; `invariant_enforcement_class` returns `context` for any link whose `status` is not `active`, `constraint` for a constraint authority, `hold` for a hold-eligible authority that also carries validated evidence, and `context` otherwise — and `cmd_drift` fails the run on a constraint violation, reports a hold violation unless `--strict-holds` is passed, and routes a `provisional` link's invariant to `revalidate` where it is never checked at all; the same two authority sets are imported by the linter rather than re-typed, so a new authority cannot drift between the classes | tests/test_memidx.py, tests/test_memlint.py, tests/test_v11.py (1,605 test functions across 17 modules)"
@@ -546,6 +546,8 @@ rg -n 'this db keys rows by path alone' memidx.py                       # the re
 ```
 
 ## History
+
+**2026-09-16** — [`e21bfa06c0201433742a657b222ad40c8f4d95f4`](https://github.com/krakozavr/MemContinuum/commit/e21bfa06c0201433742a657b222ad40c8f4d95f4) — re-read at a commit dated 2026-09-15, 115 commits past the previous pin. All four marks re-tested and held. The only change to the anchored file is a directory-pruning helper for the code walk; no mechanism behind a mark moved. Screened before reading, from a full clone: one auto-run surface, no build-time execution point, two unpinned dependency surfaces and one dependency file inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-08** — [`161f555d74d81532362a38e8f10657eac0c29e23`](https://github.com/krakozavr/MemContinuum/commit/161f555d74d81532362a38e8f10657eac0c29e23) — correction. The `scope_enforced` reasoning was accurate and its presentation was not: one decision database per project, with a second `--project` refused outright, was listed among the report's risks and named as the verdict's biggest risk. That is a property which prevents cross-project contamination, not one that causes it, and framing it as a cost invited exactly the misreading it received — that the withheld mark was a finding about leakage. The mark stays withheld, on the same line this atlas applied to Agentic Context Engine: a store holding exactly one scope cannot demonstrate partitioning on a read path. Sections 5 and 9, the frontmatter and the verdict now say that separation is enforced here and that the withholding is not a claim about isolation. Reported by the project's author; the facts were re-verified at this pin before the wording changed.
 

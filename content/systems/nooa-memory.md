@@ -7,9 +7,9 @@ page_kind: system
 source_name: NVIDIA-NeMo/labs-OO-Agents
 source_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents
 archive_name: "NVIDIA-NeMo--labs-OO-Agents"
-revision: fbbbfb16d68d66dc1ff029a9c06844d3b900e29d
-revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/fbbbfb16d68d66dc1ff029a9c06844d3b900e29d
-analyzed_at: 2026-09-08
+revision: 362f8bd217fcc39f75b70d4b668e49fc86dec104
+revision_url: https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/362f8bd217fcc39f75b70d4b668e49fc86dec104
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "the owner key applied inside the graph traversal, not to the rows it returns | packages/nooa-memory/src/nooa_memory/retrieval.py:246-296, packages/nooa-memory/src/nooa_memory/schema.py:102-113, packages/nooa-memory/src/nooa_memory/store.py:72, :160-163 | `owner` is a `TEXT NOT NULL DEFAULT ''` column with its own index, and `_spread` closes over a `_visible` predicate it calls on every edge target at every hop; the `continue` fires before both the `spread` and the `nxt` accumulators, so an invisible memory neither receives activation nor enters the next hop's frontier and cannot relay activation between two visible memories connected only through it — `owner_matches` admits an unowned row against every scope and the `is not None` clause drops an edge pointing at a row that no longer exists | packages/nooa-memory/tests/memory/test_memory_owner.py:126-142 (`test_spread_does_not_leak_foreign_memories`), :159-190 (`test_spread_does_not_relay_through_foreign_memories`), packages/nooa-memory/tests/memory/test_memory_owner_roles.py:128 (`test_spread_confined_to_role`)"
@@ -635,6 +635,8 @@ operational statistics are reported, not reproduced here.
 - Package documentation: `packages/nooa-memory/src/nooa_memory/README.md`.
 
 ## History
+
+**2026-09-16** — [`362f8bd217fcc39f75b70d4b668e49fc86dec104`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/362f8bd217fcc39f75b70d4b668e49fc86dec104) — re-read at a commit dated 2026-09-16, 203 commits past the previous pin. Both marks re-tested and held. The single change to the anchored file is a one-line type-name check on the event being folded in; no mechanism behind a mark moved. Screened before reading, from a full clone: no auto-run surface, six build-time execution points, six unpinned dependency surfaces and four dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-08** — [`fbbbfb16d68d66dc1ff029a9c06844d3b900e29d`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/fbbbfb16d68d66dc1ff029a9c06844d3b900e29d) — 187 commits on, three of them touching the memory package, and every module in it except `store.py` is byte-identical to the previous pin. `manager.py`, `retrieval.py`, `schema.py`, `reflection.py`, `forgetting.py`, `config.py` and the rest were compared by object hash rather than by reading the diff. Both marks re-checked against the code: the `continue` in `_spread` still fires before both accumulators, and all three owner tests are present, so `scope_enforced` and `negative_eval` are unchanged. `capability_evidence` records were added for both.
 
