@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 496 reports.</strong></p>
+<p><strong>This page covers all 497 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18113,6 +18113,64 @@ most important short facts.</li>
 for one concept — the reconciler fixes writes and cannot fix a SQL
 string literal, and a predicate naming a value its column never holds
 fails silently in both directions.</li>
+</ul>
+<h3 id="yantrikdb-engine"><a
+href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></h3>
+<ul>
+<li>Best idea: <strong>an as-of read whose header lists what it cannot
+reconstruct.</strong> <code>recall_as_of(query, t)</code> answers "what
+did this database believe at time <code>t</code>?" out of two ledgers —
+<code>record_revisions</code>, into which <code>correct</code> archives
+the prior text, metadata, importance and valence, and
+<code>record_links</code>, whose dated edges hide a record from an as-of
+read <em>only</em> when the edge already existed at <code>t</code>,
+because "a later supersession does not rewrite what was believed then."
+Then, under a heading reading HONEST LIMITS, documented rather than
+hidden, the module states three things it does not do: ranking is
+present-day, forgotten records stay forgotten, and the candidate pool
+runs with <code>skip_reinforce</code> because "archaeology must not
+masquerade as usage." That last one is a distinction nearly nothing else
+in this corpus draws — if retrieval feeds decay, then reading your
+history keeps it alive unless you exclude it.</li>
+<li>Biggest risk: <strong>scope is offered, not enforced.</strong>
+<code>recall</code> takes <code>namespace: Option&lt;&amp;str&gt;</code>
+and appends <code>AND m.namespace = ?</code> only in the branches where
+a namespace was supplied; pass <code>None</code> and the query spans
+every namespace in the store. That is a reasonable library API — an
+embeddable engine should not impose a tenancy model — but it means the
+isolation the <a href="../systems/yantrikdb-hermes-plugin/">Hermes
+plugin</a> earns its <code>scope_enforced</code> mark for is the
+plugin's discipline, not a property of the store beneath it, and
+anything else embedding this crate inherits the option rather than the
+guarantee. Separately, the v26 columns that record the epistemic
+operation a write chose — <code>resolution_kind</code> including
+<code>dismiss</code>, <code>dismissal_reason</code>,
+<code>prior_rid</code>, <code>confidence_at_write</code> — are written
+and, at this pin, read by nothing on the write path, so a value
+dismissed with a reason can be proposed again and appended. The schema
+calls them a foundation for a future API, which is accurate and is why
+no tombstone is awarded.</li>
+<li>Most reusable component: <code>log_op_in_tx</code>. The audit row is
+written inside the caller's transaction from twelve engine modules, so
+the op and the mutation commit together and there is no window in which
+a change exists without its record. Every other large store in this
+corpus writes the audit beside the mutation and depends on each caller
+remembering.</li>
+<li>Maturity impression: Apache-2.0, version 0.23.0, 198,235 lines of
+Rust across five crates with Python, WASM and TUI bindings, and 2,274
+test functions. The schema is a version-by-version record of what the
+project learned, and its comments include a signed note that an index
+does not satisfy its query's ORDER BY and that SQLite "MAY SORT THE FULL
+ELIGIBLE SET", plus an encryption migration that vacuums because "THE
+SEAL IS NOT THE ERASURE." The <a href="../systems/yantrikdb/">server
+repository</a> carries the benchmark corrections file; that material is
+not restated here.</li>
+<li>Study when: you need point-in-time reads over a memory store, or you
+want a worked example of documenting a feature's limits where a reader
+will actually hit them.</li>
+<li>Do not copy when: you need the store itself to hold a tenancy
+boundary — here that is the caller's job, and the type signature says
+so.</li>
 </ul>
         </article>
       </div>

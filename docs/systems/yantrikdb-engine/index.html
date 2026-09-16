@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The embeddable Rust engine the
+atlas had only read through its server and its Hermes plugin: decay,
+consolidation and contradiction detection over SQLite, with an as-of
+recall that reconstructs what the database believed at a past instant —
+and a module header listing the three things that reconstruction cannot
+do.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="YantrikDB
+Engine — Agent Memory Atlas">
+    <meta property="og:description" content="The embeddable Rust engine
+the atlas had only read through its server and its Hermes plugin: decay,
+consolidation and contradiction detection over SQLite, with an as-of
+recall that reconstructs what the database believed at a past instant —
+and a module header listing the three things that reconstruction cannot
+do.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="YantrikDB
+Engine — Agent Memory Atlas">
+    <meta name="twitter:description" content="The embeddable Rust engine
+the atlas had only read through its server and its Hermes plugin: decay,
+consolidation and contradiction detection over SQLite, with an as-of
+recall that reconstructs what the database believed at a past instant —
+and a module header listing the three things that reconstruction cannot
+do.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>YantrikDB Engine — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "YantrikDB Engine",
+      "description": "The embeddable Rust engine the atlas had only read through its server and its Hermes plugin: decay, consolidation and contradiction detection over SQLite, with an as-of recall that reconstructs what the database believed at a past instant \u2014 and a module header listing the three things that reconstruction cannot do.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The limits are in the doc comment, above
+the code that has them</p>
+          <h1>YantrikDB Engine</h1>
+          <p class="document-deck">The embeddable Rust engine the atlas
+had only read through its server and its Hermes plugin: decay,
+consolidation and contradiction detection over SQLite, with an as-of
+recall that reconstructs what the database believed at a past instant —
+and a module header listing the three things that reconstruction cannot
+do.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/yantrikos/yantrikdb">
+              <span>Source</span>
+              <strong>yantrikos/yantrikdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/yantrikos/yantrikdb/commit/b189e799bd854285471ec6149ff0f298cc594ec8" title="b189e799bd854285471ec6149ff0f298cc594ec8">
+              <span>Analyzed revision</span>
+              <code>b189e799…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yantrikos--yantrikdb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>yantrikos--yantrikdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This is the engine. The atlas has read it twice before through
+something else — once as the crate that <a
+href="../yantrikdb/">yantrikdb-server</a> wraps, once as the in-process
+library the <a href="../yantrikdb-hermes-plugin/">Hermes plugin</a>
+embeds — and both times only as far as the wrapper's claims required.
+Read directly it is 198,235 lines of Rust across five crates,
+Apache-2.0, at version 0.23.0, with 2,274 test functions.</p>
+<p>Its pitch is specific and correct about the problem: "Bolting a
+vector store onto it doesn't fix that: nothing is ever forgotten,
+near-duplicate memories pile up, and two contradictory facts come back
+ranked side by side with no signal that they disagree."</p>
+<p>What distinguishes it from every other large memory engine in this
+corpus is not decay or consolidation — several have those. It is that
+the code states what it cannot do, in the place where someone would
+otherwise assume it could.</p>
+<p><code>engine/bitemporal.rs</code> implements
+<code>recall_as_of(query, t)</code> — "what did this database believe at
+time <code>t</code>?" — and then, under a heading reading <strong>HONEST
+LIMITS, documented rather than hidden</strong>, lists three:</p>
+<ul>
+<li>"<strong>Ranking is present-day.</strong> Similarity is computed
+against today's vectors … <code>recall_as_of</code> reconstructs CONTENT
+and CURRENCY at <code>t</code>, not the exact ranking a query would have
+produced at <code>t</code>."</li>
+<li>"<strong>Forgotten records stay forgotten.</strong> A tombstoned
+record is physically out of the recall path … an as-of query cannot
+resurface something forgotten since <code>t</code>."</li>
+<li>"<strong>Access stats are untouched.</strong> The pool query runs
+with <code>skip_reinforce</code> — archaeology must not masquerade as
+usage."</li>
+</ul>
+<p>That third one is a design decision most systems would not have
+noticed they were making. Reading history should not look like using
+memory, because usage feeds decay and decay decides what survives.</p>
+<p>The same habit recurs. An index definition carries a note that the
+index does <strong>not</strong> satisfy its query's
+<code>ORDER BY</code>, that the query's shape "defeats index-served
+ordering anyway", and that "SQLite therefore MAY SORT THE FULL ELIGIBLE
+SET" — attributed as a reviewer finding, with the resolution named. The
+encryption migration warns that "THE SEAL IS NOT THE ERASURE" and
+vacuums the freed pages.</p>
+<p>The finding is about a boundary that is not the engine's to hold.</p>
+<p><code>recall</code> takes
+<code>namespace: Option&lt;&amp;str&gt;</code>, and the
+<code>AND m.namespace = ?</code> predicate appears only in the branches
+where a namespace was supplied. Pass <code>None</code> and the query
+spans every namespace in the store. That is a defensible library API —
+an embeddable engine should not force a tenancy model — but it means the
+isolation the Hermes plugin is credited with is the plugin's discipline,
+not a property of the store beneath it. Anything else embedding this
+crate inherits the option, not the guarantee.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>memory</strong> is a row: text, embedding, and a set of
+stored decay parameters — importance, half-life, last access, access
+count, valence — that are "stored, not continuously updated", so decay
+is computed at read time rather than swept.</p>
+<p>A <strong>correction</strong> mutates in place and archives the prior
+text, metadata, importance and valence into
+<code>record_revisions</code> with an <code>applied_at</code>.</p>
+<p>A <strong>supersession</strong> is an edge in
+<code>record_links</code>, with its own <code>created_at</code>.</p>
+<p>Those two ledgers are what make time travel possible without a second
+storage model — the module says so explicitly: "Those two ledgers are
+enough to answer an as-of query WITHOUT a new storage model."</p>
+<p>An <strong>op</strong> is a row in the oplog, written inside the
+transaction that made the change.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — correction archives the prior state and supersession is a dated edge, so an as-of read can reconstruct what was believed at t — while the namespace predicate appears only when the caller supplies one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: correction archives the prior state and supersession is a dated edge, so an as-of read can reconstruct what was believed at t — while the namespace predicate appears only when the caller supplies one
+flowchart TB
+    W[&quot;remember —&lt;br/&gt;actor-scoped idempotency key,&lt;br/&gt;confidence_basis write gate&quot;] --&gt; M[(&quot;memories&lt;br/&gt;consolidation_status:&lt;br/&gt;active | consolidated | tombstoned&lt;br/&gt;synthesis_state CHECK:&lt;br/&gt;verified | invalidated |&lt;br/&gt;unverified | superseded&quot;)]
+    C[&quot;correct&quot;] --&gt;|&quot;mutates in place&quot;| M
+    C --&gt;|&quot;archives prior_text, prior_metadata,&lt;br/&gt;prior_importance, prior_valence&quot;| REV[(&quot;record_revisions&lt;br/&gt;+ applied_at&quot;)]
+    L[&quot;link Supersedes&quot;] --&gt; LNK[(&quot;record_links&lt;br/&gt;+ created_at&quot;)]
+    F[&quot;forget&quot;] --&gt; TS[&quot;consolidation_status = &#39;tombstoned&#39;&lt;br/&gt;+ tombstone_reason&quot;]
+    TS --&gt; M
+    W &amp; C &amp; L &amp; F --&gt; OP[(&quot;oplog — written by log_op_in_tx&lt;br/&gt;INSIDE the caller&#39;s transaction&quot;)]
+    M --&gt; R{&quot;recall(query, namespace: Option)&quot;}
+    R --&gt;|&quot;Some(ns)&quot;| PRED[&quot;AND m.namespace = ?&quot;]
+    R --&gt;|&quot;None&quot;| ALL[&quot;no predicate —&lt;br/&gt;every namespace in the store&quot;]
+    M --&gt; AO[&quot;recall_as_of(query, t)&quot;]
+    REV --&gt; AO
+    LNK --&gt; AO
+    AO --&gt; RULES[&quot;1. created_at &gt; t → excluded&lt;br/&gt;2. superseded → excluded ONLY by edges&lt;br/&gt;with record_links.created_at &lt;= t&lt;br/&gt;3. corrected after t → rolled back via&lt;br/&gt;the earliest revision applied after t&quot;]
+    RULES --&gt; LIMITS[&quot;HONEST LIMITS, in the header:&lt;br/&gt;ranking is present-day ·&lt;br/&gt;forgotten stays forgotten ·&lt;br/&gt;skip_reinforce, because&lt;br/&gt;&#39;archaeology must not&lt;br/&gt;masquerade as usage&#39;&quot;]
+    ET[&quot;event_time_min / event_time_max —&lt;br/&gt;event time, distinct from created_at&lt;br/&gt;as transaction time&quot;] --&gt; M</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/yantrikdb-core/src/base/schema.rs</code></td>
+<td>The whole schema as one SQL constant, heavily commented per
+version</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/engine/bitemporal.rs</code></td>
+<td><code>recall_as_of</code>, and its limits</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/engine/recall.rs</code></td>
+<td>6,768 lines of hybrid retrieval and the namespace branches</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/engine/lifecycle.rs</code></td>
+<td>Decay, tombstoning, correction</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/engine/stats.rs</code></td>
+<td>The oplog writers</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/engine/thread.rs</code></td>
+<td>Conversation-thread reconstruction and its visibility test</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/engine/audit.rs</code></td>
+<td>Synthesis-evidence integrity queries</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/cognition/</code></td>
+<td>156,204 lines: belief, contradiction, calibration, coherence,
+consolidation, counterfactual, metacognition</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-python</code>, <code>-wasm</code>,
+<code>-tui</code>, <code>-ml</code></td>
+<td>The bindings the wrappers use</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>engine/bitemporal.rs:1-36</code>. Read the header before the
+code; it is the best thirty lines in the repository and it explains the
+design of everything under it.</p>
+<p><code>base/schema.rs:31-170</code> for the memory row, which is a
+version-by-version record of what the project learned — v25 replication
+determinism, v26 write resolution, v27 and v28 reembed staging and
+generation stamps, v37 the anti-laundering write gate, v42 synthesis
+lifecycle, v48 valid time, v50 source turn.</p>
+<p><code>engine/thread.rs:1605-1651</code> for the visibility test,
+which is the clearest statement of what recall considers eligible.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>memories</code> table is the accumulated design. Beyond the
+obvious columns it carries <code>certainty</code>, <code>domain</code>,
+<code>source</code>, <code>emotional_state</code>, a
+<code>session_id</code>, <code>due_at</code> and
+<code>temporal_kind</code> for prospective queries,
+<code>storage_tier</code>, <code>consolidated_into</code>, and — as of
+v37 — <code>confidence_basis</code>, "the typed justification tier
+(observation|asserted|confirmation|verification|inference|
+assumption|learned(model-vX))" that "participates in the write-gate
+consistency matrix", alongside an <code>idempotency_key</code> scoped by
+<code>origin_actor</code> so "two writers can't collide".</p>
+<p>Two columns encode time in the way the atlas asks for.
+<code>created_at</code> is named in the comment as transaction time;
+<code>event_time_min</code> and <code>event_time_max</code> are "valid
+time, first-class", mirrored from metadata by "every writer that
+persists the metadata column (the <code>event_time_bounds</code> helper
+in <code>base::datetext</code> is the single source)". Designating a
+single source for a mirrored column is the detail that keeps a
+denormalised field honest, and it is stated in the schema where a future
+writer will read it. Both are NULL on encrypted stores, "so nothing is
+extractable at rest" — the limitation is named rather than left as a
+surprise.</p>
+<p>The CHECK constraints are uneven. <code>synthesis_granularity</code>
+and <code>synthesis_state</code> are constrained to their vocabularies;
+<code>consolidation_status</code>, <code>type</code>,
+<code>storage_tier</code> and <code>resolution_kind</code> are
+documented in comments and accept any string. Given that
+<code>consolidation_status</code> is a read predicate in every audit
+query, that asymmetry is worth noticing — the newer columns got the
+constraint and the older load-bearing one did not.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid retrieval with decay applied at read time from the stored
+half-life and last access, graph expansion, and thread
+reconstruction.</p>
+<p>The namespace predicate is the report's finding and deserves stating
+exactly. <code>recall.rs</code> branches: where a namespace is supplied
+it appends <code>AND m.namespace = ?N</code>; where one is not, the same
+query runs without it. The column is
+<code>NOT NULL DEFAULT 'default'</code>, so every row has a namespace
+and no row is invisible — but a caller passing <code>None</code> reads
+across all of them.</p>
+<p>That is the right API for an embeddable engine and the wrong
+assumption for anyone who reads the server's or the plugin's isolation
+guarantee and concludes the store enforces it. It does not; those
+wrappers do, by never passing <code>None</code>. The atlas's
+<code>scope_enforced</code> mark stays where the enforcement is.</p>
+<p><code>recall_as_of</code> over-fetches a candidate pool because as-of
+filtering removes rows after ranking, and runs it with
+<code>skip_reinforce</code>. Results keep their present-day
+<code>current_status</code>, so "a hit can honestly read 'this was
+current at <code>t</code>; today it is superseded', which is exactly
+what an audit wants to see."</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>remember</code> passes an actor-scoped idempotency claim whose
+<code>INSERT ... ON CONFLICT</code> on the primary key "is the
+serialization point for same-key retries", with a
+<code>pending -&gt; committed</code> state so "a losing retry" cannot
+"observe a not-yet-committed rid", and with <code>op_id</code>,
+<code>route</code> and <code>generation</code> kept as "the recovery
+evidence used to complete-or-roll-back a crashed claim (never
+row-existence)." That parenthesis is a real distinction: recovering from
+row existence would make a partially applied write look complete.</p>
+<p><code>correct</code> mutates in place and archives; <code>link</code>
+records supersession as a dated edge; <code>forget</code> tombstones
+with a caller-supplied reason and takes the row out of the recall path
+and index.</p>
+<p>The v26 columns are the honest gap. <code>prior_rid</code>,
+<code>resolution_kind</code> — <code>append</code>, <code>update</code>,
+<code>merge</code>, <code>supersede</code>, <code>dismiss</code> —
+<code>dismissal_reason</code> and <code>confidence_at_write</code>
+record which epistemic operation the write chose, and the comment says
+why they are columns rather than JSON: "so conflict resolution</p>
+<ul>
+<li>paper adoption analysis are first-class queries, not JSON-blob
+crawls." They are written and, at this pin, not read back by any write
+path. A value dismissed with a reason can be proposed again and
+appended, because nothing consults the dismissal. The schema names them
+"[f]oundation for issue #30 WriteResolution API", which is an accurate
+description of their current state and the reason <code>tombstone</code>
+is not awarded here.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Rust crate, Python bindings on PyPI, WASM, and a TUI. The server and
+the Hermes plugin are the two consumers the atlas has already read.
+<code>packs/</code> and <code>pack_mounts</code> /
+<code>trusted_publishers</code> tables suggest a distribution mechanism
+for pre-built memory sets with publisher trust, which is unusual and was
+not followed here.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The oplog is the strongest piece. <code>log_op_in_tx</code> and
+<code>log_op_at_hlc_in_tx</code> write the op inside the caller's
+transaction, so there is no window in which a mutation is committed and
+its record is not. Twelve engine modules call it, covering remember,
+correct, tombstone, link, conflict resolution, graph mutations,
+procedural writes, reembedding and materialization. It is indexed by
+timestamp, target rid, HLC and origin actor, and nothing deletes from
+it.</p>
+<p>That is the inverse of the pattern this corpus usually shows, where
+an audit table exists and each caller must remember to write to it. Here
+the transaction is the enforcement.</p>
+<p>Encryption at rest covers the oplog payload, and the migration that
+seals older plaintext rows is careful about what sealing does not
+accomplish — it rewrites the file afterwards because an
+<code>UPDATE</code> "writes the ciphertext to a new page and frees the
+old", and a freed page is not an erased one.</p>
+<p>The HLC (<code>base/hlc.rs</code>) gives the deterministic ordering
+that the synthesis lifecycle uses "to select one verified logical
+synthesis", which is how a distributed store picks a winner without a
+clock it can trust.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>2,274 test functions, and the visibility test in
+<code>thread.rs</code> is the model: a positive control, a forget, an
+exact assertion on the surviving rid list, then a supersession and
+another exact assertion. Asserting the surviving set rather than a count
+is what makes it an eval — a count of 2 would pass if the wrong row had
+left.</p>
+<p><code>engine/tests/corrections.rs</code> drives the correction and
+oplog paths, and <code>impressions.rs</code> carries a test named for
+exactly the right property:
+<code>rollup_omissions_are_exact_positive_and_not_served_children</code>.</p>
+<p>Benchmarks live in <code>benchmarks/</code>, and the README points at
+a measurement paper whose reproducible scripts and raw CSVs sit in the
+<em>server</em> repository. The <a href="../yantrikdb/">server
+report</a> covers that material and the corrections file that withdrew
+four earlier benchmark conclusions; it is not restated here.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Write the limits into the header. <code>bitemporal.rs</code> is a
+template: implement the feature, then list what it does not do, in the
+file, above the code. A reader who skims that header cannot form the
+wrong expectation, and a maintainer who later makes one of the limits
+false has to delete a sentence to do it.</p>
+<p>Take <code>skip_reinforce</code>. If retrieval feeds decay, then any
+read that is not a use — an audit, a history query, a migration scan —
+must be excluded from the statistics, or inspecting your memory keeps it
+alive. Almost nothing in this corpus separates the two.</p>
+<p>Take the supersession rule for as-of reads: a record is hidden from
+time <code>t</code> only by an edge that already existed at
+<code>t</code>. The naive version — filter out everything currently
+superseded — is the one most implementations write, and it silently
+rewrites history with today's knowledge.</p>
+<p>Put the audit write in the transaction. <code>log_op_in_tx</code>
+makes it impossible to commit a change without its record; an audit
+helper called after the commit makes it merely customary.</p>
+<p>And decide whether your scope is a property of the store or of its
+callers. An <code>Option</code> is a fine answer for a library — but say
+so, because a wrapper's guarantee will be read as the engine's.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the v26 write-resolution columns are intended to gate writes
+eventually or to remain analytical. The comment says "[f]oundation for
+issue #30", which suggests the former; at this pin nothing reads
+them.</p>
+<p>Whether <code>consolidation_status</code> will gain the CHECK
+constraint its newer siblings have. It is a read predicate in every
+audit query and currently accepts any string.</p>
+<p>How <code>CREATE TABLE IF NOT EXISTS</code> with "no migration
+constant" reaches existing databases for columns added to the constant.
+The header states the convention — "change is a new CREATE TABLE IF NOT
+EXISTS, and <code>SCHEMA_SQL</code> is executed" — but an existing table
+is not recreated, so column additions must arrive by some other path
+that was not traced here.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/yantrikdb-core/src/engine/bitemporal.rs:1-36</code></td>
+<td>How to document what a feature cannot do</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/base/schema.rs:31-184</code></td>
+<td>The memory row, versioned comment by comment</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/engine/recall.rs:1855-1880</code></td>
+<td>The namespace predicate, and the branch without it</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/engine/stats.rs:341-520</code></td>
+<td>The audit op written inside the caller's transaction</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/engine/thread.rs:1605-1651</code></td>
+<td>A visibility test that asserts the surviving set</td>
+</tr>
+<tr>
+<td><code>crates/yantrikdb-core/src/engine/mod.rs:2495-2530</code></td>
+<td>Why sealing is not erasing</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/yantrikos/yantrikdb/commit/b189e799bd854285471ec6149ff0f298cc594ec8"><code class="commit-id" title="b189e799bd854285471ec6149ff0f298cc594ec8">b189e799…</code></a>
+— first reading of the engine repository in its own right, at a commit
+dated 14 September 2026. The atlas had previously read these crates only
+as a pinned dependency of <a href="../yantrikdb/">yantrikdb-server</a>
+at tag <code>v0.22.0</code>, and in process behind the <a
+href="../yantrikdb-hermes-plugin/">Hermes plugin</a>. Screened before
+opening, from a shallow clone; a dependency surface had changed inside
+the seven-day cooldown. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
