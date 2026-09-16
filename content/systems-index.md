@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **561 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **562 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -307,6 +307,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/langchain/"><span class="az-id">LangChain</span><span class="az-what">The memory it deprecated</span><code class="az-repo">langchain-ai/langchain</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/langgraph/"><span class="az-id">LangGraph</span><span class="az-what">A conformance suite for the other half</span><code class="az-repo">langchain-ai/langgraph</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/langmem/"><span class="az-id">LangMem</span><span class="az-what">Library primitives</span><code class="az-repo">langchain-ai/langmem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
+<li><a class="az-row" href="../systems/leankg/"><span class="az-id">LeanKG</span><span class="az-what">A typo must not quietly retarget a session&#x27;s memories</span><code class="az-repo">FreePeak/LeanKG</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/lemmalog/"><span class="az-id">Lemmalog</span><span class="az-what">The transaction clock that is set to the valid clock</span><code class="az-repo">JordyZomer/lemmalog</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/leteo/"><span class="az-id">Leteo</span><span class="az-what">A blank scope is not a scope filter, and a test says so</span><code class="az-repo">asanabrial/leteo</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/lethe/"><span class="az-id">Lethe</span><span class="az-what">Verified forgetting, signed</span><code class="az-repo">deeplethe/lethe</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>

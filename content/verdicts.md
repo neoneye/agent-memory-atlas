@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 561 reports.**
+**This page covers all 562 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4847,3 +4847,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 435 commits, 14,496 lines of Python against 19,148 lines of tests holding 994 functions, thoughts stored as markdown in a Jujutsu repository whose raw output never reaches an agent, a documented lexical-substring retrieval baseline that says outright it is not a product claim, and three paper-derived protocols shipped as opt-in hook packages; four capability marks.
 - Study when: you need a memory whose read scope cannot be self-asserted by the caller, or you are deciding what a correction should do to the record it replaces before anyone has accepted it.
 - Do not copy when: you need a ranked or semantic recall — the matcher is lexical substring AND and the project says so — or a validity axis, since `created_at` is the only clock, or an append-only mutation log distinct from version-control history.
+
+### [`leankg`](../systems/leankg/)
+- Best idea: **an unrecognised scope is an error, because the reference it was ported from made it a fallback.** `ParseScope` refuses any unknown mode where the removed Rust implementation "silently fell back to per-project for ANY unknown string", with the reason in the comment — "a typo must not quietly retarget a session's memories". A scope that falls back does not fail; it writes somewhere else and reads an empty result back, and both look like working.
+- Second idea: **refuse rather than accommodate, in three separate places.** A core-file write past 2,200 bytes fails with `ErrOverflow` instead of truncating, a unique-substring replace whose old text appears twice fails instead of choosing, and an exhausted injection budget drops whole entries rather than emitting half a memory. Each accommodation would have produced a plausible wrong result instead of an error.
+- Biggest risk: **no epistemic state of any kind.** No status, no supersession, no approval surface, no mutation log — a memory is current because the file is there, a delete leaves nothing keyed on what was removed, and nothing can record that a memory turned out to be wrong. The design is coherent about this; it is a scratchpad with a search index and a boundary, and a reader wanting a ledger should look elsewhere.
+- Most reusable component: `Memory.resolve` — an empty and absolute path refused, every `..` segment refused, a three-shape allowlist, `EvalSymlinks` on the parent, and an `Lstat` plus resolve on the file so a symlink out of the root is refused "rather than create through it". Forty lines that close path escape in both directions.
+- Maturity impression: Apache-2.0, 97,573 lines of Go across 625 commits after a Rust-to-Go parity cutover, 1,077 test functions, three MCP tools serving 30 actions, and an A/B harness that refuses to record a run whose commits and prompt-template hash cannot be pinned; two capability marks, both on the memory layer rather than the knowledge graph.
+- Study when: you are porting a memory layer and want a worked example of which reference behaviours not to reproduce, or you need path containment that survives a symlink.
+- Do not copy when: a memory has to be doubted, superseded or shown to have been rejected — and do not repeat the −65% tokens / −85% tool calls figure without running the committed harness, since no result is in the tree and the only committed token A/B reports an overhead.

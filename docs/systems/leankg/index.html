@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go code knowledge graph for
+coding agents with a markdown memory layer beside it — bounded core
+files that refuse an overflowing write rather than truncating, a
+three-mode bank scope whose unknown value is an error rather than a
+silent fallback, and an FTS5 index whose per-project and shared reads
+are asserted not to see each other.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="LeanKG — Agent Memory Atlas">
+    <meta property="og:description" content="A Go code knowledge graph
+for coding agents with a markdown memory layer beside it — bounded core
+files that refuse an overflowing write rather than truncating, a
+three-mode bank scope whose unknown value is an error rather than a
+silent fallback, and an FTS5 index whose per-project and shared reads
+are asserted not to see each other.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LeanKG — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go code knowledge graph
+for coding agents with a markdown memory layer beside it — bounded core
+files that refuse an overflowing write rather than truncating, a
+three-mode bank scope whose unknown value is an error rather than a
+silent fallback, and an FTS5 index whose per-project and shared reads
+are asserted not to see each other.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>LeanKG — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "LeanKG",
+      "description": "A Go code knowledge graph for coding agents with a markdown memory layer beside it \u2014 bounded core files that refuse an overflowing write rather than truncating, a three-mode bank scope whose unknown value is an error rather than a silent fallback, and an FTS5 index whose per-project and shared reads are asserted not to see each other.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A typo must not quietly retarget a
+session's memories</p>
+          <h1>LeanKG</h1>
+          <p class="document-deck">A Go code knowledge graph for coding
+agents with a markdown memory layer beside it — bounded core files that
+refuse an overflowing write rather than truncating, a three-mode bank
+scope whose unknown value is an error rather than a silent fallback, and
+an FTS5 index whose per-project and shared reads are asserted not to see
+each other.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/FreePeak/LeanKG">
+              <span>Source</span>
+              <strong>FreePeak/LeanKG</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/FreePeak/LeanKG/commit/fabca1fe07982fe0d53f941cdc38a3357f5cd830" title="fabca1fe07982fe0d53f941cdc38a3357f5cd830">
+              <span>Analyzed revision</span>
+              <code>fabca1fe…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/FreePeak--LeanKG" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>FreePeak--LeanKG</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>LeanKG is an Apache-2.0 code knowledge graph for coding agents —
+97,573 lines of Go across 625 commits, serving 30 actions behind three
+MCP tools — and the reason it is in this atlas is the memory layer
+beside the graph. <code>internal/memory</code> (1,922 lines) keeps a
+project-anchored tree of plain markdown under
+<code>&lt;project&gt;/.leankg/memory</code>: bounded
+<code>MEMORY.md</code> and <code>USER.md</code> core files, unbounded
+<code>topics/*.md</code>, mnemopi-compatible JSONL transcript banks, and
+an FTS5 index in its own SQLite file. The graph is derived from source
+and is not memory; the markdown tree is written by the agent, survives
+the session, and can be scoped, searched and deleted.</p>
+<p>Two marks. <code>scope_enforced</code> for a boundary enforced twice
+over — a bank-routing matrix with three modes, and a path resolver that
+refuses absolutes, <code>..</code> segments, anything outside a
+three-shape allowlist, and symlinks that escape the root in either
+direction. <code>negative_eval</code> for an end-to-end test that writes
+a global memory and a project memory and then asserts each is invisible
+to the other's read, with the merged read returning exactly two rows as
+the control.</p>
+<p><strong>The line worth carrying away is a comment in
+<code>scope.go</code>.</strong> LeanKG's memory layer is a port of a
+Rust implementation that was removed at a parity cutover, and the port
+did not reproduce one of its behaviours:</p>
+<blockquote>
+<p>Unlike the reference — which silently fell back to per-project for
+ANY unknown string — an unrecognized scope is an error: a typo must not
+quietly retarget a session's memories.</p>
+</blockquote>
+<p>A scope argument that falls back on a typo does not fail; it writes
+somewhere else and reads from somewhere else, and both look like
+working. Turning that into an error is a one-line change and the kind
+this corpus finds most often <em>after</em> it has cost somebody a
+memory.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two stores that do not mix. The knowledge graph is built from the
+repository and rebuilt from it — losing it costs an index. The memory
+tree is what the agent wrote and nothing else can regenerate — losing it
+costs the memory. The code keeps them in separate files under separate
+roots, and the FTS5 index is explicitly <em>"its own sqlite file, not
+the store"</em>, so the searchable copy is derived and the markdown is
+authoritative.</p>
+<p>Within the memory tree there are two tiers with different rules.
+<code>MEMORY.md</code> and <code>USER.md</code> are core files bounded
+at <code>CoreFileBytes = 2200</code>, and the bound is enforced by
+refusal: <em>"Writes that would push a core file past this size fail
+with <code>ErrOverflow</code> rather than truncating."</em>
+<code>topics/*.md</code> are unbounded. The split means the
+always-loaded part has a hard ceiling while the recallable part does
+not, which is the right way round — a budget belongs on what is
+injected, not on what is kept.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a scope mode chooses which bank a write targets and which banks a read merges, and an unrecognised mode is refused rather than defaulted</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a scope mode chooses which bank a write targets and which banks a read merges, and an unrecognised mode is refused rather than defaulted
+flowchart TD
+    W[&quot;session retain&quot;] --&gt; S{&quot;scope mode&quot;}
+    S --&gt;|per-project| PB[&quot;project bank&lt;br/&gt;BankName(cwd)&quot;]
+    S --&gt;|global| SB[&quot;leankg-shared&quot;]
+    S --&gt;|per-project-tagged| PB
+    S --&gt;|anything else| ERR[&quot;error:&lt;br/&gt;unknown scope&quot;]
+    R[&quot;session recall&quot;] --&gt; S2{&quot;scope mode&quot;}
+    S2 --&gt;|per-project| PB2[&quot;reads project bank only&quot;]
+    S2 --&gt;|global| SB2[&quot;reads shared bank only&quot;]
+    S2 --&gt;|per-project-tagged| M[&quot;merges project then shared,&lt;br/&gt;project first on rank ties&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>One Go module. <code>internal/memory</code> holds the markdown layer,
+its scope matrix, the FTS5 side index and the JSONL bank adapter. Around
+it sit the graph packages — <code>graph</code>, <code>index</code>,
+<code>ontology</code>, <code>orgknowledge</code>, <code>prdindex</code>
+— plus <code>mcp</code>, <code>rest</code>, <code>rpc</code>,
+<code>session</code> and a <code>ui-v2</code> front end. The README
+records that the Rust engine was removed at a parity cutover and the
+whole engine is now the root Go module.</p>
+<p>The agent surface is deliberately narrow: three MCP tools —
+<code>import</code>, <code>query</code>, <code>status</code> — serving
+30 actions, against peers the README counts at roughly one to seventeen
+raw tools. Whether that is better for an agent is a design argument the
+report does not settle, but it is a real and unusual choice.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Resolve.</strong> Every read and write goes through
+<code>Memory.resolve</code>
+(<code>internal/memory/memory.go:113-153</code>): empty path rejected,
+absolute path rejected, any <code>..</code> segment rejected, then an
+allowlist of exactly three shapes — <code>MEMORY.md</code>,
+<code>USER.md</code>, <code>topics/&lt;name&gt;.md</code> with no nested
+slash — then <code>EvalSymlinks</code> on the parent and a symlink check
+on the file itself, refusing a dangling or escaping link <em>"rather
+than create through it"</em>.</li>
+<li><strong>Write.</strong> <code>Create</code>,
+<code>StrReplace</code>, <code>Insert</code> — <code>bound()</code>
+refuses a core-file write past 2,200 bytes with
+<code>ErrOverflow</code>; <code>replaceOnce</code> refuses an ambiguous
+replacement rather than picking an occurrence.</li>
+<li><strong>Search.</strong> <code>memory_index</code> is an FTS5
+virtual table over <code>(path, body)</code> with <code>unicode61</code>
+tokenisation, in <code>index.db</code> beside the tree.</li>
+<li><strong>Session recall.</strong>
+<code>SessionRecall(scope, cwd, bank, query, limit)</code> resolves the
+read banks from the scope mode, merges in mode order, and drops
+zero-match rows — <em>"zero-match entries never surface"</em>.</li>
+<li><strong>Inject.</strong>
+<code>InjectBlock(entries, limit, tokenBudget)</code> renders a
+<code>&lt;memories&gt;</code> block, default limit 8 and budget 5,000,
+and when the budget runs out mid-entry it drops the remaining entries
+whole — <em>"never a truncated half-memory"</em> — returning
+<code>""</code> on an empty result so the caller omits the block rather
+than injecting an empty one.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memory is a markdown file. The core files are whole documents
+bounded by byte count; topic notes are whole documents unbounded. The
+bank rows are JSONL entries in a mnemopi-compatible format, carrying
+content, a session key and a rank position — there is no status field,
+no confidence, no supersession pointer and no validity interval anywhere
+in the layer. A correction is an edit through <code>StrReplace</code> or
+a <code>Delete</code>, and <code>Delete</code> removes the file and its
+index rows.</p>
+<p>That absence is the report's main negative finding and is stated
+rather than implied: a search of <code>internal/memory</code> for a
+status vocabulary — draft, pending, approved, verified, rejected —
+returns nothing, so <code>trust_state</code> is withheld;
+<code>Delete</code> erases with no record keyed on what was removed, so
+<code>tombstone</code> is withheld; there is no approval surface, so
+<code>human_review</code> is withheld; and the only journal in the layer
+is SQLite's own WAL pragma, so <code>audit_log</code> is withheld. This
+is a memory that can be written, scoped, searched and removed, and
+cannot be doubted.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 over <code>(path, body)</code> for the markdown tree, and a
+unique-query-token overlap for the bank rows, with zero-match rows
+filtered before they reach a caller. The merge for
+<code>per-project-tagged</code> is ordered rather than scored: project
+rows come before shared rows on rank ties, which the end-to-end test
+asserts by content.</p>
+<p>The injection contract is where the care shows. A cap on entries
+<em>and</em> a token budget, entries dropped whole rather than
+truncated, and an empty result rendering as no block at all. Three
+separate decisions, each of which this corpus has seen go the other way:
+a limit with no budget, a budget that cuts mid-record, and an empty
+<code>&lt;memories&gt;</code> block that teaches a model the store is
+empty when the filter was simply narrow.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>StrReplace</code> is unique-substring replacement —
+<code>replaceOnce</code> returns an error when the old text appears more
+than once, so an edit that could land in two places lands in neither.
+<code>bound</code> refuses rather than truncates on the core files.
+<code>Rename</code> moves the file and updates the index rows together.
+<code>Delete</code> removes the file then the rows.</p>
+<p>Nothing in the layer is transactional across the file and the index:
+the file operation happens first and the index update second, so a crash
+between them leaves an index row for a file that is gone. The FTS index
+is derived and rebuildable, which is the right side of that failure to
+be on, and the package comment says the index is not the store.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>MCP with three tools over 30 actions, a REST surface, an RPC surface
+and a session layer. <code>LEANKG_PROJECT_DIRS</code> serves several
+projects from one HTTP server with a per-request <code>project</code>
+argument, which makes the bank scope the thing separating one project's
+memories from another's on a shared endpoint.</p>
+<p><code>AGENTS.md</code>, <code>CLAUDE.md</code> and
+<code>GEMINI.md</code> are all present and were read as data.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope enforced — awarded, and enforced in two independent
+places.</strong> The bank matrix routes a write to the project bank or
+the shared bank and decides which banks a read merges, and
+<code>ParseScope</code> refuses an unrecognised mode instead of falling
+back — the behaviour change from the Rust reference the port called out
+by name. Underneath it, <code>resolve</code> bounds every path operation
+to the memory root: absolutes and <code>..</code> rejected before
+anything touches the filesystem, a three-shape allowlist,
+<code>EvalSymlinks</code> on the parent directory, and an
+<code>Lstat</code> plus resolve on the file so a symlink pointing out of
+the root is refused rather than followed.
+<code>TestSymlinkEscapeRejected</code> and
+<code>TestPathValidation</code> pin both halves.</p>
+<p><strong>Negative eval — awarded.</strong>
+<code>TestSessionScopesEndToEnd</code>
+(<code>internal/memory/memory_test.go:511-573</code>) writes one global
+memory mentioning postgres and one project memory mentioning redis, then
+asserts the shared bank file does not contain <code>redis</code> at all,
+that a per-project recall for <code>postgres</code> returns zero rows,
+and that a global recall for <code>redis</code> returns zero rows. The
+control is in the same test: the tagged read returns exactly two rows
+with redis first and postgres second, so the corpus is proven populated
+and neither exclusion can pass on an empty store.
+<code>TestRecallZeroMatchFiltered</code> sits beside it.</p>
+<p><strong>Trust state, tombstone, human review, audit log — withheld,
+and the reason is the same one four times.</strong> This layer has no
+epistemic vocabulary. A memory is a file; it is current because it is
+there. There is no status to move a memory between, no record of a value
+that was rejected, no surface on which a person approves anything, and
+no append-only log of what changed — SQLite's WAL is a durability
+mechanism, not a mutation record. The design is coherent: it is a
+scratchpad with a search index and a boundary, and it does not pretend
+to be a ledger.</p>
+<p><strong>What the bounds get right.</strong> Three separate refusals
+rather than three silent accommodations — an overflowing core write
+fails rather than truncating, an ambiguous replacement fails rather than
+choosing, and an exhausted injection budget drops whole entries rather
+than cutting one in half. Each of those is a place where the
+accommodating version would have produced a plausible wrong result
+instead of an error.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,077 test functions across <code>internal/</code> and
+<code>cmd/</code>; eighteen of them in the memory package, named for the
+property each pins — path validation, symlink escape, core-file
+overflow, ambiguous replace, FTS round trip, deterministic bank names,
+cursor resume, zero-match filtering, scope parsing, the scopes
+end-to-end, injection budgets, and that a session makes no writes to
+<code>$HOME</code>.</p>
+<p><strong>The engine benchmark is rigorous and measures the wrong thing
+for the headline claim.</strong> <code>benchmark/ab/REPORT.md</code>
+compares the removed Rust binary against the Go engine on a synthetic
+100-file corpus, and its provenance discipline is worth copying: both
+arms pinned to commits, the corpus generated by a committed script,
+medians over at least three trials per arm, and a harness that
+<em>"refuses"</em> a run whose pins cannot be resolved to 40-hex commits
+and a 64-hex prompt-template hash before any row lands. That is a
+performance comparison between two implementations of the same
+engine.</p>
+<p><strong>The published cost claim is a different claim and is not
+reproducible from this tree.</strong> The README's header and its
+comparison table both state <em>"−65% tokens, −85% tool calls"</em>.
+<code>benchmarks/cross_tool/</code> is the harness that would produce it
+— <code>run_one.sh</code>, <code>run_arm.sh</code>,
+<code>run_repo.sh</code>, <code>aggregate.py</code>,
+<code>score.py</code>, <code>clone_repos.py</code>,
+<code>repos.yaml</code>, a Makefile and an MCP install script, comparing
+a fixed <code>claude -p</code> agent with and without LeanKG across
+seven real repositories, with the metric sources named per column and
+medians matching the methodology it benchmarks against. No result file
+is committed, and the directory's <code>.gitignore</code> excludes the
+cloned repos and the scratch transcripts rather than a results file, so
+the absence is not a gitignore artefact.</p>
+<p>The only committed A/B token measurement in the tree points the other
+way and is archived:
+<code>docs/archive/analysis/ab-testing-results-2026-04-08.md</code>
+reports seven test cases, <strong>0 of 7</strong> showing token savings,
+a total overhead of <strong>+41,048 tokens</strong>, and LeanKG winning
+2 of 7 on F1 with 5 ties — its own stated finding being <em>"better
+context correctness ... but at a token overhead"</em>, with the note
+that the deduplication optimisations <em>"may not be fully
+deployed"</em>. That run predates the parity cutover and the three-tool
+consolidation by five months, so it is not evidence that the current
+claim is false. It is the only number of its kind a reader of this
+repository can check, and it disagrees with the header.</p>
+<p><strong>No paper describes this system.</strong> A search for
+<code>arxiv</code>, <code>bibtex</code>, <code>@article</code>,
+<code>@misc</code>, <code>citation</code> and <code>doi.org</code>
+across the markdown and manifests returns nothing, and
+<code>find . -iname 'CITATION*'</code> returns nothing.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Make an unknown scope an error.</strong> The one-line
+difference between this port and its reference is the difference between
+a typo that fails and a typo that writes a session's memories somewhere
+else and reads an empty result back.</li>
+<li><strong>Bound the always-loaded tier and leave the recallable tier
+unbounded.</strong> A 2,200-byte ceiling on the core files with an
+unbounded topics directory puts the budget where the cost is.</li>
+<li><strong>Refuse rather than accommodate, in all three
+places.</strong> Overflow fails instead of truncating; an ambiguous
+replacement fails instead of choosing; an exhausted injection budget
+drops whole entries instead of half of one.</li>
+<li><strong>Return no block rather than an empty one.</strong>
+<code>InjectBlock</code> renders <code>""</code> on an empty result, so
+a model is never shown an empty <code>&lt;memories&gt;</code> section it
+will read as <em>there is nothing</em>.</li>
+<li><strong>Keep the search index out of the store.</strong> The package
+comment says the FTS5 file is <em>"its own sqlite file, not the
+store"</em>, which is what makes the non-transactional file-then-index
+write acceptable: the derived half is the half that can be rebuilt.</li>
+<li><strong>Pin both arms of a benchmark and refuse a run that cannot be
+pinned.</strong> The A/B harness will not record a row whose commits and
+prompt hash do not resolve.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The <code>−65% tokens / −85% tool calls</code> headline has a
+complete harness and no committed result, and the only committed token
+A/B in the tree reports an overhead. Running
+<code>benchmarks/cross_tool</code> and committing the aggregate would
+settle it in one direction or the other.</li>
+<li>The file operation and the index update are not transactional. The
+index is rebuildable, so the exposure is a stale row rather than a lost
+memory, but nothing in the layer detects or repairs the gap.</li>
+<li>A shared HTTP server with <code>LEANKG_PROJECT_DIRS</code> makes the
+bank scope the only separation between projects, and the scope arrives
+as a request argument. The memory layer validates the value; it does not
+establish who may ask for it.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory layer: <code>internal/memory/memory.go</code> — package
+comment and layout (1-13), <code>CoreFileBytes</code> (26),
+<code>Open</code> (67), <code>resolve</code> (113-153),
+<code>within</code> (156), <code>Snapshot</code> (163),
+<code>Create</code> (216), <code>StrReplace</code> (232),
+<code>Insert</code> (256), <code>Delete</code> (289),
+<code>Rename</code> (302), <code>replaceOnce</code> (323),
+<code>bound</code> (332).</li>
+<li>Scope matrix: <code>internal/memory/scope.go</code> —
+<code>SharedBank</code> (11), <code>ParseScope</code> (29-40) with the
+divergence comment, <code>WriteBank</code> (55).</li>
+<li>Banks and injection: <code>internal/memory/banks.go</code> —
+<code>InjectBlock</code> (542-560), zero-match filtering (485).</li>
+<li>Search: <code>internal/memory/search.go:29</code> — the FTS5 virtual
+table.</li>
+<li>Tests: <code>internal/memory/memory_test.go</code> — 18 cases,
+<code>TestPathValidation</code> (41),
+<code>TestSymlinkEscapeRejected</code> (63),
+<code>TestCoreFileOverflow</code> (84),
+<code>TestAmbiguousReplace</code> (115),
+<code>TestRecallZeroMatchFiltered</code> (356),
+<code>TestParseScopeModes</code> (390),
+<code>TestSessionScopesEndToEnd</code> (511),
+<code>TestInjectBlockBudgets</code> (613),
+<code>TestSessionHermeticNoHomeWrites</code> (640).</li>
+<li>Benchmarks: <code>benchmark/ab/REPORT.md</code> and
+<code>harness.go</code> (Rust vs Go, pinned);
+<code>benchmarks/cross_tool/</code> (the token/tool-call harness, no
+committed result);
+<code>docs/archive/analysis/ab-testing-results-2026-04-08.md</code>
+(archived, +41,048 tokens).</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rniE &#39;status.*=.*&quot;(draft|pending|approved|verified|rejected)&quot;|approv&#39; --include=&#39;*.go&#39; internal/memory/  # 0: no epistemic vocabulary, no approval surface
+grep -rniE &#39;audit|journal|event.?log&#39; --include=&#39;*.go&#39; internal/memory/   # 1 hit, the SQLite WAL pragma in search.go:20
+find benchmarks/cross_tool -type f                                        # harness complete, no result file; .gitignore excludes repos/ and scratch/ only
+grep -riE &#39;arxiv|bibtex|@article|@misc|citation|doi\.org&#39; --include=&#39;*.md&#39; --include=&#39;*.toml&#39; .   # 0
+find . -iname &#39;CITATION*&#39; -not -path &#39;./.git/*&#39;                           # 0</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/FreePeak/LeanKG/commit/fabca1fe07982fe0d53f941cdc38a3357f5cd830"><code class="commit-id" title="fabca1fe07982fe0d53f941cdc38a3357f5cd830">fabca1fe…</code></a>
+— first reading, at the head of <code>main</code>, 625 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: one auto-run
+surface, two build-time execution paths, two manifests inside the
+seven-day cooldown, one unpinned surface, and three agent-directed files
+(<code>AGENTS.md</code>, <code>CLAUDE.md</code>, <code>GEMINI.md</code>)
+read as data. Nothing was installed, built or run — no
+<code>go build</code>, no <code>make</code>, no npm. Two marks, both on
+the memory layer rather than the knowledge graph, which is derived from
+source and is not agent memory. The four withheld marks are stated in
+section 9 with the one reason they share. The README's
+<code>−65% tokens / −85% tool calls</code> claim was checked against the
+tree rather than repeated: the harness is committed and complete, no
+result is, and the only committed token A/B is an archived April run
+reporting an overhead.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
