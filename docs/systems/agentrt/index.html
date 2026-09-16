@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A C11 agent-runtime substrate
+whose memory daemon holds records in a fixed-size array with TF-IDF and
+substring scoring fused, alongside a per-session context ledger that
+filters the window by a stored status — and whose recency listing
+derives order from array position that the swap-with-tail delete
+permanently scrambles, while <code>created_at</code> sits unused on
+every record it returns.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AgentRT — Agent Memory Atlas">
+    <meta property="og:description" content="A C11 agent-runtime
+substrate whose memory daemon holds records in a fixed-size array with
+TF-IDF and substring scoring fused, alongside a per-session context
+ledger that filters the window by a stored status — and whose recency
+listing derives order from array position that the swap-with-tail delete
+permanently scrambles, while <code>created_at</code> sits unused on
+every record it returns.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AgentRT — Agent Memory Atlas">
+    <meta name="twitter:description" content="A C11 agent-runtime
+substrate whose memory daemon holds records in a fixed-size array with
+TF-IDF and substring scoring fused, alongside a per-session context
+ledger that filters the window by a stored status — and whose recency
+listing derives order from array position that the swap-with-tail delete
+permanently scrambles, while <code>created_at</code> sits unused on
+every record it returns.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AgentRT — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AgentRT",
+      "description": "A C11 agent-runtime substrate whose memory daemon holds records in a fixed-size array with TF-IDF and substring scoring fused, alongside a per-session context ledger that filters the window by a stored status \u2014 and whose recency listing derives order from array position that the swap-with-tail delete permanently scrambles, while `created_at` sits unused on every record it returns.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Recency read off an array that delete
+reorders</p>
+          <h1>AgentRT</h1>
+          <p class="document-deck">A C11 agent-runtime substrate whose
+memory daemon holds records in a fixed-size array with TF-IDF and
+substring scoring fused, alongside a per-session context ledger that
+filters the window by a stored status — and whose recency listing
+derives order from array position that the swap-with-tail delete
+permanently scrambles, while <code>created_at</code> sits unused on
+every record it returns.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/openairymax/agentrt">
+              <span>Source</span>
+              <strong>openairymax/agentrt</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/openairymax/agentrt/commit/a7d81abe20a1f4b0a97c054d135655d6fa3db464" title="a7d81abe20a1f4b0a97c054d135655d6fa3db464">
+              <span>Analyzed revision</span>
+              <code>a7d81abe…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/openairymax--agentrt" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>openairymax--agentrt</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AgentRT — full name AirymaxAgentRT — is pitched as "[a]n OS-grade
+runtime substrate for AI agent teams", a C11 platform at version 0.1.16
+whose primary home is atomgit.com and whose GitHub tree is a
+superproject of seven submodules. Memory lives in <code>mem_d</code>, a
+standalone daemon in the <code>daemons</code> submodule: 8,927 lines of
+C serving a <code>mem.*</code> JSON-RPC namespace over a Unix socket,
+with its own hash table, its own TF-IDF implementation, its own JSONL
+persistence and no database.</p>
+<p>Getting to it takes a step. The superproject's seven runtime
+directories are submodules with relative URLs
+(<code>../atoms.git</code>) and recorded pins, so a shallow clone of the
+superproject leaves all seven empty; the README's component table names
+<code>atoms</code> as the home of <code>memory</code>, and
+<code>openairymax/atoms</code> returns 404 on GitHub while atomgit.com
+returns 403 to a non-browser fetch. That is a false lead. The memory
+service is in <code>daemons</code>, which is published, and it was read
+here at the exact pin the superproject records.</p>
+<p>Two things in it are worth the visit and one is worth avoiding.</p>
+<p>The context ledger is the good part. Every entry that enters a
+session's window — system prompt, tool definition, user message, tool
+result, assistant message, compression block, cache hit — is appended to
+a per-session chain with its token cost and a status. Marking an entry
+COMPRESSED or EVICTED appends a record carrying a sequence number, a
+nanosecond timestamp and a <code>ref_id</code> pointing at the entry it
+describes, and the window read skips anything not ACTIVE. The budget
+recomputes from the surviving ACTIVE entries. That is a stored discrete
+status genuinely filtering a read path, with a producer in the repo and
+a test that asserts the window shrinks.</p>
+<p>The retrieval is the part to read carefully rather than copy. And the
+recency listing is the part that is simply wrong.</p>
+<p><code>mem.recent</code> is documented as returning the newest records
+first, and it does so by walking the record array backwards from the end
+— "按写入顺序取数组尾部" (take the tail of the array in write order).
+But <code>mem_remove_record_at</code> compacts the array by moving the
+last record into the deleted slot. After a single
+<code>mem.delete</code>, the array is no longer in write order, and
+<code>mem.recent</code> returns whichever record happened to get swapped
+forward as though it were among the oldest. Each returned item carries a
+<code>created_at</code> that the handler faithfully serialises into the
+response — and that nothing ever sorts by. The fix is four lines; the
+fact that it has not happened is explained by
+<code>mem_service_recent</code> having no test at all.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>record</strong> is bytes plus a metadata string. It has no
+owner, no session, no status, and no scope key. It lives at an index in
+a fixed-size array.</p>
+<p>The <strong>array</strong> is compacted on delete by swapping the
+tail into the hole. The hash index is repaired; the ordering is not.</p>
+<p>A <strong>knowledge base</strong> is not a container. It is the
+string <code>kb_id</code> inside a record's metadata JSON, re-parsed on
+every candidate during a filtered search.</p>
+<p>A <strong>ledger entry</strong> is the other kind of memory: one item
+of one session's context window, with a token cost and a status. Marking
+appends a record and also migrates the original's status.</p>
+<p>The <strong>semantic cache</strong> is a third thing living in the
+same daemon — LLM responses reused across sessions, keyed on canonical
+text and model id.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the record store keeps write order in array position and the delete path destroys it, while the context ledger — the other half of the daemon — filters its read on a stored status</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the record store keeps write order in array position and the delete path destroys it, while the context ledger — the other half of the daemon — filters its read on a stored status
+flowchart TB
+    subgraph REC[&quot;record store — mem.* records&quot;]
+        W[&quot;mem.write&quot;] --&gt; ARR[&quot;records[] — fixed size,&lt;br/&gt;default 1024, no eviction&quot;]
+        W --&gt; FULL{&quot;count &gt;= max_records?&quot;}
+        FULL --&gt;|&quot;yes&quot;| REJ[&quot;AIRY_ERR_OUT_OF_MEMORY —&lt;br/&gt;the write is refused,&lt;br/&gt;nothing is evicted&quot;]
+        ARR --&gt; JSONL[(&quot;mem.jsonl&lt;br/&gt;append per write&quot;)]
+        ARR --&gt; VEC[&quot;TF-IDF term vector&lt;br/&gt;+ shared DF table&quot;]
+        S[&quot;mem.search&quot;] --&gt; SCAN[&quot;scan every record:&lt;br/&gt;0.6 · cosine + 0.4 · substring density&quot;]
+        VEC --&gt; SCAN
+        EMB[&quot;optional embedding HTTP backend&quot;] -.-&gt;|&quot;answers&quot;| SCAN
+        EMB -.-&gt;|&quot;unreachable&quot;| DEG[&quot;silently degrades&lt;br/&gt;to TF-IDF&quot;]
+        D[&quot;mem.delete&quot;] --&gt; SWAP[&quot;mem_remove_record_at:&lt;br/&gt;tail record swapped&lt;br/&gt;into the hole&quot;]
+        SWAP --&gt; JSONL2[(&quot;full JSONL rewrite —&lt;br/&gt;tmp + fsync + rename&quot;)]
+        R[&quot;mem.recent&quot;] --&gt; TAIL[&quot;walk records[] backwards&lt;br/&gt;from record_count-1&quot;]
+        ARR --&gt; TAIL
+        SWAP -.-&gt;|&quot;array order is no longer&lt;br/&gt;write order&quot;| TAIL
+        TAIL --&gt; OUT[&quot;returns created_at&lt;br/&gt;on every item —&lt;br/&gt;and never sorts by it&quot;]
+        EV[&quot;mem.evolve&quot;] --&gt; MERGE[&quot;concatenate the top-N hits&lt;br/&gt;into ONE new record&quot;]
+        MERGE --&gt; ARR
+        MERGE -.-&gt;|&quot;sources are kept, and the merged&lt;br/&gt;record contains their text, so it&lt;br/&gt;out-scores them on the same query&quot;| SCAN
+    end
+    subgraph LED[&quot;context ledger — per session&quot;]
+        LA[&quot;mem.ledger_append&quot;] --&gt; CHAIN[&quot;entry chain, oldest to newest&lt;br/&gt;status = ACTIVE&quot;]
+        LM[&quot;mem.ledger_mark&lt;br/&gt;or the compress handler&quot;] --&gt; MARK[&quot;append a status-change record:&lt;br/&gt;seq, ns stamp, ref_id, token_in = 0&quot;]
+        MARK --&gt; CHAIN
+        MARK --&gt; MUT[&quot;and set the ORIGINAL entry&#39;s status —&lt;br/&gt;which the comment and README&lt;br/&gt;both say it does not do&quot;]
+        CHAIN --&gt; WIN[&quot;mem.ledger_window:&lt;br/&gt;skip status != ACTIVE&quot;]
+        MUT --&gt; WIN
+        CHAIN --&gt; BUD[&quot;budget = sum of token_in&lt;br/&gt;where status == ACTIVE&quot;]
+        LOSS[&quot;mem_ledger_destroy frees the chain —&lt;br/&gt;no file, no restart survival&quot;] -.-&gt; CHAIN
+    end</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>daemons/mem_d/src/core/service.c</code></td>
+<td>The record store: lifecycle, write, search, get, delete, recent</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/src/engine/mem_persist.c</code></td>
+<td>JSONL append, full rewrite, startup load, UTF-8 repair of older bad
+rows</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/src/engine/vector.c</code></td>
+<td>TF-IDF term vectors, the shared document-frequency table,
+cosine</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/src/engine/emb_client.c</code></td>
+<td>The optional HTTP embedding backend and its degrade path</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/src/engine/kb.c</code></td>
+<td>Chunked document ingest and per-KB listing and deletion</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/src/engine/ledger.c</code></td>
+<td>The per-session context ledger, its statuses and its budget</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/src/engine/compress.c</code></td>
+<td>Rule-based L1 trimming and extractive L2 summarisation</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/src/engine/cache.c</code></td>
+<td>The cross-session semantic response cache</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/src/handlers/</code></td>
+<td>One file of JSON-RPC handlers per surface</td>
+</tr>
+<tr>
+<td><code>heapstore/</code></td>
+<td>The runtime's SQL store — sessions, turns, checkpoints, tool calls;
+no memory table</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Read <code>service.c:514-533</code> and
+<code>service.c:574-627</code> together, in that order. The first is
+<code>mem_remove_record_at</code>, which compacts by swap. The second is
+<code>mem_service_recent</code>, which reads order from position.
+Neither is wrong on its own and the pair is.</p>
+<p>Then <code>ledger.c:372-428</code> for the status transition, and
+<code>ledger.c:303-336</code> for the window read that consumes it.</p>
+<p>Then <code>mem_handlers.c:212-378</code> for <code>mem.evolve</code>,
+which is where the store's growth model lives.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A record is <code>{record_id, data, len, metadata, created_at}</code>
+plus derived retrieval state — a TF-IDF vector and an optional embedding
+— that is rebuilt on load and never persisted. Ids are 32 hex
+characters: a truncated timestamp, a process counter and an xorshift
+value, generated without libuuid so the daemon can run standalone.</p>
+<p>There is no status, no version, no supersession pointer, no source,
+no owner and no scope key. Everything a caller wants to express beyond
+the bytes goes into <code>metadata</code>, an opaque JSON string that
+the store parses only to read <code>kb_id</code>.</p>
+<p>The JSONL is one global file. Two agents, two users or two projects
+sharing a runtime share a store, and nothing in the record distinguishes
+them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Search scores every record and sorts the survivors with a bubble
+sort. At the default ceiling of 1,024 records that is fine; it is O(n²)
+in hits and worth knowing before raising
+<code>AIRY_MEM_MAX_RECORDS</code>.</p>
+<p>The score is <code>w · vec_score + (1 - w) · sub_score</code>, with
+<code>w</code> defaulting to 0.6 and settable through
+<code>AIRY_MEM_TFIDF_WEIGHT</code>. The substring half,
+<code>mem_compute_score</code>, counts literal occurrences of the query
+string in the record and normalises by length — so it is a whole-query
+substring match, not a term match, and a two-word query scores zero on a
+record containing both words apart. The vector half is a real TF-IDF
+cosine against a shared DF table maintained incrementally on write and
+delete.</p>
+<p>When <code>AIRY_MEM_EMBEDDING_URL</code> is set, an HTTP call
+replaces the TF-IDF half for records that have an embedding. Records
+written before the backend was configured have none, and fall back to
+the vector or substring path — so a single store can score different
+records by different methods in the same query, with the fused scores
+compared as though commensurable. The degrade on an unreachable endpoint
+is deliberate and logged in design notes; the mixed population it leaves
+behind is not addressed.</p>
+<p>Embeddings are fetched outside the lock, which is the right call, and
+the code copies the record's bytes before releasing the lock with an
+explicit comment about the concurrent-delete use-after-free it is
+avoiding. That is careful work.</p>
+<p>The KB filter re-parses each candidate's metadata JSON inside the
+scan loop, with an inline comment explaining that the <code>kb.c</code>
+helper could not be reused because it returns a static buffer. It is
+correct and it is quadratic in parsing cost.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write appends to the array, builds the term vector, inserts into
+the hash index, and appends a line to the JSONL. At capacity it returns
+<code>AIRY_ERR_OUT_OF_MEMORY</code> and logs "Memory service full".
+There is no eviction, no decay, no LRU — a full store is a store that
+stops accepting memories.</p>
+<p><code>mem.evolve</code> is the consolidation surface, and it is
+strictly additive. Given a query it searches, concatenates the hit
+contents into one buffer, and writes that as a new record whose metadata
+lists the source ids and scores. The sources stay. Because the merged
+record contains all their text, it scores at least as well as any of
+them on the query that produced it, and a second <code>evolve</code> on
+the same query merges the merged record along with its sources again.
+Against a hard ceiling that refuses writes, repeated evolution is the
+fastest way to reach a store that cannot be written to.</p>
+<p>The single-record branch has a smaller version of the same issue: it
+writes an enhanced copy carrying <code>evolved_from</code>,
+<code>evolved_at</code> and <code>access_count: 1</code> — always 1,
+never incremented — and the new metadata replaces the source's entirely.
+Evolving a KB chunk therefore produces a record with no
+<code>kb_id</code>, which vanishes from <code>kb_search</code> and from
+<code>kb_delete</code>'s sweep while remaining in the global search and
+in the JSONL.</p>
+<p>Persistence is the best-engineered part of the file. Full rewrites go
+to a temp file in the same directory, fsync, then rename. The path
+resolver carries a comment recording a real prior bug — creating only
+the <code>data</code> directory left <code>agentrt/memory</code>
+missing, append failed with <code>ENOENT</code>, and memories were
+silently not written — and now does a recursive mkdir of the full
+parent.</p>
+<p>The load path has a quieter version of the same failure mode. It
+iterates lines and admits a record only while
+<code>svc-&gt;record_count &lt; svc-&gt;max_records</code>, without
+breaking the loop and without logging the skip. Since
+<code>max_records</code> is settable per run through
+<code>AIRY_MEM_MAX_RECORDS</code> or the daemon config, a store grown
+under a high ceiling and restarted under a lower one keeps the oldest
+records in the file and silently discards every newer one. The
+<code>loaded</code> count is logged; the dropped count is not
+computed.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>One daemon, one Unix socket, JSON-RPC. The gateway's capability
+registry test lists <code>mem.ledger_append</code>,
+<code>mem.ledger_window</code>, <code>mem.ledger_budget</code> and
+<code>mem.ledger_mark</code> among the registered capabilities, so the
+ledger is addressed as a first-class runtime surface rather than an
+internal detail.</p>
+<p>There is no authentication, no caller identity and no per-caller
+partition on the socket. Whatever can connect can read and delete every
+record.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The ledger's append-only claim is stated three times and is not quite
+what the code does. <code>ledger.h</code> says a status change appends a
+record rather than modifying the original; <code>ledger.c:393</code>
+repeats it as an inline comment immediately above the code; the mem_d
+README repeats it in the method table as "追加状态变更记录，原条目不改"
+(append a status-change record, the original entry unchanged). Thirty
+lines later, <code>ledger.c:423</code> writes
+<code>e-&gt;status = status</code> on the original entry.</p>
+<p>The mutation is not a bug — the window read depends on it, and the
+repo's own test at <code>test_ledger.c:147-150</code> asserts the window
+shrinks after a mark, which only passes because the original is mutated.
+The transition history stays replayable through the appended records'
+sequence numbers. What is wrong is the invariant as documented: a reader
+who builds on "原条目不改" and expects the original entry to still read
+ACTIVE in <code>ledger_history</code> will find it does not.</p>
+<p>The ledger is also process-lifetime only. There is no
+<code>fopen</code> in <code>ledger.c</code>;
+<code>mem_ledger_destroy</code> frees the chains on shutdown. Records
+survive a restart through the JSONL and the context ledger does not, so
+the audit of what entered and left a session's window is gone the moment
+the daemon stops. It also covers only ledger entries —
+<code>mem.write</code> and <code>mem.delete</code> append nothing to
+it.</p>
+<p>The semantic cache is worth flagging separately because it is a
+different trust question sharing an address space. Its own header
+describes it as "跨会话、跨时刻 的 LLM 响应复用" — cross-session,
+cross-time reuse of LLM responses — keyed on
+<code>SHA-256(canonical_text + model_id)</code> for exact hits and
+normalised Jaccard token overlap at a default 0.85 threshold for
+approximate ones. There is no tenant, user or session component in
+either key. On a multi-user runtime, an approximate hit returns another
+user's model response to a merely similar prompt. The exact-key test
+asserts that a different <code>model_id</code> misses; nothing asserts
+anything about a different caller, because the cache has no notion of
+one.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Five test binaries, 2,006 lines, covering the service, cache,
+compressor, ledger and stats JSON. They are assertion-based C with no
+framework, and they are better than the median for a project this young
+— the KB isolation test asserts both directions, the ledger tests cover
+idempotent marking and invalid status values, and
+<code>test_service.c</code> exercises malformed JSONL lines and the
+UTF-8 repair path.</p>
+<p>The gaps are specific. <code>mem_service_recent</code> has no test,
+which is why its ordering bug survives. Nothing writes past
+<code>max_records</code> and reloads under a lower ceiling. Nothing
+calls <code>mem.evolve</code> twice on the same query. The compressor's
+<code>is_instruction_word</code> list is English-only — "please, ensure,
+must, always, never" — in a project whose documentation, comments and
+likely transcripts are Chinese, and no test covers a non-English
+window.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Steal the persistence discipline. Temp file, fsync, rename, and a
+comment in the path resolver recording the exact bug that a shallower
+mkdir caused. That comment is worth more than the code it sits above,
+because it stops the fix from being undone.</p>
+<p>Steal the ledger's shape: a per-session append-only chain where every
+window item carries its token cost, transitions append a record with a
+sequence number and a back-reference, and the budget is recomputed from
+the surviving ACTIVE entries rather than incrementally adjusted.
+<code>session_recalc_active</code> after every mark is O(n) and
+obviously correct, which is the right trade at window scale.</p>
+<p>Do not derive recency from physical position. This is the report's
+one transferable warning: if a listing means "newest first", sort by the
+timestamp you already store. <code>mem.recent</code> returns
+<code>created_at</code> on every item and orders by array index, and the
+compaction that breaks the correspondence lives in a different file. Any
+structure that compacts — swap-delete, tombstone-free vectors, free
+lists — turns position into a lie the moment it is used.</p>
+<p>Decide what a full store does before you ship one. Refusing writes at
+a ceiling is a legitimate choice; it is only a choice if something else
+evicts, expires or summarises. Here nothing does, and
+<code>mem.evolve</code> actively consumes the remaining headroom.</p>
+<p>If consolidation writes a merged record, retire the sources in the
+same operation, or exclude the merged record from the retrieval that
+feeds the next consolidation. Otherwise the merge is an amplifier.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether <code>atoms/memory</code>, named in the superproject README's
+component table, is a separate memory implementation or the syscall shim
+that <code>service.c</code>'s header says this code was extracted from
+("[e]xtracted from <code>g_runtime.records[]</code> logic in
+<code>gateway/src/utils/syscall/syscall_router.c</code>").
+<code>openairymax/atoms</code> 404s on GitHub at the time of reading and
+atomgit.com returns 403 to a non-browser fetch, so the question stands
+open; the superproject records its pin as <code>0ea4061d</code>.</p>
+<p>Whether <code>heapstore</code> is intended to hold memory records.
+Its README says it persists "memory records", and its
+<code>V001_initial_schema.sql</code> defines <code>agents</code>,
+<code>sessions</code>, <code>turns</code>, <code>checkpoints</code>,
+<code>llm_calls</code>, <code>tool_calls</code>, <code>events</code> and
+<code>cost_tracking</code> with no memory table. Either the README is
+ahead of the schema or the word is being used for turns.</p>
+<p>Whether the embedding backend's mixed population is considered. A
+store holding both embedded and unembedded records fuses scores from
+different metrics into one ranking, and nothing backfills.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>daemons/mem_d/src/core/service.c</code></td>
+<td>The swap-delete and the position-derived recency, together</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/src/engine/ledger.c</code></td>
+<td>The status transition, and the line that contradicts its own
+comment</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/src/engine/mem_persist.c</code></td>
+<td>Crash-safe rewrite, and the load ceiling that drops the newest</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/src/handlers/mem_handlers.c</code></td>
+<td><code>mem.evolve</code>, the additive consolidation</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/include/cache.h</code></td>
+<td>A cross-session response cache with no caller in its key</td>
+</tr>
+<tr>
+<td><code>daemons/mem_d/tests/test_service.c</code></td>
+<td>The KB isolation assertions, negative with positive control</td>
+</tr>
+<tr>
+<td><code>.gitmodules</code></td>
+<td>Why a shallow clone of the superproject shows nothing</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/openairymax/agentrt/commit/a7d81abe20a1f4b0a97c054d135655d6fa3db464"><code class="commit-id" title="a7d81abe20a1f4b0a97c054d135655d6fa3db464">a7d81abe…</code></a>
+— first reading, at a superproject commit dated 16 September 2026. The
+seven runtime directories are submodules with relative URLs and a
+shallow clone leaves them empty; recorded pins are
+<code>atoms 0ea4061d</code>, <code>commons e0ca18a3</code>,
+<code>cupolas ad068db2</code>, <code>daemons db4962ad</code>,
+<code>gateway 9b36d117</code>, <code>heapstore d3130dde</code>,
+<code>protocols 38689aff</code>. <code>daemons</code> and
+<code>heapstore</code> were fetched by full sha and checked out at those
+exact pins and are the basis of this reading;
+<code>openairymax/atoms</code> returned 404 on GitHub and atomgit.com
+returned 403 to a non-browser fetch. Screened before opening, from
+shallow clones. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 492 reports.</strong></p>
+<p><strong>This page covers all 493 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17862,6 +17862,60 @@ exact commit — 12,028 lines of Go across 21 test files, shipping an
 agent subscriptions with a markdown memory you can export.</li>
 <li>Do not copy when: the store must enforce who may write what, or
 model belief.</li>
+</ul>
+<h3 id="agentrt"><a
+href="../systems/agentrt/"><code>agentrt</code></a></h3>
+<ul>
+<li>Best idea: <strong>a context ledger where every window item carries
+its token cost and its status, and a transition appends a record rather
+than only flipping a field.</strong> Each entry — system prompt, tool
+definition, message, tool result, compression block, cache hit — is
+appended to a per-session chain; marking it COMPRESSED or EVICTED
+appends a record with a sequence number, a nanosecond stamp and a
+<code>ref_id</code> back to the entry, the window read skips anything
+not ACTIVE, and the budget is recomputed from the survivors after every
+mark rather than adjusted incrementally. That earns
+<code>trust_state</code>, and the shape is the right one to copy:
+obviously-correct O(n) recomputation at window scale, with the
+transition sequence replayable.</li>
+<li>Biggest risk: <strong>recency is derived from a physical position
+that the delete path destroys.</strong> <code>mem_service_recent</code>
+walks the record array backwards from the end because the array is in
+write order, and <code>mem_remove_record_at</code> compacts by moving
+the last record into the deleted slot. After a single
+<code>mem.delete</code> the correspondence is gone for good, and
+whichever record was swapped forward is reported as though it were among
+the oldest. Every item the handler returns carries a
+<code>created_at</code> that nothing sorts by. The function has no test
+— it is the only public entry point in <code>service.c</code> without
+one — which is why the bug is still there. Second,
+<code>mem.evolve</code> concatenates its search hits into a new record
+and retires none of them, so the merged record contains its sources'
+text and out-scores them on the query that produced it, while the store
+has a fixed ceiling that refuses writes instead of evicting.</li>
+<li>Most reusable component: the persistence layer, and specifically its
+comments. Every full rewrite goes through a temp file, fsync and rename;
+the path resolver carries a note recording the exact prior bug —
+creating only the <code>data</code> directory left
+<code>agentrt/memory</code> missing, append failed with
+<code>ENOENT</code>, and memories were silently not written — and now
+does a recursive mkdir of the full parent. That comment is what stops
+the fix from being undone.</li>
+<li>Maturity impression: AGPL-3.0-or-later OR Apache-2.0, version
+0.1.16, C11, with atomgit.com as the primary home and GitHub carrying a
+superproject of seven submodules; <code>mem_d</code> is 8,927 lines with
+five test binaries totalling 2,006 lines, and both <code>daemons</code>
+and <code>heapstore</code> were read at the exact pins the superproject
+records. <code>openairymax/atoms</code> — which the README's component
+table names as the home of <code>memory</code> — returns 404 on
+GitHub.</li>
+<li>Study when: you are building a context-window ledger, or you want a
+memory service with no database, no runtime dependencies and a Unix
+socket.</li>
+<li>Do not copy when: the store must survive its own delete path, must
+hold more than its ceiling, or must tell one caller's memories from
+another's — a record here has no owner, session or scope key of any
+kind, and the daemon's socket has no authentication.</li>
 </ul>
         </article>
       </div>

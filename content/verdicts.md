@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 492 reports.**
+**This page covers all 493 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4286,3 +4286,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 2,770 commits since 6 June 2026, 161,184 lines with 290 Go test files; the memory model lives in `github.com/gluonfield/jazmem`, pinned at `v0.0.0-20260912084437-4d801b950d2b` and read here at that exact commit — 12,028 lines of Go across 21 test files, shipping an `eval.go` with a committed `default_eval.json`.
 - Study when: you want a personal always-on host driving your existing agent subscriptions with a markdown memory you can export.
 - Do not copy when: the store must enforce who may write what, or model belief.
+
+### [`agentrt`](../systems/agentrt/)
+- Best idea: **a context ledger where every window item carries its token cost and its status, and a transition appends a record rather than only flipping a field.** Each entry — system prompt, tool definition, message, tool result, compression block, cache hit — is appended to a per-session chain; marking it COMPRESSED or EVICTED appends a record with a sequence number, a nanosecond stamp and a `ref_id` back to the entry, the window read skips anything not ACTIVE, and the budget is recomputed from the survivors after every mark rather than adjusted incrementally. That earns `trust_state`, and the shape is the right one to copy: obviously-correct O(n) recomputation at window scale, with the transition sequence replayable.
+- Biggest risk: **recency is derived from a physical position that the delete path destroys.** `mem_service_recent` walks the record array backwards from the end because the array is in write order, and `mem_remove_record_at` compacts by moving the last record into the deleted slot. After a single `mem.delete` the correspondence is gone for good, and whichever record was swapped forward is reported as though it were among the oldest. Every item the handler returns carries a `created_at` that nothing sorts by. The function has no test — it is the only public entry point in `service.c` without one — which is why the bug is still there. Second, `mem.evolve` concatenates its search hits into a new record and retires none of them, so the merged record contains its sources' text and out-scores them on the query that produced it, while the store has a fixed ceiling that refuses writes instead of evicting.
+- Most reusable component: the persistence layer, and specifically its comments. Every full rewrite goes through a temp file, fsync and rename; the path resolver carries a note recording the exact prior bug — creating only the `data` directory left `agentrt/memory` missing, append failed with `ENOENT`, and memories were silently not written — and now does a recursive mkdir of the full parent. That comment is what stops the fix from being undone.
+- Maturity impression: AGPL-3.0-or-later OR Apache-2.0, version 0.1.16, C11, with atomgit.com as the primary home and GitHub carrying a superproject of seven submodules; `mem_d` is 8,927 lines with five test binaries totalling 2,006 lines, and both `daemons` and `heapstore` were read at the exact pins the superproject records. `openairymax/atoms` — which the README's component table names as the home of `memory` — returns 404 on GitHub.
+- Study when: you are building a context-window ledger, or you want a memory service with no database, no runtime dependencies and a Unix socket.
+- Do not copy when: the store must survive its own delete path, must hold more than its ceiling, or must tell one caller's memories from another's — a record here has no owner, session or scope key of any kind, and the daemon's socket has no authentication.
