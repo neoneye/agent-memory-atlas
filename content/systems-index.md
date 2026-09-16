@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **549 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **550 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -254,6 +254,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/huiran-cerebro/"><span class="az-id">Huiran-cerebro</span><span class="az-what">The duplicate is retired, the first writer is kept</span><code class="az-repo">qilunuojiang9-hue/Huiran-cerebro</code><span class="az-caps"><span class="az-cap">Trust state</span></span></a></li>
 <li><a class="az-row" href="../systems/humans/"><span class="az-id">HUMANs</span><span class="az-what">Recall is an action the mind must choose</span><code class="az-repo">munch2u-a11y/HUMANs</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/hungry-hippa/"><span class="az-id">Hungry Hippa</span><span class="az-what">Telling the caller what it withheld was the leak</span><code class="az-repo">TRUE-BLUE-INDUSTRIES/hungry-hippa</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></a></li>
+<li><a class="az-row" href="../systems/huqan/"><span class="az-id">HUQAN</span><span class="az-what">The approver identity never comes from the request that asks for approval</span><code class="az-repo">ali-ulu/huqan</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 </ul>
 
 ## I

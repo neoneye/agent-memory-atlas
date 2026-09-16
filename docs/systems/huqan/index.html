@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local admission gate in front of
+agent memory and tool calls, where a write is held until an
+authenticated person decides, self-approval is refused on resolved
+identity, and every decision leaves a receipt.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="HUQAN — Agent Memory Atlas">
+    <meta property="og:description" content="A local admission gate in
+front of agent memory and tool calls, where a write is held until an
+authenticated person decides, self-approval is refused on resolved
+identity, and every decision leaves a receipt.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="HUQAN — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local admission gate in
+front of agent memory and tool calls, where a write is held until an
+authenticated person decides, self-approval is refused on resolved
+identity, and every decision leaves a receipt.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>HUQAN — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "HUQAN",
+      "description": "A local admission gate in front of agent memory and tool calls, where a write is held until an authenticated person decides, self-approval is refused on resolved identity, and every decision leaves a receipt.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The approver identity never comes from the
+request that asks for approval</p>
+          <h1>HUQAN</h1>
+          <p class="document-deck">A local admission gate in front of
+agent memory and tool calls, where a write is held until an
+authenticated person decides, self-approval is refused on resolved
+identity, and every decision leaves a receipt.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ali-ulu/huqan">
+              <span>Source</span>
+              <strong>ali-ulu/huqan</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ali-ulu/huqan/commit/6f11b01476f019149cf5d56e961b5cb0b5d7a92e" title="6f11b01476f019149cf5d56e961b5cb0b5d7a92e">
+              <span>Analyzed revision</span>
+              <code>6f11b014…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ali-ulu--huqan" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ali-ulu--huqan</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>HUQAN is a decision gate rather than a memory: "An agent proposes
+something. HUQAN decides whether it lands." AGPL-3.0, JavaScript,
+287,058 lines across 1,563 files, Node 22.13 or newer, three binaries —
+a CLI, an MCP server, and a pre-execution guard for external agents. "No
+model, no cloud, no API key."</p>
+<p>It is in this atlas because one of the things it gates is a memory
+write, and because the outcomes it can return for a write are not the
+ones it returns for a tool call:</p>
+<blockquote>
+<p>"A memory write adds <code>quarantine</code> and <code>reject</code>,
+because a write can be set aside for inspection rather than refused
+outright."</p>
+</blockquote>
+<p>The README reads its own quickstart transcript back to make the
+point: "the write <strong>did not happen</strong>. It was held. It
+happened at line 3, after something approved it, and line 4 is the
+durable record of why. That gap is the entire product."</p>
+<p><strong>The mechanism to take away is one sentence, and it closes a
+hole this atlas finds repeatedly.</strong> Across the corpus, systems
+that claim human review usually record an <code>actor</code> or an
+<code>approved_by</code> string that the calling code fills in — so what
+is stored is who the request <em>said</em> approved it. HUQAN refuses
+that construction:</p>
+<blockquote>
+<p>"The runtime never accepts an approver identity from the decision
+body. The receiver/operator supplies an authenticated context and the
+injected identity resolver turns that context into a receiver-owned
+identity result. Missing or ambiguous identity, stale state, scope
+drift, unavailable durability, and firewall disagreement all fail
+closed."</p>
+</blockquote>
+<p><code>decide()</code> takes an <code>approverContext</code>.
+<code>resolveIdentity</code> is a required injected function and the
+runtime will not construct without it. Separation of duties is then
+checked on the resolved identity rather than on a label: the approver is
+compared to the requester on both <code>identityRef</code> and
+<code>identityHash</code> and rejected with
+<code>SELF_APPROVAL_REJECTED</code> unless the policy explicitly allows
+it, and above the policy's critical risk score the runtime pulls prior
+decisions out of the mutation journal and keys them into a set, so the
+same person cannot count twice toward a two-approver requirement.</p>
+<p><strong>The refusals compose the way they should.</strong> An
+<code>override</code> is authorised only when the policy allows it
+<em>and</em> the firewall actually returned block. An
+<code>approve</code> against a firewall block fails outright. A decision
+on a case whose status is no longer <code>pending</code>,
+<code>escalated</code> or <code>blocked</code> is refused as duplicate
+or ambiguous.</p>
+<p><strong>And the module declines to become a platform.</strong> "This
+module is deliberately bounded. It does not implement a workflow suite,
+IAM provider, connector authorization system, or a second storage
+authority. Review cases and immutable transition snapshots are committed
+through the existing Graph mutation journal and Trust Evidence
+Ledger."</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>proposal</strong> is not a write; the write is what happens
+after someone decides.</p>
+<p>An <strong>approver</strong> is a resolved identity, never a name in
+the request.</p>
+<p>A <strong>quarantine</strong> is a hold with a receipt, not a
+refusal.</p>
+<p>An <strong>escalation</strong> is a person declining to decide, and
+it stops everything.</p>
+<p>A <strong>receipt</strong> is the durable answer to why.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a proposed memory write passes evidence, verification and policy before an approval runtime that resolves the approver from an authenticated context rather than from the request, refuses self-approval on resolved identity, and commits every transition to the existing journal</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a proposed memory write passes evidence, verification and policy before an approval runtime that resolves the approver from an authenticated context rather than from the request, refuses self-approval on resolved identity, and commits every transition to the existing journal
+flowchart TB
+    AGENT[&quot;an agent proposes a memory write&quot;] --&gt; PIPE[&quot;evidence + provenance + workspace scope&lt;br/&gt;→ verification, contradiction, risk&lt;br/&gt;→ policy and approval boundary&quot;]
+    PIPE --&gt; DEC{&quot;MEMORY_ADMISSION_DECISIONS&lt;br/&gt;frozen: allow · review · quarantine · reject&lt;br/&gt;severity 0 · 1 · 2 · 3&quot;}
+    DEC --&gt;|&quot;allow&quot;| LAND[(&quot;the graph — nodes keyed under&lt;br/&gt;a workspace scope (nodeStorageKey)&quot;)]
+    DEC --&gt;|&quot;quarantine&quot;| HOLD[&quot;set aside for inspection,&lt;br/&gt;with a memory_quarantine_receipt&quot;]
+    DEC --&gt;|&quot;reject&quot;| NO[&quot;refused outright&quot;]
+    DEC --&gt;|&quot;review&quot;| CASE[&quot;a review case, pending&quot;]
+    CASE --&gt; D{&quot;decide: caseId, decisionType, approverContext&quot;}
+    CTX[&quot;an authenticated context&quot;] --&gt; RES[&quot;the injected resolveIdentity turns it into&lt;br/&gt;a receiver-owned identity result&quot;]
+    RES --&gt; D
+    D -.-&gt;|&quot;&#39;the runtime never accepts an approver identity&lt;br/&gt;from the decision body&#39; — and resolveIdentity is&lt;br/&gt;required for the runtime to construct at all&quot;| KEY[&quot;who approved is resolved, not asserted&quot;]
+    D --&gt;|&quot;approver identityRef or identityHash&lt;br/&gt;matches the requester&quot;| SELF[&quot;SELF_APPROVAL_REJECTED&lt;br/&gt;unless policy.allowSelfApproval&quot;]
+    D --&gt;|&quot;override without policy.allowOverride,&lt;br/&gt;or without an actual firewall block&quot;| OVR[&quot;OVERRIDE_NOT_AUTHORIZED&quot;]
+    D --&gt;|&quot;approve while the firewall says block&quot;| FW[&quot;BLOCKED_BY_FIREWALL&quot;]
+    D --&gt;|&quot;status is not pending, escalated or blocked&quot;| DUP[&quot;DUPLICATE_OR_AMBIGUOUS_DECISION&quot;]
+    D --&gt;|&quot;risk at or above policy.criticalRiskScore&quot;| MULTI[&quot;prior approvers pulled from the journal,&lt;br/&gt;filtered to this workspaceId, keyed into a set —&lt;br/&gt;one person cannot count twice&quot;]
+    D --&gt;|&quot;reviewer escalates instead of deciding&quot;| ESC[&quot;nothing executes until the authority&lt;br/&gt;it was raised to answers&quot;]
+    MULTI &amp; SELF &amp; OVR &amp; FW &amp; DUP --&gt; FAIL[&quot;missing or ambiguous identity, stale state,&lt;br/&gt;scope drift, unavailable durability and firewall&lt;br/&gt;disagreement ALL fail closed&quot;]
+    D --&gt;|&quot;approved&quot;| LAND
+    LAND --&gt; JOURNAL[(&quot;graph mutation journal +&lt;br/&gt;Trust Evidence Ledger — the runtime&lt;br/&gt;commits through these, never beside them&quot;)]
+    JOURNAL --&gt; RECEIPT[&quot;Trust Receipt: what the evidence was,&lt;br/&gt;which policy applied, who approved it&quot;]
+    XW[&quot;cross-workspace access gate — a pure function&lt;br/&gt;over two workspace ids, an operation and an&lt;br/&gt;explicit grant list; reads and writes nothing&quot;] -.-&gt;|&quot;answers the question the storage key and the&lt;br/&gt;admission check do not: may an actor in A&lt;br/&gt;reach into B at all?&quot;| LAND</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lib/human-oversight-approval-runtime.js</code></td>
+<td>Review cases, resolved identities, and every refusal</td>
+</tr>
+<tr>
+<td><code>lib/memory-admission-gate.js</code></td>
+<td>The frozen decision vocabulary and its receipt kinds</td>
+</tr>
+<tr>
+<td><code>lib/cross-workspace-access-gate.js</code></td>
+<td>A pure isolation decision over two workspaces</td>
+</tr>
+<tr>
+<td><code>lib/graph-mutation-receipt-*.js</code></td>
+<td>The journal's schema, writer, reader and rollback</td>
+</tr>
+<tr>
+<td><code>lib/cli-trust-receipt.js</code></td>
+<td>The receipt a person reads</td>
+</tr>
+<tr>
+<td><code>THREAT_MODEL.md</code></td>
+<td>What the gate is defending against, stated separately</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>lib/human-oversight-approval-runtime.js:10-15</code> — the
+sentence that decides whether a review claim means anything.</p>
+<p><code>:78</code> — the runtime refusing to exist without an identity
+resolver.</p>
+<p><code>:348-354</code> — self-approval checked on resolved identity,
+not on a name.</p>
+<p><code>:368-389</code> — distinct prior approvers, gathered from the
+journal and scoped to one workspace.</p>
+<p><code>lib/memory-admission-gate.js:5-21</code> — four outcomes,
+frozen, with an ordering.</p>
+<p><code>lib/cross-workspace-access-gate.js:3-14</code> — the tenant
+question the storage key does not answer.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>What HUQAN durably holds is a decision record: review cases,
+immutable transition snapshots, mutation receipts and Trust Receipts,
+alongside the graph nodes that were allowed to land, keyed under their
+workspace. The memory entry itself is ordinary; what is unusual is that
+it does not exist until something decided it should.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval here serves adjudication rather than recall: evidence
+gathering, verification, contradiction detection and risk scoring feed
+the policy boundary. A reader looking for ranking, fusion or
+consolidation will not find them, and that is the design rather than an
+omission.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A proposal carries evidence, provenance and a workspace. The gate
+returns one of four outcomes for a write. <code>review</code> opens a
+case that only an authenticated decision closes, and the transition is
+committed through the journal that already exists rather than into a
+store of the runtime's own.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>huqan</code> for people, <code>huqan-mcp</code> for agents over
+stdio, and <code>huqan-gate</code> as a pre-execution guard for agents
+that are not otherwise wired in. The quickstart runs against a throwaway
+store in a temporary directory and "does not touch your own memory and
+does not relax a gate."</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Fail-closed is the stated default across identity, staleness, scope,
+durability and firewall disagreement, and the escape hatches are policy
+flags rather than code paths — which is both the strength and the limit,
+since a policy that sets <code>allowSelfApproval</code> gets exactly
+what it asked for.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Tests sit beside their modules throughout the tree, including for the
+approval runtime, the admission gate and the cross-workspace gate — the
+last of which is written as a pure function specifically so its decision
+can be tested without a store.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Never take the approver from the thing asking for approval. If your
+schema has an <code>approved_by</code> field the caller fills in, what
+you have recorded is a claim about a person, not a person.</p>
+<p>Require the identity resolver at construction. A runtime that can be
+built without one will eventually be built without one.</p>
+<p>Check separation of duties on the resolved identity, and key your
+approver set on it, so a second approval from the same principal does
+not satisfy a two-approver rule.</p>
+<p>Make "held" a distinct outcome from "refused". A write set aside for
+inspection and a write rejected are different facts about the same
+content, and only one of them is recoverable.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the oversight guarantees mean much in a single-user install.
+Escalation is absent there by the project's own account, and the
+distinct-approver rule degenerates, so what a solo operator gets is
+receipts and refusals rather than separation of duties — which is
+honest, and worth knowing before the gate is credited with more than it
+provides.</p>
+<p>Whether the graph behind the gate is meant to grow into a memory in
+its own right. The admission machinery is far more developed than the
+store it admits into, and a reader evaluating HUQAN as agent memory
+rather than as a gate should size that gap first.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lib/human-oversight-approval-runtime.js:10-15</code></td>
+<td>The rule that makes an approval mean something</td>
+</tr>
+<tr>
+<td><code>lib/human-oversight-approval-runtime.js:348-354</code></td>
+<td>Self-approval refused on resolved identity</td>
+</tr>
+<tr>
+<td><code>lib/human-oversight-approval-runtime.js:368-389</code></td>
+<td>One person cannot be two approvers</td>
+</tr>
+<tr>
+<td><code>lib/memory-admission-gate.js:5-21</code></td>
+<td>Held and refused as different outcomes</td>
+</tr>
+<tr>
+<td><code>lib/cross-workspace-access-gate.js:3-14</code></td>
+<td>The isolation question a storage key does not answer</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/ali-ulu/huqan/commit/6f11b01476f019149cf5d56e961b5cb0b5d7a92e"><code class="commit-id" title="6f11b01476f019149cf5d56e961b5cb0b5d7a92e">6f11b014…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: no auto-run surfaces, one build-time
+execution point, one unpinned dependency surface and six dependency
+files inside the seven-day cooldown. <code>AGENTS.md</code> is addressed
+to a reading agent and was recorded as data. Nothing was installed,
+built or run, and the quickstart was not executed, so the gate described
+here is read from source rather than observed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

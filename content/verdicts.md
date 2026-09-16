@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 549 reports.**
+**This page covers all 550 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4742,3 +4742,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0, TypeScript, version 0.11.2, 17,259 lines over 105 files on PostgreSQL with pgvector, Redis and optional Neo4j, extracted from a longer-running agent system. No auto-run surfaces at this pin; the committed tests are unit-level, with no store-level assertion that a superseded or another user's fact fails to come back.
 - Study when: your as-of read is a separate method from your ordinary one, or your status vocabulary lives only in application code.
 - Do not copy when: your audit log has to survive an erasure request. Four marks: trust state, bitemporal, scope enforced, mutation audit.
+
+### [`huqan`](../systems/huqan/)
+- Best idea: **the approver identity never comes from the request that asks for approval.** This is the failure this atlas withholds a review mark for again and again — an `actor` or `approved_by` string the calling code fills in — and HUQAN refuses the construction outright: "The runtime never accepts an approver identity from the decision body. The receiver/operator supplies an authenticated context and the injected identity resolver turns that context into a receiver-owned identity result." `decide()` takes an `approverContext`, `resolveIdentity` is a required injected function without which the runtime will not construct, separation of duties is checked on the resolved identity by both `identityRef` and `identityHash`, and above a critical risk score prior approvers are pulled from the mutation journal into a set so one person cannot satisfy a two-approver rule twice. "Missing or ambiguous identity, stale state, scope drift, unavailable durability, and firewall disagreement all fail closed."
+- Biggest risk: **the guarantees need two people, and it says so.** Escalation "requires a second approver, so it is simply absent in a single-user install", and the distinct-approver rule degenerates in the same setting, so a solo operator gets the receipts and the refusals rather than the separation of duties. `allowSelfApproval` and `allowOverride` are policy flags, so the strength of the gate is the strength of the policy an installation ships. And the graph behind the gate is much thinner than the gate in front of it: retrieval quality, ranking and consolidation are not this project's subject, so anyone sizing HUQAN as agent memory rather than as an admission gate should measure that gap first.
+- Most reusable component: the outcome vocabulary, and specifically that a memory write has two outcomes a tool call does not. `MEMORY_ADMISSION_DECISIONS` is frozen to `allow`, `review`, `reject` and `quarantine` with a severity ordering, because "a write can be set aside for inspection rather than refused outright" — and a held write gets its own `memory_quarantine_receipt`, so "held" and "refused" stay different durable facts about the same content.
+- Maturity impression: AGPL-3.0, JavaScript, 287,058 lines over 1,563 files, Node 22.13 or newer, three binaries including an MCP server and a pre-execution guard, a separate threat model, a CLA and CODEOWNERS, and tests beside each module. No auto-run surfaces at this pin, and six dependency files inside the cooldown.
+- Study when: your review surface records who the request said approved it.
+- Do not copy when: you are one person, and the separation of duties would be theatre. Four marks: trust state, scope enforced, mutation audit, review.

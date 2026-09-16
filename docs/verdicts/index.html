@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 549 reports.</strong></p>
+<p><strong>This page covers all 550 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -20633,6 +20633,54 @@ one, or your status vocabulary lives only in application code.</li>
 <li>Do not copy when: your audit log has to survive an erasure request.
 Four marks: trust state, bitemporal, scope enforced, mutation
 audit.</li>
+</ul>
+<h3 id="huqan"><a href="../systems/huqan/"><code>huqan</code></a></h3>
+<ul>
+<li>Best idea: <strong>the approver identity never comes from the
+request that asks for approval.</strong> This is the failure this atlas
+withholds a review mark for again and again — an <code>actor</code> or
+<code>approved_by</code> string the calling code fills in — and HUQAN
+refuses the construction outright: "The runtime never accepts an
+approver identity from the decision body. The receiver/operator supplies
+an authenticated context and the injected identity resolver turns that
+context into a receiver-owned identity result." <code>decide()</code>
+takes an <code>approverContext</code>, <code>resolveIdentity</code> is a
+required injected function without which the runtime will not construct,
+separation of duties is checked on the resolved identity by both
+<code>identityRef</code> and <code>identityHash</code>, and above a
+critical risk score prior approvers are pulled from the mutation journal
+into a set so one person cannot satisfy a two-approver rule twice.
+"Missing or ambiguous identity, stale state, scope drift, unavailable
+durability, and firewall disagreement all fail closed."</li>
+<li>Biggest risk: <strong>the guarantees need two people, and it says
+so.</strong> Escalation "requires a second approver, so it is simply
+absent in a single-user install", and the distinct-approver rule
+degenerates in the same setting, so a solo operator gets the receipts
+and the refusals rather than the separation of duties.
+<code>allowSelfApproval</code> and <code>allowOverride</code> are policy
+flags, so the strength of the gate is the strength of the policy an
+installation ships. And the graph behind the gate is much thinner than
+the gate in front of it: retrieval quality, ranking and consolidation
+are not this project's subject, so anyone sizing HUQAN as agent memory
+rather than as an admission gate should measure that gap first.</li>
+<li>Most reusable component: the outcome vocabulary, and specifically
+that a memory write has two outcomes a tool call does not.
+<code>MEMORY_ADMISSION_DECISIONS</code> is frozen to <code>allow</code>,
+<code>review</code>, <code>reject</code> and <code>quarantine</code>
+with a severity ordering, because "a write can be set aside for
+inspection rather than refused outright" — and a held write gets its own
+<code>memory_quarantine_receipt</code>, so "held" and "refused" stay
+different durable facts about the same content.</li>
+<li>Maturity impression: AGPL-3.0, JavaScript, 287,058 lines over 1,563
+files, Node 22.13 or newer, three binaries including an MCP server and a
+pre-execution guard, a separate threat model, a CLA and CODEOWNERS, and
+tests beside each module. No auto-run surfaces at this pin, and six
+dependency files inside the cooldown.</li>
+<li>Study when: your review surface records who the request said
+approved it.</li>
+<li>Do not copy when: you are one person, and the separation of duties
+would be theatre. Four marks: trust state, scope enforced, mutation
+audit, review.</li>
 </ul>
         </article>
       </div>
