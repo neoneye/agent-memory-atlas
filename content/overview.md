@@ -3982,6 +3982,35 @@ wrong — two questions can be neighbours in embedding space and have different
 answers — which is why the serious ones grow a verification step, and why that
 step is a cost-control problem rather than a memory one.
 
+[vision-memory-mcp](https://github.com/putervision/vision-memory-mcp) extends the
+same shape to images, and is worth recording because it looks more like memory
+than the other two. At
+[`c5fa6625dc1dbd15876209e86281721f5fd8a4d8`](https://github.com/putervision/vision-memory-mcp/commit/c5fa6625dc1dbd15876209e86281721f5fd8a4d8)
+— MIT, version 1.2.1, 38 commits since 13 July 2026, 20,980 lines of TypeScript
+— it caches screenshots by perceptual hash with local CLIP embeddings, OCR, and
+accessibility-tree grounding, and it keeps a transition graph between visual
+states, so it has clustering, sequences, snapshots and a redaction pass over
+extracted text with patterns for cards, emails, SSNs and provider tokens. Its
+own sentence settles the category: the point is "to eliminate repetitive vision
+LLM calls." What it stores is a derived description keyed by its input, and
+`core/eviction.ts` runs a background TTL and LRU sweep — the cache policy this
+section's rule names, an optimisation whose loss costs a model call rather than
+a belief the store must account for. Correcting an entry means re-running the
+model, not retracting a claim.
+
+One detail from it is worth carrying out of the section, because it is a third
+answer to a question two entries on this page get wrong. `core/cache.ts`
+resolves the branch with `git rev-parse --abbrev-ref HEAD`, which on a detached
+HEAD prints the literal string `HEAD` — so work during a rebase or a bisect is
+filed under a branch named `HEAD`. The same author's
+[state-memory-mcp](../systems/state-memory-mcp/) asks the same question with
+`git branch --show-current`, which prints nothing there, and files the work
+under `main` while reads for it return nothing. Two packages, one author, one
+question, two different wrong answers — and [dsh-mnemon](../systems/dsh-mnemon/)
+a third. The branch an agent is on is not a fact a single git invocation
+reliably returns, and a memory that scopes by it needs to say so when it cannot
+tell.
+
 ### Not in scope: conversation-window management
 
 Most agent frameworks ship something called "memory" that is a **chat buffer**,

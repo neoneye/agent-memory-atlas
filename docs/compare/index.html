@@ -6873,6 +6873,37 @@ a KV cache in that its <em>hit</em> can be wrong — two questions can be
 neighbours in embedding space and have different answers — which is why
 the serious ones grow a verification step, and why that step is a
 cost-control problem rather than a memory one.</p>
+<p><a
+href="https://github.com/putervision/vision-memory-mcp">vision-memory-mcp</a>
+extends the same shape to images, and is worth recording because it
+looks more like memory than the other two. At <a
+href="https://github.com/putervision/vision-memory-mcp/commit/c5fa6625dc1dbd15876209e86281721f5fd8a4d8"><code class="commit-id" title="c5fa6625dc1dbd15876209e86281721f5fd8a4d8">c5fa6625…</code></a>
+— MIT, version 1.2.1, 38 commits since 13 July 2026, 20,980 lines of
+TypeScript — it caches screenshots by perceptual hash with local CLIP
+embeddings, OCR, and accessibility-tree grounding, and it keeps a
+transition graph between visual states, so it has clustering, sequences,
+snapshots and a redaction pass over extracted text with patterns for
+cards, emails, SSNs and provider tokens. Its own sentence settles the
+category: the point is "to eliminate repetitive vision LLM calls." What
+it stores is a derived description keyed by its input, and
+<code>core/eviction.ts</code> runs a background TTL and LRU sweep — the
+cache policy this section's rule names, an optimisation whose loss costs
+a model call rather than a belief the store must account for. Correcting
+an entry means re-running the model, not retracting a claim.</p>
+<p>One detail from it is worth carrying out of the section, because it
+is a third answer to a question two entries on this page get wrong.
+<code>core/cache.ts</code> resolves the branch with
+<code>git rev-parse --abbrev-ref HEAD</code>, which on a detached HEAD
+prints the literal string <code>HEAD</code> — so work during a rebase or
+a bisect is filed under a branch named <code>HEAD</code>. The same
+author's <a href="../systems/state-memory-mcp/">state-memory-mcp</a>
+asks the same question with <code>git branch --show-current</code>,
+which prints nothing there, and files the work under <code>main</code>
+while reads for it return nothing. Two packages, one author, one
+question, two different wrong answers — and <a
+href="../systems/dsh-mnemon/">dsh-mnemon</a> a third. The branch an
+agent is on is not a fact a single git invocation reliably returns, and
+a memory that scopes by it needs to say so when it cannot tell.</p>
 <h3 id="not-in-scope-conversation-window-management">Not in scope:
 conversation-window management</h3>
 <p>Most agent frameworks ship something called "memory" that is a
