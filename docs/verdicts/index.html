@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 483 reports.</strong></p>
+<p><strong>This page covers all 484 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17470,6 +17470,48 @@ and OpenCode.</li>
 real per-project separation and a write path that refuses secrets.</li>
 <li>Do not copy when: the store itself must model belief, supersession
 or forgetting rather than delegating them to repository history.</li>
+</ul>
+<h3 id="tracedecay"><a
+href="../systems/tracedecay/"><code>tracedecay</code></a></h3>
+<ul>
+<li>Best idea: <strong>every deletion is a proposal that carries its own
+review flag.</strong> The hygiene rules are "conservative, rule-based
+checks — no model is ever invoked from Rust", and standalone TraceDecay
+only rejects secret-like writes and <em>proposes</em> deletions in a
+dry-run plan; the supersession analysis emits
+<code>"recommended_op": "delete"</code> beside
+<code>"review_required": true</code>, <code>"status": "candidate"</code>
+and a reason ending "confirm which fact is current before applying"; the
+CLI states the contract in its help text — "Curation defaults to a
+dry-run preview; nothing is deleted without <code>--apply</code>". Two
+marks: <code>human_review</code>, <code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>a hard delete leaves no record, by stated
+policy.</strong> The changelog records an archive-semantics purge whose
+policy is that deleted memories are permanently hard-deleted, with the
+archive and supersede ops removed because "neither planner can produce
+them; the curate ops contract is delete/merge only". The cascade is
+pinned by a store-level test, but nothing records that a fact was
+rejected, so the same transient noise an agent re-derives is written
+again and the curator proposes the same deletion a person already
+declined. Alongside it, <code>supersedes</code> is a relation kind in
+the type, the parser and a database <code>CHECK</code> that no read path
+consults.</li>
+<li>Most reusable component: the twelve committed memory-eval scenarios
+— each with a well-behaved path asserted to a compliant end state
+<em>before</em> the violation runs, and each carrying an
+<code>adapted_from</code> line naming the upstream project, its licence
+and the exact commit (<code>memory-no-pollution</code> credits <a
+href="../systems/mnemon/">mnemon</a> at <code>41a9612</code> under
+Apache-2.0).</li>
+<li>Maturity impression: MIT, version 0.0.74, 10,937 commits since 6
+June 2026, 483,833 lines of Rust against 125,958 lines of integration
+tests across per-area suites, local libSQL storage, an MCP server with
+code-graph tools beside <code>fact_store</code>, a daemon, a CLI and a
+local dashboard.</li>
+<li>Study when: you want a local code-intelligence graph with a modest
+fact store and a curator that never acts alone.</li>
+<li>Do not copy when: rejected memories must stay rejected, or the read
+path must know a fact has been superseded.</li>
 </ul>
         </article>
       </div>

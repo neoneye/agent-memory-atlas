@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 483 reports.**
+**This page covers all 484 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4214,3 +4214,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, core package 0.6.2 with the README labelling the 0.x line alpha; 1,996 commits since 28 March 2026, 157,951 lines of Python against 297,851 lines across 520 test files, markdown files as the authority with SQLite as an index, an MCP server, a CLI, an HTTP API with a dashboard, and packaged plugins for Claude Code, Kimi and OpenCode.
 - Study when: you want memory that stays in your own markdown with real per-project separation and a write path that refuses secrets.
 - Do not copy when: the store itself must model belief, supersession or forgetting rather than delegating them to repository history.
+
+### [`tracedecay`](../systems/tracedecay/)
+- Best idea: **every deletion is a proposal that carries its own review flag.** The hygiene rules are "conservative, rule-based checks — no model is ever invoked from Rust", and standalone TraceDecay only rejects secret-like writes and *proposes* deletions in a dry-run plan; the supersession analysis emits `"recommended_op": "delete"` beside `"review_required": true`, `"status": "candidate"` and a reason ending "confirm which fact is current before applying"; the CLI states the contract in its help text — "Curation defaults to a dry-run preview; nothing is deleted without `--apply`". Two marks: `human_review`, `negative_eval`.
+- Biggest risk: **a hard delete leaves no record, by stated policy.** The changelog records an archive-semantics purge whose policy is that deleted memories are permanently hard-deleted, with the archive and supersede ops removed because "neither planner can produce them; the curate ops contract is delete/merge only". The cascade is pinned by a store-level test, but nothing records that a fact was rejected, so the same transient noise an agent re-derives is written again and the curator proposes the same deletion a person already declined. Alongside it, `supersedes` is a relation kind in the type, the parser and a database `CHECK` that no read path consults.
+- Most reusable component: the twelve committed memory-eval scenarios — each with a well-behaved path asserted to a compliant end state *before* the violation runs, and each carrying an `adapted_from` line naming the upstream project, its licence and the exact commit (`memory-no-pollution` credits [mnemon](../systems/mnemon/) at `41a9612` under Apache-2.0).
+- Maturity impression: MIT, version 0.0.74, 10,937 commits since 6 June 2026, 483,833 lines of Rust against 125,958 lines of integration tests across per-area suites, local libSQL storage, an MCP server with code-graph tools beside `fact_store`, a daemon, a CLI and a local dashboard.
+- Study when: you want a local code-intelligence graph with a modest fact store and a curator that never acts alone.
+- Do not copy when: rejected memories must stay rejected, or the read path must know a fact has been superseded.
