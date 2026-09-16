@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **547 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **548 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -354,6 +354,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/memex-zettel/"><span class="az-id">Memex</span><span class="az-what">A secret gate that will not quote the secret</span><code class="az-repo">iamtouchskyer/memex</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/memex-zero-rag/"><span class="az-id">MeMex Zero-RAG</span><span class="az-what">Enforcement by instruction</span><code class="az-repo">JPeetz/MeMex-Zero-RAG</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/memharness/"><span class="az-id">MemHarness</span><span class="az-what">A prior that updates from outcomes</span><code class="az-repo">KnowledgeXLab/MemHarness</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/memhtml/"><span class="az-id">memhtml</span><span class="az-what">An empty result tells you whether the address never existed or was archived</span><code class="az-repo">memhtml/memhtml</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/memlayer/"><span class="az-id">Memlayer</span><span class="az-what">Salience by example, with an API key among the examples</span><code class="az-repo">divagr18/memlayer</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/memledger/"><span class="az-id">MemLedger</span><span class="az-what">Provenance that answers, and does not enforce</span><code class="az-repo">riktar/memledger</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/memmachine/"><span class="az-id">MemMachine</span><span class="az-what">Episode-preserving dual memory</span><code class="az-repo">MemMachine/MemMachine</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>

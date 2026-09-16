@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A git repository of semantic HTML
+files, one fact each, with a rebuildable SQLite index, four ranking arms
+sharing one scope filter, and a seventeen-phase curation pass that
+commits to a branch only a person may merge.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="memhtml — Agent Memory Atlas">
+    <meta property="og:description" content="A git repository of
+semantic HTML files, one fact each, with a rebuildable SQLite index,
+four ranking arms sharing one scope filter, and a seventeen-phase
+curation pass that commits to a branch only a person may merge.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="memhtml — Agent Memory Atlas">
+    <meta name="twitter:description" content="A git repository of
+semantic HTML files, one fact each, with a rebuildable SQLite index,
+four ranking arms sharing one scope filter, and a seventeen-phase
+curation pass that commits to a branch only a person may merge.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>memhtml — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "memhtml",
+      "description": "A git repository of semantic HTML files, one fact each, with a rebuildable SQLite index, four ranking arms sharing one scope filter, and a seventeen-phase curation pass that commits to a branch only a person may merge.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An empty result tells you whether the
+address never existed or was archived</p>
+          <h1>memhtml</h1>
+          <p class="document-deck">A git repository of semantic HTML
+files, one fact each, with a rebuildable SQLite index, four ranking arms
+sharing one scope filter, and a seventeen-phase curation pass that
+commits to a branch only a person may merge.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/memhtml/memhtml">
+              <span>Source</span>
+              <strong>memhtml/memhtml</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/memhtml/memhtml/commit/4778735a5016ecaabd725df594729848334e9968" title="4778735a5016ecaabd725df594729848334e9968">
+              <span>Analyzed revision</span>
+              <code>4778735a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/memhtml--memhtml" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>memhtml--memhtml</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>memhtml "stores an agent's long-term memory as a git repository of
+semantic HTML5 files, one fact per file. A rebuildable SQLite index sits
+over that tree, retrieval fuses four ranking arms, and a seventeen-phase
+curation pipeline commits its work to a branch a human reviews before it
+lands." Apache-2.0, TypeScript, 132,835 lines across 393 files, two
+binaries and an MCP server.</p>
+<p><strong>The design is a division of labour, stated as a
+rule.</strong></p>
+<blockquote>
+<p>"Three actors share one tree. The agent writes facts, and it resolves
+only the conflicts it found itself. Sleep curates on a branch when a
+caller fires it, and it detects conflicts without resolving them. The
+human owns the gate and every one-way door."</p>
+</blockquote>
+<p>Everything else follows. The nightly pass puts its commits on
+<code>sleep/&lt;date&gt;</code> and leaves <code>main</code> untouched.
+Each phase commits separately "so a human reads the curation one
+phase-shaped diff at a time", and <code>trace-consolidation</code> lands
+"each distilled memory as its own commit, one per memory, so a reviewer
+reads one claim at a time." The phases that could decide and choose not
+to open a task instead, quoting the sentence they found, because "[a]
+detection is a proposal for a human, never a fact the corpus asserts."
+<code>memhtml sleep merge</code> fast-forwards <code>main</code> "only
+after a quality gate that can refuse", and that gate re-runs the
+retrieval evaluation "so a sleep run that degrades retrieval cannot
+land."</p>
+<p><strong>The evaluation behind that gate is the second thing to
+take.</strong> Its controls are the system's own merge veto read
+backwards:</p>
+<blockquote>
+<p>"The three predicates that forbid folding two memories together are
+the three ways to build a plausible impostor, and a control the veto
+cannot see does not test anything."</p>
+</blockquote>
+<p>Negation, numeric token and variant qualifier become text transforms
+"that turn a true claim into a high-similarity WRONG one", and the
+discrimination gate asks "can the retrieval stack rank a memory above
+its own high-similarity WRONG twin?" Each control is validated against
+its own family's predicate rather than the disjunction, so one that
+trips a different rule does not count.</p>
+<p><strong>A third piece answers a question most stores leave hanging:
+what an empty result means.</strong> When a scope matches nothing,
+<code>archivedMatches</code> reports how many archived rows the same
+scope matches, so an agent can "tell 'never existed' from 'archived'"
+and follow <code>archived[].supersededBy</code> to the replacement. A
+corrected memory leaves the default view — "the default scope excludes
+archived rows" — without leaving the corpus.</p>
+<p><strong>And the scope filter is built once for all four
+arms</strong>, with the reason given: "[p]er-arm filters would let a
+scope apply to three arms and not the fourth, which surfaces as a scoped
+query returning a result from outside the scope. No type catches that
+leak."</p>
+<p>The gap is that the mutation record is git. The phase trailers and
+the one-commit-per-claim discipline are real, and they live in a history
+a rewrite can change, with no append-only table in the store beside
+them.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>memory</strong> is one HTML file in a git tree, and the
+index is rebuildable.</p>
+<p>A <strong>correction</strong> archives the loser and links it to its
+winner, both ways.</p>
+<p>A <strong>curation run</strong> is a branch of phase-shaped
+diffs.</p>
+<p>A <strong>task</strong> is what the machine opens when it declines to
+decide.</p>
+<p>An <strong>empty result</strong> says whether the address never
+existed or was archived.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the agent writes to main, the sleep run curates on a branch it may not merge, a person owns the gate, and the merge is refused by an evaluation whose adversarial controls are generated from the system's own anti-merge predicates</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the agent writes to main, the sleep run curates on a branch it may not merge, a person owns the gate, and the merge is refused by an evaluation whose adversarial controls are generated from the system&#39;s own anti-merge predicates
+flowchart TB
+    AGENT[&quot;the agent — writes facts to main at any hour,&lt;br/&gt;one fact per file, and resolves only&lt;br/&gt;the conflicts it found itself&quot;] --&gt; MAIN[(&quot;main: a git tree of semantic HTML5,&lt;br/&gt;one fact per file, PARA directories&quot;)]
+    HOOK[&quot;session hooks: recall and trace indexing&lt;br/&gt;under a hard time bound&quot;] -.-&gt;|&quot;NO hook writes a memory —&lt;br/&gt;any failure prints nothing and exits 0,&lt;br/&gt;so a hook can never block a turn&quot;| MAIN
+    MAIN --&gt; IDX[(&quot;rebuildable SQLite index:&lt;br/&gt;files · chunks · edges · vectors&quot;)]
+    IDX --&gt; ARMS[&quot;four arms: FTS · vector · recency · salience,&lt;br/&gt;fused with reciprocal rank&quot;]
+    SCOPE[&quot;one scope filter string, built ONCE&quot;] --&gt; ARMS
+    SCOPE -.-&gt;|&quot;&#39;per-arm filters would let a scope apply to three arms&lt;br/&gt;and not the fourth, which surfaces as a scoped query&lt;br/&gt;returning a result from outside the scope.&lt;br/&gt;No type catches that leak.&#39;&quot;| SAFE[&quot;the leak a type cannot catch&quot;]
+    ARMS --&gt; RES{&quot;any hits?&quot;}
+    RES --&gt;|&quot;yes&quot;| HITS[&quot;each hit carries supersededBy,&lt;br/&gt;present-and-nullable&quot;]
+    RES --&gt;|&quot;no&quot;| EMPTY[&quot;archivedMatches: how many archived rows&lt;br/&gt;this same scope matches&quot;]
+    EMPTY -.-&gt;|&quot;so an agent can tell &#39;never existed&#39;&lt;br/&gt;from &#39;archived&#39;, and follow the link&lt;br/&gt;to what replaced it&quot;| ANSWER[&quot;an empty result that answers&quot;]
+    MAIN --&gt; SLEEP[&quot;memhtml sleep run — seventeen phases&lt;br/&gt;on a sleep/date branch, main untouched&quot;]
+    SLEEP --&gt; COMMITS[&quot;each phase commits separately;&lt;br/&gt;trace-consolidation lands ONE commit per claim&quot;]
+    SLEEP -.-&gt;|&quot;phases detect contradictions&lt;br/&gt;WITHOUT choosing a winner&quot;| TASKS[&quot;a task, quoting its evidence verbatim,&lt;br/&gt;capped at ten a night — &#39;a proposal for a&lt;br/&gt;human, never a fact the corpus asserts&#39;&quot;]
+    COMMITS --&gt; HUMAN[&quot;the human reads phase-shaped diffs&quot;]
+    HUMAN --&gt; MERGE{&quot;memhtml sleep merge&quot;}
+    GATE[&quot;the discrimination gate: can retrieval rank a memory&lt;br/&gt;above its own high-similarity WRONG twin?&quot;] --&gt; MERGE
+    CTRL[&quot;controls generated by reading the merge veto backwards —&lt;br/&gt;negation, numeric token, variant qualifier;&lt;br/&gt;each validated against its OWN family&#39;s predicate&quot;] --&gt; GATE
+    MERGE --&gt;|&quot;gate refuses&quot;| NOLAND[&quot;a run that degrades retrieval cannot land&quot;]
+    MERGE --&gt;|&quot;gate passes&quot;| MAIN
+    CORR[&quot;a correction&quot;] --&gt; ARCH[&quot;git mv into archive/ +&lt;br/&gt;memhtml-superseded-by on the loser,&lt;br/&gt;a supersedes edge on the winner, ONE commit&quot;]
+    ARCH -.-&gt;|&quot;the default scope excludes archived rows;&lt;br/&gt;includeArchived or the asOf lens brings them back&quot;| IDX
+    ASOF[&quot;asOf lens&quot;] -.-&gt;|&quot;coalesce(valid_from, event_at, created_at) bounds the start —&lt;br/&gt;so a memory that declares no validity is valid from&lt;br/&gt;the moment it was written&quot;| IDX</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/store</code></td>
+<td>The git tree, supersession meta, archive moves, the merge
+driver</td>
+</tr>
+<tr>
+<td><code>packages/index</code></td>
+<td>The rebuildable SQLite index, the four arms, and the one scope
+filter</td>
+</tr>
+<tr>
+<td><code>packages/sleep</code></td>
+<td>Seventeen curation phases, each its own commit</td>
+</tr>
+<tr>
+<td><code>packages/eval</code></td>
+<td>Adversarial controls and the discrimination gate the merge runs</td>
+</tr>
+<tr>
+<td><code>packages/domain</code></td>
+<td>Divergence predicates, retention scoring, confidence decay</td>
+</tr>
+<tr>
+<td><code>packages/integrations</code></td>
+<td>Four host installers, and the receipts that make uninstall
+exact</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>packages/index/src/scope.ts:6-20</code> — one filter for four
+arms, and the leak no type catches.</p>
+<p><code>packages/index/src/scope.ts:195-200</code> — the point-in-time
+predicate and its coalesce fallback.</p>
+<p><code>packages/index/src/retrieval.ts:140-160</code> — the count that
+makes an empty result informative.</p>
+<p><code>packages/eval/src/controls.ts:1-20</code> — the merge veto read
+backwards into impostors.</p>
+<p><code>packages/eval/src/discriminate.ts:8-12</code> — the one
+question the gate asks.</p>
+<p><code>packages/store/src/store.ts:253</code>, <code>:266</code> — a
+correction as one commit touching both sides.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One semantic HTML5 file per fact, carrying the claim, type, entities,
+validity bounds, confidence and supersession meta, addressed by path
+inside PARA directories. The SQLite index holds files, chunks, edges and
+vectors and is rebuildable from the tree, which is what makes the tree
+the system of record.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS, vector, recency and salience arms fused with reciprocal rank,
+each receiving the same scope filter. Archived rows are excluded by
+default and admitted by <code>includeArchived</code> or by the
+point-in-time lens. Every hit reports whether something superseded it
+and what.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The agent writes through the CLI or MCP; hooks never write.
+Corrections are one commit touching the loser's meta and the winner's
+edge together. Eviction and compression are <code>git mv</code> into
+<code>archive/</code>, so nothing is destroyed by curation.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Fifteen MCP tools and three resources over stdio, plus installers for
+Claude Code, Codex, Cursor and OpenCode that write MCP entries, hooks,
+an instruction block and a skill — each recorded in a receipt with the
+SHA-256 of every owned file or fragment, "so uninstall removes exactly
+what install wrote and nothing you added beside it."</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The strong parts are the actor separation, the refusable merge gate,
+the single-filter scope, and an empty result that explains itself. The
+gaps are an audit that is git rather than a table, scope that narrows
+only what the caller asked, and a validity fallback that silently
+equates world time with write time for memories that declare
+neither.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>The discrimination gate runs in <code>pnpm check</code>, in CI, and
+again at merge, with a deterministic fake-embedder mode so it needs no
+credentials, and a <code>live</code> mode that reports
+<code>skipped: true</code> rather than passing when it cannot reach a
+model. Write-path acceptance corpora sit beside it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Build your scope filter once and hand the same string to every arm. A
+scope that holds on three of four retrieval paths is a leak no type
+system will catch.</p>
+<p>Generate your adversarial controls from the rules you already wrote.
+If you have predicates that forbid merging two records, those predicates
+describe exactly the impostors your retrieval has to survive.</p>
+<p>Make an empty result say why. "Never existed" and "archived last
+night" are different answers, and only one of them means the agent
+should stop looking.</p>
+<p>Let the machine open a task where it declines to decide, and make the
+task quote its evidence. A proposal with the sentence attached is
+reviewable; a flag is not.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether an append-only record belongs beside the git history.
+Everything about the curation is designed to be reviewable, and the
+review record itself lives somewhere a rewrite can edit.</p>
+<p>Whether the validity coalesce should be visible in the answer. A
+historical query whose result rests on <code>created_at</code> because
+no memory declared a validity is a different claim from one resting on
+<code>valid_from</code>, and the result does not currently distinguish
+them.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/index/src/scope.ts:6-20</code></td>
+<td>One filter for every arm, and the reason</td>
+</tr>
+<tr>
+<td><code>packages/index/src/retrieval.ts:140-160</code></td>
+<td>An empty result that tells you which kind of empty</td>
+</tr>
+<tr>
+<td><code>packages/eval/src/controls.ts:1-20</code></td>
+<td>Adversarial controls derived from your own veto</td>
+</tr>
+<tr>
+<td><code>packages/eval/src/discriminate.ts:8-12</code></td>
+<td>The single question a retrieval gate should ask</td>
+</tr>
+<tr>
+<td><code>README.md:126</code></td>
+<td>Three actors, and which one owns the one-way doors</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/memhtml/memhtml/commit/4778735a5016ecaabd725df594729848334e9968"><code class="commit-id" title="4778735a5016ecaabd725df594729848334e9968">4778735a…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: no auto-run surfaces, no build-time
+execution points, one unpinned dependency surface and eighteen
+dependency files inside the seven-day cooldown, with
+<code>pnpm-lock.yaml</code> present. <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> are addressed to a reading agent and were
+recorded as data. Nothing was installed, built or run, no integration
+installer was executed, and no AWS credential was present, so the sleep
+pipeline and the evaluation gate are described from source rather than
+observed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
