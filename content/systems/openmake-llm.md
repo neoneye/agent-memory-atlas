@@ -7,9 +7,9 @@ page_kind: system
 source_name: "openmake/openmake_llm"
 source_url: https://github.com/openmake/openmake_llm
 archive_name: "openmake--openmake_llm"
-revision: 9ffeca8c4c2bbad08864257ebb40b9998270ec52
-revision_url: https://github.com/openmake/openmake_llm/commit/9ffeca8c4c2bbad08864257ebb40b9998270ec52
-analyzed_at: 2026-09-07
+revision: 1a4089d78b9877adbc19b0a8d7813e22d5fd4328
+revision_url: https://github.com/openmake/openmake_llm/commit/1a4089d78b9877adbc19b0a8d7813e22d5fd4328
+analyzed_at: 2026-09-16
 capabilities: "scope_enforced, tombstone, audit_log"
 capability_evidence:
   scope_enforced: "every read of the memory table | apps/api/src/data/repositories/user-memory-repository.ts:46-55,:61-70,:72-96, apps/api/src/services/chat-service/user-context-blocks.ts:19-46, apps/api/src/controllers/user-memories.controller.ts:67-78 | `user_id` is `NOT NULL` with a cascade to `users`, and every query the repository exposes — list active, list known, count, soft delete, delete-all — carries `WHERE user_id = $1`; the prompt block is built only for an authenticated non-guest id and the REST routes take the id from the session, never from the body | apps/api/src/data/repositories/user-memory-repository.test.ts:14-26 asserts the predicate and the parameter on five queries through a fake pool; apps/api/src/controllers/__tests__/user-memories.controller.test.ts:37-41,:62-68 asserts the list and delete routes use the session id and that another user's row answers 404"
@@ -413,6 +413,28 @@ consulted it, and agent tasks built the block for every non-guest.
 Adapting the mechanism to another host is trivial, because there is almost
 nothing to adapt: a table, a numbered list, a cap and a stored boolean.
 
+**Four metadata columns arrived on the memory row, and one of them is not yet
+read.** A create now accepts a `ttlDays` bounded by `MAX_TTL_DAYS` and a `scope`
+of `user`, `session` or `task`, and the row carries `confidence` derived from
+its source, a `sensitivity` marker and an `expires_at`. The audit line was
+widened to match, so a `memory.created` row records the scope, the sensitivity
+and the expiry alongside the id and length.
+
+The expiry is enforced — the listing query carries
+`expires_at IS NULL OR expires_at > NOW()` beside `is_active` — but the scope is
+written and never filtered on. `scope` appears in the `INSERT` and in no `WHERE`
+clause, and the field's own comment is candid about the state of it: the
+injection path *"reads only `user`."* That is a statement about what is
+currently written rather than a predicate that would hold if something wrote
+`task`, which is the distinction this atlas keeps drawing between a vocabulary
+and a filter.
+
+One policy is worth quoting because it resolves a tension rather than avoiding
+it. An explicit save whose content matches a sensitive pattern is stored anyway
+— *"an explicit save is stored even if it is a sensitive pattern (the user's
+intent); only a sensitivity marker is left"* — so the system records what the
+user asked it to record and labels it, instead of refusing on the user's behalf.
+
 ## 9. Reliability, Safety, and Trust
 
 **Scope — awarded.** `user_id` on every query, from the session, with
@@ -638,6 +660,8 @@ rg -n -i 'arxiv|bibtex|citation|doi' README.md docs                             
 ```
 
 ## History
+
+**2026-09-16** — [`1a4089d78b9877adbc19b0a8d7813e22d5fd4328`](https://github.com/openmake/openmake_llm/commit/1a4089d78b9877adbc19b0a8d7813e22d5fd4328) — re-read at a commit dated 16 September 2026, 120 commits past the previous pin. All three marks re-tested and held. The tombstone is now pinned by two committed tests rather than one: the repository test asserts that `listKnownContentsByUser` carries no `is_active` filter, and the extraction test drives a previously deleted sentence through the auto-extraction path and asserts it is not written back. The memory row gained `scope`, `confidence`, `sensitivity` and `expires_at`, with the expiry enforced on the listing query and the audit line widened to carry all three; `scope` is written and no read filters on it, which its own comment is candid about. Screened before reading, from a full clone: no auto-run surface, one build-time execution point, eight unpinned dependency surfaces and nine dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-09-07** — [`9ffeca8c4c2bbad08864257ebb40b9998270ec52`](https://github.com/openmake/openmake_llm/commit/9ffeca8c4c2bbad08864257ebb40b9998270ec52) — re-pinned sixteen commits on, releases 1.46.0 to 1.49.0. Commit `0e62e475` of 7 September 2026, whose message and code comments name this atlas's 6 September reading as the source, moves the GDPR export to the live `user_memories` columns with tombstoned rows included and a `_meta.failedCategories` list, audits automatic extraction and the backfill as `memory.auto_created` and `memory.backfilled`, and adds tests for the prompt block, the export and the audit; `9ffeca8c` fixes two more old column lists the same export had for skills and custom agents. The `audit_log` evidence widens to the extractors; `negative_eval` stays withheld because the prompt-block isolation case runs against a mocked repository, so the exclusion it asserts is the mock's. The tombstone, the scope predicate and the policy did not move; three marks stand. Screened before reading: nine manifests inside the seven-day cooldown, nothing installed or run.
 

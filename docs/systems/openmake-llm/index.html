@@ -133,14 +133,14 @@ names the predecessor's columns.</p>
               <strong>openmake/openmake_llm</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/openmake/openmake_llm/commit/9ffeca8c4c2bbad08864257ebb40b9998270ec52" title="9ffeca8c4c2bbad08864257ebb40b9998270ec52">
+            <a class="meta-pill revision-pill" href="https://github.com/openmake/openmake_llm/commit/1a4089d78b9877adbc19b0a8d7813e22d5fd4328" title="1a4089d78b9877adbc19b0a8d7813e22d5fd4328">
               <span>Analyzed revision</span>
-              <code>9ffeca8c…</code>
+              <code>1a4089d7…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/openmake--openmake_llm" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -588,6 +588,31 @@ non-guest.</p>
 <p>Adapting the mechanism to another host is trivial, because there is
 almost nothing to adapt: a table, a numbered list, a cap and a stored
 boolean.</p>
+<p><strong>Four metadata columns arrived on the memory row, and one of
+them is not yet read.</strong> A create now accepts a
+<code>ttlDays</code> bounded by <code>MAX_TTL_DAYS</code> and a
+<code>scope</code> of <code>user</code>, <code>session</code> or
+<code>task</code>, and the row carries <code>confidence</code> derived
+from its source, a <code>sensitivity</code> marker and an
+<code>expires_at</code>. The audit line was widened to match, so a
+<code>memory.created</code> row records the scope, the sensitivity and
+the expiry alongside the id and length.</p>
+<p>The expiry is enforced — the listing query carries
+<code>expires_at IS NULL OR expires_at &gt; NOW()</code> beside
+<code>is_active</code> — but the scope is written and never filtered on.
+<code>scope</code> appears in the <code>INSERT</code> and in no
+<code>WHERE</code> clause, and the field's own comment is candid about
+the state of it: the injection path <em>"reads only
+<code>user</code>."</em> That is a statement about what is currently
+written rather than a predicate that would hold if something wrote
+<code>task</code>, which is the distinction this atlas keeps drawing
+between a vocabulary and a filter.</p>
+<p>One policy is worth quoting because it resolves a tension rather than
+avoiding it. An explicit save whose content matches a sensitive pattern
+is stored anyway — <em>"an explicit save is stored even if it is a
+sensitive pattern (the user's intent); only a sensitivity marker is
+left"</em> — so the system records what the user asked it to record and
+labels it, instead of refusing on the user's behalf.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>Scope — awarded.</strong> <code>user_id</code> on every
@@ -912,6 +937,23 @@ rg -n &#39;content, source, is_active&#39; apps/api/src/controllers/export.contr
 rg -n &#39;column|category|importance&#39; db/migrations/034_user_memories.sql            # the live table has neither column
 rg -n -i &#39;arxiv|bibtex|citation|doi&#39; README.md docs                               # no paper</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/openmake/openmake_llm/commit/1a4089d78b9877adbc19b0a8d7813e22d5fd4328"><code class="commit-id" title="1a4089d78b9877adbc19b0a8d7813e22d5fd4328">1a4089d7…</code></a>
+— re-read at a commit dated 16 September 2026, 120 commits past the
+previous pin. All three marks re-tested and held. The tombstone is now
+pinned by two committed tests rather than one: the repository test
+asserts that <code>listKnownContentsByUser</code> carries no
+<code>is_active</code> filter, and the extraction test drives a
+previously deleted sentence through the auto-extraction path and asserts
+it is not written back. The memory row gained <code>scope</code>,
+<code>confidence</code>, <code>sensitivity</code> and
+<code>expires_at</code>, with the expiry enforced on the listing query
+and the audit line widened to carry all three; <code>scope</code> is
+written and no read filters on it, which its own comment is candid
+about. Screened before reading, from a full clone: no auto-run surface,
+one build-time execution point, eight unpinned dependency surfaces and
+nine dependency files inside the seven-day cooldown. Nothing was
+installed, built or run.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/openmake/openmake_llm/commit/9ffeca8c4c2bbad08864257ebb40b9998270ec52"><code class="commit-id" title="9ffeca8c4c2bbad08864257ebb40b9998270ec52">9ffeca8c…</code></a>
 — re-pinned sixteen commits on, releases 1.46.0 to 1.49.0. Commit
