@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A multi-model database pitched as
+agent memory whose row-level policies are injected into physical plans
+by a walker that matches exhaustively over every engine's own op enum,
+resolves each variant to inject, refuse, admit or no-op, and leaves an
+un-run write check readable as 'never ran' — with the episodic-memory
+framing having no code behind it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="NodeDB — Agent Memory Atlas">
+    <meta property="og:description" content="A multi-model database
+pitched as agent memory whose row-level policies are injected into
+physical plans by a walker that matches exhaustively over every engine's
+own op enum, resolves each variant to inject, refuse, admit or no-op,
+and leaves an un-run write check readable as 'never ran' — with the
+episodic-memory framing having no code behind it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NodeDB — Agent Memory Atlas">
+    <meta name="twitter:description" content="A multi-model database
+pitched as agent memory whose row-level policies are injected into
+physical plans by a walker that matches exhaustively over every engine's
+own op enum, resolves each variant to inject, refuse, admit or no-op,
+and leaves an un-run write check readable as 'never ran' — with the
+episodic-memory framing having no code behind it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>NodeDB — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "NodeDB",
+      "description": "A multi-model database pitched as agent memory whose row-level policies are injected into physical plans by a walker that matches exhaustively over every engine's own op enum, resolves each variant to inject, refuse, admit or no-op, and leaves an un-run write check readable as 'never ran' \u2014 with the episodic-memory framing having no code behind it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The security predicate is exhaustive over
+every engine's plan</p>
+          <h1>NodeDB</h1>
+          <p class="document-deck">A multi-model database pitched as
+agent memory whose row-level policies are injected into physical plans
+by a walker that matches exhaustively over every engine's own op enum,
+resolves each variant to inject, refuse, admit or no-op, and leaves an
+un-run write check readable as 'never ran' — with the episodic-memory
+framing having no code behind it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/NodeDB-Lab/nodedb">
+              <span>Source</span>
+              <strong>NodeDB-Lab/nodedb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/NodeDB-Lab/nodedb/commit/124cc53a6bdc7bde4cbe34a38ea670c9cf90786f" title="124cc53a6bdc7bde4cbe34a38ea670c9cf90786f">
+              <span>Analyzed revision</span>
+              <code>124cc53a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/NodeDB-Lab--nodedb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>NodeDB-Lab--nodedb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>NodeDB calls itself "[t]he memory and storage engine for AI agents —
+from the edge to the cloud": 117,535 lines of Rust across twenty-five
+crates, 16,585 test functions, version 0.5.0, licensed BUSL-1.1 with a
+change date of 1 May 2030 and Apache-2.0 as the change licence.</p>
+<p>The memory claim should be dealt with first, because it is the reason
+the project is in this atlas and it is mostly framing. The README
+promises "[s]emantic, relational, episodic, and time-series memory in
+one engine, one process, with no network hops between them." The string
+<code>episodic</code> does not appear anywhere in the engine's Rust.
+There is no memory schema, no decay, no consolidation, no importance or
+salience, no provenance model, no extraction and no agent-facing memory
+API. The four "kinds of memory" are the vector, graph, time-series and
+document engines described in memory vocabulary.
+<code>nodedb-mem</code>, the one crate whose name suggests otherwise, is
+arena allocation, budgets, pressure and spill — RAM management.</p>
+<p>What is here instead is worth more to a memory system than any of
+that, and it is the reason this is a report rather than a bullet.</p>
+<p>A memory store that serves several agents, or several people's
+agents, needs one property above all others: a caller must not be able
+to read a row it is not entitled to, and that must be true on
+<em>every</em> read path, including the ones added next quarter. Almost
+every system in this corpus asserts that property in prose and
+implements it as a predicate that some code path remembers to apply.</p>
+<p>NodeDB implements it as an exhaustive match.</p>
+<p><code>control/planner/rls_injection</code> walks the physical plan
+after conversion and before dispatch. Its module header states the
+design: it is "[e]xhaustive over [<code>PhysicalPlan</code>] and every
+engine's own op enum (one module per engine)", and "[e]ach variant
+resolves to one outcome: <strong>Inject</strong> (op reads rows, plan
+carries a filter slot), <strong>Refuse</strong> (protected read with no
+filter slot, or a write whose post-image isn't carried …),
+<strong>Admit</strong> (write carries its image in full, policy
+evaluated, violation → <code>Error::RejectedAuthz</code>), or
+<strong>No-op</strong> (DDL/ maintenance, no stored row touched). A
+write is never a silent no-op."</p>
+<p>The nine per-engine dispatch modules — kv, document, columnar, graph,
+vector, text, array, crdt, meta — contain no wildcard match arm between
+them. In Rust that is not a stylistic preference; it means adding an
+operation to any engine fails to compile until someone decides which of
+the four outcomes it gets. The single <code>_ =&gt;</code> in the whole
+subsystem is on a MessagePack decode result and returns
+<code>RejectedAuthz</code> because "the policy could not be evaluated
+against it".</p>
+<p>And a write whose policy never ran is detectable. The check slot's
+default is <code>PendingInjection</code>, which the comment says "reads
+as 'never ran'", and <code>refuse_undecided_write_check</code> walks the
+plan again afterwards to catch it. The absence of a decision is a
+distinct state from a decision to allow — which is the difference
+between a fence and a habit.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>collection</strong> lives in one of nine engines and holds
+rows.</p>
+<p>A <strong>policy</strong> is a predicate with <code>$auth.*</code>
+references, compiled and substituted against the caller's identity into
+scan filters.</p>
+<p>A <strong>plan</strong> is a tree of physical tasks. RLS injection
+rewrites it in place: read ops get a filter, write ops get their row
+images admitted or rejected, and anything that can be neither is
+refused.</p>
+<p>A <strong>bitemporal collection</strong> additionally carries
+<code>_ts_system</code>, <code>_ts_valid_from</code> and
+<code>_ts_valid_until</code> as required columns, so a read can ask two
+independent questions: what was recorded as of <em>this</em> instant,
+and what was true at <em>that</em> one.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the policy is not a predicate some read path remembers — the walker is exhaustive over every engine's op enum, so an uncovered variant fails to compile, an undecidable one is refused, and an un-run write check reads as 'never ran' rather than as allow</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the policy is not a predicate some read path remembers — the walker is exhaustive over every engine&#39;s op enum, so an uncovered variant fails to compile, an undecidable one is refused, and an un-run write check reads as &#39;never ran&#39; rather than as allow
+flowchart TB
+    Q[&quot;statement&quot;] --&gt; PLAN[&quot;physical plan (tasks)&quot;]
+    PLAN --&gt; INJ[&quot;inject_rls(tasks, rls_store, auth)&lt;br/&gt;called from BOTH query-planning paths&quot;]
+    INJ --&gt; WALK{&quot;walk: exhaustive over PhysicalPlan&lt;br/&gt;and every engine&#39;s own op enum&quot;}
+    WALK --&gt;|&quot;reads rows, plan&lt;br/&gt;carries a filter slot&quot;| I[&quot;INJECT the predicate&quot;]
+    WALK --&gt;|&quot;protected read with no filter slot,&lt;br/&gt;or a write whose post-image&lt;br/&gt;isn&#39;t carried&quot;| R[&quot;REFUSE — PlanError&quot;]
+    WALK --&gt;|&quot;write carries its image in full&quot;| A[&quot;ADMIT — policy evaluated,&lt;br/&gt;violation → RejectedAuthz&quot;]
+    WALK --&gt;|&quot;DDL / maintenance,&lt;br/&gt;no stored row touched&quot;| N[&quot;NO-OP&quot;]
+    ENG[&quot;nine dispatch modules:&lt;br/&gt;kv · document · columnar · graph ·&lt;br/&gt;vector · text · array · crdt · meta&lt;br/&gt;ZERO wildcard arms&quot;] -.-&gt;|&quot;a new variant is a&lt;br/&gt;COMPILE ERROR, not a bypass&quot;| WALK
+    ONE[&quot;the subsystem&#39;s single _ =&gt;:&lt;br/&gt;row batch failed to decode →&lt;br/&gt;RejectedAuthz, &#39;so the policy could&lt;br/&gt;not be evaluated against it&#39;&quot;] -.-&gt; A
+    I &amp; A --&gt; CHK{&quot;refuse_undecided_write_check&quot;}
+    CHK --&gt;|&quot;slot still PendingInjection&quot;| NEVER[&quot;&#39;reads as never ran&#39; — refused&quot;]
+    CHK --&gt;|&quot;decided&quot;| D[&quot;dispatch&quot;]
+    D --&gt; SCAN[&quot;scan&quot;]
+    BT[&quot;bitemporal collection:&lt;br/&gt;_ts_system, _ts_valid_from,&lt;br/&gt;_ts_valid_until required&quot;] --&gt; SCAN
+    SCAN --&gt; P1[&quot;AS OF SYSTEM TIME t →&lt;br/&gt;_ts_system &lt;= t&quot;]
+    SCAN --&gt; P2[&quot;valid at t →&lt;br/&gt;_ts_valid_from &lt;= t&lt;br/&gt;AND _ts_valid_until &gt; t&quot;]
+    OUT[&quot;a policy-excluded row reads&lt;br/&gt;ABSENT, never as an error —&lt;br/&gt;&#39;an error distinguishable from&lt;br/&gt;no such key is itself a probe&#39;&quot;] -.-&gt; D</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nodedb/src/control/planner/rls_injection/</code></td>
+<td>The walker and its nine per-engine dispatch modules</td>
+</tr>
+<tr>
+<td><code>nodedb/src/control/security/rls/</code></td>
+<td>Policy types, store, predicate evaluation, namespace
+authorization</td>
+</tr>
+<tr>
+<td><code>nodedb/src/control/security/</code></td>
+<td>59,732 lines: identity, JWT/OIDC, mTLS, API keys, scope grants,
+redaction, rate limits, risk, SIEM, audit</td>
+</tr>
+<tr>
+<td><code>nodedb/src/data/executor/handlers/</code></td>
+<td>Per-engine execution, including the timeseries bitemporal scan</td>
+</tr>
+<tr>
+<td><code>nodedb-wal</code>, <code>-raft</code>,
+<code>-cluster</code></td>
+<td>Durability and replication</td>
+</tr>
+<tr>
+<td><code>nodedb-vector</code>, <code>-graph</code>, <code>-fts</code>,
+<code>-columnar</code>, <code>-spatial</code>, <code>-crdt</code>,
+<code>-array</code></td>
+<td>The engines</td>
+</tr>
+<tr>
+<td><code>nodedb-mem</code></td>
+<td>Arena, budget, pressure and spill — RAM, not memory in this atlas's
+sense</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>rls_injection/plan.rs:1-64</code>. The header is the design
+document; read it before the code.</p>
+<p>Then <code>rls_injection/context.rs:206-232</code>, for what happens
+when a row batch cannot be decoded — the only wildcard in the subsystem,
+and it rejects.</p>
+<p>Then
+<code>tests/inproc/cases/resp_row_level_security.rs:196-210</code>, for
+<code>assert_absent_not_error</code> and the reasoning behind it.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There isn't one, in this atlas's sense. A row is whatever the
+collection's schema says.</p>
+<p>The one exception is genuinely useful. A collection declared
+bitemporal gets <code>_ts_system</code>, <code>_ts_valid_from</code> and
+<code>_ts_valid_until</code> as required <code>Int64</code> columns,
+written through one ingest path per engine and read through one
+extraction helper whose contract is explicit: <code>(None, None)</code>
+means "not bitemporal", and "[c]allers MUST treat absence as 'not
+bitemporal', never as an error", because heartbeats, schemaless point KV
+writes and replayed bulk summaries all legitimately produce it.</p>
+<p>For an agent memory built on this, that is the piece to use: a fact's
+validity interval kept separately from when the database learned it,
+with both queryable.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>SQL and RESP over one planner, with the vector, graph, text and
+spatial operators available in the same process — which is the genuine
+architectural claim, and the one the README makes accurately: "no
+network hops between them."</p>
+<p>Temporal reads come in two independent forms.
+<code>SystemTimeScope</code> is <code>Current</code>,
+<code>AsOf(ms)</code>, or <code>AllVersions</code> — the last returning
+"every system-time version of each matching row, ordered ascending by
+system time, with the system-time column projected into the output
+(audit-log semantics)". Separately, a valid-time point becomes
+<code>_ts_valid_from &lt;= point AND _ts_valid_until &gt; point</code>.
+Both are ordinary column predicates, so the columnar segment reader's
+block-skip applies them against per-block minima and maxima without
+special-casing.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write reaches dispatch only after its row images have been
+admitted. The batch admission "[a]dmit[s] every row of a MessagePack
+batch; the first violation fails the whole statement before dispatch" —
+all-or-nothing rather than partial application, and the verdict is
+recorded in the check slot rather than inferred.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Embedded in-process or as a server, with RESP and SQL surfaces and a
+client crate. For an agent that runs on a device and syncs when
+connected, the embedded-plus-cluster story is the reason to look at this
+rather than at a hosted vector database.</p>
+<p>What it does not give an agent is a memory API. There is no remember,
+recall, forget or consolidate; there is <code>SET</code>,
+<code>GET</code>, <code>SELECT</code>. Anything memory-shaped is the
+caller's to build, and the atlas's usual questions — what is a memory,
+when does it expire, who said it, what does it supersede — are all
+answered by whatever schema that caller writes.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The audit log is "[i]mmutable audit log for security-relevant events"
+with a hash-chain helper, covering authentication success and failure,
+authorization denial, privilege change, tenant lifecycle, snapshot and
+restore, certificate rotation and DDL. It does not record row-level data
+mutations; those go to the WAL, which is a durability mechanism rather
+than a queryable record of who changed which memory and when. That is
+why <code>audit_log</code> is not awarded here despite the subsystem's
+quality — the mark is about mutations to the store's own contents.</p>
+<p>Scope grants are worth noting for anyone building multi-agent memory
+on this. A grant carries <code>expires_at</code>, a
+<code>grace_period_secs</code>, an <code>on_expire_action</code> of
+<code>revoke_all</code>, <code>grant:&lt;scope&gt;</code> or plain
+expiry, and a list of conditions — with the distinction between the two
+mechanisms spelled out: expiry retires "the whole grant on a wall
+clock", while "a conditional grant stays granted and simply does not
+apply to requests that fail its conditions."</p>
+<p>The cluster recovery check verifies the in-memory policy store
+against the catalog and can repair it, which closes the gap where a
+replica comes back with policies it has forgotten.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>16,585 test functions across 874 test files, plus a
+<code>fuzz/</code> tree with libFuzzer targets.</p>
+<p>The RLS tests are the ones to read. <code>rls_fuzz.rs</code> is
+proptest over generated auth contexts and predicates, asserting that
+substitution never panics, that <code>AlwaysFalse</code> produces a deny
+filter, that a deny filter matches no document whatever the document,
+and — the control — that a role the caller actually holds produces
+<code>match_all</code>.</p>
+<p><code>resp_row_level_security.rs</code> drives a real RESP listener
+end to end, and its baselines are deliberate: the unpoliced
+<code>KEYS</code> and <code>SCAN</code> cases exist because "a scan that
+cannot decode its own result cannot be said to filter it either." That
+is the right instinct — a filtering test that passes because the read
+was broken proves nothing.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Make coverage a compile error. If your store has several read paths
+and an access predicate, dispatch over a closed enum with no wildcard,
+so adding a path forces a decision. Prose in a header cannot do this;
+<code>match</code> can.</p>
+<p>Give the undecided case its own state. <code>PendingInjection</code>
+— "reads as 'never ran'" — is the detail that turns a missing check from
+an invisible allow into a detectable refusal. A boolean
+<code>allowed</code> defaulting to false is not the same thing, because
+false also means "checked and denied", and you cannot tell a bug from a
+policy afterwards.</p>
+<p>Make an excluded row absent, not an error.
+<code>assert_absent_not_error</code> states the reason: "an error
+distinguishable from 'no such key' is itself a probe for keys the caller
+may not read." Any memory store that serves more than one principal has
+this hole, and almost none of them test for it.</p>
+<p>Keep valid time separate from system time and let both be plain
+column predicates.
+<code>_ts_valid_from &lt;= t AND _ts_valid_until &gt; t</code> needs no
+special execution path and inherits block-skip for free.</p>
+<p>And if you write a README that promises episodic memory, either
+implement it or say "a database you can build episodic memory on." The
+second is true and still sells.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the memory framing is aspirational or reflects a layer not in
+this repository. Nothing in <code>docs/ai/</code> was read here beyond
+its index entry, and the engine carries no memory-specific code at this
+pin.</p>
+<p>Whether row-level data mutations are meant to reach the audit log.
+The machinery — hash-chained entries, a structured detail body per event
+type — would carry them, and <code>AllVersions</code> already offers
+"audit-log semantics" over system time from the data side.</p>
+<p>What the BUSL additional-use grant permits in practice. The licence
+names a change date of 1 May 2030 and Apache-2.0 after it; the
+production-use grant's bounds were not analysed.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nodedb/src/control/planner/rls_injection/plan.rs</code></td>
+<td>Four outcomes, exhaustively, and "a write is never a silent
+no-op"</td>
+</tr>
+<tr>
+<td><code>nodedb/src/control/planner/rls_injection/context.rs</code></td>
+<td>The one wildcard, and that it rejects</td>
+</tr>
+<tr>
+<td><code>nodedb/src/control/security/rls/mod.rs</code></td>
+<td>"Not bypassable by application code"</td>
+</tr>
+<tr>
+<td><code>nodedb/src/data/executor/handlers/timeseries/scan.rs</code></td>
+<td>Both temporal axes as ordinary predicates</td>
+</tr>
+<tr>
+<td><code>nodedb/tests/inproc/cases/resp_row_level_security.rs</code></td>
+<td>Absent, not an error — and why the baselines are there</td>
+</tr>
+<tr>
+<td><code>nodedb/tests/inproc/cases/rls_fuzz.rs</code></td>
+<td>Deny asserted over generated inputs</td>
+</tr>
+<tr>
+<td><code>nodedb/src/control/security/scope/grant/types.rs</code></td>
+<td>Expiry versus condition, distinguished</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/NodeDB-Lab/nodedb/commit/124cc53a6bdc7bde4cbe34a38ea670c9cf90786f"><code class="commit-id" title="124cc53a6bdc7bde4cbe34a38ea670c9cf90786f">124cc53a…</code></a>
+— first reading, at a commit dated 13 September 2026. Screened before
+opening, from a shallow clone; a dependency surface had changed inside
+the seven-day cooldown. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

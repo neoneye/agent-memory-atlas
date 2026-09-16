@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 497 reports.</strong></p>
+<p><strong>This page covers all 498 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18171,6 +18171,58 @@ will actually hit them.</li>
 <li>Do not copy when: you need the store itself to hold a tenancy
 boundary — here that is the caller's job, and the type signature says
 so.</li>
+</ul>
+<h3 id="nodedb"><a
+href="../systems/nodedb/"><code>nodedb</code></a></h3>
+<ul>
+<li>Best idea: <strong>the access predicate's coverage is a compile
+error, not a convention.</strong> <code>rls_injection</code> walks the
+physical plan before dispatch and is "[e]xhaustive over
+[<code>PhysicalPlan</code>] and every engine's own op enum (one module
+per engine)", resolving each variant to Inject, Refuse, Admit or No-op
+under a stated invariant — "A write is never a silent no-op." The nine
+dispatch modules hold no wildcard arm between them, so adding an
+operation to any engine fails to compile until someone decides which
+outcome it gets; the subsystem's only <code>_ =&gt;</code> returns
+<code>RejectedAuthz</code> on an undecodable row batch "so the policy
+could not be evaluated against it". Better still, the undecided case has
+its own state: a write check left at <code>PendingInjection</code>
+"reads as 'never ran'", and a second pass refuses it, so a missing check
+is detectable rather than indistinguishable from an allow. The
+end-to-end test then requires an excluded row to read back absent rather
+than as an error, because "an error distinguishable from 'no such key'
+is itself a probe for keys the caller may not read".</li>
+<li>Biggest risk: <strong>the memory in "memory engine for AI agents" is
+framing.</strong> The README promises "[s]emantic, relational, episodic,
+and time-series memory in one engine"; <code>episodic</code> appears
+nowhere in the engine's Rust, and the four kinds are the vector, graph,
+time-series and document engines under memory names. There is no memory
+schema, no decay, consolidation, importance or provenance, and no
+remember/recall/forget surface — a caller gets a database and builds all
+of it. <code>nodedb-mem</code>, the one crate whose name suggests agent
+memory, is arena, budget, pressure and spill management for RAM. The
+licence is BUSL-1.1 with a change date of 1 May 2030, so the current
+release is not open source, and the audit log records security and DDL
+events rather than row-level mutations, which go to the WAL.</li>
+<li>Most reusable component: the four-outcome exhaustive walker, and the
+<code>PendingInjection</code> sentinel beside it. A boolean
+<code>allowed</code> defaulting to false is not the same thing, because
+false also means "checked and denied" — and afterwards you cannot tell a
+bug from a policy.</li>
+<li>Maturity impression: 117,535 lines of Rust across twenty-five crates
+at version 0.5.0, 16,585 test functions in 874 files, plus a libFuzzer
+tree. The RLS tests are property-based as well as end-to-end, and the
+unpoliced baselines are deliberate: "a scan that cannot decode its own
+result cannot be said to filter it either." A cluster recovery check
+verifies the in-memory policy store against the catalog and can repair
+it.</li>
+<li>Study when: you are building multi-agent or multi-tenant memory and
+need the read predicate to hold on every path, including the ones added
+later, or you want valid time and system time as independent column
+predicates.</li>
+<li>Do not copy when: you wanted a memory system — this is the substrate
+underneath one, and the memory vocabulary in its README describes
+engines rather than mechanisms.</li>
 </ul>
         </article>
       </div>
