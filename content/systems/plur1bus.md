@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Cyb3rb1ade/openclaw-plur1bus-memory"
 source_url: https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory
 archive_name: "Cyb3rb1ade--openclaw-plur1bus-memory"
-revision: 6317fd99e253889fc25976fc20624dd5597381a4
-revision_url: https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/6317fd99e253889fc25976fc20624dd5597381a4
-analyzed_at: 2026-09-07
+revision: 75e1c4c6c47710a8767e588de0161f1c62cca799
+revision_url: https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/75e1c4c6c47710a8767e588de0161f1c62cca799
+analyzed_at: 2026-09-16
 capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval, bitemporal, tombstone"
 capability_evidence:
   trust_state: "the neo store and the claim layer over it | lib/neo-arch.js, lib/epistemic-status.js | `scoreNeoRecallItem` returns `-Infinity` for `pruned`, `tombstoned` and `demoted`, and for any record whose `epistemicStatus` normalizes to `invalidated`; `conflict` is deliberately left finite, with the reason recorded at the call site | tests/neo-demoted-withhold.test.js — 'excludes demoted at -Infinity and keeps conflict finite'"
@@ -38,7 +38,7 @@ matrix:
 
 ## 1. Executive Summary
 
-PLUR1BUS is an MIT-licensed memory plugin for OpenClaw, at release 7.11.0 — 12,418 lines in `index.js`, 73,743 across 254 files in `lib/`, and more again in `tests/` and `test/`, which is the first unusual thing about it: the test suite is larger than the implementation it covers, across 361 test files.
+PLUR1BUS is an MIT-licensed memory plugin for OpenClaw, at release 7.12.57 — 13,284 lines in `index.js`, 78,099 across 263 files in `lib/`, and more again in `tests/` and `test/`, which is the first unusual thing about it: the test suite is larger than the implementation it covers, across 361 test files.
 
 The second unusual thing is the ratio of care to surface. `openclaw.plugin.json` declares fifty top-level configuration groups, covering dreaming, emotional state, persona voice, an Obsidian vault bridge, skill mining, reminders, a semantic lens, conversation reactivation, and a proactive governor. Underneath that is a correction path — `lib/safe-update.js`, 414 lines — that is more disciplined than most of the dedicated memory systems in this atlas: a content change is refused unless the caller supplies both an update source and a quoted piece of evidence, the replacement row is written and made durable *before* the old row is marked superseded, and the whole transition is appended to a reconsolidation event log keyed by an idempotency hash.
 
@@ -418,6 +418,8 @@ The part worth taking whatever you are building is `lib/safe-update.js`. It is 4
 - Tests cited: `tests/crr-status-filter.test.js`, `tests/b13-acl-callsite-adapters.test.js`, `tests/gc-neverforget-guard.test.js`, `tests/safe-update-dataloss.test.js`, `tests/valid-time.test.js`, `tests/tombstone-e2e.test.js`, `tests/correct-tombstone-guard.test.js`, `tests/semantic-lens-status-filter.test.js`, `tests/rem-dream-acl-partition.test.js`, `tests/cron-plugin-direct-dispatch-wiring.test.js`, `tests/host-patch-skip.test.js`, `tests/release-750-compat.test.js`, `tests/critical-classifier-double-push.test.js`.
 
 ## History
+
+**2026-09-16** — [`75e1c4c6c47710a8767e588de0161f1c62cca799`](https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/75e1c4c6c47710a8767e588de0161f1c62cca799) — re-read at a commit dated 12 September 2026, 82 commits past the previous pin, at release 7.12.57. All seven marks re-tested and unchanged, and the files they rest on are unchanged with them: `lib/epistemic-status.js`, `lib/tombstone.js`, `lib/valid-time.js` and `lib/acl-middleware.js` are byte-identical to the previous pin, so the six-value status with its actor-tiered transition matrix, the content-fingerprint tombstone consulted at capture, the validity axis and the ACL gate all stand as described. The growth is storage plumbing rather than mechanism: `lib/neo-arch.js` gained about a thousand lines of vector sidecar — a versioned index, float32 buffers, batched and lazily-attached reads — alongside stale temp-file cleanup and persisted cap-recheck state. Screened before reading: six files scanned, no auto-run surface, one build-time execution point, one unpinned dependency surface and three dependency files inside the seven-day cooldown. An agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
 **2026-09-07** — [`6317fd99e253889fc25976fc20624dd5597381a4`](https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/6317fd99e253889fc25976fc20624dd5597381a4) — re-pinned six commits on, release 7.12.1. The range is the scoped-embedding IPC owner election on macOS (`lib/providers/scoped-embedding-ipc.js`), two macOS CI workflows, two audit notes and their tests; no file under the recall, correction, tombstone, ACL or reconsolidation paths changed. Seven marks stand on the same evidence. Screened before reading: no auto-run surface, two manifests inside the seven-day cooldown, nothing installed or run.
 
