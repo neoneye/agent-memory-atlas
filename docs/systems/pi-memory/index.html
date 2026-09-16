@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Pi extension whose facts carry a
+validity interval separate from when they were recorded and a five-value
+standing the storage layer reads through an allowlist — and whose
+resolve path refuses to move a superseded or contradicted fact back to a
+live standing, telling the caller to record a new fact instead.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="pi-memory — Agent Memory Atlas">
+    <meta property="og:description" content="A Pi extension whose facts
+carry a validity interval separate from when they were recorded and a
+five-value standing the storage layer reads through an allowlist — and
+whose resolve path refuses to move a superseded or contradicted fact
+back to a live standing, telling the caller to record a new fact
+instead.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="pi-memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Pi extension whose facts
+carry a validity interval separate from when they were recorded and a
+five-value standing the storage layer reads through an allowlist — and
+whose resolve path refuses to move a superseded or contradicted fact
+back to a live standing, telling the caller to record a new fact
+instead.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>pi-memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "pi-memory",
+      "description": "A Pi extension whose facts carry a validity interval separate from when they were recorded and a five-value standing the storage layer reads through an allowlist \u2014 and whose resolve path refuses to move a superseded or contradicted fact back to a live standing, telling the caller to record a new fact instead.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A closed interval cannot be reopened</p>
+          <h1>pi-memory</h1>
+          <p class="document-deck">A Pi extension whose facts carry a
+validity interval separate from when they were recorded and a five-value
+standing the storage layer reads through an allowlist — and whose
+resolve path refuses to move a superseded or contradicted fact back to a
+live standing, telling the caller to record a new fact instead.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/prjct-app/pi-memory">
+              <span>Source</span>
+              <strong>prjct-app/pi-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/prjct-app/pi-memory/commit/4eed65428da97bba1ebd41630767a1764cbe9d09" title="4eed65428da97bba1ebd41630767a1764cbe9d09">
+              <span>Analyzed revision</span>
+              <code>4eed6542…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/prjct-app--pi-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>prjct-app--pi-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>pi-memory is "Pi-native temporal memory and hybrid retrieval for
+agents" — MIT, TypeScript, version 0.1.0, 15,920 lines with 41 test
+files. It is an extension for <a href="../pi/">Pi</a> plus a standalone
+daemon that "analyzes changed sources while Pi is closed."</p>
+<p>The architecture note in the README is worth quoting for what it
+declines to do: <code>/memory sync</code> "fingerprints publishers and
+enqueues work — it does not copy raw source bodies", and "[d]o not
+install a persistent service unless explicitly authorized." Both are
+restraint written into the first screen.</p>
+<p>The memory model is bitemporal in the way the atlas asks for. A fact
+carries <code>valid_at</code> and <code>invalid_at</code> — when the
+thing it states was true — separately from <code>recorded_at</code>,
+when the store learned it. Both retrieval entry points accept an
+<code>asOf</code>, parse it strictly
+(<code>"asOf must be ISO-8601."</code>), default it to now, and filter
+candidates with <code>factIsValidAt(fact, asOf)</code>. The federated
+path resolves the instant once and passes it down to every engine leg,
+so a query spanning several scopes reads one consistent moment rather
+than a different now per leg.</p>
+<p>Beside that runs a five-value standing — <code>candidate</code>,
+<code>supported</code>, <code>needs_review</code>,
+<code>contradicted</code>, <code>superseded</code> — and the storage
+layer reads it through an allowlist:</p>
+<pre><code>SELECT id FROM facts WHERE scope_id=? AND standing IN (&#39;supported&#39;,&#39;needs_review&#39;,&#39;candidate&#39;)</code></pre>
+<p>An allowlist rather than a denylist, so a standing added next year is
+withheld by default instead of leaking until somebody remembers to
+exclude it.</p>
+<p>The sentence that makes the whole thing cohere is in
+<code>resolveFact</code>. Moving a fact to a new standing requires a
+rationale, which is redacted before it is committed, and a replacement
+must be a different existing fact. And a fact that is already
+<code>superseded</code> or <code>contradicted</code> cannot be moved
+back:</p>
+<blockquote>
+<p>"A closed interval cannot be reopened without losing history; record
+a new fact instead."</p>
+</blockquote>
+<p>That is the rule that keeps a mutable standing from undoing a
+temporal record. The standing can move forward; the interval it closed
+stays closed; the way to say "actually it is true again" is to record
+that as a new fact with its own validity, which is what a bitemporal
+store is for.</p>
+<p>The capture gate deserves a mention for one detail. It refuses
+routine chatter — <code>ok</code>, <code>done</code>, <code>lgtm</code>,
+<code>wip</code> — and tool dumps, and then
+<code>isNegationOrCorrection</code> deliberately admits corrections and
+constraints regardless. Corrections are the class most likely to look
+like noise to a filter and the most expensive to drop, and the module's
+first line names the failure it is avoiding: "Not a copy of prjct
+fail-open excess."</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>fact</strong> states something, for an interval, as of a
+moment it was recorded.</p>
+<p>A <strong>standing</strong> says how the store currently regards it.
+Two of the five values are terminal.</p>
+<p>An <strong>asOf</strong> is a question about a moment, not about
+now.</p>
+<p><strong>Evidence</strong> is what a fact rests on: a content hash, a
+provenance, an actor, a session and the tool call that produced it.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — validity time and record time are separate columns filtered by a validated asOf, while the standing is read through an allowlist and its two terminal values cannot be reopened</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: validity time and record time are separate columns filtered by a validated asOf, while the standing is read through an allowlist and its two terminal values cannot be reopened
+flowchart TB
+    CAP[&quot;Pi extension records ·&lt;br/&gt;daemon analyses changed sources&lt;br/&gt;while Pi is closed&quot;] --&gt; GATE{&quot;capture gate&quot;}
+    GATE --&gt;|&quot;ok · done · lgtm · wip ·&lt;br/&gt;tool dumps&quot;| DROP[&quot;refused&quot;]
+    GATE --&gt;|&quot;isNegationOrCorrection —&lt;br/&gt;corrections and constraints&lt;br/&gt;admitted regardless&quot;| RED[&quot;redactSecrets&quot;]
+    GATE --&gt;|&quot;ordinary&quot;| RED
+    RED --&gt; F[(&quot;facts: statement · standing ·&lt;br/&gt;confidence · valid_at · invalid_at ·&lt;br/&gt;recorded_at · scope_id&quot;)]
+    EV[(&quot;evidence: provenance ·&lt;br/&gt;content_hash · observed_at ·&lt;br/&gt;actor_id · tool_call_id&quot;)] --- F
+    F --&gt; READ{&quot;activeFacts:&lt;br/&gt;standing IN (&#39;supported&#39;,&lt;br/&gt;&#39;needs_review&#39;,&#39;candidate&#39;)&quot;}
+    READ --&gt;|&quot;allowlist — a standing added&lt;br/&gt;later is withheld by default&quot;| OUT[&quot;read&quot;]
+    RES[&quot;resolveFact(factId, standing,&lt;br/&gt;rationale, replacementId?)&quot;] --&gt; CHK{&quot;is the fact already&lt;br/&gt;superseded or contradicted?&quot;}
+    CHK --&gt;|&quot;yes, and the new standing is live&quot;| REF[&quot;throws: &#39;A closed interval cannot be&lt;br/&gt;reopened without losing history;&lt;br/&gt;record a new fact instead.&#39;&quot;]
+    CHK --&gt;|&quot;no&quot;| MOVE[&quot;standing moves · rationale required&lt;br/&gt;and redacted · replacement must be&lt;br/&gt;a different existing fact&quot;]
+    MOVE --&gt; F
+    Q[&quot;recall(query, asOf?)&quot;] --&gt; P{&quot;asOf parsed as ISO-8601,&lt;br/&gt;rejected if unparseable,&lt;br/&gt;defaults to now&quot;}
+    P --&gt; FED[&quot;federated: resolve the instant ONCE,&lt;br/&gt;pass it to every engine leg&quot;]
+    FED --&gt; VAL[&quot;factIsValidAt(fact, asOf) —&lt;br/&gt;the validity interval, not recorded_at&quot;]
+    VAL --&gt; RES2[&quot;results carry validAt, invalidAt,&lt;br/&gt;expiredAt AND the standing —&lt;br/&gt;retrieval labels rather than withholds&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/storage/migrations.ts</code></td>
+<td>The schema: documents, chunks, episodes, evidence, entities,
+facts</td>
+</tr>
+<tr>
+<td><code>src/storage/projection.ts</code></td>
+<td>The read layer, including the standing allowlist</td>
+</tr>
+<tr>
+<td><code>src/engine.ts</code></td>
+<td><code>resolveFact</code> and the reopening guard</td>
+</tr>
+<tr>
+<td><code>src/retrieval/hybrid.ts</code>, <code>federated.ts</code></td>
+<td><code>asOf</code> parsing, candidate selection, validity
+filtering</td>
+</tr>
+<tr>
+<td><code>src/curation/</code></td>
+<td>The pipeline, validation and publication</td>
+</tr>
+<tr>
+<td><code>src/retention/</code></td>
+<td>Capture gate, consolidation, a value model, bounded GC</td>
+</tr>
+<tr>
+<td><code>src/security/redact.ts</code></td>
+<td>Secret redaction on capture and on rationales</td>
+</tr>
+<tr>
+<td><code>src/eval/</code></td>
+<td>Oracles, evidence scoring and a comparison CLI</td>
+</tr>
+<tr>
+<td><code>src/daemon/</code></td>
+<td>Out-of-process analysis of changed sources</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>src/engine.ts:358-367</code> — <code>resolveFact</code>, four
+lines of validation and the sentence that explains the model.</p>
+<p><code>src/storage/projection.ts:721-726</code> — the allowlist, and
+the scope parameter.</p>
+<p><code>src/retrieval/federated.ts:29-40</code> — one <code>asOf</code>
+resolved once and pushed to every leg.</p>
+<p><code>src/retention/capture-gate.ts:1-12</code> — what it refuses,
+and the exception for corrections.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Facts sit on top of evidence rather than replacing it. An
+<code>evidence</code> row carries an origin, a provenance string, an
+optional URI, a content hash, an excerpt, an observed-at, an actor, a
+session and the tool call it came from; an <code>episode_evidence</code>
+join links episodes to the evidence they rest on, with
+<code>ON DELETE CASCADE</code> from the episode and a plain reference to
+the evidence, so deleting an episode does not delete the evidence
+another episode may also cite.</p>
+<p>A fact adds <code>kind</code>, a statement, an optional
+subject/predicate/object triple, a <code>standing</code>, a
+<code>confidence</code>, and the three timestamps. Confidence is a float
+and therefore not a trust state in the atlas's sense;
+<code>standing</code> is the discrete field, and it is the one the reads
+use.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid lexical, vector and graph retrieval over a scope, federated
+across engines. Two details are worth borrowing.</p>
+<p><code>asOf</code> is validated rather than coerced — an unparseable
+value throws instead of silently becoming now — and in the federated
+path it is resolved once and passed down, which is the difference
+between "as of last Tuesday" and "as of whenever each leg happened to
+evaluate".</p>
+<p>And the relevance gate reports rather than returns: when nothing
+clears the threshold the response carries "Insufficient evidence: no
+candidate meets the default relevance gate." A memory that can say it
+does not know is a better input to an agent than one that returns its
+three closest guesses.</p>
+<p>The honest limit is what retrieval does with <code>standing</code>.
+It is threaded into every result — <code>standing: fact.standing</code>
+beside <code>validAt</code>, <code>invalidAt</code> and
+<code>expiredAt</code> — rather than used to withhold. So the
+storage-level allowlist governs <code>activeFacts</code> and
+publication, and a caller using the hybrid API gets contradicted facts
+back, labelled. That is a defensible design for an API whose consumer is
+another program, and it means the label has to be read.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The extension records; the daemon analyses. <code>/memory sync</code>
+fingerprints publishers and enqueues work rather than copying source
+bodies, which keeps the store from becoming a second copy of everything
+it has seen.</p>
+<p><code>resolveFact</code> is the state-change surface and it asks for
+three things: the new standing, a rationale, and optionally a
+replacement. The rationale passes through <code>redactSecrets</code>
+before it reaches the event log, which is the kind of detail that is
+easy to skip — a free-text explanation of why a fact was contradicted is
+exactly where somebody pastes a token.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Pi extension and a daemon, with the caution about persistent
+services stated in the README rather than left to the installer. The
+eval CLI and oracles — <code>final-answer</code>,
+<code>grounding</code>, <code>evidence-complete</code>,
+<code>unanswerable</code> — suggest the project measures answer quality
+rather than only retrieval, and having an <code>unanswerable</code>
+oracle kind at all is a good sign: it is the case where a memory system
+is supposed to say nothing.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Redaction on capture and on rationales, a capture gate, a
+compact-authority singleton with a digest, an applied-events table, and
+the reopening guard.</p>
+<p>The guard is the one to take away, and it generalises past this
+project. Any store with a mutable status over a temporal record faces
+the same question: can a closed interval be reopened? Answering yes
+quietly loses the history of the closure; answering no forces the honest
+representation — a new fact, with its own validity, recording that the
+thing became true again. pi-memory answers no, in one line, with the
+alternative in the same sentence.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>41 test files including <code>curation-safety</code>,
+<code>capture-gate</code>, <code>compact-authority</code>,
+<code>compact-promotion</code> and <code>daemon</code>, plus the eval
+oracles and a comparison CLI.</p>
+<p>What is absent is a must-not-retrieve assertion: nothing in the tree
+seeds a contradicted or superseded fact and asserts it stays out of a
+retrieval, which is the test that would pin the allowlist against a
+future refactor moving the filter. Given that the storage query is the
+single place the rule lives, that test is cheap and load-bearing.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Refuse to reopen a closed interval. If your status is mutable and
+your record is temporal, the two will eventually disagree; deciding in
+advance that terminal means terminal, and that the way forward is a new
+fact, keeps the history honest. Put the alternative in the error message
+so the caller knows what to do.</p>
+<p>Read the status through an allowlist. A denylist knows only the
+statuses somebody remembered to add; an allowlist withholds a new one by
+default, which is the direction you want to fail in.</p>
+<p>Validate <code>asOf</code> and resolve it once. Parsing it strictly
+stops a bad string silently becoming now, and resolving it once before
+fanning out is what makes a federated as-of query mean anything.</p>
+<p>Let the gate admit corrections. A noise filter tuned on "ok" and
+"done" will also catch "no, it's the other one" unless you exempt it
+deliberately, and that is the sentence you most wanted to keep.</p>
+<p>Redact free-text rationales. The field where someone explains why a
+fact was wrong is a field where someone pastes the thing that proved
+it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the hybrid API should withhold contradicted facts rather than
+label them. The storage layer and the publication path both exclude
+them; the retrieval API does not, and nothing in the tree records that
+as a decision either way.</p>
+<p>Whether <code>scope_id</code> will move from a parameter to a
+property of the handle. As a parameter it is the caller's to pass
+correctly, which is why no scope mark is claimed here.</p>
+<p>What the redactor does not catch. The rest of the codebase writes
+limits down; this module does not, and a pattern-based redactor always
+has some.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/engine.ts:358-367</code></td>
+<td>The reopening guard, and the alternative in the message</td>
+</tr>
+<tr>
+<td><code>src/storage/projection.ts:721-726</code></td>
+<td>An allowlist read, and the scope parameter</td>
+</tr>
+<tr>
+<td><code>src/retrieval/federated.ts:29-40</code></td>
+<td>One <code>asOf</code>, resolved once, pushed to every leg</td>
+</tr>
+<tr>
+<td><code>src/storage/migrations.ts:137-176</code></td>
+<td>Evidence with provenance, and a fact's three timestamps</td>
+</tr>
+<tr>
+<td><code>src/retention/capture-gate.ts</code></td>
+<td>What it refuses, and the exemption for corrections</td>
+</tr>
+<tr>
+<td><code>src/eval/oracles.ts</code></td>
+<td>An oracle kind for the answer that should not be given</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/prjct-app/pi-memory/commit/4eed65428da97bba1ebd41630767a1764cbe9d09"><code class="commit-id" title="4eed65428da97bba1ebd41630767a1764cbe9d09">4eed6542…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: three files scanned, no auto-run
+surfaces, no build-time execution points, one unpinned surface and two
+dependency files inside the seven-day cooldown. Nothing was installed,
+built or run, and the README's caution against installing a persistent
+service was moot for a read-only reading.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
