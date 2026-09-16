@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 562 reports.</strong></p>
+<p><strong>This page covers all 563 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21348,6 +21348,49 @@ containment that survives a symlink.</li>
 have been rejected — and do not repeat the −65% tokens / −85% tool calls
 figure without running the committed harness, since no result is in the
 tree and the only committed token A/B reports an overhead.</li>
+</ul>
+<h3 id="hypha"><a href="../systems/hypha/"><code>hypha</code></a></h3>
+<ul>
+<li>Best idea: <strong>compare a hash of the scope before anything
+else.</strong>
+<code>record.scopeHash !== hashMemoryScope(request.query.scope)</code>
+is the first test in the retrieval gate, ahead of status, expiry and
+every caller-supplied filter, and no read path reaches a record without
+it holding. A SHA-256 over the structured scope means a scope differing
+in any field is a different bucket, and the provider adapters enforce
+the same boundary — a mapping fetched under a scope differing only in
+<code>sessionId</code> is rejected with
+<code>MEMORY_SCOPE_DENIED</code>.</li>
+<li>Second idea: <strong>keep the index state off the trust
+state.</strong> <code>indexStatus</code> is its own seven-value machine,
+so "not yet searchable" never has to borrow a value from "not believed"
+— a distinction several systems here collapse into one column.</li>
+<li>Biggest risk: <strong>a <code>verifiedOnly</code> filter with
+nothing that verifies.</strong> <code>humanVerified</code> appears six
+times in the whole repository: the schema, a retrieval filter, the same
+filter in the managed store, a ranking feature scored one-or-zero, and a
+same-key conflict check. It is never on the left of an assignment, in
+source or in tests, so the filter returns the empty set by construction
+and the verified score is always zero. Beside it,
+<code>contentHash</code> is stored on every record and consulted by no
+write path, leaving the material for a value-keyed tombstone
+unused.</li>
+<li>Most reusable component: the retrieval gate and its explanation —
+hard filtering, score fusion, a stable tie-break, and a snapshot
+replayable by id with a committed assertion that
+<code>explain(snapshot.id)</code> equals the retrieve it came from.</li>
+<li>Maturity impression: Apache-2.0, 1,537 commits, 148,121 non-test
+lines across seventeen workspace packages with a 40,651-line memory
+subsystem and 270 cases in its tests, heavy on failure paths —
+dead-lettering, provider reconciliation, bounded recovery, API-version
+drift, and a refusal to construct a client against a non-loopback
+cleartext endpoint; three capability marks.</li>
+<li>Study when: you are designing a memory record contract and want a
+worked example of which axes to keep separate, or you want a read gate
+whose scope test cannot be skipped.</li>
+<li>Do not copy when: you need the verified flag the schema advertises —
+it has consumers and no producer — or a record of what was deleted,
+since the content hash that would key one is never read back.</li>
 </ul>
         </article>
       </div>

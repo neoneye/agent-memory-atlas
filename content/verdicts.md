@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 562 reports.**
+**This page covers all 563 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4856,3 +4856,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 97,573 lines of Go across 625 commits after a Rust-to-Go parity cutover, 1,077 test functions, three MCP tools serving 30 actions, and an A/B harness that refuses to record a run whose commits and prompt-template hash cannot be pinned; two capability marks, both on the memory layer rather than the knowledge graph.
 - Study when: you are porting a memory layer and want a worked example of which reference behaviours not to reproduce, or you need path containment that survives a symlink.
 - Do not copy when: a memory has to be doubted, superseded or shown to have been rejected — and do not repeat the −65% tokens / −85% tool calls figure without running the committed harness, since no result is in the tree and the only committed token A/B reports an overhead.
+
+### [`hypha`](../systems/hypha/)
+- Best idea: **compare a hash of the scope before anything else.** `record.scopeHash !== hashMemoryScope(request.query.scope)` is the first test in the retrieval gate, ahead of status, expiry and every caller-supplied filter, and no read path reaches a record without it holding. A SHA-256 over the structured scope means a scope differing in any field is a different bucket, and the provider adapters enforce the same boundary — a mapping fetched under a scope differing only in `sessionId` is rejected with `MEMORY_SCOPE_DENIED`.
+- Second idea: **keep the index state off the trust state.** `indexStatus` is its own seven-value machine, so "not yet searchable" never has to borrow a value from "not believed" — a distinction several systems here collapse into one column.
+- Biggest risk: **a `verifiedOnly` filter with nothing that verifies.** `humanVerified` appears six times in the whole repository: the schema, a retrieval filter, the same filter in the managed store, a ranking feature scored one-or-zero, and a same-key conflict check. It is never on the left of an assignment, in source or in tests, so the filter returns the empty set by construction and the verified score is always zero. Beside it, `contentHash` is stored on every record and consulted by no write path, leaving the material for a value-keyed tombstone unused.
+- Most reusable component: the retrieval gate and its explanation — hard filtering, score fusion, a stable tie-break, and a snapshot replayable by id with a committed assertion that `explain(snapshot.id)` equals the retrieve it came from.
+- Maturity impression: Apache-2.0, 1,537 commits, 148,121 non-test lines across seventeen workspace packages with a 40,651-line memory subsystem and 270 cases in its tests, heavy on failure paths — dead-lettering, provider reconciliation, bounded recovery, API-version drift, and a refusal to construct a client against a non-loopback cleartext endpoint; three capability marks.
+- Study when: you are designing a memory record contract and want a worked example of which axes to keep separate, or you want a read gate whose scope test cannot be skipped.
+- Do not copy when: you need the verified flag the schema advertises — it has consumers and no producer — or a record of what was deleted, since the content hash that would key one is never read back.

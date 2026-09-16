@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agent framework whose memory
+record carries an eight-value status the read gate genuinely enforces
+and a scope hash it compares before anything else — beside a
+humanVerified flag that four call sites read, a retrieval filter selects
+on, a ranking feature scores, and no code anywhere ever sets.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Hypha — Agent Memory Atlas">
+    <meta property="og:description" content="An agent framework whose
+memory record carries an eight-value status the read gate genuinely
+enforces and a scope hash it compares before anything else — beside a
+humanVerified flag that four call sites read, a retrieval filter selects
+on, a ranking feature scores, and no code anywhere ever sets.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hypha — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agent framework whose
+memory record carries an eight-value status the read gate genuinely
+enforces and a scope hash it compares before anything else — beside a
+humanVerified flag that four call sites read, a retrieval filter selects
+on, a ranking feature scores, and no code anywhere ever sets.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Hypha — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Hypha",
+      "description": "An agent framework whose memory record carries an eight-value status the read gate genuinely enforces and a scope hash it compares before anything else \u2014 beside a humanVerified flag that four call sites read, a retrieval filter selects on, a ranking feature scores, and no code anywhere ever sets.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A verified-only filter with nothing that
+verifies</p>
+          <h1>Hypha</h1>
+          <p class="document-deck">An agent framework whose memory
+record carries an eight-value status the read gate genuinely enforces
+and a scope hash it compares before anything else — beside a
+humanVerified flag that four call sites read, a retrieval filter selects
+on, a ranking feature scores, and no code anywhere ever sets.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/CodeSoul-co/Hypha">
+              <span>Source</span>
+              <strong>CodeSoul-co/Hypha</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/CodeSoul-co/Hypha/commit/ac77fa9b4a1b1da2815adf7d5582dbc27cd9373f" title="ac77fa9b4a1b1da2815adf7d5582dbc27cd9373f">
+              <span>Analyzed revision</span>
+              <code>ac77fa9b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/CodeSoul-co--Hypha" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>CodeSoul-co--Hypha</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Hypha is an Apache-2.0 TypeScript agent framework — 148,121 non-test
+lines across seventeen workspace packages, 1,537 commits — and
+<code>packages/memory</code> is a 40,651-line memory subsystem in its
+own right, 152 files covering a managed record store, a retrieval
+pipeline, a context builder, provider adapters for several external
+memory services, a lifecycle task queue and a dead-letter manager.</p>
+<p>The record contract is one of the richest in this corpus. A managed
+memory carries an eight-value <code>status</code>, a five-value
+<code>visibility</code>, a structured <code>scope</code> with a
+<code>scopeHash</code> beside it, a <code>contentHash</code>, four
+separate unit-interval scores — <code>confidence</code>,
+<code>importance</code>, <code>strength</code>, <code>salience</code> —
+plus <code>decayScore</code>, <code>accessCount</code>, typed relations,
+an index status of its own, <code>expiresAt</code>,
+<code>deletedAt</code>, and the flags <code>immutable</code>,
+<code>sensitive</code> and <code>humanVerified</code>.</p>
+<p>Three marks are earned and the schema's ambition is the reason to
+check each one rather than read the field list. <code>trust_state</code>
+and <code>scope_enforced</code> are real: the retrieval gate compares
+<code>record.scopeHash</code> against a hash of the requesting query's
+scope <em>before any other test</em>, then drops <code>deleted</code>
+and <code>deletion_pending</code> unconditionally and
+<code>superseded</code> and <code>invalidated</code> unless the caller
+asked for them. <code>negative_eval</code> is earned by a case that
+proves the store populated and then invalidates one of two records and
+asserts the retrieve returns only the other.</p>
+<p><strong>And one field in that list is read four times and written
+nowhere.</strong> <code>humanVerified</code> appears exactly six times
+in the entire repository: once in the schema, once as a
+<code>verifiedOnly</code> retrieval filter, once as the same filter in
+the managed store, once as a ranking feature scored
+<code>record.humanVerified ? 1 : 0</code>, once in a conflict check —
+and never on the left-hand side of an assignment, in source or in tests.
+The filter can only ever return nothing; the ranking feature is always
+zero. <code>human_review</code> is withheld on that, and it is the most
+informative thing in the package: the design understood that a verified
+memory should outrank an unverified one, and the verifying was never
+built.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory here is a <em>managed record</em> with a governed lifecycle,
+and the framework's posture is that every read is a filtered projection
+of a store the caller does not address directly. A retrieve carries a
+scope; the gate hashes that scope and admits only records whose stored
+<code>scopeHash</code> equals it. There is no path that returns a record
+by id without that comparison.</p>
+<p>The status ladder is a retention lifecycle more than an epistemic one
+— <code>pending → active → dormant</code>, with <code>superseded</code>,
+<code>invalidated</code>, <code>deletion_pending</code>,
+<code>deleted</code> and <code>failed</code> as the ways out — and the
+epistemic weight sits in the four scores beside it rather than in the
+status. That is worth naming because it is the opposite arrangement from
+most of this corpus: here the <em>status</em> is mostly about the
+record's place in a lifecycle and the <em>scores</em> carry belief, and
+only <code>invalidated</code> reads as "we no longer think this is
+true".</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the retrieval gate compares the record's stored scope hash against a hash of the request's scope first, then excludes by status, expiry and the declared filters — one of which can never match</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the retrieval gate compares the record&#39;s stored scope hash against a hash of the request&#39;s scope first, then excludes by status, expiry and the declared filters — one of which can never match
+flowchart TD
+    Q[&quot;retrieve(query, scope)&quot;] --&gt; H{&quot;record.scopeHash ==&lt;br/&gt;hashMemoryScope(query.scope)&quot;}
+    H --&gt;|no| X1[&quot;excluded&quot;]
+    H --&gt;|yes| S{&quot;status&quot;}
+    S --&gt;|deleted / deletion_pending| X2[&quot;excluded, always&quot;]
+    S --&gt;|superseded| C1{&quot;includeSuperseded?&quot;}
+    S --&gt;|invalidated| C2{&quot;includeInvalidated?&quot;}
+    C1 --&gt;|no| X3[&quot;excluded&quot;]
+    C2 --&gt;|no| X4[&quot;excluded&quot;]
+    S --&gt;|active / dormant / pending| E{&quot;expiresAt &lt;= now?&quot;}
+    E --&gt;|yes| X5[&quot;excluded&quot;]
+    E --&gt;|no| F[&quot;declared filters:&lt;br/&gt;statuses, visibility, tags,&lt;br/&gt;conflictFreeOnly, legalHoldOnly,&lt;br/&gt;verifiedOnly — never matches&quot;]
+    F --&gt; R[&quot;ranked&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Seventeen packages. <code>memory</code> holds the record contract,
+the native in-process provider, the retrieval pipeline, the context
+builder and gateway, a working store, structured stores for vectors,
+idempotency, extraction state, external mappings and lifecycle tasks,
+plus client adapters for several third-party memory services.
+<code>core</code>, <code>kernel</code>, <code>fsm</code>,
+<code>domain</code>, <code>skills</code>, <code>tools</code>,
+<code>inference</code>, <code>storage</code>, <code>serving-cache</code>
+and <code>workcache</code> sit around it, with <code>mcp</code> as the
+agent surface.</p>
+<p><code>memory-events.ts</code> defines a <code>memory.*</code> /
+<code>context.*</code> event family carrying an operation id, a profile
+id and revision, a provider id, a scope hash, a memory id, an item
+count, a latency and a normalised error, published through the
+framework's event bus. It is observability rather than a ledger — the
+events are emitted, not persisted to the memory store — which is why
+<code>audit_log</code> is withheld below.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>native-memory.ts</code> builds a
+record with
+<code>contentHash: hashMemoryContent(candidate.content)</code> and
+<code>scopeHash: hashMemoryScope(request.scope)</code>, sets
+<code>status: 'active'</code> and
+<code>indexStatus: { state: 'pending', attempts: 0 }</code>, and when a
+previous version exists links it with a
+<code>{ type: 'supersedes', targetMemoryId: previous.versionId }</code>
+relation
+(<code>packages/memory/src/native-memory.ts:555-572</code>).</li>
+<li><strong>Read gate.</strong> <code>retrieval.ts:462-526</code> —
+scope hash equality first, then status, then expiry, then the declared
+filter set.</li>
+<li><strong>Rank.</strong> <code>recordComponentScores</code> combines
+an exponential recency term with a configurable half-life,
+<code>importance</code>, <code>confidence</code>, an authority score
+derived from the source type, <code>verified</code>, and
+<code>reinforcement</code> from <code>strength</code>
+(<code>retrieval.ts:528-545</code>).</li>
+<li><strong>Index.</strong> A pending index state, an outbox and a
+worker that leases and completes, with a dead-letter manager for
+exhausted lifecycle tasks.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>managedMemoryRecordSchema</code>
+(<code>packages/memory/src/record-contract.ts:170-205</code>) is the
+contract, validated with Zod. The fields that matter for the marks are
+<code>status</code> (<code>:52-61</code>), <code>visibility</code>
+(<code>:177</code>), <code>scope</code> and <code>scopeHash</code>
+(<code>:176</code>, <code>:199</code>), <code>contentHash</code>
+(<code>:198</code>), and the three booleans <code>immutable</code>,
+<code>humanVerified</code> and <code>sensitive</code>
+(<code>:189-191</code>).</p>
+<p><code>indexStatus</code> is a second small state machine on the same
+record — <code>none</code>, <code>pending</code>, <code>indexing</code>,
+<code>indexed</code>, <code>partial</code>, <code>failed</code>,
+<code>deleted</code> — which keeps "has this been indexed" separate from
+"is this believed", a distinction several systems in this corpus
+collapse into one column.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hard filtering, then score fusion, then a stable tie-break, then an
+explanation that can be replayed:
+<code>provider.retrieval.explain(snapshot.id)</code> returns the same
+object the retrieve produced, and a committed case asserts the equality.
+A retrieval that can be re-explained from its own snapshot id is rare
+here and worth the note.</p>
+<p>The filter set is broad — <code>statuses</code>,
+<code>visibility</code>, <code>tagsAny</code>, <code>tagsAll</code>,
+<code>excludeTags</code>, <code>verifiedOnly</code>,
+<code>conflictFreeOnly</code>, <code>canonicalKeys</code>,
+<code>relationTypes</code>, <code>legalHoldOnly</code>.
+<code>conflictFreeOnly</code> excludes any record carrying a
+<code>contradicts</code> relation, which is a genuinely useful
+predicate. <code>verifiedOnly</code> is the one that cannot match.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A correction writes a new version and relates it to the previous one
+with <code>supersedes</code>, leaving the predecessor in the store with
+its status moved. The supersession pointer is keyed on
+<code>previous.versionId</code> — a record id — which is what withholds
+the <code>tombstone</code> mark: <code>contentHash</code> is computed
+and stored on every record, so the material for a value-keyed refusal
+exists, and no write path consults it against the hashes of deleted or
+invalidated records.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP package, a harness, a skills package and a domain-pack model,
+with the README describing the product as an "Agent Core + Production
+Harness for governed, durable, and reusable domain agents". Sixteen
+workspace manifests carry floating version ranges, which the screen
+flagged and this reading did not act on — nothing was installed.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope enforced — awarded.</strong>
+<code>retrieval.ts:462-463</code> computes
+<code>hashMemoryScope(request.query.scope)</code> and excludes any
+record whose stored <code>scopeHash</code> differs, and it is the first
+test in the gate, before status, expiry or any declared filter. The hash
+is a SHA-256 over the structured scope object, so a scope that differs
+in any field is a different bucket.
+<code>hindsight-local-client.test.ts:419-459</code> pins the boundary at
+the provider adapter: a mapping stored under one scope, fetched under a
+scope differing only in <code>sessionId</code>, is rejected with
+<code>MEMORY_SCOPE_DENIED</code> rather than returned. The honest limit
+is that the scope arrives in the request — the gate enforces consistency
+between the request's scope and the record's, and nothing in the memory
+package establishes that the caller is entitled to the scope it
+names.</p>
+<p><strong>Trust state — awarded.</strong> Eight stored values, of which
+four withhold a record from a default retrieve: <code>deleted</code> and
+<code>deletion_pending</code> unconditionally, and
+<code>superseded</code> and <code>invalidated</code> unless the request
+opts in. That is a state deciding admission rather than a score deciding
+order, and the four unit-interval scores sit beside it doing the
+ordering, which keeps the two jobs apart.</p>
+<p><strong>Negative eval — awarded.</strong>
+<code>foundation.test.ts:179-243</code> adds two records, runs a
+retrieve and asserts the result ids equal <em>both</em> of them — the
+populated control — then sets the second record's status to
+<code>invalidated</code> through <code>recordStore.updateStatus</code>
+and asserts the same retrieve now returns exactly the first record's id.
+The exclusion is proven against a result that was populated moments
+earlier in the same test, and an empty store fails the first
+assertion.</p>
+<p><strong>Human review — withheld, and this is the finding.</strong>
+<code>humanVerified</code> is declared on the record, filtered on by
+<code>verifiedOnly</code> in both the retrieval gate
+(<code>retrieval.ts:501</code>) and the managed store
+(<code>managed-store.ts:366</code>), scored as a ranking feature
+(<code>retrieval.ts:541</code>), and consulted in a same-key conflict
+check (<code>native-maintenance.ts:85</code>). It appears six times in
+the repository and not once on the left of an assignment — no MCP tool,
+no provider, no maintenance pass, no test fixture sets it. So
+<code>verifiedOnly</code> is a filter that returns the empty set by
+construction, and <code>verified</code> contributes a constant zero to
+every score.</p>
+<p>This is the shape the atlas's producer test exists for, and the
+distinction worth keeping is that the <em>consumers</em> are real and
+correct. Someone thought about what a human-verified memory should mean
+for retrieval and for ranking, wrote both, and never built the
+verifying. A reader adopting this schema should treat the flag as a hole
+to fill rather than a feature to inherit.</p>
+<p><strong>Tombstone — withheld, with the material present.</strong>
+Every record stores a <code>contentHash</code>, and supersession is
+keyed on the predecessor's version id. Nothing consults the hash of a
+removed or invalidated record before a new write, so the same content
+can be re-added under a fresh id. The hash exists; the lookup does
+not.</p>
+<p><strong>Audit log — withheld.</strong> <code>memory-events.ts</code>
+is an emission layer over the framework event bus — typed payloads with
+an operation id, scope hash, latency and error — published rather than
+persisted. It is the right design for observability and is not a durable
+record of what changed in the store.</p>
+<p><strong>Bitemporal — withheld.</strong> <code>createdAt</code>,
+<code>updatedAt</code> and <code>expiresAt</code> are all record-axis
+timestamps, and <code>expiresAt &lt;= now</code> is an expiry test
+rather than an as-of read. There is no validity interval and no instant
+parameter on the retrieve.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>270 cases in <code>packages/memory/src/*.test.ts</code> across 74
+test files in that package alone. The suite is unusually concerned with
+failure paths — dead-letter management, provider reconciliation, bounded
+recovery, context artifact integrity, API-version drift, and a case that
+refuses a non-loopback cleartext endpoint at construction.
+<code>foundation.test.ts</code> covers hard filtering, score fusion,
+stable tie-break and the replayable explanation in one case.</p>
+<p><strong>No paper describes this system, and no benchmark result is
+committed.</strong> A search for <code>arxiv</code>,
+<code>bibtex</code>, <code>@article</code>, <code>@misc</code>,
+<code>citation</code> and <code>doi.org</code> across the markdown and
+manifests returns nothing, and <code>find . -iname 'CITATION*'</code>
+returns nothing. The README's claims are architectural rather than
+measured.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Hash the scope and compare hashes, first.</strong> One
+equality against a SHA-256 of the structured scope, evaluated before
+status, expiry or any user filter, is cheaper to reason about than a
+predicate assembled per query — and there is no read path that skips
+it.</li>
+<li><strong>Keep the index state off the trust state.</strong>
+<code>indexStatus</code> is its own seven-value machine, so "not yet
+searchable" never has to borrow a value from "not believed".</li>
+<li><strong>Make a retrieval explainable by id.</strong>
+<code>explain(snapshot.id)</code> returning the same object the retrieve
+produced, with a committed equality assertion, turns a ranking into
+something a user can be shown after the fact.</li>
+<li><strong>Grep your own schema for fields nothing writes.</strong> The
+cheapest version of this report's main finding is one command per
+boolean flag: search for the field name and look for an assignment. Four
+consumers and no producer is a filter that silently returns
+nothing.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Was <code>humanVerified</code> ever wired, in a branch or an earlier
+release? The consumers read as deliberate rather than speculative, which
+suggests a producer was planned; nothing in the tree at this commit
+indicates where it would go.</li>
+<li>The scope gate enforces consistency, not entitlement. Whether a
+caller may request a given scope is decided outside
+<code>packages/memory</code>, and a reader deploying this should find
+out where.</li>
+<li><code>contentHash</code> is computed and stored on every record and,
+as far as this reading found, is not read on any write path. It is one
+lookup away from being the tombstone the schema otherwise lacks.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Record contract: <code>packages/memory/src/record-contract.ts</code>
+— <code>memoryStatusSchema</code> (52-61),
+<code>managedMemoryRecordSchema</code> (170-205),
+<code>humanVerified</code> (190),
+<code>contentHash</code>/<code>scopeHash</code> (198-199).</li>
+<li>Retrieval: <code>packages/memory/src/retrieval.ts</code> — the gate
+(462-526), the <code>verifiedOnly</code> filter (501),
+<code>recordComponentScores</code> (528-545).</li>
+<li>Managed store: <code>packages/memory/src/managed-store.ts:366</code>
+— the second <code>verifiedOnly</code> filter.</li>
+<li>Maintenance:
+<code>packages/memory/src/native-maintenance.ts:85</code> — the same-key
+conflict check reading <code>humanVerified</code>.</li>
+<li>Write path:
+<code>packages/memory/src/native-memory.ts:555-572</code>.</li>
+<li>Hashing:
+<code>packages/memory/src/memory-utils.ts:17-23</code>.</li>
+<li>Events: <code>packages/memory/src/memory-events.ts</code>.</li>
+<li>Tests: <code>packages/memory/src/foundation.test.ts:179-243</code>
+(the populated control and the invalidation exclusion),
+<code>hindsight-local-client.test.ts:419-459</code> (cross-scope
+rejection).</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &#39;humanVerified&#39; --include=&#39;*.ts&#39; . | grep -v node_modules            # 6 hits: 1 schema, 4 consumers, 0 assignments
+grep -rn &#39;humanVerified&#39; --include=&#39;*.ts&#39; --include=&#39;*.js&#39; . | grep -E &#39;humanVerified\s*[:=]\s*(true|false|[a-z])&#39;   # 1 hit, the Zod declaration itself
+grep -rn &#39;contentHash&#39; --include=&#39;*.ts&#39; packages/memory/src/operations.ts packages/memory/src/native-memory.ts   # computed and stored, never compared
+grep -riE &#39;arxiv|bibtex|@article|@misc|citation|doi\.org&#39; --include=&#39;*.md&#39; --include=&#39;*.json&#39; . | grep -v node_modules   # 0
+find . -iname &#39;CITATION*&#39; -not -path &#39;./.git/*&#39; -not -path &#39;*/node_modules/*&#39;  # 0</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/CodeSoul-co/Hypha/commit/ac77fa9b4a1b1da2815adf7d5582dbc27cd9373f"><code class="commit-id" title="ac77fa9b4a1b1da2815adf7d5582dbc27cd9373f">ac77fa9b…</code></a>
+— first reading, at the head of <code>main</code>, 1,537 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: no auto-run
+surface, one build-time execution path, sixteen manifests carrying
+floating version ranges, and nothing inside the seven-day cooldown.
+Nothing was installed, built or run — no npm, no vitest, no jest. Three
+marks. <code>human_review</code> is withheld on a producer test rather
+than on an absence: <code>humanVerified</code> has four consumers
+including a retrieval filter and a ranking feature, and no writer
+anywhere in the tree. <code>tombstone</code> is withheld with its
+material present — <code>contentHash</code> is stored on every record
+and consulted by no write path. <code>audit_log</code> is withheld
+because the memory events are published to an event bus rather than
+persisted, and <code>bitemporal</code> because every timestamp on the
+record is a record-axis one.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
