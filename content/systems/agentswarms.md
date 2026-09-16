@@ -7,9 +7,9 @@ page_kind: system
 source_name: "AgentSwarms-fyi/agentswarms"
 source_url: https://github.com/AgentSwarms-fyi/agentswarms
 archive_name: "AgentSwarms-fyi--agentswarms"
-revision: 6705e292da0cb97df62d46a4d1ea00821ccfbfc8
-revision_url: https://github.com/AgentSwarms-fyi/agentswarms/commit/6705e292da0cb97df62d46a4d1ea00821ccfbfc8
-analyzed_at: 2026-09-11
+revision: 52c9d731e270ada95bf56525192bfb699f360aed
+revision_url: https://github.com/AgentSwarms-fyi/agentswarms/commit/52c9d731e270ada95bf56525192bfb699f360aed
+analyzed_at: 2026-09-17
 capabilities: "scope_enforced, human_review"
 capability_evidence:
   scope_enforced: "long-term memory recall | src/utils/memory/recall.server.ts:84-85 | `.eq(\"user_id\", userId).eq(\"agent_id\", agentId)` on the query, with row-level security enforcing the same at the database | unknown"
@@ -557,6 +557,8 @@ Run from the root of the checkout at the pinned commit.
 
 ## History
 
-**2026-09-11** — [`6705e292da0cb97df62d46a4d1ea00821ccfbfc8`](https://github.com/AgentSwarms-fyi/agentswarms/commit/6705e292da0cb97df62d46a4d1ea00821ccfbfc8) — re-read, and the numbers are the finding: **554 commits and 291,954 insertions past the previous pin, of which the memory path took 76 lines across four files**, most of that a stopword list reformatted one entry per line. Every claim in this report holds at the new commit, including the three that name inert columns. `usage_count` is still written as `undefined` — dropped from the PostgREST body — under a comment promising a read-then-write that does not exist, with `void ids;` discarding the ids it had gathered for it; `score` is still the schema default read into the ranking sum and set by nothing; `expires_at` is still declared and untouched. `last_used_at` remains the one live member of that group, written on every surfaced row and read back as a recency boost. Both marks re-verified, with `capability_evidence` records added where the report had none. Screened before reading: thirteen findings, none an auto-run surface; nothing was installed or run.
+**2026-09-17** — [`52c9d731e270ada95bf56525192bfb699f360aed`](https://github.com/AgentSwarms-fyi/agentswarms/commit/52c9d731e270ada95bf56525192bfb699f360aed) — re-pinned after 59 commits. Both anchored files — the recall path behind `scope_enforced` and the memory toolset behind `human_review` — are byte-identical at both commits, so both marks stand on unchanged code and every line number and quotation here is exact at the new pin. Nothing was installed, built or run.
+
+**2026-09-11** — [`52c9d731e270ada95bf56525192bfb699f360aed`](https://github.com/AgentSwarms-fyi/agentswarms/commit/52c9d731e270ada95bf56525192bfb699f360aed) — re-read, and the numbers are the finding: **554 commits and 291,954 insertions past the previous pin, of which the memory path took 76 lines across four files**, most of that a stopword list reformatted one entry per line. Every claim in this report holds at the new commit, including the three that name inert columns. `usage_count` is still written as `undefined` — dropped from the PostgREST body — under a comment promising a read-then-write that does not exist, with `void ids;` discarding the ids it had gathered for it; `score` is still the schema default read into the ranking sum and set by nothing; `expires_at` is still declared and untouched. `last_used_at` remains the one live member of that group, written on every surfaced row and read back as a recency boost. Both marks re-verified, with `capability_evidence` records added where the report had none. Screened before reading: thirteen findings, none an auto-run surface; nothing was installed or run.
 
 **2026-07-31** — [`cfde9169ede6128f3cf149e0b3748859e1a2f4e4`](https://github.com/AgentSwarms-fyi/agentswarms/commit/cfde9169ede6128f3cf149e0b3748859e1a2f4e4) — first reading.

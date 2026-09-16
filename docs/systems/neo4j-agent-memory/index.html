@@ -112,14 +112,14 @@ than only successes.</p>
               <strong>neo4j-labs/agent-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/neo4j-labs/agent-memory/commit/0303dc0066e0c071c8468536acc6219c183e2f97" title="0303dc0066e0c071c8468536acc6219c183e2f97">
+            <a class="meta-pill revision-pill" href="https://github.com/neo4j-labs/agent-memory/commit/f801acc654398e5bbe5551b49af66c17d3da5d5e" title="f801acc654398e5bbe5551b49af66c17d3da5d5e">
               <span>Analyzed revision</span>
-              <code>0303dc00…</code>
+              <code>f801acc6…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-13</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/neo4j-labs--agent-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -415,6 +415,47 @@ of this repository can verify: the Python guarantee is checkable here
 and the TypeScript one is a claim about a service that is not.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
+<p><strong>Four writes that reported success while the graph kept
+nothing.</strong> Version 0.6 fixes a cluster of defects in the Bolt
+entity write path, and they are worth reading as a set because the
+commit is right that they compound: <code>add_entity</code> handed out
+an id addressing no node, and <code>add_relationship</code> then
+acknowledged the write that id was used for, so the failure surfaced
+only as missing data much later.</p>
+<p><code>add_entity</code> MERGEs on <code>(name, type)</code>, so a
+repeat add takes the <code>ON MATCH</code> arm, keeps the pre-existing
+node's id — and returned the freshly minted one anyway, addressing what
+the commit calls a ghost entity. No second node is created, which is why
+the repair belongs in the return value rather than in a caller-side name
+lookup. <code>add_relationship</code> MATCHes both endpoints before
+MERGEing the edge, so a pair of ids matching no node wrote zero rows and
+the method still returned a <code>Relationship</code>; it now raises
+<code>NotFoundError</code> naming both ids and telling the caller to use
+the ids stored on the nodes rather than ones minted client-side
+(<code>memory/long_term.py:1058-1069</code>). Aliases were written into
+the JSON metadata blob while the alias lookup reads a top-level
+<code>aliases</code> property — which is what the merge query already
+wrote — so an entity was never findable by an alias passed to
+<code>add_entity</code>; <code>aliases</code> is now a top-level list
+everywhere, appended on match, with a metadata fallback in the parser so
+rows written earlier still read back. And
+<code>merge_duplicate_entities</code> carried subqueries for
+<code>MENTIONS</code> and <code>SAME_AS</code> only, against a docstring
+promising that relationships were transferred, so a merge silently
+dropped <code>RELATED_TO</code> in both directions, both provenance
+edges and the v0.2 audit edges. All are now copied onto the survivor
+tagged <code>migrated_from</code>, and <em>copied</em> rather than moved
+so the merge stays reversible.</p>
+<p>Two details generalise past this store. A write and a read that
+disagree about where a field lives are the same defect as two copies of
+a predicate that disagree — here the field was <code>aliases</code>, and
+the disagreement made a lookup silently return nothing rather than fail.
+And the commit names why none of this was caught: <em>"every defect here
+is invisible to a mocked client — the mechanism is a real MERGE/ON
+MATCH."</em> A suite that stands in for the database cannot see a defect
+that lives in the database's own semantics, which is the argument for
+the integration tests the fix ships beside it — 28 unit cases and an
+integration file reproducing the reported sequence.</p>
 <p>Strengths:</p>
 <ul>
 <li><strong>Failures captured by control flow</strong>, not by caller
@@ -525,8 +566,23 @@ over the same conversation?</li>
 <code>benchmarks/metrics.py</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/neo4j-labs/agent-memory/commit/f801acc654398e5bbe5551b49af66c17d3da5d5e"><code class="commit-id" title="f801acc654398e5bbe5551b49af66c17d3da5d5e">f801acc6…</code></a>
+— re-read after 6 commits, at 0.6.0. <code>long_term.py</code> is the
+only anchored file and it moved, gaining 97 lines; both marks were
+re-derived there and hold. The window is a fix for four write-path
+defects in which a call reported success while the graph did not hold
+what the caller was told, written up in section 9 — an id returned for a
+node it does not address, a relationship acknowledged against endpoints
+that matched nothing, aliases written where the alias lookup does not
+read, and a merge that orphaned every edge type its docstring promised
+to transfer except two. The commit's own account of why none of it was
+caught is the transferable part: the defects are invisible to a mocked
+client because the mechanism is real
+<code>MERGE</code>/<code>ON MATCH</code> semantics. Nothing was
+installed, built or run.</p>
 <p><strong>2026-09-13</strong> — <a
-href="https://github.com/neo4j-labs/agent-memory/commit/0303dc0066e0c071c8468536acc6219c183e2f97"><code class="commit-id" title="0303dc0066e0c071c8468536acc6219c183e2f97">0303dc00…</code></a>
+href="https://github.com/neo4j-labs/agent-memory/commit/f801acc654398e5bbe5551b49af66c17d3da5d5e"><code class="commit-id" title="f801acc654398e5bbe5551b49af66c17d3da5d5e">f801acc6…</code></a>
 — 116 commits and about 187,000 added lines past the previous pin, most
 of it a new <code>typescript/</code> client and integrations for
 Strands, Mastra and the Vercel AI SDK. Both marks re-verified in the

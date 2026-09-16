@@ -8129,7 +8129,7 @@ Privacy/deletion:
 - [QwenLM/qwen-code](https://github.com/QwenLM/qwen-code) at [`d313505fdb7e31e795bab00f76ab8488ff72f90f`](https://github.com/QwenLM/qwen-code/commit/d313505fdb7e31e795bab00f76ab8488ff72f90f)
 - [anomalyco/opencode](https://github.com/anomalyco/opencode) at [`e03db9bc6908f75c9334d8aa997deeaac81c0298`](https://github.com/anomalyco/opencode/commit/e03db9bc6908f75c9334d8aa997deeaac81c0298)
 - [NVIDIA-NeMo/labs-OO-Agents](https://github.com/NVIDIA-NeMo/labs-OO-Agents) at [`362f8bd217fcc39f75b70d4b668e49fc86dec104`](https://github.com/NVIDIA-NeMo/labs-OO-Agents/commit/362f8bd217fcc39f75b70d4b668e49fc86dec104)
-- [neo4j-labs/agent-memory](https://github.com/neo4j-labs/agent-memory) at [`0303dc0066e0c071c8468536acc6219c183e2f97`](https://github.com/neo4j-labs/agent-memory/commit/0303dc0066e0c071c8468536acc6219c183e2f97)
+- [neo4j-labs/agent-memory](https://github.com/neo4j-labs/agent-memory) at [`f801acc654398e5bbe5551b49af66c17d3da5d5e`](https://github.com/neo4j-labs/agent-memory/commit/f801acc654398e5bbe5551b49af66c17d3da5d5e)
 - [noamschwartz/atlas-memory-demo](https://github.com/noamschwartz/atlas-memory-demo) at [`d84f9235a69d45a4fe326aaa691ad024699d0daa`](https://github.com/noamschwartz/atlas-memory-demo/commit/d84f9235a69d45a4fe326aaa691ad024699d0daa)
 - [NVIDIA/NemoClaw](https://github.com/NVIDIA/NemoClaw) at [`be46805b51b0d626466538e9f8fe56c8ad157549`](https://github.com/NVIDIA/NemoClaw/commit/be46805b51b0d626466538e9f8fe56c8ad157549)
 - [chaitanyagiri/munder-difflin](https://github.com/chaitanyagiri/munder-difflin) at [`bdf524ecfb319b4f10cebde0c3539a1c75aeea9a`](https://github.com/chaitanyagiri/munder-difflin/commit/bdf524ecfb319b4f10cebde0c3539a1c75aeea9a)
@@ -8171,7 +8171,7 @@ Privacy/deletion:
 - [GOODMAN-PRO/helm](https://github.com/GOODMAN-PRO/helm) at [`f453eaa9683ea0a66b45c76275cb6576bcf14f73`](https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73)
 - [agno-agi/agno](https://github.com/agno-agi/agno) at [`8bf156efe7a1fe6d496e4434be73726b374ed8aa`](https://github.com/agno-agi/agno/commit/8bf156efe7a1fe6d496e4434be73726b374ed8aa)
 - [aiming-lab/SimpleMem](https://github.com/aiming-lab/SimpleMem) at [`db80b6a7c591e0ea730a058e9f5fc4eb06572299`](https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299)
-- [pydantic/pydantic-ai-harness](https://github.com/pydantic/pydantic-ai-harness) at [`5dd1e0e3dd4becd2eb64cde6fe98802cd1b60221`](https://github.com/pydantic/pydantic-ai-harness/commit/5dd1e0e3dd4becd2eb64cde6fe98802cd1b60221)
+- [pydantic/pydantic-ai-harness](https://github.com/pydantic/pydantic-ai-harness) at [`58400a1d1b2b5625aadbb154d2fea1030014337c`](https://github.com/pydantic/pydantic-ai-harness/commit/58400a1d1b2b5625aadbb154d2fea1030014337c)
 - [camel-ai/camel](https://github.com/camel-ai/camel) at [`8c791b7b9cf7deab56cb5a92818c34499af9097f`](https://github.com/camel-ai/camel/commit/8c791b7b9cf7deab56cb5a92818c34499af9097f)
 - [microsoft/agent-framework](https://github.com/microsoft/agent-framework) at [`6d532cf77e26988fe2d822f13ddea021faa9d735`](https://github.com/microsoft/agent-framework/commit/6d532cf77e26988fe2d822f13ddea021faa9d735)
 - [crewAIInc/crewAI](https://github.com/crewAIInc/crewAI) at [`7b796623723474a10d7b9e91516df70801dd679d`](https://github.com/crewAIInc/crewAI/commit/7b796623723474a10d7b9e91516df70801dd679d)
@@ -8193,7 +8193,7 @@ Privacy/deletion:
 - [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) at [`fe66389083369c3159aa391117185c8f58b4d07c`](https://github.com/Graphify-Labs/graphify/commit/fe66389083369c3159aa391117185c8f58b4d07c)
 - [mthines/lorekit](https://github.com/mthines/lorekit) at [`b325977c959ed2d0d58f1168283973bf27a9c451`](https://github.com/mthines/lorekit/commit/b325977c959ed2d0d58f1168283973bf27a9c451)
 - [SyntheticAutonomicMind/CLIO](https://github.com/SyntheticAutonomicMind/CLIO) at [`e0a9574e76a2582334aed5ceed6f32a3a4a8a267`](https://github.com/SyntheticAutonomicMind/CLIO/commit/e0a9574e76a2582334aed5ceed6f32a3a4a8a267)
-- [AgentSwarms-fyi/agentswarms](https://github.com/AgentSwarms-fyi/agentswarms) at [`6705e292da0cb97df62d46a4d1ea00821ccfbfc8`](https://github.com/AgentSwarms-fyi/agentswarms/commit/6705e292da0cb97df62d46a4d1ea00821ccfbfc8)
+- [AgentSwarms-fyi/agentswarms](https://github.com/AgentSwarms-fyi/agentswarms) at [`52c9d731e270ada95bf56525192bfb699f360aed`](https://github.com/AgentSwarms-fyi/agentswarms/commit/52c9d731e270ada95bf56525192bfb699f360aed)
 - [proxysoul/Empryo](https://github.com/proxysoul/Empryo) at [`f771fc238e6426706a28773a9aaa01b967c70342`](https://github.com/proxysoul/Empryo/commit/f771fc238e6426706a28773a9aaa01b967c70342) — renamed from `proxysoul/soulforge`
 - [truffle-ai/dexto](https://github.com/truffle-ai/dexto) at [`a910e0ef36f2a538c0bb0d4f17e83c4ec8293735`](https://github.com/truffle-ai/dexto/commit/a910e0ef36f2a538c0bb0d4f17e83c4ec8293735) — read only at the second pin; a dependency surface inside the cooldown, so nothing was installed or run. The memory packages did not change; `human_review` re-tested and recorded as delete-only, since pinning is an agent tool
 - [Arvincreator/project-golem](https://github.com/Arvincreator/project-golem) at [`210658a11bee669df875cc6edc0511fac239d1ba`](https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875cc6edc0511fac239d1ba)

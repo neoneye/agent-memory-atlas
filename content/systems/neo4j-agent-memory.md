@@ -7,9 +7,9 @@ page_kind: system
 source_name: neo4j-labs/agent-memory
 source_url: https://github.com/neo4j-labs/agent-memory
 archive_name: "neo4j-labs--agent-memory"
-revision: 0303dc0066e0c071c8468536acc6219c183e2f97
-revision_url: https://github.com/neo4j-labs/agent-memory/commit/0303dc0066e0c071c8468536acc6219c183e2f97
-analyzed_at: 2026-09-13
+revision: f801acc654398e5bbe5551b49af66c17d3da5d5e
+revision_url: https://github.com/neo4j-labs/agent-memory/commit/f801acc654398e5bbe5551b49af66c17d3da5d5e
+analyzed_at: 2026-09-17
 capabilities: "bitemporal, scope_enforced"
 capability_evidence:
   bitemporal: "long-term preferences — validity bounds beside the record time | src/neo4j_agent_memory/memory/long_term.py:345-346 (`valid_from`, `valid_until`), `supersede_preference` | a preference carries an explicit validity interval distinct from when it was written, and supersession closes the older interval rather than overwriting the row, so the period during which a wrong preference was in force stays answerable. The bound is real and worth naming: validity applies to preferences only, not to entities or to the reasoning tier, so the graph as a whole is not bi-temporal — one memory kind is | tests/ in-repo; not run for this reading — the screen reports 49 dependency files inside the seven-day cooldown and 16 build-time execution points, so nothing was installed"
@@ -304,6 +304,43 @@ that is not.
 
 ## 9. Reliability, Safety, and Trust
 
+**Four writes that reported success while the graph kept nothing.** Version 0.6
+fixes a cluster of defects in the Bolt entity write path, and they are worth
+reading as a set because the commit is right that they compound: `add_entity`
+handed out an id addressing no node, and `add_relationship` then acknowledged the
+write that id was used for, so the failure surfaced only as missing data much
+later.
+
+`add_entity` MERGEs on `(name, type)`, so a repeat add takes the `ON MATCH` arm,
+keeps the pre-existing node's id — and returned the freshly minted one anyway,
+addressing what the commit calls a ghost entity. No second node is created, which
+is why the repair belongs in the return value rather than in a caller-side name
+lookup. `add_relationship` MATCHes both endpoints before MERGEing the edge, so a
+pair of ids matching no node wrote zero rows and the method still returned a
+`Relationship`; it now raises `NotFoundError` naming both ids and telling the
+caller to use the ids stored on the nodes rather than ones minted client-side
+(`memory/long_term.py:1058-1069`). Aliases were written into the JSON metadata
+blob while the alias lookup reads a top-level `aliases` property — which is what
+the merge query already wrote — so an entity was never findable by an alias
+passed to `add_entity`; `aliases` is now a top-level list everywhere, appended on
+match, with a metadata fallback in the parser so rows written earlier still read
+back. And `merge_duplicate_entities` carried subqueries for `MENTIONS` and
+`SAME_AS` only, against a docstring promising that relationships were
+transferred, so a merge silently dropped `RELATED_TO` in both directions, both
+provenance edges and the v0.2 audit edges. All are now copied onto the survivor
+tagged `migrated_from`, and *copied* rather than moved so the merge stays
+reversible.
+
+Two details generalise past this store. A write and a read that disagree about
+where a field lives are the same defect as two copies of a predicate that
+disagree — here the field was `aliases`, and the disagreement made a lookup
+silently return nothing rather than fail. And the commit names why none of this
+was caught: *"every defect here is invisible to a mocked client — the mechanism
+is a real MERGE/ON MATCH."* A suite that stands in for the database cannot see a
+defect that lives in the database's own semantics, which is the argument for the
+integration tests the fix ships beside it — 28 unit cases and an integration file
+reproducing the reported sequence.
+
 Strengths:
 
 - **Failures captured by control flow**, not by caller discipline.
@@ -401,7 +438,9 @@ putting the old value back.
 
 ## History
 
-**2026-09-13** — [`0303dc0066e0c071c8468536acc6219c183e2f97`](https://github.com/neo4j-labs/agent-memory/commit/0303dc0066e0c071c8468536acc6219c183e2f97) — 116 commits and about 187,000 added lines past the previous pin, most of it a new `typescript/` client and integrations for Strands, Mastra and the Vercel AI SDK. Both marks re-verified in the Python implementation, which the client calls rather than reimplements.
+**2026-09-17** — [`f801acc654398e5bbe5551b49af66c17d3da5d5e`](https://github.com/neo4j-labs/agent-memory/commit/f801acc654398e5bbe5551b49af66c17d3da5d5e) — re-read after 6 commits, at 0.6.0. `long_term.py` is the only anchored file and it moved, gaining 97 lines; both marks were re-derived there and hold. The window is a fix for four write-path defects in which a call reported success while the graph did not hold what the caller was told, written up in section 9 — an id returned for a node it does not address, a relationship acknowledged against endpoints that matched nothing, aliases written where the alias lookup does not read, and a merge that orphaned every edge type its docstring promised to transfer except two. The commit's own account of why none of it was caught is the transferable part: the defects are invisible to a mocked client because the mechanism is real `MERGE`/`ON MATCH` semantics. Nothing was installed, built or run.
+
+**2026-09-13** — [`f801acc654398e5bbe5551b49af66c17d3da5d5e`](https://github.com/neo4j-labs/agent-memory/commit/f801acc654398e5bbe5551b49af66c17d3da5d5e) — 116 commits and about 187,000 added lines past the previous pin, most of it a new `typescript/` client and integrations for Strands, Mastra and the Vercel AI SDK. Both marks re-verified in the Python implementation, which the client calls rather than reimplements.
 
 **A published claim is corrected in the direction that matters.** The first reading named `_enforce_multi_tenant` as the scope mechanism; it is an argument check on the write path, and it cannot filter a read. The predicate that earns `scope_enforced` is in `get_preferences_for`, which compiles the caller's `user_identifier` into a `MATCH (u:User {identifier: $user_identifier})` pattern. The bound now recorded with it: `search_entities`, `search_preferences` and `get_context` accept no user parameter, so the semantic path an agent uses to assemble a prompt is unscoped. The mark stands on the by-user read and the report says which read carries it.
 
