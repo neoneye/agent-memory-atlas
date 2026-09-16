@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Go CLI whose team memory is a
+git repository shared by humans and agents, where a pull that halts on
+conflicts is resolved in three tiers — git's union driver, accept-theirs
+confined to regenerable artifacts, then a bounded LLM whose only
+post-condition is that no conflict markers remain.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="SageOx CLI — Agent Memory Atlas">
+    <meta property="og:description" content="A Go CLI whose team memory
+is a git repository shared by humans and agents, where a pull that halts
+on conflicts is resolved in three tiers — git's union driver,
+accept-theirs confined to regenerable artifacts, then a bounded LLM
+whose only post-condition is that no conflict markers remain.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SageOx
+CLI — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Go CLI whose team memory
+is a git repository shared by humans and agents, where a pull that halts
+on conflicts is resolved in three tiers — git's union driver,
+accept-theirs confined to regenerable artifacts, then a bounded LLM
+whose only post-condition is that no conflict markers remain.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>SageOx CLI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "SageOx CLI",
+      "description": "A Go CLI whose team memory is a git repository shared by humans and agents, where a pull that halts on conflicts is resolved in three tiers \u2014 git's union driver, accept-theirs confined to regenerable artifacts, then a bounded LLM whose only post-condition is that no conflict markers remain.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">When two agents' memories conflict, tier
+three is an LLM</p>
+          <h1>SageOx CLI</h1>
+          <p class="document-deck">A Go CLI whose team memory is a git
+repository shared by humans and agents, where a pull that halts on
+conflicts is resolved in three tiers — git's union driver, accept-theirs
+confined to regenerable artifacts, then a bounded LLM whose only
+post-condition is that no conflict markers remain.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/sageox/ox">
+              <span>Source</span>
+              <strong>sageox/ox</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/sageox/ox/commit/02f4f406a4b973fa4adda9df62725904cc1859d9" title="02f4f406a4b973fa4adda9df62725904cc1859d9">
+              <span>Analyzed revision</span>
+              <code>02f4f406…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/sageox--ox" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>sageox--ox</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>SageOx CLI is "[t]he hivemind for human-agent teams" — MIT, Go,
+651,919 lines across 1,337 test files, shipping an <code>ox</code>
+binary and a Claude plugin.</p>
+<p>Its team memory is a git repository. The cloud provisions it, the CLI
+clones it sparsely, and it holds <code>MEMORY.md</code> plus
+<code>memory/daily/</code>, <code>memory/weekly/</code> and
+<code>memory/monthly/</code> alongside <code>sessions/</code> and
+<code>data/</code>. Agents write observations with
+<code>ox memory put</code>; a daemon syncs them; the server distils them
+into the summaries that later get read.</p>
+<p>Two design choices are worth the visit and one is worth knowing
+before you trust it.</p>
+<p>The first is how memory reaches an agent. Priming does not inject it.
+It hands over <code>MEMORY.md</code> and then a catalogue — "Recent:
+memory/daily/ (12 files — what happened recently)", "Patterns:
+memory/weekly/", "Trends: memory/monthly/" — under a heading called
+Progressive Disclosure, and leaves the agent to open what it wants with
+ordinary file tools. In a corpus where nearly every system either
+retrieves-and-injects or injects whole, advertising the shelf and
+letting the reader choose is a genuinely different answer, and it costs
+nothing at prompt time.</p>
+<p>The second is the comment on <code>DefaultResolveRules</code>, which
+is the best piece of writing in this repository and possibly the best
+documented engineering judgement in this atlas. It explains why
+<code>sessions/</code> auto-resolves on conflict: <code>meta.json</code>
+is written by both the cloud summarizer and the local CLI, so with no
+rule "the rebase halts, nothing can resolve it, the abort restores the
+pre-rebase state, and the next attempt fails identically — a
+deterministic wedge that never escalates and never self-heals." Then the
+evidence: "One ledger sat 341 ahead / 1055 behind for 13 days with 281
+such conflicts." Then the justification, artifact by artifact, each with
+its canonical source named elsewhere, and the trade stated outright: "An
+imperfect summary beats a ledger that can never sync again." Then a
+SAFETY paragraph about pointer-wins ordering that ends "Do not weaken
+that guard", and a NOTE explaining why the rule is scoped to the ledger
+rather than added to the shared defaults.</p>
+<p>Crucially, the paths that auto-resolve are <code>data/</code> and
+<code>sessions/</code> — the regenerable ones. The memory directories
+are not on that list. That is the right call, and it is what makes the
+third thing matter.</p>
+<p>A conflict that is <em>not</em> under a safe prefix falls to tier
+three: <code>internal/ledger/automerge</code> runs an LLM —
+<code>claude</code>, <code>gemini</code> or <code>codex</code>, or an
+explicit absolute path, restricted by an allowlist with the argv[0]
+substitution attack spelled out in the comment — on the conflicted file,
+with a 60-second per-file deadline, and asks it to merge.</p>
+<p>The system prompt is careful: "Preserve user intent on both sides;
+when in doubt prefer including more content over deleting. Remove all
+conflict markers from your output."</p>
+<p>The verification is that the conflict markers are gone.</p>
+<p>That is the whole post-condition. A model that resolves the conflict
+by keeping one side and discarding the other, or by paraphrasing both
+into something neither person wrote, produces a file with no conflict
+markers and is staged and committed. For source code that is a familiar
+risk with a familiar remedy — someone reviews the diff. For a team's
+shared memory, the thing being silently rewritten is the record of what
+the team decided.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An <strong>observation</strong> is what an agent records in the
+moment: <code>{"content": "..."}</code>, capped at 20KB.</p>
+<p>A <strong>fact</strong> is what extraction produces: a headline, an
+optional summary and rationale, a <code>who</code>, a source type and
+reference, a timestamp, and a category from a closed list.</p>
+<p>The <strong>ledger</strong> is a git repository shared by the team's
+humans and agents.</p>
+<p>A <strong>sync</strong> is <code>git pull --rebase</code>, and when
+it halts, the three tiers decide what the team remembers.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the accept-theirs tier is deliberately confined to regenerable artifacts, so a conflict in memory content falls through to an LLM whose only post-condition is the absence of conflict markers</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the accept-theirs tier is deliberately confined to regenerable artifacts, so a conflict in memory content falls through to an LLM whose only post-condition is the absence of conflict markers
+flowchart TB
+    A[&quot;agent&quot;] --&gt;|&quot;ox memory put&quot;| OBS[(&quot;.observations/ — local JSONL,&lt;br/&gt;20KB cap per observation&quot;)]
+    OBS --&gt;|&quot;daemon sync&quot;| LED[(&quot;team ledger — a git repo,&lt;br/&gt;cloned sparsely from a&lt;br/&gt;server-provided URL&quot;)]
+    LED --&gt; MEM[&quot;MEMORY.md&lt;br/&gt;memory/daily · weekly · monthly&lt;br/&gt;sessions/ · data/&quot;]
+    OBS --&gt;|&quot;POST /api/v1/teams/{id}/memory/distill&quot;| CLOUD[&quot;SageOx API —&lt;br/&gt;server-side LLM distillation.&lt;br/&gt;The local pipeline that did this&lt;br/&gt;was removed 2026-09-09&quot;]
+    CLOUD --&gt; MEM
+    MEM --&gt; PRIME[&quot;agent prime: MEMORY.md +&lt;br/&gt;a CATALOGUE with file counts —&lt;br/&gt;&#39;Progressive Disclosure&#39;.&lt;br/&gt;Content is not injected&quot;]
+    SYNC[&quot;git pull --rebase halts&lt;br/&gt;on conflicts&quot;] --&gt; T1{&quot;tier 1 — union driver&lt;br/&gt;(paths declaring merge=union)&quot;}
+    T1 --&gt;|&quot;markers gone&quot;| STAGE[&quot;stage&quot;]
+    T1 --&gt;|&quot;unresolved&quot;| T2{&quot;tier 2 — accept-theirs,&lt;br/&gt;only if ALL remaining paths are&lt;br/&gt;under SafePrefixes&quot;}
+    SAFE[&quot;SafePrefixes = data/ + sessions/ —&lt;br/&gt;regenerable artifacts, each with its&lt;br/&gt;canonical source named elsewhere.&lt;br/&gt;memory/ is NOT among them&quot;] -.-&gt; T2
+    T2 --&gt;|&quot;resolved&quot;| STAGE
+    T2 --&gt;|&quot;a memory path conflicts&quot;| T3{&quot;tier 3 — LLM merge&quot;}
+    T3 --&gt; BOUND[&quot;bounded: allowlist claude | gemini | codex&lt;br/&gt;or an absolute path; 60s per file&quot;]
+    BOUND --&gt; PROMPT[&quot;&#39;Preserve user intent on both sides;&lt;br/&gt;when in doubt prefer including more&lt;br/&gt;content over deleting&#39;&quot;]
+    PROMPT --&gt; CHECK{&quot;post-condition&quot;}
+    CHECK --&gt;|&quot;no &#39;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#39; remains&quot;| STAGE
+    CHECK -.-&gt;|&quot;nothing checks that content&lt;br/&gt;survived — a silent drop or&lt;br/&gt;rewrite passes&quot;| RISK[&quot;the record of what the&lt;br/&gt;team decided, rewritten&quot;]
+    STAGE --&gt; CONT[&quot;git rebase --continue&lt;br/&gt;(only once ALL conflicts staged)&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/ledger/</code></td>
+<td>The git-backed team ledger: clone, sparse checkout, sync, push</td>
+</tr>
+<tr>
+<td><code>internal/ledger/automerge/</code></td>
+<td>The three conflict tiers and the LLM binary allowlist</td>
+</tr>
+<tr>
+<td><code>internal/facts/</code></td>
+<td>The unified <code>Fact</code> schema and its JSONL reader and
+writer</td>
+</tr>
+<tr>
+<td><code>cmd/ox/memory_put.go</code></td>
+<td>Local observation capture</td>
+</tr>
+<tr>
+<td><code>cmd/ox/memory_distill.go</code></td>
+<td>The call to the server's distillation endpoint</td>
+</tr>
+<tr>
+<td><code>cmd/ox/agent_prime.go</code></td>
+<td>What an agent is told about memory at session start</td>
+</tr>
+<tr>
+<td><code>internal/manifest/</code></td>
+<td>Sparse-checkout paths and the resolve rules</td>
+</tr>
+<tr>
+<td><code>docs/specs/team-memory-journal.md</code></td>
+<td>The superseded local pipeline, kept as history</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>internal/ledger/ledger.go:36-71</code>. Read the comment, not
+just the rule. It is forty lines of engineering judgement with its
+evidence attached, and it is the reason to read this project.</p>
+<p>Then <code>internal/ledger/automerge/automerge.go:1-20</code> for the
+tiers, and <code>llm.go:22</code> for the prompt that decides a
+merge.</p>
+<p>Then <code>cmd/ox/agent_prime.go:2313-2328</code> for progressive
+disclosure.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The <code>Fact</code> is well shaped for citation:
+<code>SourceRef</code> is "the stable canonical identifier",
+<code>SourceURL</code> is "the human-clickable URL for drill-down",
+<code>SourceTitle</code> is "a short human label for citations", and the
+comment notes that older files lacking the last two are still valid
+because "the citation pipeline degrades gracefully (link omitted, label
+derived from other fields)". <code>Who</code> carries the author. A file
+header records a schema version, the source type, a recorded-at, an
+optional source hash and the query window that produced it.</p>
+<p>What the model does not carry is any epistemic state.
+<code>Category</code> is
+<code>decision | learning | open_question | action_item | context | ship | blocker | direction_change</code>
+— a taxonomy of what kind of thing was said, decided at write time.
+Nothing marks a fact as disputed, superseded, corrected or withdrawn,
+and <code>WriteFacts</code> opens the file with <code>os.Create</code>,
+which truncates: a rewrite replaces the file rather than appending to
+it. The history is git's, which is real but is the repository's history
+rather than the memory's own record — and after an LLM merge, the git
+history shows a resolution commit, not what each side originally
+said.</p>
+<p>That is why this report carries no marks. Every mechanism the atlas
+asks about is either absent or delegated: no stored status filtering a
+read, no validity interval, no value-keyed rejection, no scope predicate
+— the team boundary is a separate repository — no append-only mutation
+record of its own, no human review step over memory, and no committed
+must-not-retrieve assertion.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is none to speak of, deliberately. <code>MEMORY.md</code> is
+the always-present document; everything else is a file tree the agent
+may open. For a team whose agents already have file tools, that is a
+defensible answer and it makes the memory auditable by
+<code>git log</code> and readable by a human without the CLI.</p>
+<p>The cost is that nothing ranks. An agent that does not go looking
+does not find the weekly summary, and the priming text is the only thing
+nudging it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>ox memory put</code> accepts a JSON object or JSONL batch on
+the command line, from a file, or on stdin, caps each observation at
+20,480 bytes ("~5000 tokens"), and writes into
+<code>.observations</code> for the daemon to sync. Priming instructs the
+agent to use it as a standing behaviour: "Proactively record
+observations throughout this session … Record decisions, discoveries,
+questions, and notable events as they happen — don't wait to be
+asked."</p>
+<p>Distillation is the other half and it is not here.
+<code>ox memory distill</code> posts the pending observations and a date
+range to <code>/api/v1/teams/{teamID}/memory/distill</code> and receives
+a summary — the comment calls it "server-side LLM distillation". The
+command also refuses to run for a human, printing an explanation
+instead, because "[m]emory distillation is an automated process run by
+AI coworkers."</p>
+<p>So the policy that decides what a team remembers — what gets
+summarised, what is dropped, how contradictions between two agents'
+observations are settled — runs on a server whose code is not in this
+repository. The local pipeline that once did it was removed:
+<code>docs/specs/team-memory-journal.md</code> is headed
+"<strong>Superseded — 2026-09-09:</strong> <code>ox distill</code> and
+its entire <code>history</code> command tree have been removed", and the
+surviving references to <code>memory/daily/</code> in Go are a file
+count for priming and a sparse-checkout path.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Claude plugin plus the CLI, with agent priming, session upload and
+a daemon. The daemon is where the LLM resolver runs
+(<code>internal/daemon/llm_resolver.go</code>), which means the merge
+decision happens in the background rather than in front of whoever
+caused the conflict.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The LLM binary allowlist is the trust mechanism done well.
+<code>claude</code>, <code>gemini</code> and <code>codex</code> as bare
+names, or an explicit absolute path — "relative paths with a slash are
+refused outright" — with the reasoning recorded: an attacker who can
+write a binary earlier on <code>PATH</code> could otherwise "redirect to
+/tmp/evil", while an absolute path is trusted because "the operator
+already chose where to point this binary." A test file exists solely for
+the allowlist.</p>
+<p>Each tier is conservative in the right direction: "a tier that can't
+safely resolve every remaining conflicted path returns control to the
+next tier", and the resolver "only calls
+<code>git rebase --continue</code> once all conflicts have been staged."
+The accept-theirs tier fires only when <em>every</em> remaining conflict
+is under a safe prefix, so one memory file in the set sends the whole
+batch to the next tier rather than resolving the rest quietly.</p>
+<p>The gap is the post-condition on tier three, and it is worth stating
+precisely because the rest of the design is careful enough that it
+stands out. The check is
+<code>strings.Contains(data, "&lt;&lt;&lt;&lt;&lt;&lt;&lt;")</code>.
+That confirms the file is syntactically clean. It cannot confirm that
+both sides' content survived, and the instruction that it should is a
+sentence in a system prompt. A cheap improvement exists: the tier
+already has both sides of the conflict, so a post-merge check that every
+non-marker line from either side appears in the output — or a count of
+lines dropped, logged and thresholded — would turn the prompt's intent
+into something enforced.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,337 test files, including dedicated coverage for the allowlist,
+sparse clone, the murmur paths, github sync and the automerge tiers. The
+memory commands have put, write, integration and observation-roundtrip
+tests.</p>
+<p>The README is candid about what is not running: a comment in the
+badge block reads "CI badge intentionally omitted: ci.yml is currently
+disabled (ci.yml.disabled). Only docs.yml and smoke-test.yml are active,
+and neither is a build signal." Saying so in the file where a badge
+would otherwise imply otherwise is the honest choice.</p>
+<p>No test asserts anything about what the LLM merge tier preserves.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Copy the comment on <code>DefaultResolveRules</code> as a form. Name
+the failure, quantify it, justify the scope one item at a time, state
+the trade in a sentence, mark the safety constraint, and explain what
+you deliberately did <em>not</em> do. A rule documented that way
+survives the next refactor because its reasoning is checkable.</p>
+<p>Confine automatic conflict resolution to artifacts you can
+regenerate, and name the canonical source of each one where the rule
+lives. <code>data/</code> and <code>sessions/</code> qualify; a record
+of what someone decided does not.</p>
+<p>If an LLM resolves merges in a shared memory, give the tier a
+post-condition about content, not only about syntax. You have both sides
+in hand at that point; checking that neither vanished is cheap, and the
+absence of conflict markers is not evidence that a merge preserved
+anything.</p>
+<p>Consider progressive disclosure for team-scale memory. Advertising
+<code>memory/weekly/ (7 files — weekly themes)</code> costs a line of
+prompt and lets the agent decide; injecting the same content costs the
+context window every turn whether it is relevant or not.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>What the server's distillation does with contradictory observations
+from two agents. The request carries only observations and a date range;
+the policy is not in this repository.</p>
+<p>Whether the LLM merge tier ever fires on memory paths in practice, or
+whether those conflicts abort. The tier ordering allows it; nothing in
+the tree records how often it happens.</p>
+<p>Whether a fact can be retracted. Nothing in the schema or the CLI
+surface suggests a mechanism, and <code>WriteFacts</code> rewriting the
+file whole means a removal leaves no trace in the format itself.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/ledger/ledger.go:36-71</code></td>
+<td>Forty lines of documented judgement, with the evidence</td>
+</tr>
+<tr>
+<td><code>internal/ledger/automerge/automerge.go</code></td>
+<td>The three tiers, and where each one stops</td>
+</tr>
+<tr>
+<td><code>internal/ledger/automerge/llm.go</code></td>
+<td>The allowlist, its threat model, and the merge prompt</td>
+</tr>
+<tr>
+<td><code>internal/facts/types.go</code></td>
+<td>A citation-shaped fact with no epistemic state</td>
+</tr>
+<tr>
+<td><code>cmd/ox/memory_put.go</code></td>
+<td>The observation cap and the local-then-sync path</td>
+</tr>
+<tr>
+<td><code>cmd/ox/agent_prime.go</code></td>
+<td>Progressive disclosure instead of injection</td>
+</tr>
+<tr>
+<td><code>docs/specs/team-memory-journal.md</code></td>
+<td>The local pipeline that was removed, kept as history</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/sageox/ox/commit/02f4f406a4b973fa4adda9df62725904cc1859d9"><code class="commit-id" title="02f4f406a4b973fa4adda9df62725904cc1859d9">02f4f406…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: twenty files scanned, three auto-run
+surfaces, one build-time execution point, one unpinned surface, five
+dependency files inside the seven-day cooldown, and the
+<code>CLAUDE.md</code> and <code>AGENTS.md</code> read as data. Nothing
+was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

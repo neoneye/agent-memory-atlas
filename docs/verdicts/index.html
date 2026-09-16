@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 499 reports.</strong></p>
+<p><strong>This page covers all 500 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18276,6 +18276,60 @@ memory and want to see what a conclusion browser looks like.</li>
 <li>Do not copy when: you need the store — this keeps none, and every
 mechanism the atlas usually asks about belongs to the Honcho instance
 behind it.</li>
+</ul>
+<h3 id="ox"><a href="../systems/ox/"><code>ox</code></a></h3>
+<ul>
+<li>Best idea: <strong>a documented judgement, with its evidence
+attached.</strong> The comment on <code>DefaultResolveRules</code>
+explains why <code>sessions/</code> auto-resolves:
+<code>meta.json</code> is written by both the cloud summarizer and the
+local CLI, so with no rule "the rebase halts, nothing can resolve it,
+the abort restores the pre-rebase state, and the next attempt fails
+identically — a deterministic wedge that never escalates and never
+self-heals." Then the evidence — "[o]ne ledger sat 341 ahead / 1055
+behind for 13 days with 281 such conflicts" — then a justification per
+artifact naming each one's canonical source elsewhere, then the trade in
+one sentence: "[a]n imperfect summary beats a ledger that can never sync
+again." Then a SAFETY note ending "[d]o not weaken that guard", and a
+NOTE on why the rule is scoped to the ledger rather than the shared
+defaults. Copy the form. Beside it, priming advertises the memory tree
+with file counts instead of injecting it — <code>MEMORY.md</code> plus
+"Recent: memory/daily/ (N files)" under a Progressive Disclosure heading
+— which costs a line of prompt and lets the agent choose.</li>
+<li>Biggest risk: <strong>the LLM merge tier's post-condition is
+syntactic.</strong> A conflict not under a safe prefix — and memory
+content is deliberately not a safe prefix — falls to an LLM invoked on
+the conflicted file. The tier is bounded properly: an allowlist of
+<code>claude</code>, <code>gemini</code>, <code>codex</code> or an
+explicit absolute path, with the argv[0] substitution attack spelled out
+in the comment, and a sixty-second per-file deadline. The prompt asks it
+to "[p]reserve user intent on both sides; when in doubt prefer including
+more content over deleting." The check is that
+<code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> no longer appears. Nothing
+verifies that both sides' content survived, so a merge that keeps one
+agent's observations and discards the other's, or paraphrases both into
+something neither wrote, is staged and committed — and what is being
+rewritten is the record of what the team decided. The tier already holds
+both sides; a dropped-line count would turn the prompt's intent into an
+enforcement.</li>
+<li>Most reusable component: the LLM binary allowlist — bare names
+restricted to three, relative paths with a slash "refused outright",
+absolute paths trusted because "the operator already chose where to
+point this binary", and a test file for the allowlist alone.</li>
+<li>Maturity impression: MIT, Go, 651,919 lines across 1,337 test files,
+shipping a CLI and a Claude plugin. Distillation — the step producing
+the summaries agents read — is a POST to the SageOx API, so that policy
+is not inspectable here; the local pipeline that did it was removed on 9
+September 2026, with its spec kept and headed "superseded". The README
+omits a CI badge and says why in a comment: <code>ci.yml</code> is
+disabled and neither active workflow is a build signal.</li>
+<li>Study when: you are storing team memory in git and need a conflict
+policy, or you want to see progressive disclosure used instead of
+injection.</li>
+<li>Do not copy when: you need the memory itself to carry state — facts
+here have write-time categories and no way to be superseded or
+withdrawn, and <code>WriteFacts</code> truncates rather than appends. No
+marks.</li>
 </ul>
         </article>
       </div>
