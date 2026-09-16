@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 523 reports.</strong></p>
+<p><strong>This page covers all 524 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19496,6 +19496,46 @@ status that withholds without deleting.</li>
 <code>status='active'</code> is repeated at four call sites and
 <code>namespace</code> emits nothing when omitted. One mark: trust
 state.</li>
+</ul>
+<h3 id="light-mem"><a
+href="../systems/light-mem/"><code>light-mem</code></a></h3>
+<ul>
+<li>Best idea: <strong>it strips its own injected context block, and the
+harness's reminders, before storing a turn.</strong>
+<code>stripTags</code> removes six tag families in one pass —
+<code>private</code>, <code>light-mem-context</code>,
+<code>system_instruction</code>, <code>system-instruction</code>,
+<code>persisted-output</code>, <code>system-reminder</code> — so the
+tool does not re-ingest what it and the host wrote into the prompt.
+Beside it, a privacy check that separates two cases a boolean conflated:
+an absent <code>user_prompts</code> row "is NOT a privacy signal —
+treating it as 'private' silently freezes EVERY observation for the
+session", while a row present but empty after stripping is a genuine
+redaction and suppresses.</li>
+<li>Biggest risk: <strong>there are two stores and only one is
+audited.</strong> The session store the hooks write — observations,
+summaries, user prompts, vectors — keeps no mutation record; the
+<code>audit_log</code> table with actor type, action and target belongs
+to a newer server schema written from the v1 HTTP routes, and the
+<code>legacy_observation_id</code> / <code>legacy_table</code> columns
+bridging them say which came first. So ordinary capture, the product's
+main path, leaves no audit row. Nothing in either schema is epistemic:
+<code>kind</code> is a write-time genre, no status withholds a record,
+nothing supersedes.</li>
+<li>Most reusable component: <code>tag-stripping.ts</code> — forty-five
+lines, one regular expression, and a list whose second entry is the
+tool's own context tag. Copy the list shape before the regex.</li>
+<li>Maturity impression: Apache-2.0, Node 24+, 74,394 lines of
+TypeScript with 1,778 test cases across 153 files, four supported hosts
+through one worker, a plugin marketplace entry, an MCP surface and a web
+viewer. The README badge advertises 13.7.4 against a
+<code>package.json</code> at 0.3.3.</li>
+<li>Study when: you inject memory into a prompt and then capture that
+prompt, or you have a privacy check that cannot tell a missing record
+from a redacted one.</li>
+<li>Do not copy when: you need a record of what changed, or
+de-duplication — a fact restated across sessions is stored as many times
+as it is said. No marks.</li>
 </ul>
         </article>
       </div>

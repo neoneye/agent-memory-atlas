@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 523 reports.**
+**This page covers all 524 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4534,3 +4534,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 1.5.0, Python 3.10+, 4,582 lines in a handful of modules, a single SQLite file with FTS5 trigram tokenisation and a reserved embedding table, an MCP server with a written Doubao integration guide, a web console, a `doctor` command, and a version constant a script syncs the README badge to. Windows-oriented: batch launchers, and a delete that moves a directory to the recycle bin through `SHFileOperationW`.
 - Study when: you are writing a de-duplication pass and have not decided which side survives, or you want a small worked example of a status that withholds without deleting.
 - Do not copy when: you need the predicate enforced — `status='active'` is repeated at four call sites and `namespace` emits nothing when omitted. One mark: trust state.
+
+### [`light-mem`](../systems/light-mem/)
+- Best idea: **it strips its own injected context block, and the harness's reminders, before storing a turn.** `stripTags` removes six tag families in one pass — `private`, `light-mem-context`, `system_instruction`, `system-instruction`, `persisted-output`, `system-reminder` — so the tool does not re-ingest what it and the host wrote into the prompt. Beside it, a privacy check that separates two cases a boolean conflated: an absent `user_prompts` row "is NOT a privacy signal — treating it as 'private' silently freezes EVERY observation for the session", while a row present but empty after stripping is a genuine redaction and suppresses.
+- Biggest risk: **there are two stores and only one is audited.** The session store the hooks write — observations, summaries, user prompts, vectors — keeps no mutation record; the `audit_log` table with actor type, action and target belongs to a newer server schema written from the v1 HTTP routes, and the `legacy_observation_id` / `legacy_table` columns bridging them say which came first. So ordinary capture, the product's main path, leaves no audit row. Nothing in either schema is epistemic: `kind` is a write-time genre, no status withholds a record, nothing supersedes.
+- Most reusable component: `tag-stripping.ts` — forty-five lines, one regular expression, and a list whose second entry is the tool's own context tag. Copy the list shape before the regex.
+- Maturity impression: Apache-2.0, Node 24+, 74,394 lines of TypeScript with 1,778 test cases across 153 files, four supported hosts through one worker, a plugin marketplace entry, an MCP surface and a web viewer. The README badge advertises 13.7.4 against a `package.json` at 0.3.3.
+- Study when: you inject memory into a prompt and then capture that prompt, or you have a privacy check that cannot tell a missing record from a redacted one.
+- Do not copy when: you need a record of what changed, or de-duplication — a fact restated across sessions is stored as many times as it is said. No marks.

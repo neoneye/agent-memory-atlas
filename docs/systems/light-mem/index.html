@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A hook-driven memory for four
+coding agents that strips six tag families — including its own injected
+context block — before anything is stored, and whose privacy check
+distinguishes a prompt row that is absent from one that is empty after
+redaction.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="light-mem — Agent Memory Atlas">
+    <meta property="og:description" content="A hook-driven memory for
+four coding agents that strips six tag families — including its own
+injected context block — before anything is stored, and whose privacy
+check distinguishes a prompt row that is absent from one that is empty
+after redaction.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="light-mem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A hook-driven memory for
+four coding agents that strips six tag families — including its own
+injected context block — before anything is stored, and whose privacy
+check distinguishes a prompt row that is absent from one that is empty
+after redaction.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>light-mem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "light-mem",
+      "description": "A hook-driven memory for four coding agents that strips six tag families \u2014 including its own injected context block \u2014 before anything is stored, and whose privacy check distinguishes a prompt row that is absent from one that is empty after redaction.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A missing prompt row is not a redacted
+one</p>
+          <h1>light-mem</h1>
+          <p class="document-deck">A hook-driven memory for four coding
+agents that strips six tag families — including its own injected context
+block — before anything is stored, and whose privacy check distinguishes
+a prompt row that is absent from one that is empty after redaction.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/DevEstacion/light-mem">
+              <span>Source</span>
+              <strong>DevEstacion/light-mem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/DevEstacion/light-mem/commit/6c96cb651749d0456d40424242985e76e5bc5edc" title="6c96cb651749d0456d40424242985e76e5bc5edc">
+              <span>Analyzed revision</span>
+              <code>6c96cb65…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/DevEstacion--light-mem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>DevEstacion--light-mem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>light-mem is "[l]ightweight persistent memory for Claude Code, Grok,
+Codex, and OpenCode" — Apache-2.0, TypeScript, Node 24+, 74,394 lines
+with 1,778 test cases across 153 test files, installed with
+<code>npx light-mem install</code> or from the Claude Code plugin
+marketplace. Session hooks capture turns into a shared worker, a context
+block is injected into new sessions, and MCP search tools plus a web
+viewer on the worker port let a person or an agent go back through
+it.</p>
+<p>Two decisions are worth the visit, and both are about what
+<em>not</em> to store.</p>
+<p><strong>Redaction happens before storage, and it strips more than the
+privacy tag.</strong> <code>stripTags</code> removes six tag families in
+one pass:</p>
+<pre><code>private · light-mem-context · system_instruction ·
+system-instruction · persisted-output · system-reminder</code></pre>
+<p>The privacy one is the advertised feature — wrap a message in
+<code>&lt;private&gt;</code> and it never lands. The two that matter
+more are <code>light-mem-context</code>, which is the tool's own
+injected memory block, and <code>system-reminder</code>, which is the
+harness's. Stripping both means the system does not re-ingest what it
+and the host put into the prompt in the first place. That loop — an
+agent reading its own prior memory, restating it, and storing the
+restatement as a fresh observation — is the self-reinforcement failure
+<a href="../agent-memory-guard/">OWASP's memory guard</a> describes as a
+threat, and most systems in this corpus meet it only after it has
+already compounded. Here it is closed by a regular expression in a
+utility module, at the one point every captured turn passes through.</p>
+<p><strong>And an absent prompt is distinguished from a redacted
+one.</strong> The privacy check used to be a boolean, and the docstring
+says what that cost:</p>
+<blockquote>
+<p>"Distinguishes two cases the old boolean check conflated (#2794): The
+<code>user_prompts</code> row is ABSENT (getUserPrompt → null):
+session-init never persisted the prompt for this session (e.g. the
+UserPromptSubmit hook raced worker boot, #2795). This is NOT a privacy
+signal — treating it as 'private' silently freezes EVERY observation for
+the session. Allow ingestion and emit a visible warn. The row is PRESENT
+but empty after privacy stripping (''/whitespace): the user genuinely
+redacted the turn → suppress."</p>
+</blockquote>
+<p>Absence of evidence read as evidence of absence, found in production,
+named with two issue numbers, and split into two paths with a warning on
+the one that used to be silent. This atlas keeps finding the unfixed
+version of that mistake; this is the fixed one, with its history
+attached.</p>
+<p>The direction it fails in is worth stating plainly, because the
+project chose it: when the row is missing because of a race, the turn is
+ingested. That is right for a memory tool whose failure mode was
+freezing an entire session, and it is wrong if the missing row was the
+redacted one. The code makes the trade loudly rather than quietly, which
+is the part to copy.</p>
+<p>No marks, and the reason is structural. <strong>There are two stores
+and only one is audited.</strong> The store the hooks write —
+<code>observations</code>, <code>session_summaries</code>,
+<code>user_prompts</code>, <code>vectors</code> in
+<code>SessionStore</code> — has no mutation record. The
+<code>audit_log</code> table, with an actor type of
+<code>user | api_key | system</code>, an action and a target, belongs to
+the newer server schema alongside <code>memory_items</code>,
+<code>projects</code>, <code>teams</code> and scoped
+<code>api_keys</code>, and is written from the v1 HTTP route layer.
+Those two schemas are bridged by <code>legacy_observation_id</code> and
+<code>legacy_table</code> columns whose existence says which one came
+first. So an agent's ordinary capture — the product's main path — leaves
+no audit row, and the mark is withheld rather than awarded to a layer
+the hooks do not use.</p>
+<p>Nothing else here is epistemic either: <code>memory_items.kind</code>
+is a write-time genre of
+<code>observation | summary | prompt | manual</code>, no status
+withholds a record from a read, and nothing supersedes or retires a
+claim. The privacy work is real and happens earlier than a filter could;
+it is not a filter, so it earns no filtering mark.</p>
+<p>One small discrepancy for a reader checking versions: the README
+badge advertises 13.7.4 and <code>package.json</code> says 0.3.3.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>turn</strong> is captured automatically, and passes one
+stripper on the way in.</p>
+<p>A <strong>stripped-empty prompt</strong> means the user redacted it.
+A <strong>missing</strong> prompt row means something went wrong.</p>
+<p>Its <strong>own context block</strong> is not input.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the stripper runs before storage and removes the tool's own injected block along with the privacy tag; an absent prompt row and an empty-after-stripping one take different paths</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the stripper runs before storage and removes the tool&#39;s own injected block along with the privacy tag; an absent prompt row and an empty-after-stripping one take different paths
+flowchart TB
+    HOOK[&quot;session hooks — Claude Code · Grok ·&lt;br/&gt;Codex · OpenCode, via one worker&quot;] --&gt; TURN[&quot;a captured turn&quot;]
+    TURN --&gt; STRIP[&quot;stripTags: remove six tag families&lt;br/&gt;private · light-mem-context ·&lt;br/&gt;system_instruction · system-instruction ·&lt;br/&gt;persisted-output · system-reminder&quot;]
+    STRIP -.-&gt;|&quot;light-mem-context is its OWN injected&lt;br/&gt;memory block; system-reminder is the&lt;br/&gt;harness&#39;s — so it does not re-ingest&lt;br/&gt;what it and the host wrote&quot;| LOOP[&quot;the self-reinforcement loop, closed&lt;br/&gt;at the one point every turn passes&quot;]
+    STRIP --&gt; PR{&quot;PrivacyCheckValidator:&lt;br/&gt;getUserPrompt(session, promptNumber)&quot;}
+    PR --&gt;|&quot;row ABSENT (null) — the hook raced&lt;br/&gt;worker boot (#2794/#2795)&quot;| WARN[&quot;&#39;This is NOT a privacy signal&#39; —&lt;br/&gt;ingest anyway, emit a visible warn&lt;br/&gt;(the old boolean froze EVERY&lt;br/&gt;observation for the session)&quot;]
+    PR --&gt;|&quot;row PRESENT but empty after stripping&quot;| SUP[&quot;the user genuinely redacted the turn&lt;br/&gt;→ suppress the observation&quot;]
+    WARN --&gt; STORE
+    SUP --&gt; NONE[&quot;nothing stored for this turn&quot;]
+    STORE[(&quot;SessionStore: observations ·&lt;br/&gt;session_summaries · user_prompts ·&lt;br/&gt;vectors — no audit record&quot;)] --&gt; SEARCH[&quot;FTS5 + vectors → MCP search tools,&lt;br/&gt;progressive-disclosure context block&lt;br/&gt;with token costs shown&quot;]
+    V1[(&quot;server schema: memory_items · projects ·&lt;br/&gt;teams · api_keys · audit_log&quot;)] -.-&gt;|&quot;legacy_observation_id / legacy_table&lt;br/&gt;columns point back at SessionStore&quot;| STORE
+    ROUTES[&quot;v1 HTTP routes&quot;] --&gt;|&quot;this.audit(req, &#39;memory.write&#39;, …)&quot;| V1
+    ROUTES -.-&gt;|&quot;the hook path does not pass through here,&lt;br/&gt;so ordinary capture leaves no audit row&quot;| STORE</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/hooks</code>, <code>src/cli/handlers</code></td>
+<td>The harness hooks and their handlers</td>
+</tr>
+<tr>
+<td><code>src/services/worker</code></td>
+<td>The shared worker, its HTTP routes and validators</td>
+</tr>
+<tr>
+<td><code>src/services/sqlite/SessionStore.ts</code></td>
+<td>Observations, summaries, prompts, vectors</td>
+</tr>
+<tr>
+<td><code>src/storage/sqlite/</code></td>
+<td>The newer server schema: memory items, teams, keys, audit</td>
+</tr>
+<tr>
+<td><code>src/utils/tag-stripping.ts</code></td>
+<td>The six tag families, in one regular expression</td>
+</tr>
+<tr>
+<td><code>src/ui</code>, <code>src/servers</code></td>
+<td>The web viewer and the MCP surface</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>src/utils/tag-stripping.ts:1-45</code> — the list, and why two
+of the names are the interesting ones.</p>
+<p><code>src/services/worker/validation/PrivacyCheckValidator.ts:1-45</code>
+— two cases a boolean conflated.</p>
+<p><code>src/storage/sqlite/schema.ts:85-150</code> — the newer schema,
+and the legacy columns that date it.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Observations with a title, subtitle, narrative, text, facts,
+concepts, files read and files modified — a richer capture than most
+hook-driven tools, and the basis for the citation feature that lets a
+later session reference a past observation by id. The server schema
+mirrors those columns on <code>memory_items</code> and adds a
+<code>memory_sources</code> row per item with a <code>source_type</code>
+constrained to
+<code>observation | session_summary | user_prompt | manual | import</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>FTS5 with a vector table beside it, surfaced as MCP search tools and
+as a progressive-disclosure context block that shows what each layer
+costs in tokens. Making the token price of injected context visible to
+the person configuring it is a small and unusual courtesy.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Automatic, off the hook path, through the worker. The stripper is the
+only gate, and it is a good one; there is no de-duplication, no
+supersession and no conflict handling, so a fact restated across
+sessions is stored as many times as it is said.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Four hosts through one worker, a plugin marketplace entry, and an
+explicit note that <code>npm install -g</code> gets the library only and
+not the hooks. The screening pass flags what that implies: a plugin
+manifest, harness hook settings and agent-instruction files are all part
+of the distribution, which is expected for this class of tool and worth
+knowing before installing it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The write-time redaction is the trust story and it is well placed.
+What is missing is any record of what changed: neither store versions a
+memory, and the audit log that exists does not cover the path the hooks
+use.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,778 test cases across 153 files, including a tag-stripping suite
+that pairs each removal with an assertion that the surrounding public
+text survived — the right shape, at the unit level. Nothing was
+installed or run for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Strip your own context block back out. If you inject memory into a
+prompt and then capture that prompt, you are storing your own output as
+an observation; one tag name in the stripper list prevents it.</p>
+<p>Distinguish missing from redacted. A boolean that reads "no prompt"
+as "private" will silently stop recording an entire session, and the
+silence is what makes it expensive.</p>
+<p>Redact before storing, not before serving. Text that never enters the
+store cannot leak from it, and no later read path has to remember a
+filter.</p>
+<p>And when you choose a failure direction, write down which way you
+chose. This code ingests on a missing row and says so in a warning; the
+alternative is defensible too, and only one of them is documented.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the two stores are converging. The <code>legacy_*</code>
+columns suggest a migration in progress; which one wins was not
+established.</p>
+<p>Whether the audit log is reachable in the default install. The v1
+routes are a server surface, and whether a local single-user install
+exercises them was not traced.</p>
+<p>What the version badge refers to. The README advertises 13.7.4
+against a <code>package.json</code> at 0.3.3.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/utils/tag-stripping.ts:1-45</code></td>
+<td>Six tag families, two of them its own</td>
+</tr>
+<tr>
+<td><code>src/services/worker/validation/PrivacyCheckValidator.ts:1-45</code></td>
+<td>Absent is not redacted</td>
+</tr>
+<tr>
+<td><code>src/storage/sqlite/schema.ts:85-150</code></td>
+<td>A newer schema, and the columns that date it</td>
+</tr>
+<tr>
+<td><code>src/services/sqlite/SessionStore.ts:195-215</code></td>
+<td>The store the hooks actually write</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/DevEstacion/light-mem/commit/6c96cb651749d0456d40424242985e76e5bc5edc"><code class="commit-id" title="6c96cb651749d0456d40424242985e76e5bc5edc">6c96cb65…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: eleven files scanned, three auto-run
+surfaces (a plugin manifest, harness hook settings and agent-instruction
+files), one build-time execution point, two unpinned surfaces and three
+dependency files inside the seven-day cooldown. Nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
