@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 558 reports.</strong></p>
+<p><strong>This page covers all 559 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21108,6 +21108,63 @@ behind a decision into the code that implements it.</li>
 <li>Do not copy when: you need the store itself to withhold a memory, or
 a project boundary that holds when the caller says nothing. No
 marks.</li>
+</ul>
+<h3 id="memorywhale"><a
+href="../systems/memorywhale/"><code>memorywhale</code></a></h3>
+<ul>
+<li>Best idea: <strong>decide approval from the author, at write time,
+through two different functions.</strong> <code>remember</code> is one
+line — <code>remember_as(text, cwd, "human", None, None)</code> — and is
+what <code>mw mark</code> and <code>mw remember</code> call;
+<code>remember_as</code> with <code>"agent"</code> is the MCP path and
+carries the client's name. The approval flag then falls out of who wrote
+the row rather than out of a parameter every caller must fill in
+correctly, which makes the review queue exactly
+<code>WHERE approved = 0 AND author_kind = 'agent'</code> and makes the
+approving action a desktop command a person invokes. Review mode
+defaults to on, and its documentation frames turning it off as opting
+"into automatic approval" rather than opting out of review.</li>
+<li>Second idea: <strong>refuse the schema you cannot filter.</strong>
+The loader reads the bookmarks table's columns from schema metadata —
+"not by treating an arbitrary prepare error as a legacy-schema signal" —
+and a database carrying <code>status</code> without
+<code>approved</code> returns <code>UnsupportedSchema</code> rather than
+quietly falling back to a weaker predicate, on the stated ground that
+"no released migration creates it". A guard that degrades silently when
+its column is missing is absent exactly when it matters, and this one is
+written not to.</li>
+<li>Biggest risk: <strong>nothing remembers what was refused.</strong>
+Rejection from the review queue is
+<code>DELETE FROM bookmarks WHERE id = ?1</code>, nothing is keyed on
+the lesson's text, and no table records mutations — so an agent that
+proposed a lesson a person threw out can propose it again, and the queue
+will show it again as new. An approval, a supersession and a rejection
+all leave the same trace, which is none. The scope keys do not bind
+either: project and machine sit behind
+<code>(?1 IS NULL OR column = ?1)</code>, so a caller that supplies
+nothing reads across every project on the machine.</li>
+<li>Most reusable component: the compaction rulebook. It is pure, its
+thresholds arrive as arguments "so the CLI can expose flags and tests
+can pin every boundary", its rules are listed in evaluation order, and
+every decision returns the named reason that selected it. The first rule
+is the one that shows the product understands its own users: "Failures
+outrank successes. A failed command or an errored run is exactly what
+future-you will search for, so it is never auto-compacted."</li>
+<li>Maturity impression: MIT, Rust, version 0.10.0, 34,341 lines across
+75 files in two crates plus a Tauri desktop shell, one local SQLite
+database with FTS5 and an embeddings table, numbered
+<code>PRAGMA user_version</code> migrations whose comments say what each
+does to a populated database, a CLI on crates.io, a terminal UI, shell
+hooks, an MCP surface and eight translated READMEs, against 401 test
+attributes. No auto-run surface, one build-time execution point and one
+dependency file inside the cooldown at this pin.</li>
+<li>Study when: you have a review flag and want it to be something other
+than decoration, or you are deciding what a guard should do when the
+column it depends on is missing.</li>
+<li>Do not copy when: a rejected proposal must stay rejected, you need a
+record of who approved what, or a project boundary has to hold when the
+caller says nothing. Three marks: review, trust state, negative
+eval.</li>
 </ul>
         </article>
       </div>

@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first Rust debugging
+memory where a lesson written by an agent lands unapproved by default,
+every reader filters on the approval flag, and the loader refuses
+outright to run against a schema shape in which that filter could be
+silently skipped.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MemoryWhale — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first Rust
+debugging memory where a lesson written by an agent lands unapproved by
+default, every reader filters on the approval flag, and the loader
+refuses outright to run against a schema shape in which that filter
+could be silently skipped.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MemoryWhale — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first Rust
+debugging memory where a lesson written by an agent lands unapproved by
+default, every reader filters on the approval flag, and the loader
+refuses outright to run against a schema shape in which that filter
+could be silently skipped.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MemoryWhale — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MemoryWhale",
+      "description": "A local-first Rust debugging memory where a lesson written by an agent lands unapproved by default, every reader filters on the approval flag, and the loader refuses outright to run against a schema shape in which that filter could be silently skipped.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An agent's lesson is not retrievable until
+a person approves it</p>
+          <h1>MemoryWhale</h1>
+          <p class="document-deck">A local-first Rust debugging memory
+where a lesson written by an agent lands unapproved by default, every
+reader filters on the approval flag, and the loader refuses outright to
+run against a schema shape in which that filter could be silently
+skipped.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/wuisabel-gif/MemWhale">
+              <span>Source</span>
+              <strong>wuisabel-gif/MemWhale</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/wuisabel-gif/MemWhale/commit/91b978508866fa8479136142d1eb415e3fd067b1" title="91b978508866fa8479136142d1eb415e3fd067b1">
+              <span>Analyzed revision</span>
+              <code>91b97850…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/wuisabel-gif--MemWhale" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>wuisabel-gif--MemWhale</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MemoryWhale is "[p]ersistent local debugging memory for developers
+and coding agents" — MIT, Rust, version 0.10.0, 34,341 lines across 75
+files in two crates and a Tauri shell, with 401 test attributes.
+Everything stays on the machine; the README badge says so plainly.</p>
+<p><strong>The mechanism to take away is where the approval decision is
+made.</strong> A great many systems in this corpus have a review flag,
+and in most of them the flag is set by whatever wrote the row and then
+consulted nowhere. Here the flag is derived from <em>who wrote it</em>,
+at the moment of writing:</p>
+<pre class="rust"><code>let approved = if author_kind == &quot;agent&quot; &amp;&amp; review_agent_memories() {</code></pre>
+<p>and the two authors are separated by the API rather than by a
+parameter a caller might fill in wrongly. <code>remember</code> — what
+<code>mw remember</code> and <code>mw mark</code> call — is one
+line:</p>
+<blockquote>
+<p><code>remember_as(text, cwd, "human", None, None)</code></p>
+</blockquote>
+<p>while <code>remember_as</code> with <code>"agent"</code> is what the
+MCP surface uses, carrying the client's name. So a person's lesson is
+approved because a person wrote it, and an agent's lesson waits.</p>
+<p><strong>Review mode is on by default, and the switch is framed in the
+safe direction.</strong> <code>review_agent_memories()</code> ends
+<code>.unwrap_or(true)</code>, and the doc comment describes turning it
+off as opting "into automatic approval" rather than opting out of review
+— a small piece of phrasing that puts the burden on the person loosening
+the gate.</p>
+<p><strong>Every reader filters on it, and the loader refuses the one
+schema shape where that could fail silently.</strong> The comment above
+the query states the contract:</p>
+<blockquote>
+<p>"Review mode is enforced at write time (agent notes land with
+approved=0), so every reader filters approved=1 when that column
+exists."</p>
+</blockquote>
+<p>What makes this more than a convention is the arm beneath it. The
+loader reads the table's columns from schema metadata — "not by treating
+an arbitrary prepare error as a legacy-schema signal" — and if it finds
+<code>status</code> without <code>approved</code> it returns an error
+rather than a result:</p>
+<blockquote>
+<p>"status exists without approved; review filtering cannot be
+enforced"</p>
+</blockquote>
+<p>A database in that shape is not something a released migration can
+produce, and the loader treats it as unsupported instead of falling back
+to the weaker filter. That is the failure this atlas most often finds
+shipped the other way: a guard that degrades quietly when its column is
+missing.</p>
+<p><strong>The lifecycle rides in the same query.</strong>
+<code>status</code> carries <code>active</code>, <code>expired</code>,
+<code>stale</code> and <code>superseded</code>, and the loader asks for
+<code>approved = 1 AND status = 'active'</code>. Each value has a
+distinct writer and a distinct meaning. The expiry sweep moves rows past
+their <code>expires_at</code> and the comment says why it is a status
+rather than a delete — it "stops surfacing them without deleting the
+evidence". <code>mark_note_stale</code> retires a memory on judgement,
+clearing <code>superseded_by_id</code> as it goes.
+<code>supersede_note</code> retires one in favour of another and writes
+the replacement's id onto the retired row, after refusing a memory that
+would supersede itself and refusing a replacement id naming no row.</p>
+<p><strong>What it does not do is remember what it rejected.</strong>
+Rejection from the review queue is
+<code>DELETE FROM bookmarks WHERE id = ?1</code>. Nothing is keyed on
+the lesson's content, and no table records that the rejection happened,
+so an agent that proposed something a person threw out can propose it
+again and the queue will show it again as new. The review gate is a
+filter on what reaches retrieval, not a memory of what was refused.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two layers, and the interesting rules live between them.</p>
+<p>Underneath is <strong>evidence</strong>: command runs with their
+argv, exit code, output and an error fingerprint; session transcripts;
+agent turns. It is bulky, it is captured automatically, and it is never
+the thing retrieval hands back.</p>
+<p>On top are <strong>lessons</strong> — the <code>bookmarks</code>
+table, despite the name — each one a sentence somebody or something
+concluded, carrying provenance, an approval flag and a lifecycle status.
+Retrieval returns these.</p>
+<p>Between them sits a compaction rulebook that decides which evidence
+may shrink, and the first rule is the one that shows the product knows
+its user:</p>
+<blockquote>
+<p>"Failures outrank successes. A failed command or an errored run is
+exactly what future-you will search for, so it is never
+auto-compacted."</p>
+</blockquote>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a lesson's approval flag is decided at write time from the author's kind, with review mode on by default; the loader filters on that flag and on the lifecycle status in the same query, and refuses outright a schema carrying the status column without the approval column; rejection from the review queue deletes the row, so nothing records what was refused</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a lesson&#39;s approval flag is decided at write time from the author&#39;s kind, with review mode on by default; the loader filters on that flag and on the lifecycle status in the same query, and refuses outright a schema carrying the status column without the approval column; rejection from the review queue deletes the row, so nothing records what was refused
+flowchart TB
+    H[&quot;a person: mw mark / mw remember&quot;]
+    A[&quot;an agent: the MCP surface&quot;]
+    RA[&quot;remember() — hardcodes author_kind = human&quot;]
+    RB[&quot;remember_as(author_kind = agent,&lt;br/&gt;author_name = the client)&quot;]
+    GATE{&quot;author_kind == agent&lt;br/&gt;AND review_agent_memories()&lt;br/&gt;— unwrap_or(TRUE)&quot;}
+    W0[(&quot;bookmarks row: approved = 0&quot;)]
+    W1[(&quot;bookmarks row: approved = 1&quot;)]
+
+    H --&gt; RA --&gt; GATE
+    A --&gt; RB --&gt; GATE
+    GATE --&gt;|&quot;yes&quot;| W0
+    GATE --&gt;|&quot;no — a person wrote it,&lt;br/&gt;or review mode was switched off&quot;| W1
+
+    Q[&quot;pending_agent_notes:&lt;br/&gt;WHERE approved = 0&lt;br/&gt;AND author_kind = &#39;agent&#39;&quot;]
+    DASH[&quot;the desktop dashboard&quot;]
+    APP[&quot;approve_lesson — a registered&lt;br/&gt;Tauri command&quot;]
+    REJ[&quot;reject_note —&lt;br/&gt;DELETE FROM bookmarks&quot;]
+    GONE[&quot;no row, and no record&lt;br/&gt;that anything was refused&quot;]
+
+    W0 --&gt; Q --&gt; DASH
+    DASH --&gt;|&quot;a person approves&quot;| APP --&gt; W1
+    DASH --&gt;|&quot;a person rejects&quot;| REJ --&gt; GONE
+    GONE -.-&gt;|&quot;nothing is keyed on the lesson&#39;s TEXT,&lt;br/&gt;so the same proposal returns as new&quot;| RB
+
+    LOAD{&quot;load_memories reads the table&#39;s&lt;br/&gt;columns from schema metadata&quot;}
+    ERR[&quot;LoadErrorKind::UnsupportedSchema —&lt;br/&gt;&#39;status exists without approved;&lt;br/&gt;review filtering cannot be enforced&#39;&quot;]
+    SQL[&quot;WHERE approved = 1&lt;br/&gt;AND status = &#39;active&#39;&quot;]
+    OUT[&quot;the lessons retrieval returns&quot;]
+
+    W1 --&gt; LOAD
+    LOAD --&gt;|&quot;status WITHOUT approved&quot;| ERR
+    LOAD --&gt;|&quot;both present&quot;| SQL --&gt; OUT
+
+    EXP[&quot;expiry sweep: active rows&lt;br/&gt;past expires_at&quot;]
+    STL[&quot;mark_note_stale&quot;]
+    SUP[&quot;supersede_note — writes the&lt;br/&gt;replacement&#39;s id onto the retired row&quot;]
+    EXP --&gt; SQL
+    STL --&gt; SQL
+    SUP --&gt; SQL</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/memorywhale-core</code></td>
+<td>The loader, the scorer, the embedding path, the privacy redaction
+and the compaction policy</td>
+</tr>
+<tr>
+<td><code>crates/mw-cli</code></td>
+<td>The <code>mw</code> binary: capture, migrations, the lesson API, the
+review queue, the terminal UI and the integrations</td>
+</tr>
+<tr>
+<td><code>src-tauri</code></td>
+<td>The desktop dashboard's commands, including the pending list and
+<code>approve_lesson</code></td>
+</tr>
+<tr>
+<td><code>src</code>, <code>index.html</code></td>
+<td>The dashboard front end</td>
+</tr>
+<tr>
+<td><code>benchmarks</code>, <code>tests</code></td>
+<td>Retrieval and compatibility harnesses</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>crates/mw-cli/src/lib.rs:1405-1420</code> —
+<code>review_agent_memories()</code>, defaulting to on.</li>
+<li><code>crates/mw-cli/src/lib.rs:1558-1590</code> —
+<code>remember</code> and <code>remember_as</code>, where the approval
+flag is decided.</li>
+<li><code>crates/mw-cli/src/lib.rs:1471-1492</code> —
+<code>pending_agent_notes</code>, the review queue.</li>
+<li><code>crates/mw-cli/src/lib.rs:1494-1509</code> —
+<code>approve_note</code> and <code>reject_note</code>.</li>
+<li><code>crates/mw-cli/src/lib.rs:1511-1552</code> —
+<code>mark_note_stale</code> and <code>supersede_note</code>, with their
+validation.</li>
+<li><code>crates/mw-cli/src/lib.rs:389-394</code> — the expiry
+sweep.</li>
+<li><code>crates/memorywhale-core/src/sqlite.rs:448-490</code> — the
+loader, its schema introspection and its refusal.</li>
+<li><code>src-tauri/src/lib.rs:383-440</code> — the dashboard's pending
+list and <code>approve_lesson</code>.</li>
+<li><code>crates/memorywhale-core/src/policy.rs</code> — the compaction
+rulebook.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A lesson carries <code>label</code>, <code>cwd</code>,
+<code>created_at</code>, <code>command_run_id</code>,
+<code>session_id</code>, and — added by numbered migrations —
+<code>author_kind</code>, <code>author_name</code>,
+<code>source_session_id</code>, <code>approved</code>,
+<code>status</code> and <code>superseded_by_id</code>. The migration
+comments are careful about what each change does to a populated
+database, noting that <code>ADD COLUMN</code> with a constant default
+never rewrites rows, and that migration 1 backfills existing lessons as
+human through the column defaults.</p>
+<p>Evidence carries more: a command run has its argv, exit code, output,
+a <code>capture_kind</code> distinguishing a full capture from a
+shell-hook row that keeps only command, directory and exit code, and an
+<code>error_fingerprint</code> that groups recurring failures so
+<code>mw context --last-error</code> can show a history immediately.</p>
+<p>Every time here is a record time. There is no validity axis and no
+as-of read, so <code>bitemporal</code> is withheld on an absence.
+<code>expires_at</code> is a retention policy rather than a statement
+about when something was true.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Search is FTS5 over captured commands, with each whitespace term
+quoted and given a trailing prefix <code>*</code> so "link" still finds
+"linker" — the comment says this is deliberately "closer to the old
+substring search" the index replaced. Quoting escapes punctuation so a
+query cannot break <code>MATCH</code> syntax.</p>
+<p>Lessons come from the loader, behind the two predicates above. A
+scorer produces named reasons alongside its numbers, and an embeddings
+table supports an optional vector path.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every note-writing surface — <code>mw mark</code>,
+<code>mw remember</code>, MCP, the desktop app — routes through
+<code>remember_as</code>, and the capture gate runs "before the database
+is opened", so a directory excluded from capture never reaches storage
+at all. Redaction runs over captured text, with tests asserting that a
+token value is absent from the result.</p>
+<p>The compaction pass is separate and is where the evidence layer is
+managed. Its policy module is pure: thresholds arrive as arguments "so
+the CLI can expose flags and tests can pin every boundary", and every
+decision returns a <code>Tier</code> carrying the <code>Reason</code>
+that selected it — <code>Distilled</code>, <code>StaleLarge</code> or
+<code>SuccessNoise</code>. The second rule is the one that ties the two
+layers together: an approved lesson distilled from a session makes the
+transcript copy redundant, "the reasoning lives in the lesson".</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP surface writes lessons attributed to the calling client, shell
+hooks capture commands as they run, and a <code>capture_kind</code>
+records which tier a row came from. The desktop dashboard and the
+terminal UI are the person's surfaces; the TUI's own text tells the
+reader where agent memories land when review mode is on.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Human review — awarded.</strong> The producer test is what
+decides it: the approving action is a desktop command a person invokes,
+the queue is exactly the agent-written unapproved rows, and the two
+author kinds are written by two different functions rather than by one
+function with a parameter. The qualification belongs beside it: review
+mode is a setting. It defaults to on and the documentation frames the
+change in the safe direction, but one line in <code>config.toml</code>
+or one environment variable makes every agent lesson retrievable at the
+moment it is written.</p>
+<p><strong>Trust state — awarded.</strong> Four values, filtered in the
+same SQL as the approval flag, each with its own writer, and a
+supersession that names its replacement and validates before
+writing.</p>
+<p><strong>Negative evaluation — awarded.</strong> The fixture is built
+so that each excluded row differs from the expected one in exactly one
+column, which is what makes it discriminating rather than merely
+non-empty, and the unsupported-schema arm asserts that the dangerous
+configuration fails loudly.</p>
+<p><strong>Scope enforced — withheld.</strong> Project and machine are
+real stored keys, and the query places them behind
+<code>(?1 IS NULL OR column = ?1)</code>. A caller that supplies nothing
+reads across everything, so the boundary is the caller's habit.</p>
+<p><strong>Tombstone — withheld.</strong> Rejection deletes the row, and
+nothing is keyed on the lesson's text, so a rejected proposal can return
+as a new pending note. The lifecycle statuses do retain evidence, which
+is the right instinct in a neighbouring place — but a superseded row is
+not consulted when anything is written.</p>
+<p><strong>Audit log — withheld.</strong> Fifteen tables and none of
+them a mutation record. An approval, a supersession and a rejection all
+leave the same trace.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>401 test attributes across the two crates. The loader test is the
+load-bearing one and is described above. The policy module's tests pin
+every threshold boundary, which is what its thresholds-as-arguments
+design is for. The privacy tests assert a secret's absence from a
+redacted string. A <code>benchmarks</code> directory and a
+shortcut-evaluation example drive retrieval over a synthetic store.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Decide approval from the author, at write time.</strong> A
+flag set by the writer and checked by the reader only works if the
+writer cannot lie about who it is. Two functions — one that hardcodes
+the human kind, one that takes an agent's client name — is a cheaper
+guarantee than a parameter everyone must pass correctly.</li>
+<li><strong>Refuse the schema you cannot filter.</strong> The best line
+in this codebase is the one that turns a missing column into an error
+because "no released migration creates it". A guard that degrades
+quietly when its column is absent is a guard that will be absent exactly
+when it matters.</li>
+<li><strong>Read the schema from metadata, not from a failed
+prepare.</strong> Treating an arbitrary error as a legacy-schema signal
+is how a broken query becomes a silent policy change.</li>
+<li><strong>Give retirement more than one word.</strong>
+<code>expired</code>, <code>stale</code> and <code>superseded</code> say
+three different things about why a memory stopped being offered, and the
+last of them names what replaced it.</li>
+<li><strong>Attach the reason to the decision.</strong> The compaction
+tier carries which rule fired, so a shrunken row can be explained later
+without re-deriving the policy.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should rejection leave anything behind? Today it deletes, so the
+same lesson can be proposed again with nothing to notice — the review
+queue has no memory of its own decisions.</li>
+<li>Is the scope meant to bind? A project column exists on the session
+and the query makes it optional; which is the intended contract is not
+written down.</li>
+<li>What happens to a lesson whose evidence was compacted and whose
+status later becomes stale? The transcript path still points at the raw
+file, but the relationship between the two lifecycles is not
+stated.</li>
+<li>Will the approval flag ever record who approved, and when? The
+lesson records who wrote it in three columns and records nothing about
+who let it through.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What lives there</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/mw-cli/src/lib.rs</code></td>
+<td>Migrations with their notes, the lesson API, the review queue, the
+lifecycle writers and the expiry sweep</td>
+</tr>
+<tr>
+<td><code>crates/memorywhale-core/src/sqlite.rs</code></td>
+<td><code>load_memories</code>, the schema introspection, the two
+predicates and the unsupported-schema refusal</td>
+</tr>
+<tr>
+<td><code>crates/memorywhale-core/src/policy.rs</code></td>
+<td>The compaction rulebook, its tiers and its named reasons</td>
+</tr>
+<tr>
+<td><code>crates/memorywhale-core/src/privacy.rs</code></td>
+<td>Redaction, with tests asserting a secret's absence</td>
+</tr>
+<tr>
+<td><code>crates/memorywhale-core/src/scorer.rs</code></td>
+<td>Ranking with named reasons</td>
+</tr>
+<tr>
+<td><code>src-tauri/src/lib.rs</code></td>
+<td>The dashboard commands, including the pending list and
+<code>approve_lesson</code></td>
+</tr>
+<tr>
+<td><code>crates/mw-cli/src/tui.rs</code></td>
+<td>The terminal UI, including where it tells a reader agent memories
+land</td>
+</tr>
+<tr>
+<td><code>crates/mw-cli/src/agent_hook.rs</code></td>
+<td>The hook that captures agent activity</td>
+</tr>
+</tbody>
+</table></div>
+<p>Searches behind the absence claims above, run from the repository
+root:</p>
+<pre class="sh"><code>grep -rn &#39;valid_from\|valid_to\|as_of&#39; crates --include=&#39;*.rs&#39;   # no validity axis; the hits are &#39;invalid_toml&#39;
+grep -rhoE &#39;CREATE TABLE (IF NOT EXISTS )?[a-z_]+&#39; crates src-tauri | sort -u   # fifteen tables, none a mutation history
+grep -rn &#39;IS NULL OR project&#39; crates --include=&#39;*.rs&#39;            # the scope predicate is omittable
+grep -rn &#39;reject_note&#39; crates --include=&#39;*.rs&#39;                   # rejection is a DELETE</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/wuisabel-gif/MemWhale/commit/91b978508866fa8479136142d1eb415e3fd067b1"><code class="commit-id" title="91b978508866fa8479136142d1eb415e3fd067b1">91b97850…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: eleven files scanned, no auto-run
+surface, one build-time execution point —
+<code>src-tauri/build.rs</code>, which cargo runs at build time — one
+unpinned dependency surface, and one dependency file inside the
+seven-day cooldown, with both <code>package-lock.json</code> and
+<code>Cargo.lock</code> present. <code>AGENTS.md</code> is addressed to
+a reading agent and was recorded as data. Nothing was installed, built
+or run, and no benchmark was reproduced.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
