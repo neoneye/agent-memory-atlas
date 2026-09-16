@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A personal learning agent whose L1
+learner profile derives mastery from weighted, typed evidence — recall
+quality, hint level, spacing, evaluator confidence — and whose
+misconception status genuinely gates what reaches the prompt, beside two
+profile tools that write mastery, a diagnosis and a list of evidence ids
+nothing resolves against the event log.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Inno Agent — Agent Memory Atlas">
+    <meta property="og:description" content="A personal learning agent
+whose L1 learner profile derives mastery from weighted, typed evidence —
+recall quality, hint level, spacing, evaluator confidence — and whose
+misconception status genuinely gates what reaches the prompt, beside two
+profile tools that write mastery, a diagnosis and a list of evidence ids
+nothing resolves against the event log.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Inno
+Agent — Agent Memory Atlas">
+    <meta name="twitter:description" content="A personal learning agent
+whose L1 learner profile derives mastery from weighted, typed evidence —
+recall quality, hint level, spacing, evaluator confidence — and whose
+misconception status genuinely gates what reaches the prompt, beside two
+profile tools that write mastery, a diagnosis and a list of evidence ids
+nothing resolves against the event log.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Inno Agent — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Inno Agent",
+      "description": "A personal learning agent whose L1 learner profile derives mastery from weighted, typed evidence \u2014 recall quality, hint level, spacing, evaluator confidence \u2014 and whose misconception status genuinely gates what reaches the prompt, beside two profile tools that write mastery, a diagnosis and a list of evidence ids nothing resolves against the event log.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A careful evidence model, and two tools
+that route around it</p>
+          <h1>Inno Agent</h1>
+          <p class="document-deck">A personal learning agent whose L1
+learner profile derives mastery from weighted, typed evidence — recall
+quality, hint level, spacing, evaluator confidence — and whose
+misconception status genuinely gates what reaches the prompt, beside two
+profile tools that write mastery, a diagnosis and a list of evidence ids
+nothing resolves against the event log.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/hhyqhh/inno-agent">
+              <span>Source</span>
+              <strong>hhyqhh/inno-agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/hhyqhh/inno-agent/commit/fdd95ccd44ac237444dd3bc12572f6b17ea132c7" title="fdd95ccd44ac237444dd3bc12572f6b17ea132c7">
+              <span>Analyzed revision</span>
+              <code>fdd95ccd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/hhyqhh--inno-agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>hhyqhh--inno-agent</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Inno Agent is a personal learning agent — MIT, TypeScript, 84,072
+lines across 90 test files, built on the Pi coding-agent SDK with the
+kernel deliberately unmodified. It ships as an Electron app, a React web
+UI and a terminal CLI over one runtime state, and it organises memory
+into three declared layers: an L1 learner profile, an L2 Markdown wiki,
+and L3 session records with cross-conversation recall.</p>
+<p>The README states the stance plainly: "Durable facts go to tools, not
+replies — anything that affects future teaching is written to L1/L2 via
+tools, so personalization is evidence-driven and traceable," and
+"unevidenced labels are forbidden."</p>
+<p>The evidence model behind that claim is the best-argued one in this
+family. <code>evidence.ts</code> types a piece of evidence by kind and
+weights it: <code>exposure</code> is worth zero,
+<code>recognition</code> 0.25, <code>guided_recall</code> 0.45,
+<code>free_recall</code> 0.75, <code>application</code> 0.85,
+<code>transfer</code> 1, and a learner's <code>self_report</code> 0.1.
+That is multiplied by a hint-level factor that drops to 0.1 at three
+hints, by the evaluator's confidence, and by a spacing factor that pays
+1.25 for a week-delayed success and 0.75 for one inside five minutes.
+Mastery moves by
+<code>LEARNING_RATE * weight * (observed - mastery)</code>, so being
+shown something moves nothing at all.</p>
+<p>The guard on top of it is the kind of detail that only gets written
+by someone who has watched a model produce contradictory output.
+<code>resultValue</code> clamps the optional numeric score into the band
+its categorical result allows, with the reason in the comment: "A model
+can accidentally emit contradictory fields (for example,
+result=incorrect with score=1); constrain the optional score to the
+selected result band so malformed evidence can never invert the learning
+signal."</p>
+<p>Then there are two other tools.</p>
+<p><code>patch_learner_profile</code> takes an absolute
+<code>mastery</code>, a free-text <code>diagnosis</code>, and
+<code>evidence_ids_append</code>. <code>update_learner_profile</code>
+takes whole knowledge-state objects, including
+<code>estimate_confidence</code>, <code>stability_days</code>,
+<code>successful_transfer_count</code> and an optional
+<code>state_label</code>. Both call <code>saveProfile</code> directly.
+Neither appends anything to <code>events.jsonl</code>. And nothing
+anywhere resolves an id in <code>evidence_ids</code> against the event
+log.</p>
+<p>That matters more than it looks, because <code>evidence_ids</code> is
+doing three jobs at once. It is the provenance list shown to the
+learner. It is a confidence gate — <code>state-engine.ts:111</code>
+reads a non-empty array as licence to raise the estimate-confidence
+ceiling from 0.35 to 0.6. And it is the dedup key:
+<code>state-engine.ts:123</code> builds a <code>Set</code> from it, and
+any evidence whose id is already in that set is skipped outright. The
+array is also not a coherent key space —
+<code>auto-profile.ts:273</code> pushes <code>event.event_id</code> into
+it while <code>state-engine.ts:267</code> pushes
+<code>evidence.evidence_id</code>, two different id namespaces in one
+field.</p>
+<p>So the careful path cannot be faked and the other path does not need
+to be.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p><strong>Evidence</strong> is the atom. It has a kind, a categorical
+result, a hint level, an evaluator and that evaluator's confidence. It
+is appended to <code>events.jsonl</code> and never edited.</p>
+<p>A <strong>knowledge state</strong> is not stored truth.
+<code>projectKnowledgeState</code> takes the stored state as a
+<em>prior</em> and replays evidence over it, producing a
+<code>DerivedKnowledgeState</code> with a <code>state_label</code> of
+unknown, learning, fragile, review_due, stable or misconception. The
+label is recomputed on every read; the stored <code>state_label</code>
+field is written by tools and never read back.</p>
+<p>A <strong>misconception</strong> is the one genuinely stored status.
+<code>active</code> blocks teaching. Leaving <code>active</code>
+requires a linked, hint-free, confidently evaluated correct
+retrieval.</p>
+<p>The <strong>wiki</strong> is Markdown with frontmatter. Its pages
+also carry a status — draft, reviewed, outdated — and that one is
+decorative.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — evidence reaches the projection through a weighted, guarded path that cannot be faked; the two profile tools write the prior that projection starts from, and skip the event log entirely</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: evidence reaches the projection through a weighted, guarded path that cannot be faked; the two profile tools write the prior that projection starts from, and skip the event log entirely
+flowchart TB
+    subgraph EV[&quot;the evidence path&quot;]
+        T1[&quot;record_learning_evidence&quot;] --&gt; LOG[(&quot;events.jsonl&lt;br/&gt;append-only&quot;)]
+        LOG --&gt; W[&quot;evidenceWeight =&lt;br/&gt;kind × hint × evaluator_confidence × spacing&lt;br/&gt;exposure = 0, transfer = 1&quot;]
+        W --&gt; RV[&quot;resultValue clamps score&lt;br/&gt;into the result&#39;s band —&lt;br/&gt;&#39;malformed evidence can never&lt;br/&gt;invert the learning signal&#39;&quot;]
+    end
+    subgraph TOOLS[&quot;the two other tools&quot;]
+        P[&quot;patch_learner_profile&lt;br/&gt;absolute mastery, free-text diagnosis,&lt;br/&gt;evidence_ids_append&quot;] --&gt; SAVE[&quot;saveProfile —&lt;br/&gt;writes profile.json&quot;]
+        U[&quot;update_learner_profile&lt;br/&gt;whole KnowledgeState objects:&lt;br/&gt;estimate_confidence, stability_days,&lt;br/&gt;successful_transfer_count&quot;] --&gt; SAVE
+        SAVE -.-&gt;|&quot;appends nothing&quot;| LOG
+    end
+    SAVE --&gt; BASE[&quot;stored KnowledgeState&lt;br/&gt;= the PRIOR&quot;]
+    BASE --&gt; PROJ[&quot;projectKnowledgeState&quot;]
+    RV --&gt; PROJ
+    IDS[&quot;evidence_ids — never resolved&lt;br/&gt;against events.jsonl&quot;] --&gt; GATE1[&quot;non-empty ⇒ confidence&lt;br/&gt;ceiling 0.35 → 0.6&quot;]
+    IDS --&gt; GATE2[&quot;used as the dedup Set:&lt;br/&gt;matching evidence is SKIPPED&quot;]
+    BASE --&gt; IDS
+    GATE1 --&gt; PROJ
+    GATE2 --&gt; PROJ
+    PROJ --&gt; LABEL[&quot;state_label recomputed&lt;br/&gt;every read&quot;]
+    MIS[&quot;misconception.status&lt;br/&gt;active | repairing | resolved | stale&quot;] --&gt; ACT{&quot;status === &#39;active&#39;?&quot;}
+    ACT --&gt;|&quot;yes&quot;| BLOCK[&quot;blocks teaching:&lt;br/&gt;enters the context pack,&lt;br/&gt;forces label = misconception&quot;]
+    ACT --&gt;|&quot;repairing / resolved / stale&quot;| PASS[&quot;stops blocking —&lt;br/&gt;the ladder has four rungs,&lt;br/&gt;the filter tests one&quot;]
+    HUMAN[&quot;learner&#39;s web panel:&lt;br/&gt;PATCH mastery, diagnosis,&lt;br/&gt;misconception status&quot;] --&gt; BASE
+    HUMAN -.-&gt;|&quot;status cast with no&lt;br/&gt;enum validation&quot;| MIS
+    LABEL --&gt; PACK[&quot;context pack → the prompt&quot;]
+    BLOCK --&gt; PACK</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory/learner/evidence.ts</code></td>
+<td>Evidence typing and the weight function</td>
+</tr>
+<tr>
+<td><code>memory/learner/state-engine.ts</code></td>
+<td>The projection, the misconception gate, the FSRS-style stability
+model</td>
+</tr>
+<tr>
+<td><code>memory/learner/profile-store.ts</code></td>
+<td><code>profile.json</code>, the append-only
+<code>events.jsonl</code>, and its rotation</td>
+</tr>
+<tr>
+<td><code>memory/learner/profile-updater.ts</code></td>
+<td><code>patchProfile</code> and <code>updateProfile</code> — the
+direct write paths</td>
+</tr>
+<tr>
+<td><code>memory/learner/context-pack.ts</code></td>
+<td>What actually reaches the prompt</td>
+</tr>
+<tr>
+<td><code>memory/learner/prerequisite-resolver.ts</code></td>
+<td>Prerequisite assessment feeding the teaching gate</td>
+</tr>
+<tr>
+<td><code>memory/learner/teaching-entry-gate.ts</code></td>
+<td>Diagnose, teach, repair or answer directly</td>
+</tr>
+<tr>
+<td><code>memory/l2/</code></td>
+<td>The wiki: ingest, chunking, summarising, linking, linting, graph and
+overview</td>
+</tr>
+<tr>
+<td><code>memory/l3/</code></td>
+<td>Session indexing into SQLite FTS5, and recall</td>
+</tr>
+<tr>
+<td><code>server/routes/learner.ts</code></td>
+<td>The learner-facing edit API</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p>Read <code>evidence.ts</code> and
+<code>state-engine.ts:100-200</code> first — that is the argument the
+project is making, and it is worth the time regardless of what you
+conclude about the rest.</p>
+<p>Then read <code>profile-updater.ts:117-182</code> immediately
+afterwards. The contrast is the whole report.</p>
+<p>Then <code>state-engine.ts:250-281</code> for the misconception gate,
+which is the part that got it right.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>L1 is one JSON file plus one JSONL log. The profile holds goals,
+knowledge states, misconceptions, preferences and a summary; the log
+holds learning events, each optionally carrying a structured
+<code>evidence</code> object.</p>
+<p>A stored <code>KnowledgeState</code> and a computed
+<code>DerivedKnowledgeState</code> are different types with overlapping
+fields. The stored one carries <code>mastery</code>,
+<code>confidence</code> and <code>stability</code> on a 0–1 scale; the
+derived one carries <code>mastery</code>,
+<code>estimate_confidence</code>, <code>stability_days</code>,
+<code>retrievability</code>, <code>next_review_at</code>, counts of
+exposures, retrievals, lapses and successful transfers, and the
+<code>state_label</code>. The tool schema exposes the derived fields as
+optional inputs on the stored type, which is how a caller ends up able
+to submit <code>successful_transfer_count</code> directly — one of the
+four conditions for the <code>stable</code> label.</p>
+<p>L2 is a Markdown tree. A page's frontmatter carries
+<code>status</code>, <code>confidence</code>, <code>sources</code>,
+<code>source_ids</code>, an optional <code>concept_id</code> linking it
+to L1's concept space, explicit <code>prerequisites</code> with a
+relation and a source, and optional <code>contested</code> and
+<code>contradictions</code> fields. The distinction between a typed
+prerequisite and a plain wikilink is drawn deliberately: "Explicit
+teaching dependencies. Ordinary wikilinks remain non-directional
+relatedness."</p>
+<p>L3 is <code>chunks</code> and <code>chunks_fts</code> in SQLite, one
+row per user or assistant turn.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>L1 is not retrieved. <code>buildContextPack</code> projects every
+concept, sorts by a fixed state priority — misconception, review_due,
+unknown, learning, fragile, stable — takes five, collects the active
+misconceptions, and renders them as lines in the prompt. There is no
+query and no threshold, which for a single-learner profile is the right
+call.</p>
+<p>L2 search is keyword matching over manifest fields, falling back to
+page body content, with an embedding-backed path when configured.</p>
+<p>L3 is FTS5 with an <code>excludeSessionId</code> option so
+cross-session recall does not return the conversation you are already in
+— a small thing that many systems in this corpus get wrong.</p>
+<p>The retrieval finding is what <em>isn't</em> filtered.
+<code>WikiPageStatus</code> is <code>draft | reviewed | outdated</code>,
+and the only place a status value is compared in L2 is
+<code>l2-tools.ts:182</code>, where <code>status === "indexed"</code> on
+a <em>manifest</em> entry guards re-archiving. No read path tests a
+page's review status: <code>wiki-page-model-view.ts:161</code>
+normalises it for rendering and that is the end of it. An
+<code>outdated</code> page is retrieved and presented exactly like a
+<code>reviewed</code> one. <code>contested</code> is the same — the
+maintainer counts contested pages into the overview for a human to read,
+and nothing withholds them.</p>
+<p>Two statuses in one system, and only the L1 one is enforced.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>record_learning_evidence</code> builds a structured evidence
+object, appends it, and folds the deterministic signals into the profile
+— with a <code>dedupe_key</code> check that scans the existing log
+before appending.</p>
+<p>The two profile tools are the finding. <code>patchProfile</code>
+creates the knowledge state if absent, then applies whatever the caller
+sent: <code>mastery</code> absolute or by delta,
+<code>confidence</code>, a <code>stability_delta</code>, a
+<code>diagnosis</code> string, appended <code>next_actions</code>,
+appended <code>evidence_ids</code>, <code>last_practiced_at</code> and
+<code>review_due_at</code>. <code>updateProfile</code> merges whole
+objects by id. Both end at <code>saveProfile</code>, which bumps a
+version counter and writes the file.</p>
+<p>Nothing validates that an appended evidence id exists. Nothing
+records that the write happened. The version counter increments, and it
+is the only trace.</p>
+<p>The consequence is not that mastery can be set — a personal agent has
+every right to let a learner assert what they know. It is that an
+<em>asserted</em> value is stored in the same field, with the same
+shape, as a <em>derived</em> one, and the provenance field that would
+tell them apart is itself free text. The projection then treats the
+asserted value as a prior and moves it by 35% of one weighted step per
+piece of real evidence, so a fabricated 0.95 survives several honest
+failures.</p>
+<p>The web panel writes through a second door with a different
+validation posture. The tool path declares <code>status</code> as a
+<code>StringEnum</code> of four values; the HTTP handler at
+<code>learner.ts:173</code> does
+<code>(body.status as Misconception["status"]) ?? current.status</code>
+— a bare TypeScript cast, which erases at runtime. A PATCH carrying any
+string stores it, and since the read path tests only
+<code>status === "active"</code>, an unrecognised value silently stops
+the misconception from blocking.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The SDK kernel is not modified; memory is registered tools plus one
+extension hook, and the README makes that a stated design constraint.
+That is the right instinct for staying upstream-compatible, and it is
+visible in the code rather than only in the prose.</p>
+<p><code>formatTeachingEntryDecision</code> is worth reading as an
+artifact in its own right: when the gate decides to diagnose, it emits a
+protocol block instructing the next reply to ask exactly one observable
+question, give no hints or answers, and stop and wait. It is prompt
+engineering, not enforcement — nothing checks that the model complied —
+but the decision of what to constrain is well made.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The misconception gate is the system's best mechanism and deserves
+the credit. Its comment states the rule and the code keeps it: a correct
+answer on the concept does not clear a misconception; only an evidence
+record explicitly carrying that <code>misconception_id</code>, produced
+by a retrieval-kind interaction, at hint level 0 or 1, with an evaluator
+at least 0.7 confident and a computed weight of at least 0.25, moves it
+out of <code>active</code>. A later linked failure sets it straight
+back.</p>
+<p>The gap is at the other end. That careful transition moves
+<code>active</code> to <code>repairing</code> — never to
+<code>resolved</code>, which no code path sets. And both read filters
+test <code>status === "active"</code>. So the moment a misconception
+becomes <code>repairing</code> it stops entering the context pack and
+stops forcing the <code>misconception</code> state label, even though
+<code>repairing</code> plainly means the repair is underway rather than
+done. A four-value vocabulary is being consumed as a boolean, and the
+value the careful gate produces is on the permissive side of it.</p>
+<p><code>events.jsonl</code> is append-only and rotates at 10 MB, and
+<code>loadEvents</code> — which <code>rebuildProfileFromEvents</code>
+uses — reads only the current segment. The code says so: "older segments
+stay on disk as archives." A rebuild after a rotation therefore replays
+a truncated history. <code>rebuildProfileFromEvents</code> also starts
+from the <em>current</em> profile rather than a default, so it is a
+replay-on-top, not a reconstruction; a value written by
+<code>patch_learner_profile</code> survives it untouched.</p>
+<p>There is no scope key anywhere, which is a stated non-goal rather
+than an oversight — the README lists multi-user support under
+"Non-goals" and the architecture is consistent with that. Workspaces are
+separated by data directory only.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Ninety test files, and the memory ones are real.
+<code>l3.test.ts</code> seeds a session whose assistant turn carries a
+<code>thinking</code> block and a visible <code>text</code> block, then
+asserts the chunk count is 2, the visible text is findable, and the
+reasoning is not — a negative with its positive control and an exact
+count in the same test, against the real store.
+<code>state-engine.test.ts:216-254</code> is titled "moves only an
+explicitly linked, reliably repaired misconception out of active" and
+asserts the status lands on <code>repairing</code> after the good repair
+and returns to <code>active</code> after a later linked failure — which
+is also the clearest confirmation that <code>repairing</code>, not
+<code>resolved</code>, is what the careful path produces.
+<code>wiki-linker.test.ts</code> asserts a hallucinated page name does
+not end up in a page body and that the graph reports no missing targets.
+<code>server.smoke.test.ts</code> drives the learner API end to end over
+a real HTTP server, including the delete.</p>
+<p>What is not tested is the seam this report is about: no test writes a
+knowledge state through <code>patch_learner_profile</code> and then
+asserts anything about how the projection treats it, and no test appends
+a fabricated evidence id and checks what happens to the confidence
+ceiling or the dedup set.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Take <code>evidence.ts</code> more or less whole. Typing evidence by
+what the learner actually did — recognised, recalled with hints,
+recalled freely, applied, transferred — and weighting
+<code>exposure</code> at exactly zero is the single most useful idea
+here, and it generalises past education to any memory that records how
+strongly something was confirmed.</p>
+<p>Take <code>resultValue</code>'s guard, and take the reason with it.
+When a model supplies both a category and a number, let the category
+constrain the number's range. The comment naming the failure it prevents
+is what makes the guard survive the next refactor.</p>
+<p>Take the misconception rule: a blocker is not cleared by success on
+the general topic, only by a check explicitly linked to the blocker
+itself, and a later linked failure reinstates it.</p>
+<p>Do not let a field be provenance, a confidence gate and a dedup key
+at once. <code>evidence_ids</code> is all three, and because the first
+job is descriptive nobody validates it, while the second and third are
+load-bearing. Split them: a provenance list can be free-form, but
+anything that raises a confidence or suppresses a record must be
+resolved against the store that would confirm it.</p>
+<p>If you have a derived value and an asserted one, do not store them in
+the same field. Keep the assertion beside the derivation with its own
+provenance, and decide explicitly which one the read path uses.</p>
+<p>Make the status vocabulary and the read filter agree. Four values and
+one <code>=== "active"</code> check is a decision about
+<code>repairing</code> that nobody wrote down.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether <code>resolved</code> and <code>stale</code> are intended to
+be reachable. No code path sets either; both are in the type, the tool
+schema and the web PATCH. If the model is expected to set them through
+<code>update_learner_profile</code>, the careful gate in
+<code>applyEvidenceToLinkedMisconception</code> can be bypassed by the
+same call.</p>
+<p>Whether the stored <code>state_label</code> is meant to be
+authoritative anywhere. It is writable through the tool schema and the
+projection never reads it.</p>
+<p>Whether the technical report — <code>docs/inno-agent.pdf</code>,
+described in the README as an arXiv paper from June 2026 — describes the
+evidence model as implemented or as designed. It was not read here.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/inno-agent/src/memory/learner/evidence.ts</code></td>
+<td>The weighting, and why exposure is worth zero</td>
+</tr>
+<tr>
+<td><code>apps/inno-agent/src/memory/learner/state-engine.ts</code></td>
+<td>The projection, the dedup set, and the misconception gate</td>
+</tr>
+<tr>
+<td><code>apps/inno-agent/src/memory/learner/profile-updater.ts</code></td>
+<td>The two write paths that skip the log</td>
+</tr>
+<tr>
+<td><code>apps/inno-agent/src/memory/learner/context-pack.ts</code></td>
+<td>The <code>status === "active"</code> filter</td>
+</tr>
+<tr>
+<td><code>apps/inno-agent/src/server/routes/learner.ts</code></td>
+<td>The human edit surface, and the unchecked cast</td>
+</tr>
+<tr>
+<td><code>apps/inno-agent/src/memory/l3/l3.test.ts</code></td>
+<td>Thinking blocks excluded, asserted both ways</td>
+</tr>
+<tr>
+<td><code>apps/inno-agent/src/memory/l2/types.ts</code></td>
+<td>A page status nothing filters on</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/hhyqhh/inno-agent/commit/fdd95ccd44ac237444dd3bc12572f6b17ea132c7"><code class="commit-id" title="fdd95ccd44ac237444dd3bc12572f6b17ea132c7">fdd95ccd…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: ten files scanned, no auto-run surfaces,
+five dependency files inside the seven-day cooldown, six unpinned
+surfaces including two <code>package.json</code> files with no lockfile
+beside them and a <code>xlsx</code> dependency from a vendored tarball,
+and the <code>CLAUDE.md</code> read as data. Nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 493 reports.</strong></p>
+<p><strong>This page covers all 494 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17916,6 +17916,75 @@ socket.</li>
 hold more than its ceiling, or must tell one caller's memories from
 another's — a record here has no owner, session or scope key of any
 kind, and the daemon's socket has no authentication.</li>
+</ul>
+<h3 id="inno-agent"><a
+href="../systems/inno-agent/"><code>inno-agent</code></a></h3>
+<ul>
+<li>Best idea: <strong>evidence typed by what the learner actually did,
+weighted accordingly, with a guard against the model contradicting
+itself.</strong> Eight kinds run from <code>exposure</code> at exactly 0
+— being shown something moves nothing — through <code>recognition</code>
+0.25, <code>guided_recall</code> 0.45, <code>free_recall</code> 0.75,
+<code>application</code> 0.85 to <code>transfer</code> 1, multiplied by
+a hint-level factor that falls to 0.1 at three hints, by the evaluator's
+confidence, and by a spacing factor paying 1.25 for a week-delayed
+success against 0.75 for one inside five minutes. On top of it,
+<code>resultValue</code> clamps the optional numeric score into the band
+its categorical result allows, with the reason written down: a model
+"can accidentally emit contradictory fields (for example,
+result=incorrect with score=1)", so constraining the score means
+"malformed evidence can never invert the learning signal". Mastery is
+never stored as truth — it is projected from the evidence on every read.
+The misconception gate matches it: a correct answer on the concept
+clears nothing, only evidence explicitly carrying that
+<code>misconception_id</code>, from a retrieval-kind interaction at hint
+level 0 or 1 with an evaluator at least 0.7 confident, and a later
+linked failure reinstates the blocker.</li>
+<li>Biggest risk: <strong>two tools write the same fields with none of
+that discipline, and the provenance field that would expose it is
+unvalidated.</strong> <code>patch_learner_profile</code> takes an
+absolute <code>mastery</code>, a free-text <code>diagnosis</code> and an
+<code>evidence_ids_append</code> list;
+<code>update_learner_profile</code> takes whole knowledge-state objects
+including <code>estimate_confidence</code>, <code>stability_days</code>
+and <code>successful_transfer_count</code> — three of the four
+conditions for the <code>stable</code> label. Both call
+<code>saveProfile</code> directly and neither appends to
+<code>events.jsonl</code>, so the append-only record does not cover the
+profile's own write paths. Nothing resolves an id in
+<code>evidence_ids</code> against the log, and that array is doing three
+jobs at once: provenance shown to the learner, a confidence gate that
+raises the estimate ceiling from 0.35 to 0.6 when non-empty, and the
+dedup <code>Set</code> that causes matching real evidence to be skipped
+— while mixing <code>event_id</code> values pushed by
+<code>auto-profile.ts</code> with <code>evidence_id</code> values pushed
+by <code>state-engine.ts</code>. Separately, the careful misconception
+gate produces <code>repairing</code>, and both read filters test only
+<code>active</code>, so a repair that has begun stops blocking teaching
+immediately; and the web PATCH stores <code>body.status</code> through a
+bare TypeScript cast where the tool path declares a four-value
+enum.</li>
+<li>Most reusable component: <code>evidence.ts</code> more or less
+whole, and <code>resultValue</code>'s guard with its comment attached.
+The idea generalises past education — any store that records <em>how
+strongly</em> something was confirmed can type its evidence this way,
+and letting a categorical judgement constrain an accompanying number is
+the cheapest defence there is against a model that answers twice.</li>
+<li>Maturity impression: MIT, TypeScript, 84,072 lines across 90 test
+files, shipping as an Electron app, a React web UI and a terminal CLI
+over one runtime state, built on the Pi coding-agent SDK with the kernel
+unmodified as a stated constraint. The memory tests are real:
+<code>state-engine.test.ts</code> pins the misconception transitions,
+<code>l3.test.ts</code> asserts the assistant's <code>thinking</code>
+blocks never enter the index with a positive control beside it, and
+<code>server.smoke.test.ts</code> drives the learner API over a real
+HTTP server.</li>
+<li>Study when: you are modelling how well something is known rather
+than merely what was said, or you want a worked spaced-repetition state
+machine driven by evidence quality instead of a timer.</li>
+<li>Do not copy when: one field must serve as provenance, a confidence
+gate and a dedup key — split those — or when a derived value and an
+asserted one need to share a schema.</li>
 </ul>
         </article>
       </div>
