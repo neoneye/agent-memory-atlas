@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An identity and memory substrate
+whose read-scoping lives in a single helper every path must import —
+written that way because the same rule, scattered, once leaked office
+memories to any authenticated agent — and whose promoted memories
+default to private unless a recorded justification says otherwise.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Flair — Agent Memory Atlas">
+    <meta property="og:description" content="An identity and memory
+substrate whose read-scoping lives in a single helper every path must
+import — written that way because the same rule, scattered, once leaked
+office memories to any authenticated agent — and whose promoted memories
+default to private unless a recorded justification says otherwise.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Flair — Agent Memory Atlas">
+    <meta name="twitter:description" content="An identity and memory
+substrate whose read-scoping lives in a single helper every path must
+import — written that way because the same rule, scattered, once leaked
+office memories to any authenticated agent — and whose promoted memories
+default to private unless a recorded justification says otherwise.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Flair — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Flair",
+      "description": "An identity and memory substrate whose read-scoping lives in a single helper every path must import \u2014 written that way because the same rule, scattered, once leaked office memories to any authenticated agent \u2014 and whose promoted memories default to private unless a recorded justification says otherwise.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The scattered rule is the leak, so there is
+one rule</p>
+          <h1>Flair</h1>
+          <p class="document-deck">An identity and memory substrate
+whose read-scoping lives in a single helper every path must import —
+written that way because the same rule, scattered, once leaked office
+memories to any authenticated agent — and whose promoted memories
+default to private unless a recorded justification says otherwise.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/tpsdev-ai/flair">
+              <span>Source</span>
+              <strong>tpsdev-ai/flair</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/tpsdev-ai/flair/commit/02512aae1e859bcfa75d494f34b7a535a8caf0b5" title="02512aae1e859bcfa75d494f34b7a535a8caf0b5">
+              <span>Analyzed revision</span>
+              <code>02512aae…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/tpsdev-ai--flair" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>tpsdev-ai--flair</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Flair is "[t]he identity and memory substrate for AI agents.
+Crypto-pinned. Federated. Self-hosted." Apache-2.0, TypeScript, version
+0.54.2, 250,467 lines with 474 test files, distributed as an npm CLI
+over a Harper instance it installs and supervises, with thirteen adapter
+packages and a stdio MCP server written into whichever clients it
+detects.</p>
+<p>Its pitch is three things that survive a restart: an identity proved
+with an Ed25519 keypair, memory searched by meaning, and a "soul" — the
+personality, values and procedures that make an agent that agent.</p>
+<p>What makes it worth reading is none of those. It is that the comments
+record the bugs.</p>
+<p><strong>The read-scoping module exists because the rule was once
+scattered.</strong> Its header says so:</p>
+<blockquote>
+<p>"Before this module existed, SemanticSearch had its OWN inline
+grant-resolution + a <code>visibility === "office"</code> global
+OR-clause that leaked ANY authenticated agent's read of ANY other
+agent's memories once that memory happened to carry
+<code>visibility: "office"</code> … Scattering the scoping rule per path
+is exactly how that leak happened — this module exists so it can't
+happen again: one rule, one place, every path imports it."</p>
+</blockquote>
+<p>Four paths import it — search, get, semantic search, bootstrap, and
+the by-id guard in the auth middleware — the resolver is composed from a
+record-type registry rather than hand-typed per site, and a test
+introspects the composed resolver's mode and owner field against that
+registry so the two cannot drift apart again. That is the correct
+response to a scoping leak, carried through to the test that keeps it
+fixed.</p>
+<p><strong>The migration invariant is argued, not asserted.</strong> The
+private exclusion is <code>visibility != 'private'</code> and the module
+explains why it is not <code>visibility == 'shared'</code>:</p>
+<blockquote>
+<p>"<code>not_equal</code>, which INCLUDES records missing the field
+entirely … never <code>visibility == 'shared'</code>
+(<code>equals</code>, which would EXCLUDE them and silently
+retroactively privatize every legacy row)."</p>
+</blockquote>
+<p>Choosing the predicate by what it does to rows written before the
+field existed is a habit almost nothing else here displays.</p>
+<p><strong>Promotion defaults to private unless something justified
+sharing.</strong> A continuity candidate promoted into memory
+re-verifies a scope tag, a <code>visibilityRuling</code> and a
+<code>visibilityRationale</code>, and defaults to private otherwise,
+under a rule written into the schema: "a shared promoted row must always
+trace to a recorded justification, never to a default."</p>
+<p><strong>The dedup gate never suppresses a write</strong>, in
+capitals, with the bug that earned it: an earlier client-side gate
+returned the existing record instead of writing, and "two
+topically-close but DISTINCT findings — one about replication
+route-directionality, one about DDL/schema replication — and the SECOND
+was silently dropped". Now the server computes a match signal, attaches
+it to the response, and writes anyway.</p>
+<p>Three marks follow from the above: a stored visibility that
+withholds, an owner key bound from the authenticated agent and applied
+by one resolver, and an end-to-end test — "(a) search as the connector:
+A's org-non-private row IS visible; A's private row NEVER is" — that
+asserts both halves through the actual MCP search tool, checking the
+private row's absence by id and by content marker.</p>
+<p><strong>Now read the scope model before deploying it</strong>,
+because it is not what "identity substrate" usually implies. Within one
+instance, every verified agent reads every other agent's non-private
+memory. That is deliberate — the module calls it knowledge refinement
+rather than access control, <code>private</code> is "the ONLY owner-only
+exception", and per-owner grants still exist as an inspectable
+relationship but no longer gate any read. For a personal instance that
+is a defensible model and the "zero knobs" argument behind it is
+coherent. For a shared one it means one careless agent registration
+reads everything not marked private, and the only hard boundary left is
+the federation push filter, which "already excludes <code>private</code>
+rows from ever leaving this instance".</p>
+<p>The identity is also narrower than the tagline. The Ed25519 key
+proves an agent to the HTTP surface; memories are not encrypted with it,
+so losing it "costs the identity, not the data", and nothing signs a
+memory's content. The <code>attribution</code> field on a usage row is
+"OPAQUE — never parsed, never fed to an LLM, never rendered" and the
+schema says to trust it as "nothing more than a label" — the right
+disclosure, and a reminder that provenance here is a hint rather than a
+proof.</p>
+<p>That candour runs through the documentation too, which volunteers
+what most projects bury: the match percentage "is not a probability that
+the memory answers your question correctly"; a root-owned install makes
+semantic search "silently degrade to keyword-only"; the built-in MCP
+surface is off by default and "[n]o documented client setup uses it
+today"; and the install pulls roughly 130 MB of React Native tooling a
+Node install never uses, with the upstream issue linked and a warning
+not to fix it with <code>--omit=optional</code> because that breaks the
+database binding.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>memory</strong> belongs to an agent and is open to the
+instance unless it says private.</p>
+<p><strong>Private</strong> is the only word that withholds
+anything.</p>
+<p>A <strong>promotion</strong> must cite its reason to be shared.</p>
+<p>A <strong>key</strong> proves who is calling, not what was said.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one resolver every cross-agent path imports, after a scattered copy of the same rule leaked office memories; private is the only value that withholds, and promotion must justify anything else</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one resolver every cross-agent path imports, after a scattered copy of the same rule leaked office memories; private is the only value that withholds, and promotion must justify anything else
+flowchart TB
+    RULE[&quot;resolveReadScope — &#39;The SINGLE source every&lt;br/&gt;cross-agent Memory read path resolves through&#39;&quot;]
+    P1[&quot;Memory.search() / get()&quot;] --&gt; RULE
+    P2[&quot;SemanticSearch&quot;] --&gt; RULE
+    P3[&quot;MemoryBootstrap&quot;] --&gt; RULE
+    P4[&quot;auth-middleware by-id guard&quot;] --&gt; RULE
+    PAST[&quot;the leak this replaced: SemanticSearch&#39;s own&lt;br/&gt;inline grant resolution plus a global&lt;br/&gt;visibility === &#39;office&#39; OR-clause&quot;] -.-&gt;|&quot;&#39;Scattering the scoping rule per path&lt;br/&gt;is exactly how that leak happened&#39;&quot;| RULE
+    RULE --&gt; COND{&quot;reader vs row&quot;}
+    COND --&gt;|&quot;the reader&#39;s own row&quot;| ALL[&quot;readable at ANY visibility,&lt;br/&gt;including private&quot;]
+    COND --&gt;|&quot;another agent&#39;s row&quot;| NP{&quot;visibility != &#39;private&#39;&quot;}
+    NP --&gt;|&quot;&#39;shared&#39;, or the field absent&quot;| OPEN[&quot;readable by any verified agent&lt;br/&gt;on this instance — open-within-org,&lt;br/&gt;no grant consulted&quot;]
+    NP --&gt;|&quot;&#39;private&#39;&quot;| DENY[&quot;denied, with a message that does not&lt;br/&gt;name the other agent&quot;]
+    NOTE[&quot;not_equal, never equals &#39;shared&#39; —&lt;br/&gt;equals &#39;would silently retroactively&lt;br/&gt;privatize every legacy row&#39;&quot;] -.-&gt; NP
+    PROM[&quot;continuity candidate promoted into memory&quot;] --&gt; CHK{&quot;scopeTag AND visibilityRuling&lt;br/&gt;AND visibilityRationale re-verified?&quot;}
+    CHK --&gt;|&quot;yes&quot;| SHARED[&quot;shared, traceable to a recorded justification&quot;]
+    CHK --&gt;|&quot;no&quot;| PRIV[&quot;private — &#39;never to a default&#39;&quot;]
+    FED[&quot;federation push filter&quot;] --&gt;|&quot;the one remaining hard boundary:&lt;br/&gt;private rows never leave the instance&quot;| OUT[&quot;another instance&quot;]
+    DEDUP[&quot;conservative-duplicate gate&quot;] --&gt;|&quot;NEVER SUPPRESSES A WRITE —&lt;br/&gt;signal on the response only&quot;| WROTE[&quot;the write happens anyway&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>resources/Memory.ts</code></td>
+<td>The memory resource, the dedup signal, the write response</td>
+</tr>
+<tr>
+<td><code>resources/memory-read-scope.ts</code></td>
+<td>The one scoping rule</td>
+</tr>
+<tr>
+<td><code>resources/memory-visibility.ts</code></td>
+<td>Validation and the durability-keyed default</td>
+</tr>
+<tr>
+<td><code>resources/SemanticSearch.ts</code>,
+<code>bm25-index.ts</code></td>
+<td>Hybrid retrieval</td>
+</tr>
+<tr>
+<td><code>resources/Federation.ts</code></td>
+<td>Cross-instance sync and its push filter</td>
+</tr>
+<tr>
+<td><code>src/cli.ts</code>, <code>src/commands/</code></td>
+<td>init, doctor, upgrade, federation, quality</td>
+</tr>
+<tr>
+<td><code>packages/</code></td>
+<td>The stdio MCP adapter, a client, and eleven runtime bridges</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>resources/memory-read-scope.ts:4-46</code> — the leak, the
+rule, and the invariant, in one header.</p>
+<p><code>resources/Memory.ts:41-95</code> — a gate that computes a
+signal and never drops a write, and the registry the scope is drawn
+from.</p>
+<p><code>schemas/memory.graphql:268-276</code> — default private unless
+a justification survives re-verification.</p>
+<p><code>test/integration/mcp-connector-principal-mapping.test.ts:256-283</code>
+— both halves of the claim, through the tool an agent actually
+calls.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Content, owning agent, durability class, visibility, embedding,
+usage. Durability sets the write-time visibility default and a guard
+refuses to flip an ephemeral row to shared on either POST or PUT — with
+the test file labelling its cases "POSITIVE CONTROL" and "no over-fire",
+which is the vocabulary this atlas uses for exactly the same reason.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid semantic and lexical, with the honest note in the README that
+the displayed percentage is a similarity with a keyword boost, that
+hybrid ranking means the top result need not have the highest
+percentage, and that the number is not a probability of correctness.
+Three sentences that prevent a category of misreading.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Write, then signal. The gate scopes its single candidate comparison
+to the same agent as the write — "never cross-agent" — and requires both
+a cosine threshold and a Jaccard token overlap against the one top
+candidate, with no fallback to the second. Conservative in both
+directions: it rarely claims a duplicate, and it never acts on the
+claim.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>flair init --agent name</code> writes a keypair, wires every
+detected MCP client to a version-pinned <code>npx</code> adapter, and
+runs a smoke test. The distinction between the built-in
+<code>/mcp</code> surface (off unless two environment variables are set)
+and the separate stdio adapter package is documented rather than left to
+be discovered, which is more care than the average MCP story gets.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The scoping history above is the trust story, and the surrounding
+disclosures are the rest of it. What is absent: nothing signs memory
+content, there is no provenance class distinguishing what a person said
+from what a model inferred, no supersession, and no record of what a
+memory said before an edit.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>474 test files across unit, isolated-unit, integration and end-to-end
+suites, with a benchmark harness and a corpus profiler. Test names carry
+issue numbers and the vocabulary of controls. Nothing was built or run
+for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Put the scoping rule in one module and make every path import it.
+Then add the test that trips when a second copy appears. This project's
+own header is the best argument for it in the corpus, because it is
+written from the other side of the leak.</p>
+<p>Choose the predicate by what it does to old rows.
+<code>!= private</code> and <code>== shared</code> differ only on
+records written before the field existed, and one of them privatises
+your whole history silently.</p>
+<p>Never let a de-duplication gate drop a write. Compute the signal,
+return it, and store the record; the two-findings bug is what the other
+design costs.</p>
+<p>Default to private and require a reason to share. A promoted row that
+can only be shared by citing a recorded justification is a memory system
+that can answer why something is visible.</p>
+<p>And say what your score is not. "This percentage is not a probability
+that the memory answers your question" is one sentence that stops a
+whole class of downstream misuse.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the open-within-org model is intended for multi-tenant
+instances. The module argues it as knowledge refinement for one org, and
+nothing in the code distinguishes an org from an instance.</p>
+<p>Whether federation verification covers content. The push filter
+excludes private rows and the tree carries
+<code>federation-verify</code> and <code>fleet-verify</code>; what they
+attest to was not traced.</p>
+<p>What the "soul" costs at read time. It is central to the pitch and
+sits outside the memory paths read here.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>resources/memory-read-scope.ts:4-46</code></td>
+<td>A leak, a rule, and an invariant argued from old rows</td>
+</tr>
+<tr>
+<td><code>resources/Memory.ts:41-95</code></td>
+<td>A gate that signals and never suppresses</td>
+</tr>
+<tr>
+<td><code>schemas/memory.graphql:186-199</code>,
+<code>:268-276</code></td>
+<td>A label not to trust, and a default that demands a reason</td>
+</tr>
+<tr>
+<td><code>test/data-scoping.test.ts:96-118</code></td>
+<td>The predicate, with its controls and a no-oracle assertion</td>
+</tr>
+<tr>
+<td><code>test/integration/mcp-connector-principal-mapping.test.ts:256-283</code></td>
+<td>Both halves, through the real tool</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/tpsdev-ai/flair/commit/02512aae1e859bcfa75d494f34b7a535a8caf0b5"><code class="commit-id" title="02512aae1e859bcfa75d494f34b7a535a8caf0b5">02512aae…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: thirty-five files scanned, no auto-run
+surfaces, twelve build-time execution points, five unpinned surfaces and
+sixteen dependency files inside the seven-day cooldown. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

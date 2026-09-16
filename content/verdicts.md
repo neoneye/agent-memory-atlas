@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 519 reports.**
+**This page covers all 520 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4502,3 +4502,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT or Apache-2.0, version 0.6.8, explicitly pre-1.0 alpha, 177,137 lines across ten crates with 2,328 test functions, on crates.io, npm and PyPI, with a simulation harness, a benchmark crate and an adversarial RBAC-writes suite. The previous coding-assistant positioning is deprecated in 0.6.4 and removed in 0.7, still tested meanwhile.
 - Study when: you are writing role-scoped reads and want a worked example that covers the history endpoint, or you want derived relationships that retract themselves in the commit that invalidates them.
 - Do not copy when: you need epistemic state — an edge has a score and a rule, not a status, provenance class or validity window. Three marks: scope enforced, audit log, negative eval.
+
+### [`flair`](../systems/flair/)
+- Best idea: **the scoping rule lives in one module because the scattered version was the leak, and a test trips when a second copy appears.** Its header names what it replaced — a `SemanticSearch` inline grant resolution plus a global `visibility === "office"` OR-clause that "leaked ANY authenticated agent's read of ANY other agent's memories" — and concludes "one rule, one place, every path imports it". The private exclusion is argued from old rows too: `not_equal 'private'` over `equals 'shared'`, because the latter "would silently retroactively privatize every legacy row".
+- Biggest risk: **within an instance there is no boundary between agents except the word private.** Reads are open-within-org by design: a reader gets all of its own records at any visibility plus every other agent's non-private record, grants remain inspectable but "no longer gate reads", and the only hard boundary left is the federation push filter that keeps private rows from leaving. Coherent for a personal instance; on a shared one a single careless agent registration reads everything not marked private. The Ed25519 key is likewise narrower than "crypto-pinned" suggests — it proves the caller to the HTTP surface, memories are not encrypted with it, and nothing signs a memory's content.
+- Most reusable component: `memory-read-scope.ts` entire — forty-six lines of header stating the leak, the model and the migration invariant, over a resolver composed from a record-type registry with a drift tripwire — and beside it the promotion rule that makes a shared row "always trace to a recorded justification, never to a default".
+- Maturity impression: Apache-2.0, version 0.54.2, 250,467 lines of TypeScript with 474 test files across unit, isolated, integration and end-to-end suites, thirteen adapter packages, an upgrade planner spanning three published packages, and comments that cite issue numbers and the bug each invariant fixed.
+- Study when: you have a scoping rule copied into more than one read path, or you want an example of a de-duplication gate that computes a signal and never suppresses a write.
+- Do not copy when: you need agents isolated from one another inside an instance. Three marks: trust state, scope enforced, negative eval — and read the scope evidence before relying on the third word.
