@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 501 reports.</strong></p>
+<p><strong>This page covers all 502 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18386,6 +18386,64 @@ it.</li>
 <li>Do not copy when: you are looking for a memory mechanism — this is
 the client surface, and the docstring itself defers to the server as
 authoritative. No marks.</li>
+</ul>
+<h3 id="syke"><a href="../systems/syke/"><code>syke</code></a></h3>
+<ul>
+<li>Best idea: <strong>bracket the unsupervised LLM rewrite, and make
+creation time immutable.</strong> Before each synthesis cycle,
+<code>capture_baseline</code> fingerprints every memory and link by id,
+content hash and created-at, and <code>create_recovery_point</code>
+clones the database — copy-on-write where the filesystem allows one,
+SQLite's backup API otherwise — running integrity checks on the copy
+before accepting it as a snapshot. A lock and a recovery fence guard
+concurrency, and <code>try_reconcile_before_database_use</code>
+reconciles an interrupted cycle before anything touches the database
+again. Afterwards <code>validate_state_after_cycle</code> gates the
+result on invariants that are exactly the right ones: a pre-existing
+memory's, link's or MEMEX's <code>created_at</code> may not change — the
+agent may revise what it believes, not when it first knew it — no link
+may reference a missing memory, the identity must stay a singleton with
+no rows outside it, the FTS index must match the memories table, and
+exactly one non-empty current MEMEX must survive. A failure is marked
+repairable and the cycle retried. Almost nothing else in this corpus
+asserts the created-at invariant, and it catches a whole class of an
+agent rewriting history rather than revising belief.</li>
+<li>Biggest risk: <strong>the gate counts what the cycle deleted and
+nobody reads the number.</strong> Inside the same function,
+<code>stats["memories_removed"]</code> and
+<code>stats["removed_memory_ids"]</code> are assigned and then never
+mentioned again; there is no <code>issues.append</code> for removed
+memories anywhere in it, and neither identifier appears elsewhere in the
+package. The synthesis backend branches on
+<code>semantic_gate.get("valid", False)</code>, which is derived from
+<code>issues</code> alone, so a cycle that deletes most of the graph is
+valid. The recovery point taken minutes earlier means the state is
+restorable — the part Syke got right and most systems here lack — but
+nothing notices it should be restored, and the number that would notice
+is already in a dictionary. The fix is a threshold, an
+<code>issues.append</code> and a config value. Separately, the per-cycle
+graph change set is assembled as <code>stats["graph_change"]</code> and
+persisted nowhere, so the immutable receipt-linked history versions the
+rendered projection rather than recording the mutations that produced
+it.</li>
+<li>Most reusable component: <code>capture_baseline</code> plus the
+gate, as a pattern. Fingerprint before, snapshot before, gate after,
+reconcile on restart — and put the snapshot's integrity check before you
+trust it as a snapshot.</li>
+<li>Maturity impression: AGPL-3.0-only, Python 3.12+, 32,408 lines with
+11,539 of tests covering the daemon, IPC, metrics, state, CLI contract
+and prompt building; adapter seeds ship for Claude Code, Codex, Cursor,
+Copilot, opencode, Hermes, Pi and Antigravity.
+<code>test_build_prompt.py</code> asserts internal failure strings never
+reach the model's view. There is no test file named for the safety
+layer, and nothing asserts what the gate does with a deleting cycle —
+consistent with the behaviour being unspecified rather than chosen.</li>
+<li>Study when: an LLM mutates your store unattended and you need to
+decide what it may and may not do to state it did not create.</li>
+<li>Do not copy when: you need the memory to carry belief — a memory
+here has prose, two timestamps and nothing else: no status, no
+confidence, no source, no supersession pointer, and the link's
+<code>reason</code> is free text. No marks.</li>
 </ul>
         </article>
       </div>
