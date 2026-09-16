@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 526 reports.</strong></p>
+<p><strong>This page covers all 527 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19619,6 +19619,48 @@ boundary itself. Three marks: trust state, bitemporal, negative eval —
 and note that recall admits <code>contested</code> alongside
 <code>active</code>, so a disputed memory is surfaced rather than
 resolved away.</li>
+</ul>
+<h3 id="chitta-field"><a
+href="../systems/chitta-field/"><code>chitta-field</code></a></h3>
+<ul>
+<li>Best idea: <strong>an excluding status returns <code>None</code>,
+not a low weight.</strong> <code>status_multiplier</code> gives
+<code>Active | Verified | Observed | Proposed</code> a configurable
+factor and <code>Superseded | Contradicted | Archived</code> nothing at
+all, and the recall loop reads that as
+<code>….is_none() =&gt; continue</code>. A zero survives normalisation,
+re-ranking and blending; an <code>Option</code> forces every caller to
+handle the exclusion and the compiler checks that they did. Beside it,
+<code>EpistemicStatus</code> returns a plain <code>f32</code> and can
+never veto — "[h]ow a memory was obtained — orthogonal to confidence" —
+so provenance ranks down without suppressing.</li>
+<li>Biggest risk: <strong>the hash chain is per writer, and nothing
+refuses a restated contradiction at the door.</strong> One segment file
+per writer process means each writer's history is tamper-evident alone
+while their interleaving is not a single chained order — a direct cost
+of the concurrent-writer target. And no write path consults a
+contradicted or superseded memory, so the same claim can be written
+again and is caught, if at all, by the next reconcile pass. The
+remaining state is continuous and the per-kind and per-epistemic
+multipliers are configurable with no ceiling found.</li>
+<li>Most reusable component: <code>contradiction.rs</code>'s opening
+premise — "claim-centric, not text-centric. Two memories contradict when
+they make incompatible claims under overlapping scope (same
+subject+predicate), not merely when they are semantically similar" —
+and, from <code>log.rs</code>, the <code>vector_space_id</code> stamp
+that lets replay fence out segments written under a foreign embedding
+model, dimension or text format.</li>
+<li>Maturity impression: MIT, Rust, version 2.7.12, 57,134 lines with
+287 test functions, a C FFI, snapshot migrations for five prior formats,
+and a design stated against shared NFS, concurrent writers and
+sub-millisecond recall. Memories are Sparse Distributed Representations,
+64 active bits of 16,384 — rare in this corpus.</li>
+<li>Study when: you have a scoring pipeline where some states must be
+excluded rather than down-weighted, or you call a cosine threshold a
+contradiction detector.</li>
+<li>Do not copy when: you need one ordered, chained history across
+writers, or a write-time refusal rather than a later sweep. Two marks:
+trust state, audit log.</li>
 </ul>
         </article>
       </div>

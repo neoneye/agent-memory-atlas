@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 526 reports.**
+**This page covers all 527 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4558,3 +4558,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, TypeScript, version 0.1.1, 87,938 lines across six packages with 1,212 test cases in 127 files, ADR-numbered decisions cited from the code, and a shared conformance kit every store adapter must pass — which is why its negative-evaluation test binds a contract rather than one implementation. Documentation in Japanese.
 - Study when: you carry provenance as an optional string and want to see it carried as a type, or you need three time concepts — occurred, recorded, valid between — kept apart with separate not-yet-valid and expired predicates.
 - Do not copy when: you need the library to hold the isolation boundary itself. Three marks: trust state, bitemporal, negative eval — and note that recall admits `contested` alongside `active`, so a disputed memory is surfaced rather than resolved away.
+
+### [`chitta-field`](../systems/chitta-field/)
+- Best idea: **an excluding status returns `None`, not a low weight.** `status_multiplier` gives `Active | Verified | Observed | Proposed` a configurable factor and `Superseded | Contradicted | Archived` nothing at all, and the recall loop reads that as `….is_none() => continue`. A zero survives normalisation, re-ranking and blending; an `Option` forces every caller to handle the exclusion and the compiler checks that they did. Beside it, `EpistemicStatus` returns a plain `f32` and can never veto — "[h]ow a memory was obtained — orthogonal to confidence" — so provenance ranks down without suppressing.
+- Biggest risk: **the hash chain is per writer, and nothing refuses a restated contradiction at the door.** One segment file per writer process means each writer's history is tamper-evident alone while their interleaving is not a single chained order — a direct cost of the concurrent-writer target. And no write path consults a contradicted or superseded memory, so the same claim can be written again and is caught, if at all, by the next reconcile pass. The remaining state is continuous and the per-kind and per-epistemic multipliers are configurable with no ceiling found.
+- Most reusable component: `contradiction.rs`'s opening premise — "claim-centric, not text-centric. Two memories contradict when they make incompatible claims under overlapping scope (same subject+predicate), not merely when they are semantically similar" — and, from `log.rs`, the `vector_space_id` stamp that lets replay fence out segments written under a foreign embedding model, dimension or text format.
+- Maturity impression: MIT, Rust, version 2.7.12, 57,134 lines with 287 test functions, a C FFI, snapshot migrations for five prior formats, and a design stated against shared NFS, concurrent writers and sub-millisecond recall. Memories are Sparse Distributed Representations, 64 active bits of 16,384 — rare in this corpus.
+- Study when: you have a scoring pipeline where some states must be excluded rather than down-weighted, or you call a cosine threshold a contradiction detector.
+- Do not copy when: you need one ordered, chained history across writers, or a write-time refusal rather than a later sweep. Two marks: trust state, audit log.
