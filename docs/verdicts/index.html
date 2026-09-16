@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 491 reports.</strong></p>
+<p><strong>This page covers all 492 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17817,6 +17817,51 @@ MCP revision plus four legacy ones.</li>
 query with real SQL under real database permissions.</li>
 <li>Do not copy when: a token scope must limit reading as well as
 writing, or you need an open-source licence.</li>
+</ul>
+<h3 id="jaz"><a href="../systems/jaz/"><code>jaz</code></a></h3>
+<ul>
+<li>Best idea: <strong>two horizon files injected every turn, with
+different write authority.</strong> <code>LONG_TERM.md</code> is the
+store's considered view, maintained by a scheduled dream pass with its
+own policy prompt; <code>SHORT_TERM.md</code> is the agent's scratch,
+pruned by the same pass. Injecting the long-term view rather than
+retrieving it guarantees it is present without depending on a query
+matching it, and separating what an agent may write from what it may
+only read is the distinction most systems here blur. Its page model is
+good too: typed links — reference, mention, or a named relationship such
+as <code>works_at</code> — with queryable backlinks.</li>
+<li>Biggest risk: <strong>that write boundary exists only in a
+comment.</strong> The engine's own line reads
+<em>"<code>LONG_TERM.md</code> is dream-maintained and read-only for
+agents; <code>SHORT_TERM.md</code> is agent-updated and
+dream-pruned"</em>, and the phrase "read-only for agents" appears
+exactly once in the engine — there. <code>WriteHorizonFile</code>
+validates that the name is one of the two horizon files and that the
+content passes a shape check, then writes either; Jaz's
+<code>handleMemoryHorizon</code> takes the name from the URL path and
+passes it through. On a single-user desktop host anything on the machine
+can reach that endpoint, including the agents the product exists to run,
+so an agent — or a prompt injection arriving through one of the
+connected inboxes — can rewrite what every future turn believes, with no
+record. No marks: there is also no scope inside the store, no status on
+a page, no validity window and no record of a rejected value.</li>
+<li>Most reusable component: the memory service as single owner —
+<em>"the single owner of jaz's embedded memory: the jazmem instance, the
+live enabled gate, the maintenance scheduler, and the MCP surface.
+Everything that consumes memory takes this service instead of
+re-deriving its own gate."</em> That instinct is exactly what the
+horizon gate is missing.</li>
+<li>Maturity impression: Apache-2.0, 2,770 commits since 6 June 2026,
+161,184 lines with 290 Go test files; the memory model lives in
+<code>github.com/gluonfield/jazmem</code>, pinned at
+<code>v0.0.0-20260912084437-4d801b950d2b</code> and read here at that
+exact commit — 12,028 lines of Go across 21 test files, shipping an
+<code>eval.go</code> with a committed
+<code>default_eval.json</code>.</li>
+<li>Study when: you want a personal always-on host driving your existing
+agent subscriptions with a markdown memory you can export.</li>
+<li>Do not copy when: the store must enforce who may write what, or
+model belief.</li>
 </ul>
         </article>
       </div>

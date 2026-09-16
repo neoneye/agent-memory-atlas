@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A personal always-on agent host
+whose memory is a markdown page graph with two horizon files injected
+every turn — a long-term one the engine documents as dream-maintained
+and read-only for agents, and a short-term one agents update — where
+neither the engine API nor the HTTP endpoint distinguishes the two, so
+the boundary is a convention and not a constraint.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Jaz — Agent Memory Atlas">
+    <meta property="og:description" content="A personal always-on agent
+host whose memory is a markdown page graph with two horizon files
+injected every turn — a long-term one the engine documents as
+dream-maintained and read-only for agents, and a short-term one agents
+update — where neither the engine API nor the HTTP endpoint
+distinguishes the two, so the boundary is a convention and not a
+constraint.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Jaz — Agent Memory Atlas">
+    <meta name="twitter:description" content="A personal always-on agent
+host whose memory is a markdown page graph with two horizon files
+injected every turn — a long-term one the engine documents as
+dream-maintained and read-only for agents, and a short-term one agents
+update — where neither the engine API nor the HTTP endpoint
+distinguishes the two, so the boundary is a convention and not a
+constraint.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Jaz — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Jaz",
+      "description": "A personal always-on agent host whose memory is a markdown page graph with two horizon files injected every turn \u2014 a long-term one the engine documents as dream-maintained and read-only for agents, and a short-term one agents update \u2014 where neither the engine API nor the HTTP endpoint distinguishes the two, so the boundary is a convention and not a constraint.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A write boundary that lives in a
+comment</p>
+          <h1>Jaz</h1>
+          <p class="document-deck">A personal always-on agent host whose
+memory is a markdown page graph with two horizon files injected every
+turn — a long-term one the engine documents as dream-maintained and
+read-only for agents, and a short-term one agents update — where neither
+the engine API nor the HTTP endpoint distinguishes the two, so the
+boundary is a convention and not a constraint.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/gluonfield/jaz">
+              <span>Source</span>
+              <strong>gluonfield/jaz</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/gluonfield/jaz/commit/a99018abab31920a3c134a5868eb6342c574530f" title="a99018abab31920a3c134a5868eb6342c574530f">
+              <span>Analyzed revision</span>
+              <code>a99018ab…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/gluonfield--jaz" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>gluonfield--jaz</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Jaz is "a personal AI on machines you own — any agent, loops that run
+overnight, boards, memory, and git control": an Electron desktop app
+over a Go backend, driving Claude, Codex and open-source agents,
+Apache-2.0, 2,770 commits since 6 June 2026, 161,184 lines across the
+tree with 290 Go test files. One of its stated principles is "[u]nified
+memory that you control and can export."</p>
+<p>The memory is not in this repository.
+<code>backend/internal/memoryservice</code> is "the single owner of
+jaz's embedded memory: the jazmem instance, the live enabled gate, the
+maintenance scheduler, and the MCP surface", and the engine is
+<code>github.com/gluonfield/jazmem</code>, pinned at
+<code>v0.0.0-20260912084437-4d801b950d2b</code>. This report reads that
+module at exactly that commit —
+<code class="commit-id" title="4d801b950d2b9a47e196b1f1db823d0efe3349b0">4d801b95…</code>, dated 12
+September 2026, 12,028 lines of Go across 21 test files — because a
+report on the wrapper would describe none of the mechanism.</p>
+<p>The model is a markdown page graph: a page has a slug, a type, a
+title, aliases, frontmatter, a body, and typed links with backlinks —
+"the link type (reference, mention, or a typed relationship such as
+<code>works_at</code>)". Agents reach it over MCP through a single
+public search tool.</p>
+<p>The design idea worth examining is the <strong>horizons</strong>. Two
+root-level files are "injected into agent context every turn, not
+indexed pages", and the comment that introduces them states a division
+of authority:</p>
+<blockquote>
+<p><code>LONG_TERM.md</code> is dream-maintained and read-only for
+agents; <code>SHORT_TERM.md</code> is agent-updated and
+dream-pruned.</p>
+</blockquote>
+<p>That is a good split. The long horizon is the store's considered
+view, maintained by a scheduled pass with its own policy prompt; the
+short horizon is the agent's scratch, pruned by the same pass.
+Separating what an agent may write from what it may only read is the
+distinction most memory systems in this corpus blur.</p>
+<p>It is not enforced. <code>WriteHorizonFile</code> validates only that
+the name is one of the two horizon files and that the content passes a
+shape check, then writes; it draws no distinction between them. Jaz's
+own <code>handleMemoryHorizon</code> takes the file name from the URL
+path and passes it straight through. Searching the engine for the phrase
+finds "read-only for agents" exactly once, in that doc comment. Both
+write paths accept <code>LONG_TERM.md</code>.</p>
+<p>Whether that matters depends on who can reach the local HTTP server,
+and on a single-user desktop app the honest answer is that anything
+running on the machine can — which includes the agents the product
+exists to run. The boundary is a convention the dream policy describes,
+not a constraint the code holds.</p>
+<p>With no scope inside the store, no status on a page, no validity
+window and no record of a rejected value, no marks follow. The page
+graph with typed links and backlinks is real and useful; the governance
+is a comment.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>page</strong> is markdown with frontmatter, addressed by
+slug, linked to other pages by typed edges that are queryable in both
+directions.</p>
+<p>A <strong>horizon</strong> is one of two root files injected into
+every turn: <code>LONG_TERM.md</code>, maintained by the dream;
+<code>SHORT_TERM.md</code>, written by the agent and pruned by the
+dream.</p>
+<p>A <strong>dream</strong> is a scheduled pass with its own prompt
+template that rewrites the long horizon and prunes the short one.</p>
+<p>The <strong>memory service</strong> owns the engine instance, the
+enabled gate and the scheduler, so "[e]verything that consumes memory
+takes this service instead of re-deriving its own gate."</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the long horizon is documented as read-only for agents, and neither write path distinguishes it from the short one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the long horizon is documented as read-only for agents, and neither write path distinguishes it from the short one
+flowchart TB
+    AGENT[&quot;agent (Claude, Codex, OSS)&lt;br/&gt;running on the same machine&quot;] --&gt; MCP[&quot;MCP: one public search tool&quot;]
+    MCP --&gt; PAGES[(&quot;markdown page graph&lt;br/&gt;slug, type, title, aliases,&lt;br/&gt;frontmatter, body,&lt;br/&gt;typed links + backlinks&quot;)]
+    PAGES --&gt; INJECT[&quot;horizons injected every turn&quot;]
+    LT[(&quot;LONG_TERM.md&lt;br/&gt;&#39;dream-maintained and&lt;br/&gt;read-only for agents&#39;&quot;)] --&gt; INJECT
+    ST[(&quot;SHORT_TERM.md&lt;br/&gt;&#39;agent-updated and&lt;br/&gt;dream-pruned&#39;&quot;)] --&gt; INJECT
+    DREAM[&quot;scheduled dream runner&lt;br/&gt;own policy prompt&quot;] --&gt; LT
+    DREAM --&gt; ST
+    HTTP[&quot;POST /memory/horizon/{name}&lt;br/&gt;local server&quot;] --&gt; WHF[&quot;WriteHorizonFile(name, content)&quot;]
+    WHF --&gt; CHK{&quot;is it one of the two&lt;br/&gt;horizon files?&quot;}
+    CHK --&gt;|&quot;no&quot;| ERR[&quot;error: unknown horizon file&quot;]
+    CHK --&gt;|&quot;yes&quot;| VAL[&quot;ValidateHorizonContent&quot;]
+    VAL --&gt; WRITE[&quot;write the root file&quot;]
+    WRITE --&gt; LT
+    WRITE --&gt; ST
+    NOTE[&quot;neither WriteHorizonFile nor the&lt;br/&gt;handler distinguishes LONG_TERM from&lt;br/&gt;SHORT_TERM — &#39;read-only for agents&#39;&lt;br/&gt;appears once, in a comment&quot;] -.-&gt; CHK</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/internal/memoryservice</code></td>
+<td>The single owner: engine instance, enabled gate, scheduler, MCP
+surface</td>
+</tr>
+<tr>
+<td><code>backend/internal/memorydream</code></td>
+<td>The dream runner that maintains and prunes the horizons</td>
+</tr>
+<tr>
+<td><code>backend/internal/memorysource</code>,
+<code>internal/templates/memory*prompt</code></td>
+<td>Sources and the prompt templates that carry the policy</td>
+</tr>
+<tr>
+<td><code>backend/internal/server/memory.go</code></td>
+<td>The HTTP endpoints, including the horizon write</td>
+</tr>
+<tr>
+<td><code>jazmem/pkg/jazmem</code> (pinned dependency)</td>
+<td>The model: pages, horizons, retrieval, scheduler, eval, tasks,
+render</td>
+</tr>
+<tr>
+<td><code>frontend/</code>, <code>dist/</code></td>
+<td>The Electron app</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>jazmem/pkg/jazmem/horizons.go:10-13</code> — the division of
+authority, as prose.</li>
+<li><code>:38-46</code> — <code>WriteHorizonFile</code>, which does not
+implement it.</li>
+<li><code>jaz/backend/internal/server/memory.go:238-258</code> — the
+endpoint that passes the name through.</li>
+<li><code>jaz/backend/internal/memoryservice/service.go:1-4</code> — the
+single-owner comment, which is the right instinct applied
+elsewhere.</li>
+<li><code>jazmem/pkg/jazmem/types.go</code> — the page and link
+model.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Pages with typed links and backlinks, and a <code>LinkRef</code> that
+names the link type rather than treating every edge as the same —
+reference, mention, or a typed relationship such as
+<code>works_at</code>. Alongside them, the two horizon files, which are
+not pages and are not indexed: they are text injected verbatim each
+turn.</p>
+<p>What is absent is any per-page governance. No status, no validity, no
+owner, no supersession link, no record of a deletion.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Search plus graph neighbourhood, exposed to agents as one public
+search tool. The horizons bypass retrieval entirely by being injected,
+which is a legitimate design — it guarantees the long-term view is
+present without depending on a query matching it — and it is why who may
+write them matters.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Pages through the engine; horizons through the HTTP endpoint or the
+dream. The validation on a horizon write is that the name is one of two
+and the content passes a shape check.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The product is the integration: boards, overnight loops, git control,
+connectors to Telegram, WhatsApp, Gmail, Calendar and Slack, and the
+explicit principle of reusing the major coding agents rather than
+reinventing them. The memory is the shared context those pieces write
+into.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The gap between the comment and the code is the whole of this
+section, and it is worth being precise rather than alarmist. Jaz is a
+single-user personal host; there is no other principal to protect
+against, and an agent overwriting the long-term horizon damages its
+owner's memory rather than someone else's. The failure is a correctness
+one: the dream's considered long-term view is the thing injected into
+every turn, and an agent that rewrites it — by mistake, or because a
+prompt injection in one of those connected inboxes told it to — changes
+what every future turn believes, with no record that it happened.</p>
+<p>Two one-line changes would close it: refuse <code>LONG_TERM.md</code>
+in <code>WriteHorizonFile</code> unless a caller-supplied flag marks the
+write as the dream's, or split the endpoint. The rest of this codebase
+shows the instinct — the memory service exists precisely so that nothing
+"re-deriv[es] its own gate" — which is why the horizon gate being absent
+reads as an oversight rather than a decision.</p>
+<p>Also worth stating: the engine is a separate module, so what Jaz's
+memory does is pinned only as tightly as the Go dependency. This report
+reads the pinned commit; a <code>go get -u</code> moves it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>290 Go test files in Jaz, 21 in the engine, and the engine ships
+<code>eval.go</code> with a <code>default_eval.json</code> — a committed
+evaluation configuration alongside the retrieval code.
+<code>deep_horizons_test.go</code> exercises the horizon round-trip
+including the rejection of a non-horizon name and a content-shape
+failure, so the validations that <em>do</em> exist are tested; there is
+no test asserting that an agent cannot write the long-term file, because
+there is no such rule to test.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Inject the considered view rather than retrieving
+it.</strong> A long-term horizon that is present every turn does not
+depend on a query matching it.</li>
+<li><strong>Split what the agent may write from what it may only
+read</strong>, and give each its own maintenance policy. The idea is
+right even where the enforcement is missing.</li>
+<li><strong>Name one owner for the engine, the gate and the
+scheduler.</strong> The comment — everything that consumes memory takes
+this service "instead of re-deriving its own gate" — is the pattern that
+keeps a feature flag from being reimplemented four times.</li>
+<li><strong>Type your links.</strong> <code>reference</code>,
+<code>mention</code>, and a named relationship are three different
+things, and backlinks make the graph answerable in both directions.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A write boundary that exists only in a doc comment.</strong>
+If one file is read-only to a caller, the function that writes it should
+say so; a sentence above the constants cannot refuse a request.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reach for this if you want a personal always-on host that drives your
+existing agent subscriptions and keeps a markdown memory you can export.
+Look elsewhere if you need the store to enforce who may write what, or
+to model belief.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Should <code>WriteHorizonFile</code> distinguish the two files, or
+should the dream have a separate entrypoint the HTTP surface cannot
+reach?</li>
+<li>With connectors to several inboxes, what stops content arriving
+through them from reaching the horizon write path?</li>
+<li>The engine is pinned by Go module version. Is there a policy for
+moving that pin, given the memory model lives there?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>jazmem/pkg/jazmem/horizons.go</code></td>
+<td>The division of authority, and its absence in code</td>
+</tr>
+<tr>
+<td><code>jazmem/pkg/jazmem/types.go</code></td>
+<td>Pages and typed links</td>
+</tr>
+<tr>
+<td><code>jaz/backend/internal/server/memory.go</code></td>
+<td>The horizon write endpoint</td>
+</tr>
+<tr>
+<td><code>jaz/backend/internal/memoryservice/service.go</code></td>
+<td>The single-owner comment</td>
+</tr>
+<tr>
+<td><code>jaz/backend/internal/memorydream/runner.go</code></td>
+<td>The dream pass</td>
+</tr>
+<tr>
+<td><code>jazmem/pkg/jazmem/deep_horizons_test.go</code></td>
+<td>What the horizon round-trip does check</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/gluonfield/jaz/commit/a99018abab31920a3c134a5868eb6342c574530f"><code class="commit-id" title="a99018abab31920a3c134a5868eb6342c574530f">a99018ab…</code></a>
+— first reading, at a commit dated 15 September 2026, with the
+<code>jazmem</code> engine read at <a
+href="https://github.com/gluonfield/jazmem/commit/4d801b950d2b9a47e196b1f1db823d0efe3349b0"><code class="commit-id" title="4d801b950d2b9a47e196b1f1db823d0efe3349b0">4d801b95…</code></a>,
+the exact commit its <code>go.mod</code> pins. Screened before opening,
+from shallow clones: eight files, no auto-run surfaces, one build-time
+execution point, one unpinned surface, four dependency files inside the
+cooldown. Nothing was installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 491 reports.**
+**This page covers all 492 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4278,3 +4278,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: BUSL-1.1 (previously PolyForm NC 1.0), 1,074 commits since 7 May 2026, 288,019 lines across the tree with 318 backend test files including a vault-scope SQL end-to-end script, git-backed vaults over PostgreSQL, hybrid semantic and keyword search across docs, tables and files, and one tool and authorization core behind the current MCP revision plus four legacy ones.
 - Study when: you want an organizational knowledge base agents can query with real SQL under real database permissions.
 - Do not copy when: a token scope must limit reading as well as writing, or you need an open-source licence.
+
+### [`jaz`](../systems/jaz/)
+- Best idea: **two horizon files injected every turn, with different write authority.** `LONG_TERM.md` is the store's considered view, maintained by a scheduled dream pass with its own policy prompt; `SHORT_TERM.md` is the agent's scratch, pruned by the same pass. Injecting the long-term view rather than retrieving it guarantees it is present without depending on a query matching it, and separating what an agent may write from what it may only read is the distinction most systems here blur. Its page model is good too: typed links — reference, mention, or a named relationship such as `works_at` — with queryable backlinks.
+- Biggest risk: **that write boundary exists only in a comment.** The engine's own line reads *"`LONG_TERM.md` is dream-maintained and read-only for agents; `SHORT_TERM.md` is agent-updated and dream-pruned"*, and the phrase "read-only for agents" appears exactly once in the engine — there. `WriteHorizonFile` validates that the name is one of the two horizon files and that the content passes a shape check, then writes either; Jaz's `handleMemoryHorizon` takes the name from the URL path and passes it through. On a single-user desktop host anything on the machine can reach that endpoint, including the agents the product exists to run, so an agent — or a prompt injection arriving through one of the connected inboxes — can rewrite what every future turn believes, with no record. No marks: there is also no scope inside the store, no status on a page, no validity window and no record of a rejected value.
+- Most reusable component: the memory service as single owner — *"the single owner of jaz's embedded memory: the jazmem instance, the live enabled gate, the maintenance scheduler, and the MCP surface. Everything that consumes memory takes this service instead of re-deriving its own gate."* That instinct is exactly what the horizon gate is missing.
+- Maturity impression: Apache-2.0, 2,770 commits since 6 June 2026, 161,184 lines with 290 Go test files; the memory model lives in `github.com/gluonfield/jazmem`, pinned at `v0.0.0-20260912084437-4d801b950d2b` and read here at that exact commit — 12,028 lines of Go across 21 test files, shipping an `eval.go` with a committed `default_eval.json`.
+- Study when: you want a personal always-on host driving your existing agent subscriptions with a markdown memory you can export.
+- Do not copy when: the store must enforce who may write what, or model belief.
