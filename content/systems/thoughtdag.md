@@ -7,9 +7,9 @@ page_kind: system
 source_name: "chenxiachan/thoughtdag"
 source_url: https://github.com/chenxiachan/thoughtdag
 archive_name: "chenxiachan--thoughtdag"
-revision: 0c6d961c84024beeda8fb7236fd66e470a40a5f5
-revision_url: https://github.com/chenxiachan/thoughtdag/commit/0c6d961c84024beeda8fb7236fd66e470a40a5f5
-analyzed_at: 2026-09-07
+revision: 3c57d429f83946498fce06d8e2a579c99f102e1e
+revision_url: https://github.com/chenxiachan/thoughtdag/commit/3c57d429f83946498fce06d8e2a579c99f102e1e
+analyzed_at: 2026-09-16
 capabilities: "audit_log, human_review, negative_eval"
 capability_evidence:
   audit_log: "the canvas event log | src/store/slices/events.ts:1-26, src/types.ts:300-318, src/store/streaming.ts:281-286, src/store/slices/nodes.ts:27-454, src/store/slices/llm.ts:20-619, src/lib/adapters/thoughtdag-canvas.ts:209-222 | an append-only list of semantic operations — ask, generate, edit-question, edit-response, regenerate, delete, archive, unarchive, highlight, connect, disconnect, merge, weave, explore, fanout, material-add, undo, redo and commit — each with a timestamp, the object id and metadata only, never text; undo rolls the graph back and is itself an event; `commit` records at dispatch the SHA-256 of the canonical request, its message count, images, lane and model; the log persists with the canvas and in every backup, exports as CSV, and is projected into canonical `context.committed` events; a cap of 10,000 drops the oldest 1,000 past it, ambient-memory admissions announce themselves with a toast and write no event, an agent turn's approvals are kept on the node and not in the log, and an agent-lane `commit` hashes the compiled messages under lane `proxy` when the runtime received a flattened block or the bare question | cli/test/canvas.test.mjs:49-130 (a backup's commit events round-trip through the canvas adapter with their hash and bundle id), cli/test/events.test.mjs"
@@ -320,7 +320,7 @@ and for imported tool calls the `paths` and `op`. Edges are solid
 A node that ran an agent turn also carries `agentSession` — runtime,
 session id and file, working directory, whether it continued a mirrored
 session, and what changed on disk — a transient `agentTrace` and
-`pendingApproval`, and `approvals[]`, one record per decided question
+`pendingApprovals`, and `approvals[]`, one record per decided question
 with the tool, the question as shown, the outcome (`allowed-once`,
 `rejected`, `cancelled`, `unavailable`, `answered`), the time and any
 value (`src/types.ts:39-91`). A project's metadata holds `agentCwd` and
@@ -432,6 +432,21 @@ with its versions and *will send* preview, the sliding reviewer node, the
 thought-map export, the memory manager, the atlas with its unread
 watermark, and the folder backup. *"The graph is acyclic. You are the
 loop."*
+
+**The approval queue holds more than one question, because holding one lost
+them.** `pendingApproval` was a single slot, so a second tool call arriving in
+parallel overwrote the first, and the comment on the fix names both halves of
+the damage: *"append, never replace: a second parallel tool call must not evict
+the first one's card (that stranded the first approval and hung the turn)."* The
+person never saw the first question, and the turn waited for an answer to a card
+that no longer existed. It is now a list, and a request whose id is already
+present is ignored rather than appended twice.
+
+The session record is merged rather than replaced for the same reason — *"a
+later session event (the file found, the effort read) adds to the record, never
+wipes it"* — so a field learned early survives a later event that knows nothing
+about it. Both are the same bug in two places: a write that assumed it held the
+whole truth.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -666,6 +681,8 @@ rg -c '^\s*(test|it)\(' cli/test/*.mjs                                # 54
 ```
 
 ## History
+
+**2026-09-16** — [`3c57d429f83946498fce06d8e2a579c99f102e1e`](https://github.com/chenxiachan/thoughtdag/commit/3c57d429f83946498fce06d8e2a579c99f102e1e) — re-read at a commit dated 15 September 2026, 42 commits past the previous pin. All three marks re-tested and held, and the review surface is repaired: `pendingApproval` was one slot, so a second tool call arriving in parallel evicted the first question before anyone saw it and left the turn waiting on a card that no longer existed. It is now `pendingApprovals`, appended to and de-duplicated by request id. The `agentSession` record is merged rather than replaced for the same reason, and each stored version now carries the effort its run used. Screened before reading, from a full clone: no auto-run surface, no build-time execution point, three unpinned dependency surfaces and two dependency files inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
 **2026-09-07** — [`0c6d961c84024beeda8fb7236fd66e470a40a5f5`](https://github.com/chenxiachan/thoughtdag/commit/0c6d961c84024beeda8fb7236fd66e470a40a5f5) — re-pinned twenty commits on, all of one day, for the agent lane: Pi and Codex as runtimes the model picker offers, a guard per working directory, an approval card, and footprints excluded from context with a pointer in their place; the context builder's one change is that pointer. The benchmark, the CLI, the memory judge and the event contract are byte-identical to the previous pin, and no mark moved. Corrected in the body: the line ranges cited for `buildContext`, its archived skips and the stale-mark prepend were wrong at the previous pin (the function starts at line 183, not 74), `memory.ts` is 168 lines rather than 240, and the event slice is 26. Added, with its search, the statement that no compiled benchmark condition carries the stale mark. Screened first: no auto-run surface, five manifests inside the seven-day cooldown (the app, desktop, plugin and CLI manifests and the lockfile), `AGENTS.md` treated as data; nothing installed or run, the read made from a full clone.
 
