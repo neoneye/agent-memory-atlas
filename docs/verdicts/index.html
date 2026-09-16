@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 513 reports.</strong></p>
+<p><strong>This page covers all 514 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19072,6 +19072,54 @@ the handle rather than the query.</li>
 <code>updated_at</code>, so the point-in-time read answers what the
 store held, never when anything was true. Three marks: trust state,
 scope enforced, audit log.</li>
+</ul>
+<h3 id="memex"><a href="../systems/memex/"><code>memex</code></a></h3>
+<ul>
+<li>Best idea: <strong>a gate that fails the build when memory was not
+used.</strong> <code>memex verify</code> checks that every page parses,
+every index row is fresh against its body hash and every
+<code>[[link]]</code> resolves, and <code>--since</code> with
+<code>--require-recall</code> or <code>--require-write</code> turns "the
+agent should have consulted memory" into an exit code. Hooks try to make
+recall happen; this is the only layer in the design that checks whether
+it did, and very little else in this corpus asks the question at
+all.</li>
+<li>Biggest risk: <strong>no write path can update a memory, and the
+tool description says otherwise.</strong> <code>WriteInput</code> has no
+slug field, <code>Memex.write</code> leaves the slug empty, and
+<code>WikiStore.write</code> therefore always derives a fresh
+collision-suffixed one — so the same title written twice is two live
+pages, <code>deploy-on-fridays</code> and
+<code>deploy-on-fridays-2</code>, both retrievable and disagreeing with
+nothing to reconcile them. The consolidator's
+<code>updating = bool(node.slug) and self._store.exists(node.slug)</code>
+reads a slug that is empty by construction, so
+<code>nodes_updated</code> can never be non-empty while two adapters
+report its length. And <code>memex_write</code>'s own description — the
+surface the project calls "the one guaranteed-read surface" — tells the
+model "Writing an existing slug updates it, preserving creation history
+and access counts."</li>
+<li>Most reusable component: <code>bm25_retriever._match_query</code>,
+five lines reducing free text to <code>[a-z0-9]+</code> tokens joined by
+<code>OR</code> so a hostile or malformed query is a weak search rather
+than an FTS5 parser error — and beside it the pair of temporal
+predicates that make soft-forgetting a filter the caller can opt out
+of.</li>
+<li>Maturity impression: MIT, Python 3.12+, version 0.2.4, 10,249 lines
+with 297 test functions across thirty-six files, a numbered
+acceptance-test table in a published specification, a docs site, CI
+badges, and installers for four agent harnesses. The care in the
+contracts and the docstrings is well above the median here, which is
+what makes the unreachable update path surprising.</li>
+<li>Study when: you want an index you can delete without losing
+memories, a store that reconciles hand edits instead of fighting them,
+or a worked example of proving memory activity in CI.</li>
+<li>Do not copy when: corrections matter — there is no update, no
+content de-duplication, and <code>forget</code> is by a slug you must
+find first. One mark, negative eval, for a soft-forget test that pairs
+its must-not-retrieve assertion with the same query under
+<code>include_expired=True</code>. <code>valid_from</code> is stored on
+four surfaces and read by none.</li>
 </ul>
         </article>
       </div>

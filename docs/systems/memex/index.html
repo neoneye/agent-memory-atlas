@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Markdown-file memory for coding
+agents with a disposable SQLite index, a CI gate that fails a build when
+the agent did not use memory, and a write path on which every call
+creates a new page — because no public input carries the slug an update
+would need.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="memex — Agent Memory Atlas">
+    <meta property="og:description" content="A Markdown-file memory for
+coding agents with a disposable SQLite index, a CI gate that fails a
+build when the agent did not use memory, and a write path on which every
+call creates a new page — because no public input carries the slug an
+update would need.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="memex — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Markdown-file memory for
+coding agents with a disposable SQLite index, a CI gate that fails a
+build when the agent did not use memory, and a write path on which every
+call creates a new page — because no public input carries the slug an
+update would need.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>memex — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "memex",
+      "description": "A Markdown-file memory for coding agents with a disposable SQLite index, a CI gate that fails a build when the agent did not use memory, and a write path on which every call creates a new page \u2014 because no public input carries the slug an update would need.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A tool whose description promises an update
+its own input cannot request</p>
+          <h1>memex</h1>
+          <p class="document-deck">A Markdown-file memory for coding
+agents with a disposable SQLite index, a CI gate that fails a build when
+the agent did not use memory, and a write path on which every call
+creates a new page — because no public input carries the slug an update
+would need.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/phanijapps/memex">
+              <span>Source</span>
+              <strong>phanijapps/memex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/phanijapps/memex/commit/80411705baa1004f061c8a0c29af94acbeb9e813" title="80411705baa1004f061c8a0c29af94acbeb9e813">
+              <span>Analyzed revision</span>
+              <code>80411705…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/phanijapps--memex" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>phanijapps--memex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>memex is "[a] durable, local-first memory layer for AI coding
+agents", MIT, Python 3.12+, version 0.2.4 — 10,249 lines with 297 test
+functions across thirty-six test files, a published specification, and
+installers for four agent harnesses. Its three claims are on the front
+page: "The filesystem is the memory · the index is disposable · every
+session is provable."</p>
+<p>The first two hold. A memory is a Markdown page with YAML front
+matter under <code>~/.memex/docs/</code>, and SQLite FTS5 is an index
+that <code>memex rebuild-index</code> reconstructs from the pages —
+including rewriting the front-matter <code>content_hash</code> of a page
+somebody edited by hand, which makes editing a memory in your own editor
+a supported operation rather than a corruption. An optional watcher does
+the same continuously.</p>
+<p>The third is the interesting one, because memex is one of very few
+systems here that tries to <em>prove</em> memory was used.
+<code>memex verify</code> is documented as converting "should have used
+memory" into a failing exit code: it checks that every page parses, that
+every index row is fresh against its body hash, and that every
+<code>[[link]]</code> resolves, and with <code>--since</code> plus
+<code>--require-recall</code> or <code>--require-write</code> it fails
+the build when nothing was read or written since a cutoff. The rest of
+the integration story is built around the same worry — that agents
+forget to call tools — with per-turn injection hooks for pi, Claude
+Code, Codex and Copilot so recall happens whether or not the model
+chooses it.</p>
+<p>Against that care, the write path has a gap large enough to change
+what the system is.</p>
+<p><strong>Nothing can update a memory.</strong> <code>WriteInput</code>
+carries type, title, body, tags, importance, links, session and the
+three temporal fields — and no slug. <code>Memex.write</code> constructs
+a <code>WikiNode</code> leaving <code>slug</code> at its empty default,
+and <code>WikiStore.write</code> derives a slug whenever the incoming
+one is empty, passing it through <code>unique_slug</code>, which returns
+<code>base</code>, else <code>base-2</code>, <code>base-3</code>. So
+writing "Deploy on Fridays" twice produces two pages. Both are live,
+both are indexed, both come back from recall, and if the second says
+something different from the first, nothing resolves them.</p>
+<p>The consolidator has the branch that would handle it:</p>
+<pre class="python"><code>updating = bool(node.slug) and self._store.exists(node.slug)</code></pre>
+<p><code>node</code> was built four lines earlier with no slug, so
+<code>bool(node.slug)</code> is always false and
+<code>report.nodes_updated</code> is always empty — while the CLI and
+the MCP tool both report its length as a result. And the tool
+description a model reads says the opposite of what the code does:
+"Writing an existing slug updates it, preserving creation history and
+access counts." The mechanism exists in <code>WikiStore</code> — it
+preserves <code>id</code>, <code>created</code>,
+<code>access_count</code> and <code>last_access</code> for an existing
+slug — and only two writers can reach it: transcript ingest, whose
+episode slug is the session id, and JSON import, which carries slugs
+from an export document. The tool a model actually calls cannot.</p>
+<p>The consequence lands on correction. <code>forget</code> is by slug,
+so retiring the stale page means finding it first; and because the
+retired file still exists, the next write of that title becomes
+<code>-2</code> rather than reusing the slug. The store grows a family
+of same-titled pages whose only distinguishing mark is a numeric
+suffix.</p>
+<p>One more field is inert. <code>valid_from</code> is accepted by the
+API, validated as ISO8601, written into front matter, given its own
+column in <code>wiki_index</code> and carried through import and export
+— and appears in no <code>WHERE</code> clause in the repository. The
+spec calls it "ISO8601 temporal validity start". Recall filters
+<code>expires_at</code> and <code>valid_to</code> against now, never
+<code>valid_from</code>, so a page marked valid from next year is
+returned today. The only test that touches it asserts it survives a
+round trip.</p>
+<p>The mark is for the forgetting test. <code>test_forget_soft</code>
+asserts a retired page is absent from recall and, in the same body, that
+the same query with <code>include_expired=True</code> returns it — the
+positive control that turns an empty result into evidence about the
+filter rather than about the query. That pattern is rarer in this corpus
+than it should be.</p>
+<p>No trust-state mark: <code>valid_to</code> and
+<code>expires_at</code> are timestamps compared against now, not a
+stored status, and there is no epistemic field at all —
+<code>importance</code> is a continuous weight and the five node types
+are genres chosen at write time. No audit mark either, and the reason is
+worth stating precisely: <code>logging.py</code> opens with "Operation
+audit logging", and it is a <code>RotatingFileHandler</code> with
+<code>maxBytes=5 * 1024 * 1024, backupCount=3</code> recording "slugs,
+counts, durations only — never memory contents". A record that rotates
+itself away after four files, and never says what a value was before, is
+an operational log wearing an audit log's name.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>page</strong> is the memory. Markdown, front matter, in a
+directory named for its type.</p>
+<p>The <strong>index</strong> is a cache. Delete it, rebuild it, lose
+nothing.</p>
+<p>A <strong>write</strong> makes a page. It never finds one.</p>
+<p><strong>Forgetting</strong> is a timestamp in the future's past, or
+the file being gone.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the update branch is unreachable because every public write path leaves the slug empty, so unique_slug always suffixes; valid_from is stored on three surfaces and read by none</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the update branch is unreachable because every public write path leaves the slug empty, so unique_slug always suffixes; valid_from is stored on three surfaces and read by none
+flowchart TB
+    API[&quot;memex_write / CLI write / Python write&lt;br/&gt;WriteInput(type, title, body, tags,&lt;br/&gt;importance, links, expires_at,&lt;br/&gt;valid_from, valid_to)&quot;]
+    API --&gt;|&quot;no slug field exists&lt;br/&gt;on the input contract&quot;| NODE[&quot;Memex.write builds&lt;br/&gt;WikiNode(slug = &#39;&#39;)&quot;]
+    NODE --&gt; WS{&quot;WikiStore.write:&lt;br/&gt;slug = node.slug or _new_slug(title)&quot;}
+    WS --&gt;|&quot;node.slug is always &#39;&#39;&quot;| NEW[&quot;_new_slug -&gt; unique_slug(base, taken)&lt;br/&gt;&#39;deploy-on-fridays&#39;, then &#39;-2&#39;, &#39;-3&#39;, ...&quot;]
+    WS -.-&gt;|&quot;reachable only from transcript ingest&lt;br/&gt;(slug = session_id) and JSON import&quot;| UPD[&quot;update in place: preserve&lt;br/&gt;id, created, access_count, last_access&quot;]
+    NEW --&gt; PAGE[(&quot;docs/{type}/{slug}.md&lt;br/&gt;atomic temp + rename&quot;)]
+    UPD --&gt; PAGE
+    PAGE --&gt; IDX[(&quot;mem.db — FTS5 index&lt;br/&gt;disposable, rebuilt from pages&quot;)]
+    CONS[&quot;consolidator._store_node:&lt;br/&gt;updating = bool(node.slug) and exists(node.slug)&quot;] -.-&gt;|&quot;node.slug is &#39;&#39; by construction,&lt;br/&gt;so nodes_updated is always empty —&lt;br/&gt;and its length is reported&quot;| NEW
+    HUMAN[&quot;a person edits the .md in an editor&quot;] --&gt; REB[&quot;rebuild-index / watcher:&lt;br/&gt;stale content_hash detected,&lt;br/&gt;page rewritten, links re-synced&quot;]
+    REB --&gt; IDX
+    IDX --&gt; RECALL{&quot;recall: BM25 over FTS5,&lt;br/&gt;query reduced to [a-z0-9]+ joined by OR&quot;}
+    RECALL --&gt;|&quot;default&quot;| FILT[&quot;AND (expires_at IS NULL OR expires_at &gt;= now)&lt;br/&gt;AND (valid_to IS NULL OR valid_to &gt;= now)&quot;]
+    RECALL --&gt;|&quot;include_expired=True&quot;| ALL[&quot;no temporal filter&quot;]
+    VF[&quot;valid_from — validated on write,&lt;br/&gt;in front matter, a column in wiki_index,&lt;br/&gt;carried through import and export&quot;] -.-&gt;|&quot;appears in no WHERE clause&lt;br/&gt;in the repository&quot;| NULL[&quot;never read&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>domain/models.py</code></td>
+<td>Every wire contract, validated in <code>__post_init__</code></td>
+</tr>
+<tr>
+<td><code>domain/operations.py</code></td>
+<td>One source for tool descriptions and wire types, shared by CLI and
+MCP</td>
+</tr>
+<tr>
+<td><code>infrastructure/wiki_store.py</code></td>
+<td>Markdown pages, atomic writes, slug derivation</td>
+</tr>
+<tr>
+<td><code>infrastructure/index_manager.py</code></td>
+<td>The FTS5 index and its schema</td>
+</tr>
+<tr>
+<td><code>infrastructure/bm25_retriever.py</code></td>
+<td>Search, filters, and access-counter side effects</td>
+</tr>
+<tr>
+<td><code>infrastructure/transcript_hook.py</code></td>
+<td>Session capture and provenance</td>
+</tr>
+<tr>
+<td><code>infrastructure/consolidator.py</code></td>
+<td>The only LLM call in the system</td>
+</tr>
+<tr>
+<td><code>application/verify.py</code></td>
+<td>The CI gate</td>
+</tr>
+<tr>
+<td><code>marketplace/</code></td>
+<td>Per-harness installers and hooks</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>infrastructure/wiki_store.py:115-147</code> — the write, with
+the update branch and the slug derivation that keeps it out of
+reach.</p>
+<p><code>infrastructure/bm25_retriever.py:127-131</code> — the two
+temporal predicates, and which field is missing from them.</p>
+<p><code>application/verify.py:41-70</code> — three health checks and
+two activity-evidence checks.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Front matter carries <code>id</code>, <code>type</code>,
+<code>title</code>, <code>tags</code>, <code>importance</code>,
+<code>created</code>, <code>updated</code>, <code>access_count</code>,
+<code>last_access</code>, <code>expires_at</code>,
+<code>valid_from</code>, <code>valid_to</code>,
+<code>transcript_ref</code>, <code>session_id</code>, <code>links</code>
+and <code>content_hash</code>. The body is Markdown with
+<code>[[slug]]</code> links parsed into a <code>wiki_links</code>
+table.</p>
+<p>The validation is unusually strict for a local tool — ISO8601
+timestamps matched against a regex <em>and</em> parsed, tags normalised
+and de-duplicated, importance bounded, <code>session_id</code>
+restricted to <code>[A-Za-z0-9._-]</code> because it becomes a filename,
+and a <code>TurnStreamEntry</code> that refuses <code>tool_name</code>
+on a non-tool role. The module's own framing is that "[c]onstructors
+validate untrusted input eagerly so invalid states stay unrepresentable
+past the boundary", and within a turn or a page that is true.</p>
+<p>What is unrepresentable is a <em>reference to an existing
+page</em>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>BM25 over FTS5 with filters for node type, tag (AND semantics), an
+<code>updated</code> range, and the two temporal predicates. The query
+reduction is the detail to copy: <code>[a-z0-9]+</code> tokens joined by
+<code>OR</code>, so a query containing FTS5 operators or unbalanced
+quotes degrades to a weak search instead of raising — stated in the
+docstring as "untrusted input never reaches the FTS5 MATCH parser".</p>
+<p>Recall bumps <code>access_count</code> and <code>last_access</code>
+on every returned hit, in the index only; the files are untouched, so a
+read never dirties a page or a git diff. That is the right split, and it
+is what makes <code>verify --require-recall</code> possible.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Covered above. One further note: <code>content_hash</code> is
+computed on every write and used for index staleness, external-edit
+detection and <code>verify</code>'s <code>index-fresh</code> check —
+never for de-duplication. Two pages with byte-identical bodies are two
+memories.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The integration layers are named and honest: pull (eight MCP tools
+the model may call), push (harness hooks that inject memory every turn
+regardless), and proof (<code>memex verify</code> in CI). The hook path
+is the answer to a real failure — a model that has a memory tool and
+does not call it — and the verify path is the answer to nobody
+noticing.</p>
+<p>Tool descriptions are long, specify where each failure arrives, and
+are shared between adapters so they cannot drift, under a stated
+rationale: "not every consumer renders schemas, and the description is
+the one guaranteed-read surface". That is good practice, which makes the
+one description that contradicts its implementation costly: a model
+reading <code>memex_write</code> is told an update will happen, and will
+not check for <code>title-2</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Provenance traces a page to the transcript that produced it, with a
+confidence of <code>direct</code>, <code>inferred</code> or
+<code>none</code> — <code>inferred</code> meaning an episode links to
+the node rather than the node naming a transcript. Naming the weaker
+case rather than flattening both into "has provenance" is the right
+call.</p>
+<p>Restore moves existing data to <code>pre-restore-{timestamp}/</code>
+instead of deleting it, and validates archive members against absolute
+paths, traversal and links before extraction.</p>
+<p>Transcript turns are "stored verbatim and never logged", and the
+logging module records metadata only — a deliberate and well-kept
+boundary, which is separate from the question of whether that log is an
+audit record. It is not.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>297 test functions across thirty-six files, split unit and
+acceptance, with the spec carrying a numbered acceptance-test table. The
+forgetting test earns the mark by pairing its negative assertion with a
+positive control; <code>test_forget_decay</code> directly below it makes
+the same negative claim without one, which is the difference the mark is
+meant to detect.</p>
+<p>The suite does not cover what the write path does on a repeated title
+through the public API. <code>test_wiki_store_acceptance.py:52</code>
+asserts <code>third.slug == "ruff-linter-2"</code> at the store level —
+the behaviour is known and tested there — but no test asks whether that
+is the right outcome for <code>memex_write</code>, and the tool
+description says it is not.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Give the write contract a way to name an existing memory. An update
+path whose only caller cannot construct the argument is not an update
+path, and the version of this bug that costs you is the one where the
+description promises the behaviour anyway.</p>
+<p>Delete a field nothing reads, or wire it up. <code>valid_from</code>
+is on four surfaces and in no query; every reader who sees it in front
+matter will assume it works.</p>
+<p>Pair every "must not be retrieved" assertion with the same query
+proving the row is still there. <code>test_forget_soft</code> is four
+lines and it is the difference between testing a filter and testing a
+typo.</p>
+<p>Ship the gate that proves memory was used.
+<code>memex verify --since --require-recall</code> is a small amount of
+code for a question almost nobody in this corpus asks, and it catches
+the failure that hooks and tool descriptions are both trying to
+prevent.</p>
+<p>And do not call a rotating operational log an audit log. Four files
+of metadata with no before-image answers a different question than the
+name implies.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the missing update is intended. The store supports it, the
+description promises it, the consolidator has a branch for it, and no
+input can request it — which reads more like a contract that lost a
+field than a decision.</p>
+<p>What <code>nodes_updated</code> was meant to count. It is reported by
+two adapters and cannot be non-empty.</p>
+<p>Whether the harness hooks de-duplicate. Per-turn injection plus a
+write tool over a store with no update is the combination that produces
+<code>-2</code> pages fastest, and the hook code was not traced
+here.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/memex/infrastructure/wiki_store.py:115-147</code></td>
+<td>The update branch, and the slug derivation that hides it</td>
+</tr>
+<tr>
+<td><code>src/memex/domain/models.py:147-181</code></td>
+<td>A write contract with no slug</td>
+</tr>
+<tr>
+<td><code>src/memex/infrastructure/consolidator.py:189-205</code></td>
+<td>A flag that is always false</td>
+</tr>
+<tr>
+<td><code>src/memex/infrastructure/bm25_retriever.py:56-61</code>,
+<code>:127-131</code></td>
+<td>Safe query reduction, and the two predicates</td>
+</tr>
+<tr>
+<td><code>src/memex/application/verify.py:41-70</code></td>
+<td>Memory activity as an exit code</td>
+</tr>
+<tr>
+<td><code>tests/acceptance/test_operations_acceptance.py:48-62</code></td>
+<td>A negative assertion with its control</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/phanijapps/memex/commit/80411705baa1004f061c8a0c29af94acbeb9e813"><code class="commit-id" title="80411705baa1004f061c8a0c29af94acbeb9e813">80411705…</code></a>
+— first reading, at a commit dated 15 September 2026. Screened before
+opening, from a shallow clone: seven files scanned, no auto-run
+surfaces, one build-time execution point, no unpinned surfaces and three
+dependency files inside the seven-day cooldown. Nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 513 reports.**
+**This page covers all 514 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4454,3 +4454,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, Python, 66,891 lines with 281 test files and 1,606 test functions, on PyPI, with an MCP server, hooks, Alembic migrations, coverage reporting and an audit report in-tree. The F1, C8 and A2.2 labels in the comments index some review process that was not traced here.
 - Study when: you have a suppression or privacy flag and have not decided what a write with no flag means, or you want scope carried by the handle rather than the query.
 - Do not copy when: you need a second time axis — `valid_from` is the write instant on the same clock as `updated_at`, so the point-in-time read answers what the store held, never when anything was true. Three marks: trust state, scope enforced, audit log.
+
+### [`memex`](../systems/memex/)
+- Best idea: **a gate that fails the build when memory was not used.** `memex verify` checks that every page parses, every index row is fresh against its body hash and every `[[link]]` resolves, and `--since` with `--require-recall` or `--require-write` turns "the agent should have consulted memory" into an exit code. Hooks try to make recall happen; this is the only layer in the design that checks whether it did, and very little else in this corpus asks the question at all.
+- Biggest risk: **no write path can update a memory, and the tool description says otherwise.** `WriteInput` has no slug field, `Memex.write` leaves the slug empty, and `WikiStore.write` therefore always derives a fresh collision-suffixed one — so the same title written twice is two live pages, `deploy-on-fridays` and `deploy-on-fridays-2`, both retrievable and disagreeing with nothing to reconcile them. The consolidator's `updating = bool(node.slug) and self._store.exists(node.slug)` reads a slug that is empty by construction, so `nodes_updated` can never be non-empty while two adapters report its length. And `memex_write`'s own description — the surface the project calls "the one guaranteed-read surface" — tells the model "Writing an existing slug updates it, preserving creation history and access counts."
+- Most reusable component: `bm25_retriever._match_query`, five lines reducing free text to `[a-z0-9]+` tokens joined by `OR` so a hostile or malformed query is a weak search rather than an FTS5 parser error — and beside it the pair of temporal predicates that make soft-forgetting a filter the caller can opt out of.
+- Maturity impression: MIT, Python 3.12+, version 0.2.4, 10,249 lines with 297 test functions across thirty-six files, a numbered acceptance-test table in a published specification, a docs site, CI badges, and installers for four agent harnesses. The care in the contracts and the docstrings is well above the median here, which is what makes the unreachable update path surprising.
+- Study when: you want an index you can delete without losing memories, a store that reconciles hand edits instead of fighting them, or a worked example of proving memory activity in CI.
+- Do not copy when: corrections matter — there is no update, no content de-duplication, and `forget` is by a slug you must find first. One mark, negative eval, for a soft-forget test that pairs its must-not-retrieve assertion with the same query under `include_expired=True`. `valid_from` is stored on four surfaces and read by none.
