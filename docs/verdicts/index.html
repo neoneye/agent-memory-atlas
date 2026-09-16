@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 504 reports.</strong></p>
+<p><strong>This page covers all 505 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18564,6 +18564,65 @@ exceptions expire.</li>
 <li>Do not copy when: you need something you can run — the project says
 it is not ready, and the honest reading is that this is a design worth
 studying rather than a system worth adopting.</li>
+</ul>
+<h3 id="neuralmind"><a
+href="../systems/neuralmind/"><code>neuralmind</code></a></h3>
+<ul>
+<li>Best idea: <strong>a test that the project's own published numbers
+are reproducible.</strong> <code>tests/test_site_claims.py</code>
+enforces three rules on the marketing site: every <code>N×</code> ratio
+on a high-traffic page must be listed in <code>site/claims.json</code>
+"with a source and a reproduction command"; names on a
+<code>private_names_never_publish</code> manifest must not appear
+anywhere under <code>site/</code>; and the absolute-privacy-claim
+patterns the docs guard forbids apply there too. Multipliers under 2×
+are exempt with a stated reason — "those are decay coefficients and
+worked examples in the publications, not claims." The docstring explains
+itself by listing the four drifts that shipped before it existed: one
+token-reduction figure attributed to three different repo sizes, a
+<code>63.6×</code> transcription of <code>65.6×</code> "sitting one card
+away from the original", a query-latency number "with no measurement
+behind it anywhere in the repo", a 100% gold-file recall claim "the
+current public benchmark contradicts (93.75% mean; <code>click</code> is
+0.79)", and the real name of a private client every other document
+anonymises. Requiring a reproduction command is what lifts rule one
+above a citation check.</li>
+<li>Biggest risk: <strong>the audit chain proves nothing was altered,
+and two code paths let an entry be absent.</strong>
+<code>AuditTrail</code> is a genuine tamper-evident chain — SHA-256 over
+the previous hash plus a stable serialization, a <code>verify</code>
+that recomputes every entry, and rotation that preserves continuity by
+seeding the new file from the archived file's final hash. But
+<code>_emit_audit</code> wraps the append in a bare
+<code>except Exception: pass</code> under the comment "Audit logging
+must never block primary query/build/search flows", so a permission
+error or a full disk drops the entry silently; and <code>verify</code>
+treats an unparseable entry as a "[l]egacy line", updates the running
+hash from its content, and continues with "no chain check". For a
+tamper-evident log, a hole verifies clean — and completeness is usually
+the property the log was wanted for. Both have cheap fixes that keep the
+stated intent: count the drops and the skips, and surface them in the
+verifier's result.</li>
+<li>Most reusable component: the rotation that preserves hash-chain
+continuity. A chain that resets when the file rolls over is two chains,
+and the seam is exactly where a missing entry would sit; seeding the new
+file from the archived final hash and writing a continuation marker
+costs a few lines and closes it.</li>
+<li>Maturity impression: 102,514 lines of Python at version 3.11.3, 150
+test files, committed eval corpora — an actual book under
+<code>evals/book_retrieval/</code>, a baseline under
+<code>evals/quality/</code> — and a self-benchmark CI workflow, so the
+retrieval numbers can be reproduced by someone who is not the author.
+Open-core with the clearest licence boundary in this corpus: one
+directory, two licences, and a forward-only promise that "every release
+up to and including v2.0.1 was published entirely under MIT and remains
+MIT permanently."</li>
+<li>Study when: you publish performance numbers and want them to stay
+true, or you need a hash-chained log that survives rotation.</li>
+<li>Do not copy when: you need memory that can be corrected — this is an
+index over a repository, with no status on a node, no provenance beyond
+its source file, and no delete or forget path in the core, so fixing
+what it believes means rebuilding it.</li>
 </ul>
         </article>
       </div>

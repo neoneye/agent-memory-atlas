@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Persistent memory and context
+compression for coding agents, whose audit trail is an append-only hash
+chain that survives rotation — and whose test suite refuses to let a
+performance multiplier appear on the marketing site unless
+<code>claims.json</code> gives it a source and a command to reproduce
+it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="NeuralMind — Agent Memory Atlas">
+    <meta property="og:description" content="Persistent memory and
+context compression for coding agents, whose audit trail is an
+append-only hash chain that survives rotation — and whose test suite
+refuses to let a performance multiplier appear on the marketing site
+unless <code>claims.json</code> gives it a source and a command to
+reproduce it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NeuralMind — Agent Memory Atlas">
+    <meta name="twitter:description" content="Persistent memory and
+context compression for coding agents, whose audit trail is an
+append-only hash chain that survives rotation — and whose test suite
+refuses to let a performance multiplier appear on the marketing site
+unless <code>claims.json</code> gives it a source and a command to
+reproduce it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>NeuralMind — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "NeuralMind",
+      "description": "Persistent memory and context compression for coding agents, whose audit trail is an append-only hash chain that survives rotation \u2014 and whose test suite refuses to let a performance multiplier appear on the marketing site unless `claims.json` gives it a source and a command to reproduce it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A test that every performance ratio on the
+website is reproducible</p>
+          <h1>NeuralMind</h1>
+          <p class="document-deck">Persistent memory and context
+compression for coding agents, whose audit trail is an append-only hash
+chain that survives rotation — and whose test suite refuses to let a
+performance multiplier appear on the marketing site unless
+<code>claims.json</code> gives it a source and a command to reproduce
+it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/dfrostar/neuralmind">
+              <span>Source</span>
+              <strong>dfrostar/neuralmind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/dfrostar/neuralmind/commit/38c74096f5e8e82c79feb037ece7395461fab4f8" title="38c74096f5e8e82c79feb037ece7395461fab4f8">
+              <span>Analyzed revision</span>
+              <code>38c74096…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/dfrostar--neuralmind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>dfrostar--neuralmind</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>NeuralMind is "[p]ersistent memory and context compression for AI
+coding agents" — 102,514 lines of Python at version 3.11.3, open-core:
+MIT for everything except <code>neuralmind/tier2/</code>, which is
+source-available under a Commercial Modules License.</p>
+<p>Three things here are worth taking somewhere else, and one of them is
+not about memory at all.</p>
+<p>The audit trail is a genuine tamper-evident chain.
+<code>AuditTrail</code> appends JSONL entries whose SHA-256 covers the
+previous hash plus a stable serialization, <code>verify</code> walks the
+chain recomputing every entry, and — the detail that separates a real
+implementation from a gesture — the archive path preserves chain
+continuity across rotation by seeding the new active file from the
+archived file's final hash and writing a continuation marker. A second,
+independently chained log in <code>tier2/audit.py</code> carries
+governance events with its own genesis hash,
+<code>SHA256("neuralmind-team-audit-v1")</code>, and a doctest that
+asserts <code>verify()["ok"]</code>.</p>
+<p>The licensing statement is the clearest open-core boundary in this
+corpus. One repository, two licences, one directory, and a forward-only
+guarantee stated without hedging: "every release up to and including
+v2.0.1 was published entirely under MIT and remains MIT permanently. The
+boundary takes effect with v3.0.0." The commercial modules stay in the
+repository and stay readable — "source-available, not closed" — and a
+one-seat licence auto-issues with no signup and no expiry.</p>
+<p>And then there is <code>tests/test_site_claims.py</code>, which is
+the most unusual test in this corpus. It guards the project's own
+marketing site against untrue numbers, and its docstring explains why it
+exists by listing four classes of drift that had already shipped:</p>
+<blockquote>
+<p>"the same token-reduction figure attributed to three different repo
+sizes … a transcription error of that figure (<code>63.6×</code> for
+<code>65.6×</code>) sitting one card away from the original, a
+query-latency number with no measurement behind it anywhere in the repo,
+a <code>100%</code> gold-file recall claim the current public benchmark
+contradicts (93.75% mean; <code>click</code> is 0.79), and the real name
+of a private client whose field report every doc deliberately
+anonymizes."</p>
+</blockquote>
+<p>The three rules it now enforces are: every <code>N×</code> ratio on a
+high-traffic page must be listed in <code>site/claims.json</code> "with
+a source and a reproduction command"; names on a
+<code>private_names_never_publish</code> manifest must not appear
+anywhere under <code>site/</code>; and the absolute-privacy-claim
+patterns the docs guard forbids apply to the site too. Multipliers under
+2× are exempt with a stated reason — "those are decay coefficients and
+worked examples in the publications, not claims."</p>
+<p>Requiring a <em>reproduction command</em> is what makes rule one more
+than a citation check. A vendor benchmark with a command anyone can run
+is a different artifact from a number in a card.</p>
+<p>The weakness is in the same place as the strength. The chain proves
+that no entry was altered. Nothing proves that no entry is missing, and
+the code contains two ways for one to go missing.
+<code>_emit_audit</code> wraps the append in a bare
+<code>except Exception: pass</code>, under a comment stating the intent
+— "Audit logging must never block primary query/build/search flows" — so
+a disk error or a serialisation failure drops the entry silently. And
+<code>verify</code> treats a line it cannot parse as a "[l]egacy line",
+updates the running hash from its content, and proceeds with "no chain
+check".</p>
+<p>For a tamper-evident log, a hole verifies clean.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>content node</strong> is a piece of the repository in a
+code graph, with synapse weights learned from use.</p>
+<p>A <strong>build</strong> regenerates that graph; there is no edit and
+no delete.</p>
+<p>An <strong>audit entry</strong> is a link in a chain that survives
+file rotation.</p>
+<p>A <strong>claim</strong> — in the marketing sense — is a number that
+must be reproducible or it may not be published.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the audit chain proves entries were not altered, and two paths let an entry be absent without the verifier noticing</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the audit chain proves entries were not altered, and two paths let an entry be absent without the verifier noticing
+flowchart TB
+    B[&quot;backend build&quot;] --&gt; EM[&quot;NeuralMind._emit_audit —&lt;br/&gt;the single emitter&quot;]
+    ING[&quot;ingest_document&quot;] --&gt; EM
+    SRCH[&quot;search · wakeup · probe&quot;] --&gt; EM
+    EM --&gt; TRY{&quot;try: audit.append_event&quot;}
+    TRY --&gt;|&quot;ok&quot;| CHAIN[&quot;entry.sha256 = SHA256(prev_hash&lt;br/&gt;+ stable serialization)&quot;]
+    TRY --&gt;|&quot;except Exception: pass —&lt;br/&gt;&#39;Audit logging must never block&lt;br/&gt;primary query/build/search flows&#39;&quot;| GAP[&quot;entry silently dropped&quot;]
+    CHAIN --&gt; JL[(&quot;audit_events.jsonl —&lt;br/&gt;append-only&quot;)]
+    JL --&gt; ROT[&quot;rotation: archive oversized file,&lt;br/&gt;seed the new file&#39;s chain from the&lt;br/&gt;archived file&#39;s FINAL hash,&lt;br/&gt;write a continuation marker&quot;]
+    JL --&gt; V{&quot;verify() walks the chain&quot;}
+    V --&gt;|&quot;recomputed == stored&quot;| OK[&quot;ok&quot;]
+    V --&gt;|&quot;line will not parse&quot;| LEG[&quot;&#39;Legacy line — update prev_sha&lt;br/&gt;from its content (no chain check)&#39;&quot;]
+    GAP -.-&gt;|&quot;a hole verifies clean&quot;| OK
+    LEG -.-&gt; OK
+    T2[(&quot;tier2/audit.py — a second chain&lt;br/&gt;for governance events;&lt;br/&gt;genesis SHA256(&#39;neuralmind-team-audit-v1&#39;);&lt;br/&gt;source-available, not MIT&quot;)] --- JL
+    SITE[&quot;tests/test_site_claims.py&quot;] --&gt; R1[&quot;every N× ratio on a high-traffic page&lt;br/&gt;must be in site/claims.json with a&lt;br/&gt;source AND a reproduction command&quot;]
+    SITE --&gt; R2[&quot;names on private_names_never_publish&lt;br/&gt;must not appear anywhere under site/&quot;]
+    SITE --&gt; R3[&quot;no absolute privacy claims&quot;]
+    WHY[&quot;the four drifts that shipped before it:&lt;br/&gt;one figure on three repo sizes ·&lt;br/&gt;63.6× for 65.6× · a latency number with&lt;br/&gt;no measurement · a 100% recall claim the&lt;br/&gt;benchmark contradicts · a real client name&quot;] -.-&gt; SITE</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>neuralmind/audit.py</code></td>
+<td>The MIT hash-chained trail, its verifier and its rotation</td>
+</tr>
+<tr>
+<td><code>neuralmind/tier2/audit.py</code></td>
+<td>The source-available governance chain</td>
+</tr>
+<tr>
+<td><code>neuralmind/core.py</code></td>
+<td>Build, ingest, search, and the single audit emitter</td>
+</tr>
+<tr>
+<td><code>neuralmind/context_selector.py</code>,
+<code>compressors.py</code></td>
+<td>Context compression, the product claim</td>
+</tr>
+<tr>
+<td><code>neuralmind/bm25.py</code>, <code>bge_embedder.py</code></td>
+<td>The retrieval arms</td>
+</tr>
+<tr>
+<td><code>evals/</code></td>
+<td>Faithfulness, quality, parity, onboarding, SWE-bench and a book
+corpus</td>
+</tr>
+<tr>
+<td><code>tests/test_site_claims.py</code>,
+<code>test_docs_claims.py</code></td>
+<td>The project's own numbers, gated</td>
+</tr>
+<tr>
+<td><code>LICENSING.md</code></td>
+<td>One directory, two licences, forward-only</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>tests/test_site_claims.py:1-26</code>. Read the docstring
+before the code — it is a post-mortem of four shipped inaccuracies and
+the rules that followed, and it is the most transferable thing in the
+repository.</p>
+<p><code>neuralmind/audit.py:234-290</code> for rotation that preserves
+chain continuity, which is the part of a hash chain most implementations
+get wrong or skip.</p>
+<p><code>neuralmind/core.py:442-465</code> for the emitter, and the
+<code>except Exception: pass</code> that is the chain's blind spot.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The memory is an index over a repository rather than a store of
+claims: content nodes in a code graph with synapse weights, ingested
+documents, and chapter indexes for long-form text.</p>
+<p>That shape answers most of the atlas's usual questions by
+construction. There is no epistemic status because a node is not a
+belief; there is no supersession because a rebuild replaces the graph;
+there is no delete path in the core because forgetting means not
+indexing. Provenance is the source file.</p>
+<p>The consequence worth naming is correction. If the graph encodes
+something wrong — a stale file, a misattributed symbol — the remedy is a
+rebuild, and there is no way to mark a single node as not-to-be-trusted
+in the meantime.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>BM25 and embeddings with a context selector and compressors, tuned by
+a CI tuner and measured by the eval harnesses in <code>evals/</code>.
+Unlike several projects read recently, the corpora are committed —
+<code>evals/book_retrieval/</code> carries an actual book,
+<code>evals/quality/baseline.json</code> an actual baseline — so the
+numbers can be reproduced by someone who is not the author. That is the
+same discipline the site-claims test enforces, applied upstream of the
+claim.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Build and ingest, both audited. A build failure emits an audit event
+with <code>status="failure"</code>, which is the right half to remember:
+a log that records only successes tells you nothing about the run that
+went wrong.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, editor extensions, agent hooks, a CLI, a daemon with
+backpressure, and a dashboard. The product claim is token reduction
+through context compression, and the claim is one of the numbers
+<code>site/claims.json</code> has to justify.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Two independent hash chains, a compliance annotation engine, an MCP
+security layer with its own audit integration, and no telemetry.</p>
+<p>The honest assessment of the chains is that they are well built and
+under-guarded at the edges. A tamper-evident log answers "was this
+record changed?" and not "is this record complete", and completeness is
+the property an audit is usually wanted for. Two lines of code decide it
+here: the swallowed exception, and the legacy-line branch.</p>
+<p>Both have cheap fixes that do not compromise the stated intent. The
+emitter could increment a dropped-entry counter and surface it in
+<code>verify</code>'s result, so a gap becomes visible without ever
+blocking a query. The legacy branch could record how many unchained
+lines it skipped, so "ok" stops meaning "ok, apart from the ones I did
+not check."</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>150 test files, committed eval corpora, a self-benchmark CI workflow,
+and the two claims guards.</p>
+<p>The claims guards deserve the last word because they are rare enough
+to be worth naming as a category. Most projects treat their README as
+marketing and their tests as engineering. This one treats a published
+number as an assertion that can be false, gives it a source and a
+reproduction command, and fails the build if a new one appears without
+them. The four drifts listed in the docstring are what happens without
+that, and every one of them is a mistake an honest project makes.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Test your own claims. If you publish a multiplier, put it in a
+manifest with its source and the command that regenerates it, and fail
+CI when a number appears on a high-traffic page without one. The
+exemption for values under 2× — "decay coefficients and worked examples
+… not claims" — is the detail that keeps the rule usable.</p>
+<p>Keep a list of names that must never be published and assert it
+against the site. The drift that motivated this one included a real
+client name in a document every other copy anonymised; a grep in CI is a
+complete defence.</p>
+<p>Preserve the chain across rotation. A hash chain that resets when the
+file rolls over is two chains, and the seam is exactly where a missing
+entry would sit. Seeding the new file from the archived final hash and
+writing a continuation marker costs a few lines.</p>
+<p>Count what you swallow. "This must never block the primary flow" is a
+correct requirement and a silent <code>pass</code> is the wrong
+implementation of it: increment a counter, surface it in the verifier,
+and the log can be both non-blocking and honest about its gaps.</p>
+<p>And state your licence boundary the way this one does — one
+directory, one sentence, and a forward-only promise about what stays
+permissive.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether a memory node can be corrected without a full rebuild. No
+delete, forget or invalidate path was found in the core.</p>
+<p>Whether <code>verify</code> is run anywhere automatically. It exists
+on both chains and a doctest exercises the tier2 one; nothing observed
+schedules it.</p>
+<p>How many audit entries are lost in practice. The swallowed exception
+makes the answer unknowable from the log itself, which is the point of
+the finding.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tests/test_site_claims.py</code></td>
+<td>Four shipped inaccuracies, and the three rules that followed</td>
+</tr>
+<tr>
+<td><code>neuralmind/audit.py:234-290</code></td>
+<td>Rotation that preserves hash-chain continuity</td>
+</tr>
+<tr>
+<td><code>neuralmind/core.py:442-465</code></td>
+<td>The single emitter, and the exception it swallows</td>
+</tr>
+<tr>
+<td><code>neuralmind/audit.py:173-196</code></td>
+<td>The verifier, and the legacy line it does not check</td>
+</tr>
+<tr>
+<td><code>neuralmind/tier2/audit.py</code></td>
+<td>A second chain, source-available, with a genesis hash</td>
+</tr>
+<tr>
+<td><code>LICENSING.md</code></td>
+<td>One directory, two licences, forward-only</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/dfrostar/neuralmind/commit/38c74096f5e8e82c79feb037ece7395461fab4f8"><code class="commit-id" title="38c74096f5e8e82c79feb037ece7395461fab4f8">38c74096…</code></a>
+— first reading, at a commit dated 16 September 2026. The repository is
+open-core: MIT except <code>neuralmind/tier2/</code>, which is
+source-available under a Commercial Modules License and was read as
+source. Screened before opening, from a shallow clone: fifteen files
+scanned, no auto-run surfaces, one build-time execution point, three
+unpinned surfaces, eight dependency files inside the seven-day cooldown,
+and the <code>CLAUDE.md</code> read as data. Nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
