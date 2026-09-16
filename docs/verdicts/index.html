@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 489 reports.</strong></p>
+<p><strong>This page covers all 490 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17728,6 +17728,50 @@ across several coding hosts and you work on named branches.</li>
 <li>Do not copy when: your agents run inside a rebase, a bisect or a CI
 checkout, or you need scoping inside a store rather than between
 directories.</li>
+</ul>
+<h3 id="the-librarian"><a
+href="../systems/the-librarian/"><code>the-librarian</code></a></h3>
+<ul>
+<li>Best idea: <strong>one function produces every verdict, and it never
+asks the model how risky the edit was.</strong>
+<code>curator-apply-policy.ts</code> opens by claiming its own monopoly
+— <em>"Every apply/propose/skip verdict in the system … is produced HERE
+and nowhere else"</em> — and states that the rule is <em>"enforced by
+OPERATION TYPE, never by model-self-reported risk (the old risk_level /
+off|safe_only|high_confidence policy levels are gone)"</em>. Archive and
+split, <em>"the only two operations that destroy or restructure
+information — ALWAYS propose, regardless of confidence"</em>; anything
+touching a <code>requires_approval</code> memory proposes; a
+<code>forceProposal</code> hint is an override nothing auto-applies
+past. Two marks: <code>human_review</code>,
+<code>negative_eval</code>.</li>
+<li>Biggest risk: <strong>below the destructive line, a confident wrong
+merge auto-applies.</strong> Create, update and merge are decided by the
+model's confidence against a threshold, and the project's own intake
+eval exists because that is the failure that survives every other guard
+— <code>entity_resolution</code> measures whether an ambiguous merge
+<em>"AVOID[ed] a confident wrong-merge (it should propose, never
+auto-augment)"</em>. Separately, the vault's history is git rather than
+something the store keeps, so what a note said last week is a
+<code>git log</code> question.</li>
+<li>Most reusable component: the intake eval — a separate package with a
+fake model, a fixture, pure scorers with <em>"[n]o I/O, no model"</em>,
+a committed baseline, and headline metrics that are absences:
+<code>no_clobber_rate</code> (did an edit to a hand-authored doc
+preserve it), <code>contradiction_recall</code> (was a contradicting
+update superseded), <code>entity_resolution</code> (did an ambiguous
+merge avoid a confident wrong one).</li>
+<li>Maturity impression: Apache-2.0, 1,296 commits since 3 May 2026,
+47,344 lines of TypeScript in <code>packages/</code> outside tests
+against 350 test files; a markdown-and-git vault of memories, handoffs
+and references linked by wikilinks, seven MCP verbs with a primer under
+2KB, a dashboard, a cross-harness handoff document, and a self-host path
+that runs the verified image by immutable digest.</li>
+<li>Study when: you want memory your team reads and edits as markdown in
+git, curated by an agent whose destructive moves always stop at a
+person.</li>
+<li>Do not copy when: the store itself must answer historical questions
+rather than deferring them to version control.</li>
 </ul>
         </article>
       </div>

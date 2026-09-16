@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 489 reports.**
+**This page covers all 490 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4262,3 +4262,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, version 1.2.1, 47 commits since 7 July 2026, 34,549 lines of TypeScript against 114 test files, one SQLite file per resolved project root, no model in the loop, and an MCP surface aimed at Cursor, Claude Code, Gemini and Copilot with four auto-run install surfaces.
 - Study when: you want deterministic local workflow state shared across several coding hosts and you work on named branches.
 - Do not copy when: your agents run inside a rebase, a bisect or a CI checkout, or you need scoping inside a store rather than between directories.
+
+### [`the-librarian`](../systems/the-librarian/)
+- Best idea: **one function produces every verdict, and it never asks the model how risky the edit was.** `curator-apply-policy.ts` opens by claiming its own monopoly — *"Every apply/propose/skip verdict in the system … is produced HERE and nowhere else"* — and states that the rule is *"enforced by OPERATION TYPE, never by model-self-reported risk (the old risk_level / off|safe_only|high_confidence policy levels are gone)"*. Archive and split, *"the only two operations that destroy or restructure information — ALWAYS propose, regardless of confidence"*; anything touching a `requires_approval` memory proposes; a `forceProposal` hint is an override nothing auto-applies past. Two marks: `human_review`, `negative_eval`.
+- Biggest risk: **below the destructive line, a confident wrong merge auto-applies.** Create, update and merge are decided by the model's confidence against a threshold, and the project's own intake eval exists because that is the failure that survives every other guard — `entity_resolution` measures whether an ambiguous merge *"AVOID[ed] a confident wrong-merge (it should propose, never auto-augment)"*. Separately, the vault's history is git rather than something the store keeps, so what a note said last week is a `git log` question.
+- Most reusable component: the intake eval — a separate package with a fake model, a fixture, pure scorers with *"[n]o I/O, no model"*, a committed baseline, and headline metrics that are absences: `no_clobber_rate` (did an edit to a hand-authored doc preserve it), `contradiction_recall` (was a contradicting update superseded), `entity_resolution` (did an ambiguous merge avoid a confident wrong one).
+- Maturity impression: Apache-2.0, 1,296 commits since 3 May 2026, 47,344 lines of TypeScript in `packages/` outside tests against 350 test files; a markdown-and-git vault of memories, handoffs and references linked by wikilinks, seven MCP verbs with a primer under 2KB, a dashboard, a cross-harness handoff document, and a self-host path that runs the verified image by immutable digest.
+- Study when: you want memory your team reads and edits as markdown in git, curated by an agent whose destructive moves always stop at a person.
+- Do not copy when: the store itself must answer historical questions rather than deferring them to version control.

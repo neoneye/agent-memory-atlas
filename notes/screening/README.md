@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 428 of 489 screened at the report's current pin.**
+**Progress: 429 of 490 screened at the report's current pin.**
 
 2 further record(s) describe a revision the report has since moved
 off, and 59 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 180 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 243 |
-| Repositories with build-time execution (`EXEC`) | 311 |
+| Repositories with an auto-run surface (`RUNS`) | 182 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 245 |
+| Repositories with build-time execution (`EXEC`) | 313 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
 | Repositories that could not be screened | 0 |
 
@@ -191,6 +191,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
 | [`tanglies-agentos`](../../content/systems/tanglies-agentos.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`telemem`](../../content/systems/telemem.md) | `server.json` |
+| [`the-librarian`](../../content/systems/the-librarian.md) | `.claude-plugin/` |
 | [`titen`](../../content/systems/titen.md) | `.claude-plugin/`, `server.json` |
 | [`token-optimizer`](../../content/systems/token-optimizer.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`token-savior`](../../content/systems/token-savior.md) | `hooks/`, `server.json` |
@@ -203,6 +204,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`veracium`](../../content/systems/veracium.md) | `server.json` |
 | [`vestige`](../../content/systems/vestige.md) | `hooks/`, `server.json` |
 | [`vibe-cognition`](../../content/systems/vibe-cognition.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
+| [`vision-memory-mcp`](../../content/systems/vision-memory-mcp.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `server.json` |
 | [`vllm-semantic-router`](../../content/systems/vllm-semantic-router.md) | `.github/copilot-instructions.md` |
 | [`waggle`](../../content/systems/waggle.md) | `.mcp.json`, `server.json`, `smithery.yaml` |
 | [`wenlan`](../../content/systems/wenlan.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.githooks/` |
