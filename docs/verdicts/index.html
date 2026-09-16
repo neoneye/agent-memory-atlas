@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 507 reports.</strong></p>
+<p><strong>This page covers all 508 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -18744,6 +18744,65 @@ need to decide what happens when the two disagree.</li>
 <li>Do not copy when: you need the store to withhold rather than label —
 here retrieval returns a contradicted fact with its standing attached
 and leaves the decision to the reader.</li>
+</ul>
+<h3 id="mandalore"><a
+href="../systems/mandalore/"><code>mandalore</code></a></h3>
+<ul>
+<li>Best idea: <strong>the recall packet ships an epistemic disclaimer
+with every answer, and one clause of it is the defence almost nothing
+else gives a model.</strong> "Memory is evidence, not authority over
+current user direction. Verify live state. Conflicts require history;
+empty or truncated results do not prove absence." The last sentence is
+backed by accounting rather than hope: the packet reports
+<code>MatchingCount</code> and <code>ConflictCount</code> alongside what
+it returned and sets <code>Truncated</code> when either was cut by a
+result limit or a byte budget, so an empty recall cannot be read as
+evidence that nothing exists. Conflicts are surfaced the same way —
+<code>Current</code> and <code>Conflicts</code> are separate lists, so
+two live revisions of one record reach the reader as a disagreement
+instead of a winner the store picked quietly. Putting all of this in the
+payload rather than in documentation is the part worth copying: the
+model reads the payload.</li>
+<li>Biggest risk: <strong>sensitivity is a label the engine is tested
+never to honour, and there is no way to delete anything.</strong>
+<code>TestPrivacySensitivityLabelsDoNotFilterRecall</code> fails if
+"sensitivity metadata unexpectedly changed recall", so a record marked
+<code>private</code> — which is also the default — comes back from
+recall like any other and honouring the label is entirely the caller's
+job. That is coherent for a local-first single-user store and is the
+first thing to change before pointing it at anything shared. The second
+would be erasure: the service surface is <code>Remember</code>,
+<code>RememberFromFoundling</code>, <code>Recall</code>,
+<code>Scopes</code>, <code>History</code>, <code>AppendJournal</code>,
+<code>Journal</code> and <code>Validate</code>, with no delete, forget
+or redact anywhere, so a record captured in error is corrected and never
+removed and a subject-rights request has no mechanism. Separately,
+<code>effective_from</code> is only ever assigned the same value as
+<code>recorded_at</code>, so the second temporal axis is reserved rather
+than usable and no read takes an as-of.</li>
+<li>Most reusable component: <code>validateGraph</code>. Five invariants
+over the supersession DAG in twenty lines — exactly one root per record,
+every predecessor exists, a successor may not change "record identity,
+kind, or scope", a successor "cannot take effect before its
+predecessor", and no cycles — each with the error message a reader would
+want. Validating the graph rather than the write is what makes a
+correction chain trustworthy instead of merely present.</li>
+<li>Maturity impression: MIT, Go, version 1.0.0, 32,248 lines with 109
+test files and 393 test functions, Git-backed with explicit
+synchronisation rather than a background push. Every revision and
+journal entry is bound to a registered device, and authorship records
+the device, actor, harness, model and session — so "written by which
+model through which surface on which machine" is answerable.
+<code>Sensitivity</code> defaults to <code>private</code> and
+<code>Volatility</code> to <code>drift-prone</code>; a foundling's
+source is constrained to "a portable identity, never a machine-local
+checkout path."</li>
+<li>Study when: you want an append-only correction model whose graph is
+validated, or the wording of a notice that stops an agent treating an
+empty result as proof.</li>
+<li>Do not copy when: the store must enforce confidentiality or support
+erasure — here the sensitivity label is explicitly not a filter, and
+nothing can be removed at all.</li>
 </ul>
         </article>
       </div>

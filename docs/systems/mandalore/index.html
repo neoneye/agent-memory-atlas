@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Git-backed memory whose every
+write is a new revision carrying its author's device, harness and model,
+a required change reason and explicit supersedes edges — with no
+deletion surface anywhere, a validator that refuses a successor taking
+effect before its predecessor, and a recall packet that tells the model
+absence is not proof.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Mandalore — Agent Memory Atlas">
+    <meta property="og:description" content="A Git-backed memory whose
+every write is a new revision carrying its author's device, harness and
+model, a required change reason and explicit supersedes edges — with no
+deletion surface anywhere, a validator that refuses a successor taking
+effect before its predecessor, and a recall packet that tells the model
+absence is not proof.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mandalore — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Git-backed memory whose
+every write is a new revision carrying its author's device, harness and
+model, a required change reason and explicit supersedes edges — with no
+deletion surface anywhere, a validator that refuses a successor taking
+effect before its predecessor, and a recall packet that tells the model
+absence is not proof.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Mandalore — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mandalore",
+      "description": "A Git-backed memory whose every write is a new revision carrying its author's device, harness and model, a required change reason and explicit supersedes edges \u2014 with no deletion surface anywhere, a validator that refuses a successor taking effect before its predecessor, and a recall packet that tells the model absence is not proof.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">There is no delete, and the packet says
+what it cannot prove</p>
+          <h1>Mandalore</h1>
+          <p class="document-deck">A Git-backed memory whose every write
+is a new revision carrying its author's device, harness and model, a
+required change reason and explicit supersedes edges — with no deletion
+surface anywhere, a validator that refuses a successor taking effect
+before its predecessor, and a recall packet that tells the model absence
+is not proof.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/acoz-labs/mandalore">
+              <span>Source</span>
+              <strong>acoz-labs/mandalore</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/acoz-labs/mandalore/commit/3332938212cc73ee05d03d57e5179d13705a0447" title="3332938212cc73ee05d03d57e5179d13705a0447">
+              <span>Analyzed revision</span>
+              <code>33329382…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/acoz-labs--mandalore" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>acoz-labs--mandalore</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Mandalore is "[y]our lore, across time and space" — MIT, Go, version
+1.0.0, 32,248 lines with 109 test files and 393 test functions, offering
+"[a]utomatic, durable memory across agents and tools" through a shared
+engine, a CLI, a local MCP server and thin harness plugins. It describes
+itself as "the memory-only successor to My Friday."</p>
+<p>Two design decisions define it, and both are subtractive.</p>
+<p>The first: <strong>there is no delete.</strong> The service surface
+is <code>Remember</code>, <code>RememberFromFoundling</code>,
+<code>Recall</code>, <code>Scopes</code>, <code>History</code>,
+<code>AppendJournal</code>, <code>Journal</code> and
+<code>Validate</code>. No forget, no redact, no purge; the only
+<code>os.Remove</code> calls in the memory package are staging and
+temp-file cleanup. A record captured in error is corrected by a new
+revision that names what it supersedes and why, and a test asserts the
+correction did not "erase predecessor".</p>
+<p>Every revision carries who made it in unusual detail — an
+<code>Authorship</code> of device id, actor, harness, model and session
+id, validated against a registered device — plus an
+<code>Evidence</code> block of basis, confidence and source references,
+a <code>ChangeReason</code>, and explicit <code>Supersedes</code> edges.
+<code>validateGraph</code> then enforces the chain: exactly one root per
+record, every predecessor must exist, a successor may not change "record
+identity, kind, or scope", a successor "cannot take effect before its
+predecessor", and the graph must be acyclic.</p>
+<p>That is an append-only mutation record that is also the memory, with
+no path to remove an entry, which is the mark it earns.</p>
+<p>The second decision is what the recall packet says. Every result
+ships with this notice:</p>
+<blockquote>
+<p>"Memory is evidence, not authority over current user direction.
+Verify live state. Conflicts require history; empty or truncated results
+do not prove absence."</p>
+</blockquote>
+<p>Three separate honest claims, and the third is the one almost nothing
+else in this corpus makes. A packet cut by a result limit or a byte
+budget sets <code>Truncated</code>, and the notice tells the reading
+model what that means: nothing came back is not the same as nothing
+exists. An agent that treats an empty recall as proof of absence is the
+failure mode this sentence exists to prevent, and stating it in the
+payload — rather than in documentation the model never reads — is the
+right place for it.</p>
+<p>Conflicts get the same treatment. The packet carries
+<code>Current</code> and <code>Conflicts</code> as separate lists, so
+two live revisions of one record arrive as a disagreement the reader can
+see rather than a winner the store picked quietly.</p>
+<p>The limits are equally clear, and one of them is deliberate.
+<code>Sensitivity</code> is not a read filter, and a test says so in its
+name: <code>TestPrivacySensitivityLabelsDoNotFilterRecall</code>,
+failing if "sensitivity metadata unexpectedly changed recall". A record
+marked private comes back like any other; the label travels with it and
+honouring it is the caller's job. That is a defensible position for a
+local-first single-user store and it should be read before pointing this
+at anything shared.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>record</strong> has an identity. A
+<strong>revision</strong> is a statement of it at a moment, by a device,
+with a reason.</p>
+<p><strong>Supersedes</strong> is an edge, validated: a successor cannot
+change what the record is, and cannot take effect before what it
+replaces.</p>
+<p>A <strong>packet</strong> is what recall returns: current revisions,
+conflicts, a truncation flag, and a notice about what none of it
+proves.</p>
+<p>A <strong>foundling</strong> is an externally-sourced record whose
+origin is "a portable identity, never a machine-local checkout
+path".</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every change is a new revision with authorship and a reason, validated against the supersession DAG — and recall returns conflicts and a truncation flag beside a notice that absence is not proof</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every change is a new revision with authorship and a reason, validated against the supersession DAG — and recall returns conflicts and a truncation flag beside a notice that absence is not proof
+flowchart TB
+    W[&quot;Remember · RememberFromFoundling&quot;] --&gt; DEF[&quot;defaults: Sensitivity = private ·&lt;br/&gt;Volatility = drift-prone&lt;br/&gt;— an unclassified memory is assumed&lt;br/&gt;confidential and assumed to go stale&quot;]
+    DEF --&gt; REV[&quot;new Revision:&lt;br/&gt;recorded_at · effective_from ·&lt;br/&gt;supersedes[] · change_reason ·&lt;br/&gt;evidence{basis, confidence, source_refs} ·&lt;br/&gt;authorship{device, actor, harness,&lt;br/&gt;model, session}&quot;]
+    REV --&gt; VG{&quot;validateGraph&quot;}
+    VG --&gt;|&quot;more than one root per record&quot;| X1[&quot;refused&quot;]
+    VG --&gt;|&quot;missing predecessor&quot;| X2[&quot;refused&quot;]
+    VG --&gt;|&quot;&#39;successor changes record identity,&lt;br/&gt;kind, or scope&#39;&quot;| X3[&quot;refused&quot;]
+    VG --&gt;|&quot;&#39;successor cannot take effect&lt;br/&gt;before its predecessor&#39;&quot;| X4[&quot;refused&quot;]
+    VG --&gt;|&quot;cycle&quot;| X5[&quot;refused&quot;]
+    VG --&gt;|&quot;valid&quot;| STORE[(&quot;Git-backed files;&lt;br/&gt;explicit sync, not a&lt;br/&gt;background push&quot;)]
+    NODEL[&quot;Service surface: Remember ·&lt;br/&gt;RememberFromFoundling · Recall ·&lt;br/&gt;Scopes · History · AppendJournal ·&lt;br/&gt;Journal · Validate&lt;br/&gt;— NO delete, forget or redact&quot;] -.-&gt; STORE
+    STORE --&gt; R[&quot;Recall(query, scope, limit, budgetBytes)&quot;]
+    R --&gt; PK[&quot;packet: Current[] · Conflicts[] ·&lt;br/&gt;MatchingCount · ConflictCount ·&lt;br/&gt;Truncated&quot;]
+    PK --&gt; NOTE[&quot;notice, on every recall:&lt;br/&gt;&#39;Memory is evidence, not authority over&lt;br/&gt;current user direction. Verify live state.&lt;br/&gt;Conflicts require history; empty or&lt;br/&gt;truncated results do not prove absence.&#39;&quot;]
+    SENS[&quot;Sensitivity does NOT filter recall —&lt;br/&gt;TestPrivacySensitivityLabelsDoNotFilterRecall&lt;br/&gt;fails if it ever does&quot;] -.-&gt; R
+    EFF[&quot;effective_from is only ever set&lt;br/&gt;equal to recorded_at: the second&lt;br/&gt;temporal axis exists and is not&lt;br/&gt;yet independently settable&quot;] -.-&gt; REV
+    J[(&quot;memory/events/YYYY/MM/ —&lt;br/&gt;explicitly appended journal,&lt;br/&gt;device-validated&quot;)] --- STORE</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/memory/memory.go</code></td>
+<td>The revision model and the graph validator</td>
+</tr>
+<tr>
+<td><code>internal/memory/service.go</code></td>
+<td>The write and recall surface, and the packet's notice</td>
+</tr>
+<tr>
+<td><code>internal/memory/journal.go</code></td>
+<td>Explicitly appended events with validated authorship</td>
+</tr>
+<tr>
+<td><code>internal/memory/foundlings.go</code></td>
+<td>Externally-sourced records with portable identities and pins</td>
+</tr>
+<tr>
+<td><code>internal/memory/snapshot.go</code>, <code>pages.go</code></td>
+<td>Snapshots and pagination</td>
+</tr>
+<tr>
+<td><code>internal/sync</code></td>
+<td>Explicit Git synchronisation</td>
+</tr>
+<tr>
+<td><code>internal/mcp</code>, <code>internal/codex</code>,
+<code>plugins</code></td>
+<td>The MCP server and harness plugins</td>
+</tr>
+<tr>
+<td><code>internal/memory/*_test.go</code></td>
+<td>Boundary, integrity, precision, privacy, failure, retrieval,
+evaluation</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>internal/memory/memory.go:180-205</code> — the graph validator.
+Five invariants in twenty lines, each with the error message a reader
+would want.</p>
+<p><code>internal/memory/service.go:183-224</code> — the recall packet,
+the notice and the truncation accounting.</p>
+<p><code>internal/memory/service.go:110-131</code> — the cautious
+defaults and the single place <code>EffectiveFrom</code> is
+assigned.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A revision is unusually well-provenanced. <code>Authorship</code>
+records not just an actor but the device, the harness and the model — so
+"this was written by Claude through the Codex plugin on the laptop" is
+answerable, which matters for a store explicitly designed to span
+machines and agents.</p>
+<p><code>Evidence</code> carries a basis, a confidence and source
+references, and <code>LastVerifiedAt</code> is an optional timestamp
+distinct from both the recording and the effective time.</p>
+<p>The two classification fields default cautiously:
+<code>Sensitivity</code> to <code>private</code> and
+<code>Volatility</code> to <code>drift-prone</code>. An unclassified
+memory is assumed confidential and assumed to go stale, which is the
+right direction for both.</p>
+<p><code>EffectiveFrom</code> is the one place the model reaches further
+than the code. It is a valid-time column, the validator uses it to
+enforce that a successor cannot take effect before its predecessor, and
+it is only ever assigned the same value as <code>RecordedAt</code> —
+once on the write path, once in a test fixture. So the axis is present
+and reserved rather than usable: nothing can yet record that a fact
+became true last March, and no read takes an as-of. That is why no
+bitemporal mark is claimed, and the shape is there for it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Lexical recall over a scope, with <code>ExactScope</code> to exclude
+bank-wide records when a narrower scope is selected — a caller-selected
+widening rather than a boundary, which is why no scope mark is claimed
+either.</p>
+<p>The packet-building loop is worth reading for its accounting.
+Conflicts are appended one at a time and popped back off when they would
+exceed the limit or the byte budget, and <code>Truncated</code> is
+computed by comparing what was returned against what matched —
+<code>len(p.Current) &lt; p.MatchingCount || len(p.Conflicts) &lt; p.ConflictCount</code>.
+The counts are reported alongside, so the reader knows both what it got
+and what it did not.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>One path, producing one revision, validated against the whole graph
+before it lands. <code>RememberFromFoundling</code> takes a verify
+callback, so an externally-sourced record can be checked against its
+origin before admission, and a <code>FoundlingSource</code> is
+constrained by a comment that is also a rule: "a portable identity,
+never a machine-local checkout path." A memory that names
+<code>/Users/someone/src/thing</code> is a memory another device cannot
+resolve.</p>
+<p>Synchronisation is explicit. The README says so and the package
+layout follows.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A shared engine behind a CLI, a local MCP server, and thin harness
+plugins — including a Codex plugin whose lifecycle hooks are read-only.
+Keeping the engine's logic in one place and the plugins thin is what
+makes the authorship field meaningful: whichever surface wrote a
+revision, it went through the same validator.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The trust posture is honest and slightly unusual: strong on
+provenance and integrity, deliberately weak on access control, and
+explicit about both.</p>
+<p>Every revision and journal entry is bound to a registered device and
+refuses to land otherwise. The supersession graph is validated as a
+whole rather than per-write. Nothing can be deleted. And the recall
+packet tells the model that what it is reading is evidence rather than
+authority.</p>
+<p>Against that, sensitivity is a label. A <code>private</code> record
+is returned by recall exactly like a public one, and the test that would
+catch a future change of mind asserts the current behaviour rather than
+the safer one. For a local-first store on one person's machines that is
+coherent. For anything shared it is the first thing to change, and the
+second would be a delete path — a store that cannot forget is a store
+that cannot honour an erasure request.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>393 test functions across 109 files, with the memory package alone
+carrying boundary, dependency, evaluation, failure, integrity,
+precision, privacy, retrieval and snapshot suites plus an evaluation
+benchmark.</p>
+<p><code>TestPrivacyCorrectionPreservesHistoryAndJournal</code> is the
+one that pins the model: a correction must update current recall, keep
+the correction history, not erase the predecessor, and not change
+independent journal evidence. Four assertions, one per way the
+append-only promise could break.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Put the epistemic disclaimer in the payload. "[E]mpty or truncated
+results do not prove absence" is a sentence the model reads on every
+recall, and it is the defence against an agent concluding a thing does
+not exist because the budget cut it. Documentation cannot do this; the
+packet can.</p>
+<p>Report truncation as data. Comparing returned against matched, and
+shipping both counts, costs two integers and turns a silent cut into a
+fact the reader can act on.</p>
+<p>Surface conflicts instead of resolving them. Two live revisions of
+one record is information; picking one quietly throws it away, and the
+reader is better placed than the store to know which is right.</p>
+<p>Default the classification fields to the cautious value.
+<code>private</code> and <code>drift-prone</code> mean an unlabelled
+memory is treated as confidential and perishable, which is the direction
+you want to be wrong in.</p>
+<p>Validate the supersession graph, not just the write. One root per
+record, predecessors that exist, no identity change across an edge, no
+effect before the thing it replaces, no cycles — five checks that make a
+correction chain trustworthy rather than merely present.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether <code>EffectiveFrom</code> will become independently
+settable. The column, the validator's ordering rule and the JSON field
+are all in place; only the write path holds it to
+<code>RecordedAt</code>.</p>
+<p>Whether sensitivity will ever gate recall. The test asserts it does
+not, by name, so a change would be deliberate — but the label exists for
+a reason and the reason is not currently enforced anywhere in the
+engine.</p>
+<p>How erasure is handled. There is no delete surface at all, which is a
+coherent integrity stance and leaves a subject-rights request with no
+mechanism.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/memory/memory.go:180-205</code></td>
+<td>Five supersession invariants, each with its message</td>
+</tr>
+<tr>
+<td><code>internal/memory/service.go:183-224</code></td>
+<td>The packet, the notice, and the truncation accounting</td>
+</tr>
+<tr>
+<td><code>internal/memory/service.go:110-131</code></td>
+<td>Cautious defaults, and the one assignment of
+<code>EffectiveFrom</code></td>
+</tr>
+<tr>
+<td><code>internal/memory/journal.go</code></td>
+<td>Device-validated events under a dated path</td>
+</tr>
+<tr>
+<td><code>internal/memory/foundlings.go</code></td>
+<td>A source identity that must be portable</td>
+</tr>
+<tr>
+<td><code>internal/memory/privacy_test.go</code></td>
+<td>A label that is tested not to filter, and a correction that must not
+erase</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/acoz-labs/mandalore/commit/3332938212cc73ee05d03d57e5179d13705a0447"><code class="commit-id" title="3332938212cc73ee05d03d57e5179d13705a0447">33329382…</code></a>
+— first reading, at a commit dated 15 September 2026. The project
+describes itself as the memory-only successor to
+<code>acoz-labs/my-friday</code>, which is not in this atlas. Screened
+before opening, from a shallow clone: six files scanned, no auto-run
+surfaces, no build-time execution points, no unpinned surfaces and three
+dependency files inside the seven-day cooldown. Nothing was installed,
+built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
