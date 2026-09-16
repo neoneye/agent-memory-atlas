@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 524 reports.</strong></p>
+<p><strong>This page covers all 525 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -19536,6 +19536,46 @@ from a redacted one.</li>
 <li>Do not copy when: you need a record of what changed, or
 de-duplication — a fact restated across sessions is stored as many times
 as it is said. No marks.</li>
+</ul>
+<h3 id="bifrost"><a
+href="../systems/bifrost/"><code>bifrost</code></a></h3>
+<ul>
+<li>Best idea: <strong>the write key and the read key are built from the
+same expression, a few lines apart.</strong>
+<code>MemvidSearchTool::new(manager, tenant_id, session_id.unwrap_or("anon"))</code>
+and
+<code>commit_memory(tenant_id, session_id.unwrap_or("anon"), …)</code>
+cannot drift, so what an agent can read is exactly what this runtime
+wrote for it — the asymmetry this shape usually has. A commit failure is
+logged at error level and swallowed, so a memory write cannot fail a
+user's turn.</li>
+<li>Biggest risk: <strong>the tool description and the filename
+disagree.</strong> The model is told it is searching "your absolute
+long-term memory for past conversations, facts, or context you have
+stored", and the store is
+<code>agent_{tenant}_session_{session}.mv2</code> — one file per
+session, so a new conversation starts empty. The exception is the
+fallback: a missing session id sends both paths to the literal
+<code>"anon"</code>, pooling a tenant's session-less turns into one
+shared file, which is the only configuration where the description holds
+and is reached by an absent identifier rather than a decision.</li>
+<li>Most reusable component: <code>get_agent_path</code>, as a
+cautionary three lines — the whole scoping model of an agent runtime
+expressed as a <code>format!</code>, worth reading beside the tool
+description it contradicts.</li>
+<li>Maturity impression: AGPL-3.0, Rust 1.75+ with a Python side, 11,091
+lines and 121 test functions, a dashboard, a Kubernetes manifest, and
+named guardrails. Status is legible from the top level —
+<code>INTEGRATION_STATUS.md</code>, <code>PHASE_A_SUMMARY.md</code>,
+<code>COMPLETION_SUMMARY.md</code> — and <code>src/</code> carries
+<code>.backup</code> copies of two source files beside their
+originals.</li>
+<li>Study when: you are registering a memory tool on an agent and want
+to check that what its description promises is what its key can
+reach.</li>
+<li>Do not copy when: you need memory across sessions, de-duplication,
+or any way to remove something — the 148-line layer appends and nothing
+else. No marks; the mechanisms are Memvid's.</li>
 </ul>
         </article>
       </div>

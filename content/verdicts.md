@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 524 reports.**
+**This page covers all 525 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4542,3 +4542,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, Node 24+, 74,394 lines of TypeScript with 1,778 test cases across 153 files, four supported hosts through one worker, a plugin marketplace entry, an MCP surface and a web viewer. The README badge advertises 13.7.4 against a `package.json` at 0.3.3.
 - Study when: you inject memory into a prompt and then capture that prompt, or you have a privacy check that cannot tell a missing record from a redacted one.
 - Do not copy when: you need a record of what changed, or de-duplication — a fact restated across sessions is stored as many times as it is said. No marks.
+
+### [`bifrost`](../systems/bifrost/)
+- Best idea: **the write key and the read key are built from the same expression, a few lines apart.** `MemvidSearchTool::new(manager, tenant_id, session_id.unwrap_or("anon"))` and `commit_memory(tenant_id, session_id.unwrap_or("anon"), …)` cannot drift, so what an agent can read is exactly what this runtime wrote for it — the asymmetry this shape usually has. A commit failure is logged at error level and swallowed, so a memory write cannot fail a user's turn.
+- Biggest risk: **the tool description and the filename disagree.** The model is told it is searching "your absolute long-term memory for past conversations, facts, or context you have stored", and the store is `agent_{tenant}_session_{session}.mv2` — one file per session, so a new conversation starts empty. The exception is the fallback: a missing session id sends both paths to the literal `"anon"`, pooling a tenant's session-less turns into one shared file, which is the only configuration where the description holds and is reached by an absent identifier rather than a decision.
+- Most reusable component: `get_agent_path`, as a cautionary three lines — the whole scoping model of an agent runtime expressed as a `format!`, worth reading beside the tool description it contradicts.
+- Maturity impression: AGPL-3.0, Rust 1.75+ with a Python side, 11,091 lines and 121 test functions, a dashboard, a Kubernetes manifest, and named guardrails. Status is legible from the top level — `INTEGRATION_STATUS.md`, `PHASE_A_SUMMARY.md`, `COMPLETION_SUMMARY.md` — and `src/` carries `.backup` copies of two source files beside their originals.
+- Study when: you are registering a memory tool on an agent and want to check that what its description promises is what its key can reach.
+- Do not copy when: you need memory across sessions, de-duplication, or any way to remove something — the 148-line layer appends and nothing else. No marks; the mechanisms are Memvid's.
