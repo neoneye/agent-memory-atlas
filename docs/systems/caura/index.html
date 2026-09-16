@@ -135,14 +135,14 @@ it proposes anything.</p>
               <strong>caura-ai/caura</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/caura-ai/caura/commit/816be36e32540c9133a817ad1e0e141823bae78d" title="816be36e32540c9133a817ad1e0e141823bae78d">
+            <a class="meta-pill revision-pill" href="https://github.com/caura-ai/caura/commit/c7da9d5e762adeb431d4f1f6e01fd6530edb4ad1" title="c7da9d5e762adeb431d4f1f6e01fd6530edb4ad1">
               <span>Analyzed revision</span>
-              <code>816be36e…</code>
+              <code>c7da9d5e…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/caura-ai--caura" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -225,13 +225,13 @@ another."</em> Migration 026 added a per-event idempotency key so a
 lost-ack retry of the async flush dedups before <code>seq</code> is
 assigned rather than double-appending to the chain.</p>
 <p><strong>The scope clause exists because the leak moved.</strong>
-<code>_fleet_visibility_clause</code> is the one builder every
-fleet-scoped read calls, and its docstring says why: <em>"A54
-established what happens otherwise — the identical predicate lived in
-several queries, one was fixed, and the leak simply moved to the next
-copy."</em> This is the third system in this reading to centralise a
-scope predicate after discovering copies of it disagreed, which suggests
-the lesson is structural rather than anecdotal.</p>
+<code>_fleet_scope_clause</code> is the one builder every fleet-scoped
+read calls, and its docstring says why: <em>"A54 established what
+happens otherwise — the identical predicate lived in several queries,
+one was fixed, and the leak simply moved to the next copy."</em> This is
+the third system in this reading to centralise a scope predicate after
+discovering copies of it disagreed, which suggests the lesson is
+structural rather than anecdotal.</p>
 <p><strong>Where a reader should be careful.</strong> Two of the seven
 marks — the tombstone and the human review — live behind
 <code>org_settings.skills_factory.enabled</code> and return
@@ -332,8 +332,8 @@ validates against <code>MEMORY_STATUSES</code>) → reserved types demoted
 <code>uq_memories_live_content_hash</code> on
 <code>(tenant, fleet, agent, content_hash)</code> where
 <code>deleted_at IS NULL</code>.</li>
-<li><strong>Scope clause.</strong> <code>_fleet_visibility_clause</code>
-(<code>core-storage-api/.../postgres_service.py:275-291</code>) →
+<li><strong>Scope clause.</strong> <code>_fleet_scope_clause</code>
+(<code>core-storage-api/.../postgres_service.py:262-294</code>) →
 <code>fleet_id IN (...)</code>, plus <code>fleet_id IS NULL</code> when
 not strict, plus <code>visibility == 'scope_org'</code> when org
 visibility is included.</li>
@@ -341,7 +341,7 @@ visibility is included.</li>
 status in <code>LIVE_MEMORY_STATUSES</code>,
 <code>deleted_at IS NULL</code> → optional <code>valid_at</code> hard
 filter on <code>ts_valid_start</code> at day granularity
-(<code>:2735-2760</code>) → vector and full-text scores in the
+(<code>:2781-2810</code>) → vector and full-text scores in the
 <code>ingredients</code> CTE → soft <code>currency_factor</code> for a
 lapsed <code>ts_valid_end</code> → optional rerank → top k.</li>
 <li><strong>Audit.</strong> <code>log_action</code> mints a
@@ -430,8 +430,8 @@ down.</p>
 <p><strong>The same parameter means two things in two queries, which is
 worth knowing before relying on it.</strong> On the hybrid search path
 the end bound is advisory. In <code>memory_find_successors</code>
-(<code>:3496-3551</code>) <code>valid_at</code> hard-filters
-<em>both</em> bounds at timestamp granularity —
+(<code>:3639</code>) <code>valid_at</code> hard-filters <em>both</em>
+bounds at timestamp granularity —
 <code>ts_valid_start IS NULL OR &lt;= valid_at</code>
 <strong>and</strong>
 <code>ts_valid_end IS NULL OR &gt;= valid_at</code>. So a strict as-of
@@ -439,6 +439,26 @@ window does exist in this codebase; it is on the successor lookup rather
 than on search, and a caller who reads the search comment and assumes
 the semantics are shared would be wrong in the safe direction on one
 path and the unsafe direction on the other.</p>
+<p><strong>The reference clock for recency is now itself a
+parameter.</strong> A search's freshness decay and its
+<code>temporal_boost</code> — the 1.3× multiplier that answers <em>last
+month</em> — both measured from <code>now()</code> against the row's
+<code>created_at</code>, which is record time.
+<code>postgres_service.py:2591-2602</code> adds a
+<code>freshness_reference</code> setting: at <code>1</code>, and only
+when the request also carried a <code>valid_at</code>, both the decay
+and the window anchor to that instant instead, and the window compares
+the row's event time rather than its ingest time
+(<code>:3116-3122</code>). The reason is stated where the switch is:
+<em>"a corpus ingested in one sitting still has a 'last month'."</em>
+That is the single-clock failure in one sentence — load a decade of
+documents on a Tuesday and every one of them is equally fresh, so a
+recency term ranks nothing. The gating is the part to copy: the knob
+alone changes nothing, <code>valid_at</code> alone changes nothing, and
+only the conjunction retargets the clock, so the new behaviour cannot
+reach a caller who did not ask for it. It stays opt-in, which means the
+default search still ranks an as-of question by how recently the answer
+was ingested.</p>
 <p>An optional rerank pass runs against a local model, with its own
 Compose file.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
@@ -745,6 +765,33 @@ rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.
 rg -n &#39;harness&#39; BENCHMARKS.md                                           # the file&#39;s own statement that the accuracy harness is not bundled
 rg -n &#39;skills_factory.enabled&#39; core-api/src                             # the flag gating the inbox and the poison write</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/caura-ai/caura/commit/c7da9d5e762adeb431d4f1f6e01fd6530edb4ad1"><code class="commit-id" title="c7da9d5e762adeb431d4f1f6e01fd6530edb4ad1">c7da9d5e…</code></a>
+— re-read after 73 commits across 188 files. All seven marks hold. Three
+anchor sets were byte-identical at both commits and needed no re-reading
+— the poison module and the Forge service that consults it, the audit
+model, and the fleet-visibility test file — and the rest were
+re-derived: <code>LIVE_MEMORY_STATUSES</code> is still the same
+three-value subset and still applied as a set-membership filter rather
+than a literal <code>active</code>, the validity window still
+hard-filters the start side on search and both sides on the successor
+lookup, and the inbox still lands five status transitions behind the org
+flag. One correction carried over from the first reading: the shared
+scope-clause builder is named <code>_fleet_scope_clause</code>, not
+<code>_fleet_visibility_clause</code> — the earlier name appears nowhere
+in the tree at either commit, and it had propagated into the report's
+evidence record, its implementation-paths list, its matrix and the
+overview. Found alongside it, and now recorded, is the structural test
+that protects the centralisation:
+<code>tests/test_c27_strict_fleet_scoping.py:95-107</code> reads the
+module's own source and asserts the multi-fleet predicate is built in
+exactly one place. The retrieval change is written up in section 6 — a
+<code>freshness_reference</code> setting that re-anchors recency decay
+and the <em>last month</em> window from <code>now()</code> to the
+request's <code>valid_at</code>. Re-screened at this commit from a full
+clone: three auto-run surfaces, four build-time execution paths, ten
+floating versions, twelve manifests inside the cooldown. Nothing was
+installed, built or run.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/caura-ai/caura/commit/816be36e32540c9133a817ad1e0e141823bae78d"><code class="commit-id" title="816be36e32540c9133a817ad1e0e141823bae78d">816be36e…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 10

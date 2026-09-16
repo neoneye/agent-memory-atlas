@@ -121,14 +121,14 @@ on the triple so the next extraction cannot re-assert them.</p>
               <strong>deeplethe/utopia</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/deeplethe/utopia/commit/cb3235665c51b8a7c2b81604b825bb946239da1d" title="cb3235665c51b8a7c2b81604b825bb946239da1d">
+            <a class="meta-pill revision-pill" href="https://github.com/deeplethe/utopia/commit/60df635d6924127c9a57e98acbd99e43bdd92d08" title="60df635d6924127c9a57e98acbd99e43bdd92d08">
               <span>Analyzed revision</span>
-              <code>cb323566…</code>
+              <code>60df635d…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-12</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/deeplethe--utopia" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -156,8 +156,8 @@ on the triple so the next extraction cannot re-assert them.</p>
 supervise them: one Rust binary and one Postgres that ingest documents
 and recorded sentences, extract entities and facts against an editable
 ontology, keep every fact on two clocks, and serve the result to an
-agent over MCP. 86,064 lines of Rust across eight crates, 33,475 lines
-of TypeScript in the console, 49 forward-only migrations and 38 numbered
+agent over MCP. 108,946 lines of Rust across eight crates, 37,252 lines
+of TypeScript in the console, 61 forward-only migrations and 43 numbered
 decision records. Apache-2.0. Source comments and decision records are
 in Chinese; identifiers, API and UI strings are in English.</p>
 <p><strong>It clears the memory bar on a narrow, deliberate path, and
@@ -169,7 +169,7 @@ sentence as a chunk on a per-base <em>Memory log</em> document
 extracts triples from it, and because that document belongs to the
 implicit <code>memory</code> source, the extractor diverts every triple
 into <code>pending_facts</code> instead of the graph
-(<code>crates/utopia-server/src/extraction.rs:1027</code>). The agent is
+(<code>crates/utopia-server/src/extraction.rs:1086</code>). The agent is
 told, in the tool result itself, to say the sentence was recorded and
 the facts await confirmation. Eleven read tools — chunk search, entity
 facts, neighbours, timeline, paths, and a <code>changes</code> tool that
@@ -410,18 +410,19 @@ within a conversation.</p>
 <code>documents::delete</code> / <code>restore</code> /
 <code>purge</code> for the document lifecycle;
 <code>pending::confirm</code> / <code>reject</code> for the queue.</p>
-<p><strong>Schema.</strong> 49 migrations, each one named for the
+<p><strong>Schema.</strong> 61 migrations, each one named for the
 property it adds — <code>a_fact_awaiting_a_nod</code>,
 <code>deleting_is_an_event</code>, <code>purge_is_final</code>,
 <code>a_contradiction_points_upstream</code>,
-<code>an_unknown_date_is_not_an_open_one</code> — and each carrying a
-long comment arguing the choice, usually against the version that was
-tried first.</p>
+<code>an_unknown_date_is_not_an_open_one</code>,
+<code>a_conflict_that_evaporated_was_not_decided</code> — and each
+carrying a long comment arguing the choice, usually against the version
+that was tried first.</p>
 <p><strong>MCP.</strong>
 <code>crates/utopia-server/src/api/mcp.rs</code>, one route,
 <code>POST /api/v1/kbs/{kb_id}/mcp</code>, JSON-RPC 2.0 over Streamable
 HTTP, stateless so every call re-authenticates.</p>
-<p><strong>Tests.</strong> 612 test functions; 73 integration files
+<p><strong>Tests.</strong> 851 test functions; 100 integration files
 under <code>crates/utopia-store/tests/</code> named for the property
 each one pins.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
@@ -530,6 +531,21 @@ learned ranking. RRF only, with fixed per-channel recall of 24 and a
 top-k the caller supplies. There is no token budget on retrieved
 context: the budget is the six-round tool loop and each tool's own
 limit.</p>
+<p><strong>The limit now runs after the filter, not before it.</strong>
+<code>retrieval::hybrid</code> used to fuse straight to
+<code>top_k</code> and hand those ids to <code>chunks_by_ids</code>,
+which is where the record-time and document-deletion predicates live. A
+historical query therefore spent its ten slots on whatever ranked
+highest today and then had the filter remove the ones that did not exist
+at the instant asked about — a caller asking for ten got however many of
+those ten happened to survive, with no signal that the shortfall was a
+filter rather than the corpus.
+<code>crates/utopia-server/src/retrieval.rs:47-58</code> fuses the whole
+candidate set, filters, and truncates last, with the reason written
+beside it: newer hits must not consume a historical query's limit. The
+ordering is the whole bug — both halves were correct on their own, and
+putting the cheaper one first cost recall only on the read path the
+bitemporal design exists to serve.</p>
 <p><strong>Failure modes.</strong> Under-recall on record-time lexical
 search, as above. Over-recall is bounded by the tool loop rather than by
 scoring. The sharper risk is entity resolution: same-name entities are
@@ -650,6 +666,45 @@ tampering impossible, and names the hash chain as the missing piece.
 <strong>That chain does not exist at this commit</strong> —
 <code>prev_hash</code> and <code>hash_chain</code> appear nowhere in the
 tree.</p>
+<p><strong>A conflict that evaporated is no longer recorded as one that
+was decided.</strong> <code>temporal::list_conflicts</code> was a read
+that began with a write: before selecting, it swept open conflicts whose
+two facts were no longer both live into
+<code>status='resolved', resolution='stale', resolved_at=now()</code>.
+The sweep itself was right — a conflict around an invalidated edge has
+nothing left to adjudicate — but three things followed from doing it
+there. <code>resolved_at</code> recorded the moment someone opened the
+review page rather than the moment the question lapsed, so an export, an
+audit, or a <em>how long do conflicts take to resolve</em> query was
+reading a page visit; the record-axis predicate
+<code>status='open' OR resolved_at &gt; T</code> read the same column,
+which made <em>was this conflict open at T</em> depend on who had
+visited that page since. <code>stale</code> was not among the three
+values the column's comment documented, and the column carried no
+<code>CHECK</code>, so the documented vocabulary and the real one had
+quietly diverged — and <code>stale</code> is not the same kind of thing
+as <code>closed</code>, <code>kept_both</code> and
+<code>rejected_new</code>, which are decisions a person made. And a base
+whose review page nobody opened kept its lapsed conflicts open
+indefinitely.</p>
+<p><code>migrations/0051_a_conflict_that_evaporated_was_not_decided.sql</code>
+splits the two apart. Withdrawal gets its own status,
+<code>withdrawn</code>; <code>resolution</code> is constrained by a
+<code>CHECK</code> to the three human decisions and is <code>NULL</code>
+on a withdrawn row, so a reader no longer has to work out whether a
+resolution is a verdict or a cleanup. The withdrawal itself moves onto
+an <code>AFTER UPDATE OF invalidated_at</code> trigger on
+<code>facts</code>, with the reasoning stated: twelve sites set
+<code>invalidated_at</code> and four undo it, patching each is a matter
+of time before one is missed, and the invariant belongs where the data
+changes. Un-invalidation reverses it, and only when <em>both</em> facts
+are live again. The backfill is the part worth copying — rather than
+nulling the bad timestamps, it recomputes each one as
+<code>min(invalidated_at)</code> over the conflict's two facts, because
+that is when the question actually disappeared and the database still
+holds it; erasing to <code>NULL</code> would have made the record axis
+report those conflicts as never having been open, which the migration
+names as a different lie rather than a neutral one.</p>
 <p><strong>The ledger is also an input.</strong> The governance agent
 reads past human verdicts out of <code>audit_events</code> as precedent
 before adjudicating a duplicate pair, cites the events it relied on in
@@ -731,8 +786,8 @@ clicking through the queue without reading is the failure mode the
 design cannot see.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>612 test functions, one <code>#[ignore]</code>.</strong> The
-integration suite is 72 files under
+<p><strong>851 test functions, one <code>#[ignore]</code>.</strong> The
+integration suite is 100 files under
 <code>crates/utopia-store/tests/</code>, each named for the property it
 pins, each building its own organisation and tearing it down, each
 hitting real Postgres.</p>
@@ -953,7 +1008,9 @@ facts), <code>0019_a_signature_holds_on_every_path.sql</code>,
 <code>0022_deleting_is_an_event.sql</code>,
 <code>0023_purge_is_final.sql</code>,
 <code>0026_an_agent_records_over_mcp.sql</code>,
-<code>0035_governance_reads_the_ledger.sql</code>.</li>
+<code>0035_governance_reads_the_ledger.sql</code>,
+<code>0051_a_conflict_that_evaporated_was_not_decided.sql</code>,
+<code>0057_an_end_the_engine_drew_moves_with_what_follows.sql</code>.</li>
 <li>Store: <code>crates/utopia-store/src/graph.rs</code>,
 <code>temporal.rs</code>, <code>world_axis.rs</code>,
 <code>record_axis.rs</code>, <code>pending.rs</code>,
@@ -962,11 +1019,14 @@ facts), <code>0019_a_signature_holds_on_every_path.sql</code>,
 <code>access.rs</code>, <code>review.rs</code>,
 <code>review_summary.rs</code>, <code>execution_gate.rs</code>,
 <code>jobs.rs</code>, <code>documents.rs</code>,
-<code>sealing.rs</code>, <code>test_db.rs</code>.</li>
+<code>sealing.rs</code>, <code>names.rs</code>,
+<code>time_mentions.rs</code>, <code>extraction_drops.rs</code>,
+<code>test_db.rs</code>.</li>
 <li>Server: <code>crates/utopia-server/src/extraction.rs</code>,
 <code>pipeline.rs</code>, <code>retrieval.rs</code>,
-<code>governance.rs</code>, <code>adjudication.rs</code>,
-<code>type_resolution.rs</code>, <code>main.rs</code>.</li>
+<code>mapping_index.rs</code>, <code>governance.rs</code>,
+<code>adjudication.rs</code>, <code>type_resolution.rs</code>,
+<code>main.rs</code>.</li>
 <li>Agent surface: <code>crates/utopia-server/src/api/mcp.rs</code>,
 <code>tools.rs</code>, <code>tools_graph.rs</code>,
 <code>chat.rs</code>, <code>review_routes.rs</code>,
@@ -1006,7 +1066,7 @@ facts), <code>0019_a_signature_holds_on_every_path.sql</code>,
 <p><strong>Searches recorded for the negative claims</strong></p>
 <pre class="sh"><code>grep -rn &#39;rejected_facts&#39; --include=&#39;*.rs&#39; --include=&#39;*.sql&#39; --include=&#39;*.ts&#39; --include=&#39;*.tsx&#39; .   # writer pending.rs:351, sole reader pending.rs:95, no other consumer
 grep -n &#39;pending::propose&#39; crates/utopia-server/src/extraction.rs                                   # four sites, all behind await_nod at :1027
-grep -rni &#39;prev_hash\|hash_chain&#39; --include=&#39;*.rs&#39; --include=&#39;*.sql&#39; --include=&#39;*.md&#39; .             # 2 hits, both prose in migrations/0007_audit.sql: no chain exists
+grep -rniE &#39;prev_hash|hash_chain|哈希链&#39; --include=&#39;*.rs&#39; --include=&#39;*.sql&#39; --include=&#39;*.md&#39; .  # 2 hits, both prose in migrations/0007_audit.sql: no chain exists (the source comments are Chinese; the ASCII terms alone return nothing)
 grep -rn &#39;DELETE FROM audit_events\|UPDATE audit_events&#39; --include=&#39;*.rs&#39; --include=&#39;*.sql&#39; .       # 0
 grep -rn &#39;CREATE POLICY\|ROW LEVEL SECURITY&#39; migrations/ crates/                                    # 0: the boundary is a kb_id predicate, not RLS
 grep -rniE &#39;arxiv|bibtex|@article|@misc|citation|doi\.org&#39; --include=&#39;*.md&#39; --include=&#39;*.cff&#39; --include=&#39;*.toml&#39; .  # one hit, the README&#39;s &quot;inline citations&quot; UI copy
@@ -1019,6 +1079,34 @@ grep -rn &#39;attested_from\|attested_to&#39; --include=&#39;*.rs&#39; crates   
 grep -rn &#39;#\[ignore&#39; --include=&#39;*.rs&#39; crates | wc -l                                                # 1
 ls migrations/ | grep -c down                                                                       # 0: forward-only migrations</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/deeplethe/utopia/commit/60df635d6924127c9a57e98acbd99e43bdd92d08"><code class="commit-id" title="60df635d6924127c9a57e98acbd99e43bdd92d08">60df635d…</code></a>
+— re-read after 78 commits. All seven marks hold and every one was
+re-derived rather than inherited: <code>pending::propose</code> still
+consults <code>rejected_facts</code> before every proposal and the five
+call sites that reach it are all behind <code>await_nod</code> at
+<code>extraction.rs:1086</code>; the ledger still has no
+<code>UPDATE</code> or <code>DELETE</code> path and the call sites grew
+from 79 to 87; the review endpoints are still absent from the MCP
+surface, which exposes eleven read tools and <code>remember</code>. Two
+changes are written up above — the conflict withdrawal moved off the
+read path onto a trigger (<code>migrations/0051</code>), and
+<code>retrieval::hybrid</code> now truncates to <code>top_k</code> after
+the record-time filter instead of before it. Three smaller corrections:
+the <code>pending::reject</code> anchor moved to <code>:342-365</code>,
+the chunk-retrieval anchors to <code>documents.rs:1545</code> and
+<code>:1570-1579</code>, and the temporal question set is described more
+exactly — all 37 questions carry a <code>not</code> field, 25 of them
+populated, not all 37. The recorded search for the hash chain was also
+wrong: the source's comments are Chinese, so the ASCII
+<code>prev_hash|hash_chain</code> grep returns nothing and the two hits
+are <code>哈希链</code> in <code>migrations/0007_audit.sql</code>. The
+claim it supports is unchanged — no chain exists — but the search as
+written would not have found the comments that anticipate one. Screened
+again at this commit with a full clone rather than a depth-1 one: one
+floating version, seven manifests genuinely inside the seven-day
+cooldown, no auto-running configuration. Nothing was installed, built or
+run.</p>
 <p><strong>2026-09-12</strong> — <a
 href="https://github.com/deeplethe/utopia/commit/cb3235665c51b8a7c2b81604b825bb946239da1d"><code class="commit-id" title="cb3235665c51b8a7c2b81604b825bb946239da1d">cb323566…</code></a>
 — first reading. Screened before reading with
