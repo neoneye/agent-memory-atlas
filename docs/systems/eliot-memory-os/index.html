@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A pre-alpha MIT Rust control plane
+of 1.17 million lines whose memory unit is a claim card carrying a
+nine-value epistemic status on an axis separate from its lifecycle,
+which only an operator can promote out of candidate — and whose
+architecture boundaries are checked against the Cargo manifests by a
+script with three dispositions rather than a pass and a fail.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ELIOT Memory
+OS — Agent Memory Atlas">
+    <meta property="og:description" content="A pre-alpha MIT Rust
+control plane of 1.17 million lines whose memory unit is a claim card
+carrying a nine-value epistemic status on an axis separate from its
+lifecycle, which only an operator can promote out of candidate — and
+whose architecture boundaries are checked against the Cargo manifests by
+a script with three dispositions rather than a pass and a fail.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ELIOT Memory
+OS — Agent Memory Atlas">
+    <meta name="twitter:description" content="A pre-alpha MIT Rust
+control plane of 1.17 million lines whose memory unit is a claim card
+carrying a nine-value epistemic status on an axis separate from its
+lifecycle, which only an operator can promote out of candidate — and
+whose architecture boundaries are checked against the Cargo manifests by
+a script with three dispositions rather than a pass and a fail.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ELIOT Memory OS — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ELIOT Memory OS",
+      "description": "A pre-alpha MIT Rust control plane of 1.17 million lines whose memory unit is a claim card carrying a nine-value epistemic status on an axis separate from its lifecycle, which only an operator can promote out of candidate \u2014 and whose architecture boundaries are checked against the Cargo manifests by a script with three dispositions rather than a pass and a fail.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A claim is not usable until an operator
+dispositions it</p>
+          <h1>ELIOT Memory OS</h1>
+          <p class="document-deck">A pre-alpha MIT Rust control plane of
+1.17 million lines whose memory unit is a claim card carrying a
+nine-value epistemic status on an axis separate from its lifecycle,
+which only an operator can promote out of candidate — and whose
+architecture boundaries are checked against the Cargo manifests by a
+script with three dispositions rather than a pass and a fail.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/UnknownAlienHuman/eliot-memory-os">
+              <span>Source</span>
+              <strong>UnknownAlienHuman/eliot-memory-os</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/UnknownAlienHuman/eliot-memory-os/commit/905dbe68e0d72a75346958b89e525731f2eaa19d" title="905dbe68e0d72a75346958b89e525731f2eaa19d">
+              <span>Analyzed revision</span>
+              <code>905dbe68…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/UnknownAlienHuman--eliot-memory-os" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>UnknownAlienHuman--eliot-memory-os</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ELIOT Memory OS is "a governed memory, understanding, and learning
+system for AI agents" — MIT, Rust, 1,172,006 lines across nineteen crate
+groups with 6,142 test functions, and a README that leads with
+"Pre-alpha — active development. Not ready for use."</p>
+<p>That disclaimer is the right frame for everything below. A tree this
+large at this stage cannot be assessed for whether it works; what can be
+assessed is what it has decided, and two of those decisions are worth
+taking elsewhere.</p>
+<p>The first is the memory unit. A claim card carries an
+<code>EpistemicStatus</code> — <code>Observed</code>,
+<code>Candidate</code>, <code>Supported</code>, <code>Verified</code>,
+<code>Contested</code>, <code>Superseded</code>, <code>Stale</code>,
+<code>Rejected</code>, <code>Unknown</code> — and, separately, a
+<code>LifecycleStatus</code> of <code>Active</code>,
+<code>Dormant</code>, <code>Suppressed</code>,
+<code>Archived</code>.</p>
+<p>Two axes, and the split is the point. Most systems in this corpus
+have one status field doing both jobs, so <code>superseded</code> and
+<code>archived</code> compete for the same slot and a claim that is
+well-founded but currently irrelevant is indistinguishable from one that
+was wrong. Here, how a claim came to be believed and whether it is
+operationally live are different questions with different vocabularies,
+and <code>Contested</code> exists as a first-class value rather than as
+an absence of confidence.</p>
+<p>The status is load-bearing rather than decorative. The store derives
+a confidence weight from it — <code>Verified =&gt; 80</code>,
+<code>Supported =&gt; 50</code>, <code>Candidate =&gt; 10</code> — the
+cognition surface counts a source as promoted only when the claim reads
+<code>Verified</code>, and the operator path refuses outright unless the
+claim is still an undispositioned <code>Candidate</code>.</p>
+<p>The second decision is who may move a claim out of candidacy, and the
+answer is an operator. <code>promote</code> bails with "only an
+undispositioned candidate claim can be promoted", confirms the candidate
+is still active, and then stamps the payload with
+<code>candidate_only: false</code>,
+<code>admitted_by_operator: true</code> and an
+<code>operator_candidate_disposition</code> recording the disposition,
+the task, the candidate reference, the source write id and the source
+memory revision.</p>
+<p>What makes that more than a flag is what happens afterwards. The
+reciprocal promotion verification re-reads the claim and fails unless
+<em>all</em> of the following hold: the status is <code>Verified</code>,
+the <code>write_id</code> equals the receipt's,
+<code>candidate_only</code> is exactly <code>false</code>,
+<code>admitted_by_operator</code> is exactly <code>true</code>, and the
+cognitive run id, call id, call number and host all match the source
+attempt. The operator's approval is checked against the receipt that
+recorded it, rather than believed because the field says so.</p>
+<p>And the architecture is checked the same way the claims are.
+<code>audit-architecture-boundaries.py</code> reads the Cargo manifests,
+the production Rust and a declared policy in
+<code>config/architecture-boundaries.toml</code>, and reports three
+dispositions rather than two: <strong>HARD_VIOLATION</strong>, "an
+untracked contradiction that must fail integration";
+<strong>TRACKED_DEBT</strong>, "an exact temporary exception with owning
+issue and removal rule"; and <strong>AUDIT_SIGNAL</strong>, "evidence
+that needs human review but is not an authority rule." A debt entry is
+rejected as malformed unless it carries a positive issue number, a
+reason <em>and</em> a removal condition — so the exception mechanism
+cannot be used as a silent suppression, which is what an allowlist in a
+two-state checker becomes.</p>
+<p>The policy it enforces is concrete: <code>eliot-host</code>,
+<code>eliot-kernel</code>, <code>eliot-watchdog</code> and
+<code>eliot-doctor</code> each declare <code>eliot-app</code>,
+<code>eliot-engine</code>, the SurrealDB adapter and
+<code>surrealdb</code> as forbidden exact dependencies, and
+<code>eliot-dreamer</code>, <code>eliot-research</code>,
+<code>eliot-agent-</code> and <code>eliot-model</code> as forbidden
+prefixes. That is the claim in <code>canonical_record.rs</code>'s header
+— that the minimal kernel "does not depend on
+model/Dreamer/graph/provider/UI" — turned into something a build can
+fail on.</p>
+<p>The script is honest about its own reach, in the same register as the
+rest: "A clean result is static source evidence only. It is never
+runtime or Product Proof."</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>claim card</strong> is what the system believes, with two
+independent statuses.</p>
+<p>An <strong>operator disposition</strong> is the only way out of
+<code>Candidate</code>.</p>
+<p>A <strong>write receipt</strong> is what an approval is later checked
+against.</p>
+<p>A <strong>projection</strong> — a report, a cognitive view — is
+generated from canonical state and is "prose not truth".</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the epistemic and lifecycle axes are separate, only an operator moves a claim out of candidacy, and the promotion is later re-verified field by field against the receipt that recorded it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the epistemic and lifecycle axes are separate, only an operator moves a claim out of candidacy, and the promotion is later re-verified field by field against the receipt that recorded it
+flowchart TB
+    OBS[&quot;tool observations · evidence atoms ·&lt;br/&gt;source snapshots · verification runs&quot;] --&gt; CC[&quot;CanonicalClaimCard&quot;]
+    CC --&gt; E[&quot;EpistemicStatus — how well founded:&lt;br/&gt;Observed · Candidate · Supported ·&lt;br/&gt;Verified · Contested · Superseded ·&lt;br/&gt;Stale · Rejected · Unknown&quot;]
+    CC --&gt; L[&quot;LifecycleStatus — whether live:&lt;br/&gt;Active · Dormant ·&lt;br/&gt;Suppressed · Archived&quot;]
+    SPLIT[&quot;two axes, so &#39;superseded&#39; and&lt;br/&gt;&#39;archived&#39; are different facts&lt;br/&gt;rather than one overloaded field&quot;] -.-&gt; E
+    VER[&quot;verification path writes Candidate&quot;] --&gt; E
+    E --&gt; GATE{&quot;operator promote&quot;}
+    GATE --&gt;|&quot;status != Candidate&quot;| REFUSE[&quot;&#39;only an undispositioned candidate&lt;br/&gt;claim can be promoted&#39;&quot;]
+    GATE --&gt;|&quot;undispositioned + still active&quot;| STAMP[&quot;candidate_only = false&lt;br/&gt;admitted_by_operator = true&lt;br/&gt;operator_candidate_disposition:&lt;br/&gt;disposition · task · candidate_ref ·&lt;br/&gt;source_write_id · source_memory_revision&quot;]
+    STAMP --&gt; RECHECK{&quot;reciprocal promotion verification&quot;}
+    RECHECK --&gt;|&quot;ALL must hold: status == Verified ·&lt;br/&gt;write_id == receipt · candidate_only == false ·&lt;br/&gt;admitted_by_operator == true ·&lt;br/&gt;cognitive run + call + number + host match&quot;| OK[&quot;accepted&quot;]
+    RECHECK --&gt;|&quot;any mismatch&quot;| BAIL[&quot;bail — the approval is checked&lt;br/&gt;against its own receipt,&lt;br/&gt;not believed&quot;]
+    E --&gt; W[&quot;store confidence weight:&lt;br/&gt;Verified 80 · Supported 50 · Candidate 10&quot;]
+    E --&gt; COG[&quot;cognition surface counts a source&lt;br/&gt;as promoted only when Verified&quot;]
+    ARCH[&quot;audit-architecture-boundaries.py&lt;br/&gt;reads Cargo manifests + policy&quot;] --&gt; D3{&quot;three dispositions&quot;}
+    D3 --&gt; HV[&quot;HARD_VIOLATION — untracked&lt;br/&gt;contradiction, fails integration&quot;]
+    D3 --&gt; TD[&quot;TRACKED_DEBT — requires a positive&lt;br/&gt;issue number, a reason AND a removal&lt;br/&gt;condition, or it is malformed&quot;]
+    D3 --&gt; AS[&quot;AUDIT_SIGNAL — needs human review,&lt;br/&gt;not an authority rule&quot;]
+    HONEST[&quot;&#39;A clean result is static source&lt;br/&gt;evidence only. It is never runtime&lt;br/&gt;or Product Proof.&#39;&quot;] -.-&gt; ARCH</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/eliot-types/src/memory.rs</code></td>
+<td>The two status vocabularies</td>
+</tr>
+<tr>
+<td><code>crates/eliot-store/</code></td>
+<td>Canonical records, projections, the redb control WAL, the SurrealDB
+schema</td>
+</tr>
+<tr>
+<td><code>crates/eliot-app/src/mcp_stdio/</code></td>
+<td>The agent surface: operator, cognition, task and verification
+handlers</td>
+</tr>
+<tr>
+<td><code>crates/governor/</code></td>
+<td>41,468 lines of governance, including epistemic composition</td>
+</tr>
+<tr>
+<td><code>crates/kernel/</code>, <code>crates/smart/</code></td>
+<td>183,920 and 254,228 lines respectively</td>
+</tr>
+<tr>
+<td><code>scripts/audit-architecture-boundaries.py</code></td>
+<td>Boundaries checked against the manifests</td>
+</tr>
+<tr>
+<td><code>scripts/verify-doc-code-conformance.py</code></td>
+<td>Drift between operational documentation and source</td>
+</tr>
+<tr>
+<td><code>config/architecture-boundaries.toml</code></td>
+<td>The declared policy, per package, with issue numbers</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>crates/eliot-types/src/memory.rs:44-62</code> — the two enums,
+side by side. They are the most transferable thing here and they fit on
+a screen.</p>
+<p><code>crates/eliot-app/src/mcp_stdio/operator.rs:3911-3950</code> —
+the promotion refusal and what an operator disposition records.</p>
+<p><code>crates/eliot-app/src/mcp_stdio.rs:2324-2345</code> — the same
+promotion re-verified field by field afterwards.</p>
+<p><code>scripts/audit-architecture-boundaries.py:1-14</code> and
+<code>:615-645</code> — three dispositions, and the validation that
+makes tracked debt cost something.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Canonical state lives in SurrealDB across <code>scope_head</code>,
+<code>source_snapshot</code>, <code>evidence_atom</code>,
+<code>tool_observation</code>, <code>claim_card</code>,
+<code>verification_run</code>, <code>failure_fingerprint</code>,
+<code>write_receipt</code>, <code>memory_transition</code>,
+<code>canonical_record</code>, <code>trace_span</code> and
+<code>context_packet_receipt</code>. Every canonical record carries a
+<code>record_id</code>, a <code>receipt_kind</code>, a project id, an
+optional task id, a subject ref, a <code>WriteReceiptRef</code>, a
+<code>MemoryRevision</code> and a <code>ProjectSequence</code>.</p>
+<p>The layering is deliberate and stated in module headers: evidence
+atoms and tool observations are what happened, claim cards are what is
+believed about it, and projections are neither —
+<code>canonical_record.rs</code> describes itself as "a read-only
+lossless wire projection with no canonical authority" and lists by name
+every view it deliberately excludes.</p>
+<p>One structural caveat matters for anyone evaluating this. Every
+SurrealDB table is declared <code>SCHEMALESS</code>, so none of these
+vocabularies is constrained at the storage layer.
+<code>EpistemicStatus</code> is an enum in Rust and a free string in the
+database. For a pre-alpha system that is a reasonable stage to be at; it
+means the invariants hold exactly as far as the Rust does.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Cognitive projections and an activation graph over canonical state,
+with the confidence weighting derived from epistemic status. Reports are
+generated from canonical state and are, in the architecture's own
+phrase, "prose not truth" — the boundary being that a report may be read
+by a human or an agent and may never be read back as authority.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes stage through a redb control write-ahead log carrying pending
+writes, failed writes, dead letters and project heads, with a
+<code>WriteStatus</code> and typed <code>WriteRejectReason</code>s,
+adapter circuit states, restart windows and runtime checkpoints. A write
+that cannot be applied becomes a dead letter rather than a silent
+loss.</p>
+<p>Candidates are produced by the verification path as
+<code>Candidate</code> and go no further without an operator. That
+ordering — machine proposes, person dispositions, machine re-verifies
+the disposition against the receipt — is the shape most of this corpus
+reaches for and few implement with the third step.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP stdio surface with handlers split by concern, plus Windows
+IPC, an app, a kernel, a watchdog and a doctor. The kernel's isolation
+from model, dreamer, research and UI crates is the boundary the auditor
+enforces, which is what makes the "minimal live Kernel preserves
+canonical history, fencing, health and recovery entrypoint" claim
+checkable rather than aspirational.</p>
+<p>The repository also carries a documentation protocol addressed to
+reading agents, instructing them to run a routing script and record a
+read receipt before mutating anything. It was treated as data here and
+not followed, in line with the atlas's practice on agent-instruction
+files; it is noted because it is an unusual and deliberate artifact in
+its own right.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The trust design is the subject above. What is worth adding is the
+pattern the three-disposition auditor represents, because it generalises
+past this project.</p>
+<p>A boundary checker with two outcomes forces every real exception into
+one of two bad states: a permanent failure someone learns to ignore, or
+an allowlist entry with no expiry and no owner. Adding a third
+disposition that <em>requires</em> an issue number, a reason and a
+removal condition turns the exception into a tracked liability. The
+validation is one line —
+<code>if not isinstance(issue, int) or issue &lt;= 0 or not reason or not removal</code>
+— and it is what stops the middle category from becoming the first
+category's hiding place.</p>
+<p>On the durable-audit surface: the architecture names it as one of
+four, the tables exist, and every canonical record carries a write
+receipt and a memory revision. Whether those tables are append-only
+across every write path was not verified in a tree of this size, so no
+audit mark is claimed — not because the design looks wrong, but because
+the claim was not checked.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>6,142 test functions across the crates, plus
+<code>tests/cognitive</code>, <code>tests/harness-security</code>,
+<code>tests/release-security</code> and an operator test suite. The
+scripts directory carries its own Python tests for the serde-boundary
+and conformance auditors, with committed test data — the checkers are
+themselves checked, which is consistent with the rest.</p>
+<p>What cannot be established from the tree is coverage of the memory
+mechanisms specifically, or whether any of this has run against a real
+workload. The project says it has not.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Split epistemic status from lifecycle status. This is the single most
+portable idea here and it costs one extra field. <code>Superseded</code>
+says a better claim exists; <code>Archived</code> says nobody is reading
+this one; <code>Contested</code> says two sources disagree;
+<code>Dormant</code> says not now. Collapsing those into one enum forces
+a lossy choice at exactly the moment the distinction matters.</p>
+<p>Make an approval checkable after the fact. Recording
+<code>admitted_by_operator: true</code> is a flag; re-reading the claim
+and failing unless the status, the write id, the flag and four run
+identifiers all agree with the receipt is a verification. The second one
+survives a bug in the path that wrote the flag.</p>
+<p>Give your boundary checker three dispositions. The middle one is
+where honest exceptions live, and requiring an issue, a reason and a
+removal condition is what keeps it from becoming an allowlist.</p>
+<p>Say what a clean result does not prove. "Static source evidence only.
+It is never runtime or Product Proof" is the sentence that stops a green
+check from being quoted as something it is not.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether the SurrealDB tables will gain schemas. Every vocabulary is
+currently a Rust enum against a schemaless store, so a write from any
+path that bypasses the typed layer is unconstrained.</p>
+<p>Whether <code>Observed</code>, <code>Supported</code>,
+<code>Contested</code>, <code>Stale</code> and <code>Unknown</code> have
+producers. <code>Candidate</code>, <code>Verified</code> and
+<code>Rejected</code> were traced to code paths; the other six were not,
+and a vocabulary with unreachable values is a common early-stage
+state.</p>
+<p>How much of 1.17 million lines is exercised. The question is not
+answerable from the tree, and the project's own answer is that it is
+pre-alpha.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/eliot-types/src/memory.rs:44-62</code></td>
+<td>Two status axes, side by side</td>
+</tr>
+<tr>
+<td><code>crates/eliot-app/src/mcp_stdio/operator.rs:3911-3950</code></td>
+<td>Only an undispositioned candidate may be promoted</td>
+</tr>
+<tr>
+<td><code>crates/eliot-app/src/mcp_stdio.rs:2324-2345</code></td>
+<td>The approval re-checked against its receipt</td>
+</tr>
+<tr>
+<td><code>crates/eliot-store/src/canonical_record.rs</code></td>
+<td>A projection that names every authority it does not have</td>
+</tr>
+<tr>
+<td><code>scripts/audit-architecture-boundaries.py</code></td>
+<td>Three dispositions, and what tracked debt must carry</td>
+</tr>
+<tr>
+<td><code>config/architecture-boundaries.toml</code></td>
+<td>The kernel's forbidden dependencies, per package, with issue
+numbers</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/UnknownAlienHuman/eliot-memory-os/commit/905dbe68e0d72a75346958b89e525731f2eaa19d"><code class="commit-id" title="905dbe68e0d72a75346958b89e525731f2eaa19d">905dbe68…</code></a>
+— first reading, at a commit dated 15 September 2026, of a repository
+its own README calls pre-alpha and not ready for use. Screened before
+opening, from a shallow clone: 195 files scanned, no auto-run surfaces,
+three build-time execution points, no unpinned surfaces, and 187
+dependency files inside the seven-day cooldown. The repository's
+documentation protocol and <code>AGENTS.md</code>, both addressed to
+reading agents, were read as data and not followed. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
