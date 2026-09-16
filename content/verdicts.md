@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 487 reports.**
+**This page covers all 488 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4246,3 +4246,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0-only for the implementation, MIT for `plugins/`, CC0-1.0 for the protocol specification, each stated in the licence file; 530 commits since 14 February 2026, 59,493 lines of Go outside tests against 62,028 lines across 211 test files; versioned markdown over QUIC with a memory broker exposing a private world over MCP with OAuth and a knowledge broker composing worlds behind one endpoint.
 - Study when: you want a self-hosted, tamper-evident document store with real capability scoping and will put ranking, routing and belief in your agent.
 - Do not copy when: the store itself must model validity, supersession or forgetting.
+
+### [`people-context`](../systems/people-context/)
+- Best idea: **narrow by default, widened on purpose.** `ORDINARY_SENSITIVITIES` is `(PUBLIC, PERSONAL)` and is documented as *"[l]evels an ordinary read may disclose, in the shared order used by every other read path"*, with `ALL_SENSITIVITIES` kept for *"the explicit local opt-in"*; a fact defaults to `PERSONAL`, so a record marked `SENSITIVE` or `RESTRICTED` is absent from a timeline or upcoming-reminder read until a caller asks for it. Imports match that posture: a staged batch is *"durable review state"*, and commit takes the ids a person named, where *"only ids the batch actually staged are selectable, and a typo refuses the whole selection rather than silently committing the part that happened to parse."* Three marks: `scope_enforced`, `human_review`, `negative_eval`.
+- Biggest risk: **it stores personal data about people who never consented, and no mechanism resolves that.** The project reduces accidental disclosure carefully — a default sensitivity of `PERSONAL`, error paths annotated for what they may echo, a review gate before anything extracted becomes durable — but the underlying question is not one software decides. Two narrower limits: the store is one person's local file, so sensitivity is a discipline about what surfaces show rather than a boundary between principals; and a fact carries a validity period and a recording time the domain calls *"bitemporal-lite"*, with no read path found here gating a query against a past instant.
+- Most reusable component: the staged-candidate docstring's rule for a restore — re-check a bound only when refusing could not reject this installation's own data, which is why a trait's evidence budget and `stated_by` are re-checked while an observation's `text` and a fact's `value` keep their released shape.
+- Maturity impression: MIT, version 1.2.1, 238 commits since 16 July 2026, 33,465 lines of Python against 52,271 lines of tests, one local SQLite file with no network call, an MCP server and a `pctx` CLI, an Obsidian plugin, an OpenClaw plugin, and a committed eval suite with a fixture world and weighted rubrics.
+- Study when: you want an agent to hold relationship context locally with disclosure bounded by default.
+- Do not copy when: you need multi-principal scoping, or point-in-time reads over the validity periods it already stores.

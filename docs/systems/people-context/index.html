@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first MCP server holding
+memory about the people in your life, where a four-level sensitivity
+decides what an ordinary read may disclose and every other level needs
+an explicit opt-in, imported candidates are staged for review and commit
+only by the ids a person names, and a committed eval suite scores
+rubrics that include what an answer must not say.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="people-context — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first MCP server
+holding memory about the people in your life, where a four-level
+sensitivity decides what an ordinary read may disclose and every other
+level needs an explicit opt-in, imported candidates are staged for
+review and commit only by the ids a person names, and a committed eval
+suite scores rubrics that include what an answer must not say.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="people-context — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first MCP server
+holding memory about the people in your life, where a four-level
+sensitivity decides what an ordinary read may disclose and every other
+level needs an explicit opt-in, imported candidates are staged for
+review and commit only by the ids a person names, and a committed eval
+suite scores rubrics that include what an answer must not say.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>people-context — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "people-context",
+      "description": "A local-first MCP server holding memory about the people in your life, where a four-level sensitivity decides what an ordinary read may disclose and every other level needs an explicit opt-in, imported candidates are staged for review and commit only by the ids a person names, and a committed eval suite scores rubrics that include what an answer must not say.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Narrow by default, widened on purpose</p>
+          <h1>people-context</h1>
+          <p class="document-deck">A local-first MCP server holding
+memory about the people in your life, where a four-level sensitivity
+decides what an ordinary read may disclose and every other level needs
+an explicit opt-in, imported candidates are staged for review and commit
+only by the ids a person names, and a committed eval suite scores
+rubrics that include what an answer must not say.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/JinyangWang27/people-context">
+              <span>Source</span>
+              <strong>JinyangWang27/people-context</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/JinyangWang27/people-context/commit/e4afd375f3b79217cdae2a238153bd2d4dd6519b" title="e4afd375f3b79217cdae2a238153bd2d4dd6519b">
+              <span>Analyzed revision</span>
+              <code>e4afd375…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/JinyangWang27--people-context" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>JinyangWang27--people-context</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>people-context is memory about people rather than about code: "who
+someone is, how you know them, what you last agreed, and how they like
+to be talked to", held in one local SQLite file with "[n]o account, no
+cloud, no network calls". MIT, version 1.2.1, 238 commits since 16 July
+2026, 33,465 lines of Python in <code>src</code> against 52,271 lines of
+tests, plus a committed eval suite, an Obsidian plugin and an OpenClaw
+plugin.</p>
+<p>The subject matter is the first thing to say about it. This is a
+store of personal data about third parties who did not consent to being
+in it, and the project knows: sensitivity is a first-class field, CLI
+error paths are annotated with warnings that a rejected input echoes
+submitted values "which may be personal", and a validation error is
+noted as "not automatically safe to print". That care shows up as
+mechanism rather than as a policy document.</p>
+<p><strong>Disclosure is narrow by default and widened on
+purpose.</strong> <code>ORDINARY_SENSITIVITIES</code> is
+<code>(PUBLIC, PERSONAL)</code>, documented as "[l]evels an ordinary
+read may disclose, in the shared order used by every other read path",
+with <code>ALL_SENSITIVITIES</code> kept for "the explicit local
+opt-in". A fact defaults to <code>PERSONAL</code>. So a record marked
+<code>SENSITIVE</code> or <code>RESTRICTED</code> is simply absent from
+a timeline or an upcoming-reminder read until a caller asks for it — the
+shape this atlas looks for in a scope key, applied here to
+confidentiality rather than to tenancy.</p>
+<p><strong>Imports stage, review, then commit by name.</strong> The
+import module's opening line states the intent: "[t]he lifecycle keeps
+its review gate on purpose. A staged batch is durable review state."
+<code>pctx import review</code> lists the staged candidates;
+<code>pctx import commit</code> takes the ids a person selected, and
+"only ids the batch actually staged are selectable, and a typo refuses
+the whole selection rather than silently committing the part that
+happened to parse." Refusing the whole selection on a typo is the
+conservative choice and the uncommon one.</p>
+<p>The staging model's docstring is the best piece of writing in the
+repository and is worth reading for the principle rather than the code.
+It explains which validations belong at the staging boundary and which
+do not, and the rule it lands on for a restore is subtle and right:
+re-check a bound only when refusing could not reject this installation's
+own data. A trait's evidence budget and its <code>stated_by</code>
+attribution are re-checked because they were unconditional at the input
+boundary and their breach would be carried forward; an observation's
+<code>text</code> and a fact's <code>value</code> keep their released
+shape, because narrowing those "<em>would</em> refuse rows this
+installation legitimately stored."</p>
+<p><strong>The eval suite scores what an answer must not say.</strong>
+<code>evals/suite/suite.json</code> carries a fixture world and weighted
+rubrics; the <code>identity-disambiguation</code> task seeds two
+contacts sharing a first name and scores
+<code>names-the-right-priya</code> and
+<code>states-employer-and-role</code> beside
+<code>does-not-attribute-the-other-priya</code>.</p>
+<p>Two limits to state plainly. The store is one person's local file, so
+sensitivity is a discipline about what surfaces show, not a boundary
+between principals — there is no second principal to keep out. And a
+fact carries a validity period and a recording time, which the domain
+calls "bitemporal-lite"; no read path found here gates a query against a
+past instant, so the data supports a point-in-time question that the
+interface does not yet ask.</p>
+<p>Three marks: <code>scope_enforced</code>, <code>human_review</code>,
+<code>negative_eval</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>person</strong> is the subject. Around them:
+<strong>facts</strong> (predicate, value, validity period, recorded
+time, confidence, sensitivity, provenance),
+<strong>observations</strong>, <strong>interactions</strong>,
+<strong>traits</strong> with typed <strong>evidence links</strong>,
+<strong>relationships</strong> from a vocabulary,
+<strong>groups</strong>, <strong>organizations</strong>,
+<strong>preferences</strong> and <strong>reminders</strong>.</p>
+<p>A <strong>sensitivity</strong> is one of four levels. Ordinary reads
+see two.</p>
+<p>A <strong>staged candidate</strong> is an import in review: not the
+shape it arrived in, not the shape it will be stored as, but a third
+thing with batch-local references rewritten to canonical ids.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — imports stage into durable review state and commit only by named id; ordinary reads disclose two of four sensitivity levels and the rest need an explicit opt-in</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: imports stage into durable review state and commit only by named id; ordinary reads disclose two of four sensitivity levels and the rest need an explicit opt-in
+flowchart TB
+    SRC[&quot;transcript / source&quot;] --&gt; EXTRACT[&quot;extraction at a bounded boundary&lt;br/&gt;byte budgets apply here only&quot;]
+    EXTRACT --&gt; STAGE[(&quot;import_staging&lt;br/&gt;refs rewritten to canonical ids&lt;br/&gt;extra = forbid&quot;)]
+    STAGE --&gt; REVIEW[&quot;pctx import review &amp;lt;batch&amp;gt;&lt;br/&gt;every staged candidate shown&quot;]
+    REVIEW --&gt; PERSON{&quot;person selects ids&quot;}
+    PERSON --&gt;|&quot;typo in an id&quot;| REFUSE[&quot;whole selection refused&quot;]
+    PERSON --&gt;|&quot;valid ids&quot;| COMMIT[&quot;pctx import commit --ids ...&quot;]
+    COMMIT --&gt; STORE[(&quot;SQLite: people, facts,&lt;br/&gt;observations, interactions,&lt;br/&gt;traits + evidence links,&lt;br/&gt;relationships, reminders&quot;)]
+    FACT[&quot;fact: predicate, value,&lt;br/&gt;validity period, recorded_at,&lt;br/&gt;confidence, sensitivity, provenance&quot;] --&gt; STORE
+    READ[&quot;timeline / upcoming / insights&quot;] --&gt; SENS{&quot;sensitivity&quot;}
+    STORE --&gt; SENS
+    SENS --&gt;|&quot;PUBLIC, PERSONAL&quot;| SHOW[&quot;disclosed by an ordinary read&quot;]
+    SENS --&gt;|&quot;SENSITIVE, RESTRICTED&quot;| HIDE[&quot;absent unless the caller&lt;br/&gt;opts in explicitly&quot;]
+    EVAL[&quot;evals/suite: fixture world + rubrics&quot;] --&gt; MUSTNOT[&quot;scores must-say and must-not-say&lt;br/&gt;e.g. does-not-attribute-the-other-priya&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/people_context/domain/</code></td>
+<td>The model — one file per concept, including
+<code>staged_candidate.py</code> and <code>trait_evidence.py</code></td>
+</tr>
+<tr>
+<td><code>src/people_context/app/</code></td>
+<td>Use cases, including <code>insights/timeline.py</code> and
+<code>insights/upcoming.py</code> where the sensitivity bound lives</td>
+</tr>
+<tr>
+<td><code>src/people_context/adapters/</code>, <code>ports/</code></td>
+<td>The SQLite adapter behind ports</td>
+</tr>
+<tr>
+<td><code>src/people_context/cli/</code></td>
+<td><code>pctx</code> — people, groups, imports, insights, portability,
+onboarding, maintenance</td>
+</tr>
+<tr>
+<td><code>evals/</code></td>
+<td>A harness, a suite with a fixture world, and recorded results</td>
+</tr>
+<tr>
+<td><code>obsidian-plugin/</code>, <code>openclaw-plugin/</code>,
+<code>mcpb/</code>, <code>skills/</code></td>
+<td>Integrations</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><code>src/people_context/app/insights/timeline.py:66-74</code> — the
+two sensitivity tuples and the comment that makes the default
+explicit.</li>
+<li><code>src/people_context/cli/imports.py:1-9, 200-260</code> — the
+review gate and the all-or-nothing selection.</li>
+<li><code>src/people_context/domain/staged_candidate.py</code> — the
+boundary reasoning.</li>
+<li><code>src/people_context/domain/fact.py:10-22</code> — the
+"bitemporal-lite" fact.</li>
+<li><code>evals/suite/suite.json</code> — the rubrics, including the
+must-not item.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One domain file per concept keeps the model readable, and two details
+stand out. A trait's evidence link carries the record <em>type</em> as
+well as the id, because "ids are opaque and unique only within their own
+table, so a restored store may hold an observation and an interaction
+sharing one id" — a restore-safety concern most systems discover later.
+And <code>extra="forbid"</code> on the staged shape is justified as
+"staging is where extraction output stops being prose, so a key nothing
+here declares is unexplained text that review would display and every
+later bundle would carry."</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Resolve the person first — the eval suite's system prompt instructs
+exactly that, and says "never guess an identity you could look up" —
+then read their stored context. Timelines and upcoming reminders are
+bounded by the ordinary sensitivity levels.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Direct writes through the CLI and MCP tools; imports through
+extraction, staging, review and a named commit. Error paths are written
+with the awareness that echoing a rejected value may print personal
+data.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server plus <code>pctx</code>, with an Obsidian plugin, an
+OpenClaw plugin, an <code>mcpb</code> bundle and skills. The pitch —
+"[y]our agent already remembers your codebase. Now it can remember your
+people" — is a fair description of the gap it fills in this corpus,
+where almost every subject is about code or tasks.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The care about personal data is real and mechanical: a default
+sensitivity of <code>PERSONAL</code>, ordinary reads bounded to two
+levels, error paths annotated for what they may echo, and a review gate
+before anything extracted becomes durable.</p>
+<p>What the design cannot do is consent. The people in this store did
+not agree to be in it, and no software decision changes that; the honest
+framing is that the project reduces accidental disclosure rather than
+resolving the underlying question. Anyone deploying it should read the
+sensitivity levels as a tool for their own discipline.</p>
+<p>The single-user local model is also why <code>scope_enforced</code>
+here means something narrower than it does for a multi-tenant service:
+the key is stored and the read path honours it, but the party being kept
+out is the surface, not another principal.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>52,271 lines of tests against 33,465 of source, organised to mirror
+the package, plus <code>evals/</code> with a harness, a committed
+fixture world, a suite and recorded results. The eval design is the part
+to copy: a small hand-built world with deliberately confusable contacts,
+tasks with weighted rubric items, and rubric kinds that include both
+<code>answer_contains_all</code> and a must-not pattern.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make the narrow set the default and name the wide
+one.</strong> Two constants — <code>ORDINARY_SENSITIVITIES</code> and
+<code>ALL_SENSITIVITIES</code> — with a comment saying which one an
+ordinary read uses, is clearer than a boolean parameter.</li>
+<li><strong>Refuse the whole selection on a bad id.</strong> Committing
+the part that parsed is how a review gate quietly becomes a
+formality.</li>
+<li><strong>Decide which validations belong at which boundary, and write
+the rule down.</strong> Re-check a bound on restore only when refusing
+could not reject your own stored data.</li>
+<li><strong>Put the record type in an evidence citation.</strong> Ids
+unique only within a table collide after a restore, and a bare id
+renders two records as one.</li>
+<li><strong>Seed an eval world with confusable entities</strong> and
+score what the answer must not say.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Printing a rejected value without thinking about what it
+contains.</strong> The CLI's annotations exist because the obvious error
+message leaks the thing the store is careful about.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Reach for this if you want an agent to hold relationship context
+locally with disclosure bounded by default. Look elsewhere if you need
+multi-principal scoping, or point-in-time reads over the validity
+periods it already stores.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The fact carries a validity period and a recording time. Is an as-of
+read planned, and would it use both axes or only validity?</li>
+<li>Sensitivity bounds ordinary reads. Does the MCP surface expose the
+opt-in, and if so what stops an agent taking it by default?</li>
+<li>Trait evidence links name the record type. Is there a check that a
+cited record still exists after an erasure?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>app/insights/timeline.py</code></td>
+<td>The sensitivity bound and its comment</td>
+</tr>
+<tr>
+<td><code>cli/imports.py</code></td>
+<td>The stage-review-commit gate and its refusal rule</td>
+</tr>
+<tr>
+<td><code>domain/staged_candidate.py</code></td>
+<td>Which validations belong where, and why</td>
+</tr>
+<tr>
+<td><code>domain/fact.py</code></td>
+<td>The "bitemporal-lite" assertion</td>
+</tr>
+<tr>
+<td><code>evals/suite/suite.json</code></td>
+<td>Rubrics including a must-not item</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/JinyangWang27/people-context/commit/e4afd375f3b79217cdae2a238153bd2d4dd6519b"><code class="commit-id" title="e4afd375f3b79217cdae2a238153bd2d4dd6519b">e4afd375…</code></a>
+— first reading, at a commit dated 14 September 2026. Screened before
+opening, from a shallow clone: twenty files, three auto-run surfaces (a
+<code>.claude-plugin/</code> directory, an <code>.mcp.json</code> and an
+MCP server manifest), two build-time execution points, two unpinned
+surfaces, nine dependency files inside the cooldown, and
+<code>AGENTS.md</code> read as data. Nothing was installed, built or
+run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
