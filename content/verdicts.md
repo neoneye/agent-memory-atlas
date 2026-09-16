@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 553 reports.**
+**This page covers all 554 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4774,3 +4774,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, Rust, 58,766 lines over 152 files in twenty crates, with HTTP, MCP, Python and Node surfaces and a codebase-mapping CLI. The README discloses that its own install line "starts working at v0.1.1" because "v0.1.0 predates it and carries no binaries". One auto-run surface and twenty-five dependency files inside the cooldown at this pin.
 - Study when: your safety gate is a set of numbers a config file can widen.
 - Do not copy when: a rewritten policy should reach a person before it reaches production. Three marks: bitemporal, scope enforced, mutation audit.
+
+### [`ulpia`](../systems/ulpia/)
+- Best idea: **the differentiating claim is the refusal, so the refusal is measured — in both directions.** "Every retrieval system this one competes with always returns a rank one, because ranking cannot express absence. Ulpia's differentiating claim is the refusal, and a claim that differentiates is a claim that must be measured or it is marketing." The benchmark produces two numbers over a labelled set, "the decline rate on questions the corpus should refuse, and the false-decline rate on questions it should answer", which cannot both be improved by the same cheat. The scope is bounded under a heading written for the reader who would over-read it — "[w]hat 'declined' means here, stated so nobody reads more into it" — limiting the figure to the deterministic layer.
+- Biggest risk: **a provenance ladder that is recorded and never read.** Every note carries `stage: raw | distilled | derived` and a provenance field, with a `captured` stage kept deliberately distinct from `distilled` "so the provenance ladder does not quietly gain a rung" — and no comparison against a stage appears on any read path in the tool sources, so a raw capture and a distilled note rank by the same keyword score. Scoping selects a base rather than filtering within one. The panel's reviewers are agents booted from constitutions rather than people, so its ledger records adjudication by the same kind of thing that produced the work. And the tax is real and unhedged: a note without a good `Search for:` line is unreachable, and nothing infers one.
+- Most reusable component: the trade, stated in full. "Retrieval is plain software: no embedding model, no network, nothing in the path that improvises. Same question, same answer, today and in a year" — followed immediately by "[t]he price is writing, and it is paid per note… Nothing infers it for you." A system that names its own cost in the third paragraph is easier to believe about everything after it.
+- Maturity impression: Apache-2.0, Rust, one binary with an MCP server, a panel mode with a priced round and an objection ledger where each is "taken, refused with a reason, or escalated", architecture decision records that carry their own `Search for:` lines, and committed LongMemEval results with per-question hypotheses declared alongside the run. Four auto-run surfaces and twelve dependency files inside the cooldown at this pin.
+- Study when: your system can abstain and you have measured it once, in one direction.
+- Do not copy when: nobody will write the keys. One mark: negative evals.
