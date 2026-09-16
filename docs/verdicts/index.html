@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 490 reports.</strong></p>
+<p><strong>This page covers all 491 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -17772,6 +17772,51 @@ git, curated by an agent whose destructive moves always stop at a
 person.</li>
 <li>Do not copy when: the store itself must answer historical questions
 rather than deferring them to version control.</li>
+</ul>
+<h3 id="akb"><a href="../systems/akb/"><code>akb</code></a></h3>
+<ul>
+<li>Best idea: <strong>on the surface that runs caller-supplied SQL, the
+database holds the ACL.</strong> <code>user_sql_executor.py</code> is
+the <em>"[s]ole entrypoint for executing user-supplied SQL under
+per-user PG role"</em>, and inside a transaction it issues
+<code>SET LOCAL ROLE</code> to <code>akb_user_&lt;uid&gt;</code> — or
+<code>akb_token_&lt;tid&gt;</code>, <em>"owner-ACL ∩ scope; even if
+admin"</em>, for a scoped token — so <em>"PostgreSQL enforce[s] vault
+isolation via its native ACL — no application-side identifier filtering
+required."</em> <code>SET LOCAL</code> is transaction-scoped, so a
+pooled connection cannot carry one caller's role into the next request.
+The token scope is defined as an intersection and documented as
+<em>"escalation-impossible by construction"</em>, with <code>None</code>
+meaning unscoped and explicitly <em>"never … an empty
+<code>VaultScope</code> (which permits nothing)"</em>. Two marks:
+<code>scope_enforced</code>, <code>audit_log</code>.</li>
+<li>Biggest risk: <strong>a scoped token bounds writing, not
+reading.</strong> The model's own docstring says a concrete scope
+<em>"gates mutating roles (writer/admin/owner) only — reads are
+unrestricted (a scoped agent still READS broadly, it just can't WRITE
+outside its scope)"</em>, so an operator issuing a narrow token to an
+agent should not expect it to limit what that agent can see; read
+scoping is the user ACL alone. System admins also bypass the role switch
+entirely. And the licence moved from PolyForm Noncommercial 1.0 to
+BUSL-1.1 — neither the current nor the prior terms are open source,
+which <code>LICENSE-CHANGE.md</code> sets out.</li>
+<li>Most reusable component: <code>check_vault_access</code> as a thin
+wrapper that records the authorization at one place, written that way
+<em>"purely so the contextvar is set at ONE place: the implementation
+has six distinct success returns … and a set at each of them is a line
+that a future return can silently skip"</em>, with every raise leaving
+it untouched because <em>"a failed check must never look like an
+authorization."</em></li>
+<li>Maturity impression: BUSL-1.1 (previously PolyForm NC 1.0), 1,074
+commits since 7 May 2026, 288,019 lines across the tree with 318 backend
+test files including a vault-scope SQL end-to-end script, git-backed
+vaults over PostgreSQL, hybrid semantic and keyword search across docs,
+tables and files, and one tool and authorization core behind the current
+MCP revision plus four legacy ones.</li>
+<li>Study when: you want an organizational knowledge base agents can
+query with real SQL under real database permissions.</li>
+<li>Do not copy when: a token scope must limit reading as well as
+writing, or you need an open-source licence.</li>
 </ul>
         </article>
       </div>

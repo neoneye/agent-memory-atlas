@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 490 reports.**
+**This page covers all 491 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4270,3 +4270,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 1,296 commits since 3 May 2026, 47,344 lines of TypeScript in `packages/` outside tests against 350 test files; a markdown-and-git vault of memories, handoffs and references linked by wikilinks, seven MCP verbs with a primer under 2KB, a dashboard, a cross-harness handoff document, and a self-host path that runs the verified image by immutable digest.
 - Study when: you want memory your team reads and edits as markdown in git, curated by an agent whose destructive moves always stop at a person.
 - Do not copy when: the store itself must answer historical questions rather than deferring them to version control.
+
+### [`akb`](../systems/akb/)
+- Best idea: **on the surface that runs caller-supplied SQL, the database holds the ACL.** `user_sql_executor.py` is the *"[s]ole entrypoint for executing user-supplied SQL under per-user PG role"*, and inside a transaction it issues `SET LOCAL ROLE` to `akb_user_<uid>` — or `akb_token_<tid>`, *"owner-ACL ∩ scope; even if admin"*, for a scoped token — so *"PostgreSQL enforce[s] vault isolation via its native ACL — no application-side identifier filtering required."* `SET LOCAL` is transaction-scoped, so a pooled connection cannot carry one caller's role into the next request. The token scope is defined as an intersection and documented as *"escalation-impossible by construction"*, with `None` meaning unscoped and explicitly *"never … an empty `VaultScope` (which permits nothing)"*. Two marks: `scope_enforced`, `audit_log`.
+- Biggest risk: **a scoped token bounds writing, not reading.** The model's own docstring says a concrete scope *"gates mutating roles (writer/admin/owner) only — reads are unrestricted (a scoped agent still READS broadly, it just can't WRITE outside its scope)"*, so an operator issuing a narrow token to an agent should not expect it to limit what that agent can see; read scoping is the user ACL alone. System admins also bypass the role switch entirely. And the licence moved from PolyForm Noncommercial 1.0 to BUSL-1.1 — neither the current nor the prior terms are open source, which `LICENSE-CHANGE.md` sets out.
+- Most reusable component: `check_vault_access` as a thin wrapper that records the authorization at one place, written that way *"purely so the contextvar is set at ONE place: the implementation has six distinct success returns … and a set at each of them is a line that a future return can silently skip"*, with every raise leaving it untouched because *"a failed check must never look like an authorization."*
+- Maturity impression: BUSL-1.1 (previously PolyForm NC 1.0), 1,074 commits since 7 May 2026, 288,019 lines across the tree with 318 backend test files including a vault-scope SQL end-to-end script, git-backed vaults over PostgreSQL, hybrid semantic and keyword search across docs, tables and files, and one tool and authorization core behind the current MCP revision plus four legacy ones.
+- Study when: you want an organizational knowledge base agents can query with real SQL under real database permissions.
+- Do not copy when: a token scope must limit reading as well as writing, or you need an open-source licence.
