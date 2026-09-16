@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A cognitive layer meant to sit
+under an existing agent framework, where a memory's origin is a
+discriminated union rather than a flag, a contested memory is still
+recalled, and three time concepts — occurred, recorded, valid between —
+are kept apart.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="mnemora — Agent Memory Atlas">
+    <meta property="og:description" content="A cognitive layer meant to
+sit under an existing agent framework, where a memory's origin is a
+discriminated union rather than a flag, a contested memory is still
+recalled, and three time concepts — occurred, recorded, valid between —
+are kept apart.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="mnemora — Agent Memory Atlas">
+    <meta name="twitter:description" content="A cognitive layer meant to
+sit under an existing agent framework, where a memory's origin is a
+discriminated union rather than a flag, a contested memory is still
+recalled, and three time concepts — occurred, recorded, valid between —
+are kept apart.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>mnemora — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "mnemora",
+      "description": "A cognitive layer meant to sit under an existing agent framework, where a memory's origin is a discriminated union rather than a flag, a contested memory is still recalled, and three time concepts \u2014 occurred, recorded, valid between \u2014 are kept apart.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Provenance is the union's tag, so it cannot
+be left unfilled</p>
+          <h1>mnemora</h1>
+          <p class="document-deck">A cognitive layer meant to sit under
+an existing agent framework, where a memory's origin is a discriminated
+union rather than a flag, a contested memory is still recalled, and
+three time concepts — occurred, recorded, valid between — are kept
+apart.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/takecchi/mnemora">
+              <span>Source</span>
+              <strong>takecchi/mnemora</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/takecchi/mnemora/commit/3676311e73ad95ca650957d44ccb46a627cc74da" title="3676311e73ad95ca650957d44ccb46a627cc74da">
+              <span>Analyzed revision</span>
+              <code>3676311e…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-16</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/takecchi--mnemora" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>takecchi--mnemora</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>mnemora describes itself as a cognitive layer to lay
+<em>underneath</em> an existing LLM application — MIT, TypeScript,
+version 0.1.1, 87,938 lines across six packages with 1,212 test cases in
+127 files, documentation in Japanese. Its stated aim is one sentence:
+give LLM applications <em>remembering</em>, rather than <em>saving</em>.
+It is explicit that it does not want to replace LangGraph, Mastra or a
+hand-written agent — it wants to sit below them, between the agent loop
+and storage, running observation, recall, association, reinforcement,
+forgetting, consolidation and reflection.</p>
+<p>Three things earn marks, and one line of code explains the project
+better than its README does.</p>
+<p><strong>Provenance is the tag of a discriminated union.</strong> The
+module says why:</p>
+<blockquote>
+<p>"The owner's principle 7, 'distinguish the AI's inference from facts
+the user stated', is implemented as the value of <code>kind</code>
+itself rather than as an additional flag."</p>
+</blockquote>
+<p><code>stated | inferred | consolidated | reflected | imported</code>,
+and each arm carries what that kind must prove: <code>stated</code>
+needs a source observation id and a time; <code>inferred</code> needs
+the model, the prompt version, a <code>basis</code> of the memory and
+observation ids it reasoned from, and a confidence. A memory whose
+provenance was never established is not a memory with a null field — it
+is a value the type system will not let you build. Nearly every system
+in this corpus carries provenance as an optional string; this one
+carries it as the thing the record <em>is</em>.</p>
+<p>The spelling of that union then lives in exactly one place, after it
+was found duplicated by hand into the recall query's
+<code>excludeProvenanceKinds</code>:</p>
+<blockquote>
+<p>"When a closed union's spelling exists in two places, fixing one and
+forgetting the other depends on attention, and will certainly fail."</p>
+</blockquote>
+<p><strong>A contested memory is still recalled.</strong>
+<code>MemoryStatus</code> is
+<code>active | superseded | contested | archived | forgotten</code>, and
+the recall scan admits two of them:
+<code>WHERE status IN ('active', 'contested')</code>. Superseded,
+archived and forgotten stay in the store and leave retrieval; contested
+stays in both. A memory under dispute is surfaced rather than resolved
+away at write time — the same stance <a href="../yacmemo/">yacmemo</a>
+takes with its warning marker, reached here through a status value. The
+count beside the scan carries the identical predicate, so a withheld row
+does not move the number either.</p>
+<p><strong>Three time concepts are kept apart.</strong>
+<code>occurred_at</code> is when the thing happened,
+<code>recorded_at</code> is when the store learned it, and
+<code>valid_from</code>/<code>valid_until</code> are the window the
+memory applies in. The effective time is
+<code>COALESCE(occurred_at, recorded_at)</code> under a comment tying
+the convention to the freshness formula, and a caller's
+<code>validAt</code> gates the window — with <code>isExpired</code> and
+<code>isNotYetValid</code> built as <em>separate</em> predicates, so the
+system can distinguish a memory that has lapsed from one that has not
+started, rather than only excluding both.</p>
+<p>The third mark is the conformance kit.
+<code>expect(ids).not.toContain(excluded.id)</code> with
+<code>expect(ids).toContain(kept.id)</code> on the next line, over a
+real store call — and the test after it asserts the eligible count
+equals the in-scope, non-excluded total even when the limit is reduced,
+which is the side channel rather than the list. It lives in a shared kit
+every backend must pass, so the contract binds future adapters and not
+just Postgres.</p>
+<p><strong>There is no tenancy to enforce, and the code says so before a
+reader can assume otherwise:</strong></p>
+<blockquote>
+<p>"mnemora keeps no ledger of tenants. <code>tenantId</code> is an
+opaque string the caller passes; it performs no existence check and no
+authentication."</p>
+</blockquote>
+<p>Every read does emit <code>WHERE tenant_id = ${ctx.tenantId}</code>,
+so a correct caller is isolated — but the string is the caller's, and
+the safety boundary therefore lives in the embedding application. For a
+library meant to sit beneath somebody else's agent that is the right
+place for it, and the same file draws the distinction that makes it
+workable: the tenant is the isolation boundary, the unit of safety; the
+subject is the unit of organisation within a tenant; do not confuse the
+asymmetry. <a href="../anda-db/">Anda DB</a> makes the same separation
+between a Space and a Domain, from the opposite end of the scale.</p>
+<p>One more decision worth borrowing. <code>MAX_STRENGTH = 1</code>
+exists because without a ceiling "a Memory written with one larger value
+would dominate that tenant's recall — the same hole ADR 0036 closed for
+<code>freshness</code>", and the constant is exported so a caller can
+read that the ceiling exists and what it is. A scoring multiplier with
+an unbounded tail is a self-service priority escalation, and this is the
+second time the project has closed it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A <strong>memory</strong> knows what kind of thing it is: something
+said, something inferred, something merged, something reflected on,
+something imported.</p>
+<p><strong>Contested</strong> is not a reason to hide.</p>
+<p><strong>Happened</strong>, <strong>recorded</strong> and
+<strong>valid between</strong> are three different clocks.</p>
+<p><strong>Strength</strong> has a ceiling, because the second time is
+when you learn that.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — provenance is the union tag rather than a flag, so each kind demands its own evidence; recall admits active and contested, and three time concepts are gated separately</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: provenance is the union tag rather than a flag, so each kind demands its own evidence; recall admits active and contested, and three time concepts are gated separately
+flowchart TB
+    OBS[&quot;observation in&quot;] --&gt; EXT[&quot;extraction&quot;]
+    EXT --&gt; PROV{&quot;Provenance — a discriminated union,&lt;br/&gt;not a flag on a row&quot;}
+    PROV --&gt;|&quot;stated&quot;| S[&quot;requires sourceObservationId,&lt;br/&gt;speaker, at&quot;]
+    PROV --&gt;|&quot;inferred&quot;| I[&quot;requires model, promptVersion,&lt;br/&gt;basis{memoryIds, observationIds},&lt;br/&gt;confidence&quot;]
+    PROV --&gt;|&quot;consolidated · reflected · imported&quot;| O[&quot;each with its own required fields&quot;]
+    S &amp; I &amp; O --&gt; MEM[(&quot;memory: status · strength (0, 1] ·&lt;br/&gt;occurred_at · recorded_at ·&lt;br/&gt;valid_from · valid_until&quot;)]
+    MEM --&gt; ST{&quot;status&quot;}
+    ST --&gt;|&quot;active&quot;| IN[&quot;admitted to recall&quot;]
+    ST --&gt;|&quot;contested&quot;| IN
+    ST --&gt;|&quot;superseded · archived · forgotten&quot;| OUT[&quot;stored, not recalled —&lt;br/&gt;supersededById records what replaced it&quot;]
+    IN --&gt; TIME{&quot;time gates&quot;}
+    TIME --&gt; EFF[&quot;effective time =&lt;br/&gt;COALESCE(occurred_at, recorded_at)&quot;]
+    TIME --&gt; VAL{&quot;validAt supplied?&quot;}
+    VAL --&gt;|&quot;no&quot;| ALL[&quot;no validity narrowing&quot;]
+    VAL --&gt;|&quot;yes&quot;| WIN[&quot;valid_from &lt;= validAt AND&lt;br/&gt;valid_until &gt; validAt&quot;]
+    WIN --&gt; WHY[&quot;isExpired and isNotYetValid are&lt;br/&gt;separate predicates — the system can say&lt;br/&gt;WHY something fell outside its window&quot;]
+    EFF &amp; ALL &amp; WIN --&gt; SCORE[&quot;similarity × decay × tagMatch ×&lt;br/&gt;freshness × strength&lt;br/&gt;— strength capped at 1 so one row&lt;br/&gt;cannot dominate a tenant&#39;s recall&quot;]
+    SCORE --&gt; PACK[&quot;recall result + a recorded footprint&lt;br/&gt;of what the recall actually touched&quot;]
+    CTX[&quot;Ctx{ tenantId, subjectId? }&quot;] -.-&gt;|&quot;&#39;mnemora keeps no ledger of tenants…&lt;br/&gt;no existence check, no authentication&#39; —&lt;br/&gt;the boundary is the caller&#39;s to hold&quot;| MEM</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>core</code></td>
+<td>The model, recall runtime, provenance, outbox, strategies (33,220
+lines)</td>
+</tr>
+<tr>
+<td><code>postgres</code></td>
+<td>The store adapters and their SQL (17,544)</td>
+</tr>
+<tr>
+<td><code>testkit</code></td>
+<td>Conformance suites every adapter must pass (11,238)</td>
+</tr>
+<tr>
+<td><code>openai</code>, <code>anthropic</code>,
+<code>local-embedding</code></td>
+<td>Model and embedding adapters</td>
+</tr>
+</tbody>
+</table></div>
+<p>Inside <code>core</code>, the files worth their names:
+<code>provenance.ts</code>, <code>recall-footprint.ts</code>,
+<code>recall-output-validation.ts</code>,
+<code>idempotent-create.ts</code>,
+<code>event-retention-purge.ts</code>, <code>digest-band.ts</code>,
+<code>ann-truncation.ts</code>.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><code>packages/core/src/provenance.ts:1-40</code> — the union, and
+the argument for it being a union.</p>
+<p><code>packages/core/src/memory.ts:5-30</code> — five statuses and a
+ceiling with its history.</p>
+<p><code>packages/postgres/src/memory-store.ts:999-1050</code> — three
+clocks, two admitted statuses, one predicate shared with the count.</p>
+<p><code>packages/core/src/ctx.ts:1-20</code> — what the tenant is and
+is not.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Content, status, strength, the two timestamps, the validity window,
+<code>supersededById</code>, and the provenance union. Creation is
+idempotent on a content hash, and status changes take an
+<code>expectedStatus</code> so two writers cannot both believe they
+performed the transition.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>total = similarity × decay × tagMatch × freshness × strength</code>,
+documented in <code>docs/recall.md</code>, with every factor bounded and
+the bounds exported. A digest band returns a compact list alongside the
+full results, and a recall footprint records what the recall touched —
+which is what makes a later question about why something was recalled
+answerable.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Observations are extracted into memories; background cognition runs
+through an outbox rather than inline, with an inline scheduler for
+tests. Forgetting is a status, not a delete — and nothing is consulted
+at write time against a forgotten memory, so the same content can be
+created again afterwards.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Deliberately none of its own. The positioning — beneath LangGraph,
+Mastra or a hand-written agent — is unusual in this corpus, where most
+projects want to own the loop, and it is what makes the tenant decision
+coherent: a library one layer down should not invent an authentication
+model for the application above it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The typed provenance is the trust mechanism and it is the strongest
+version of that idea here: not a field a writer may fill, but a tag a
+writer must choose, with each choice demanding its own evidence.</p>
+<p>What is absent: no record of what a memory said before it changed,
+beyond the supersession link; no audit of who changed a status; and no
+authentication, by design.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,212 test cases across 127 files, with the conformance kit as the
+interesting part — store behaviour is specified once and every adapter
+is held to it, which is why the negative-evaluation mark attaches to a
+contract rather than to an implementation. Nothing was installed or run
+for this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<p>Make provenance the tag, not a flag. A discriminated union whose arms
+demand different evidence turns "we forgot to record where this came
+from" into a compile error.</p>
+<p>Spell a closed union once. This project found the same five values
+copied into a query schema by hand and wrote down why that always fails
+eventually.</p>
+<p>Let contested stay in recall. Suppressing a disputed memory is a
+decision made at write time by whoever wrote last; surfacing it is a
+decision the reader can make with both halves in front of them.</p>
+<p>Bound every multiplier and export the bound. An uncapped factor in a
+ranking formula is a way for one row to outrank everything else, and the
+fix costs one constant.</p>
+<p>And say what your isolation does not do. "No existence check, no
+authentication" in the file that defines the tenant is worth more than a
+tenancy chapter that implies otherwise.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<p>Whether a forgotten memory can be re-created. Nothing consults status
+at write time, and idempotency is keyed on a content hash whose
+interaction with a forgotten row was not traced.</p>
+<p>What the recall footprint is used for downstream. It is recorded per
+recall; which surface reads it was not established.</p>
+<p>How reflection differs from consolidation in practice. Both are
+provenance kinds and both are background passes; the boundary is drawn
+in the docs rather than in the types.</p>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What to read it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>packages/core/src/provenance.ts:1-40</code></td>
+<td>Provenance as a union, and the duplication that taught them</td>
+</tr>
+<tr>
+<td><code>packages/core/src/memory.ts:5-30</code></td>
+<td>Five statuses, and a ceiling closed twice</td>
+</tr>
+<tr>
+<td><code>packages/postgres/src/memory-store.ts:999-1050</code></td>
+<td>Three clocks and two admitted statuses</td>
+</tr>
+<tr>
+<td><code>packages/core/src/ctx.ts:1-20</code></td>
+<td>An isolation boundary that declines to authenticate</td>
+</tr>
+<tr>
+<td><code>packages/testkit/src/memory-store-conformance.ts:4238-4262</code></td>
+<td>A negative assertion, its control, and the count beside it</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/takecchi/mnemora/commit/3676311e73ad95ca650957d44ccb46a627cc74da"><code class="commit-id" title="3676311e73ad95ca650957d44ccb46a627cc74da">3676311e…</code></a>
+— first reading, at a commit dated 16 September 2026. Screened before
+opening, from a shallow clone: nineteen files scanned, no auto-run
+surfaces, no build-time execution points, three unpinned surfaces and
+nine dependency files inside the seven-day cooldown. Nothing was
+installed, built or run.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

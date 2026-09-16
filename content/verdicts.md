@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 525 reports.**
+**This page covers all 526 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4550,3 +4550,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0, Rust 1.75+ with a Python side, 11,091 lines and 121 test functions, a dashboard, a Kubernetes manifest, and named guardrails. Status is legible from the top level — `INTEGRATION_STATUS.md`, `PHASE_A_SUMMARY.md`, `COMPLETION_SUMMARY.md` — and `src/` carries `.backup` copies of two source files beside their originals.
 - Study when: you are registering a memory tool on an agent and want to check that what its description promises is what its key can reach.
 - Do not copy when: you need memory across sessions, de-duplication, or any way to remove something — the 148-line layer appends and nothing else. No marks; the mechanisms are Memvid's.
+
+### [`mnemora`](../systems/mnemora/)
+- Best idea: **provenance is the tag of a discriminated union, not a flag on a row.** `stated | inferred | consolidated | reflected | imported`, each arm demanding its own evidence — `stated` a source observation and a time, `inferred` the model, the prompt version, the basis memory and observation ids, and a confidence — so a memory whose origin was never established is a value the type system will not build. The module states the principle it implements: distinguishing the AI's inference from what the user stated "is implemented as the value of `kind` itself rather than as an additional flag".
+- Biggest risk: **there is no tenancy to enforce, which the code says where a reader will look.** "mnemora keeps no ledger of tenants. `tenantId` is an opaque string the caller passes; it performs no existence check and no authentication." Every read carries `WHERE tenant_id = ${ctx.tenantId}`, so a correct caller is isolated and a careless one is not, and the safety boundary sits in the embedding application — the right place for a library one layer down, and the thing to know before treating the tenant column as a control.
+- Most reusable component: `provenance.ts` whole, and beside it the one-line rule that put the union's spelling in a single place after it was found hand-copied into a recall query: "when a closed union's spelling exists in two places, fixing one and forgetting the other depends on attention, and will certainly fail."
+- Maturity impression: MIT, TypeScript, version 0.1.1, 87,938 lines across six packages with 1,212 test cases in 127 files, ADR-numbered decisions cited from the code, and a shared conformance kit every store adapter must pass — which is why its negative-evaluation test binds a contract rather than one implementation. Documentation in Japanese.
+- Study when: you carry provenance as an optional string and want to see it carried as a type, or you need three time concepts — occurred, recorded, valid between — kept apart with separate not-yet-valid and expired predicates.
+- Do not copy when: you need the library to hold the isolation boundary itself. Three marks: trust state, bitemporal, negative eval — and note that recall admits `contested` alongside `active`, so a disputed memory is surfaced rather than resolved away.
