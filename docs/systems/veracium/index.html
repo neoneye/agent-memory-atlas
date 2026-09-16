@@ -113,14 +113,14 @@ make.</p>
               <strong>veracium-ai/Veracium</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/veracium-ai/Veracium/commit/b4da91e3fca1b4507926bb83c592ee3b2989ce8f" title="b4da91e3fca1b4507926bb83c592ee3b2989ce8f">
+            <a class="meta-pill revision-pill" href="https://github.com/veracium-ai/Veracium/commit/6b8d757530865194c5ad4ffc50783994b7eb8f0c" title="6b8d757530865194c5ad4ffc50783994b7eb8f0c">
               <span>Analyzed revision</span>
-              <code>b4da91e3…</code>
+              <code>6b8d7575…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-30</strong>
+              <strong>2026-09-16</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/veracium-ai--Veracium" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -148,33 +148,48 @@ make.</p>
 Longitudinal Evaluation Instrument for Agent Memory, and the Tenure
 Crossover in Memory-Architecture Rankings</em> (<a
 href="https://arxiv.org/abs/2607.21962">arXiv:2607.21962</a>, Quentin
-Spencer, 24 July 2026). MIT, 17,707 lines under <code>src/</code>
-against <strong>39,168 lines of tests across 104 files</strong>, 1,067
+Spencer, 24 July 2026). MIT, 25,593 lines under <code>src/</code>
+against <strong>62,104 lines of tests across 159 files</strong>, 1,397
 commits since 11 July 2026.</p>
 <p><strong>All seven capability marks</strong>, which eight systems here
 carry. The reasons are what make it worth a report rather than a row:
 three of the seven are the strongest instance of their mark the atlas
 has read.</p>
 <ul>
-<li><strong>The audit record is a precondition, not a
+<li><p><strong>The audit record is a precondition, not a
 consequence.</strong> <code>confirm_edge</code> is the only path that
 clears <code>needs_confirmation</code>, and it writes the
 <code>confirmations</code> row inside the same transaction under a
 stated rule: <em>"if the record cannot commit, the whole confirmation
 fails and the flag stays set."</em> Most audit logs in this corpus are
-written after the fact and best-effort.</li>
-<li><strong>Third-party claims are quarantined by construction.</strong>
-A claim from received email or an external document is born
-<code>QUARANTINED</code> — <em>"unverified third-party claim; never
-asserted"</em> — because of the channel it arrived on, not because a
-classifier judged it. The read path gates on <code>assertable</code>,
-and quarantine is one of its three conditions.</li>
-<li><strong>Refusals are durable.</strong>
+written after the fact and best-effort.</p></li>
+<li><p><strong>Third-party claims are quarantined by
+construction.</strong> A claim from received email or an external
+document is born <code>QUARANTINED</code> — <em>"unverified third-party
+claim; never asserted"</em> — because of the channel it arrived on, not
+because a classifier judged it. The read path gates on
+<code>assertable</code>, and quarantine is one of its three
+conditions.</p>
+<p>A second reason routes to the same value rather than to a new one.
+When the source an event arrives from stands revoked, every edge of that
+event and the episode with it are born <code>QUARANTINED</code> — the
+ingest path reads standing revocations once per event, before any record
+is written, because <em>"an event half-quarantined by a mid-ingest
+revocation would be worse than either whole answer."</em> Nothing is
+refused: there is no host-configurable refusal, so a revoked source's
+write is recorded and fenced rather than dropped, and the row carries
+<code>quarantined_at_birth</code> and the revocation digest that caused
+it. The audit line takes the digest rather than a count deliberately —
+it is content-free, and it makes <em>"which source is still
+writing"</em> answerable from the audit sink alone, where <em>"a bare
+count answers only 'how much'."</em> A later lift of the revocation does
+not revisit the floor.</p></li>
+<li><p><strong>Refusals are durable.</strong>
 <code>supersession_refusals</code> records the corrections the system
 <em>declined</em> to make: the prior edge, the incoming edge, both
 effective authorities, and the <code>rule_version</code> that refused.
 Every system here records what it superseded; this is the only one that
-records what it would not.</li>
+records what it would not.</p></li>
 </ul>
 <p>The cost is stated plainly in section 9: the specification apparatus
 around all of this is larger than the mechanism, and adopting it means
@@ -462,7 +477,7 @@ is not something the tree answers.</p>
 </tr>
 <tr>
 <td><code>src/veracium/store/schema_version.py</code></td>
-<td>The declared registry, fifteen versions, REQUIRED vs
+<td>The declared registry at schema version 14, REQUIRED vs
 REBUILDABLE</td>
 </tr>
 <tr>
@@ -476,7 +491,8 @@ must-raise-not-degrade rule</td>
 </tr>
 <tr>
 <td><code>src/veracium/ingest.py</code></td>
-<td>Channel-derived disclosure and the revoked-at-birth check</td>
+<td>Channel-derived disclosure, and the one standing-state read per
+event that quarantines a revoked source's writes</td>
 </tr>
 <tr>
 <td><code>src/veracium/scope.py</code>, <code>scope_linkage.py</code>,
@@ -489,7 +505,17 @@ must-raise-not-degrade rule</td>
 </tr>
 <tr>
 <td><code>tests/test_0023_non_revival.py</code></td>
-<td>Six paths a revoked source must not return by</td>
+<td>Seven paths a revoked source must not return by</td>
+</tr>
+<tr>
+<td><code>tests/test_0023_quarantine_at_birth.py</code></td>
+<td>One verdict per event, and a later lift that does not revisit the
+floor</td>
+</tr>
+<tr>
+<td><code>tests/test_0023_resurfacing_pin.py</code></td>
+<td>A manifest regenerated from the shipped surface, with each cell
+asserted by name so a wrongly-regenerated pin still fails</td>
 </tr>
 <tr>
 <td><code>tests/test_0020_read_surfaces.py</code>,
@@ -499,6 +525,22 @@ must-raise-not-degrade rule</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-16</strong> — <a
+href="https://github.com/veracium-ai/Veracium/commit/6b8d757530865194c5ad4ffc50783994b7eb8f0c"><code class="commit-id" title="6b8d757530865194c5ad4ffc50783994b7eb8f0c">6b8d7575…</code></a>
+— re-read at a commit dated 16 September 2026, 330 commits past the
+previous pin. All seven marks re-tested against their mechanisms and
+held; every anchor moved, and the source grew from 17,707 lines to
+25,593 against 62,104 lines of test. The substantive addition is
+quarantine-at-birth (specs/0023 §4a): a standing-revoked source's writes
+land <code>QUARANTINED</code> rather than being refused, decided by one
+standing-state read per event before any record is written, recorded
+with <code>quarantined_at_birth</code> and the revocation digest, and
+not revisited when the revocation is later lifted. The non-revival
+family grew from six paths to seven. Screened before reading, from a
+full clone: four files scanned, one auto-run surface, one build-time
+execution point, one unpinned dependency surface and one dependency file
+inside the seven-day cooldown. Nothing was installed, built or run, and
+no benchmark was reproduced.</p>
 <p><strong>2026-08-30</strong> — <a
 href="https://github.com/veracium-ai/Veracium/commit/b4da91e3fca1b4507926bb83c592ee3b2989ce8f"><code class="commit-id" title="b4da91e3fca1b4507926bb83c592ee3b2989ce8f">b4da91e3…</code></a>
 — first reading, MIT, 17,707 lines under <code>src/</code> and 39,168

@@ -7,18 +7,18 @@ page_kind: system
 source_name: "veracium-ai/Veracium"
 source_url: https://github.com/veracium-ai/Veracium
 archive_name: "veracium-ai--Veracium"
-revision: b4da91e3fca1b4507926bb83c592ee3b2989ce8f
-revision_url: https://github.com/veracium-ai/Veracium/commit/b4da91e3fca1b4507926bb83c592ee3b2989ce8f
-analyzed_at: 2026-08-30
+revision: 6b8d757530865194c5ad4ffc50783994b7eb8f0c
+revision_url: https://github.com/veracium-ai/Veracium/commit/6b8d757530865194c5ad4ffc50783994b7eb8f0c
+analyzed_at: 2026-09-16
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
-  tombstone: "source revocation, consulted on the ingest path | src/veracium/store/schema_version.py (v9 `source_revocations`), src/veracium/ingest.py:164-165,:194, src/veracium/store/revocation_sweep.py | `source_revocations` is append-only per user — `(user_id, seq)`, `action IN ('revoke','lift')`, keyed on an `identity_digest` — and the standing revocation set is derived from it rather than stored. `ingest` computes `revoked_at_birth = _birth_digest in store.standing_revocations(user_id)` and gives such a record `Disclosure.QUARANTINED`, so re-ingesting revoked material admits it unasserted rather than silently restoring it. The key is the content's identity, not a row id, which is what makes it survive re-extraction | tests/test_0023_non_revival.py"
-  trust_state: "the edge, on the read path | src/veracium/schema.py:52,:299-310,:343-362 | `Provenance.QUARANTINED` is *\"unverified third-party claim; never asserted\"*, `needs_confirmation` marks an edge past its expected lifetime, `active` and `use_only` sit beside them, and `assertable` is the derived gate: `self.active and not self.quarantined and not self.use_only`. `invalidation_reason` is a closed six-value vocabulary — superseded, lapsed, decayed, disputed, corrected, absorbed_duplicate — so why a memory stopped counting is a field rather than an inference | tests/test_0003_supersession_contested.py"
-  bitemporal: "the edge — validity interval separate from observation | src/veracium/schema.py:117,:299-301 | `valid_from` and `invalidated_at` bound when the fact held; `observed_at` records when the system last saw it, and `confirm_edge` advances `observed_at` while `valid_from` stays *\"first-known and immutable\"*, the confirmation returning the two separately because *\"each meaning what it says\"* | tests/"
+  tombstone: " source revocation, consulted on the ingest path before any record is written | src/veracium/store/schema_version.py (the `source_revocations` table), src/veracium/ingest.py:329-340, :383-384, :400-401, src/veracium/store/revocation_sweep.py, tests/test_0023_quarantine_at_birth.py | `source_revocations` is append-only per user — `(user_id, seq)`, `action IN ('revoke','lift')`, keyed on an `identity_digest` — and the standing revocation set is derived from it rather than stored. `ingest` computes `revoked_at_birth = _birth_digest in store.standing_revocations(user_id)` and gives such a record `Disclosure.QUARANTINED`, so re-ingesting revoked material admits it unasserted rather than silently restoring it. The key is the content's identity, not a row id, which is what makes it survive re-extraction | tests/test_0023_non_revival.py"
+  trust_state: " the edge, on the read path, through one shared predicate | src/veracium/schema.py:88-91, :786-794, :875-890 | `Provenance.QUARANTINED` is *\"unverified third-party claim; never asserted\"*, `needs_confirmation` marks an edge past its expected lifetime, `active` and `use_only` sit beside them, and `assertable` is the derived gate: `self.active and not self.quarantined and not self.use_only`. `invalidation_reason` is a closed six-value vocabulary — superseded, lapsed, decayed, disputed, corrected, absorbed_duplicate — so why a memory stopped counting is a field rather than an inference | tests/test_0003_supersession_contested.py"
+  bitemporal: "the edge — validity interval separate from observation | src/veracium/schema.py:156, :701, :770-794 | `valid_from` and `invalidated_at` bound when the fact held; `observed_at` records when the system last saw it, and `confirm_edge` advances `observed_at` while `valid_from` stays *\"first-known and immutable\"*, the confirmation returning the two separately because *\"each meaning what it says\"* | tests/"
   scope_enforced: "every store table and every read | src/veracium/store/schema_version.py, src/veracium/scope.py, src/veracium/scope_read.py, src/veracium/__init__.py:14 | `user_id` is a NOT NULL column on every table and the leading column of every index, and the package docstring states the invariant it exists for: *\"Memory is per-user; one user's memory never reaches another's.\"* Three modules — `scope.py`, `scope_linkage.py`, `scope_read.py`, 1,709 lines between them — carry the surface, with a pure reference implementation the spec binds conforming implementations to | tests/test_0020_read_surfaces.py:299"
-  audit_log: "confirmations, and the record is the precondition | src/veracium/store/base.py:228-245, src/veracium/store/sqlite.py:154, src/veracium/store/schema_version.py (v2 `confirmations`) | `confirm_edge` is *\"the ONLY path that clears `needs_confirmation`\"* and does everything in one transaction — verify ownership, clear the flag, advance `observed_at`/`confidence`, write the confirmation episode, persist the `confirmations` row carrying actor, call path, correlation id and request digest — with the rule stated as a contract: *\"if the record cannot commit, the whole confirmation fails and the flag stays set.\"* Idempotent on `(user_id, correlation_id)`; a different request under the same id is an integrity conflict; *\"a backend that cannot do this atomically MUST raise, not degrade\"* | tests/"
-  human_review: "confirmation, with the actor a closed value | src/veracium/schema.py:70-76, src/veracium/__init__.py:1230-1259 | `ConfirmationActor` is `USER` (*\"the user affirmed the fact\"*) or `HOST`, and the enum exists because the field used to be free-form: *\"a host could smuggle prose past the constraints on the other fields.\"* Confirming is the only way to clear `needs_confirmation`, and the request digest is built from the caller's own inputs so two date-less retries are the same request | tests/"
-  negative_eval: "recall context and the non-revival family | tests/test_0003_supersession_contested.py:103, tests/test_0020_read_surfaces.py:299, tests/test_0023_non_revival.py | `assert \"unemployed\" not in r.context` after a supersession, and `assert \"Thornbury\" not in b.context and \"Acme\" not in b.context` for a cross-scope read. `test_0023_non_revival.py` is six cases asserting a revoked source cannot reinforce, renew, supersede, be absorbed as a duplicate or enter consolidation — the negative half of a correction, tested per path rather than once | these are the tests"
+  audit_log: "confirmations, and the record is the precondition | src/veracium/store/base.py:215-220, :375-381, src/veracium/store/schema_version.py (the `confirmations` table) | `confirm_edge` is *\"the ONLY path that clears `needs_confirmation`\"* and does everything in one transaction — verify ownership, clear the flag, advance `observed_at`/`confidence`, write the confirmation episode, persist the `confirmations` row carrying actor, call path, correlation id and request digest — with the rule stated as a contract: *\"if the record cannot commit, the whole confirmation fails and the flag stays set.\"* Idempotent on `(user_id, correlation_id)`; a different request under the same id is an integrity conflict; *\"a backend that cannot do this atomically MUST raise, not degrade\"* | tests/"
+  human_review: "confirmation, with the actor a closed value | src/veracium/schema.py:94-116 | `ConfirmationActor` is `USER` (*\"the user affirmed the fact\"*) or `HOST`, and the enum exists because the field used to be free-form: *\"a host could smuggle prose past the constraints on the other fields.\"* Confirming is the only way to clear `needs_confirmation`, and the request digest is built from the caller's own inputs so two date-less retries are the same request | tests/"
+  negative_eval: "recall context and the non-revival family | tests/test_0023_non_revival.py, tests/test_0023_quarantine_at_birth.py, tests/test_0020_read_surfaces.py, tests/test_0003_supersession_contested.py | `assert \"unemployed\" not in r.context` after a supersession, and `assert \"Thornbury\" not in b.context and \"Acme\" not in b.context` for a cross-scope read. `test_0023_non_revival.py` is six cases asserting a revoked source cannot reinforce, renew, supersede, be absorbed as a duplicate or enter consolidation — the negative half of a correction, tested per path rather than once | these are the tests"
 stack_storage: "sqlite"
 stack_retrieval: "graph"
 stack_source: "reviewed"
@@ -42,8 +42,8 @@ Veracium is the library released alongside *Ground Truth First: A Longitudinal
 Evaluation Instrument for Agent Memory, and the Tenure Crossover in
 Memory-Architecture Rankings*
 ([arXiv:2607.21962](https://arxiv.org/abs/2607.21962), Quentin Spencer, 24 July
-2026). MIT, 17,707 lines under `src/` against **39,168 lines of tests across 104
-files**, 1,067 commits since 11 July 2026.
+2026). MIT, 25,593 lines under `src/` against **62,104 lines of tests across 159
+files**, 1,397 commits since 11 July 2026.
 
 **All seven capability marks**, which eight systems here carry. The reasons
 are what make it worth a report rather than a row: three of the seven are the
@@ -59,6 +59,19 @@ strongest instance of their mark the atlas has read.
   claim; never asserted"* — because of the channel it arrived on, not because a
   classifier judged it. The read path gates on `assertable`, and quarantine is
   one of its three conditions.
+
+  A second reason routes to the same value rather than to a new one. When the
+  source an event arrives from stands revoked, every edge of that event and the
+  episode with it are born `QUARANTINED` — the ingest path reads standing
+  revocations once per event, before any record is written, because *"an event
+  half-quarantined by a mid-ingest revocation would be worse than either whole
+  answer."* Nothing is refused: there is no host-configurable refusal, so a
+  revoked source's write is recorded and fenced rather than dropped, and the
+  row carries `quarantined_at_birth` and the revocation digest that caused it.
+  The audit line takes the digest rather than a count deliberately — it is
+  content-free, and it makes *"which source is still writing"* answerable from
+  the audit sink alone, where *"a bare count answers only 'how much'."* A later
+  lift of the revocation does not revisit the floor.
 - **Refusals are durable.** `supersession_refusals` records the corrections the
   system *declined* to make: the prior edge, the incoming edge, both effective
   authorities, and the `rule_version` that refused. Every system here records
@@ -343,15 +356,19 @@ spec apparatus that produced them is not something the tree answers.
 | Path | What it holds |
 | --- | --- |
 | `src/veracium/schema.py` | `Edge`, `Provenance`, `ConfirmationActor`, the invalidation vocabulary, `assertable` |
-| `src/veracium/store/schema_version.py` | The declared registry, fifteen versions, REQUIRED vs REBUILDABLE |
+| `src/veracium/store/schema_version.py` | The declared registry at schema version 14, REQUIRED vs REBUILDABLE |
 | `src/veracium/store/base.py` | The `confirm_edge` contract, including the must-raise-not-degrade rule |
 | `src/veracium/store/revocation_sweep.py` | The pure sweep, the completeness statement, the pinned vectors |
-| `src/veracium/ingest.py` | Channel-derived disclosure and the revoked-at-birth check |
+| `src/veracium/ingest.py` | Channel-derived disclosure, and the one standing-state read per event that quarantines a revoked source's writes |
 | `src/veracium/scope.py`, `scope_linkage.py`, `scope_read.py` | The per-user read surface |
 | `src/veracium/graph.py` | `subgraph_for_query`, `render_edges` |
-| `tests/test_0023_non_revival.py` | Six paths a revoked source must not return by |
+| `tests/test_0023_non_revival.py` | Seven paths a revoked source must not return by |
+| `tests/test_0023_quarantine_at_birth.py` | One verdict per event, and a later lift that does not revisit the floor |
+| `tests/test_0023_resurfacing_pin.py` | A manifest regenerated from the shipped surface, with each cell asserted by name so a wrongly-regenerated pin still fails |
 | `tests/test_0020_read_surfaces.py`, `test_0003_supersession_contested.py` | Cross-scope and post-supersession absence |
 
 ## History
+
+**2026-09-16** — [`6b8d757530865194c5ad4ffc50783994b7eb8f0c`](https://github.com/veracium-ai/Veracium/commit/6b8d757530865194c5ad4ffc50783994b7eb8f0c) — re-read at a commit dated 16 September 2026, 330 commits past the previous pin. All seven marks re-tested against their mechanisms and held; every anchor moved, and the source grew from 17,707 lines to 25,593 against 62,104 lines of test. The substantive addition is quarantine-at-birth (specs/0023 §4a): a standing-revoked source's writes land `QUARANTINED` rather than being refused, decided by one standing-state read per event before any record is written, recorded with `quarantined_at_birth` and the revocation digest, and not revisited when the revocation is later lifted. The non-revival family grew from six paths to seven. Screened before reading, from a full clone: four files scanned, one auto-run surface, one build-time execution point, one unpinned dependency surface and one dependency file inside the seven-day cooldown. Nothing was installed, built or run, and no benchmark was reproduced.
 
 **2026-08-30** — [`b4da91e3fca1b4507926bb83c592ee3b2989ce8f`](https://github.com/veracium-ai/Veracium/commit/b4da91e3fca1b4507926bb83c592ee3b2989ce8f) — first reading, MIT, 17,707 lines under `src/` and 39,168 across 104 test files, 1,067 commits since 11 July 2026, released alongside [arXiv:2607.21962](https://arxiv.org/abs/2607.21962). Screened before reading: one auto-run surface (`server.json`, a registry manifest), one build-time execution surface (`tests/conftest.py`), one unpinned surface and one manifest inside the seven-day cooldown. Nothing was installed and nothing was run. **All seven marks.** `tombstone` rests on `source_revocations` being keyed on a content `identity_digest`, appended rather than mutated, and consulted by `ingest` so a re-ingested revoked source is born quarantined; `audit_log` on `confirmations` being a precondition for the transition rather than a record of it; `human_review` on `confirm_edge` with a closed `ConfirmationActor`; `trust_state` on the quarantine/needs-confirmation/use-only trio behind a derived `assertable`; `bitemporal` on `valid_from`/`invalidated_at` beside `observed_at`; `scope_enforced` on `user_id` NOT NULL everywhere with a pure reference implementation of the read surface; `negative_eval` on the recall-context absences and the six non-revival paths. The reading covers the schema, the store contracts, ingest, the revocation sweep and the tests; the wiki curation, the portability layer, the MCP surface and the benchmark harness under `bench/` were not traced, and no published number was recomputed.
