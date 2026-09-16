@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 215 |
+| Repositories with an auto-run surface (`RUNS`) | 216 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 309 |
 | Repositories with build-time execution (`EXEC`) | 365 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 3 |
@@ -49,6 +49,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`all-agentic-architectures`](../../content/systems/all-agentic-architectures.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`altk-evolve`](../../content/systems/altk-evolve.md) | `.claude-plugin/` |
 | [`anything-llm`](../../content/systems/anything-llm.md) | `.devcontainer/devcontainer.json`, `.gitmodules`, `.vscode/settings.json`, `.vscode/tasks.json` |
+| [`areev`](../../content/systems/areev.md) | `.githooks/` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
 | [`athena`](../../content/systems/athena.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
 | [`auto-company`](../../content/systems/auto-company.md) | `.claude/settings.json` |
