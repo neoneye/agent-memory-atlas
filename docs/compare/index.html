@@ -12364,44 +12364,56 @@ function does not accept</td>
 </tr>
 <tr>
 <td><code>auto-company</code></td>
-<td>One file. <code>memories/consensus.md</code> holds a timestamp, a
-phase, what the cycle did, the key decisions and their reasons, the
-active projects, the company state and a next action; there is no record
-smaller than the document and nothing addresses a part of it except by
-heading</td>
+<td>One file, now with two governed regions.
+<code>memories/consensus.md</code> holds the cycle log, decisions,
+active projects, company state and next action as agent-owned prose,
+plus <code>## Human Overrides</code> and
+<code>## Priority Issues</code>, which are the only sections with a rule
+attached to them</td>
 <td>A single markdown file under <code>memories/</code>, which
-<code>.gitignore</code> excludes from the repository along with
-everything else in that directory, plus a <code>.bak</code> copy the
-loop writes before each cycle</td>
+<code>.gitignore</code> excludes along with everything in that directory
+except the template; plus a <code>.bak</code> baseline per cycle, a
+timestamped snapshot of every consensus a cycle successfully produced
+under <code>memories/snapshots/</code>, and an exclusive-create copy
+under <code>memories/resets/</code> before any reset</td>
 <td>None as a mechanism. The loop pre-loads the file into the prompt and
 tells the model to read it from disk if that did not happen; there is no
 query, no index and no selection</td>
 <td>The prompt requires the model to rewrite the consensus before the
-cycle ends, in a stated section layout. Nothing parses what it wrote
-beyond checking that three headings are present</td>
-<td>The file is replaced wholesale each cycle. There is no history, no
-supersession and no record of what the previous version said; the only
-prior state that exists is the single <code>.bak</code> copy, which the
-next cycle overwrites</td>
+cycle ends. Two validators then read it: the loop greps for three
+headings, and the guard parses the two governance headings, requires
+each exactly once in canonical form, and byte-compares the Human
+Overrides section against the pre-cycle baseline</td>
+<td>The file is still replaced wholesale each cycle, but a successful
+cycle now leaves a timestamped snapshot, so the series of past documents
+survives; there is still no supersession and no diff, and a cycle that
+fails leaves no snapshot of what it wrote</td>
 <td>None. One file per installation</td>
-<td>A launchd or systemd user daemon runs the loop; fourteen agent
-personas and thirty-six skills are markdown files under
-<code>.claude/</code>; a small Python server and a browser dashboard
-render a preview of the consensus and the cycle log</td>
-<td>The loop itself — wake, read, decide, form a squad, execute, rewrite
-the consensus, sleep — with a circuit breaker on consecutive errors and
-a wait when a usage limit is detected</td>
-<td>None. No status, no confidence and no provenance on anything the
-consensus records; a decision and its reason are prose in a bulleted
-list</td>
-<td>A transactional guard around a markdown memory that almost nothing
-else at this size has: back up, run, validate the structure, and roll
-back on failure — with a timed-out cycle that still updated the file
-treated as a success rather than discarded</td>
-<td>The memory is one file with no schema beyond three required
-headings, rewritten wholesale each cycle with no history of what it said
-before; no test covers any of it; the README shows an MIT badge and the
-repository contains no licence file; the last commit is 20 May 2026</td>
+<td>A launchd or systemd user daemon runs the loop behind an advisory
+lock; fourteen agent personas and thirty-six skills are markdown files
+under <code>.claude/</code>, with an English translation set under
+<code>i18n/</code>; the engine sits behind a named adapter contract; a
+small Python server and a browser dashboard render a preview of the
+consensus, the cycle log and the usage ledger</td>
+<td>The loop itself — preflight, baseline, read, decide, execute,
+rewrite, verify, snapshot, sleep — with a circuit breaker on consecutive
+errors, a usage-ledger budget pause, an advisory lock on the pid file so
+two loops cannot own one checkout, and a pending marker that forces
+governance recovery after a kill</td>
+<td>None on a claim. No status, confidence or provenance on anything the
+consensus records; the one discrete state in the file is a priority
+item's checkbox, which gates the whole cycle rather than any single
+read</td>
+<td>A human-owned region of the memory the agent cannot keep a change to
+— byte-compared around every cycle, restored and paused on violation —
+plus a blocking priority item checked before the model is invoked,
+snapshots of every successful consensus, and a governance suite that
+drives the real loop under SIGTERM and SIGKILL</td>
+<td>Only one of the two human sections is byte-compared, so a cycle may
+rewrite Priority Issues — including checking off a blocker — and pass
+verification; the agent-owned body is still validated by heading
+presence alone; and the README shows an MIT badge while the repository
+still contains no licence file</td>
 </tr>
 <tr>
 <td><code>autogen</code></td>
@@ -35116,7 +35128,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>170 of 580:</em> <a
+<p><em>171 of 580:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
@@ -35131,6 +35143,7 @@ href="../systems/altk-evolve/"><code>altk-evolve</code></a>, <a
 href="../systems/animus/"><code>animus</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
 href="../systems/argos/"><code>argos</code></a>, <a
+href="../systems/auto-company/"><code>auto-company</code></a>, <a
 href="../systems/breadcrumbs/"><code>breadcrumbs</code></a>, <a
 href="../systems/bytechef/"><code>bytechef</code></a>, <a
 href="../systems/cambium/"><code>cambium</code></a>, <a
@@ -42703,10 +42716,13 @@ run</li>
 <li><a
 href="https://github.com/MaxMiksa/Auto-Company">MaxMiksa/Auto-Company</a>
 at <a
-href="https://github.com/MaxMiksa/Auto-Company/commit/ebfab9b4bd5f0ab5ad452a1ff85285b3c141acdd"><code class="commit-id" title="ebfab9b4bd5f0ab5ad452a1ff85285b3c141acdd">ebfab9b4…</code></a>
-— read only; one auto-run surface, one build-time execution point,
-nothing installed or run; no licence file in the tree against an MIT
-badge in the README</li>
+href="https://github.com/MaxMiksa/Auto-Company/commit/8a85f3b5cc3d925fd1b65cc6606dcf7265c20ebc"><code class="commit-id" title="8a85f3b5cc3d925fd1b65cc6606dcf7265c20ebc">8a85f3b5…</code></a>
+— read only; one auto-run surface (<code>.claude/settings.json</code>,
+which sets <code>bypassPermissions</code> and allows Bash, Edit and
+Write), one build-time execution point, three unpinned dependency
+surfaces and one manifest inside the seven-day cooldown, so nothing was
+installed or run; still no licence file in the tree against an MIT badge
+in the README</li>
 <li><a href="https://github.com/redhat-et/ripwire">redhat-et/ripwire</a>
 at <a
 href="https://github.com/redhat-et/ripwire/commit/f8e6087cc1dae2b438b3a69ccc8a4b53c19314cd"><code class="commit-id" title="f8e6087cc1dae2b438b3a69ccc8a4b53c19314cd">f8e6087c…</code></a>
