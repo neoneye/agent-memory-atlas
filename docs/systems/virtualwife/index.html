@@ -113,7 +113,7 @@ weights mean anything.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yakami129--VirtualWife" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -168,6 +168,18 @@ recency function as tie-breakers within an importance band. The original
 applies its weights to normalised components, which is what makes equal
 weights a design choice rather than an accident — that step is named
 here and not performed.</p>
+<p><strong>And the original's own version of this term is broken in the
+other direction, which the atlas learned only on 2026-09-17.</strong> <a
+href="../generative-agents/">Generative Agents</a> normalises its three
+components properly and then computes recency as
+<code>recency_decay ** i</code> over a list sorted <em>ascending</em> by
+last access, so the least recently accessed node scores highest. So the
+atlas now holds the ancestor with an inverted recency term and this port
+with an unnormalised sum, and <strong>neither repository has a test that
+touches the function</strong>. The port dropped the step that made the
+weights meaningful; the original kept the step and got the direction
+wrong. A single assertion — two memories, one touched, assert the order
+— would have caught either.</p>
 <p>Two further findings, both checkable:</p>
 <ul>
 <li><strong>The short-term read path drops its scope key.</strong>
@@ -655,6 +667,33 @@ imported by <code>llms/llm_model_strategy.py:10</code>,
 memory.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit, confirmed
+still the tip by <code>git ls-remote</code> before a
+<code>--depth 1</code> clone. Nothing could have moved, so this reading
+audited the first one. Screened again: no auto-run surface, no
+build-time execution path, three unpinned manifests, nothing inside the
+cooldown; nothing was installed or run.</p>
+<p>Every claim held and the arithmetic paragraph needed no correction:
+<code>relevance = 1 - hit.distance</code>,
+<code>recency = 0.99 ** (time_diff / 3600)</code> and an
+<code>INT64 importance_score</code> the model is asked to score out of
+ten, summed by a function called <code>normalize_scores</code> that
+normalises none of them.</p>
+<p>Two things were added. The atlas now knows that the ancestor this
+file ports has its <em>own</em> defect in the same term — Generative
+Agents normalises correctly and then computes recency over an ascending
+sort, so it rewards the least recently accessed memory — which makes
+this pair the clearest lineage in the corpus: the original kept the
+normalisation and inverted the direction, the port kept the direction
+and dropped the normalisation, and neither repository tests the
+function. And the test position is now stated exactly: the only test
+directory in the tree, <code>domain-chatbot/tests/</code>, holds
+<code>__init__.py</code> and <code>bilibili_api_test.py</code>, so
+nothing exercises memory at all.</p>
+<p>Marks unchanged at none. <code>stack_retrieval</code> was empty and
+seeded; it is now <code>vector</code>, reviewed — a Milvus similarity
+search with the three-term sum applied afterwards, and no lexical
+arm.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/yakami129/VirtualWife/commit/c8afd6d3ce6bb6f58988c649c50299d36b63e08f"><code class="commit-id" title="c8afd6d3ce6bb6f58988c649c50299d36b63e08f">c8afd6d3…</code></a>
 — first reading.</p>

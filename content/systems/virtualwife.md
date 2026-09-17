@@ -9,11 +9,11 @@ source_url: https://github.com/yakami129/VirtualWife
 archive_name: "yakami129--VirtualWife"
 revision: c8afd6d3ce6bb6f58988c649c50299d36b63e08f
 revision_url: https://github.com/yakami129/VirtualWife/commit/c8afd6d3ce6bb6f58988c649c50299d36b63e08f
-analyzed_at: 2026-07-29
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "milvus"
-stack_retrieval: ""
-stack_source: "seeded"
+stack_retrieval: "vector"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Short term, a raw exchange as JSON in Django; long term, an LLM summary of an exchange with an LLM-assigned importance score 1–10"
   storage: "Two stores behind one `BaseStorage` interface — a Django model for the short term, Milvus for the long term"
@@ -61,6 +61,17 @@ old. **Importance alone orders the results**; relevance and recency function as
 tie-breakers within an importance band. The original applies its weights to
 normalised components, which is what makes equal weights a design choice rather
 than an accident — that step is named here and not performed.
+
+**And the original's own version of this term is broken in the other direction,
+which the atlas learned only on 2026-09-17.** [Generative Agents](../generative-agents/)
+normalises its three components properly and then computes recency as
+`recency_decay ** i` over a list sorted *ascending* by last access, so the least
+recently accessed node scores highest. So the atlas now holds the ancestor with
+an inverted recency term and this port with an unnormalised sum, and **neither
+repository has a test that touches the function**. The port dropped the step that
+made the weights meaningful; the original kept the step and got the direction
+wrong. A single assertion — two memories, one touched, assert the order — would
+have caught either.
 
 Two further findings, both checkable:
 
@@ -486,5 +497,13 @@ All paths under `domain-chatbot/apps/chatbot/`.
 - `tests/bilibili_api_test.py`. Nothing covering memory.
 
 ## History
+
+**2026-09-18** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, no build-time execution path, three unpinned manifests, nothing inside the cooldown; nothing was installed or run.
+
+Every claim held and the arithmetic paragraph needed no correction: `relevance = 1 - hit.distance`, `recency = 0.99 ** (time_diff / 3600)` and an `INT64 importance_score` the model is asked to score out of ten, summed by a function called `normalize_scores` that normalises none of them.
+
+Two things were added. The atlas now knows that the ancestor this file ports has its *own* defect in the same term — Generative Agents normalises correctly and then computes recency over an ascending sort, so it rewards the least recently accessed memory — which makes this pair the clearest lineage in the corpus: the original kept the normalisation and inverted the direction, the port kept the direction and dropped the normalisation, and neither repository tests the function. And the test position is now stated exactly: the only test directory in the tree, `domain-chatbot/tests/`, holds `__init__.py` and `bilibili_api_test.py`, so nothing exercises memory at all.
+
+Marks unchanged at none. `stack_retrieval` was empty and seeded; it is now `vector`, reviewed — a Milvus similarity search with the three-term sum applied afterwards, and no lexical arm.
 
 **2026-07-29** — [`c8afd6d3ce6bb6f58988c649c50299d36b63e08f`](https://github.com/yakami129/VirtualWife/commit/c8afd6d3ce6bb6f58988c649c50299d36b63e08f) — first reading.
