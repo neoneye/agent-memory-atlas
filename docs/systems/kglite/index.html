@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An embedded Cypher-queryable graph
+engine offered as a substrate for agents, whose temporal context shifts
+a whole traversal to a past date — one validity axis, no record of when
+the graph learned anything, and a skills layer the graph carries about
+itself.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="KGLite — Agent Memory Atlas">
+    <meta property="og:description" content="An embedded
+Cypher-queryable graph engine offered as a substrate for agents, whose
+temporal context shifts a whole traversal to a past date — one validity
+axis, no record of when the graph learned anything, and a skills layer
+the graph carries about itself.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="KGLite — Agent Memory Atlas">
+    <meta name="twitter:description" content="An embedded
+Cypher-queryable graph engine offered as a substrate for agents, whose
+temporal context shifts a whole traversal to a past date — one validity
+axis, no record of when the graph learned anything, and a skills layer
+the graph carries about itself.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>KGLite — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "KGLite",
+      "description": "An embedded Cypher-queryable graph engine offered as a substrate for agents, whose temporal context shifts a whole traversal to a past date \u2014 one validity axis, no record of when the graph learned anything, and a skills layer the graph carries about itself.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The date is set once and the traversal
+obeys it</p>
+          <h1>KGLite</h1>
+          <p class="document-deck">An embedded Cypher-queryable graph
+engine offered as a substrate for agents, whose temporal context shifts
+a whole traversal to a past date — one validity axis, no record of when
+the graph learned anything, and a skills layer the graph carries about
+itself.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/kkollsga/kglite">
+              <span>Source</span>
+              <strong>kkollsga/kglite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/kkollsga/kglite/commit/68bc723a24663d56fb00fe7f5b4b32579a2e2af8" title="68bc723a24663d56fb00fe7f5b4b32579a2e2af8">
+              <span>Analyzed revision</span>
+              <code>68bc723a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kkollsga--kglite" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>kkollsga--kglite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>KGLite is an MIT-licensed embedded knowledge graph — 362,473 lines of
+Rust with 4,172 test functions, 2,922 commits since March 2024 — that
+runs in-process with no database service, speaks Cypher and a fluent
+traversal API, and ships a Bolt server, a C ABI, a Python wheel with no
+required runtime dependencies, and an MCP server. The README states the
+intent that brings it into this corpus: the same graph should serve
+<em>"an application, an analyst, or an LLM agent."</em></p>
+<p>It is a graph engine rather than a memory system, and the honest way
+to read it here is as a substrate — what does it give a memory built on
+top of it, and what does it leave to the builder?</p>
+<p>One mark. What it gives is <strong>time</strong>, in the form most
+useful to a traversal: a context you set once.</p>
+<pre class="python"><code>temporal_graph.date(&quot;2005&quot;).select(&quot;Field&quot;).where({&quot;title&quot;: &quot;DRAUGEN&quot;}).traverse(&quot;HAS_LICENSEE&quot;)</code></pre>
+<p>The date is not a predicate repeated at every hop. It is a context,
+and every node and edge the traversal crosses is checked against it —
+<code>valid_from &lt;= reference AND (valid_to IS NULL OR valid_to &gt;= reference)</code>,
+with a missing bound treated as unbounded on that side. The committed
+test asserts both halves of what that must mean: at 2005 the licensee
+that held the licence from 2000 to 2010 is in the result, and the one
+that did not is not.</p>
+<p>What it does not give is the second axis. The graph records when a
+fact was true in the world; nothing records when the graph came to
+believe it. A correction — <em>we were wrong, it was always this</em> —
+and a change in the world — <em>it became this in March</em> — are
+written the same way and read back the same way. This atlas read <a
+href="../mnestic/">a fork that added exactly that missing axis</a>
+earlier in the same session, and the contrast is the clearest available
+statement of what a single temporal axis can and cannot answer.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Nodes and edges with interned property keys. Validity is not a
+built-in column but a <em>declaration</em>: a
+<code>TemporalConfig</code> names which two properties on this graph
+carry the start and end of a window, so an existing dataset can be made
+temporal without renaming its columns to suit the engine.</p>
+<p>Once declared, two things follow. Cypher gains
+<code>valid_at(entity, date, 'from', 'to')</code> and
+<code>valid_during(entity, start, end, 'from', 'to')</code> as scalar
+functions, so a query can filter explicitly. And the fluent API gains a
+temporal context — <code>date("2005")</code> — that the traversal
+machinery consults on every node and edge it touches.</p>
+<p>For a memory built on this, the useful property is that "what was
+true then" is a first-class read. The missing property is that "what we
+believed then" is not expressible at all.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Validity property names are declared per graph rather than fixed by the engine, and a date context set once is consulted at every node and edge the traversal crosses — one axis, with no record of when the graph learned a fact.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Validity property names are declared per graph rather than fixed by the engine, and a date context set once is consulted at every node and edge the traversal crosses — one axis, with no record of when the graph learned a fact.
+flowchart TD
+  DECL[&quot;Schema declares a TemporalConfig&lt;br/&gt;which two properties carry the window&quot;]
+  GRAPH[(&quot;Embedded graph&lt;br/&gt;nodes and edges with interned keys&quot;)]
+  CTX[&quot;date(2005) sets a traversal context&quot;]
+  CYPHER[&quot;Cypher valid_at and valid_during&quot;]
+  PRED[&quot;is_temporally_valid&lt;br/&gt;from at or before reference&lt;br/&gt;and to null or at or after&quot;]
+  NODE{&quot;node in window&quot;}
+  EDGE{&quot;edge in window&quot;}
+  OUT[&quot;Traversal result&quot;]
+  MISS[&quot;Missing property&lt;br/&gt;treated as unbounded that side&quot;]
+  ABSENT[&quot;No record axis&lt;br/&gt;a correction and a change look alike&quot;]
+
+  DECL --&gt; GRAPH
+  CTX --&gt; PRED
+  CYPHER --&gt; PRED
+  PRED --&gt; NODE --&gt; OUT
+  PRED --&gt; EDGE --&gt; OUT
+  PRED --&gt; MISS
+  GRAPH -.-&gt; ABSENT</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Declare.</strong> <code>TemporalConfig</code> carries the
+two property names (<code>graph/schema.rs:313-360</code>), parsed from
+column types at load so a dataframe with its own naming becomes temporal
+without transformation.</li>
+<li><strong>Filter.</strong>
+<code>is_temporally_valid(properties, config, reference)</code> is the
+one predicate, with node and edge wrappers over it
+(<code>graph/features/temporal.rs:15-80</code>).</li>
+<li><strong>Traverse in context.</strong> The temporal config travels
+with the traversal state alongside the spatial one
+(<code>graph/core/traversal.rs</code>), so a shifted date applies to the
+whole walk rather than to a single pattern.</li>
+<li><strong>Query explicitly.</strong> <code>valid_at</code> and
+<code>valid_during</code> are registered scalar functions in the Cypher
+executor
+(<code>languages/cypher/executor/scalar_functions/utility.rs</code>,
+with the registry beside it), and the planner's cost model knows about
+them.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no memory record here — no status, no confidence, no
+provenance, no supersession pointer. That is a legitimate position for
+an engine and it is worth stating plainly, because it decides what a
+memory built on KGLite has to supply itself.</p>
+<p><code>trust_state</code> is withheld because nothing on a node says
+whether it is believed; <code>tombstone</code> because deletion is graph
+deletion with nothing keyed on what was removed; <code>audit_log</code>
+because no table or log records mutations; <code>scope_enforced</code>
+because the unit of isolation is the process's own graph file, with the
+MCP server's workspace modes choosing which graph is served rather than
+filtering rows within one.</p>
+<p><code>bitemporal</code> is the one that needs its reason spelled out,
+because the half that exists is real. A graph can answer <em>what was
+true in 2005</em>. It cannot answer <em>what this graph would have said
+in 2005</em>, because nothing stamps when a property was written or when
+a window was corrected. Closing a validity window and fixing a window
+that was wrong are the same edit. For a knowledge graph of licences and
+fields — the shape the tests use — that is often enough. For an agent
+memory that has to explain why it acted on something last Tuesday, it is
+the axis that matters.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Cypher, with a planner and a cost model, plus a fluent API, plus an
+MCP tool surface. The temporal behaviour is the part this report is
+about, and the design choice worth copying is that the reference date is
+<em>state on the traversal</em> rather than an argument threaded through
+every step. A predicate that has to be repeated at each hop is a
+predicate that will be omitted at one of them; a context consulted by
+the machinery cannot be.</p>
+<p>The missing-bound rule is also worth naming: a node with no
+<code>valid_from</code> is treated as valid from the beginning of time
+rather than as invalid. For a partially-populated dataset that is the
+forgiving choice, and it means a graph half-annotated with dates answers
+a temporal query with its undated rows included. Whether that is right
+depends on whether undated means <em>always true</em> or
+<em>unknown</em>, and the engine picks the first without comment.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Bulk loading from records and dataframes, with the temporal columns
+detected at load. Nothing in the engine performs correction: closing a
+window is an ordinary property write. That is consistent with an
+engine's remit, and it is why the correction vocabulary this atlas
+usually looks for — supersession, invalidation, tombstones — is absent
+rather than incomplete.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server is the most distinctive part of the repository for
+this corpus, and it is about how an agent <em>discovers</em> a graph
+rather than how it remembers.</p>
+<p>Three things stand out. The skills layer is carried by the graph
+itself: a graph ships skills describing how to query it, resolved
+against a producer layer and an operator layer with a stated precedence
+— the producer describes the shapes its builder always emits, the graph
+describes itself, <em>"and a graph wins a name collision because it is
+the more specific statement. Both lose to the operator's own
+files."</em></p>
+<p>Those skills are gated by a predicate evaluator over the <em>active
+graph's shape</em>, so a skill is offered only when the graph actually
+has the structure it needs — which is the difference between a tool list
+and a tool list that is true of the data in front of the agent.</p>
+<p>And there is a discovery steer written for a failure the authors
+evidently hit: lazy-tool-discovery clients that surface only
+<code>grep</code> and <code>read_source</code> on a broad first query
+and never see the graph tools at all. The steer is folded into the
+workspace-mode instructions so every such deployment emits it, rather
+than being copy-pasted into each manifest.</p>
+<p>The response budget is delegated to an <code>mcp_methods</code>
+dependency, and the repository keeps contract tests over it that
+<em>"prevent a dependency update from compiling while silently dropping
+the discovery, non-replay, or structured-selection behavior KGLite
+builds on."</em> Testing a dependency's behaviour at your own boundary,
+rather than trusting its version number, is the right response to
+relying on someone else's context-budget semantics.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>There is little to assess here in the atlas's usual terms, because
+the engine takes no position on belief. What it does take a position on
+is documentation contracts: <code>tests/test_docs_contract.py</code>
+exists, as do <code>CYPHER.md</code>, <code>FLUENT.md</code> and
+<code>BENCHMARKS.md</code> at the repository root, and a
+<code>dev-docs</code> tree beside the published one.</p>
+<p>The temporal predicate's edge cases are handled explicitly rather
+than by accident — <code>Value::Null</code> and a missing key both mean
+unbounded, and the date comparison handles a <code>DateTime</code>
+carrying a <code>NaiveDate</code>. A separate index test is named
+<code>temporal_equality_index_admits_the_date_and_its_midnight</code>,
+which is the kind of name that tells you someone was bitten by a date
+and a datetime comparing unequal.</p>
+<p>The dependency surface is the operational risk: every manifest in the
+workspace changed on the day of this reading, so nothing here is outside
+the cooldown, and the report is a reading of source rather than of
+anything installed.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>4,172 Rust test functions plus a Python suite; nothing was run here.
+The Python tests are the ones that exercise the behaviour an embedder
+sees, and the temporal file is a good example: fixtures build a small
+licensing graph, and the assertions name the party that must appear and
+the party that must not.</p>
+<p><code>BENCHMARKS.md</code> and a <code>benchmarks</code> directory
+are committed; this reading did not check any published number against
+them.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Make the reference date a context, not an argument.</strong>
+A temporal predicate threaded through every traversal step is a
+predicate one step will forget. State on the traverser is checked by the
+machinery at every hop by construction.</li>
+<li><strong>Let the data name its own validity columns.</strong> A
+<code>TemporalConfig</code> naming two existing properties turns an
+existing dataset temporal without a migration; fixing the column names
+in the engine would have required one.</li>
+<li><strong>Decide what an undated row means, and say so.</strong>
+Treating a missing <code>valid_from</code> as <em>valid from the
+beginning of time</em> is a choice, and the opposite choice — unknown,
+therefore excluded — is equally defensible. Silence means every embedder
+discovers it from a surprising result.</li>
+<li><strong>Test your dependency's behaviour at your own
+boundary.</strong> A contract test that fails when an upgrade drops a
+behaviour you rely on is cheaper than finding out from a user whose
+agent silently stopped getting structured selections.</li>
+<li><strong>Ship the skills with the data.</strong> A graph that carries
+its own query skills, gated on a predicate over its actual shape, gives
+an agent a tool list that is true of what is in front of it rather than
+of what the builder imagined.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is a record axis wanted? Adding <em>when the graph learned this</em>
+alongside <em>when it was true</em> is the difference between a
+knowledge graph and one an agent can be held to account against.</li>
+<li>Is the unbounded treatment of a missing <code>valid_from</code>
+documented anywhere an embedder would find it before relying on it?</li>
+<li>The skills predicate evaluates the active graph's shape. Does it
+re-evaluate when the watcher reloads a changed graph, or is the
+activation fixed at boot?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Temporal: <code>crates/kglite/src/graph/features/temporal.rs</code>
+(the predicate and its node and edge wrappers),
+<code>crates/kglite/src/graph/schema.rs:313-360</code>
+(<code>TemporalConfig</code> and its parse),
+<code>crates/kglite/src/graph/core/traversal.rs</code> (the context on
+the traversal state),
+<code>crates/kglite/src/graph/languages/cypher/executor/scalar_functions/utility.rs</code>
+(<code>valid_at</code>, <code>valid_during</code>).</li>
+<li>Agent surface:
+<code>crates/kglite-mcp-server/src/skills.rs:1-60</code> (the layer
+precedence and the discovery steer),
+<code>crates/kglite-mcp-server/src/response_budget_contract.rs:1-20</code>
+(the dependency contract tests),
+<code>crates/kglite-mcp-server/src/modes.rs</code>.</li>
+<li>Tests: <code>tests/test_temporal_awareness.py:108-135</code>,
+<code>tests/test_temporal.py</code>,
+<code>tests/test_docs_contract.py</code>,
+<code>crates/kglite/src/graph/dir_graph/index_predicate_tests.rs:65</code>.</li>
+<li>Documentation: <code>CYPHER.md:520-530</code> and
+<code>:938-965</code> (the temporal functions), <code>FLUENT.md</code>,
+<code>BENCHMARKS.md</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;transaction_time\|recorded_at\|as_of&quot; crates/kglite/src --include=&#39;*.rs&#39;   # 0 — one temporal axis, validity only
+grep -rn &quot;status\|confidence\|provenance&quot; crates/kglite/src/graph/schema.rs          # no trust field on a node or edge
+grep -rn &quot;tenant\|namespace_id\|owner_id&quot; crates/kglite/src --include=&#39;*.rs&#39;         # no row-level scope in the engine
+grep -rn &quot;is_temporally_valid&quot; crates/kglite/src --include=&#39;*.rs&#39;                    # one predicate, wrapped for nodes and edges</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/kkollsga/kglite/commit/68bc723a24663d56fb00fe7f5b4b32579a2e2af8"><code class="commit-id" title="68bc723a24663d56fb00fe7f5b4b32579a2e2af8">68bc723a…</code></a>
+— first reading, at the head of <code>main</code>, 2,922 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: every
+dependency manifest in the workspace, <code>Cargo.lock</code> included,
+changed on the day of this reading, so the whole surface is inside the
+seven-day cooldown. Nothing was installed, built or run — no cargo, no
+pip, no server started. One mark. This is an engine rather than a memory
+system, and four marks are withheld for absence rather than for a flaw:
+no trust field on a node or edge, no mutation log, no row-level scope,
+and nothing keyed on a removed value. <code>bitemporal</code> is the
+informative withholding — the validity axis is real, declared per graph
+rather than fixed by the engine, and reachable both as a Cypher function
+and as a traversal context, but nothing records when the graph learned a
+fact, so a correction and a change in the world are written and read
+identically.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

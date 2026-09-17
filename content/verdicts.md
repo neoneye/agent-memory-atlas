@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 573 reports.**
+**This page covers all 574 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4970,3 +4970,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 113,429 lines of Rust with 1,393 test functions, 752 commits since March 2026, SQLite and Postgres behind one storage trait, an MCP server and gateway, and bindings for Python, Go, TypeScript and WebAssembly; three capability marks.
 - Study when: you enforce a tenant boundary in more than one place and need each layer's test to prove its own layer.
 - Do not copy when: you need an as-of read — `event_time` is stored as distinct from the encoding timestamp and nothing queries it — or an account of what changed, as opposed to a feed of what the tools did.
+
+### [`kglite`](../systems/kglite/)
+- Best idea: **make the reference date a context, not an argument.** `date("2005")` is state on the traverser, and the machinery checks every node and edge the walk crosses. A temporal predicate threaded through each step is one a step will eventually omit.
+- Second idea: **let the data name its own validity columns.** A `TemporalConfig` naming two existing properties makes a loaded dataset temporal without renaming anything to suit the engine.
+- Third idea: **ship the skills with the data, gated on its shape.** The served graph carries its own query skills, offered only when a predicate over the active graph's structure says they apply, under a stated precedence — the producer describes what its builder emits, the graph describes itself, "and a graph wins a name collision because it is the more specific statement. Both lose to the operator's own files."
+- Fourth idea: **test your dependency's behaviour at your own boundary.** Contract tests exist to "prevent a dependency update from compiling while silently dropping the discovery, non-replay, or structured-selection behavior KGLite builds on" — the right response to relying on someone else's context-budget semantics.
+- Biggest risk: **one temporal axis.** The graph records when a fact was true and never when it learned it, so closing a window because the world changed and fixing a window that was wrong are the same edit. For licences and fields that is often enough; for a memory that must explain why it acted last Tuesday it is the axis that matters.
+- Second risk: a missing `valid_from` is treated as valid from the beginning of time rather than as unknown, and the choice is not documented where an embedder would meet it before relying on it.
+- Most reusable component: `is_temporally_valid` and its node and edge wrappers — one predicate, with null and absent both meaning unbounded on that side, and an index test named for the day a date and its midnight compared unequal.
+- Maturity impression: MIT, 362,473 lines of Rust with 4,172 test functions, 2,922 commits since March 2024, a Python wheel with no required runtime dependencies, a Bolt server, a C ABI and an MCP server; one capability mark, this being an engine rather than a memory system.
+- Study when: you are putting validity time under a graph an agent will traverse, or you want a worked example of a tool surface that adapts to the data in front of it.
+- Do not copy when: you need to distinguish a correction from a change in the world — that needs the record axis this engine does not have.

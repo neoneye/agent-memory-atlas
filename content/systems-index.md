@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **573 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **574 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -297,6 +297,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/kannaka-memory/"><span class="az-id">kannaka-memory</span><span class="az-what">The README reads like mysticism and the gate reads like a security review</span><code class="az-repo">kannaka-labs/kannaka-memory</code><span class="az-caps"><span class="az-cap">Trust state</span></span></a></li>
 <li><a class="az-row" href="../systems/kektordb/"><span class="az-id">KektorDB</span><span class="az-what">A vector database that gardens its memories</span><code class="az-repo">sanonone/kektordb</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/kept/"><span class="az-id">Kept</span><span class="az-what">Markdown notes with a local embedder and a bounded index</span><code class="az-repo">codexofc/kept</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/kglite/"><span class="az-id">KGLite</span><span class="az-what">The date is set once and the traversal obeys it</span><code class="az-repo">kkollsga/kglite</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/khabeer/"><span class="az-id">Khabeer</span><span class="az-what">Hermes memory ported to Android</span><code class="az-repo">bakka22/khabeer</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/khoj/"><span class="az-id">Khoj</span><span class="az-what">Muninn keeps the facts</span><code class="az-repo">khoj-ai/khoj</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/kipi-system/"><span class="az-id">Kipi System</span><span class="az-what">It measures whether its own human oversight is real</span><code class="az-repo">assafkip/kipi-system</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
