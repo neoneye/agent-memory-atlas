@@ -2917,12 +2917,31 @@ result.</li>
 <li>Biggest risk: a complete <code>MemoryPrivacyPolicy</code> — allowed
 tiers, PII redaction, retention — lives in a process-local
 <code>Map</code> and is consulted by nothing.</li>
+<li>Second risk: <strong>the scope key reaches two of the five retrieval
+arms and is the model's own argument in both.</strong>
+<code>searchSemantic</code>, the semantic vector search and the graph
+traversal take no session parameter at all; the two episodic arms take
+one only if the agent supplies <code>args.sessionId</code>, while
+<code>context.sessionId</code> — which the same function passes to the
+supervisor twelve lines later — never reaches the query.
+<code>scope_enforced</code> was awarded at the first reading and
+withdrawn on 2026-09-18.</li>
+<li>Third risk: the tree ships twice.
+<code>packages/ai/src/memory/</code> is a re-pathed copy of
+<code>src/memory/</code> identical apart from one import line in 13 of
+15 files — but <code>graph.ts</code> is 120 lines behind, and
+<code>embeddings.ts</code> silently returns a stub embedder where the
+<code>src/</code> copy warns that semantic search is running
+degraded.</li>
 <li>Most reusable component: the injectable approval gate that fails
 closed on refusal, plus classifying with regexes before reaching for a
 model.</li>
 <li>Maturity impression: a scheduled weekly benchmark that is real,
-sampled and expiring, beside a governance module with no callers and a
-tier filter that silently substitutes.</li>
+sampled and expiring, beside a governance module with no callers — whose
+PII redaction exists a second time as a private function in the
+consolidation pipeline that <em>is</em> called — and a tier filter that
+silently substitutes. One capability mark,
+<code>human_review</code>.</li>
 <li>Study when: your agents handle material with real disclosure
 consequences and you want a person or a supervisor in the loop at
 retrieval time.</li>

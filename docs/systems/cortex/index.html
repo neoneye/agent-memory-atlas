@@ -117,7 +117,7 @@ policy that is exported and called by nothing.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/CortexPrism--cortex" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -125,7 +125,7 @@ policy that is exported and called by nothing.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -285,14 +285,58 @@ to one key produce a version sequence rather than a silent clobber.</p>
 <p>Vector similarity plus lexical search over episodic and semantic,
 with a graph traversal beside it, then a tier filter, then the
 gates.</p>
-<p><strong>Scope is a SQL predicate and it is optional.</strong>
-<code>store.ts</code> builds
+<p><strong>Scope is a SQL predicate, it is optional, and it reaches two
+of the five retrieval arms.</strong> <code>store.ts</code> builds
 <code>const sessionClause = sessionId ? ' AND em.session_id = ?' : ''</code>
-— applied on the read path when a session is supplied, absent when it is
-not, and episodic only. The mark is earned on the same basis as <a
-href="../agent-memory-supabase/">Agent Memory on Supabase</a>'s
-<code>project</code> filter: genuinely applied, opt-in rather than
-fail-closed.</p>
+— applied when a session is supplied and absent when it is not.
+Following the five arms <code>retrieve</code> actually fans out to
+settles it:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>arm</th>
+<th>session parameter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>searchEpisodic(query, limit, sessionId)</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td><code>searchByVector(qVec, 'episodic', limit, sessionId)</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td><code>searchSemantic(query, limit)</code></td>
+<td><strong>none in the signature</strong></td>
+</tr>
+<tr>
+<td><code>searchByVector(qVec, 'semantic', limit)</code></td>
+<td><strong>none in the signature</strong></td>
+</tr>
+<tr>
+<td><code>searchEntities(word, 3)</code></td>
+<td><strong>none in the signature</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>And the value that reaches the two that accept it is the <em>model's
+own tool argument</em>: <code>memory_search.ts:101</code> reads
+<code>const sessionId = (args.sessionId as string) ?? undefined</code>,
+while <code>context.sessionId</code> — the runtime's own value, which
+the same function passes to the supervisor twelve lines later — never
+reaches the query. So an agent that omits the argument searches every
+session of every agent, and an agent that supplies someone else's
+searches theirs.</p>
+<p><strong><code>scope_enforced</code> was awarded at the first reading
+and is withdrawn on 2026-09-18.</strong> The rubric asks for a stored
+scope key <em>applied as a filter on the read path</em>; three of five
+arms cannot apply it and the other two apply it only when asked. This is
+a different situation from <a href="../outworked/">Outworked</a>, where
+the key is also the model's argument but <em>every</em> read carries it
+— there the mark holds and the danger is the value, here the predicate
+is frequently not there at all.</p>
 <p><strong>The tier filter has a defect its own comment admits.</strong>
 Asking for <code>tier: 'reflection'</code> or <code>tier: 'graph'</code>
 runs
@@ -339,8 +383,38 @@ gate</strong>, and the report's argument is that this is a
 <em>different</em> thing from the other fifteen holders of the mark
 rather than a weaker one. Denial returns an error, not a redacted
 result: the tool fails closed.</p>
-<p><strong><code>scope_enforced</code> is earned narrowly</strong>, as
-in §6.</p>
+<p><strong><code>scope_enforced</code> is withdrawn</strong>, for the
+reasons set out in §6: three of the five retrieval arms take no session
+parameter, and the two that do take it from the model's own tool
+arguments rather than from the runtime context that sits in the same
+function.</p>
+<p><strong>The dead policy has a live sibling, which sharpens the
+finding.</strong> <code>MemoryPrivacyPolicy</code> — allowed tiers, PII
+redaction, retention — is exported from <code>memory/privacy.ts</code>
+into the barrel and called by nothing outside its own file. Meanwhile
+<code>pipeline/builtin.ts:23</code> defines its <em>own</em>
+<code>redactPII</code>, and that one is live: <code>:216</code> runs it
+over an older summary during consolidation. So the capability exists
+twice, once as an unreachable policy object and once as a private
+function the policy does not know about, and a reader who configures the
+policy gets nothing while a reader who reads the pipeline finds
+redaction happening under different rules.</p>
+<p><strong>The tree ships twice.</strong>
+<code>packages/ai/src/memory/</code> mirrors <code>src/memory/</code>:
+13 of the 15 files differ only in a rewritten import path
+(<code>../db/client.ts</code> →
+<code>../../../../src/db/client.ts</code>), so it is a re-pathed copy
+rather than a fork. Two files have drifted apart from that.
+<code>graph.ts</code> in the package is 120 lines shorter and is missing
+<code>EntityDetail</code> and everything after it. And
+<code>embeddings.ts</code> differs where it matters to a reader: the
+<code>src/</code> copy warns <em>"No embedding provider configured —
+semantic memory search will use a stub embedder with degraded
+accuracy"</em>, while the package copy is
+<code>if (!provider) return new StubEmbedder();</code> — the same
+degradation, announced in one copy and silent in the other. Which one an
+adopter imports decides whether they are told their semantic search is a
+stub.</p>
 <p><strong>Nothing else.</strong> No tombstone — consolidation rewrites
 and there is no record of a rejected value. No trust state —
 <code>sensitivity</code> grades disclosure, not belief. No
@@ -508,6 +582,49 @@ consults it.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit, confirmed
+still the tip by <code>git ls-remote</code> before a
+<code>--depth 1</code> clone. Nothing could have moved, so this reading
+audited the first one. Screened again: one auto-run surface
+(<code>.github/copilot-instructions.md</code>, read as data), one
+build-time execution path (<code>desktop/src-tauri/build.rs</code>), no
+unpinned manifest, nothing inside the cooldown; <code>AGENTS.md</code>
+was read as data. Nothing was installed, built or run.</p>
+<p><strong><code>scope_enforced</code> is withdrawn.</strong> The first
+reading awarded it "narrowly" on
+<code>const sessionClause = sessionId ? ' AND em.session_id = ?' : ''</code>.
+Following <code>retrieve</code> to the five arms it actually fans out to
+shows the predicate reaching two of them — <code>searchEpisodic</code>
+and the episodic <code>searchByVector</code> — while
+<code>searchSemantic</code>, the semantic <code>searchByVector</code>
+and <code>searchEntities</code> take no session parameter in their
+signatures at all. And the value that reaches the two is the model's own
+tool argument (<code>memory_search.ts:101</code>), not
+<code>context.sessionId</code>, which the same function passes to the
+supervisor twelve lines later. A key that three of five read paths
+cannot apply, and that the other two apply only when the agent chooses
+to supply it, is not a filter on the read path.</p>
+<p><strong><code>human_review</code> holds and now carries an evidence
+record</strong>, including the producer test the atlas requires of an
+approver: <code>requestHumanApproval</code> prints the classification,
+tool, query, justification and the supervisor's reasoning, then reads
+<code>[y]es / [n]o / [d]etails</code> from stdin. It is a person at a
+prompt, the refusal returns an error rather than a redaction, and the
+gate sits on the <strong>read</strong> — which remains the unusual and
+valuable thing about this system.</p>
+<p><strong>Two findings added.</strong> The dead
+<code>MemoryPrivacyPolicy</code> has a live sibling:
+<code>pipeline/builtin.ts</code> defines its own <code>redactPII</code>
+and calls it during consolidation, so the capability exists twice — once
+as an unreachable policy and once as a private function the policy does
+not know about. And the tree ships twice:
+<code>packages/ai/src/memory/</code> is a re-pathed copy of
+<code>src/memory/</code> differing only in an import line in 13 of 15
+files, with <code>graph.ts</code> 120 lines behind and
+<code>embeddings.ts</code> silently returning a stub embedder where the
+<code>src/</code> copy warns that semantic search is degraded.</p>
+<p><code>stack_source</code> moves from <code>seeded</code> to
+<code>reviewed</code>. Marks go from two to one.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/CortexPrism/cortex/commit/0c446572ddaad588164af939f2e093441b06921f"><code class="commit-id" title="0c446572ddaad588164af939f2e093441b06921f">0c446572…</code></a>
 — first reading.</p>

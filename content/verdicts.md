@@ -920,8 +920,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`cortex`](../systems/cortex/)
 - Best idea: the gate is on the **read**, not the write. A secret-classified hit needs a supervisor decision and then a human yes, and a denial returns an error rather than a quietly redacted result.
 - Biggest risk: a complete `MemoryPrivacyPolicy` — allowed tiers, PII redaction, retention — lives in a process-local `Map` and is consulted by nothing.
+- Second risk: **the scope key reaches two of the five retrieval arms and is the model's own argument in both.** `searchSemantic`, the semantic vector search and the graph traversal take no session parameter at all; the two episodic arms take one only if the agent supplies `args.sessionId`, while `context.sessionId` — which the same function passes to the supervisor twelve lines later — never reaches the query. `scope_enforced` was awarded at the first reading and withdrawn on 2026-09-18.
+- Third risk: the tree ships twice. `packages/ai/src/memory/` is a re-pathed copy of `src/memory/` identical apart from one import line in 13 of 15 files — but `graph.ts` is 120 lines behind, and `embeddings.ts` silently returns a stub embedder where the `src/` copy warns that semantic search is running degraded.
 - Most reusable component: the injectable approval gate that fails closed on refusal, plus classifying with regexes before reaching for a model.
-- Maturity impression: a scheduled weekly benchmark that is real, sampled and expiring, beside a governance module with no callers and a tier filter that silently substitutes.
+- Maturity impression: a scheduled weekly benchmark that is real, sampled and expiring, beside a governance module with no callers — whose PII redaction exists a second time as a private function in the consolidation pipeline that *is* called — and a tier filter that silently substitutes. One capability mark, `human_review`.
 - Study when: your agents handle material with real disclosure consequences and you want a person or a supervisor in the loop at retrieval time.
 - Do not copy when: you need to correct memory. There is no supersession, no tombstone and no trust state — the system can stop you seeing a memory and cannot record that one was wrong.
 

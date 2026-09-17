@@ -9,22 +9,24 @@ source_url: https://github.com/CortexPrism/cortex
 archive_name: "CortexPrism--cortex"
 revision: 0c446572ddaad588164af939f2e093441b06921f
 revision_url: https://github.com/CortexPrism/cortex/commit/0c446572ddaad588164af939f2e093441b06921f
-analyzed_at: 2026-07-30
-capabilities: "scope_enforced, human_review"
+analyzed_at: 2026-09-18
+capabilities: "human_review"
+capability_evidence:
+  human_review: "the read gate on `memory_search`, which refuses rather than redacts | src/tools/builtin/memory_search.ts:130-175, src/security/classification.ts:130-139, src/security/approval.ts:17-45, src/security/supervisor.ts:257-260 | the retrieved hits are re-classified at read time by `classifyContent(hitTexts)`; `requiresSupervisor` (sensitive or secret) routes the request to an LLM supervisor whose denial returns `success: false` with an `Access denied` error, and `requiresHuman` (secret) then calls the caller-supplied `context.approvalGate` or `requestHumanApproval`, which prints the classification, the tool, the query, the justification and the supervisor\u2019s reasoning to the terminal and reads `[y]es / [n]o / [d]etails` from stdin. A refusal at either stage returns an error rather than a redacted result, and the supervisor forces the human stage whenever the classification is secret or its own confidence is below 0.7 | tests/memory_search_tool_test.ts asserts the `success: false` refusal paths and tests/security_supervisor_test.ts asserts the two gate predicates; neither drives a real approval, which is inherent — the approver is a person at a prompt"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An episodic row (session, summary, topics, entities, importance, sensitivity) or a semantic row (content, summary, category, tags, importance, sensitivity)"
   storage: "libSQL/SQLite with FTS, embeddings stored as blobs, and an optional mirrored vector backend"
   retrieval: "Vector plus lexical over episodic and semantic, tier-filtered, with an optional `AND em.session_id = ?` predicate and a graph traversal beside it"
   write: "Regex heuristics assign category and tags with no model call; a classifier assigns a sensitivity level; the vector store is mirrored best-effort"
   update_delete: "Consolidation and a delete path into both the row store and the vector records"
-  scoping: "`session_id` applied as a SQL predicate when supplied, on the episodic tier; `shared_context` is namespaced and versioned for deliberate cross-agent sharing"
+  scoping: "None enforced. Two of the five retrieval arms accept a `sessionId` and apply it only if the model supplies it in its own tool arguments; the semantic, semantic-vector and graph arms take no session parameter at all"
   integration: "A Deno agent runtime with a memory_search tool, a supervisor decision path and a human approval gate"
   background: "Consolidation, a preference learner, and a weekly benchmark workflow in CI"
   trust: "A four-level sensitivity classification — public, normal, sensitive, secret — computed at write and recomputed at read"
-  strengths: "A read gate that can refuse: a secret-classified hit needs a supervisor decision and then a human yes, and denial returns an error rather than a redaction"
+  strengths: "A read gate that can refuse: hits are re-classified after retrieval, a secret-classified result needs a supervisor decision and then a human yes at a terminal prompt, and denial returns an error rather than a redaction"
   risks: "A complete `MemoryPrivacyPolicy` with allowed tiers, PII redaction and retention lives in a process-local Map and is consulted by nothing"
 ---
 
@@ -159,12 +161,34 @@ clobber.
 Vector similarity plus lexical search over episodic and semantic, with a graph
 traversal beside it, then a tier filter, then the gates.
 
-**Scope is a SQL predicate and it is optional.** `store.ts` builds
-`const sessionClause = sessionId ? ' AND em.session_id = ?' : ''` — applied on
-the read path when a session is supplied, absent when it is not, and episodic
-only. The mark is earned on the same basis as
-[Agent Memory on Supabase](../agent-memory-supabase/)'s `project` filter:
-genuinely applied, opt-in rather than fail-closed.
+**Scope is a SQL predicate, it is optional, and it reaches two of the five
+retrieval arms.** `store.ts` builds
+`const sessionClause = sessionId ? ' AND em.session_id = ?' : ''` — applied when
+a session is supplied and absent when it is not. Following the five arms
+`retrieve` actually fans out to settles it:
+
+| arm | session parameter |
+| --- | --- |
+| `searchEpisodic(query, limit, sessionId)` | optional |
+| `searchByVector(qVec, 'episodic', limit, sessionId)` | optional |
+| `searchSemantic(query, limit)` | **none in the signature** |
+| `searchByVector(qVec, 'semantic', limit)` | **none in the signature** |
+| `searchEntities(word, 3)` | **none in the signature** |
+
+And the value that reaches the two that accept it is the *model's own tool
+argument*: `memory_search.ts:101` reads `const sessionId = (args.sessionId as
+string) ?? undefined`, while `context.sessionId` — the runtime's own value,
+which the same function passes to the supervisor twelve lines later — never
+reaches the query. So an agent that omits the argument searches every session
+of every agent, and an agent that supplies someone else's searches theirs.
+
+**`scope_enforced` was awarded at the first reading and is withdrawn on
+2026-09-18.** The rubric asks for a stored scope key *applied as a filter on the
+read path*; three of five arms cannot apply it and the other two apply it only
+when asked. This is a different situation from
+[Outworked](../outworked/), where the key is also the model's argument but
+*every* read carries it — there the mark holds and the danger is the value, here
+the predicate is frequently not there at all.
 
 **The tier filter has a defect its own comment admits.** Asking for
 `tier: 'reflection'` or `tier: 'graph'` runs
@@ -212,7 +236,32 @@ this is a *different* thing from the other fifteen holders of the mark rather
 than a weaker one. Denial returns an error, not a redacted result: the tool
 fails closed.
 
-**`scope_enforced` is earned narrowly**, as in §6.
+**`scope_enforced` is withdrawn**, for the reasons set out in §6: three of the
+five retrieval arms take no session parameter, and the two that do take it from
+the model's own tool arguments rather than from the runtime context that sits in
+the same function.
+
+**The dead policy has a live sibling, which sharpens the finding.**
+`MemoryPrivacyPolicy` — allowed tiers, PII redaction, retention — is exported
+from `memory/privacy.ts` into the barrel and called by nothing outside its own
+file. Meanwhile `pipeline/builtin.ts:23` defines its *own* `redactPII`, and that
+one is live: `:216` runs it over an older summary during consolidation. So the
+capability exists twice, once as an unreachable policy object and once as a
+private function the policy does not know about, and a reader who configures the
+policy gets nothing while a reader who reads the pipeline finds redaction
+happening under different rules.
+
+**The tree ships twice.** `packages/ai/src/memory/` mirrors `src/memory/`: 13 of
+the 15 files differ only in a rewritten import path
+(`../db/client.ts` → `../../../../src/db/client.ts`), so it is a re-pathed copy
+rather than a fork. Two files have drifted apart from that. `graph.ts` in the
+package is 120 lines shorter and is missing `EntityDetail` and everything after
+it. And `embeddings.ts` differs where it matters to a reader: the `src/` copy
+warns *"No embedding provider configured — semantic memory search will use a
+stub embedder with degraded accuracy"*, while the package copy is
+`if (!provider) return new StubEmbedder();` — the same degradation, announced in
+one copy and silent in the other. Which one an adopter imports decides whether
+they are told their semantic search is a stub.
 
 **Nothing else.** No tombstone — consolidation rewrites and there is no record of
 a rejected value. No trust state — `sensitivity` grades disclosure, not belief.
@@ -313,5 +362,15 @@ you seeing a memory and cannot record that one was wrong.
 | `.github/workflows/memory-bench.yml` | — | Weekly, sampled, 90-day artifacts |
 
 ## History
+
+**2026-09-18** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the first one. Screened again: one auto-run surface (`.github/copilot-instructions.md`, read as data), one build-time execution path (`desktop/src-tauri/build.rs`), no unpinned manifest, nothing inside the cooldown; `AGENTS.md` was read as data. Nothing was installed, built or run.
+
+**`scope_enforced` is withdrawn.** The first reading awarded it "narrowly" on `const sessionClause = sessionId ? ' AND em.session_id = ?' : ''`. Following `retrieve` to the five arms it actually fans out to shows the predicate reaching two of them — `searchEpisodic` and the episodic `searchByVector` — while `searchSemantic`, the semantic `searchByVector` and `searchEntities` take no session parameter in their signatures at all. And the value that reaches the two is the model's own tool argument (`memory_search.ts:101`), not `context.sessionId`, which the same function passes to the supervisor twelve lines later. A key that three of five read paths cannot apply, and that the other two apply only when the agent chooses to supply it, is not a filter on the read path.
+
+**`human_review` holds and now carries an evidence record**, including the producer test the atlas requires of an approver: `requestHumanApproval` prints the classification, tool, query, justification and the supervisor's reasoning, then reads `[y]es / [n]o / [d]etails` from stdin. It is a person at a prompt, the refusal returns an error rather than a redaction, and the gate sits on the **read** — which remains the unusual and valuable thing about this system.
+
+**Two findings added.** The dead `MemoryPrivacyPolicy` has a live sibling: `pipeline/builtin.ts` defines its own `redactPII` and calls it during consolidation, so the capability exists twice — once as an unreachable policy and once as a private function the policy does not know about. And the tree ships twice: `packages/ai/src/memory/` is a re-pathed copy of `src/memory/` differing only in an import line in 13 of 15 files, with `graph.ts` 120 lines behind and `embeddings.ts` silently returning a stub embedder where the `src/` copy warns that semantic search is degraded.
+
+`stack_source` moves from `seeded` to `reviewed`. Marks go from two to one.
 
 **2026-07-30** — [`0c446572ddaad588164af939f2e093441b06921f`](https://github.com/CortexPrism/cortex/commit/0c446572ddaad588164af939f2e093441b06921f) — first reading.
