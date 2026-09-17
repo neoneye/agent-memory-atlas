@@ -353,8 +353,8 @@ locators for pages, lines and quotes.
 
 ## 6. Retrieval Mechanics
 
-There is no search on the canvas; there is a walk. Retrieval is the set
-of nodes reachable by incoming wires, in an order the compiler fixes
+There is no search on the canvas; there is a walk. Retrieval is the set of
+nodes reachable by incoming wires, in an order the compiler fixes
 independent of creation history so that *"the same graph always produces
 the same prompt,"* trimmed by what a person did to the nodes — archive,
 collapse with summary, highlight filter — and never by score. A dashed
@@ -362,15 +362,18 @@ reference contributes its question and answer and the trail of upstream
 questions, or the whole chain when the edge says so. The token weight per
 layer is reported so the preview *"shows composition honestly,"* and the
 preview is the request: the panel calls the function the dispatch calls.
+
 One thing excluded from the walk is named on the way out. An attachment on
 the excluded list that carries a tool op and paths — an agent turn's
 footprint — contributes a single line, `[Files this turn touched in <cwd>
 — contents not included] read: a.ts, b.ts` (`context-builder.ts:221-283`),
 with a source entry pointing at the attachment; an archived node
-contributes nothing. For an agent runtime the compiled messages are then
-flattened: system messages become *instructions from the canvas*, the
-rest a transcript block ahead of the question (`agent-runtime.ts:245-259`),
-and a continued session gets the question only.
+contributes nothing.
+
+For an agent runtime the compiled messages are then flattened: system
+messages become *instructions from the canvas*, the rest a transcript
+block ahead of the question (`agent-runtime.ts:245-259`), and a continued
+session gets the question only.
 
 The why layer is lookup, not ranking: `why` resolves a path, a bare
 filename inside the workspace, an `@`-prefixed host path, an arXiv id or

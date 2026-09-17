@@ -45,22 +45,26 @@ comes from the GitHub API rather than from `git log`.
 
 The notes are the memory. What the report is about is what the machine may
 do to them and how it finds them. A chat is opened on a note; the note's
-body is pre-loaded into the transcript as a synthetic `editor_readNoteBody`
-tool call so the first turn costs no round trip
+body is pre-loaded into the transcript as a synthetic
+`editor_readNoteBody` tool call so the first turn costs no round trip
 (`noteChat.ts:88-110`); the assistant edits through anchored `editor_`
 tools whose changes are applied to the body once, after the whole tool
 batch, and refused outright if the note changed underneath the request
-(`noteChat.ts:300-330`). Beyond the open note there are eleven global tools
-— read, search by keyword with Joplin's filter grammar, search by meaning,
-create, update, trash, tag, list notebooks and tags, create a notebook, view
-an image — and every one of them is a setting that defaults to off
+(`noteChat.ts:300-330`).
+
+Beyond the open note there are eleven global tools — read, search by
+keyword with Joplin's filter grammar, search by meaning, create, update,
+trash, tag, list notebooks and tags, create a notebook, view an image —
+and every one of them is a setting that defaults to off
 (`builtInMetadata.ts:872-940`), with a refusal that tells the model which
-setting to ask the user to flip (`ToolIndex.ts:47-60`). The semantic side
-is a background `EmbeddingIndexer` that follows the application's own
-`item_changes` feed with a durable cursor, chunks and embeds each modified
-note on device, stores the vectors in sqlite-vec, removes them when a note
-is trashed, locked or in conflict, and wipes and rebuilds the whole index
-when the embedding model's id changes (`EmbeddingIndexer.ts:200-330`).
+setting to ask the user to flip (`ToolIndex.ts:47-60`).
+
+The semantic side is a background `EmbeddingIndexer` that follows the
+application's own `item_changes` feed with a durable cursor, chunks and
+embeds each modified note on device, stores the vectors in sqlite-vec,
+removes them when a note is trashed, locked or in conflict, and wipes and
+rebuilds the whole index when the embedding model's id changes
+(`EmbeddingIndexer.ts:200-330`).
 
 What is strong is the posture. `ai.enabled` is off; remote providers need a
 second opt-in and a LAN address counts as remote; each tool is a switch; a

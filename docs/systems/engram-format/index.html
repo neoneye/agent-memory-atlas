@@ -295,16 +295,16 @@ flowchart TD
 <em>"SQLCipher, FTS5, vector search"</em>) and a
 <code>ContextAssembler</code> (L3, <em>"owns retrieval, token-budgeted
 assembly"</em>) — and ships the first two;
-<code>rg -n 'ContextAssembler' src</code> finds only that comment.
-<code>EngramStore</code> wraps one <code>rusqlite</code> connection
+<code>rg -n 'ContextAssembler' src</code> finds only that comment.</p>
+<p><code>EngramStore</code> wraps one <code>rusqlite</code> connection
 behind a tokio mutex, opened with <code>bundled-sqlcipher</code> and
 keyed either from the platform machine id
 (<code>hex(SHA-256(machine_id ‖ ":" ‖ "axiom-engram-vault-v1"))</code>,
 with a stated threat model: it defends against a stolen disk and not
 against a local user) or from a passphrase through Argon2id at 64 MiB,
 three passes, four lanes and a random 16-byte salt file, with two legacy
-derivations detected and re-keyed on open. <code>src/schema.rs</code>
-creates the tables idempotently and runs
+derivations detected and re-keyed on open.</p>
+<p><code>src/schema.rs</code> creates the tables idempotently and runs
 <code>PRAGMA user_version</code> migrations 0 through 7, rebuilding
 <code>engrams</code> by table swap where a <code>CHECK</code> constraint
 changed and re-running column ensures on every open so <em>"a vault that

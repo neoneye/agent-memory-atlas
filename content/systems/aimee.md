@@ -279,25 +279,30 @@ explicitly suppressed memories must not re-enter through lexical, dense or
 graph-fused candidates. memory_get() remains an audit/read-by-id surface."* —
 and it is guarded by nothing but a non-empty candidate array.
 
-Scope and lifecycle reach the SQL as three macros in `memory_scope_query.h` that
-are easy to confuse and are composed into one another.
-`DB2_MEMORY_SCOPE_RANK_SQL` is an ordering expression — an exactly matching
-`(scope_type, scope_value)` 4, active project 3, active workspace 2, shared or
-global including legacy untagged rows 1, everything else 0 — placed before the
-caller's own relevance ordering and `LIMIT`. `DB2_MEMORY_SCOPE_FILTER_SQL` wraps
-the same expression as a `WHERE` predicate, `AND (?101 = 0 OR ?102 = 1 OR (rank)
-> 0)`, and it is the one doing the excluding. `DB2_MEMORY_RECALL_FILTER_SQL`
-wraps *that* in an `EXISTS` requiring `lifecycle_state='active' AND
-activation_suppressed=0`, under a header comment that fixes the policy in place:
-*"Normal recall is deliberately stricter than scope-only history/review queries.
+Scope and lifecycle reach the SQL as three macros in
+`memory_scope_query.h` that are easy to confuse and are composed into one
+another. `DB2_MEMORY_SCOPE_RANK_SQL` is an ordering expression — an
+exactly matching `(scope_type, scope_value)` 4, active project 3, active
+workspace 2, shared or global including legacy untagged rows 1, everything
+else 0 — placed before the caller's own relevance ordering and `LIMIT`.
+`DB2_MEMORY_SCOPE_FILTER_SQL` wraps the same expression as a `WHERE`
+predicate, `AND (?101 = 0 OR ?102 = 1 OR (rank) > 0)`, and it is the one
+doing the excluding.
+
+`DB2_MEMORY_RECALL_FILTER_SQL` wraps *that* in an `EXISTS` requiring
+`lifecycle_state='active' AND activation_suppressed=0`, under a header
+comment that fixes the policy in place: *"Normal recall is deliberately
+stricter than scope-only history/review queries.
+
 Lifecycle visibility is not feature-gated: rejected, archived, pending,
-fulfilled, and superseded rows never enter an answer candidate set."* The recall
-filter is what the candidate-producing readers use — the Go store's queries in
-`server-go/modules/memory/queries.go` and `data.go` and the dense path through
-`pgvec_scope_query.h` — while the bare scope filter is left to the
-history, review and by-id surfaces that are supposed to see more. A row outside
-the caller's scope is dropped rather than merely sorted last, and a row outside
-the active lifecycle never reaches the array the drop above re-checks.
+fulfilled, and superseded rows never enter an answer candidate set."* The
+recall filter is what the candidate-producing readers use — the Go store's
+queries in `server-go/modules/memory/queries.go` and `data.go` and the
+dense path through `pgvec_scope_query.h` — while the bare scope filter is
+left to the history, review and by-id surfaces that are supposed to see
+more. A row outside the caller's scope is dropped rather than merely
+sorted last, and a row outside the active lifecycle never reaches the
+array the drop above re-checks.
 
 The pair of flags that does exist, `memory_lifecycle_enabled` and
 `memory_lifecycle_hide_archived`, gates `memory_list` — the un-filtered listing

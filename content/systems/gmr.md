@@ -440,23 +440,28 @@ carrying no memory at all — and `unsupervised` claims carrying no anchor. All 
 it is derived from the journal, so the census costs a read rather than an
 instrumented run.
 
-`tools/msis` is the acceptance one, and its stance is the part worth copying. A
-fresh agent holding only the binary and its `SKILL.md` must assemble a task's
-minimal sufficient information set by walking the anchor-memory network of a
-synthetic repository, and the fixture is built so the trivial baseline cannot
-win: the vendor name and contract cap live only in one note's body and the
-conclusion only in the journal, so *"no file grep can complete the set."* Four
-scenarios cover an incoming-link walk, an outgoing one, an unannounced edit, and
-a mechanical no-LLM case. Two gates fire — sufficiency, that the answer states
-what only the full set yields, and findability, that every ground-truth address
-appears in `relied_on` — and the third scenario gates that a drifted ground is
-*reported* rather than silently relied on. Minimality precision against three
-distractor notes is computed and deliberately **not** gated: the stated
-infrastructure bar is *"found, even if slowly — retrieval speed and precision are
-reported as metrics, never gated."* Declining to gate a metric you are already
-computing is the discipline most eval harnesses skip. It costs API money per
-scenario and never runs in CI, and it grants the agent unrestricted Bash inside a
-throwaway fixture directory, which the README says in as many words.
+`tools/msis` is the acceptance one, and its stance is the part worth
+copying. A fresh agent holding only the binary and its `SKILL.md` must
+assemble a task's minimal sufficient information set by walking the
+anchor-memory network of a synthetic repository, and the fixture is built
+so the trivial baseline cannot win: the vendor name and contract cap live
+only in one note's body and the conclusion only in the journal, so *"no
+file grep can complete the set."* Four scenarios cover an incoming-link
+walk, an outgoing one, an unannounced edit, and a mechanical no-LLM case.
+
+Two gates fire — sufficiency, that the answer states what only the full
+set yields, and findability, that every ground-truth address appears in
+`relied_on` — and the third scenario gates that a drifted ground is
+*reported* rather than silently relied on. Minimality precision against
+three distractor notes is computed and deliberately **not** gated: the
+stated infrastructure bar is *"found, even if slowly — retrieval speed and
+precision are reported as metrics, never gated."* Declining to gate a
+metric you are already computing is the discipline most eval harnesses
+skip.
+
+It costs API money per scenario and never runs in CI, and it grants the
+agent unrestricted Bash inside a throwaway fixture directory, which the
+README says in as many words.
 
 What neither establishes is detection precision and recall over a corpus of real
 memories and real changes — how often a genuine drift is surfaced and how often a

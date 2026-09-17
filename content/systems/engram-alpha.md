@@ -1027,23 +1027,28 @@ says what owns the remaining gap — the delivery trims, not the cut.
 
 ### Two attacks on the delivery floor, both priced, neither shipped
 
-The fixed `delivery_floor` of 0.22 was measured on the note register, and on
-registers whose whole score scale sits lower it behaves like the hard abstention
-gate the project had already refused three times. `floor-dial3-snippet.json` and
-`floor-dial3-rerankfull.json` price two fixes on one sweep. *Dial three* fits the
-floor per graph as a quantile of the phantom questions' score body; it is
-recall-free at 100 and 500 notes and costs 0.01 R@5 and 0.02 oblique at 1,500.
-*Full-note reranker input* lets the cross-encoder judge title plus whole body
-and wins on the note register uncut — oblique 0.34 to 0.41 at 1,500 — and
-collapses on chat: `longmemeval-s-turns50-rerankfull.json` reads R@5 0.957 to
-0.777 against the same 100 questions, multi-session coverage 0.557 to 0.246,
-delivery over-trimmed from 111 to 67 tokens per query. The two are antagonistic
-— full-note input raises phantom scores with answer scores, so the dial-three
-fit misfires on it — and the README's verdict is that neither ships as a
-default: full-note input stays a per-graph knob *"refuted as a default by the
-chat receipt"*, and the auto-tune dial is not written until the fit is validated
-on the register it exists for, which needs a chat-register floor sweep that does
-not exist yet. The 0.22 stands, with both alternatives *"priced instead of
+The fixed `delivery_floor` of 0.22 was measured on the note register, and
+on registers whose whole score scale sits lower it behaves like the hard
+abstention gate the project had already refused three times.
+`floor-dial3-snippet.json` and `floor-dial3-rerankfull.json` price two
+fixes on one sweep.
+
+*Dial three* fits the floor per graph as a quantile of the phantom
+questions' score body; it is recall-free at 100 and 500 notes and costs
+0.01 R@5 and 0.02 oblique at 1,500. *Full-note reranker input* lets the
+cross-encoder judge title plus whole body and wins on the note register
+uncut — oblique 0.34 to 0.41 at 1,500 — and collapses on chat:
+`longmemeval-s-turns50-rerankfull.json` reads R@5 0.957 to 0.777 against
+the same 100 questions, multi-session coverage 0.557 to 0.246, delivery
+over-trimmed from 111 to 67 tokens per query.
+
+The two are antagonistic — full-note input raises phantom scores with
+answer scores, so the dial-three fit misfires on it — and the README's
+verdict is that neither ships as a default: full-note input stays a
+per-graph knob *"refuted as a default by the chat receipt"*, and the
+auto-tune dial is not written until the fit is validated on the register
+it exists for, which needs a chat-register floor sweep that does not exist
+yet. The 0.22 stands, with both alternatives *"priced instead of
 promised."*
 
 The `--lme-turns 50` receipts that carry those numbers are labelled: `capped:

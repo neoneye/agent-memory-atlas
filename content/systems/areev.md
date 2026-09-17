@@ -682,23 +682,27 @@ seven fields never move; and the running score *during* learning falls, which
 it explains as the accountant adding required fields so the denominator grows,
 and declines to present as a curve.
 
-The three engine defects the run exposed are the sharper result, because each
-*"produced a plausible null result rather than an error"* and survived a
-synthetic benchmark. Every human note in every memory reached the model as an
-empty string: the renderer's fact-triple branch needed a relation, an
-Observation has none, and the fallback never checked `object`, where the store
-puts the text — *"the single highest-value evidence in a memory was the one
-shape that rendered to nothing."* The test helper had encoded the same mistake.
-A lesson could only prevent, never start doing something: the contract asked for
-a rule preventing a recurring mistake, so when the agent simply never produced a
-field the model reached for *"validate all required fields before
-submission"*, which *"passed DISCOVER, GROUND, VERIFY, human review, apply and
-render, and changed nothing"* — 0 of 30 coverage against 6 of 6 under a rule
-naming the action. And a failing grader was indistinguishable from a model with
-nothing to say. The general form is the one worth carrying out of this
-repository: **a proposal can clear every gate the engine has and still be a
-no-op, because no gate asks whether the wording names an action the agent can
-take.** The contract was reworded; no gate was added.
+The three engine defects the run exposed are the sharper result, because
+each *"produced a plausible null result rather than an error"* and
+survived a synthetic benchmark. Every human note in every memory reached
+the model as an empty string: the renderer's fact-triple branch needed a
+relation, an Observation has none, and the fallback never checked
+`object`, where the store puts the text — *"the single highest-value
+evidence in a memory was the one shape that rendered to nothing."* The
+test helper had encoded the same mistake.
+
+A lesson could only prevent, never start doing something: the contract
+asked for a rule preventing a recurring mistake, so when the agent simply
+never produced a field the model reached for *"validate all required
+fields before submission"*, which *"passed DISCOVER, GROUND, VERIFY, human
+review, apply and render, and changed nothing"* — 0 of 30 coverage against
+6 of 6 under a rule naming the action. And a failing grader was
+indistinguishable from a model with nothing to say.
+
+The general form is the one worth carrying out of this repository: **a
+proposal can clear every gate the engine has and still be a no-op, because
+no gate asks whether the wording names an action the agent can take.** The
+contract was reworded; no gate was added.
 
 ## 11. For Your Own Build
 

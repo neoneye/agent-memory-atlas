@@ -48,25 +48,29 @@ product table names three layers — execution, context, improvement — and the
 memory is the second and third: *recall, learnings, codebase graph, teamwiki*
 and *friction-based share-learnings, sessions, digest, dashboard*.
 
-A learning is a Markdown document. The share-learnings skill tells the model
-to write one with `title`, `author`, `date` and `tags` in its frontmatter and
-the body in Chinese, and `teamai contribute` writes it to `learnings/` in an
-isolated worktree, commits and pushes it as a merge request
-(`src/contribute.ts:133-252`); a reviewer merges, and the next `teamai pull`
-on every member's machine rebuilds the search index (`src/pull.ts:745-808`).
-The index is built by hand (`src/utils/search-index.ts:573-655`): frontmatter
-parsed (`:241-280`), title tokens at three times IDF, tags at two, body at
-one, a length normalisation, a domain weight, and a rule that a body-only
-match is noise unless the entry is a doc (`:730-800`). Votes add to the score:
-a per-user YAML of recalled and upvoted counts, aggregated at 0.3 per recall
-and 1.0 per upvote (`:297-354`), synced to the repository at Stop
-(`src/hook-handlers.ts:286-393`) — and an upvote is counted only for a
-document the session's transcript shows was recalled, *"to avoid crediting
-hallucinated/distractor doc-ids."* A confidence per document —
-`base·0.4 + recency·0.3 + ratio·0.3` (`src/maintenance/confidence.ts:25-45`) —
-drives `recall maintenance --prune`, which removes or archives a learning
-under 0.15, and `recall promote`, which rewrites one that clears 0.90, five
-upvotes, two contributors and fourteen days into a skill, rule or doc.
+A learning is a Markdown document. The share-learnings skill tells the
+model to write one with `title`, `author`, `date` and `tags` in its
+frontmatter and the body in Chinese, and `teamai contribute` writes it to
+`learnings/` in an isolated worktree, commits and pushes it as a merge
+request (`src/contribute.ts:133-252`); a reviewer merges, and the next
+`teamai pull` on every member's machine rebuilds the search index
+(`src/pull.ts:745-808`).
+
+The index is built by hand (`src/utils/search-index.ts:573-655`):
+frontmatter parsed (`:241-280`), title tokens at three times IDF, tags at
+two, body at one, a length normalisation, a domain weight, and a rule that
+a body-only match is noise unless the entry is a doc (`:730-800`).
+
+Votes add to the score: a per-user YAML of recalled and upvoted counts,
+aggregated at 0.3 per recall and 1.0 per upvote (`:297-354`), synced to
+the repository at Stop (`src/hook-handlers.ts:286-393`) — and an upvote is
+counted only for a document the session's transcript shows was recalled,
+*"to avoid crediting hallucinated/distractor doc-ids."* A confidence per
+document — `base·0.4 + recency·0.3 + ratio·0.3`
+(`src/maintenance/confidence.ts:25-45`) — drives `recall maintenance
+--prune`, which removes or archives a learning under 0.15, and `recall
+promote`, which rewrites one that clears 0.90, five upvotes, two
+contributors and fourteen days into a skill, rule or doc.
 
 Where a learning is filed decides who can find it. `manifest/projects.yaml`
 declares projects, each naming the `learnings` namespaces it owns
@@ -340,22 +344,26 @@ score, tool count, friction, a prompt summary, whether hinted.
 
 ## 6. Retrieval Mechanics
 
-Retrieval is lexical and weighted toward what the author declared. A query is
-tokenised for mixed languages, its domain inferred, and each entry scored by
-matched title tokens at three times their smoothed IDF, tag tokens at two,
-body tokens at one, normalised by the square root of query length so a long
-question does not outscore a short one on common words, with a body-only
-match discarded for anything but a doc and the aggregated vote score added.
+Retrieval is lexical and weighted toward what the author declared. A query
+is tokenised for mixed languages, its domain inferred, and each entry
+scored by matched title tokens at three times their smoothed IDF, tag
+tokens at two, body tokens at one, normalised by the square root of query
+length so a long question does not outscore a short one on common words,
+with a body-only match discarded for anything but a doc and the aggregated
+vote score added.
+
 `--check` prints the verdict and the threshold, which for learnings is a
 ratio of the index's IDF baseline with an absolute floor and for codebase
 hits a constant, and for the top hit the matched and missing terms and the
 sources it names. Project results come first and user results only on
-opt-in, labelled; a project entry of the same type and filename shadows the
-user one. Within a scope the index holds only what the member's namespaces
-admit, so a learning belonging to a project they are not on cannot be ranked,
-shadowed or refused — it is not in the file being searched. There is no vector
-arm; the codebase wiki is served by a separate
-graph engine with its own lookup (`code-knowledge-recall.ts`).
+opt-in, labelled; a project entry of the same type and filename shadows
+the user one.
+
+Within a scope the index holds only what the member's namespaces admit, so
+a learning belonging to a project they are not on cannot be ranked,
+shadowed or refused — it is not in the file being searched. There is no
+vector arm; the codebase wiki is served by a separate graph engine with
+its own lookup (`code-knowledge-recall.ts`).
 
 ## 7. Write Mechanics
 
@@ -482,21 +490,24 @@ memory paths: `search-index.test.ts` (53) and `search-index-multi.test.ts`
 `votes-e2e.test.ts` (3); `maintenance-prune.test.ts` (6),
 `maintenance-promote.test.ts` (6); `pull-tombstone.test.ts` (17) on the
 `.removed` list and the two skill-deletion guards, including a case that
-asserts an untombstoned file survives, one that asserts a locally edited skill
-and its unpushed file are kept, and one that asserts a skill whose team-repo
-source cannot be found is kept; `learnings-mirror.test.ts` (3) and
-`pull-learnings-deletion.test.ts` (1) on the cache reconcile, the second
-driving `pull` end to end and asserting the deleted document out of the
-rebuilt index; `pull-project-cleanup.test.ts` (4);
+asserts an untombstoned file survives, one that asserts a locally edited
+skill and its unpushed file are kept, and one that asserts a skill whose
+team-repo source cannot be found is kept; `learnings-mirror.test.ts` (3)
+and `pull-learnings-deletion.test.ts` (1) on the cache reconcile, the
+second driving `pull` end to end and asserting the deleted document out of
+the rebuilt index; `pull-project-cleanup.test.ts` (4);
 `review-store.test.ts` (15), `review-cmd.test.ts` (8),
 `iwiki-review-apply.test.ts` (2); `contribute-check.test.ts` (50) with its
-phase-two and e2e files; `hook-dispatch.test.ts` (17); `pending-learnings.test.ts`
-(10); `migrate.test.ts` (21) on the data-layout migration. The prune tests
-assert an empty candidate list at a low threshold beside a populated one at a
-high threshold; the check tests assert `NOT_RELEVANT`
-with no side effect on the quality cache. No benchmark and no paper; the
-dashboard's health page is the project's own measurement of its knowledge
-base.
+phase-two and e2e files; `hook-dispatch.test.ts` (17);
+`pending-learnings.test.ts` (10); `migrate.test.ts` (21) on the
+data-layout migration.
+
+The prune tests assert an empty candidate list at a low threshold beside a
+populated one at a high threshold; the check tests assert `NOT_RELEVANT`
+with no side effect on the quality cache.
+
+No benchmark and no paper; the dashboard's health page is the project's
+own measurement of its knowledge base.
 
 ## 11. For Your Own Build
 

@@ -72,16 +72,19 @@ next cycle is a cache hit; a fact write returns `inserted`, `duplicate` or
 pointer; a bet's resolution is immutable and records who resolved it; a
 judge that grades bets writes to a cache and applies nothing unless the
 operator turns it on and the verdict clears 0.95
-(`src/core/cycle/grade-takes.ts:1-25`). BrainBench is in the tree —
-sealed gold, a holdout, a committed baseline across three harnesses and four
-suites, and a unit test that fails if a banked baseline regresses below a
-pre-registered floor. What is weakest is the seam between the two memories:
-validity is read on facts and merely stored on takes, where `until_date` has
-no reader in `src/` and the scorecard's date window compares `since_date`
-at both ends; a rejected proposal is keyed to the page's content hash, so an
-edited page can propose the same claim again; and the evaluation numbers the
-README leads with — a LongMemEval strict `recall_all@5` of 93.19 % — are
-prose with a date and a version, not a committed run.
+(`src/core/cycle/grade-takes.ts:1-25`).
+
+BrainBench is in the tree — sealed gold, a holdout, a committed baseline
+across three harnesses and four suites, and a unit test that fails if a
+banked baseline regresses below a pre-registered floor.
+
+What is weakest is the seam between the two memories: validity is read on
+facts and merely stored on takes, where `until_date` has no reader in
+`src/` and the scorecard's date window compares `since_date` at both ends;
+a rejected proposal is keyed to the page's content hash, so an edited page
+can propose the same claim again; and the evaluation numbers the README
+leads with — a LongMemEval strict `recall_all@5` of 93.19 % — are prose
+with a date and a version, not a committed run.
 
 ## 2. Mental Model
 

@@ -145,26 +145,30 @@ flowchart TD
 
 ## 3. Architecture
 
-A library, not a service. `src/lib.rs` names three layers — `QemCache` (L1),
-`EngramStore` (L2, *"SQLCipher, FTS5, vector search"*) and a
+A library, not a service. `src/lib.rs` names three layers — `QemCache`
+(L1), `EngramStore` (L2, *"SQLCipher, FTS5, vector search"*) and a
 `ContextAssembler` (L3, *"owns retrieval, token-budgeted assembly"*) — and
-ships the first two; `rg -n 'ContextAssembler' src` finds only that comment.
+ships the first two; `rg -n 'ContextAssembler' src` finds only that
+comment.
+
 `EngramStore` wraps one `rusqlite` connection behind a tokio mutex, opened
 with `bundled-sqlcipher` and keyed either from the platform machine id
 (`hex(SHA-256(machine_id ‖ ":" ‖ "axiom-engram-vault-v1"))`, with a stated
-threat model: it defends against a stolen disk and not against a local user)
-or from a passphrase through Argon2id at 64 MiB, three passes, four lanes and
-a random 16-byte salt file, with two legacy derivations detected and re-keyed
-on open. `src/schema.rs` creates the tables idempotently and runs
-`PRAGMA user_version` migrations 0 through 7, rebuilding `engrams` by table
-swap where a `CHECK` constraint changed and re-running column ensures on
-every open so *"a vault that crashed mid-migration cannot claim a version it
-does not have."* `src/adapter.rs` implements the `MemoryBackend` trait over
-the store; `src/qem.rs` the cache; `src/embed.rs` the `Embedder` trait, a
-`NoopEmbedder` and, behind `onnx-embed`, an `OnnxEmbedder` that is in fact
-Candle with a HuggingFace tokenizer and `hf-hub` download of
-all-MiniLM-L6-v2; `src/noise.rs` the filter and the hash; `src/sync.rs` the
-serde types of the wire envelope and nothing that sends them.
+threat model: it defends against a stolen disk and not against a local
+user) or from a passphrase through Argon2id at 64 MiB, three passes, four
+lanes and a random 16-byte salt file, with two legacy derivations detected
+and re-keyed on open.
+
+`src/schema.rs` creates the tables idempotently and runs `PRAGMA
+user_version` migrations 0 through 7, rebuilding `engrams` by table swap
+where a `CHECK` constraint changed and re-running column ensures on every
+open so *"a vault that crashed mid-migration cannot claim a version it
+does not have."* `src/adapter.rs` implements the `MemoryBackend` trait
+over the store; `src/qem.rs` the cache; `src/embed.rs` the `Embedder`
+trait, a `NoopEmbedder` and, behind `onnx-embed`, an `OnnxEmbedder` that
+is in fact Candle with a HuggingFace tokenizer and `hf-hub` download of
+all-MiniLM-L6-v2; `src/noise.rs` the filter and the hash; `src/sync.rs`
+the serde types of the wire envelope and nothing that sends them.
 
 There are no background processes: `apply_daily_hygiene`,
 `apply_weekly_consolidation`, `backfill_semantic_links`,

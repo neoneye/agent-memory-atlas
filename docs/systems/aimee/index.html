@@ -400,17 +400,25 @@ ordering expression — an exactly matching
 workspace 2, shared or global including legacy untagged rows 1,
 everything else 0 — placed before the caller's own relevance ordering
 and <code>LIMIT</code>. <code>DB2_MEMORY_SCOPE_FILTER_SQL</code> wraps
-the same expression as a <code>WHERE</code> predicate, `AND (?101 = 0 OR
-?102 = 1 OR (rank)</p>
-<blockquote>
-<p>0)<code>, and it is the one doing the excluding. </code>DB2_MEMORY_RECALL_FILTER_SQL<code>wraps *that* in an</code>EXISTS<code>requiring</code>lifecycle_state='active'
-AND
-activation_suppressed=0<code>, under a header comment that fixes the policy in place: *"Normal recall is deliberately stricter than scope-only history/review queries. Lifecycle visibility is not feature-gated: rejected, archived, pending, fulfilled, and superseded rows never enter an answer candidate set."* The recall filter is what the candidate-producing readers use — the Go store's queries in </code>server-go/modules/memory/queries.go<code>and</code>data.go<code>and the dense path through</code>pgvec_scope_query.h`
-— while the bare scope filter is left to the history, review and by-id
-surfaces that are supposed to see more. A row outside the caller's scope
-is dropped rather than merely sorted last, and a row outside the active
-lifecycle never reaches the array the drop above re-checks.</p>
-</blockquote>
+the same expression as a <code>WHERE</code> predicate,
+<code>AND (?101 = 0 OR ?102 = 1 OR (rank) &gt; 0)</code>, and it is the
+one doing the excluding.</p>
+<p><code>DB2_MEMORY_RECALL_FILTER_SQL</code> wraps <em>that</em> in an
+<code>EXISTS</code> requiring
+<code>lifecycle_state='active' AND activation_suppressed=0</code>, under
+a header comment that fixes the policy in place: *"Normal recall is
+deliberately stricter than scope-only history/review queries.</p>
+<p>Lifecycle visibility is not feature-gated: rejected, archived,
+pending, fulfilled, and superseded rows never enter an answer candidate
+set."* The recall filter is what the candidate-producing readers use —
+the Go store's queries in
+<code>server-go/modules/memory/queries.go</code> and
+<code>data.go</code> and the dense path through
+<code>pgvec_scope_query.h</code> — while the bare scope filter is left
+to the history, review and by-id surfaces that are supposed to see more.
+A row outside the caller's scope is dropped rather than merely sorted
+last, and a row outside the active lifecycle never reaches the array the
+drop above re-checks.</p>
 <p>The pair of flags that does exist,
 <code>memory_lifecycle_enabled</code> and
 <code>memory_lifecycle_hide_archived</code>, gates

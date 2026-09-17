@@ -203,14 +203,16 @@ in Chinese, and <code>teamai contribute</code> writes it to
 <code>learnings/</code> in an isolated worktree, commits and pushes it
 as a merge request (<code>src/contribute.ts:133-252</code>); a reviewer
 merges, and the next <code>teamai pull</code> on every member's machine
-rebuilds the search index (<code>src/pull.ts:745-808</code>). The index
-is built by hand (<code>src/utils/search-index.ts:573-655</code>):
-frontmatter parsed (<code>:241-280</code>), title tokens at three times
-IDF, tags at two, body at one, a length normalisation, a domain weight,
-and a rule that a body-only match is noise unless the entry is a doc
-(<code>:730-800</code>). Votes add to the score: a per-user YAML of
-recalled and upvoted counts, aggregated at 0.3 per recall and 1.0 per
-upvote (<code>:297-354</code>), synced to the repository at Stop
+rebuilds the search index (<code>src/pull.ts:745-808</code>).</p>
+<p>The index is built by hand
+(<code>src/utils/search-index.ts:573-655</code>): frontmatter parsed
+(<code>:241-280</code>), title tokens at three times IDF, tags at two,
+body at one, a length normalisation, a domain weight, and a rule that a
+body-only match is noise unless the entry is a doc
+(<code>:730-800</code>).</p>
+<p>Votes add to the score: a per-user YAML of recalled and upvoted
+counts, aggregated at 0.3 per recall and 1.0 per upvote
+(<code>:297-354</code>), synced to the repository at Stop
 (<code>src/hook-handlers.ts:286-393</code>) — and an upvote is counted
 only for a document the session's transcript shows was recalled, <em>"to
 avoid crediting hallucinated/distractor doc-ids."</em> A confidence per
@@ -530,17 +532,18 @@ entry scored by matched title tokens at three times their smoothed IDF,
 tag tokens at two, body tokens at one, normalised by the square root of
 query length so a long question does not outscore a short one on common
 words, with a body-only match discarded for anything but a doc and the
-aggregated vote score added. <code>--check</code> prints the verdict and
-the threshold, which for learnings is a ratio of the index's IDF
-baseline with an absolute floor and for codebase hits a constant, and
-for the top hit the matched and missing terms and the sources it names.
-Project results come first and user results only on opt-in, labelled; a
-project entry of the same type and filename shadows the user one. Within
-a scope the index holds only what the member's namespaces admit, so a
-learning belonging to a project they are not on cannot be ranked,
-shadowed or refused — it is not in the file being searched. There is no
-vector arm; the codebase wiki is served by a separate graph engine with
-its own lookup (<code>code-knowledge-recall.ts</code>).</p>
+aggregated vote score added.</p>
+<p><code>--check</code> prints the verdict and the threshold, which for
+learnings is a ratio of the index's IDF baseline with an absolute floor
+and for codebase hits a constant, and for the top hit the matched and
+missing terms and the sources it names. Project results come first and
+user results only on opt-in, labelled; a project entry of the same type
+and filename shadows the user one.</p>
+<p>Within a scope the index holds only what the member's namespaces
+admit, so a learning belonging to a project they are not on cannot be
+ranked, shadowed or refused — it is not in the file being searched.
+There is no vector arm; the codebase wiki is served by a separate graph
+engine with its own lookup (<code>code-knowledge-recall.ts</code>).</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>A learning is written by a person or a model as a file, committed on
 a branch, and merged by a reviewer; it is retrievable on the next pull,
@@ -683,12 +686,12 @@ the deleted document out of the rebuilt index;
 <code>contribute-check.test.ts</code> (50) with its phase-two and e2e
 files; <code>hook-dispatch.test.ts</code> (17);
 <code>pending-learnings.test.ts</code> (10);
-<code>migrate.test.ts</code> (21) on the data-layout migration. The
-prune tests assert an empty candidate list at a low threshold beside a
-populated one at a high threshold; the check tests assert
-<code>NOT_RELEVANT</code> with no side effect on the quality cache. No
-benchmark and no paper; the dashboard's health page is the project's own
-measurement of its knowledge base.</p>
+<code>migrate.test.ts</code> (21) on the data-layout migration.</p>
+<p>The prune tests assert an empty candidate list at a low threshold
+beside a populated one at a high threshold; the check tests assert
+<code>NOT_RELEVANT</code> with no side effect on the quality cache.</p>
+<p>No benchmark and no paper; the dashboard's health page is the
+project's own measurement of its knowledge base.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
