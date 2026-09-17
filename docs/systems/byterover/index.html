@@ -113,7 +113,7 @@ and repairs what an LLM rewrite would silently delete.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-27</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/campfirein--byterover-cli" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -121,7 +121,7 @@ and repairs what an LLM rewrite would silently delete.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -172,6 +172,21 @@ merging the lost material back in.</p>
 repeatedly warns about and no other system here defends against
 directly: background summarization quietly discarding the evidence it
 was meant to compress.</p>
+<p>The guard is not an isolated nicety, and the first version of this
+report missed where it leads. Its verdict feeds
+<code>needsReview</code>, which puts the operation into a queue a person
+clears with <code>brv review approve</code> or
+<code>brv review reject</code> — and because impact is
+<code>maxImpact(agentImpact, structuralImpact)</code>, an agent can
+escalate its own edit into that queue but cannot argue its way out of
+it. That is the whole shape of a human-in-the-loop memory in about
+twenty lines: a deterministic detector decides what a person must look
+at, and a rejection restores the file from a backup taken before the
+write.</p>
+<p>The knowledge layer also carries a real retriever — MiniSearch BM25
+over a cached index, with a relevance floor that lets the system answer
+"I don't have that" — described in section 6 along with the corpus-size
+condition that turns that floor off.</p>
 <p>A second, smaller idea is worth noting: the deduplicator treats the
 <code>DECISIONS</code> category as an immutable append-only log that is
 never merged or skipped, while every other category is subject to LLM
@@ -364,17 +379,68 @@ no documented eviction policy in the inspected modules — which memory is
 dropped when the cap is hit is not visible here.</li>
 </ul>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
-<p><code>ListMemoriesOptions</code> supports <code>limit</code>,
+<p>There are two retrieval surfaces, and the first reading of this
+report saw only the smaller one.</p>
+<p><strong>The flat memory list is metadata filtering.</strong>
+<code>ListMemoriesOptions</code> supports <code>limit</code>,
 <code>offset</code>, and filtering by <code>tags</code> (OR logic),
-<code>source</code>, and <code>pinned</code>. This is metadata filtering
-and pagination, not ranked retrieval: no vector search, lexical index,
-or scoring appears in the memory modules inspected.</p>
-<p>ByteRover's marketing describes a hierarchical knowledge tree with
-tiered retrieval and fast pre-LLM lookup. The knowledge layer's
-<code>ContextData</code> structure and the <code>markdown-writer</code>
-are consistent with that, but the ranking machinery is not present in
-the memory domain modules reviewed here, and no claimed retrieval
-benchmark was found in the repository.</p>
+<code>source</code>, and <code>pinned</code>. No ranking, no
+scoring.</p>
+<p><strong>The knowledge tree has a full lexical retriever</strong>, in
+<code>src/agent/infra/tools/implementations/search-knowledge-service.ts</code>
+— 1,847 lines that the earlier reading did not open. It is MiniSearch
+BM25 over a cached index of the context tree, and the parts worth naming
+are the ones that decide what the agent does <em>not</em> see:</p>
+<ul>
+<li>documents are chunked at <code>CHUNK_SIZE_CHARS = 800</code> with
+<code>CHUNK_OVERLAP_CHARS = 120</code>, and the index carries an
+<code>INDEX_SCHEMA_VERSION</code> and a 5-second TTL, rebuilt when file
+mtimes move;</li>
+<li>raw BM25 scores are normalised monotonically as
+<code>score / (1 + score)</code> into <code>[0, 1)</code>;</li>
+<li>a <strong>score-gap cut</strong>:
+<code>scoreFloor = topScore * SCORE_GAP_RATIO</code> with
+<code>SCORE_GAP_RATIO = 0.7</code>, and the result loop
+<code>break</code>s at the first result below it, so a weak long tail is
+dropped rather than padded to <code>limit</code>;</li>
+<li>an <strong>out-of-domain refusal</strong>: if the best result scores
+below <code>MINIMUM_RELEVANCE_SCORE = 0.45</code>, the service returns
+zero results and the message <em>"No matching knowledge found for this
+query"</em> rather than the least-bad match;</li>
+<li>a second, term-based refusal when an AND search failed, significant
+query terms are absent from the corpus, and the top score is below
+<code>UNMATCHED_TERM_SCORE_THRESHOLD = 0.85</code>;</li>
+<li><strong>parent-score propagation</strong>:
+<code>propagateScoresToParents</code> lifts the strongest child BM25
+signal to domain and topic nodes at a decay per level, so a directory
+can surface on the strength of one file inside it;</li>
+<li>a maturity filter, <code>minMaturity</code> against
+<code>MATURITY_TIER_RANK = {core: 3, validated: 2, draft: 1}</code>,
+applied to both BM25 hits and propagated summaries;</li>
+<li>an <code>elementHint</code> structural pre-filter that restricts
+candidates by HTML tag and <code>attribute=value</code> before BM25 sees
+them — the mechanism the negative evals assert on.</li>
+</ul>
+<p><strong>Both out-of-domain refusals are gated on
+<code>documentMap.size &gt;= 50</code>.</strong> The comment states the
+intent — <em>"Only apply for corpora with enough documents for reliable
+BM25 scoring"</em> — and the effect is that a knowledge base of fewer
+than fifty documents has no relevance floor at all: every query returns
+its best match, however irrelevant, and the "no matching knowledge"
+answer is unreachable. The guard is off for exactly the corpus size a
+new project has.</p>
+<p><strong>Scope is a path prefix, and it yields.</strong>
+<code>SearchOptions.scope</code> restricts the search to a subtree of
+the context tree, and a query string can carry its own scope prefix. But
+when a scoped search returns nothing, the service calls
+<code>runTextSearch</code> again with the scope argument replaced by
+<code>undefined</code> — the comment says so: <em>"If scoped search
+returned nothing and we had a scope, fall back to global search"</em>. A
+caller who asks for <code>auth</code> and gets nothing there is answered
+from the whole tree without being told. That is a relevance convenience,
+not a boundary, and it is the reason <code>scope_enforced</code> is
+withheld below — along with the more basic one, that this key is a topic
+path rather than a user, project or tenant.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Two paths, with quite different care applied:</p>
 <ol type="1">
@@ -415,6 +481,12 @@ enrichment.</li>
 directory.</li>
 <li>Bounded dedup concurrency and a short-circuit when no comparison is
 needed.</li>
+<li>A human adjudication loop over curation: every DELETE and every
+high-impact edit is queued, and rejecting one restores the file from a
+backup taken before the write.</li>
+<li>A named log of memory <em>mutations</em> — operation type, path,
+reason and previous summary per curation task — kept separately from the
+query log.</li>
 </ul>
 <p>Gaps:</p>
 <ul>
@@ -425,27 +497,120 @@ can be re-extracted.</li>
 <li><strong>LLM <code>MERGE</code> rewrites memory content
 unguarded</strong>, which is precisely the operation the knowledge layer
 protects against elsewhere.</li>
-<li><strong>No ranked retrieval</strong> in the inspected memory
-modules.</li>
-<li><strong><code>deriveImpactFromLoss</code> is binary</strong>, so
-severity is not proportional to what was lost.</li>
+<li><strong>The relevance floor is off below fifty documents</strong>,
+so a small knowledge base cannot answer "I don't have that" (section
+6).</li>
+<li><strong><code>deriveImpactFromLoss</code> is binary</strong> —
+correctly, since what it feeds is a queue-or-not decision, but it means
+the review queue cannot be ordered by how much was lost.</li>
 <li><strong><code>maxMemories</code> eviction policy is not
 visible</strong> in the inspected code.</li>
+<li><strong>The curate log is a ring of the newest 1,000 tasks</strong>,
+pruned best-effort with the failure swallowed.</li>
 <li><strong>ELv2 licensing</strong> materially constrains reuse and
 redistribution.</li>
 </ul>
+<p><strong>The marks, and the three that were withheld.</strong></p>
+<p><code>human_review</code> is earned, and the mechanism is the nicest
+thing in the system. <code>deriveReviewMetadata</code> marks an
+operation <code>needsReview</code> when it is a <code>DELETE</code> or
+when its impact is high, and impact is not the agent's word alone:
+<code>elevatedImpact = maxImpact(impact, structuralImpact)</code> at
+<code>curate-tool.ts:1024-1026</code>, where
+<code>structuralImpact</code> comes from the deterministic detector. The
+agent may raise its own impact; it cannot lower it below what the
+detector found. A person then runs <code>brv review pending</code> and
+<code>brv review approve</code> or <code>brv review reject</code>, and a
+rejection reads the backup written before the edit and restores the file
+— or removes it, when the backup is null because the operation was an
+ADD. Two limits belong next to the mark:
+<code>brv review --disable</code> turns the queue off for a project, and
+the HTML curation path computes <code>needsReview</code> from
+<code>meta.impact</code> with no structural fallback at all, so an agent
+that asserts nothing there queues nothing. The comment at
+<code>curate-html-log.ts:174-180</code> states that asymmetry
+deliberately — <em>"semantic judgments stay with the agent"</em> — which
+is a defensible position and the opposite of the one the markdown path
+takes.</p>
+<p><code>audit_log</code> is earned by the curate log rather than the
+query log. The distinction matters: <code>brv query-log</code> records
+retrieval, which the atlas counts as the other half of the pattern and
+not as an audit trail; the curate log records mutations, one entry per
+task, each operation carrying its type, path, reason, previous summary
+and outcome, saved through a temp file and <code>rename</code>. It is a
+ring of the newest thousand entries and the review decision edits an
+entry in place, so it is append-only in content but not in extent.</p>
+<p><code>negative_eval</code> is earned by the <code>elementHint</code>
+cases in <code>search-knowledge-service-html-routing.test.ts</code>,
+which assert a document that is in the corpus must not come back, with
+the positive control in the same block — <code>severity=must</code>
+returns <code>a.html</code>, <code>severity=should</code> returns
+nothing, same store. The mark is the weakest of the three, for a reason
+worth recording: the option those cases exercise is exposed on the
+<code>ToolsSDK.searchKnowledge</code> surface and has no caller in this
+repository, which the service's own comment says outright (<em>"Wired
+but unused by today's callers"</em>). The default read path — BM25, the
+relevance floor, the scope prefix — carries no must-not assertion at
+all. The suite asserts about the seam most likely to be reached from
+outside, and is silent about the one every agent actually uses.</p>
+<p><strong><code>scope_enforced</code> is withheld twice over.</strong>
+<code>SearchOptions.scope</code> is a topic path, not a user, project or
+tenant key — and it is abandoned rather than enforced: an empty scoped
+result re-runs the search with the scope set to <code>undefined</code>.
+A key that disappears when it would have excluded everything is a
+ranking hint.</p>
+<p><strong><code>trust_state</code> is withheld</strong>, and the
+near-miss is <code>maturity</code>. It looks exactly like a trust
+vocabulary — <code>draft</code>, <code>validated</code>,
+<code>core</code> — it is stored, and <code>minMaturity</code> filters
+it on the read path, which is three of the four things the mark needs.
+What it is not is a judgement:
+<code>determineTier(importance, currentTier)</code> is a thresholded
+float with hysteresis, promoting on
+<code>importance &gt;= PROMOTE_TO_CORE</code> and demoting below
+<code>DEMOTE_FROM_VALIDATED</code>. The word "validated" names a score
+band, and nobody validated anything. The <code>reviewStatus</code> field
+— <code>pending</code>, <code>approved</code>, <code>rejected</code> —
+<em>is</em> a judgement, but it lives on the log entry rather than on
+the memory, and no read path consults it.</p>
+<p><strong><code>tombstone</code> is withheld.</strong> A rejection
+restores the previous content and then deletes the backup; nothing
+records the rejected value, so the next curation run may propose the
+same edit and a reviewer who has stopped reading will take it.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>No test files specific to the memory or knowledge domain modules were
-located in this checkout, and no committed retrieval or memory-quality
-benchmark was found. The suites were not run.</p>
-<p>For a system whose most valuable idea is a correctness guard —
-structural-loss detection — the absence of visible tests around
-<code>detectStructuralLoss</code> and <code>resolveStructuralLoss</code>
-is the most significant evidence gap in this report. The functions are
-pure and deterministic, so they are unusually easy to test; that they
-appear untested here means the guard's behaviour on edge cases (empty
-proposals, reordered arrays, case-variant duplicates) is unverified.</p>
+<p><strong>The previous version of this report said there were none, and
+that was wrong.</strong> At this same commit the repository carries 526
+<code>*.test.ts</code> files and 8,583 <code>it()</code> cases,
+including
+<code>test/unit/agent/knowledge/conflict-detector.test.ts</code>,
+<code>conflict-resolver.test.ts</code>,
+<code>test/unit/agent/memory/memory-deduplicator.test.ts</code> and an
+852-line <code>memory-manager.test.ts</code> beside a 1,037-line
+integration sibling. The suites were not run here; the files were
+read.</p>
+<p>The correction is worth stating precisely, because the earlier text
+named the very edge cases it claimed were unverified.
+<code>conflict-detector.test.ts</code> asserts that an empty proposal
+loses every snippet
+(<code>expect(loss.lostSnippets).to.equal(3)</code>), that comparison is
+case-insensitive (<code>Snippet-A</code> against <code>snippet-a</code>
+is no loss), that adding items is never loss, that a missing
+<code>narrative</code> on the existing side is not loss, and that array
+items inside <code>rawConcept</code> are counted.
+<code>deriveImpactFromLoss</code> has seven cases of its own, and
+together they pin the binary behaviour this report described as a
+weakness: every loss type returns <code>high</code>, no loss returns
+<code>low</code>. That is the right shape for what it actually feeds — a
+queue-or-not decision, not a severity display.</p>
+<p>What remains true: there is <strong>no committed retrieval or
+memory-quality benchmark</strong>, and no case asserts that the
+<code>MINIMUM_RELEVANCE_SCORE</code> floor keeps an irrelevant document
+out — the one property that most needs a test, given that the floor is
+disabled below fifty documents. <code>query-executor.test.ts:276</code>
+does cover the out-of-domain tier, but with a stubbed search service
+returning an empty list, so it asserts the executor's handling and not
+the floor.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -499,14 +664,15 @@ prohibits.</li>
 <li>Why is the structural-loss guard applied to knowledge curation but
 not to <code>MemoryDeduplicator</code>'s <code>MERGE</code> path?</li>
 <li>What is evicted when <code>maxMemories</code> is reached?</li>
-<li>Is <code>detectStructuralLoss</code> tested anywhere? Its edge-case
-behaviour is unverified in this checkout.</li>
-<li>Should impact be proportional to the volume of loss rather than
-binary?</li>
-<li>How does the hierarchical retrieval described in ByteRover's
-documentation relate to the metadata-filter-only listing in these
-modules — is ranking implemented server-side or in the closed cloud
-component?</li>
+<li>Why is the relevance floor gated on a corpus of fifty documents,
+rather than scaled with corpus size? The effect is that the system's
+ability to say "I don't have that" switches on only after the knowledge
+base has grown.</li>
+<li>Why does an empty scoped search fall back to the whole tree instead
+of returning nothing for that scope?</li>
+<li>The <code>elementHint</code> grammar carries an
+<code>attribute=value</code> axis that the service calls "wired but
+unused by today's callers". What is it for?</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <ul>
@@ -527,6 +693,42 @@ component?</li>
 <li>Licence: <code>LICENSE</code> (Elastic License 2.0).</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/campfirein/byterover-cli/commit/1052ac1a5dd0fde4da8693d4712064f7876c269c"><code class="commit-id" title="1052ac1a5dd0fde4da8693d4712064f7876c269c">1052ac1a…</code></a>
+— re-read at the same commit as the first reading. Nothing upstream had
+moved, so every correction here is the atlas's own, and two of them were
+serious. The first reading reported that no tests existed for the memory
+or knowledge modules and called that "the most significant evidence gap
+in this report"; at this same commit the repository carries 526 test
+files and 8,583 cases, including a
+<code>conflict-detector.test.ts</code> that asserts precisely the three
+edge cases the report named as unverified. The second reading error was
+larger: section 6 described retrieval as metadata filtering with no
+ranking, while <code>search-knowledge-service.ts</code> — 1,847 lines
+the first reading never opened — is a MiniSearch BM25 retriever with
+chunking, a relevance floor, a score-gap cut, parent-score propagation
+and a structural pre-filter. <code>stack_retrieval</code> goes from
+empty to <code>lexical</code> and <code>stack_source</code> from seeded
+to reviewed.</p>
+<p>Three marks follow from the corrected reading.
+<code>human_review</code> on the curate review queue, whose trigger the
+agent cannot lower —
+<code>maxImpact(agentImpact, deriveImpactFromLoss(loss))</code> — and
+whose rejection restores the file from a pre-write backup.
+<code>audit_log</code> on the curate log, which records mutations and is
+distinct from the query log, which records reads and does not count.
+<code>negative_eval</code> on the <code>elementHint</code> cases, with
+the positive control in the same block. <code>scope_enforced</code>,
+<code>trust_state</code> and <code>tombstone</code> were each examined
+and withheld, with the reasons in section 9: the search scope is a topic
+path that is dropped when it matches nothing, <code>maturity</code> is a
+thresholded importance float rather than a judgement, and a rejected
+edit leaves no record of the value it rejected.</p>
+<p>Two new findings sit beside the marks. Both out-of-domain refusals
+are gated on <code>documentMap.size &gt;= 50</code>, so a knowledge base
+below fifty documents has no relevance floor and cannot answer "I don't
+have that". And an empty scoped search silently re-runs against the
+whole tree.</p>
 <p><strong>2026-09-13</strong> — the repository was renamed from
 <code>campfirein/cipher</code> to <code>campfirein/byterover-cli</code>,
 upstream of the pinned commit and after the reading below. No

@@ -318,11 +318,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`byterover`](../systems/byterover/)
 - Best idea: counting exactly what an LLM rewrite would delete, then merging the loss back automatically.
-- Biggest risk: the Elastic License 2.0 forbids hosted redistribution, and the memory core itself has no trust, scope, or correction model.
-- Most reusable component: `detectStructuralLoss` / `resolveStructuralLoss`, and the immutable `DECISIONS` category.
-- Maturity impression: a thin memory primitive attached to a more thoughtful knowledge-curation layer, with no visible tests on its best idea.
-- Study when: an LLM is allowed to rewrite stored knowledge and you need a cheap deterministic guard.
-- Do not copy when: you need durable beliefs, ranked retrieval, or an OSI-compatible licence.
+- Second idea: that guard decides what a human has to look at. Impact is `maxImpact(agentImpact, structuralImpact)`, so an agent can raise its own edit into the review queue but never lower it out.
+- Biggest risk: both out-of-domain refusals are gated on a corpus of fifty documents, so a young knowledge base has no relevance floor and always answers something; and an empty scoped search silently re-runs against the whole tree.
+- Most reusable component: `detectStructuralLoss` / `resolveStructuralLoss` wired to a review queue, and the immutable `DECISIONS` category.
+- Maturity impression: 526 test files and 8,583 cases, including seven that pin the structural-loss detector's edge behaviour — but no committed case on the relevance floor, and no retrieval benchmark.
+- Study when: an LLM is allowed to rewrite stored knowledge and you need a cheap deterministic guard — or you want a worked example of a deterministic detector deciding what a person must adjudicate.
+- Do not copy when: you need durable beliefs, an enforced tenant scope, or an OSI-compatible licence.
 
 ### [`openclaw`](../systems/openclaw/)
 - Best idea: a regeneration path that refuses to destroy human writing — `preserveHumanNotesBlock` carries the region between `<!-- openclaw:human:start -->` and its closing marker across every machine rewrite, and throws rather than regenerate over damaged markers.
