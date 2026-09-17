@@ -5587,14 +5587,23 @@ effect of reading, so retrieval feeds popularity and popularity feeds
 retrieval, with nothing in the loop asking whether the memory was right.
 In a trading store where a stale summary of an earlier regime reads
 identically to a current one, that loop points the wrong way.</li>
-<li>Third risk: <strong>the directory named for testing the memory does
-not import it.</strong> <code>memory_testing/accuracy_testing.py</code>
-is 44 lines with zero assertions whose success line is
+<li>Third risk: <strong>two test directories, and between them not one
+assertion about the memory.</strong>
+<code>memory_testing/accuracy_testing.py</code> is 44 lines with zero
+assertions whose success line is
 <code>print("SUCCESS: The model processed the request.")</code> —
-success is the API call not raising. <code>latency_test.py</code> is a
-real measurement of <code>gpt-4o-mini</code>'s long-context latency and
-never touches <code>FinAgents/memory/</code>. A filename is making a
-claim that nothing in the file supports.</li>
+success is the API call not raising — and <code>latency_test.py</code>
+measures <code>gpt-4o-mini</code>'s long-context latency without ever
+touching <code>FinAgents/memory/</code>. Inside the package,
+<code>memory/tests/</code> is the serious attempt: 1,796 lines across
+five files driving the A2A, MCP and HTTP servers, also with zero
+<code>assert</code> statements, deciding each outcome by searching the
+reply for <code>success</code>, <code>stored</code>,
+<code>created</code>, <code>saved</code> or <code>memory_id</code>. A
+store that echoed the word <code>stored</code> would pass. The
+repository's twelve assertions all live in
+<code>orchestration/tests/</code> and none is negative, which is why the
+scope defect above has never had a case that could fail on it.</li>
 <li>Maturity impression: OpenMDW-1.0 — a model-and-data licence, not a
 software one — roughly 258,000 lines of Python, 1,419 commits since 20
 May 2025, with a 7,784-line memory service behind an MCP server and an

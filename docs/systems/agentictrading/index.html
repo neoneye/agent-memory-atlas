@@ -107,14 +107,14 @@ applies it as a filter only when a caller remembers to ask for it.</p>
               <strong>Open-Finance-Lab/AgenticTrading</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Open-Finance-Lab/AgenticTrading/commit/9966c3dfc0f4fd41978f63a36caeb111ac807601" title="9966c3dfc0f4fd41978f63a36caeb111ac807601">
+            <a class="meta-pill revision-pill" href="https://github.com/Open-Finance-Lab/AgenticTrading/commit/8df40dbe7996733d3f462d2cb4c68feee6cc1c4b" title="8df40dbe7996733d3f462d2cb4c68feee6cc1c4b">
               <span>Analyzed revision</span>
-              <code>9966c3df…</code>
+              <code>8df40dbe…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-25</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Open-Finance-Lab--AgenticTrading" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -322,9 +322,13 @@ earlier regime reads identically to a current one, and
 retrieved, which is a reinforcement loop pointing the wrong way.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><code>orchestration/FinAgents/memory_testing/</code> is the directory
-named for measuring this system, and neither of its two scripts touches
-the memory package.</p>
+<p>Two directories hold tests for the memory service and they fail in
+opposite directions.
+<code>orchestration/FinAgents/memory_testing/</code> is named for
+measuring this system and neither of its two scripts touches the memory
+package. <code>orchestration/FinAgents/memory/tests/</code> sits inside
+the package, does exercise the three servers, and asserts nothing about
+what they return.</p>
 <p><code>accuracy_testing.py</code> is 44 lines. It reads a 1.5 MB CSV
 of S&amp;P 500 headlines, formats about 120,000 tokens of them into one
 prompt, sends it to <code>gpt-4o-mini</code> with
@@ -344,13 +348,29 @@ it. That is a real measurement of a model's long-context latency. It
 never imports or calls anything in <code>FinAgents/memory/</code>, so it
 says nothing about the store's latency, which is the number its filename
 implies.</p>
-<p>Elsewhere, <code>orchestration/tests/</code> holds integration tests
-and a committed <code>test_results_20250724_193603.json</code>. A grep
-across those files for a negative assertion —
-<code>assert ... not in</code>, <code>assert not</code>, an
+<p><code>orchestration/FinAgents/memory/tests/</code> is the larger
+effort and the more interesting one: five Python files, 1,796 lines,
+aimed squarely at the A2A server on port 8002, the MCP server on 8001
+and the HTTP server on 8000. It carries <strong>zero <code>assert</code>
+statements</strong>. Outcomes are decided by reading the response and
+looking for encouraging words:</p>
+<pre class="python"><code>if any(keyword in result_str for keyword in [&quot;success&quot;, &quot;stored&quot;, &quot;created&quot;, &quot;saved&quot;, &quot;memory_id&quot;]):
+    self.record_test(&quot;MCP Store Memory Tool&quot;, True, &quot;Memory storage executed with success indicator&quot;)</code></pre>
+<p>A store whose remembered content happened to contain the word
+<code>stored</code> would pass that check for the same reason a working
+one does. The pass criterion is a substring of the reply, so the suite
+reports on whether the servers answered, not on whether they answered
+correctly — and <code>record_test</code> writes the verdict to stdout
+with a tick or a cross rather than to a process exit status.</p>
+<p><code>orchestration/tests/</code> is the one place with real
+assertions: eight files carrying twelve of them. A grep across all three
+directories for a negative assertion — <code>assert not</code>,
+<code>assert ... not in</code>, <code>assertNotIn</code>,
+<code>assertFalse</code>, <code>pytest.raises</code>, an
 empty-collection comparison — returns nothing, so no committed case
 asserts that particular material must not be retrieved.
-<code>negative_eval</code> is absent.</p>
+<code>negative_eval</code> is absent, and the scope defect above is
+precisely the property such a case would catch.</p>
 <p>Nothing was executed from this checkout.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <p><strong>If several agents share one graph, put the scope in the query
@@ -428,9 +448,57 @@ expansion</td>
 <td><code>orchestration/FinAgents/memory_testing/latency_test.py</code></td>
 <td>A real latency measurement of the model, not the store</td>
 </tr>
+<tr>
+<td><code>orchestration/FinAgents/memory/tests/memory_test.py</code></td>
+<td>1,044 lines against the three servers; decides pass by
+substring</td>
+</tr>
+<tr>
+<td><code>orchestration/FinAgents/memory/tests/database_test.py</code></td>
+<td>529 lines against Neo4j directly; no assertions</td>
+</tr>
+<tr>
+<td><code>orchestration/FinAgents/memory/tests/test_summary.py</code></td>
+<td>142 lines; prints a tally, asserts nothing</td>
+</tr>
+<tr>
+<td><code>orchestration/tests/</code></td>
+<td>Eight files carrying the repository's twelve assertions, none
+negative</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/Open-Finance-Lab/AgenticTrading/commit/8df40dbe7996733d3f462d2cb4c68feee6cc1c4b"><code class="commit-id" title="8df40dbe7996733d3f462d2cb4c68feee6cc1c4b">8df40dbe…</code></a>
+— re-pinned 269 commits and 408 changed files past the previous pin, and
+the memory subsystem is byte-identical across all of it:
+<code>rev-parse &lt;pin&gt;:orchestration/FinAgents/memory</code> and
+the same path at HEAD both give tree
+<code class="commit-id" title="36a155e383c092983d977e0240235c8b8212a7e2">36a155e3…</code>, and
+<code>memory_testing</code> likewise gives
+<code class="commit-id" title="e0d1f2ab70c13bfdc4b5cc0158ca9215f76072b4">e0d1f2ab…</code>. Every finding
+above was re-verified at the new pin rather than carried forward: the
+primary search is still three <code>CONTAINS</code> clauses with no
+<code>agent_id</code> predicate and still fires
+<code>SET m.lookup_count = m.lookup_count + 1</code> as a side effect of
+reading, and the only comparison of <code>agent_id</code> is still
+behind <code>if "agent_id" in filters</code>. Marks unchanged at none.
+Screened again before reading: one auto-run surface, five build-time
+execution surfaces, seven unpinned surfaces, and two dependency files
+changed within the seven-day cooldown. Nothing was installed and nothing
+was run. The reading adds
+<code>orchestration/FinAgents/memory/tests/</code>, a five-file,
+1,796-line suite inside the memory package that the first reading did
+not cover: it exercises all three servers, carries zero
+<code>assert</code> statements, and decides an outcome by testing the
+reply for the substrings <code>success</code>, <code>stored</code>,
+<code>created</code>, <code>saved</code> and <code>memory_id</code>.
+That does not move <code>negative_eval</code>, which stays absent, but
+it replaces a grounding search that had looked only at
+<code>memory_testing/</code> and <code>orchestration/tests/</code>. The
+indexer, the stream processor and the four agent pools remain
+untraced.</p>
 <p><strong>2026-08-25</strong> — <a
 href="https://github.com/Open-Finance-Lab/AgenticTrading/commit/9966c3dfc0f4fd41978f63a36caeb111ac807601"><code class="commit-id" title="9966c3dfc0f4fd41978f63a36caeb111ac807601">9966c3df…</code></a>
 — first reading, roughly 258,000 lines of Python, 1,419 commits since 20

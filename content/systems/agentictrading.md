@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Open-Finance-Lab/AgenticTrading"
 source_url: https://github.com/Open-Finance-Lab/AgenticTrading
 archive_name: "Open-Finance-Lab--AgenticTrading"
-revision: 9966c3dfc0f4fd41978f63a36caeb111ac807601
-revision_url: https://github.com/Open-Finance-Lab/AgenticTrading/commit/9966c3dfc0f4fd41978f63a36caeb111ac807601
-analyzed_at: 2026-08-25
+revision: 8df40dbe7996733d3f462d2cb4c68feee6cc1c4b
+revision_url: https://github.com/Open-Finance-Lab/AgenticTrading/commit/8df40dbe7996733d3f462d2cb4c68feee6cc1c4b
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "graph"
 stack_retrieval: "lexical, graph"
@@ -25,7 +25,7 @@ matrix:
   background: "A real-time stream processor and an LLM research service alongside the store"
   trust: "None. A memory node carries no status, confidence, provenance or validity field; `lookup_count` records use, which is a property of ranking rather than of the claim"
   strengths: "The schema is created explicitly with uniqueness constraints and full-text indexes rather than emerging from writes, and the memory service is a separate addressable component two protocols can reach"
-  risks: "The main retrieval query carries no `agent_id` predicate, so one agent's memories are returned to another; Neo4j credentials are literals in the source; and the two files named as memory testing measure a model's long-context latency without touching the memory package"
+  risks: "The main retrieval query carries no `agent_id` predicate, so one agent's memories are returned to another; Neo4j credentials are literals in the source; and neither test directory can catch it — the two files named for memory testing never import the package, and the 1,796-line suite inside it carries no assertions and passes on finding words like `success` or `stored` in the reply"
 ---
 
 ## 1. Executive Summary
@@ -226,8 +226,11 @@ which is a reinforcement loop pointing the wrong way.
 
 ## 10. Tests, Evals, and Benchmarks
 
-`orchestration/FinAgents/memory_testing/` is the directory named for measuring
-this system, and neither of its two scripts touches the memory package.
+Two directories hold tests for the memory service and they fail in opposite
+directions. `orchestration/FinAgents/memory_testing/` is named for measuring this
+system and neither of its two scripts touches the memory package.
+`orchestration/FinAgents/memory/tests/` sits inside the package, does exercise the
+three servers, and asserts nothing about what they return.
 
 `accuracy_testing.py` is 44 lines. It reads a 1.5 MB CSV of S&P 500 headlines,
 formats about 120,000 tokens of them into one prompt, sends it to `gpt-4o-mini`
@@ -250,11 +253,30 @@ long-context latency. It never imports or calls anything in
 `FinAgents/memory/`, so it says nothing about the store's latency, which is the
 number its filename implies.
 
-Elsewhere, `orchestration/tests/` holds integration tests and a committed
-`test_results_20250724_193603.json`. A grep across those files for a negative
-assertion — `assert ... not in`, `assert not`, an empty-collection comparison —
-returns nothing, so no committed case asserts that particular material must not
-be retrieved. `negative_eval` is absent.
+`orchestration/FinAgents/memory/tests/` is the larger effort and the more
+interesting one: five Python files, 1,796 lines, aimed squarely at the A2A server
+on port 8002, the MCP server on 8001 and the HTTP server on 8000. It carries
+**zero `assert` statements**. Outcomes are decided by reading the response and
+looking for encouraging words:
+
+```python
+if any(keyword in result_str for keyword in ["success", "stored", "created", "saved", "memory_id"]):
+    self.record_test("MCP Store Memory Tool", True, "Memory storage executed with success indicator")
+```
+
+A store whose remembered content happened to contain the word `stored` would pass
+that check for the same reason a working one does. The pass criterion is a
+substring of the reply, so the suite reports on whether the servers answered, not
+on whether they answered correctly — and `record_test` writes the verdict to
+stdout with a tick or a cross rather than to a process exit status.
+
+`orchestration/tests/` is the one place with real assertions: eight files
+carrying twelve of them. A grep across all three directories for a negative
+assertion — `assert not`, `assert ... not in`, `assertNotIn`, `assertFalse`,
+`pytest.raises`, an empty-collection comparison — returns nothing, so no
+committed case asserts that particular material must not be retrieved.
+`negative_eval` is absent, and the scope defect above is precisely the property
+such a case would catch.
 
 Nothing was executed from this checkout.
 
@@ -307,7 +329,13 @@ maintained and unread.
 | `orchestration/FinAgents/memory/intelligent_memory_indexer.py` | Indexing not traced at this pin |
 | `orchestration/FinAgents/memory_testing/accuracy_testing.py` | 44 lines, no assertions |
 | `orchestration/FinAgents/memory_testing/latency_test.py` | A real latency measurement of the model, not the store |
+| `orchestration/FinAgents/memory/tests/memory_test.py` | 1,044 lines against the three servers; decides pass by substring |
+| `orchestration/FinAgents/memory/tests/database_test.py` | 529 lines against Neo4j directly; no assertions |
+| `orchestration/FinAgents/memory/tests/test_summary.py` | 142 lines; prints a tally, asserts nothing |
+| `orchestration/tests/` | Eight files carrying the repository's twelve assertions, none negative |
 
 ## History
+
+**2026-09-17** — [`8df40dbe7996733d3f462d2cb4c68feee6cc1c4b`](https://github.com/Open-Finance-Lab/AgenticTrading/commit/8df40dbe7996733d3f462d2cb4c68feee6cc1c4b) — re-pinned 269 commits and 408 changed files past the previous pin, and the memory subsystem is byte-identical across all of it: `rev-parse <pin>:orchestration/FinAgents/memory` and the same path at HEAD both give tree `36a155e383c092983d977e0240235c8b8212a7e2`, and `memory_testing` likewise gives `e0d1f2ab70c13bfdc4b5cc0158ca9215f76072b4`. Every finding above was re-verified at the new pin rather than carried forward: the primary search is still three `CONTAINS` clauses with no `agent_id` predicate and still fires `SET m.lookup_count = m.lookup_count + 1` as a side effect of reading, and the only comparison of `agent_id` is still behind `if "agent_id" in filters`. Marks unchanged at none. Screened again before reading: one auto-run surface, five build-time execution surfaces, seven unpinned surfaces, and two dependency files changed within the seven-day cooldown. Nothing was installed and nothing was run. The reading adds `orchestration/FinAgents/memory/tests/`, a five-file, 1,796-line suite inside the memory package that the first reading did not cover: it exercises all three servers, carries zero `assert` statements, and decides an outcome by testing the reply for the substrings `success`, `stored`, `created`, `saved` and `memory_id`. That does not move `negative_eval`, which stays absent, but it replaces a grounding search that had looked only at `memory_testing/` and `orchestration/tests/`. The indexer, the stream processor and the four agent pools remain untraced.
 
 **2026-08-25** — [`9966c3dfc0f4fd41978f63a36caeb111ac807601`](https://github.com/Open-Finance-Lab/AgenticTrading/commit/9966c3dfc0f4fd41978f63a36caeb111ac807601) — first reading, roughly 258,000 lines of Python, 1,419 commits since 20 May 2025, OpenMDW-1.0. Screened before anything was read: one auto-run surface, five build-time execution surfaces, seven unpinned surfaces; `CLAUDE.md` at the root is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run. No marks. `scope_enforced` is withheld on the producer check: `agent_id` is written on every `Memory` node and the primary search applies no predicate for it, while the one place it is compared sits behind `if "agent_id" in filters`, and the graph expansion selects it into the projection without comparing it. `trust_state`, `bitemporal`, `tombstone`, `audit_log` and `human_review` are absent from the schema — no status, one timestamp, no deletion record, no event label, no review surface. `negative_eval` is withheld because a grep across the committed tests for a negative assertion returns nothing, and because the directory named `memory_testing` contains one script with zero assertions whose success criterion is that an API call returned, and one that measures a model's long-context latency without importing the memory package. The reading covers the memory service, its schema and its query paths; the indexer, the stream processor and the four agent pools were not traced.
