@@ -1308,8 +1308,22 @@ href="../systems/generative-agents/"><code>generative-agents</code></a></h3>
 <ul>
 <li>Best idea: consolidation triggered by accumulated significance
 rather than by a timer or token count.</li>
-<li>Biggest risk: its famous retrieval weights are hand-tuned constants,
-and reflections share one pool with observations.</li>
+<li>Biggest risk: <strong>the recency term is inverted.</strong>
+<code>new_retrieve</code> sorts the node list ascending by
+<code>last_accessed</code> and <code>extract_recency</code> gives the
+first element the exponent 1, so <code>recency_decay ** i</code> is
+largest for the <em>least</em> recently accessed node and the normalizer
+carries that ordering through — the oldest memory scores 1.0 on recency
+and the newest 0.0. One <code>reverse=True</code> is the whole fix. The
+effect is bounded by <code>gw[0] = 0.5</code> against relevance at 3,
+which is the likeliest reason a sign error has stood in the field's
+most-copied retrieval formula since 2023, in a repository with no test
+that touches it.</li>
+<li>Second risk: the famous weights are hand-tuned constants with two
+earlier settings left commented out and no ablation; reflections share
+one pool with observations; and every thought is stamped with a
+thirty-day <code>expiration</code> that nothing ever compares to a
+clock.</li>
 <li>Most reusable component: the reflection trigger, and the
 three-signal retrieval structure — recalibrated, with time-based
 recency.</li>

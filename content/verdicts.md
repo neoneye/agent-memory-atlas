@@ -482,7 +482,8 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`generative-agents`](../systems/generative-agents/)
 - Best idea: consolidation triggered by accumulated significance rather than by a timer or token count.
-- Biggest risk: its famous retrieval weights are hand-tuned constants, and reflections share one pool with observations.
+- Biggest risk: **the recency term is inverted.** `new_retrieve` sorts the node list ascending by `last_accessed` and `extract_recency` gives the first element the exponent 1, so `recency_decay ** i` is largest for the *least* recently accessed node and the normalizer carries that ordering through — the oldest memory scores 1.0 on recency and the newest 0.0. One `reverse=True` is the whole fix. The effect is bounded by `gw[0] = 0.5` against relevance at 3, which is the likeliest reason a sign error has stood in the field's most-copied retrieval formula since 2023, in a repository with no test that touches it.
+- Second risk: the famous weights are hand-tuned constants with two earlier settings left commented out and no ablation; reflections share one pool with observations; and every thought is stamped with a thirty-day `expiration` that nothing ever compares to a clock.
 - Most reusable component: the reflection trigger, and the three-signal retrieval structure — recalibrated, with time-based recency.
 - Maturity impression: the field's reference architecture, frozen since August 2023 and never engineered for production.
 - Study when: you want to understand where most of this atlas came from, or need a consolidation schedule that tracks salience.

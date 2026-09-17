@@ -9,15 +9,15 @@ source_url: https://github.com/joonspk-research/generative_agents
 archive_name: "joonspk-research--generative_agents"
 revision: fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4
 revision_url: https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4
-analyzed_at: 2026-07-27
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "files, memory"
-stack_retrieval: ""
-stack_source: "seeded"
+stack_retrieval: "vector"
+stack_source: "reviewed"
 matrix:
   memory_unit: "`ConceptNode` typed event, thought, or chat with poignancy"
   storage: "Per-persona JSON plus in-memory embedding dict"
-  retrieval: "Normalized recency + relevance + importance, hand-tuned `gw = [0.5, 3, 2]`"
+  retrieval: "Normalized recency + relevance + importance over a full scan, hand-tuned `gw = [0.5, 3, 2]` — and the recency term is computed over a list sorted oldest-first, so it scores the least recently accessed node highest"
   write: "Perception, conversation, and reflection all write ungated"
   update_delete: "None; observations are never deleted or overwritten"
   scoping: "One persona directory"
@@ -25,7 +25,7 @@ matrix:
   background: "Reflection fired by accumulated poignancy"
   trust: "Reflections cite supporting nodes, but citations are never used"
   strengths: "Consolidation triggered by significance rather than a timer"
-  risks: "Derived thoughts share one pool with observations; positional not temporal decay"
+  risks: "Derived thoughts share one pool with observations; the decay is positional rather than temporal, and its direction is inverted — the oldest node normalizes to 1.0 and the newest to 0.0"
 ---
 
 ## 1. Executive Summary
@@ -47,7 +47,23 @@ master_out[key] = (persona.scratch.recency_w   * recency_out[key]   * gw[0]
 
 Two earlier settings are left commented out. Relevance is weighted six times recency. There is no ablation in the repository justifying any of it. The formula that launched a hundred memory systems is a tuned heuristic, and treating it as a principled result is a mistake the atlas should name plainly.
 
-**Recency decays by position, not by time.** `recency_vals = [recency_decay ** i for i in range(1, len(nodes)+1)]` — the exponent is a memory's *index in chronological order*, so a hundred events in an hour decay exactly as much as a hundred events across a month. In a simulation with a fixed tick rate that is nearly equivalent to time decay; in a real assistant with bursty usage it is not. Later systems that adopted "recency" mostly switched to wall-clock half-lives — [Redis Agent Memory Server](../redis-agent-memory-server/) uses dual half-lives on access and creation, [OpenViking](../openviking/) a seven-day half-life — and this is where that divergence starts.
+**Recency decays by position, not by time** — and it decays in the wrong direction. Three lines of `new_retrieve` settle it:
+
+```python
+nodes = [[i.last_accessed, i] for i in persona.a_mem.seq_event + persona.a_mem.seq_thought
+         if "idle" not in i.embedding_key]
+nodes = sorted(nodes, key=lambda x: x[0])          # ascending: least recently accessed first
+...
+recency_vals = [persona.scratch.recency_decay ** i for i in range(1, len(nodes) + 1)]
+```
+
+The list is sorted **ascending** by `last_accessed`, so its first element is the *least* recently accessed node — and `extract_recency` gives that element the exponent 1, which with `recency_decay = 0.99` is the largest value in the series. `normalize_dict_floats` then maps the series monotonically onto `[0, 1]`, so over a hundred nodes the oldest normalizes to 1.0 and the newest to 0.0. The term named `recency` rewards the memory that has gone longest without being touched. A `reverse=True` on that sort is the whole fix; the comment above the sort says *"sorting them by the datetime of creation"* while the key is `last_accessed`, which is the other small slip in the same three lines.
+
+Checked rather than reasoned about: both functions were reimplemented from the source — the exponent series and the min-max normalizer — over a hundred nodes, which puts the least recently accessed at a normalized 1.0 and the most recently accessed at 0.0. Nothing in the repository was executed to establish it.
+
+The effect is bounded rather than catastrophic, and that is probably why it was never noticed: `gw[0]` is 0.5 against relevance at 3 and importance at 2, so the inverted term can contribute at most 0.5 of a possible 5.5 — under a tenth of the score. The simulation still behaves plausibly because relevance dominates.
+
+The positional part matters separately: the exponent is an *index*, so a hundred events in an hour decay exactly as much as a hundred events across a month. In a simulation with a fixed tick rate that is nearly equivalent to time decay; in a real assistant with bursty usage it is not. Later systems that adopted "recency" mostly switched to wall-clock half-lives — [Redis Agent Memory Server](../redis-agent-memory-server/) uses dual half-lives on access and creation, [OpenViking](../openviking/) a seven-day half-life — and this is where that divergence starts.
 
 The genuinely elegant mechanism, and the one least copied, is the **reflection trigger**: a countdown seeded with `importance_trigger_max` is decremented by the poignancy of each new memory, and reflection fires when it crosses zero. Consolidation is scheduled by *accumulated significance* rather than by token count, message count, or a timer.
 
@@ -80,7 +96,7 @@ Retrieval:
 ```text
 focal_points (what the agent is attending to)
 -> gather nodes chronologically
--> recency   = recency_decay ** chronological_index
+-> recency   = recency_decay ** chronological_index   # index 1 is the OLDEST node
 -> importance= node.poignancy (assigned once, at write time, by an LLM)
 -> relevance = cos_sim(embedding(focal_pt), node embedding)
 -> normalize each to [0,1]
@@ -163,7 +179,11 @@ What it lacks is any downstream use: nothing validates that a cited node support
 
 Storage is JSON files per persona under a simulation checkpoint — no database, no index beyond an in-memory embedding dictionary. Retrieval walks the node list.
 
-Present and worth noting: `created` and `expiration` timestamps (expiration is largely unused), subject/predicate/object triples alongside free text, keywords, and `filling` for evidence references.
+Present and worth noting: `created` and `expiration` timestamps, subject/predicate/object triples alongside free text, keywords, and `filling` for evidence references.
+
+**`expiration` is written on every thought and compared to nothing.** Six sites set it to `persona.scratch.curr_time + datetime.timedelta(days=30)` — in planning, in three reflection paths and in two conversation paths — and its only readers are truthiness checks in the save and load functions (`associative_memory.py:80`, `:126`). No retrieval, no reflection and no tick compares it to the clock, so every derived thought carries a thirty-day validity that nothing in the repository enforces. That is the field a later system would need in order to expire a reflection, present and inert at the origin.
+
+**`filling` serves two purposes and only one of them is read.** On a chat node it holds the utterance rows, and two live callers replay them — `run_gpt_prompt_create_conversation` inserts a prior conversation verbatim into a prompt, and `get_str_seq_chats` renders them. On a thought node it holds the ids of the nodes the reflection was derived from, and nothing anywhere reads it: a grep for a reader of a thought's `filling` returns nothing. The citation trail exists, is persisted, and is never consulted — which is the precise version of this report's earlier, broader claim that citations are never used.
 
 Absent: scope of any kind beyond one persona's directory, trust or verification state, correction or supersession, deletion, and any distinction at retrieval time between an observation and a thought derived from thoughts derived from observations.
 
@@ -175,7 +195,9 @@ Vector similarity plus two non-semantic signals, computed over the full node lis
 
 ## 7. Write Mechanics
 
-Perception writes events; conversation writes chats; reflection writes thoughts. All three go through `add_event` / `add_chat` / `add_thought` with the same signature, and all three prepend to their sequence (`self.seq_event[0:0] = [node]`), keeping the newest-first order that the recency calculation depends on.
+Perception writes events; conversation writes chats; reflection writes thoughts. All three go through `add_event` / `add_chat` / `add_thought` with the same signature, and all three prepend to their sequence (`self.seq_event[0:0] = [node]`), so the stored sequences are newest-first.
+
+**That storage order does not reach the scoring path,** which is a correction to this report's earlier reading. `new_retrieve` concatenates the two sequences and re-sorts them ascending by `last_accessed` before computing any component, so the newest-first storage order is discarded and the recency exponent is assigned over the ascending list. The only other retrieval function, `retrieve()`, does no scoring at all — it looks up events and thoughts by exact subject/predicate/object through `retrieve_relevant_events` and `retrieve_relevant_thoughts`. So there is exactly one scored path, and the order it scores over is its own.
 
 There is no gate anywhere. Anything perceived is stored, and anything the reflection prompt returns is stored as a durable thought.
 
@@ -198,7 +220,7 @@ Strengths:
 Gaps, all of which later systems in the atlas exist to address:
 
 - Hand-tuned ranking constants presented (downstream) as a principled formula.
-- Position-based rather than time-based recency decay.
+- Position-based rather than time-based recency decay, **assigned over an ascending sort**, so the term scores the least recently accessed node highest. Bounded by the smallest of the three weights.
 - One-shot LLM importance that is never revised.
 - Derived thoughts indistinguishable from observations at retrieval time, and recursively derivable.
 - No scope, correction, verification, or deletion.
@@ -207,9 +229,13 @@ Gaps, all of which later systems in the atlas exist to address:
 
 ## 10. Tests, Evals, and Benchmarks
 
-No test suite for the memory modules. The paper's evaluation is human believability ratings of agent behaviour plus ablations of the observation/reflection/planning components — which measure whether the *simulation* is convincing, not whether retrieval surfaces the right memory. There is no retrieval-precision measurement anywhere in the repository, and the `gw` constants have no committed ablation.
+No test suite for the memory modules, and the one file in the backend named `test.py` is not one: its own docstring reads *"File: gpt_structure.py"* and its 76 lines are a copy of the OpenAI wrapper functions.
 
-Unchanged since August 2023.
+The paper's evaluation is human believability ratings of agent behaviour plus ablations of the observation/reflection/planning components — which measure whether the *simulation* is convincing, not whether retrieval surfaces the right memory. There is no retrieval-precision measurement anywhere in the repository, and the `gw` constants have no committed ablation.
+
+**This is the cost of that, stated concretely.** The recency inversion in section 1 is a sign error that one assertion would catch: build two nodes, touch one, and assert that the touched one scores higher on the recency component. No such assertion exists, the term has the smallest of the three weights, and the output of the whole system is a simulation judged by humans for plausibility — three conditions under which a wrong sign is invisible. The atlas's recurring lesson about suites that assert outcomes rather than mechanisms has its origin here too.
+
+Unchanged since August 2023: the pin is still the tip of `main` and the last commit is dated 11 August 2023.
 
 ## 11. For Your Own Build
 
@@ -224,7 +250,7 @@ Unchanged since August 2023.
 ### Avoid
 
 - **Magic constants inherited as doctrine.** `gw = [0.5, 3, 2]` has been reimplemented far more often than it has been re-derived.
-- **Positional recency decay** misread as time decay.
+- **Positional recency decay** misread as time decay — and a decay series whose direction nothing checks. A single test asserting that the most recent of two nodes scores higher on the recency component would have caught the inversion, and there is no test suite at all.
 - **Importance frozen at write time.**
 - **Derived and observed memory in one undifferentiated pool**, with recursive derivation and no drift boundary.
 - **Provenance recorded but unused.**
@@ -263,6 +289,31 @@ Do not copy:
 - Planning: `persona/cognitive_modules/plan.py`.
 - Prompts, including poignancy scoring: `persona/prompt_template/run_gpt_prompt.py`.
 
+**Searches recorded for the negative claims** (run at this pin)
+
+```sh
+grep -rn "expiration" reverie --include="*.py" | grep -E "<|>|curr_time"
+                            # six writes, all curr_time + 30 days; no comparison anywhere
+grep -rn "filling" reverie/backend_server/persona --include="*.py" | grep -iE "thought"
+                            # nothing: no reader of a thought's citation list
+grep -rn "new_retrieve(\|retrieve(" reverie/backend_server --include="*.py"
+                            # one scored path, new_retrieve, called from plan, reflect and
+                            # converse; retrieve() does exact-triple lookup and no scoring
+find . -iname "*test*"      # reverie/backend_server/test.py, whose docstring names
+                            # gpt_structure.py and whose body is API wrappers
+git rev-list --count <pin>..HEAD   # 0 — still the tip of main, last commit 2023-08-11
+```
+
 ## History
 
-**2026-07-27** — [`fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4`](https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4) — first reading.
+**2026-09-17** — [`fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4`](https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4) — re-read at the same commit, which is still the tip of `main`; the repository's last commit is 11 August 2023, so nothing upstream could have changed and this reading audited the first one against the code. Screened again: no auto-run surface, nothing inside the seven-day cooldown; nothing was installed and nothing was run. Apache-2.0, 11,174 lines of Python.
+
+**The recency term is inverted, and this reading is where the atlas says so.** `new_retrieve` sorts the concatenated event and thought sequences *ascending* by `last_accessed`, and `extract_recency` then assigns `recency_decay ** i` with `i = 1` to the first element — so the least recently accessed node receives the largest value, and `normalize_dict_floats` carries that ordering onto `[0, 1]`, giving the oldest node 1.0 and the newest 0.0. A `reverse=True` on that sort is the entire fix, and the direction was confirmed by reimplementing the exponent series and the normalizer over a hundred nodes rather than by running anything in the tree. The effect is bounded because `gw[0]` is 0.5 against relevance at 3 and importance at 2 — under a tenth of the composite score — which is the most likely reason a sign error has stood in the most-copied retrieval formula in this field for three years, in a repository with no test that touches it.
+
+**One of this report's own claims was wrong and is corrected.** Section 7 said the writers' newest-first prepend order was "the order the recency calculation depends on". It is not: the scored path re-sorts, so storage order never reaches scoring, and the only other retrieval function does exact subject/predicate/object lookup with no scoring at all. The error was in the direction that hid the inversion, because it implied the calculation saw a newest-first list.
+
+**Two claims made precise.** `expiration` is written as `curr_time + 30 days` at six sites and compared to a clock nowhere: its only readers are truthiness checks in save and load, so every derived thought carries a validity window nothing enforces. And `filling` is read — but only on chat nodes, where two live callers replay the utterances into a prompt; a thought's `filling`, the reflection's citation list, has no reader anywhere in the tree. The previous phrasing, that citations are never used, was true of the half that matters and too broad as written.
+
+Also recorded: the backend's one file named `test.py` is not a test — its docstring reads *"File: gpt_structure.py"* and its body is the OpenAI wrapper functions. Marks unchanged at none. `stack_retrieval` was empty and seeded; it is now `vector`, reviewed, with the appendix carrying the searches.
+
+**2026-07-27** — [`fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4`](https://github.com/joonspk-research/generative_agents/commit/fe05a71d3e4ed7d10bf68aa4eda6dd995ec070f4) — first reading. Screened before reading; nothing was installed or run.
