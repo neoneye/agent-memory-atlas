@@ -7,9 +7,9 @@ page_kind: system
 source_name: "skalesapp/skales"
 source_url: https://github.com/skalesapp/skales
 archive_name: "skalesapp--skales"
-revision: 522a16ea3d90c2e7688368ab320615d1a9d96563
-revision_url: https://github.com/skalesapp/skales/commit/522a16ea3d90c2e7688368ab320615d1a9d96563
-analyzed_at: 2026-09-07
+revision: ce47854afe004af4e5c30df623f861fe140a5b4d
+revision_url: https://github.com/skalesapp/skales/commit/ce47854afe004af4e5c30df623f861fe140a5b4d
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -34,8 +34,11 @@ Skales is a private, local-first desktop assistant — Electron around a Next.js
 app, storing everything under `.skales-data/` on the user's machine. The code in
 this repository is a frozen **v7.1.0** snapshot of that app, current in March
 2026 with one security fix in July; the product continues as closed-source
-binary releases under BSL 1.1 at 12.9.x, and the repository's README, a fixed
-strip in the web layout and a dialog on every launch from source all say so.
+binary releases under BSL 1.1 — the committed `CHANGELOG.md` runs to **v12.9.27**
+while the code beside it stays at v7.1.0 — and the repository's README, a fixed
+strip in the web layout and a dialog on every launch from source all say so. The
+changelog is the one file that keeps moving: the product's release notes are
+maintained in the repository the product is not built from.
 What follows describes the snapshot, which is the only Skales code anyone can
 read; whether the shipped 12.9 app still has these three subsystems or the
 finding below is not checkable from this tree. Its memory is three separate
@@ -428,6 +431,10 @@ repository is where a bug in it would be filed, not where it would be fixed.
 - `LICENSE` (BSL 1.1), `COMMERCIAL-LICENSE.md`
 
 ## History
+
+**2026-09-17** — [`ce47854afe004af4e5c30df623f861fe140a5b4d`](https://github.com/skalesapp/skales/commit/ce47854afe004af4e5c30df623f861fe140a5b4d) — re-read three commits on and not one of them touches code. `apps`, `electron`, `pets`, `scripts`, `package.json` and `package-lock.json` are byte-identical by tree or blob sha, as are the licence, the security policy and every install guide; the changes are `CHANGELOG.md` (+475), `README.md`, and the public guide moved from the repository root into `docs/`. Marks unchanged at none, and every line anchor in this report still names the same code because the code did not move.
+
+The one thing worth recording is what those commits say about the gap this report is built on. The committed changelog now runs to **v12.9.27** while the tree stays the frozen v7.1.0 snapshot, so the repository's most actively maintained file documents releases of a binary nobody can read the source of. Section 1 states that rather than leaving the version pair to a reader's arithmetic. Screened again before reading: no auto-run surface, one build-time execution surface, two unpinned surfaces, nothing inside the cooldown. Nothing was installed and nothing was run.
 
 **2026-09-07** — [`522a16ea3d90c2e7688368ab320615d1a9d96563`](https://github.com/skalesapp/skales/commit/522a16ea3d90c2e7688368ab320615d1a9d96563) — re-pinned 53 commits on. Every one of them is documentation and release notes except two: a fixed strip in `apps/web/src/app/layout.tsx` and a launch dialog in `electron/main.js`, both saying the checked-in source is a v7.1.0 snapshot from March 2026 that is no longer what ships. The memory subsystems this report describes are byte-identical to the previous pin, so every finding stands for the snapshot; section 1 and the fit paragraph state what the snapshot is. The product moved from 7.1.0 to 12.9.26 as closed binaries in the same period and cannot be read. Screened first: no auto-run surface, a `postinstall` that runs a nested `npm install`, lockfiles unchanged for 171 days; nothing installed or run.
 
