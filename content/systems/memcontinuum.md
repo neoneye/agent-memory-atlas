@@ -89,22 +89,26 @@ single flag and asserts both are present
 (`tests/test_memidx.py:2802-2867`).
 
 Three findings sit against the design. **The scope key can never exclude
-anything.** Every record carries a `project` column and 64 read queries filter
-on it, but `records` is keyed by `path` alone, so opening one database under a
-second `--project` is refused with the reason stated in the error — *"this db
-keys rows by path alone, so opening the SAME physical file for a different
-`--project` would silently evict that project's rows"* (`memidx.py:1019-1024`).
-One store, one project; the predicate is a guard against a stamping accident
-rather than a partition. **A declined ruling is delivered, not enforced.** The
-schema has a `declined` status, a `declined` kind and per-link `alternatives`
-each with an `option`, a `rejected_because` and its own authority, all frozen
-once written — and the pre-edit chain hands every link to the model regardless
-of status, so a rejected option reaches the agent about to touch that file.
-Nothing keys on the value and nothing refuses. **Every hook fails open.** A
-missing index, a missing python, a failed lookup or a slow one means the hook
-stays silent and the edit proceeds, and a file changed from the shell gets no
-lookup at all — the ledger notices it afterwards from a tree diff, or not at
-all if it was committed in the same breath.
+anything.** Every record carries a `project` column and 64 read queries
+filter on it, but `records` is keyed by `path` alone, so opening one
+database under a second `--project` is refused with the reason stated in
+the error — *"this db keys rows by path alone, so opening the SAME
+physical file for a different `--project` would silently evict that
+project's rows"* (`memidx.py:1019-1024`). One store, one project; the
+predicate is a guard against a stamping accident rather than a partition.
+
+**A declined ruling is delivered, not enforced.** The schema has a
+`declined` status, a `declined` kind and per-link `alternatives` each with
+an `option`, a `rejected_because` and its own authority, all frozen once
+written — and the pre-edit chain hands every link to the model regardless
+of status, so a rejected option reaches the agent about to touch that
+file. Nothing keys on the value and nothing refuses.
+
+**Every hook fails open.** A missing index, a missing python, a failed
+lookup or a slow one means the hook stays silent and the edit proceeds,
+and a file changed from the shell gets no lookup at all — the ledger
+notices it afterwards from a tree diff, or not at all if it was committed
+in the same breath.
 
 ## 2. Mental Model
 

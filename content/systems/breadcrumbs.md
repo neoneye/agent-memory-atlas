@@ -755,25 +755,30 @@ goes into the shared store, and the desk's curation contract routes explicitly
 through it: *"The gardener proposes; a human merges."* The mark is earned on
 that.
 
-It is worth being exact about what it is. It is a repository gate, not a memory
-gate: there is no reviewer field on a row, no approved status, nothing in any
-store recording that an adjudication happened. It governs what reaches `main`,
-not what the session that wrote the line reads back from its own working tree.
-And the shipped policy exempts one of the stores.
+It is worth being exact about what it is. It is a repository gate, not a
+memory gate: there is no reviewer field on a row, no approved status,
+nothing in any store recording that an adjudication happened. It governs
+what reaches `main`, not what the session that wrote the line reads back
+from its own working tree. And the shipped policy exempts one of the
+stores.
+
 [`ci-kit/workflows/greenlight_tiers.py`](https://github.com/The-825/breadcrumbs/blob/abd08addf5f778fc8050894fe57eb1b0b57a8710/ci-kit/workflows/greenlight_tiers.py)
-lets a PR merge unlabeled when every changed file is an addition or modification
-inside `docs/`, `checklists/`, `README.md` or `planning/DECISIONS.md` — and
-`planning/DECISIONS.md` is the decisions ledger, a memory store in the table in
-section 5. A ruling can therefore land on `main` on green alone, while a
-conclusions line, keyed anywhere else in the tree, waits for the label. The
-argument for tiering is stated and good — *"a blanket approval-label gate scales
-the operator, not the system. Past a few PRs a day the label becomes a rubber
-stamp applied in batches, which is worse than no gate, because it still LOOKS
-like review"* — and everything else fails closed: deletions and renames always
-gate, an unreadable input gates, an empty changed-files list gates, and the gate
-runs the base branch's copy of the policy so a PR cannot loosen the rule on
-itself. The exemption is a deliberate line drawn at a store rather than at a
-risk, and it is the one place the policy and the memory model disagree.
+lets a PR merge unlabeled when every changed file is an addition or
+modification inside `docs/`, `checklists/`, `README.md` or
+`planning/DECISIONS.md` — and `planning/DECISIONS.md` is the decisions
+ledger, a memory store in the table in section 5. A ruling can therefore
+land on `main` on green alone, while a conclusions line, keyed anywhere
+else in the tree, waits for the label.
+
+The argument for tiering is stated and good — *"a blanket approval-label
+gate scales the operator, not the system. Past a few PRs a day the label
+becomes a rubber stamp applied in batches, which is worse than no gate,
+because it still LOOKS like review"* — and everything else fails closed:
+deletions and renames always gate, an unreadable input gates, an empty
+changed-files list gates, and the gate runs the base branch's copy of the
+policy so a PR cannot loosen the rule on itself. The exemption is a
+deliberate line drawn at a store rather than at a risk, and it is the one
+place the policy and the memory model disagree.
 
 Beside it the kit ships `greenlight-all.yml`, which batch-applies the label to
 every green agent PR on one dispatch. It is a template and is not installed

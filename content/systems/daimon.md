@@ -1091,27 +1091,31 @@ new request citing `supersedes`, which makes re-asking an append-only fact with
 visible lineage. And revision is capped at three per record lifetime, on the
 ground that *"without it, revise is a nag loop the recipient cannot stop."*
 
-The join is wider than two buckets in one case, without any write reaching a
-foreign one. A human decides from whatever directory they are standing in, so a
-verdict can land in a *third* bucket holding no `opened` row for the id; the
-recipient's join keeps such orphan groups when the id is addressed to it,
-discards a bucket's rows for ids the project is not party to, and *"a row
-claiming an agent channel is still refused by the fold's authority re-check, so
-widening the read adds no write reach anywhere."* An ask reaches a running
-session at its next turn boundary when `DAIMON_LIVE_DELIVERY` is on, rather
-than at that session's next start, deduplicated by a `delivered` row keyed on
-revision epoch *and* session id — a brief renders an ask once per epoch, while
-live delivery owes it to every session running in that epoch. The verdict
-travels back the same way. An accepted ask moves to an *owed* lane with its own
-event name, kept apart from `delivered` because accepting never bumps the
-revision, so reusing that key *"would drop the accepted card with no error and
-no log line"* (`_RECIPIENT_OWED`, `owed_renderable`, `requests.py:1041`); and
-staleness deliberately does not reach it, since *"work does not expire by being
-ignored."* The predicate deciding whether an ask still deserves ambient
-attention is one function shared by the panel and the live path
-(`_deserves_attention`, `requests.py:1014`), named once because *"the day the
-two filters disagree, one of them is nudging about an ask the other already
-decided was not worth attention."*
+The join is wider than two buckets in one case, without any write reaching
+a foreign one. A human decides from whatever directory they are standing
+in, so a verdict can land in a *third* bucket holding no `opened` row for
+the id; the recipient's join keeps such orphan groups when the id is
+addressed to it, discards a bucket's rows for ids the project is not party
+to, and *"a row claiming an agent channel is still refused by the fold's
+authority re-check, so widening the read adds no write reach anywhere."*
+
+An ask reaches a running session at its next turn boundary when
+`DAIMON_LIVE_DELIVERY` is on, rather than at that session's next start,
+deduplicated by a `delivered` row keyed on revision epoch *and* session id
+— a brief renders an ask once per epoch, while live delivery owes it to
+every session running in that epoch.
+
+The verdict travels back the same way. An accepted ask moves to an *owed*
+lane with its own event name, kept apart from `delivered` because
+accepting never bumps the revision, so reusing that key *"would drop the
+accepted card with no error and no log line"* (`_RECIPIENT_OWED`,
+`owed_renderable`, `requests.py:1041`); and staleness deliberately does
+not reach it, since *"work does not expire by being ignored."* The
+predicate deciding whether an ask still deserves ambient attention is one
+function shared by the panel and the live path (`_deserves_attention`,
+`requests.py:1014`), named once because *"the day the two filters
+disagree, one of them is nudging about an ask the other already decided
+was not worth attention."*
 
 **A ruling can stop an action, and the hook that does it is the first in
 the tree that can.** `hook/daimon-pre-action.py` is registered on `PreToolUse`

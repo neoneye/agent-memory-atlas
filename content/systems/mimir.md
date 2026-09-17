@@ -52,26 +52,31 @@ stores — so a query about a function can return the note somebody wrote about 
 and the symbol itself, ranked against each other rather than merged afterwards
 by a caller.
 
-Four mechanisms are worth taking away regardless of the rest. **A deliberate
-deletion refuses its own return**: `forget` leaves a tombstone, and `remember`
-checks the text and its rewordings against the newest deliberate tombstones
-before it writes, refusing with `--force` as the only way back and a
-`Resurfacing` finding in the review queue each time it happens
-(`crates/mimir-core/src/memory.rs`). **A mutation ledger** records who changed a
-memory, when and why, as hashes and never the value (`audit.rs`); its
-`superseded_at` is what lets `recall --as-of` judge supersession by when it
-happened, separately from the `valid_from`/`valid_to` interval a person declares
-(`search/mod.rs`). **A review queue** holds what the store noticed and will not
-decide — contradictions, stale groundings, expired conditions, resurfacing facts
-— until a person keeps, supersedes or dismisses with a reason (`review.rs`).
-**Consolidation supersedes and never deletes**, stated as an invariant in the
-module's own header comment and implemented as `UPDATE node SET superseded_by =
-?2`, so the merge that collapses two memories leaves both rows and a pointer.
-And the **context guard** turns the moment a coding session runs out of window into a memory event:
-in `handoff` mode it instructs the agent to write one structured
-`session-handoff` memory *before* the user clears, then restores it on the next
-`SessionStart`. That is the conversation-window boundary this atlas puts outside
-its scope, handled by making one durable memory out of it.
+Four mechanisms are worth taking away regardless of the rest. **A
+deliberate deletion refuses its own return**: `forget` leaves a tombstone,
+and `remember` checks the text and its rewordings against the newest
+deliberate tombstones before it writes, refusing with `--force` as the
+only way back and a `Resurfacing` finding in the review queue each time it
+happens (`crates/mimir-core/src/memory.rs`).
+
+**A mutation ledger** records who changed a memory, when and why, as
+hashes and never the value (`audit.rs`); its `superseded_at` is what lets
+`recall --as-of` judge supersession by when it happened, separately from
+the `valid_from`/`valid_to` interval a person declares (`search/mod.rs`).
+
+**A review queue** holds what the store noticed and will not decide —
+contradictions, stale groundings, expired conditions, resurfacing facts —
+until a person keeps, supersedes or dismisses with a reason (`review.rs`).
+
+**Consolidation supersedes and never deletes**, stated as an invariant in
+the module's own header comment and implemented as `UPDATE node SET
+superseded_by = ?2`, so the merge that collapses two memories leaves both
+rows and a pointer. And the **context guard** turns the moment a coding
+session runs out of window into a memory event: in `handoff` mode it
+instructs the agent to write one structured `session-handoff` memory
+*before* the user clears, then restores it on the next `SessionStart`.
+That is the conversation-window boundary this atlas puts outside its
+scope, handled by making one durable memory out of it.
 
 The gap is the familiar one and it is one predicate wide. `remember` computes a
 normalized content hash and looks for an existing node with the same hash — under

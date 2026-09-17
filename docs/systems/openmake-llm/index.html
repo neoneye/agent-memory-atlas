@@ -523,24 +523,24 @@ measures held no rows on 6 September 2026.</p>
 throws — a failure is logged at debug level and the response is
 unaffected — so a memory formed from turn <em>n</em> is in the table
 before turn <em>n + 1</em> is assembled, and the lag is the extractor's
-own model call when that switch is on. The LLM prompt asks for
-<em>"user-specific facts that stay useful in the next conversation"</em>
-— names, preferences, occupation, language, projects, repeated requests
-— excludes one-off questions, time-dependent information and <em>answers
-to questions</em>, tells the model the tagged text is material to
-analyse and not a question to it, requires each fact as a <em>the
-user…</em> line, and demands exactly <code>NONE</code> when there is
-nothing; the response is split on lines, stripped of bullets and quotes,
-filtered to lines that begin with the Korean subject
-<em>사용자는/의/가</em>, bounded to three and to 300 characters each.
-Temperature is fixed at 0. The filter is the load-bearing part: the
-config comment records a backfill dry run over one user's history in
-which eight of eleven candidates were the model's answers to a geometry
-question (<code>config/memory-extraction.ts:22-27</code>), and the
-commit that added the tag and the filter records the same sessions
-replayed leaking none. It also means the LLM extractor stores nothing
-that is not phrased in Korean with that subject, whatever language the
-person writes in.</p>
+own model call when that switch is on.</p>
+<p>The LLM prompt asks for <em>"user-specific facts that stay useful in
+the next conversation"</em> — names, preferences, occupation, language,
+projects, repeated requests — excludes one-off questions, time-dependent
+information and <em>answers to questions</em>, tells the model the
+tagged text is material to analyse and not a question to it, requires
+each fact as a <em>the user…</em> line, and demands exactly
+<code>NONE</code> when there is nothing; the response is split on lines,
+stripped of bullets and quotes, filtered to lines that begin with the
+Korean subject <em>사용자는/의/가</em>, bounded to three and to 300
+characters each. Temperature is fixed at 0.</p>
+<p>The filter is the load-bearing part: the config comment records a
+backfill dry run over one user's history in which eight of eleven
+candidates were the model's answers to a geometry question
+(<code>config/memory-extraction.ts:22-27</code>), and the commit that
+added the tag and the filter records the same sessions replayed leaking
+none. It also means the LLM extractor stores nothing that is not phrased
+in Korean with that subject, whatever language the person writes in.</p>
 <p>Dedup is two-stage: <code>norm(a) == norm(b)</code> or either
 containing the other after lower-casing and stripping punctuation, and
 failing that a Jaccard overlap of crude-stemmed tokens at or above 0.75.

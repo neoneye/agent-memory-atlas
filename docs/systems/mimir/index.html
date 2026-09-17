@@ -176,18 +176,19 @@ caller.</p>
 the text and its rewordings against the newest deliberate tombstones
 before it writes, refusing with <code>--force</code> as the only way
 back and a <code>Resurfacing</code> finding in the review queue each
-time it happens (<code>crates/mimir-core/src/memory.rs</code>).
-<strong>A mutation ledger</strong> records who changed a memory, when
+time it happens (<code>crates/mimir-core/src/memory.rs</code>).</p>
+<p><strong>A mutation ledger</strong> records who changed a memory, when
 and why, as hashes and never the value (<code>audit.rs</code>); its
 <code>superseded_at</code> is what lets <code>recall --as-of</code>
 judge supersession by when it happened, separately from the
 <code>valid_from</code>/<code>valid_to</code> interval a person declares
-(<code>search/mod.rs</code>). <strong>A review queue</strong> holds what
-the store noticed and will not decide — contradictions, stale
-groundings, expired conditions, resurfacing facts — until a person
-keeps, supersedes or dismisses with a reason (<code>review.rs</code>).
-<strong>Consolidation supersedes and never deletes</strong>, stated as
-an invariant in the module's own header comment and implemented as
+(<code>search/mod.rs</code>).</p>
+<p><strong>A review queue</strong> holds what the store noticed and will
+not decide — contradictions, stale groundings, expired conditions,
+resurfacing facts — until a person keeps, supersedes or dismisses with a
+reason (<code>review.rs</code>).</p>
+<p><strong>Consolidation supersedes and never deletes</strong>, stated
+as an invariant in the module's own header comment and implemented as
 <code>UPDATE node SET superseded_by = ?2</code>, so the merge that
 collapses two memories leaves both rows and a pointer. And the
 <strong>context guard</strong> turns the moment a coding session runs

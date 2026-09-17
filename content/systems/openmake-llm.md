@@ -349,22 +349,26 @@ The explicit path blocks on one insert. The automatic path is
 `void`-called from the pipeline before dispatch and never throws — a
 failure is logged at debug level and the response is unaffected — so a
 memory formed from turn *n* is in the table before turn *n + 1* is
-assembled, and the lag is the extractor's own model call when that switch is
-on. The LLM prompt asks for *"user-specific facts that stay useful in the
-next conversation"* — names, preferences, occupation, language, projects,
+assembled, and the lag is the extractor's own model call when that switch
+is on.
+
+The LLM prompt asks for *"user-specific facts that stay useful in the next
+conversation"* — names, preferences, occupation, language, projects,
 repeated requests — excludes one-off questions, time-dependent information
 and *answers to questions*, tells the model the tagged text is material to
-analyse and not a question to it, requires each fact as a *the user…* line,
-and demands exactly `NONE` when there is nothing; the response is split on
-lines, stripped of bullets and quotes, filtered to lines that begin with
-the Korean subject *사용자는/의/가*, bounded to three and to 300 characters
-each. Temperature is fixed at 0. The filter is the load-bearing part: the
-config comment records a backfill dry run over one user's history in which
-eight of eleven candidates were the model's answers to a geometry question
+analyse and not a question to it, requires each fact as a *the user…*
+line, and demands exactly `NONE` when there is nothing; the response is
+split on lines, stripped of bullets and quotes, filtered to lines that
+begin with the Korean subject *사용자는/의/가*, bounded to three and to 300
+characters each. Temperature is fixed at 0.
+
+The filter is the load-bearing part: the config comment records a backfill
+dry run over one user's history in which eight of eleven candidates were
+the model's answers to a geometry question
 (`config/memory-extraction.ts:22-27`), and the commit that added the tag
-and the filter records the same sessions replayed leaking none. It also means the LLM
-extractor stores nothing that is not phrased in Korean with that subject,
-whatever language the person writes in.
+and the filter records the same sessions replayed leaking none. It also
+means the LLM extractor stores nothing that is not phrased in Korean with
+that subject, whatever language the person writes in.
 
 Dedup is two-stage: `norm(a) == norm(b)` or either containing the other
 after lower-casing and stripping punctuation, and failing that a Jaccard

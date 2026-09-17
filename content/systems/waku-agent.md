@@ -260,7 +260,34 @@ Gaps:
 
 Seventy-one deterministic eval files, model-free rather than model-judged, which is the right shape for behavioural checks. `test_retrieval_gate.py` carries eleven cases and every one is about plumbing: JSON extracted from prose, survival of a thinking block, failing open on an API error, exactly one model call. `test_episodic_store_switch.py` and `test_skill_encoding.py` exercise the self-management tools; `test_consolidation.py` pins the thinking-only truncation; `test_fact_store_conformance.py` holds every fact backend to the same contract, and `test_memory_search.py` pins the Unicode FTS fix. Beside them sit two judge-scored files under `evals/judge/`, both requiring a provider key. Nothing was run for this review — a dependency surface changed the day of the reading, inside the seven-day cooldown.
 
-The largest committed addition since the previous pin is a **memory benchmark**. `waku/ops/memory_arena.py` (896 lines) is a harness that holds the model and the probes constant and varies only `WAKU_SEMANTIC_STORE`, so "a difference in the scoreboard can only have come from where the facts live" — racing Waku's own SQLite against Supabase, mem0, Zep, LangMem and a no-memory control. It seeds a *conversation* rather than a pre-extracted fact list, so each backend's own extraction runs, then scores each probe on four outcomes: `PASS`, `MISS` (an honest failure), `STALE` (returns a superseded answer), and `INVENTED` (answers a probe that should have been refused) — the last being, in the code's words, "the number the whole exercise exists to produce." An LLM adjudicator settles only the verdicts a substring heuristic marks uncertain, and returns `None` rather than silently converting when unreachable. The **negative control** — a contestant "told nothing, then asked everything" — is the sharpest idea: any probe it passes was scoring the model's training data, not the store, and running it found 3 of 7 dinner-track probes doing exactly that. No results are committed; the harness writes to a gitignored directory, and only a deliberately dull example fixture (`evals/memory_arena.json`), a cleanup script and a methodology doc (`docs/memory-backends-playbook.md`) are in the tree. It measures other systems, so it changes none of Waku's own marks, but it is one of the more carefully-reasoned memory evals in the corpus. See the [benchmarks page](../../benchmarks/).
+The largest committed addition since the previous pin is a **memory
+benchmark**. `waku/ops/memory_arena.py` (896 lines) is a harness that
+holds the model and the probes constant and varies only
+`WAKU_SEMANTIC_STORE`, so "a difference in the scoreboard can only have
+come from where the facts live" — racing Waku's own SQLite against
+Supabase, mem0, Zep, LangMem and a no-memory control.
+
+It seeds a *conversation* rather than a pre-extracted fact list, so each
+backend's own extraction runs, then scores each probe on four outcomes:
+`PASS`, `MISS` (an honest failure), `STALE` (returns a superseded answer),
+and `INVENTED` (answers a probe that should have been refused) — the last
+being, in the code's words, "the number the whole exercise exists to
+produce."
+
+An LLM adjudicator settles only the verdicts a substring heuristic marks
+uncertain, and returns `None` rather than silently converting when
+unreachable.
+
+The **negative control** — a contestant "told nothing, then asked
+everything" — is the sharpest idea: any probe it passes was scoring the
+model's training data, not the store, and running it found 3 of 7
+dinner-track probes doing exactly that. No results are committed; the
+harness writes to a gitignored directory, and only a deliberately dull
+example fixture (`evals/memory_arena.json`), a cleanup script and a
+methodology doc (`docs/memory-backends-playbook.md`) are in the tree. It
+measures other systems, so it changes none of Waku's own marks, but it is
+one of the more carefully-reasoned memory evals in the corpus. See the
+[benchmarks page](../../benchmarks/).
 
 ### The gate accuracy eval, and why it does not carry the mark
 
