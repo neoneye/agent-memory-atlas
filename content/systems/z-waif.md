@@ -9,11 +9,11 @@ source_url: https://github.com/SugarcaneDefender/z-waif
 archive_name: "SugarcaneDefender--z-waif"
 revision: aaf905c12efcbd2a709a3b2285f55e554d47484f
 revision_url: https://github.com/SugarcaneDefender/z-waif/commit/aaf905c12efcbd2a709a3b2285f55e554d47484f
-analyzed_at: 2026-07-29
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "files"
-stack_retrieval: ""
-stack_source: "seeded"
+stack_retrieval: "lexical"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A message pair — one user turn and one character turn — reduced to a list of word ids with the common words pruned out"
   storage: "Three JSON files under `RAG_Database/`: a word table with counts and values, per-pair word ids and scores, and the raw text"
@@ -25,7 +25,7 @@ matrix:
   background: "A thread recomputes word values every 120 seconds, plus a roughly one-in-three chance of recomputing on any given turn"
   trust: "None. Every stored pair is equally eligible and nothing records where it came from"
   strengths: "Inverse document frequency, length normalisation and a cap on the character's own words steering retrieval — all derived from scratch"
-  risks: "A three-message window score is computed and never used; the licence is not open source"
+  risks: "A three-message window score is computed and never used; the licence is not open source, and one of its three conditions constrains what a memory system may store"
 ---
 
 ## 1. Executive Summary
@@ -472,5 +472,13 @@ the two ideas worth having.
 - None.
 
 ## History
+
+**2026-09-17** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, no build-time execution path, one unpinned manifest, nothing inside the cooldown; nothing was installed or run.
+
+Every claim held. `based_rag.py` is still 628 lines with no test anywhere in the tree; the character's own words are still discounted by `score * 0.97` under the comment *"Make hers less powerful"*; and `central_score` is still computed from the three-message window at `:280-282` and never read — the selection two lines later compares `histories_word_id_database['scores'][i]` alone. Worth adding, because it makes the dead code more interesting rather than less: the loop opens with `i = 1` under the comment *"Disallow message 1; always start on message 2 or higher"*, so the window's boundary was thought about before its result was discarded.
+
+The licence riders are unchanged and this report's account of all three is accurate. What was thinner was the atlas's own summary: the [licence table](../../compare/#what-the-licences-actually-say) described Z-Waif as carrying "a royalty clause and an 'ethical treatment' clause" and omitted the third condition, which is the one that bears on a memory system — no collection or storage of *"user logs, character configurations, or other user data"* without consent obtained through terms the user *"MUST ACCEPT UPON OPENING"* the software. That row now names all three.
+
+Marks unchanged at none. `stack_retrieval` was empty and seeded; it is now `lexical`, reviewed — shared-word counting with inverse document frequency and a length penalty, and no embedding anywhere.
 
 **2026-07-29** — [`aaf905c12efcbd2a709a3b2285f55e554d47484f`](https://github.com/SugarcaneDefender/z-waif/commit/aaf905c12efcbd2a709a3b2285f55e554d47484f) — first reading.
