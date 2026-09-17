@@ -1864,9 +1864,31 @@ href="../systems/memoryos/"><code>memoryos</code></a></h3>
 <li>Best idea: the promotion rule is a written formula with named
 coefficients, and the LoCoMo harness ships with its dataset committed
 beside it.</li>
-<li>Biggest risk: heat sums frequency, interaction length and recency
-into one scalar with weights of 1/1/1, and a second LFU counter can
-disagree with it about the same segment.</li>
+<li>Biggest risk: <strong>the third term of that formula is a
+constant.</strong> <code>R_recency</code> is
+<code>exp(-Δhours / tau)</code>, and three of the four live
+<code>compute_segment_heat</code> calls set <code>last_visit_time</code>
+to the current timestamp on the line immediately before — so the decay
+measures now against now and returns <code>exp(0) = 1.0</code> every
+time. The one call where the timestamp is still older is the
+post-analysis path, whose own comment says <em>"Recency will
+re-calculate naturally"</em>; the periodic refresh that would re-decay
+stored heat sits commented out inside <code>rebuild_heap</code>. With γ
+= 1 the term adds a constant to every segment and cannot change an
+ordering: the paper prints three terms, the code has two and an
+offset.</li>
+<li>Second risk: heat sums frequency and interaction length into one
+scalar with weights of 1/1, so verbosity is indistinguishable from
+importance, and a second LFU counter can disagree with the heat about
+the same segment.</li>
+<li>Third risk: <strong>the committed LoCoMo harness is not the shipped
+configuration.</strong> <code>eval/</code> has its own copy of the
+formula at <code>alpha=0.8, beta=0.8, gamma=0.0001</code>, its own
+<code>compute_time_decay</code> whose <code>tau=3600</code> is in
+seconds where the library's 24 is in hours, and a short-term memory
+built with <code>max_capacity=1</code> against the library's 10. Five
+copies of the implementation ship in one repository, which is how one of
+them comes to hold different numbers.</li>
 <li>Most reusable component: the shape — tiers with an explicit,
 computable promotion signal — rather than the formula.</li>
 <li>Maturity impression: a legible research implementation with an MCP

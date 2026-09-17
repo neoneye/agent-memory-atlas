@@ -1,7 +1,7 @@
 ---
 title: MemoryOS
 eyebrow: Heat-promoted tiers
-description: A three-tier research memory whose promotion runs on a hand-tuned heat score, and which keeps two different access counters that can disagree about what matters.
+description: A three-tier research memory whose promotion runs on a hand-tuned heat score whose recency term is 1.0 on every path that updates it, and which keeps two different access counters that can disagree about what matters.
 root: ../..
 page_kind: system
 source_name: BAI-LAB/MemoryOS
@@ -9,23 +9,23 @@ source_url: https://github.com/BAI-LAB/MemoryOS
 archive_name: "BAI-LAB--MemoryOS"
 revision: 587ed7755c7aed179965792830ff1b5ad9a6fa92
 revision_url: https://github.com/BAI-LAB/MemoryOS/commit/587ed7755c7aed179965792830ff1b5ad9a6fa92
-analyzed_at: 2026-07-28
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "chroma, files"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "QA pair in short term; topic session segment in mid term; profile string and knowledge entry in long term"
   storage: "JSON files by default; a separate ChromaDB variant"
-  retrieval: "Embedding similarity per tier, with mid-term segments ordered by a heat score"
+  retrieval: "Embedding similarity per tier, with mid-term segments ordered by a heat score whose third term is a constant in practice"
   write: "Dialogue pairs appended; LLM segmentation into topic sessions; profile and knowledge updates"
   update_delete: "LFU eviction at capacity; bounded knowledge deques; profile merged by rewrite"
   scoping: "`user_id` and `assistant_id` on the store"
   integration: "PyPI package, MCP server, ChromaDB variant, playground"
-  background: "Segmentation, heat recomputation, profile and knowledge updates on threshold"
+  background: "Segmentation, profile and knowledge updates on threshold; the heat recomputation inside `rebuild_heap` is commented out, so stored heat is never re-decayed"
   trust: "None found — no source, actor, or status on a memory"
   strengths: "A committed LoCoMo harness with its dataset, and an explicit promotion signal"
-  risks: "Heat mixes three signals with hardcoded weights; a second LFU counter can disagree with it"
+  risks: "Heat mixes two signals and a constant: three of its four call sites overwrite `last_visit_time` immediately before measuring decay from it, so `R_recency` is exactly 1.0; the LoCoMo harness additionally uses different weights from the shipped library; a second LFU counter can disagree with the heat"
 ---
 
 ## 1. Executive Summary
@@ -71,6 +71,49 @@ one ablation removes **modules** — mid-term memory, the long-term persona
 module, the dialogue page chain — never the three weights. The coefficients are
 not an implementation shortcut that the research tuned elsewhere; they are 1, 1
 and 1 in both places.
+
+**And the third term is not a signal.** `R_recency` is
+`exp(-Δhours / tau_hours)` over the gap between `last_visit_time` and now — but
+three of the four live calls to `compute_segment_heat` set `last_visit_time` to
+the current timestamp on the line immediately before, so the gap is zero and the
+decay is `exp(0) = 1.0` every time:
+
+```python
+session["N_visit"] += 1
+session["last_visit_time"] = current_time_str
+session["access_count_lfu"] = session.get("access_count_lfu", 0) + 1
+self.access_frequency[session_id] = session["access_count_lfu"]
+session["H_segment"] = compute_segment_heat(session)   # decays from now to now
+```
+
+That is `mid_term.py:345-350`, the retrieval-hit path. Session creation
+(`:170`) sets `last_visit_time` to the creation timestamp and computes heat in
+the same breath; insertion (`:273`) calls `get_timestamp()` on the preceding
+line. The **only** site where the stored timestamp is still older than now is
+`memoryos.py:214`, after a segment has been analysed — and its own neighbouring
+comment says *"Recency will re-calculate naturally"*, which is precisely what the
+other three prevent. The periodic refresh that would re-decay stored heat is
+present and commented out: `rebuild_heap` carries
+`# session_data["H_segment"] = compute_segment_heat(session_data)` above the line
+that rebuilds the heap from whatever heat was last stored.
+
+So with γ = 1, recency adds a constant 1.0 to every segment's heat and cannot
+change any ordering. The formula the paper prints has three terms; the code has
+two and an offset. This strengthens the criticism above rather than replacing it:
+the weights are untuned *and* the term whose weight would matter most is inert.
+
+**The LoCoMo harness does not use the shipped formula.** `eval/` carries its own
+copy of `compute_segment_heat` with different defaults —
+`alpha=0.8, beta=0.8, gamma=0.0001` against the library's `1.0, 1.0, 1` — and
+its own `compute_time_decay` whose `tau` is 3600 in units of *seconds* against
+the library's 24 in *hours*. Its recency is 1.0 for the same reason
+(`eval/mid_term_memory.py:237-238` sets `last_visit_time` then measures from it),
+and at γ = 0.0001 the term contributes one ten-thousandth of a constant. The
+harness also constructs short-term memory with `max_capacity=1`
+(`main_loco_parse.py:233`) where the library defaults to 10, so every pair is
+promoted immediately. The committed benchmark is therefore evidence about a
+configuration that is not the one the package installs, which is worth knowing
+before reading the numbers as a property of the system.
 
 **There are two access counters.** Heat consumes `N_visit`, while capacity
 eviction runs a separate LFU path over `self.access_frequency` and
@@ -351,6 +394,14 @@ to learn the shape from, not to build on.
   `memoryos-playground/`.
 
 ## History
+
+**2026-09-17** — third reading, at the same commit, confirmed still the tip by `git ls-remote` before cloning; the last commit upstream is 7 July 2026. Nothing could have moved, so this reading audited the previous two. Screened again: no auto-run surface, no build-time execution path, six unpinned manifests, nothing inside the cooldown; nothing was installed or run, from a `--depth 1` clone because the pin is the tip.
+
+**The heat formula's third term is a constant, which neither earlier reading caught.** `R_recency` is `exp(-Δhours / tau_hours)` between `last_visit_time` and now, and three of the four live `compute_segment_heat` calls set `last_visit_time` to the current timestamp on the line immediately before — session creation at `mid_term.py:170`, insertion at `:273`, and the retrieval-hit path at `:345-350`. The gap is zero, so the decay is `exp(0) = 1.0` every time. The one call where the stored timestamp is still older is `memoryos.py:214`, after analysis, whose neighbouring comment reads *"Recency will re-calculate naturally"* — which is exactly what the other three prevent. And the periodic refresh that would re-decay stored heat sits commented out inside `rebuild_heap`. With γ = 1 the term adds a constant 1.0 to every segment and cannot affect an ordering: the paper prints three terms and the code has two and an offset. This does not replace the standing criticism about untuned weights, it sharpens it — the weight that would matter most is applied to a constant.
+
+**The committed LoCoMo harness is not running the shipped configuration.** `eval/` carries its own `compute_segment_heat` with `alpha=0.8, beta=0.8, gamma=0.0001` against the library's `1.0, 1.0, 1`, its own `compute_time_decay` whose `tau=3600` is in seconds where the library's 24 is in hours, and a short-term memory constructed with `max_capacity=1` where the library defaults to 10. The 2026-08-09 entry recorded that the paper and the code agree on α = β = γ = 1; the harness that produced the numbers agrees with neither. Read the benchmark as evidence about that configuration rather than about the package.
+
+Everything else held: two access counters maintained separately, the profile merged by rewrite, and no trust or provenance on a memory. Marks unchanged at none; `stack_source` moves from `seeded` to `reviewed`. Five copies of the memory implementation ship in one repository — `memoryos-pypi`, `memoryos-playground`, `memoryos-mcp/memoryos`, `memoryos-chromadb` and `eval` — which is how a formula can be edited in one of them without anything noticing.
 
 **2026-08-09** — the accompanying paper ([arXiv:2506.06326](https://arxiv.org/abs/2506.06326)) was read and cited, which the first reading did not do. It changes no claim: the paper prints the same heat formula, states the three coefficients are set to 1, and ablates modules rather than weights — so the report's central criticism holds in both artifacts rather than only in the code.
 

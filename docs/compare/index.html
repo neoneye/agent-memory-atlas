@@ -23376,20 +23376,24 @@ already stored</td>
 string and knowledge entry in long term</td>
 <td>JSON files by default; a separate ChromaDB variant</td>
 <td>Embedding similarity per tier, with mid-term segments ordered by a
-heat score</td>
+heat score whose third term is a constant in practice</td>
 <td>Dialogue pairs appended; LLM segmentation into topic sessions;
 profile and knowledge updates</td>
 <td>LFU eviction at capacity; bounded knowledge deques; profile merged
 by rewrite</td>
 <td><code>user_id</code> and <code>assistant_id</code> on the store</td>
 <td>PyPI package, MCP server, ChromaDB variant, playground</td>
-<td>Segmentation, heat recomputation, profile and knowledge updates on
-threshold</td>
+<td>Segmentation, profile and knowledge updates on threshold; the heat
+recomputation inside <code>rebuild_heap</code> is commented out, so
+stored heat is never re-decayed</td>
 <td>None found — no source, actor, or status on a memory</td>
 <td>A committed LoCoMo harness with its dataset, and an explicit
 promotion signal</td>
-<td>Heat mixes three signals with hardcoded weights; a second LFU
-counter can disagree with it</td>
+<td>Heat mixes two signals and a constant: three of its four call sites
+overwrite <code>last_visit_time</code> immediately before measuring
+decay from it, so <code>R_recency</code> is exactly 1.0; the LoCoMo
+harness additionally uses different weights from the shipped library; a
+second LFU counter can disagree with the heat</td>
 </tr>
 <tr>
 <td><code>memorywhale</code></td>

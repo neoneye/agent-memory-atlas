@@ -5,21 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A three-tier research memory whose
-promotion runs on a hand-tuned heat score, and which keeps two different
-access counters that can disagree about what matters.">
+promotion runs on a hand-tuned heat score whose recency term is 1.0 on
+every path that updates it, and which keeps two different access
+counters that can disagree about what matters.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="MemoryOS — Agent Memory Atlas">
     <meta property="og:description" content="A three-tier research
-memory whose promotion runs on a hand-tuned heat score, and which keeps
-two different access counters that can disagree about what matters.">
+memory whose promotion runs on a hand-tuned heat score whose recency
+term is 1.0 on every path that updates it, and which keeps two different
+access counters that can disagree about what matters.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="MemoryOS — Agent Memory Atlas">
     <meta name="twitter:description" content="A three-tier research
-memory whose promotion runs on a hand-tuned heat score, and which keeps
-two different access counters that can disagree about what matters.">
+memory whose promotion runs on a hand-tuned heat score whose recency
+term is 1.0 on every path that updates it, and which keeps two different
+access counters that can disagree about what matters.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>MemoryOS — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -41,7 +44,7 @@ two different access counters that can disagree about what matters.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "MemoryOS",
-      "description": "A three-tier research memory whose promotion runs on a hand-tuned heat score, and which keeps two different access counters that can disagree about what matters.",
+      "description": "A three-tier research memory whose promotion runs on a hand-tuned heat score whose recency term is 1.0 on every path that updates it, and which keeps two different access counters that can disagree about what matters.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -98,8 +101,9 @@ two different access counters that can disagree about what matters.">
           <p class="eyebrow">Heat-promoted tiers</p>
           <h1>MemoryOS</h1>
           <p class="document-deck">A three-tier research memory whose
-promotion runs on a hand-tuned heat score, and which keeps two different
-access counters that can disagree about what matters.</p>
+promotion runs on a hand-tuned heat score whose recency term is 1.0 on
+every path that updates it, and which keeps two different access
+counters that can disagree about what matters.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/BAI-LAB/MemoryOS">
               <span>Source</span>
@@ -113,7 +117,7 @@ access counters that can disagree about what matters.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-28</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/BAI-LAB--MemoryOS" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -178,6 +182,52 @@ mid-term memory, the long-term persona module, the dialogue page chain —
 never the three weights. The coefficients are not an implementation
 shortcut that the research tuned elsewhere; they are 1, 1 and 1 in both
 places.</p>
+<p><strong>And the third term is not a signal.</strong>
+<code>R_recency</code> is <code>exp(-Δhours / tau_hours)</code> over the
+gap between <code>last_visit_time</code> and now — but three of the four
+live calls to <code>compute_segment_heat</code> set
+<code>last_visit_time</code> to the current timestamp on the line
+immediately before, so the gap is zero and the decay is
+<code>exp(0) = 1.0</code> every time:</p>
+<pre class="python"><code>session[&quot;N_visit&quot;] += 1
+session[&quot;last_visit_time&quot;] = current_time_str
+session[&quot;access_count_lfu&quot;] = session.get(&quot;access_count_lfu&quot;, 0) + 1
+self.access_frequency[session_id] = session[&quot;access_count_lfu&quot;]
+session[&quot;H_segment&quot;] = compute_segment_heat(session)   # decays from now to now</code></pre>
+<p>That is <code>mid_term.py:345-350</code>, the retrieval-hit path.
+Session creation (<code>:170</code>) sets <code>last_visit_time</code>
+to the creation timestamp and computes heat in the same breath;
+insertion (<code>:273</code>) calls <code>get_timestamp()</code> on the
+preceding line. The <strong>only</strong> site where the stored
+timestamp is still older than now is <code>memoryos.py:214</code>, after
+a segment has been analysed — and its own neighbouring comment says
+<em>"Recency will re-calculate naturally"</em>, which is precisely what
+the other three prevent. The periodic refresh that would re-decay stored
+heat is present and commented out: <code>rebuild_heap</code> carries
+<code># session_data["H_segment"] = compute_segment_heat(session_data)</code>
+above the line that rebuilds the heap from whatever heat was last
+stored.</p>
+<p>So with γ = 1, recency adds a constant 1.0 to every segment's heat
+and cannot change any ordering. The formula the paper prints has three
+terms; the code has two and an offset. This strengthens the criticism
+above rather than replacing it: the weights are untuned <em>and</em> the
+term whose weight would matter most is inert.</p>
+<p><strong>The LoCoMo harness does not use the shipped formula.</strong>
+<code>eval/</code> carries its own copy of
+<code>compute_segment_heat</code> with different defaults —
+<code>alpha=0.8, beta=0.8, gamma=0.0001</code> against the library's
+<code>1.0, 1.0, 1</code> — and its own <code>compute_time_decay</code>
+whose <code>tau</code> is 3600 in units of <em>seconds</em> against the
+library's 24 in <em>hours</em>. Its recency is 1.0 for the same reason
+(<code>eval/mid_term_memory.py:237-238</code> sets
+<code>last_visit_time</code> then measures from it), and at γ = 0.0001
+the term contributes one ten-thousandth of a constant. The harness also
+constructs short-term memory with <code>max_capacity=1</code>
+(<code>main_loco_parse.py:233</code>) where the library defaults to 10,
+so every pair is promoted immediately. The committed benchmark is
+therefore evidence about a configuration that is not the one the package
+installs, which is worth knowing before reading the numbers as a
+property of the system.</p>
 <p><strong>There are two access counters.</strong> Heat consumes
 <code>N_visit</code>, while capacity eviction runs a separate LFU path
 over <code>self.access_frequency</code> and
@@ -460,6 +510,51 @@ what does segmentation quality do either side of it?</li>
 <code>memoryos-chromadb/</code>, <code>memoryos-playground/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — third reading, at the same commit,
+confirmed still the tip by <code>git ls-remote</code> before cloning;
+the last commit upstream is 7 July 2026. Nothing could have moved, so
+this reading audited the previous two. Screened again: no auto-run
+surface, no build-time execution path, six unpinned manifests, nothing
+inside the cooldown; nothing was installed or run, from a
+<code>--depth 1</code> clone because the pin is the tip.</p>
+<p><strong>The heat formula's third term is a constant, which neither
+earlier reading caught.</strong> <code>R_recency</code> is
+<code>exp(-Δhours / tau_hours)</code> between
+<code>last_visit_time</code> and now, and three of the four live
+<code>compute_segment_heat</code> calls set <code>last_visit_time</code>
+to the current timestamp on the line immediately before — session
+creation at <code>mid_term.py:170</code>, insertion at
+<code>:273</code>, and the retrieval-hit path at <code>:345-350</code>.
+The gap is zero, so the decay is <code>exp(0) = 1.0</code> every time.
+The one call where the stored timestamp is still older is
+<code>memoryos.py:214</code>, after analysis, whose neighbouring comment
+reads <em>"Recency will re-calculate naturally"</em> — which is exactly
+what the other three prevent. And the periodic refresh that would
+re-decay stored heat sits commented out inside
+<code>rebuild_heap</code>. With γ = 1 the term adds a constant 1.0 to
+every segment and cannot affect an ordering: the paper prints three
+terms and the code has two and an offset. This does not replace the
+standing criticism about untuned weights, it sharpens it — the weight
+that would matter most is applied to a constant.</p>
+<p><strong>The committed LoCoMo harness is not running the shipped
+configuration.</strong> <code>eval/</code> carries its own
+<code>compute_segment_heat</code> with
+<code>alpha=0.8, beta=0.8, gamma=0.0001</code> against the library's
+<code>1.0, 1.0, 1</code>, its own <code>compute_time_decay</code> whose
+<code>tau=3600</code> is in seconds where the library's 24 is in hours,
+and a short-term memory constructed with <code>max_capacity=1</code>
+where the library defaults to 10. The 2026-08-09 entry recorded that the
+paper and the code agree on α = β = γ = 1; the harness that produced the
+numbers agrees with neither. Read the benchmark as evidence about that
+configuration rather than about the package.</p>
+<p>Everything else held: two access counters maintained separately, the
+profile merged by rewrite, and no trust or provenance on a memory. Marks
+unchanged at none; <code>stack_source</code> moves from
+<code>seeded</code> to <code>reviewed</code>. Five copies of the memory
+implementation ship in one repository — <code>memoryos-pypi</code>,
+<code>memoryos-playground</code>, <code>memoryos-mcp/memoryos</code>,
+<code>memoryos-chromadb</code> and <code>eval</code> — which is how a
+formula can be edited in one of them without anything noticing.</p>
 <p><strong>2026-08-09</strong> — the accompanying paper (<a
 href="https://arxiv.org/abs/2506.06326">arXiv:2506.06326</a>) was read
 and cited, which the first reading did not do. It changes no claim: the
