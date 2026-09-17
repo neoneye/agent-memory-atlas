@@ -48,18 +48,22 @@ the project removed the platform's own character — *"openvurp is the place, no
 character"* — and moved memory, lessons and the correction mirror from one
 shared store into a directory per agent.
 
-The memory has three parts, and the interesting question is whether they meet.
+The memory has three parts, and the interesting question is whether they
+meet.
+
 **Semantic memory** is a SQLite table per agent with an FTS5 index and
-optional embeddings, written by a `remember` tool and read back into the agent's
-prompt, with a nightly fade that archives rows nobody recalled. **Lessons** are
-Markdown files promoted from a learning log through a verification gate and a
-human approval, retired with a reason, and indexed into the same vector store.
-**The Mirror** turns each owner correction into a test case: at night the agent
-is put back in the same situation with its relevant lessons in the prompt, a
-second model call judges PASS or FAIL, and the result is a per-correction pass
-streak. That last mechanism is the project's best idea and its README's central
-promise — *"A correction you give an agent becomes a test case, replayed later to
-check it does not come back"*.
+optional embeddings, written by a `remember` tool and read back into the
+agent's prompt, with a nightly fade that archives rows nobody recalled.
+**Lessons** are Markdown files promoted from a learning log through a
+verification gate and a human approval, retired with a reason, and indexed
+into the same vector store.
+
+**The Mirror** turns each owner correction into a test case: at night the
+agent is put back in the same situation with its relevant lessons in the
+prompt, a second model call judges PASS or FAIL, and the result is a
+per-correction pass streak. That last mechanism is the project's best idea
+and its README's central promise — *"A correction you give an agent
+becomes a test case, replayed later to check it does not come back"*.
 
 **The scoping is real for memory and absent for learning, and the seam runs
 through the middle of the promise.** `remember` and recall are keyed on a

@@ -387,24 +387,27 @@ Gaps:
 `test_clause_store.py` and `test_judgement_hierarchy.py` covering the memory
 directly. The suites were not run; nothing here was installed or executed.
 
-The negative cases are the good ones. `test_judgement_hierarchy.py:462-486`
-creates a clause, asserts it exists with `sop_conflict` status, asserts
-`hits == []` under the comment *"suspended judgements never fire as judgements"*,
-then resolves the conflict and asserts the clause returns to `active` — the
-positive control, the negative assertion and the restore over one fixture.
-`test_the_monitor_never_resurrects_a_curated_clause` runs the precision monitor
-over a hand-quarantined clause and asserts the hold survives.
+The negative cases are the good ones.
+`test_judgement_hierarchy.py:462-486` creates a clause, asserts it exists
+with `sop_conflict` status, asserts `hits == []` under the comment
+*"suspended judgements never fire as judgements"*, then resolves the
+conflict and asserts the clause returns to `active` — the positive
+control, the negative assertion and the restore over one fixture.
+`test_the_monitor_never_resurrects_a_curated_clause` runs the precision
+monitor over a hand-quarantined clause and asserts the hold survives.
+
 **Two tests hold the project to its own claims rather than to its code.**
-`test_reports_the_real_prompt_cost` runs thirty corrections against one clause
-and asserts `mean_prompt_words < 100`, against a baseline the docstring names —
-the blob it replaced *"spent ~1000 words on EVERY case regardless of
-relevance"* — so the saving is checked rather than asserted, and the docstring
-says which kind of saving it is: *"selection, not compression."* Beside it,
-`test_measures_statement_is_not_oversold` asserts that the evaluation's own
-prose still contains its disclaimers, by substring: *"NOT that the model would
-have decided differently"* and *"Do not report it as an accuracy number."* A
-committed test that the project has not oversold its own measurement is not
-something this atlas finds often.
+`test_reports_the_real_prompt_cost` runs thirty corrections against one
+clause and asserts `mean_prompt_words < 100`, against a baseline the
+docstring names — the blob it replaced *"spent ~1000 words on EVERY case
+regardless of relevance"* — so the saving is checked rather than asserted,
+and the docstring says which kind of saving it is: *"selection, not
+compression."* Beside it, `test_measures_statement_is_not_oversold`
+asserts that the evaluation's own prose still contains its disclaimers, by
+substring: *"NOT that the model would have decided differently"* and *"Do
+not report it as an accuracy number."* A committed test that the project
+has not oversold its own measurement is not something this atlas finds
+often.
 
 The prompt is treated as code in the same spirit. The block telling the model
 that the SOP is supreme was rewritten around an observed failure recorded in the

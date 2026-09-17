@@ -72,24 +72,29 @@ a detected contradiction and the loser is retired. `negative_eval` on three
 cases asserting a draft absent from a populated injection, one of them through
 spreading activation.
 
-Four findings sit against the design. **A retired engram cannot stop itself
-returning, on purpose.** `_hashDedup` matches only active rows
-(`packages/core/src/index.ts:1833`), and the codebase frames that as a feature
-twice over — *"its content hash cannot resurrect it"* — with a committed test
-titled *"retired engrams are excluded from dedup — new write creates new
-engram"* asserting the new id differs
-(`packages/core/test/reference-count.test.ts:149-155`). That is a deliberate
-design choice and it is the reason `tombstone` is withheld. **Nothing here can
-approve a draft.** The schema comment points at a separate enterprise repository
-for the review-queue write sites, and the shipped dashboard is read-only, so
-`draft` is a one-way state in this tree. **The direct correction path destroys
-what it replaces.** `_updateEngramReturning` overwrites the row in place
-(`:5923`) with no history event and no version bump, while the two
-model-mediated paths both preserve the prior statement in a history event.
-**The benchmark harness is not here.** The README says the harness is published
-so every number can be reproduced, and names the separate repository that holds
-it six lines later; a commit in July removed 2,238 lines including the corpus
-importer from this tree.
+Four findings sit against the design. **A retired engram cannot stop
+itself returning, on purpose.** `_hashDedup` matches only active rows
+(`packages/core/src/index.ts:1833`), and the codebase frames that as a
+feature twice over — *"its content hash cannot resurrect it"* — with a
+committed test titled *"retired engrams are excluded from dedup — new
+write creates new engram"* asserting the new id differs
+(`packages/core/test/reference-count.test.ts:149-155`). That is a
+deliberate design choice and it is the reason `tombstone` is withheld.
+
+**Nothing here can approve a draft.** The schema comment points at a
+separate enterprise repository for the review-queue write sites, and the
+shipped dashboard is read-only, so `draft` is a one-way state in this
+tree.
+
+**The direct correction path destroys what it replaces.**
+`_updateEngramReturning` overwrites the row in place (`:5923`) with no
+history event and no version bump, while the two model-mediated paths both
+preserve the prior statement in a history event.
+
+**The benchmark harness is not here.** The README says the harness is
+published so every number can be reproduced, and names the separate
+repository that holds it six lines later; a commit in July removed 2,238
+lines including the corpus importer from this tree.
 
 ## 2. Mental Model
 

@@ -44,12 +44,15 @@ sends data out or costs money; `needsConfirm`
 (`kernel/agent/agent.go:1669-1707`) asks the person before any action that
 does, unless they chose *always allow* for that tool and action, and an
 external MCP tool that does not declare itself read-only is treated as a
-write. **A snapshot before the first write.** The first local write in a
-chat triggers `IndexRepo("AI agent auto snapshot")` on the data repository
+write.
+
+**A snapshot before the first write.** The first local write in a chat
+triggers `IndexRepo("AI agent auto snapshot")` on the data repository
 (`agent.go:1344-1348`); if the snapshot fails the tool call and every call
 after it in the round is aborted and the turn is saved as interrupted; the
-session records a `snapshot` entry and can record a `rollback`. **A session
-file with revisions.** Each chat is a JSON file under
+session records a `snapshot` entry and can record a `rollback`.
+
+**A session file with revisions.** Each chat is a JSON file under
 `storage/ai/agent/sessions/` whose save checks an expected revision and a
 committing turn id, replays an idempotent retry, refuses a save while the
 runtime turn is not finalized, and recovers an orphaned turn after a crash

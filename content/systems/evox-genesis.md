@@ -78,22 +78,26 @@ outcome persisted on the task row. A `CONTEXT.md` edit is an ordinary file
 change, so the memory is adjudicated in the same diff as the code.
 
 Three findings sit against the design. **The retrieval function is
-untested.** `build_context` occurs three times in the repository — its spec,
-its definition, and one call site — and no test references it
-(`rg -n 'build_context' apps --glob '*.ex' --glob '*.exs'`), in a tree with
-4,655 committed cases; its caller answers an error by substituting the bare
-string `"Current Path: '<node>'."` (`agent/context_builder.ex:22-24`), so an
-agent whose context tree failed to assemble runs without one and is told
-nothing. **Rejection records nothing.** `Review.reject_branch/2`
+untested.** `build_context` occurs three times in the repository — its
+spec, its definition, and one call site — and no test references it (`rg
+-n 'build_context' apps --glob '*.ex' --glob '*.exs'`), in a tree with
+4,655 committed cases; its caller answers an error by substituting the
+bare string `"Current Path: '<node>'."`
+(`agent/context_builder.ex:22-24`), so an agent whose context tree failed
+to assemble runs without one and is told nothing.
+
+**Rejection records nothing.** `Review.reject_branch/2`
 (`review.ex:476-481`) deletes the branch; the task row keeps
-`review_status: :rejected`, which is keyed on the run rather than on what was
-refused, and no path consults it before an agent proposes the same change
-again. **The episode archive is opt-in.** `complete_task` writes the git note
+`review_status: :rejected`, which is keyed on the run rather than on what
+was refused, and no path consults it before an agent proposes the same
+change again.
+
+**The episode archive is opt-in.** `complete_task` writes the git note
 whenever a base commit exists, but `archive` defaults to `false`
 (`agent/tools/complete_task.ex:133`), so the archive refs that protect an
-episode's commits from garbage collection — and the record that reaches the
-task row — exist only for runs started with `--archive` or the dashboard's
-checkbox.
+episode's commits from garbage collection — and the record that reaches
+the task row — exist only for runs started with `--archive` or the
+dashboard's checkbox.
 
 ## 2. Mental Model
 

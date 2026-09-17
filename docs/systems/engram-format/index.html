@@ -234,19 +234,24 @@ behaves like a trace. It is born by capture at strength 1.0 (episodic),
 by consolidation (semantic), or by the imagination engine at strength
 0.5 with <code>imagined = true, grounded = false</code>
 (<code>Engram::new_imagined</code>, <code>src/engram.rs:232-260</code>).
-Three things move it. <strong>Retrieval</strong> — any <code>get</code>
-increments <code>retrievals</code> and stamps
-<code>last_retrieved</code> (<code>touch</code>,
-<code>src/store.rs:954-961</code>), and the daily hygiene adds 0.15 to
-anything retrieved in the last day. <strong>Decay</strong> — the same
-pass computes <code>R = e^(−t/S)</code> for every row not retrieved in a
-day, with `S = 3 × (retrievals</p>
-<ul>
-<li>1)<code>days, so a row retrieved often decays slowly, and multiplies strength by</code>R<code> with a floor of 0.01 (</code>apply_daily_hygiene<code>, </code>:1840-1922<code>). **Promotion** — the weekly pass rewrites </code>layer
-= 'semantic', source =
-'consolidation'<code> on any episodic row with five or more retrievals (</code>apply_weekly_consolidation<code>, </code>:1992-2012<code>). Duplicates are folded into the existing trace rather than stored: a verbatim repeat adds 0.1 and refreshes </code>last_retrieved<code>, a paraphrase above 0.95 is reported as </code>Similar`
-and not written.</li>
-</ul>
+Three things move it.</p>
+<p><strong>Retrieval</strong> — any <code>get</code> increments
+<code>retrievals</code> and stamps <code>last_retrieved</code>
+(<code>touch</code>, <code>src/store.rs:954-961</code>), and the daily
+hygiene adds 0.15 to anything retrieved in the last day.
+<strong>Decay</strong> — the same pass computes
+<code>R = e^(−t/S)</code> for every row not retrieved in a day, with
+<code>S = 3 × (retrievals + 1)</code> days, so a row retrieved often
+decays slowly, and multiplies strength by <code>R</code> with a floor of
+0.01 (<code>apply_daily_hygiene</code>, <code>:1840-1922</code>).</p>
+<p><strong>Promotion</strong> — the weekly pass rewrites
+<code>layer = 'semantic', source = 'consolidation'</code> on any
+episodic row with five or more retrievals
+(<code>apply_weekly_consolidation</code>, <code>:1992-2012</code>).
+Duplicates are folded into the existing trace rather than stored: a
+verbatim repeat adds 0.1 and refreshes <code>last_retrieved</code>, a
+paraphrase above 0.95 is reported as <code>Similar</code> and not
+written.</p>
 <p>Truth is a two-bit state. An observed row is
 <code>imagined = false</code>; a generated one is
 <code>imagined = true</code>, and it stays <strong>quarantined</strong>

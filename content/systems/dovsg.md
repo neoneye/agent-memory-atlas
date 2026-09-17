@@ -33,19 +33,21 @@ matrix:
 DovSG is the **code behind a robotics paper**: *Dynamic Open-Vocabulary 3D
 Scene Graphs for Long-Term Language-Guided Mobile Manipulation*, IEEE
 Robotics and Automation Letters vol. 10 no. 5, 2025, pp. 4252–4259
-([arXiv:2410.11989](https://arxiv.org/abs/2410.11989), submitted 15 October
-2024, v6 19 March 2025). Nineteen commits between 30 October 2024 and 17 April
-2025; 7,647 lines of Python under `dovsg/` beside a vendored ACE relocaliser,
-a `hardcode/` directory of ROS and ZMQ servers for the robot, three
-evaluation scripts, six git submodules — SAM2, GroundingDINO,
+([arXiv:2410.11989](https://arxiv.org/abs/2410.11989), submitted 15
+October 2024, v6 19 March 2025). Nineteen commits between 30 October 2024
+and 17 April 2025; 7,647 lines of Python under `dovsg/` beside a vendored
+ACE relocaliser, a `hardcode/` directory of ROS and ZMQ servers for the
+robot, three evaluation scripts, six git submodules — SAM2, GroundingDINO,
 Recognize-Anything, LightGlue, pytorch3d, DROID-SLAM — and two committed
-shared objects, `gsnet.so` and `lib_cxx.so`. The hardware is a UFACTORY xArm6
-on an Agilex Ranger Mini 3 with a RealSense, developed on one RTX 4090 laptop.
-**There is no licence file for the repository itself.** `ace/LICENSE` belongs
-to the vendored ACE, and the `license/` directory holds a `.lic`, a public key,
-a signature and a `licenseCfg.json` naming a *"Basic"* toolbox as
-*"PERMANENT"* — a runtime licence for the grasp library, not terms for this
-code.
+shared objects, `gsnet.so` and `lib_cxx.so`. The hardware is a UFACTORY
+xArm6 on an Agilex Ranger Mini 3 with a RealSense, developed on one RTX
+4090 laptop.
+
+**There is no licence file for the repository itself.** `ace/LICENSE`
+belongs to the vendored ACE, and the `license/` directory holds a `.lic`,
+a public key, a signature and a `licenseCfg.json` naming a *"Basic"*
+toolbox as *"PERMANENT"* — a runtime licence for the grasp library, not
+terms for this code.
 
 The memory is a **3D scene graph over object instances**, and the mechanism
 the paper is about is repairing it locally. After a scan, every frame goes

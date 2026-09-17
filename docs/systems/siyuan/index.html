@@ -165,15 +165,16 @@ action, whether it writes locally, sends data out or costs money;
 <code>needsConfirm</code> (<code>kernel/agent/agent.go:1669-1707</code>)
 asks the person before any action that does, unless they chose
 <em>always allow</em> for that tool and action, and an external MCP tool
-that does not declare itself read-only is treated as a write. <strong>A
-snapshot before the first write.</strong> The first local write in a
-chat triggers <code>IndexRepo("AI agent auto snapshot")</code> on the
-data repository (<code>agent.go:1344-1348</code>); if the snapshot fails
-the tool call and every call after it in the round is aborted and the
-turn is saved as interrupted; the session records a
-<code>snapshot</code> entry and can record a <code>rollback</code>.
-<strong>A session file with revisions.</strong> Each chat is a JSON file
-under <code>storage/ai/agent/sessions/</code> whose save checks an
+that does not declare itself read-only is treated as a write.</p>
+<p><strong>A snapshot before the first write.</strong> The first local
+write in a chat triggers
+<code>IndexRepo("AI agent auto snapshot")</code> on the data repository
+(<code>agent.go:1344-1348</code>); if the snapshot fails the tool call
+and every call after it in the round is aborted and the turn is saved as
+interrupted; the session records a <code>snapshot</code> entry and can
+record a <code>rollback</code>.</p>
+<p><strong>A session file with revisions.</strong> Each chat is a JSON
+file under <code>storage/ai/agent/sessions/</code> whose save checks an
 expected revision and a committing turn id, replays an idempotent retry,
 refuses a save while the runtime turn is not finalized, and recovers an
 orphaned turn after a crash

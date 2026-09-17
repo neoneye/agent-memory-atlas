@@ -62,23 +62,26 @@ that runs a regular expression over the assistant's reply for
 `/search` and `/replay`, which tell the model to run `sqlite3` against the
 file. That filter earns the one mark.
 
-Two findings sit between the README's loop and the code. **The session-start
-hook does not load learnings into the model.** `scripts/session-start.js`
-reads the five most recent learnings for the project (`:48-50`) and prints
-them through a `log` function that is `console.error` (`:6-7`); the file
-contains no `console.log`, no `additionalContext` and no write to stdout.
-Claude Code's hook contract adds a SessionStart hook's stdout to the model's
-context and shows its stderr to the person, so what the README calls
-*"SessionStart loads all learnings"* is a message on the person's terminal.
-The prompt hook's wiki hits go the same way (`scripts/prompt-submit.js:16-17`).
-The learnings reach the model only when it runs `/search`, `/replay` or the
-optimizer reads them, or when the person types them back. **The Stop hook
-saves without approval.** The self-correction rule says *"Wait for approval
-before persisting the learning"* (`rules/self-correction.mdc`) and the learn
-command's save step begins *"After the user confirms"*
-(`commands/learn.md:177-210`), but `learn-capture.js` parses every `[LEARN]`
-block in the reply and inserts it; a rule the model proposed and the person
-had not yet answered is in the table when the turn ends.
+Two findings sit between the README's loop and the code. **The
+session-start hook does not load learnings into the model.**
+`scripts/session-start.js` reads the five most recent learnings for the
+project (`:48-50`) and prints them through a `log` function that is
+`console.error` (`:6-7`); the file contains no `console.log`, no
+`additionalContext` and no write to stdout. Claude Code's hook contract
+adds a SessionStart hook's stdout to the model's context and shows its
+stderr to the person, so what the README calls *"SessionStart loads all
+learnings"* is a message on the person's terminal. The prompt hook's wiki
+hits go the same way (`scripts/prompt-submit.js:16-17`). The learnings
+reach the model only when it runs `/search`, `/replay` or the optimizer
+reads them, or when the person types them back.
+
+**The Stop hook saves without approval.** The self-correction rule says
+*"Wait for approval before persisting the learning"*
+(`rules/self-correction.mdc`) and the learn command's save step begins
+*"After the user confirms"* (`commands/learn.md:177-210`), but
+`learn-capture.js` parses every `[LEARN]` block in the reply and inserts
+it; a rule the model proposed and the person had not yet answered is in
+the table when the turn ends.
 
 Beside the learnings is a knowledge plane added in 3.3 — wikis as Markdown
 folders with an FTS5 shadow index, claims with a confidence, a budget-capped

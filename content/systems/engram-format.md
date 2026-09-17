@@ -84,23 +84,26 @@ vault and must build the epistemics.
 
 ## 2. Mental Model
 
-A memory is an **engram**: a row with a strength that behaves like a trace.
-It is born by capture at strength 1.0 (episodic), by consolidation
-(semantic), or by the imagination engine at strength 0.5 with
-`imagined = true, grounded = false` (`Engram::new_imagined`,
-`src/engram.rs:232-260`). Three things move it. **Retrieval** — any `get`
-increments `retrievals` and stamps `last_retrieved` (`touch`,
-`src/store.rs:954-961`), and the daily hygiene adds 0.15 to anything
-retrieved in the last day. **Decay** — the same pass computes
-`R = e^(−t/S)` for every row not retrieved in a day, with `S = 3 × (retrievals
-+ 1)` days, so a row retrieved often decays slowly, and multiplies strength
-by `R` with a floor of 0.01 (`apply_daily_hygiene`, `:1840-1922`).
+A memory is an **engram**: a row with a strength that behaves like a
+trace. It is born by capture at strength 1.0 (episodic), by consolidation
+(semantic), or by the imagination engine at strength 0.5 with `imagined =
+true, grounded = false` (`Engram::new_imagined`, `src/engram.rs:232-260`).
+Three things move it.
+
+**Retrieval** — any `get` increments `retrievals` and stamps
+`last_retrieved` (`touch`, `src/store.rs:954-961`), and the daily hygiene
+adds 0.15 to anything retrieved in the last day. **Decay** — the same pass
+computes `R = e^(−t/S)` for every row not retrieved in a day, with `S = 3
+× (retrievals + 1)` days, so a row retrieved often decays slowly, and
+multiplies strength by `R` with a floor of 0.01 (`apply_daily_hygiene`,
+`:1840-1922`).
+
 **Promotion** — the weekly pass rewrites `layer = 'semantic', source =
 'consolidation'` on any episodic row with five or more retrievals
-(`apply_weekly_consolidation`, `:1992-2012`). Duplicates are folded into the
-existing trace rather than stored: a verbatim repeat adds 0.1 and refreshes
-`last_retrieved`, a paraphrase above 0.95 is reported as `Similar` and not
-written.
+(`apply_weekly_consolidation`, `:1992-2012`). Duplicates are folded into
+the existing trace rather than stored: a verbatim repeat adds 0.1 and
+refreshes `last_retrieved`, a paraphrase above 0.95 is reported as
+`Similar` and not written.
 
 Truth is a two-bit state. An observed row is `imagined = false`; a generated
 one is `imagined = true`, and it stays **quarantined** until something sets
