@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Hugging Face's append-only memory
+over coding-agent transcripts, which declines supersession on the
+argument that a write-time correction loses information silently — and
+guards the one boundary it does have with a fail-closed secrets gate.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="funes — Agent Memory Atlas">
+    <meta property="og:description" content="Hugging Face's append-only
+memory over coding-agent transcripts, which declines supersession on the
+argument that a write-time correction loses information silently — and
+guards the one boundary it does have with a fail-closed secrets gate.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="funes — Agent Memory Atlas">
+    <meta name="twitter:description" content="Hugging Face's append-only
+memory over coding-agent transcripts, which declines supersession on the
+argument that a write-time correction loses information silently — and
+guards the one boundary it does have with a fail-closed secrets gate.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>funes — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "funes",
+      "description": "Hugging Face's append-only memory over coding-agent transcripts, which declines supersession on the argument that a write-time correction loses information silently \u2014 and guards the one boundary it does have with a fail-closed secrets gate.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A problem it chooses not to have</p>
+          <h1>funes</h1>
+          <p class="document-deck">Hugging Face's append-only memory
+over coding-agent transcripts, which declines supersession on the
+argument that a write-time correction loses information silently — and
+guards the one boundary it does have with a fail-closed secrets
+gate.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/huggingface/funes">
+              <span>Source</span>
+              <strong>huggingface/funes</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/huggingface/funes/commit/942caf8730ed07c7236ba52aef7668f5b8f8544d" title="942caf8730ed07c7236ba52aef7668f5b8f8544d">
+              <span>Analyzed revision</span>
+              <code>942caf87…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/huggingface--funes" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>huggingface--funes</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>funes is Hugging Face's memory for coding agents — Apache-2.0, 22,429
+lines of Rust with 281 test functions, 558 commits since June 2026. It
+indexes the transcripts of Claude Code, Codex, pi and Hermes into one
+Lance dataset, recalls across all of them, names which agent each hit
+came from, and can publish the whole memory as a Hub dataset that a
+teammate recalls from with one flag.</p>
+<p>It carries no capability marks, and unusually the reason is an
+argument rather than an absence. <code>docs/RATIONALE.md</code> states
+four load-bearing choices, and the first one declines the entire
+correction problem this atlas is organised around:</p>
+<blockquote>
+<p>this is a problem funes chooses not to <em>have</em>, rather than one
+it solves. A mutable memory must decide at write time what each new
+piece of information supersedes — and every wrong call loses information
+<em>silently</em>, by overwriting the right answer with a confident
+wrong one. funes makes no write-time decisions at all. Every passage
+stays, and obsolescence is resolved at <strong>read time</strong>.</p>
+</blockquote>
+<p>And the observation that follows it is the strongest case for the
+position:</p>
+<blockquote>
+<p>A log also keeps what a knowledge base throws away — the superseded
+passage is often the answer itself: <em>what did we try before, and why
+did we move off it?</em></p>
+</blockquote>
+<p>For a memory of engineering work specifically, that is hard to argue
+with. The cost is equally clear and the document does not hide it: a
+wrong passage stays recallable forever, and the only things standing
+between it and a reader are recency weighting and the reader's own
+judgement.</p>
+<p>The one boundary funes does enforce, it enforces hard. Publishing a
+memory means your transcripts leave the machine, so the push path is a
+fail-closed secrets gate — and the tests behind it include one carrying
+the exact shape of a key that once got through.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A chunk is an immutable, timestamped record of what was said when,
+with its session id and turn uuid as provenance. Indexing is parse,
+chunk, embed — <em>"No LLM in the ingest path"</em> — so the same
+transcript always produces the same index and every hit is traceable to
+a real line.</p>
+<p>The memory is a Lance dataset. Locally it is a directory; optionally
+it is a Hub repository you own, and recall over <code>hf://</code>
+fetches the immutable files a query touches into a cache pinned to the
+dataset's commit, so a warm recall reads from disk.</p>
+<p>That leaves exactly one boundary to defend, and the design is
+organised around it: everything is local until you publish, and
+publishing is where the scanning happens.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Indexing is deterministic with no model in the path, and the only boundary is publication — where a fail-closed gate reconstructs whole blocks before scanning, so a secret that chunking split across two rows cannot slip through between them.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Indexing is deterministic with no model in the path, and the only boundary is publication — where a fail-closed gate reconstructs whole blocks before scanning, so a secret that chunking split across two rows cannot slip through between them.
+flowchart TD
+  T[&quot;Transcripts&lt;br/&gt;Claude Code, Codex, pi, Hermes&quot;]
+  IDX[&quot;Index: parse, chunk, embed&lt;br/&gt;no model in the path&quot;]
+  RED[&quot;Index-time redaction&lt;br/&gt;best-effort, warns when absent&quot;]
+  DS[(&quot;Local Lance dataset&lt;br/&gt;immutable, timestamped chunks&quot;)]
+  REC[&quot;Recall: local embeddings&lt;br/&gt;local reranker, recency weighting&quot;]
+  READER[&quot;Reader judges obsolescence&lt;br/&gt;old and new passage both visible&quot;]
+  PUSH[&quot;funes push&quot;]
+  GATE{&quot;Always-on gate&lt;br/&gt;requires TruffleHog&quot;}
+  BLOCK[&quot;Reconstruct whole blocks&lt;br/&gt;before scanning&quot;]
+  HOLD[&quot;Any chunk dirty, whole block held back&quot;]
+  HUB[(&quot;Hub dataset you own&lt;br/&gt;append-only&quot;)]
+  EXIT[&quot;Nothing left to publish, exit 2&quot;]
+  SCRUB[&quot;funes scrub&lt;br/&gt;delete ids, append redacted, same coordinates&quot;]
+
+  T --&gt; IDX --&gt; RED --&gt; DS
+  DS --&gt; REC --&gt; READER
+  DS --&gt; PUSH --&gt; GATE --&gt; BLOCK
+  BLOCK --&gt; HOLD --&gt; EXIT
+  BLOCK --&gt; HUB
+  SCRUB --&gt; DS</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Chunk.</strong> <code>src/chunk.rs</code> splits turns with
+overlap, and the overlap exists for a stated reason — so a scanner sees
+a secret that the split cut across a chunk boundary. Re-chunking a
+redacted block must reproduce exactly the ids and split indices the
+original produced, <em>"so a scrub's delete-by-id + append stays
+coordinate-stable"</em>.</li>
+<li><strong>Gate.</strong> <code>drop_secret_rows</code>
+(<code>src/commands/push.rs:661</code>) reconstructs content blocks,
+scans them, and holds back every chunk of any block containing a secret,
+returning the clean batches and a summary naming the detector
+types.</li>
+<li><strong>Publish.</strong> A partial publish is allowed with a
+warning; only when the hold-back leaves nothing does push exit
+non-zero.</li>
+<li><strong>Notice.</strong> <code>funes status</code> scans this host's
+pending rows the same way a push would, <em>"a hold-back is easy to miss
+when the hooks push in the background"</em>.</li>
+<li><strong>Scrub.</strong> Removing a secret from an indexed memory
+deletes the affected chunk ids and appends the redacted text at the same
+coordinates.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>An immutable chunk with provenance and an embedding. There is no
+status, no confidence, no supersession pointer and no tombstone, and
+every one of those absences is the same decision rather than five
+oversights.</p>
+<p>The atlas's marks are largely a vocabulary for correction, so a
+system that declines correction as a category will carry none of them.
+That is worth saying plainly rather than scoring it as a deficiency:
+<code>trust_state</code> is absent because nothing is ever doubted in
+the store, only weighted at read time; <code>tombstone</code> because
+nothing is removed except a secret, and <code>scrub</code> is keyed on
+the chunk id rather than on the content; <code>bitemporal</code> because
+a chunk has one timestamp, when it was said, and the index records no
+separate belief time; <code>audit_log</code> because an append-only log
+of what was said is not a log of what changed;
+<code>scope_enforced</code> because a memory is a dataset with one owner
+and a Hub token, with no predicate inside it to enforce.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Local embeddings, a local cross-encoder reranker, recency weighting,
+and hits labelled with the agent they came from. Obsolescence is the
+reader's problem by construction — the design's phrase is <em>"defer to
+the reader"</em> — and the argument for that is the bet in the same
+document: distilling at ingest <em>"freezes your memory at the
+interpretation quality of today's model"</em>, while a raw log
+<em>"compounds with model progress for free"</em>.</p>
+<p>The honest counterweight, which the document does not make and this
+report will: recency weighting is a ranking signal, not a withholding
+one. A passage that was wrong when it was written stays as recallable as
+the correction that followed it, and the reader who resolves the
+conflict has to notice there is one. For a transcript memory of
+engineering work — where the superseded attempt genuinely is often the
+answer — that trade reads well. For a memory an agent consults without a
+human in the loop, it puts the whole burden on a ranking function.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Deterministic, and the determinism is the point: the same transcript
+always indexes the same way, so a bad result traces to a real line
+rather than to a model's paraphrase of one.</p>
+<p>The only write that removes anything is <code>scrub</code>, and its
+constraint is interesting — the re-chunking after a redaction must
+produce the same ids and split indices the original text produced, or
+the delete-and-append would leave the memory's coordinates inconsistent.
+A test pins exactly that.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Hooks index sessions as they end and push in the background;
+integrations let four different coding agents recall from one memory;
+<code>funes ask</code> borrows a coding agent to answer a question
+against recalled passages, naming the sessions it drew from.</p>
+<p>The trust-boundary paragraph in the rationale is the part worth
+quoting, because most local-first tools stop at "your data stays on your
+machine":</p>
+<blockquote>
+<p>The reader is a separate trust boundary. When a cloud coding agent
+calls <code>recall</code>, the returned passages enter that agent's
+context; likewise, the explicitly-invoked <code>funes ask</code> sends
+its question and recalled passages to the provider configured for the
+selected agent.</p>
+</blockquote>
+<p>Local storage is not local reading. Saying so, in the document that
+explains why indexing and embedding are local, is the difference between
+a privacy posture and a privacy claim.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Publishing a coding-session memory is the riskiest operation in this
+system and it is treated that way. Two layers, with the distinction
+between them stated:</p>
+<p><strong>Index time is best-effort.</strong> Redaction runs when
+TruffleHog is available and prints a warning when it is not, because
+<em>"local indexing still works without the scanner because the local
+memory has not crossed a publication boundary."</em> The consequence,
+which follows from that and is worth naming: a local memory on a machine
+without the scanner can hold credentials in the clear, and only the
+warning says so.</p>
+<p><strong>Push is the hard boundary.</strong> The gate is always on,
+requires the scanner, and <em>"reconstructs complete content blocks
+before scanning, so a secret split across chunks cannot evade
+detection."</em> If any chunk of a block is dirty, every chunk of that
+block is held back; clean rows still publish with a warning; only an
+empty result exits non-zero. <code>funes status</code> runs the same
+scan over pending rows so a background hold-back is visible.</p>
+<p>The test that earns the most confidence is the one carrying a real
+incident:</p>
+<blockquote>
+<p>The exact shape that leaked: a key stored with escaped
+<code>\n</code> (literal backslash-n), as a JSON-encoded transcript or a
+logged blob would hold it. trufflehog still detects it, but its
+canonical <code>raw</code> (real newlines) is not a substring of the
+stored bytes — value matching missed it and pushed it. Line-based
+location must hold it back.</p>
+</blockquote>
+<p>A secret that a detector found and a gate then failed to match
+against the stored bytes, because the two disagreed about newline
+encoding, is the kind of bug that survives a code review and a test
+suite that mocks the scanner. These tests do not mock it: they generate
+a real ed25519 key with <code>ssh-keygen</code> and skip honestly when
+either tool is unavailable.</p>
+<p><code>negative_eval</code> is nonetheless withheld, and this is the
+closest call of the session. The assertions govern what is
+<em>published</em> rather than what is <em>retrieved</em> —
+<code>drop_secret_rows_holds_back_a_single_chunk_secret</code> asserts
+one row held back and <em>"the clean row stays"</em>, which is a proper
+paired assertion about the set of rows leaving the machine. The mark, as
+this atlas uses it, is for a committed case asserting that particular
+material must not come back from a query. Publication is one step before
+that, and the distinction is thin here precisely because the published
+dataset is what other people recall from.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>281 test functions and three benchmark files —
+<code>bench_backends.rs</code>, <code>bench_index.rs</code>,
+<code>bench_recall.rs</code>; nothing was run here. The secrets tests
+skip rather than mock when TruffleHog or <code>ssh-keygen</code> is
+missing, printing why, which is the right shape for a test whose subject
+is an external scanner: a mocked detector proves the plumbing and
+nothing about detection.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>You may decline correction, but argue for it.</strong>
+"Every wrong supersession loses information silently" and "the
+superseded passage is often the answer itself" are reasons. An
+append-only memory without those sentences is a memory that has not
+thought about correction.</li>
+<li><strong>Scan reconstructed blocks, not stored chunks.</strong>
+Chunking splits text, and a secret cut across a boundary is invisible to
+a per-chunk scan. Reassembling the block before scanning — and giving
+the splitter overlap for that reason — closes it.</li>
+<li><strong>Hold back the whole block, not the dirty chunk.</strong> A
+secret's neighbours are its context, and publishing them without it is
+both a leak risk and a confusing artifact.</li>
+<li><strong>Fail closed at the boundary, best-effort inside it — and say
+which is which.</strong> Requiring the scanner for local indexing would
+make the tool unusable; not requiring it for publication would make the
+guarantee a wish. The two-layer split only works if the documentation
+states it.</li>
+<li><strong>Name the reader as a trust boundary.</strong> Local
+embeddings and local storage say nothing about where the recalled
+passages go next. A cloud agent calling recall is an export, and the
+design document is the right place to say so.</li>
+<li><strong>Make a hold-back visible from a second command.</strong> A
+background push that silently withheld three rows is indistinguishable
+from a successful one until someone looks.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Would a warning at recall time, rather than only at index time, be
+wanted when the local memory was indexed without a scanner?</li>
+<li>Recency weighting resolves obsolescence for a human reader who can
+see both passages. Is there a shape of that for an agent that reads only
+the top hit?</li>
+<li><code>scrub</code> is the one operation that removes content. Is a
+record that a scrub happened — not what it removed — worth keeping, so a
+reader knows a block was rewritten?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Rationale: <code>docs/RATIONALE.md:19-80</code> (append-only, no LLM
+in ingest, local-first, and the reader as a trust boundary).</li>
+<li>Chunking: <code>src/chunk.rs:94-95</code>, <code>:229</code>,
+<code>:287-320</code>, <code>:494-511</code> (overlap for split secrets,
+coordinate-stable re-chunking).</li>
+<li>Gate: <code>src/commands/push.rs:661</code>
+(<code>drop_secret_rows</code>), <code>:862-935</code> (the three
+hold-back tests), <code>:1024</code> (selection cannot bypass the
+gate).</li>
+<li>Scanning: <code>src/scan.rs:476</code>, <code>:535</code>.</li>
+<li>Redaction: <code>src/commands/index.rs:1149</code>.</li>
+<li>Documentation: <code>docs/push.md:40-70</code> (the gate and scrub),
+<code>docs/configuration.md:78</code> (<code>FUNES_TRUFFLEHOG</code>),
+<code>docs/automation.md:109</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;superseded\|supersede&quot; src --include=&#39;*.rs&#39;        # 0 — nothing supersedes; the log is append-only by design
+grep -rn &quot;status\|confidence&quot; src/memory --include=&#39;*.rs&#39;    # no trust field on a chunk
+grep -rn &quot;valid_from\|as_of\|recorded_at&quot; src --include=&#39;*.rs&#39;   # one timestamp per chunk, when it was said
+grep -rn &quot;fn .*not_\|assert!(!&quot; src/commands/recall.rs       # query-classification assertions, no retrieval exclusion</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/huggingface/funes/commit/942caf8730ed07c7236ba52aef7668f5b8f8544d"><code class="commit-id" title="942caf8730ed07c7236ba52aef7668f5b8f8544d">942caf87…</code></a>
+— first reading, at the head of <code>main</code>, 558 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: no auto-run
+surface, one build-time execution path (a cargo build script), three
+dependency manifests changed on the day of this reading, and
+<code>AGENTS.md</code> read as data. Nothing was installed, built or run
+— no cargo, no npm, no TruffleHog, no index built. No capability marks,
+and the reason is an argued position rather than an omission: the design
+document declines write-time correction on the ground that a wrong
+supersession loses information silently, so <code>trust_state</code>,
+<code>tombstone</code> and supersession are absent together and on
+purpose. <code>bitemporal</code> is absent because a chunk carries one
+timestamp; <code>audit_log</code> because an append-only record of what
+was said is not a record of what changed; <code>scope_enforced</code>
+because a memory has one owner and a Hub token rather than an in-store
+predicate. <code>negative_eval</code> is the closest call: the
+secrets-gate tests are properly paired — one row held back, <em>the
+clean row stays</em> — but they assert on what is published rather than
+on what a query returns.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
