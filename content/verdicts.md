@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 570 reports.**
+**This page covers all 571 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4938,3 +4938,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 65,422 lines of TypeScript against 74,258 lines of tests across 442 files and 3,686 cases, 1,171 commits since June 2026, 28 MCP tools, a benchmark preregistration that declares what it will *not* claim credit for, and a mutation config that states which surface its scores cover; five capability marks.
 - Study when: you need a worked example of measuring your own design claim honestly, or of bitemporal resolution layered over a ranked store.
 - Do not copy when: you need a record keyed on the rejected value — the tombstone here is keyed on the item id, so the same content rewritten under a new id meets nothing.
+
+### [`kiwi-mem`](../systems/kiwi-mem/)
+- Best idea: **a tombstone with no expiry and exactly one revocation path.** Three tables at session, turn and message granularity, retained permanently because what they answer is "may this still be written" — an expiring one would let a long-offline device re-plant deleted text — with `_restore_conversation_tx` behind `/sync/import-backup` as the only code in the repository that may lift one, because restoring a backup is the user explicitly asking.
+- Second idea: **a delete must invalidate work in flight, not just rows at rest.** A per-session source revision is snapshotted when a background task reads its material and re-compared under the same locks before saving; a mismatch discards the result and recomputes. A global reset generation covers the case the tables cannot — a session created and still streaming when the user cleared everything.
+- Third idea: **let unknown attribution fail closed.** `scope_known` gives three states rather than two, so a row whose project attribution was never established is excluded from the global loop instead of defaulting into it.
+- Biggest risk: **the guard against a second copy matches one spelling.** The global-scope predicate is a named constant precisely to prevent drift, and a committed test counts occurrences in the source and requires exactly one — but it matches the literal `scope_known = TRUE`, while a diagnostics count writes `scope_known IS TRUE`. The two agree today and the second is invisible to the guard written to prevent it.
+- Most reusable component: the project predicate's else branch — a caller naming no project gets `AND m.project_id IS NULL` rather than no clause, so a global search cannot see project memories by omission.
+- Maturity impression: AGPL-3.0, 33,801 lines of Python, 156 commits since April 2026, an 8,179-line safety suite that asserts against source text as well as behaviour — every ledger DELETE scoped by session id, advisory locks only inside transaction helpers, and the English README asserted not to claim authentication the system lacks — plus a registered list of audit findings deliberately left unfixed; one capability mark.
+- Study when: you need a worked example of deletion that survives an offline peer, a mid-flight background job and an in-flight reset.
+- Do not copy when: you need a record keyed on the rejected content — the tombstones key on message identity, so the same sentence written as a new message meets nothing — or a discrete trust state, since the row carries only scores.

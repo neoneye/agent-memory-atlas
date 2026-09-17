@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 570 reports.</strong></p>
+<p><strong>This page covers all 571 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21745,6 +21745,52 @@ store.</li>
 <li>Do not copy when: you need a record keyed on the rejected value —
 the tombstone here is keyed on the item id, so the same content
 rewritten under a new id meets nothing.</li>
+</ul>
+<h3 id="kiwi-mem"><a
+href="../systems/kiwi-mem/"><code>kiwi-mem</code></a></h3>
+<ul>
+<li>Best idea: <strong>a tombstone with no expiry and exactly one
+revocation path.</strong> Three tables at session, turn and message
+granularity, retained permanently because what they answer is "may this
+still be written" — an expiring one would let a long-offline device
+re-plant deleted text — with <code>_restore_conversation_tx</code>
+behind <code>/sync/import-backup</code> as the only code in the
+repository that may lift one, because restoring a backup is the user
+explicitly asking.</li>
+<li>Second idea: <strong>a delete must invalidate work in flight, not
+just rows at rest.</strong> A per-session source revision is snapshotted
+when a background task reads its material and re-compared under the same
+locks before saving; a mismatch discards the result and recomputes. A
+global reset generation covers the case the tables cannot — a session
+created and still streaming when the user cleared everything.</li>
+<li>Third idea: <strong>let unknown attribution fail closed.</strong>
+<code>scope_known</code> gives three states rather than two, so a row
+whose project attribution was never established is excluded from the
+global loop instead of defaulting into it.</li>
+<li>Biggest risk: <strong>the guard against a second copy matches one
+spelling.</strong> The global-scope predicate is a named constant
+precisely to prevent drift, and a committed test counts occurrences in
+the source and requires exactly one — but it matches the literal
+<code>scope_known = TRUE</code>, while a diagnostics count writes
+<code>scope_known IS TRUE</code>. The two agree today and the second is
+invisible to the guard written to prevent it.</li>
+<li>Most reusable component: the project predicate's else branch — a
+caller naming no project gets <code>AND m.project_id IS NULL</code>
+rather than no clause, so a global search cannot see project memories by
+omission.</li>
+<li>Maturity impression: AGPL-3.0, 33,801 lines of Python, 156 commits
+since April 2026, an 8,179-line safety suite that asserts against source
+text as well as behaviour — every ledger DELETE scoped by session id,
+advisory locks only inside transaction helpers, and the English README
+asserted not to claim authentication the system lacks — plus a
+registered list of audit findings deliberately left unfixed; one
+capability mark.</li>
+<li>Study when: you need a worked example of deletion that survives an
+offline peer, a mid-flight background job and an in-flight reset.</li>
+<li>Do not copy when: you need a record keyed on the rejected content —
+the tombstones key on message identity, so the same sentence written as
+a new message meets nothing — or a discrete trust state, since the row
+carries only scores.</li>
 </ul>
         </article>
       </div>

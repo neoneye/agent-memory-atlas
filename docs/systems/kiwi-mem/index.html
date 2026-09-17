@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A personal memory gateway whose
+hardest engineering is in forgetting — three permanent tombstone tables
+consulted before a write, two generation counters for in-flight deletes,
+and a committed test that forbids re-typing the scope predicate, beside
+a re-typed copy it cannot see.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="kiwi-mem — Agent Memory Atlas">
+    <meta property="og:description" content="A personal memory gateway
+whose hardest engineering is in forgetting — three permanent tombstone
+tables consulted before a write, two generation counters for in-flight
+deletes, and a committed test that forbids re-typing the scope
+predicate, beside a re-typed copy it cannot see.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="kiwi-mem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A personal memory gateway
+whose hardest engineering is in forgetting — three permanent tombstone
+tables consulted before a write, two generation counters for in-flight
+deletes, and a committed test that forbids re-typing the scope
+predicate, beside a re-typed copy it cannot see.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>kiwi-mem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "kiwi-mem",
+      "description": "A personal memory gateway whose hardest engineering is in forgetting \u2014 three permanent tombstone tables consulted before a write, two generation counters for in-flight deletes, and a committed test that forbids re-typing the scope predicate, beside a re-typed copy it cannot see.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The guard against a second copy is spelled
+one way</p>
+          <h1>kiwi-mem</h1>
+          <p class="document-deck">A personal memory gateway whose
+hardest engineering is in forgetting — three permanent tombstone tables
+consulted before a write, two generation counters for in-flight deletes,
+and a committed test that forbids re-typing the scope predicate, beside
+a re-typed copy it cannot see.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/LucieEveille/kiwi-mem">
+              <span>Source</span>
+              <strong>LucieEveille/kiwi-mem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/LucieEveille/kiwi-mem/commit/b01a0c506f4f10f90f30d408c0291f16720f0718" title="b01a0c506f4f10f90f30d408c0291f16720f0718">
+              <span>Analyzed revision</span>
+              <code>b01a0c50…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/LucieEveille--kiwi-mem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>LucieEveille--kiwi-mem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>kiwi-mem is an AGPL-3.0 personal memory gateway — 33,801 lines of
+Python across 33 files, 156 commits since April 2026, Postgres-backed,
+sitting in front of an OpenAI- or Anthropic-format provider with an MCP
+server and an admin panel beside it. The codebase and its documentation
+are in Chinese; translations below are mine and marked.</p>
+<p>One mark. The project key is bound in the SQL of both retrieval arms,
+and the branch that matters is the one for a caller who names no
+project: it narrows to <code>AND m.project_id IS NULL</code> rather than
+dropping the clause. A global search cannot see project memories because
+the absent case is a predicate, not an omission.</p>
+<p>What distinguishes the system is not retrieval, though. It is
+<strong>forgetting</strong>, and the amount of engineering spent on it
+is unusual. Three tombstone tables at session, turn and message
+granularity, retained permanently, with the reason stated
+(translated):</p>
+<blockquote>
+<p>All three kinds of tombstone are retained permanently — no expiry,
+and this release does no garbage collection on them — because what they
+answer is "may this still be written". Once they expire, a device that
+has been offline a long time could re-plant the body text the user
+deleted. The only place in the whole repository that revokes a tombstone
+is <code>_restore_conversation_tx</code>
+(<code>/sync/import-backup</code>): restoring a backup is the user
+explicitly saying "bring it back"; ordinary sync can never
+resurrect.</p>
+</blockquote>
+<p>Beside them sit two counters for the races a delete creates: a
+per-session source revision so a background summariser discards a result
+derived from material deleted while it was working, and a global reset
+generation for requests that were still streaming when the user cleared
+everything and so had left no trace in any table to purge.</p>
+<p>And then the finding. The conversation-scope predicate is a named
+constant because copies drift, and a committed test enforces that by
+counting occurrences in the source:</p>
+<pre class="python"><code>hand_written = re.findall(r&quot;scope_known = TRUE AND project_id IS NULL&quot;, db_source)
+require(len(hand_written) == 1, ...)</code></pre>
+<p>One copy — the definition. The guard is a literal regex, and
+<code>database.py:1630</code> writes the same predicate as
+<code>scope_known IS TRUE AND project_id IS NULL</code>, SQL's other
+spelling of the same test, in a diagnostics count. It agrees today, it
+is in a statistics query rather than a retrieval path, and it is
+invisible to the guard written to prevent exactly it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two stores, one database. Conversations are a ledger of what was
+said; memories are what an extractor kept. A nightly <em>dream</em> pass
+merges, softens and deletes memories, writing a run log with counts and
+a narrative.</p>
+<p>Scope is a project id, nullable, where null means global. The
+conversation side carries a second axis that the memory side does not:
+<code>scope_known</code>, a boolean recording whether the row's project
+attribution is <em>known at all</em>. That gives three states —
+known-global, known-project, and unknown — and the global predicate
+admits only the first.</p>
+<p>Deletion is the third system, and it is the one with the most thought
+in it. A delete must remove every original copy, block resurrection by a
+peer, and invalidate anything derived from what it removed.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — A write consults the tombstones before it may land, a background summariser re-checks the source revision before saving, and an in-flight request compares the reset generation at write time — three different answers to three different ways a delete can be undone.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: A write consults the tombstones before it may land, a background summariser re-checks the source revision before saving, and an in-flight request compares the reset generation at write time — three different answers to three different ways a delete can be undone.
+flowchart TD
+  USER[&quot;User deletes a session, turn or message&quot;]
+  PURGE[&quot;Purge every table holding an original copy&quot;]
+  TOMB[(&quot;session_tombstones&lt;br/&gt;turn_tombstones&lt;br/&gt;message_tombstones&lt;br/&gt;retained permanently&quot;)]
+  REV[&quot;session_source_rev plus one&quot;]
+  EPOCH[&quot;deletion_epoch plus one on reset&quot;]
+  SYNC[&quot;Ordinary sync from an offline device&quot;]
+  CHECK{&quot;tombstone present&quot;}
+  REFUSE[&quot;SessionDeletedError&lt;br/&gt;ordinary sync may not revive&quot;]
+  LAND[&quot;Write lands&quot;]
+  RESTORE[&quot;/sync/import-backup&lt;br/&gt;the only revocation path&quot;]
+  BG[&quot;Background summariser&lt;br/&gt;snapshots the rev when it reads&quot;]
+  RECHECK{&quot;rev unchanged at save&quot;}
+  DISCARD[&quot;Discard and recompute once&quot;]
+  SAVE[&quot;Save the summary&quot;]
+  INFLIGHT[&quot;Request that was streaming&lt;br/&gt;when reset landed&quot;]
+  GEN{&quot;generation unchanged&quot;}
+  DROP[&quot;Drop the write&quot;]
+
+  USER --&gt; PURGE --&gt; TOMB
+  USER --&gt; REV
+  USER --&gt; EPOCH
+  SYNC --&gt; CHECK
+  CHECK --&gt;|&quot;yes&quot;| REFUSE
+  CHECK --&gt;|&quot;no&quot;| LAND
+  RESTORE --&gt; TOMB
+  BG --&gt; RECHECK
+  RECHECK --&gt;|&quot;no&quot;| DISCARD
+  RECHECK --&gt;|&quot;yes&quot;| SAVE
+  INFLIGHT --&gt; GEN
+  GEN --&gt;|&quot;no&quot;| DROP
+  GEN --&gt;|&quot;yes&quot;| LAND</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Search.</strong> <code>search_memories</code> runs a keyword
+arm and a vector arm and fuses them, passing <code>project_id</code>
+into both. Each builds its own predicate:
+<code>AND (m.project_id IS NULL OR m.project_id = $n)</code> when a
+project is named, <code>AND m.project_id IS NULL</code> when none is
+(<code>database.py:3141-3230</code>, <code>:2721-2760</code>).</li>
+<li><strong>Global conversations.</strong>
+<code>CONVERSATIONS_GLOBAL_SCOPE</code> is the single expression every
+consumer is told to reference (<code>database.py:1079</code>).</li>
+<li><strong>Delete.</strong> A purge across the ledger, chat messages,
+compression summaries, file chunks and comments, then a tombstone row at
+the right granularity, then a bump of the session's source
+revision.</li>
+<li><strong>Refuse a resurrection.</strong>
+<code>SessionDeletedError</code> — docstring translated: <em>"this
+conversation has been permanently deleted; the ordinary sync channel
+must not revive it"</em> — is raised when a write arrives for a
+tombstoned session.</li>
+<li><strong>Invalidate derived work.</strong> A background task
+snapshots <code>session_source_rev</code> when it reads its material and
+re-compares under the same locks before saving; a mismatch means the
+material changed, so the result is discarded and recomputed once.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> grew by migration and the columns show it:
+content, importance, an embedding added at v3.0, a title at v3.2, a
+<code>memory_type</code> of fragment, daily digest or digested at v3.3,
+then a category, an emotional weight, an access count with the hashes of
+the queries that reached it, an <code>is_permanent</code> flag, and a
+<code>resolution</code> defaulting to 1.0 that the dream pass lowers
+when it <em>softens</em> a memory rather than deleting it.</p>
+<p>Softening rather than deleting is a real idea — a memory that loses
+resolution is still there and returns less sharply — and it is a score,
+not a state. <code>trust_state</code> is withheld on that: nothing on
+the row is a discrete status that withholds it from a read, and
+<code>is_permanent</code> works the other way, exempting a row from
+batch deletion rather than gating retrieval.</p>
+<p><code>tombstone</code> is withheld too, and this is the closest call
+in the report. The three tombstone tables are consulted on the
+<em>write</em> path — their stated purpose is to answer "may this still
+be written" — which is the hard half of the mark. What they are keyed on
+is session, turn and message identity. Delete a message and no peer can
+re-plant that message; write the same sentence again as a new message
+and nothing stands in the way. The atlas's mark is for a record keyed on
+the value, and this is a very good record keyed on the row.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two arms, fused, with heat parameters over access counts and recency,
+and the project predicate compiled into both statements rather than
+applied afterwards.</p>
+<p>The conversation side is where the scope thinking is sharpest.
+<code>scope_known</code> exists because a row whose project attribution
+was never established is not the same as a row known to be global, and
+the comment says so (translated):</p>
+<blockquote>
+<p>The single decision expression for a global event. TRUE and non-null
+(project conversations, including rows whose project was later deleted)
+and FALSE and null (attribution unknown) both fail it, so neither enters
+the global loop. Consumers must all reference this constant and must not
+hand-write the condition in place, to avoid drift across sites.</p>
+</blockquote>
+<p>Two good decisions in one paragraph: unknown attribution fails closed
+rather than falling into the global bucket, and the rule is centralised
+with the reason given.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The gateway extracts memories from conversation and the dream pass
+reworks them nightly, logging each run with counts of memories
+processed, deleted, merged and softened, scenes created and updated,
+links created, a narrative, and <code>interrupted_at_memory_id</code> so
+an interrupted pass can resume where it stopped.</p>
+<p><code>dream_logs</code> is a run record rather than a ledger — its
+<code>status</code> is updated in place and it counts rather than
+enumerates — so <code>audit_log</code> is withheld. It records that
+eleven memories were deleted, not which ones, which is the difference
+between a report and an account.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An OpenAI-compatible endpoint, so any client that speaks that
+protocol gets the memory layer without knowing it is there; an MCP
+server for tools; an admin panel for provider configuration, which the
+README explains is the only way to configure an Anthropic-native
+provider.</p>
+<p>The <code>KNOWN_ISSUES.md</code> file is worth naming as an artifact
+in its own right. It registers findings from a code audit that the team
+<em>deliberately did not fix in this batch</em>, sorted into design
+trade-offs, low-risk technical debt, and items needing a product
+decision, with a note that fixed high-severity items live in git history
+and are not listed, and a caution that the line numbers are approximate
+after later edits so the reader should navigate by function name. A
+register of what you decided not to fix, with the reason and the
+category, is rarer than a changelog and more useful to someone deciding
+whether to deploy.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The delete story is the strongest engineering here, and its three
+parts answer three genuinely different failure modes:</p>
+<ul>
+<li><strong>A peer that was offline.</strong> Permanent tombstones,
+because an expiring one lets an old device re-plant deleted text. One
+revocation path, and it is the one where the user explicitly asked for
+the data back.</li>
+<li><strong>A background job holding stale material.</strong> The source
+revision is snapshotted at read and re-compared under the same locks
+before the save, so a summary derived from a message deleted
+mid-computation is discarded rather than written.</li>
+<li><strong>A request that left no trace to purge.</strong> The reset
+generation catches the in-flight case the tables cannot: a session the
+server had just created and was still streaming when the user reset
+everything.</li>
+</ul>
+<p>The safety suite is 8,179 lines and asserts against source text as
+well as behaviour. Its structural contracts include that every ledger
+<code>DELETE FROM conversations</code> is scoped by
+<code>session_id</code>, that advisory locks appear only inside an
+explicit transaction helper, and — unusually — that the English README
+does not claim built-in authentication, which is a committed test that
+the documentation does not overstate the security posture. Much of the
+rest asserts that content never reaches a log: a memory log must not
+carry the content, the no-vector path must not leak it, a raw extraction
+response must not appear, and an older truncated-content log line is
+asserted gone by searching the source for the slice expression that
+produced it.</p>
+<p>Which brings the scope guard back into focus. The instruction <em>not
+to hand-write the predicate</em> is enforced by counting one literal
+string, and the same predicate appears once more in the source spelled
+<code>IS TRUE</code> instead of <code>= TRUE</code>. The consequence
+today is nil — it is a diagnostics count and the two spellings agree in
+Postgres — and that is exactly why it survived: this atlas has <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-09-16-the-second-copy-of-the-rule.md">collected
+the same shape elsewhere</a>, where the copy that goes wrong is reliably
+the one no test covers. A guard that matches a string rather than a
+parsed predicate protects against the copy someone pastes, not the copy
+someone retypes.</p>
+<p><code>negative_eval</code> is withheld, on a distinction rather than
+an absence. The suite is full of must-not assertions, and they are about
+content not reaching logs, identifiers not appearing in responses, and
+rows not surviving a purge — with genuine controls, including a batch
+delete where the locked row is asserted to survive while its unlocked
+neighbour is asserted gone. None of them asserts that particular
+material must not come back from a <em>query</em>.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Fourteen files under <code>scripts/</code> named <code>test_*</code>,
+12,534 lines in total, run as scripts with a <code>require()</code>
+harness rather than under a framework; nothing was run here. They are
+not uniform — <code>test_mcp_recall.py</code> carries no assertions at
+all, while <code>test_kiwi_prep_01.py</code> has 114 and
+<code>test_kiwi_safety_sync.py</code> is the 8,179-line suite described
+above.</p>
+<p>No benchmark, no retrieval eval, and no measured claim about memory
+quality in the README — which is at least consistent: the project does
+not publish a number it has not measured.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Make a tombstone permanent, and name the one path that may
+revoke it.</strong> An expiring deletion marker is a resurrection
+waiting for a device that was offline long enough. One documented
+revocation route — the user explicitly restoring a backup — is both the
+exception users want and the only one they expect.</li>
+<li><strong>A delete has to invalidate work in flight, not just rows at
+rest.</strong> A revision counter checked under the same lock before a
+background save is a few lines and closes the window where a summary of
+deleted material gets written after the delete succeeded.</li>
+<li><strong>Count a generation for the requests that left no
+trace.</strong> A reset cannot purge a session that did not exist yet
+when it ran. Comparing a generation at write time catches exactly the
+case the tables cannot.</li>
+<li><strong>Let unknown attribution fail closed.</strong> Three states —
+known-global, known-project, unknown — with the global predicate
+admitting only the first, is strictly better than a boolean that has to
+decide what an unclassified row is.</li>
+<li><strong>If you forbid a second copy, match the predicate, not the
+string.</strong> A regex over one spelling passes while
+<code>IS TRUE</code> sits beside <code>= TRUE</code>. Normalise
+whitespace and both spellings before counting, or move the predicate
+somewhere a copy cannot compile.</li>
+<li><strong>Publish what you decided not to fix.</strong> A register of
+audit findings left open, with each one's category and reason, tells an
+evaluator more than a list of what was closed.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>resolution</code> read anywhere at retrieval, or does
+softening only affect what the dream pass does next? A sharpness that
+nothing ranks on is a stored score with no consumer.</li>
+<li>The tombstones key on message identity. Is re-sending the same
+sentence as a new message intended to be allowed, or is that the gap a
+content key would close?</li>
+<li><code>dream_logs</code> counts memories deleted per run. Would
+naming them — the way the tombstones name sessions — make the dream
+pass's policy testable after the fact?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>database.py:114-160</code> (<code>memories</code> and
+its migrations), <code>:441-470</code> (<code>dream_logs</code>),
+<code>:605-650</code> (the three tombstone tables,
+<code>session_source_rev</code>, <code>deletion_epoch</code>, with the
+retention comment above them), <code>:727-735</code> (the project column
+and its partial index).</li>
+<li>Scope: <code>database.py:1079</code>
+(<code>CONVERSATIONS_GLOBAL_SCOPE</code> and its comment),
+<code>:1624-1634</code> (the diagnostics count with the second
+spelling), <code>:2721-2760</code> and <code>:3141-3230</code> (the two
+retrieval arms and their project predicates).</li>
+<li>Deletion: <code>database.py:1083</code>
+(<code>SessionDeletedError</code>), <code>:2426-2500</code> (the memory
+delete paths).</li>
+<li>Tests: <code>scripts/test_kiwi_safety_sync.py:4164-4180</code> (the
+structural contracts, including the scope-predicate count),
+<code>:560-600</code> (the locked-row survivor pair),
+<code>:369-420</code> (the log-leak assertions), <code>:379</code> (the
+README claim assertion).</li>
+<li>Documentation: <code>KNOWN_ISSUES.md</code>, <code>README.md</code>,
+<code>README_EN.md</code>, <code>CHANGELOG.md</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;scope_known IS TRUE AND project_id IS NULL\|scope_known = TRUE AND project_id IS NULL&quot; --include=&#39;*.py&#39; .
+  # 4: the constant, the guard&#39;s regex, one test string, and the diagnostics count in the other spelling
+grep -rn &quot;CONVERSATIONS_GLOBAL_SCOPE&quot; --include=&#39;*.py&#39; .    # 3: definition, one test use, the guard
+grep -c &quot;assert&quot; scripts/test_*.py                          # uneven: 114, 36, 20 … and 0 in test_mcp_recall.py
+grep -n &quot;CREATE TABLE&quot; database.py                          # no per-mutation ledger; dream_logs is a run record
+grep -rn &quot;status&quot; database.py | grep memories               # no discrete status on a memory row</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/LucieEveille/kiwi-mem/commit/b01a0c506f4f10f90f30d408c0291f16720f0718"><code class="commit-id" title="b01a0c506f4f10f90f30d408c0291f16720f0718">b01a0c50…</code></a>
+— first reading, at the head of <code>main</code>, 156 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: no auto-run
+surface, no build-time execution path, one unpinned dependency surface,
+one file inside the seven-day cooldown, and <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> read as data rather than as instructions. Nothing
+was installed, built or run — no pip, no Docker, no database started.
+The repository is AGPL-3.0 with no rider. One mark.
+<code>tombstone</code> is withheld on the key rather than on the
+mechanism: the three tombstone tables are consulted on the write path
+and retained permanently, which is the hard half, but they are keyed on
+session, turn and message identity rather than on the content, so the
+same text written under a new id meets nothing. <code>trust_state</code>
+is withheld because the row carries scores — importance, emotional
+weight, a resolution that softening lowers — and no discrete status that
+withholds it from a read. <code>audit_log</code> is withheld because
+<code>dream_logs</code> is a mutable run record that counts deletions
+rather than naming them. <code>negative_eval</code> is withheld on a
+distinction: the suite's many must-not assertions cover log leakage,
+identifier exposure and purge completeness, not what a query may return.
+Quotations from the source are translated from Chinese.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
