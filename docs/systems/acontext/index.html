@@ -113,7 +113,7 @@ and tests that assert it holds.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/memodb-io--Acontext" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -429,6 +429,24 @@ record of the removal. Compare <a href="../mirix/">MIRIX</a>, whose
 dashboard renders six memory types and wires no mutation at all, and <a
 href="../minecontext/">MineContext</a>, whose server implements a delete
 endpoint the UI never calls.</p>
+<p><strong>One read path does not carry the project predicate, and
+naming it is the point.</strong> <code>get_agent_skill</code> filters on
+<code>id</code> <em>and</em> <code>project_id</code>, and so does
+<code>touch_skill_updated_at</code>. The learning-space chain does not:
+<code>get_learning_space</code> selects on <code>LearningSpace.id</code>
+alone, <code>get_learning_space_skill_ids</code> on
+<code>LearningSpaceSkill.learning_space_id</code> alone, and
+<code>get_skills_info</code> runs
+<code>select(AgentSkill).where(AgentSkill.id.in_(skill_ids))</code> with
+no project clause at all. That path is reached from the message-queue
+consumer with a <code>learning_space_id</code> the pipeline itself
+published, so its input is internal rather than client-supplied and the
+scope was fixed when the learning space was created — which is why the
+mark stands. It is still the seam to watch: the only thing between those
+three queries and a cross-project read is that no HTTP route hands them
+an id, and the atlas has <a
+href="../../patterns/scope-as-a-first-class-key/">a page of systems</a>
+where exactly that stopped being true later.</p>
 <p>Prompt injection has a narrower path than in the capture-driven
 systems, because learning is triggered by task outcome rather than by
 content — but the distillation still reads session messages, so injected
@@ -454,6 +472,10 @@ running task, a pending task, and a task update with no status each
 leave <code>ctx.learning_task_ids</code> empty. The gate is not a
 comment or a prompt instruction — it is behaviour with tests that fail
 if it regresses.</p>
+<p>A fourth negative sits further down the same file:
+<code>test_learning_disabled_no_publish</code> asserts that with
+learning switched off, no message reaches the queue at all — so the gate
+is tested at two stages, the status check and the publish.</p>
 <p>Those are write-path assertions, so they do not earn
 <code>negative_eval</code>, which asks for cases asserting that
 particular material must not be <em>retrieved</em>. They are the same
@@ -589,6 +611,40 @@ and was not traced through the service layer.</li>
 <code>src/server/core/tests/service/test_skill_learner_consumer.py</code>,
 <code>src/server/tests/e2e/</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — re-read at the same commit, confirmed
+still the tip by <code>git ls-remote</code> before a
+<code>--depth 1</code> clone. Nothing could have moved, so this reading
+audited the first one. Screened again: one auto-run surface
+(<code>.claude-plugin/</code>, a plugin marketplace manifest), nine
+build-time execution paths including four pytest
+<code>conftest.py</code> collection hooks, nine unpinned manifests,
+nothing inside the cooldown; <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> were read as data. Nothing was installed, built
+or run.</p>
+<p>Both marks now carry evidence records, and writing them found the one
+thing worth adding. <code>get_agent_skill</code> and
+<code>touch_skill_updated_at</code> both filter
+<code>AgentSkill.project_id == project_id</code>, which is where the
+<code>scope_enforced</code> mark lives. The learning-space chain does
+not: <code>get_learning_space</code> selects on
+<code>LearningSpace.id</code> alone,
+<code>get_learning_space_skill_ids</code> on
+<code>learning_space_id</code> alone, and <code>get_skills_info</code>
+runs <code>select(AgentSkill).where(AgentSkill.id.in_(skill_ids))</code>
+with no project clause. That path is reached only from the MQ consumer
+with an id the pipeline itself published, so the scope was fixed at
+creation and the mark stands — but the seam is now named in section 9,
+because the only thing between those three queries and a cross-project
+read is that no HTTP route hands them an id.</p>
+<p>The trigger tests hold exactly as described, and a fourth negative
+case was added to the count:
+<code>test_learning_disabled_no_publish</code> asserts that nothing
+reaches the queue when learning is switched off, so the gate is tested
+at the status check <em>and</em> at the publish.
+<code>negative_eval</code> stays withheld for the reason already stated
+— these are write-path assertions.</p>
+<p>Marks unchanged at two; <code>stack_source</code> moves from
+<code>seeded</code> to <code>reviewed</code>.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc060a2d4126bc6"><code class="commit-id" title="259d73bfdebeed35ec2d4211ddc060a2d4126bc6">259d73bf…</code></a>
 — first reading.</p>

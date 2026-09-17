@@ -9,11 +9,14 @@ source_url: https://github.com/memodb-io/Acontext
 archive_name: "memodb-io--Acontext"
 revision: 259d73bfdebeed35ec2d4211ddc060a2d4126bc6
 revision_url: https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc060a2d4126bc6
-analyzed_at: 2026-07-29
+analyzed_at: 2026-09-17
 capabilities: "scope_enforced, human_review"
+capability_evidence:
+  scope_enforced: "the client-facing skill read | src/server/core/acontext_core/service/data/agent_skill.py:93-100, :77-87 | `get_agent_skill` is `select(AgentSkill).where(AgentSkill.id == skill_id, AgentSkill.project_id == project_id)`, and `touch_skill_updated_at` carries the same pair, so a skill id from one project cannot be read or touched through another. Disk, user and project foreign keys cascade beneath it | no cross-project retrieval case is committed. The read path that does *not* carry the predicate is named in section 9: the learning-space chain — `get_learning_space`, `get_learning_space_skill_ids` and `get_skills_info` — keys on ids alone, and is reached only from the MQ consumer with an id the pipeline itself produced, so it is trusted-input rather than client-input"
+  human_review: "the dashboard's agent-skills pages, where a person reads what was learned file by file and can remove it | dashboard/app/project/[id]/agent-skills/page.tsx, agent-skills-page-client.tsx:219, actions.ts:39-60, [skillId]/agent-skill-detail-client.tsx | the list page renders every distilled skill; the detail client renders the skill's file tree and fetches each file's contents through `getAgentSkillFile`; `deleteAgentSkill(project.id, skillToDelete.id)` runs behind a confirmation dialog. A person can therefore inspect the memory's actual text and delete it | no committed case drives the dashboard. This is the weak form of the capability and the report says so: delete-only, after the fact, with no approve-before-effect step and no record of the removal"
 stack_storage: "postgres"
 stack_retrieval: ""
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An agent skill — a directory of Markdown files with a SKILL.md the user defines the schema for"
   storage: "Postgres for skills, tasks, sessions and messages; a disk abstraction for the files themselves"
@@ -319,6 +322,20 @@ fact, with no approve-before-effect step and no record of the removal. Compare
 at all, and [MineContext](../minecontext/), whose server implements a delete
 endpoint the UI never calls.
 
+**One read path does not carry the project predicate, and naming it is the point.**
+`get_agent_skill` filters on `id` *and* `project_id`, and so does
+`touch_skill_updated_at`. The learning-space chain does not: `get_learning_space`
+selects on `LearningSpace.id` alone, `get_learning_space_skill_ids` on
+`LearningSpaceSkill.learning_space_id` alone, and `get_skills_info` runs
+`select(AgentSkill).where(AgentSkill.id.in_(skill_ids))` with no project clause at
+all. That path is reached from the message-queue consumer with a
+`learning_space_id` the pipeline itself published, so its input is internal rather
+than client-supplied and the scope was fixed when the learning space was created —
+which is why the mark stands. It is still the seam to watch: the only thing
+between those three queries and a cross-project read is that no HTTP route hands
+them an id, and the atlas has [a page of systems](../../patterns/scope-as-a-first-class-key/)
+where exactly that stopped being true later.
+
 Prompt injection has a narrower path than in the capture-driven systems, because
 learning is triggered by task outcome rather than by content — but the
 distillation still reads session messages, so injected text in a session that
@@ -344,6 +361,10 @@ the six assert a *negative*: that a running task, a pending
 task, and a task update with no status each leave `ctx.learning_task_ids` empty.
 The gate is not a comment or a prompt instruction — it is behaviour with tests
 that fail if it regresses.
+
+A fourth negative sits further down the same file: `test_learning_disabled_no_publish`
+asserts that with learning switched off, no message reaches the queue at all — so
+the gate is tested at two stages, the status check and the publish.
 
 Those are write-path assertions, so they do not earn `negative_eval`, which asks
 for cases asserting that particular material must not be *retrieved*. They are
@@ -466,5 +487,13 @@ Postgres for nothing.
 `src/server/tests/e2e/`
 
 ## History
+
+**2026-09-17** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the first one. Screened again: one auto-run surface (`.claude-plugin/`, a plugin marketplace manifest), nine build-time execution paths including four pytest `conftest.py` collection hooks, nine unpinned manifests, nothing inside the cooldown; `AGENTS.md` and `CLAUDE.md` were read as data. Nothing was installed, built or run.
+
+Both marks now carry evidence records, and writing them found the one thing worth adding. `get_agent_skill` and `touch_skill_updated_at` both filter `AgentSkill.project_id == project_id`, which is where the `scope_enforced` mark lives. The learning-space chain does not: `get_learning_space` selects on `LearningSpace.id` alone, `get_learning_space_skill_ids` on `learning_space_id` alone, and `get_skills_info` runs `select(AgentSkill).where(AgentSkill.id.in_(skill_ids))` with no project clause. That path is reached only from the MQ consumer with an id the pipeline itself published, so the scope was fixed at creation and the mark stands — but the seam is now named in section 9, because the only thing between those three queries and a cross-project read is that no HTTP route hands them an id.
+
+The trigger tests hold exactly as described, and a fourth negative case was added to the count: `test_learning_disabled_no_publish` asserts that nothing reaches the queue when learning is switched off, so the gate is tested at the status check *and* at the publish. `negative_eval` stays withheld for the reason already stated — these are write-path assertions.
+
+Marks unchanged at two; `stack_source` moves from `seeded` to `reviewed`.
 
 **2026-07-29** — [`259d73bfdebeed35ec2d4211ddc060a2d4126bc6`](https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc060a2d4126bc6) — first reading.

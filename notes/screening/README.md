@@ -17,7 +17,7 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 259 |
+| Repositories with an auto-run surface (`RUNS`) | 260 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 325 |
 | Repositories with build-time execution (`EXEC`) | 420 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 4 |
@@ -30,6 +30,7 @@ These execute without a command being typed. Read before opening the tree.
 | System | Surfaces |
 | --- | --- |
 | [`a-memory`](../../content/systems/a-memory.md) | `.cursorrules`, `hooks/` |
+| [`acontext`](../../content/systems/acontext.md) | `.claude-plugin/` |
 | [`agent-framework`](../../content/systems/agent-framework.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md` |
 | [`agent-memory-doctrine`](../../content/systems/agent-memory-doctrine.md) | `.github/copilot-instructions.md` |
 | [`agent-memory-guard`](../../content/systems/agent-memory-guard.md) | `.devcontainer/devcontainer.json` |
