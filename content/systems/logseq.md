@@ -7,9 +7,9 @@ page_kind: system
 source_name: "logseq/logseq"
 source_url: https://github.com/logseq/logseq
 archive_name: "logseq--logseq"
-revision: d2ab7726ab74402c14fdbc33041a89ac55c899ae
-revision_url: https://github.com/logseq/logseq/commit/d2ab7726ab74402c14fdbc33041a89ac55c899ae
-analyzed_at: 2026-09-07
+revision: 8e15eeecdfb9a5a8ab03fb1052022d2f69ea6b97
+revision_url: https://github.com/logseq/logseq/commit/8e15eeecdfb9a5a8ab03fb1052022d2f69ea6b97
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -165,7 +165,7 @@ string ids let one batch create a page and put blocks on it.
 **Human write.** `deps/outliner/src/logseq/outliner/core.cljs` — the `-save`
 path with `retract-attributes?`, the block tree operations, and `:delete-blocks`.
 
-**Retrieval.** `search-blocks` in `src/main/frontend/worker/search.cljs:948`.
+**Retrieval.** `search-blocks` in `src/main/frontend/worker/search.cljs:921`.
 Reads in order: exact-title query, then FTS5 `match`, then a `LIKE` arm used
 only when the query is two characters or shorter, then fuzzy, then vector.
 `enough-exact-title-results?` and `skip-fuzzy?` short-circuit the expensive arms.
@@ -373,8 +373,22 @@ There is a pleasing irony there: the property that would mark agent authorship
 is *tested* in the sync path and *unset* in the agent path.
 
 No memory benchmarks exist, and none would mean anything — there is no
-extraction pipeline to score and no conversational QA surface. No test asserts
-that particular material must not be retrieved, so `negative_eval` is withheld.
+extraction pipeline to score and no conversational QA surface.
+
+**The nearest thing to a negative evaluation is at the index, not at the query,
+and that is the whole of why the mark is withheld.** Two committed cases assert
+that particular material must not be there, and both pair the exclusion with a
+control. `search-indexes-hide-by-default-properties` asserts `"Property type"`
+and `"Hidden page"` are absent from the titles `get-all-blocks` enumerates while
+`"keywords"` and `"author"` are present.
+`sync-search-indice-reindexes-holders-when-property-is-deleted` asserts a
+deleted property is in the FTS remove set and *not* in the add set, while the
+page and block that held it are — with `d/entity` calls proving both survivors
+are still in Datascript, so the assertion cannot pass by deleting everything.
+That is the right shape. What neither does is call `search-blocks` and assert on
+what comes back: both read the enumerator that feeds the index. `negative_eval`
+asks for the query, so it is withheld — narrowly, and on the distinction rather
+than on an absence of care.
 
 **What I would want before trusting an agent with a graph:** a test that
 `upsertNodes` cannot violate a declared property cardinality; a test that a
@@ -468,12 +482,12 @@ available anywhere else in this atlas.
 **Write path**
 
 - `deps/outliner/src/logseq/outliner/core.cljs` — `-save`, `:delete-blocks`,
-  `:db/retractEntity` (lines 114, 441)
+  `:db/retractEntity` (lines 114, 463)
 - `src/electron/electron/mcp_server.cljs` — `api-upsert-nodes` (line 118)
 
 **Retrieval**
 
-- `src/main/frontend/worker/search.cljs` — `search-blocks` (line 948), FTS5
+- `src/main/frontend/worker/search.cljs` — `search-blocks` (line 921), FTS5
   trigram table (line 53), triggers (line 21), vector and fusion constants
   (lines 16–18, 148–159)
 - `sidecar/embedding_server.py` — sentence-transformers HTTP sidecar
@@ -506,6 +520,12 @@ available anywhere else in this atlas.
   tool map has no delete verb.
 
 ## History
+
+**2026-09-17** — [`8e15eeecdfb9a5a8ab03fb1052022d2f69ea6b97`](https://github.com/logseq/logseq/commit/8e15eeecdfb9a5a8ab03fb1052022d2f69ea6b97) — re-read 180 commits on. Five of the seven files this report anchors are byte-identical by blob sha, including the property schema, the one outliner writer of `created-by-ref`, the schema version and the MCP server, so the agent-authorship finding and the `scope_enforced` reasoning stand unchanged. Marks unchanged at none. Two files moved: `outliner/core.cljs` took +88 and `worker/search.cljs` +177/-114, and two anchors shift with them — the retract-entity mapping 441→463 and `search-blocks` 948→921.
+
+The change worth reading is `2fe5b8992b`, which fixes a defect this atlas exists to notice: deleting a property removed its *surviving* holders from the search index. The commit states it exactly — *"Deleting a property put its still-alive holder pages/blocks in the FTS remove set via db-before referrers, but not in the add set once the property eid was gone. Reindex surviving referrers from db-before so holders stay findable."* Pages that still existed stopped being retrievable, and nothing about the page had changed; the property it once carried had. The fix ships with a test that asserts the deleted property is in the remove set and not the add set while both holders are in the add set and both still resolve through `d/entity`.
+
+That test and `search-indexes-hide-by-default-properties` are the nearest this repository comes to a negative retrieval assertion, and section 10 now says so and says why the mark still does not move: both read `get-all-blocks`, the enumerator that feeds the index, rather than calling `search-blocks` and asserting on the result. The sentence they replace — that no test asserts particular material must not be retrieved — was true at the previous pin and is too blunt at this one. Screened again before reading: no auto-run surface, one build-time execution surface, twenty unpinned surfaces, seven dependency files inside the seven-day cooldown; `AGENTS.md` is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run.
 
 **2026-09-07** — [`d2ab7726ab74402c14fdbc33041a89ac55c899ae`](https://github.com/logseq/logseq/commit/d2ab7726ab74402c14fdbc33041a89ac55c899ae) — re-read after 476 commits and the 2.0.1 release. Nothing moved on the memory paths: the same six tools, the same gated retrieval and fusion constants, `created-by-ref` unset by `upsertNodes`, no delete verb, no MCP test. Line references and the test-file count follow the pin; the MCP server is built once per session (commit `71db2e36f`, 2026-08-18); the `db-sync` cycle-repair module was removed (commit `39b43110f`, 2026-08-26); a `created-by-ref` writer for emoji reactions is named; the age in the summary was wrong at the first reading (the first commit is dated 2019-12-11) and is corrected. Every mark stays withheld.
 

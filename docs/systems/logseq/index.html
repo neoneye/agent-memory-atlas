@@ -107,14 +107,14 @@ that lets an agent create and edit but never delete.</p>
               <strong>logseq/logseq</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/logseq/logseq/commit/d2ab7726ab74402c14fdbc33041a89ac55c899ae" title="d2ab7726ab74402c14fdbc33041a89ac55c899ae">
+            <a class="meta-pill revision-pill" href="https://github.com/logseq/logseq/commit/8e15eeecdfb9a5a8ab03fb1052022d2f69ea6b97" title="8e15eeecdfb9a5a8ab03fb1052022d2f69ea6b97">
               <span>Analyzed revision</span>
-              <code>d2ab7726…</code>
+              <code>8e15eeec…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/logseq--logseq" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -280,7 +280,7 @@ it.</p>
 <code>-save</code> path with <code>retract-attributes?</code>, the block
 tree operations, and <code>:delete-blocks</code>.</p>
 <p><strong>Retrieval.</strong> <code>search-blocks</code> in
-<code>src/main/frontend/worker/search.cljs:948</code>. Reads in order:
+<code>src/main/frontend/worker/search.cljs:921</code>. Reads in order:
 exact-title query, then FTS5 <code>match</code>, then a
 <code>LIKE</code> arm used only when the query is two characters or
 shorter, then fuzzy, then vector.
@@ -504,9 +504,25 @@ substantial coverage including
 authorship is <em>tested</em> in the sync path and <em>unset</em> in the
 agent path.</p>
 <p>No memory benchmarks exist, and none would mean anything — there is
-no extraction pipeline to score and no conversational QA surface. No
-test asserts that particular material must not be retrieved, so
-<code>negative_eval</code> is withheld.</p>
+no extraction pipeline to score and no conversational QA surface.</p>
+<p><strong>The nearest thing to a negative evaluation is at the index,
+not at the query, and that is the whole of why the mark is
+withheld.</strong> Two committed cases assert that particular material
+must not be there, and both pair the exclusion with a control.
+<code>search-indexes-hide-by-default-properties</code> asserts
+<code>"Property type"</code> and <code>"Hidden page"</code> are absent
+from the titles <code>get-all-blocks</code> enumerates while
+<code>"keywords"</code> and <code>"author"</code> are present.
+<code>sync-search-indice-reindexes-holders-when-property-is-deleted</code>
+asserts a deleted property is in the FTS remove set and <em>not</em> in
+the add set, while the page and block that held it are — with
+<code>d/entity</code> calls proving both survivors are still in
+Datascript, so the assertion cannot pass by deleting everything. That is
+the right shape. What neither does is call <code>search-blocks</code>
+and assert on what comes back: both read the enumerator that feeds the
+index. <code>negative_eval</code> asks for the query, so it is withheld
+— narrowly, and on the distinction rather than on an absence of
+care.</p>
 <p><strong>What I would want before trusting an agent with a
 graph:</strong> a test that <code>upsertNodes</code> cannot violate a
 declared property cardinality; a test that a dry-run commits nothing;
@@ -610,14 +626,14 @@ validation</li>
 <ul>
 <li><code>deps/outliner/src/logseq/outliner/core.cljs</code> —
 <code>-save</code>, <code>:delete-blocks</code>,
-<code>:db/retractEntity</code> (lines 114, 441)</li>
+<code>:db/retractEntity</code> (lines 114, 463)</li>
 <li><code>src/electron/electron/mcp_server.cljs</code> —
 <code>api-upsert-nodes</code> (line 118)</li>
 </ul>
 <p><strong>Retrieval</strong></p>
 <ul>
 <li><code>src/main/frontend/worker/search.cljs</code> —
-<code>search-blocks</code> (line 948), FTS5 trigram table (line 53),
+<code>search-blocks</code> (line 921), FTS5 trigram table (line 53),
 triggers (line 21), vector and fusion constants (lines 16–18,
 148–159)</li>
 <li><code>sidecar/embedding_server.py</code> — sentence-transformers
@@ -657,6 +673,41 @@ test exercises the six tools.</li>
 — no hit; the tool map has no delete verb.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/logseq/logseq/commit/8e15eeecdfb9a5a8ab03fb1052022d2f69ea6b97"><code class="commit-id" title="8e15eeecdfb9a5a8ab03fb1052022d2f69ea6b97">8e15eeec…</code></a>
+— re-read 180 commits on. Five of the seven files this report anchors
+are byte-identical by blob sha, including the property schema, the one
+outliner writer of <code>created-by-ref</code>, the schema version and
+the MCP server, so the agent-authorship finding and the
+<code>scope_enforced</code> reasoning stand unchanged. Marks unchanged
+at none. Two files moved: <code>outliner/core.cljs</code> took +88 and
+<code>worker/search.cljs</code> +177/-114, and two anchors shift with
+them — the retract-entity mapping 441→463 and <code>search-blocks</code>
+948→921.</p>
+<p>The change worth reading is <code>2fe5b8992b</code>, which fixes a
+defect this atlas exists to notice: deleting a property removed its
+<em>surviving</em> holders from the search index. The commit states it
+exactly — <em>"Deleting a property put its still-alive holder
+pages/blocks in the FTS remove set via db-before referrers, but not in
+the add set once the property eid was gone. Reindex surviving referrers
+from db-before so holders stay findable."</em> Pages that still existed
+stopped being retrievable, and nothing about the page had changed; the
+property it once carried had. The fix ships with a test that asserts the
+deleted property is in the remove set and not the add set while both
+holders are in the add set and both still resolve through
+<code>d/entity</code>.</p>
+<p>That test and <code>search-indexes-hide-by-default-properties</code>
+are the nearest this repository comes to a negative retrieval assertion,
+and section 10 now says so and says why the mark still does not move:
+both read <code>get-all-blocks</code>, the enumerator that feeds the
+index, rather than calling <code>search-blocks</code> and asserting on
+the result. The sentence they replace — that no test asserts particular
+material must not be retrieved — was true at the previous pin and is too
+blunt at this one. Screened again before reading: no auto-run surface,
+one build-time execution surface, twenty unpinned surfaces, seven
+dependency files inside the seven-day cooldown; <code>AGENTS.md</code>
+is addressed to a reading agent and was treated as data. Nothing was
+installed and nothing was run.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/logseq/logseq/commit/d2ab7726ab74402c14fdbc33041a89ac55c899ae"><code class="commit-id" title="d2ab7726ab74402c14fdbc33041a89ac55c899ae">d2ab7726…</code></a>
 — re-read after 476 commits and the 2.0.1 release. Nothing moved on the
