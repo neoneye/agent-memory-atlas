@@ -7,10 +7,12 @@ page_kind: system
 source_name: "aayoawoyemi/ori-mnemos"
 source_url: https://github.com/aayoawoyemi/ori-mnemos
 archive_name: "aayoawoyemi--ori-mnemos"
-revision: 56c04fa547cf11e2dad8fc503aa049d9ed024f8f
-revision_url: https://github.com/aayoawoyemi/ori-mnemos/commit/56c04fa547cf11e2dad8fc503aa049d9ed024f8f
-analyzed_at: 2026-08-09
-capabilities: ""
+revision: db5d32248a635dea870a02ecdfa241b4e36738f0
+revision_url: https://github.com/aayoawoyemi/ori-mnemos/commit/db5d32248a635dea870a02ecdfa241b4e36738f0
+analyzed_at: 2026-09-17
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the retrieval and maintenance surfaces — ranked reads and the prune candidate list | tests/core/ranking.test.ts:26-32, tests/cli/prune.test.ts:164, :167-181, :319, tests/core/bm25.test.ts:115-128 | `rankByFading` is given three notes and a 0.3 threshold and the case asserts `expect(fading.map((f) => f.title)).not.toContain(\"alive\")` beside `expect(fading.length).toBe(2)`, so the two below the threshold are proved present in the same assertion that proves the live one absent — the pairing basemode names as the thing that separates a correct filter from one excluding everything. `prune` repeats the shape on a value: a note written with `status: archived` must not appear among new candidates, and `expect(result.data.zones.archived).toBeGreaterThanOrEqual(1)` proves the fixture reached the store rather than never landing. A high-vitality hub note and a popular note are each asserted absent from the candidate list on their own reasoning. On the search path itself, BM25 returns `[]` for a no-match query and for a stopword-only query against an index the preceding case proves non-empty | the cases are the evidence; vitest over temporary vaults, no service dependency"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -172,9 +174,23 @@ did, without reading code.
 
 ## 9. Reliability, Safety, and Trust
 
-**No marks.** No trust state, no tombstone, no bitemporality, no scope key on the
-read path, no human review, and no committed case asserting that particular
-material must not be retrieved.
+**One mark, and it is `negative_eval`** — section 10 has the cases. No
+bitemporality, no scope key on the read path, and no human review.
+
+The two withholdings worth stating are the ones a reader would expect to go the
+other way. **`status` is not a trust state.** It takes two values, `active` and
+`archived`, and the only place either is compared is `buildIndex` in
+`src/core/engine.ts:533`, which skips an archived note while assembling the
+SQLite projection. So an archived note is unreachable because it was never
+indexed, not because a read consulted its status — the status governs what
+enters the index rather than what a query returns, and the mark asks for the
+second. It is also a lifecycle flag rather than a judgement about whether the
+note is true, which is the other half of what the mark counts.
+
+**Archiving is not a tombstone** for the same structural reason it usually is
+not: it is keyed on the note, not on the value the note carried. Nothing consults
+the archived set when a new note is written, so the same content can be written
+again the day after it is archived and nothing notices.
 
 The two JSONL audits — `warmth-audit.jsonl` and `explore-audit.jsonl` — are
 retrieval-side records, which is the half the `audit_log` mark excludes. They are
@@ -192,8 +208,38 @@ The risk is section 10's.
 
 `bench/` contains `hotpotqa-eval.ts`, `locomo-eval.ts` and
 `mem0-hotpotqa.py` — so both sides of the Mem0 comparison are run in-house,
-which is better practice than importing a competitor's published figure. 35 test
-files elsewhere.
+which is better practice than importing a competitor's published figure.
+
+**The test suite is 57 files and 862 tests, and 21 of those files were invisible
+to git.** `.gitignore` carried `tests/*` plus a hand-maintained allowlist of 36
+`!` lines, so a newly written test shipped only if someone remembered to exempt
+it. `tests/fixtures/` was ignored too, which meant even the 36 allowlisted files
+could not run from a clean clone. The commit that replaced the allowlist with a
+tracked directory names the hidden files — `atomic-writes`, `frontmatter`,
+`promote`, `tracking`, `indexstore`, `bm25-store`, `graph-metrics-cache`,
+`cli-learning-wiring`, `health-learning` — and states the mechanism better than a
+summary can:
+
+> "Deny-by-default on a test directory fails silently and in the worst
+> direction: the suite still passes locally, so nothing tells you the evidence
+> never shipped."
+
+That is the generalisable part. A deny-by-default rule over a directory whose
+contents are the evidence produces a repository that looks tested and ships
+nothing to test it with, and no local run can detect it.
+
+**Committed negative assertions.** `rankByFading` is given `alive` at 0.8,
+`fading` at 0.1 and `dead` at 0.0 against a 0.3 threshold, and the case asserts
+`expect(fading.map((f) => f.title)).not.toContain("alive")` beside
+`expect(fading.length).toBe(2)` — the second assertion is what stops the first
+from passing on a filter that excludes everything. `prune` repeats the shape
+keyed on a value: a note written with `status: archived` must not appear among
+new candidates, while `expect(result.data.zones.archived)
+.toBeGreaterThanOrEqual(1)` proves the note reached the store rather than never
+landing, and a high-vitality hub note and a popular note are each asserted absent
+on their own reasoning. On the search path, BM25 returns `[]` for a no-match
+query and for a stopword-only query, against an index the case immediately above
+proves returns a ranked result. `negative_eval` is earned.
 
 **But `.gitignore` excludes `bench/data/` and `bench/results/`**, and
 `bench/README.md` says "JSON output from each benchmark run stored in `results/`
@@ -325,5 +371,7 @@ subcommands `:91-92`, `:131`)
 `PLAN_NMF_LOCAL_DECOMPOSITION.md`
 
 ## History
+
+**2026-09-17** — [`db5d32248a635dea870a02ecdfa241b4e36738f0`](https://github.com/aayoawoyemi/ori-mnemos/commit/db5d32248a635dea870a02ecdfa241b4e36738f0) — re-read ten commits past the previous pin, across a 0.7.0 "correctness release" of 70 files and about 11,500 added lines. Marks move from none to `negative_eval`. The cases that earn it are in `tests/core/ranking.test.ts`, `tests/cli/prune.test.ts` and `tests/core/bm25.test.ts`, and each pairs the must-not-appear assertion with something proving the fixture was present, which is the pairing the rubric requires. `trust_state` and `tombstone` are examined and withheld, with the reasoning in section 9: `status` is compared only in `buildIndex` at `src/core/engine.ts:533`, so it governs what enters the projection rather than what a read returns, and archiving keys on the note rather than on the value it carried. The benchmark disagreement that the previous reading centred on is unchanged at this pin and was re-checked rather than assumed: `README.md` still reports HotpotQA F1 0.68 while `bench/README.md` still reports Ori explore F1 52.3% and LLM-F1 41.0% over "50 questions, same dataset, same scoring", Recall@5 still agrees at 90%, and `.gitignore` still excludes `bench/results/`, so no number in the repository is backed by a committed run. The previous reading's count of "35 test files" is corrected to 57: `.gitignore` held `tests/*` plus a 36-entry allowlist, 21 files on disk were never tracked, and `tests/fixtures/` was ignored as well — so the count the atlas published was downstream of the same defect the project fixed in `5301a9c`. Screened again before reading: three auto-run surfaces including a `.claude/settings.json` declaring SessionStart, PreToolUse and Stop hooks, one build-time execution surface, one unpinned surface, and `package.json` changed inside the seven-day cooldown. Nothing was installed, nothing was run, and no benchmark was executed.
 
 **2026-08-09** — [`56c04fa547cf11e2dad8fc503aa049d9ed024f8f`](https://github.com/aayoawoyemi/ori-mnemos/commit/56c04fa547cf11e2dad8fc503aa049d9ed024f8f) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run. The benchmark discrepancy recorded here is between two documents in the repository.
