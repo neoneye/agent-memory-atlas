@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted Postgres memory
+whose forget marks rather than deletes, whose empty space filter
+compiles to a false predicate instead of no predicate, and whose threat
+model ships a re-runnable pentest script against the claims it makes.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memory
+Vault — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted Postgres
+memory whose forget marks rather than deletes, whose empty space filter
+compiles to a false predicate instead of no predicate, and whose threat
+model ships a re-runnable pentest script against the claims it makes.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memory
+Vault — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted Postgres
+memory whose forget marks rather than deletes, whose empty space filter
+compiles to a false predicate instead of no predicate, and whose threat
+model ships a re-runnable pentest script against the claims it makes.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memory Vault — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memory Vault",
+      "description": "A self-hosted Postgres memory whose forget marks rather than deletes, whose empty space filter compiles to a false predicate instead of no predicate, and whose threat model ships a re-runnable pentest script against the claims it makes.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An unresolved space name must not widen to
+every space</p>
+          <h1>Memory Vault</h1>
+          <p class="document-deck">A self-hosted Postgres memory whose
+forget marks rather than deletes, whose empty space filter compiles to a
+false predicate instead of no predicate, and whose threat model ships a
+re-runnable pentest script against the claims it makes.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/MihaiBuilds/memory-vault">
+              <span>Source</span>
+              <strong>MihaiBuilds/memory-vault</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/MihaiBuilds/memory-vault/commit/84987337c1418d85468c4dd09c28e7a75252c378" title="84987337c1418d85468c4dd09c28e7a75252c378">
+              <span>Analyzed revision</span>
+              <code>84987337…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/MihaiBuilds--memory-vault" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>MihaiBuilds--memory-vault</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memory Vault is an MIT-licensed self-hosted memory for AI
+applications — 17,143 lines of Python, 589 test functions across 57
+files, 165 commits since March 2026 — over one Postgres with pgvector,
+reached through an MCP server, a REST API, a dashboard and a CLI.</p>
+<p>Three marks, and the one worth reading the repository for is a single
+<code>else</code> branch.</p>
+<p><code>_build_where_clause</code> documents three cases for its space
+filter, and the third is the interesting one:</p>
+<blockquote>
+<p><code>None</code> → no space filter (search every space)
+<code>[]</code> → caller asked for specific spaces but none resolved;
+return zero rows (a hard <code>false</code> predicate) rather than
+silently widening to every space</p>
+</blockquote>
+<p>The end-to-end test names the bug that produced that comment: a
+<code>spaces=["unknown"]</code> filter <em>"used to silently widen to
+every space because <code>resolve_space_names</code> returned
+<code>[]</code> and the caller collapsed it to <code>None</code> via
+<code>or None</code>."</em></p>
+<p>That is the falsy-collapse bug this atlas keeps meeting — and here it
+failed in the worst possible direction, turning a narrowing request into
+a widening one. The fix is three lines, and the test that guards it
+ingests a uniquely-tokened document, searches for it under a space name
+that does not exist, and asserts zero results; the next test ingests a
+different token, searches with no filter, and asserts a hit, so the
+exclusion cannot be satisfied by a store that is simply empty.</p>
+<p>Forgetting is the second mark and follows the same instinct.
+<code>forget</code> sets a flag, stamps the time and zeroes the
+importance; the row stays. Every read excludes it, starting with the
+first clause the shared builder emits. Destruction is a separate, later,
+operator-run step with a thirty-day floor.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Chunks in Postgres, with an embedding for the semantic arm and a text
+index for the keyword arm, a space for organisation, and a JSONB
+metadata bag carrying the content hash and the forgotten flag. Entities
+and relations are extracted alongside into a knowledge graph with live
+views over the same table.</p>
+<p>Two boundaries matter and they are different in kind. The space is an
+<em>organising</em> key that becomes a filter when a caller names one.
+The forgotten flag is an <em>exclusion</em> that applies whether or not
+anyone asks. Both are compiled into the SQL rather than applied to
+results, and both live in one builder shared by the two search arms,
+which is what stops them diverging.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — One WHERE-clause builder serves both search arms, so the forgotten exclusion cannot be dropped by one of them — and an empty space list compiles to a false predicate rather than to no predicate at all.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: One WHERE-clause builder serves both search arms, so the forgotten exclusion cannot be dropped by one of them — and an empty space list compiles to a false predicate rather than to no predicate at all.
+flowchart TD
+  CALL[&quot;Search request&lt;br/&gt;query, optional spaces, optional since&quot;]
+  RESOLVE[&quot;resolve_space_names&quot;]
+  B[&quot;_build_where_clause&quot;]
+  N{&quot;space_ids&quot;}
+  NONE[&quot;None — no space clause&lt;br/&gt;searches every space&quot;]
+  EMPTY[&quot;Empty — the literal false&lt;br/&gt;zero rows, no widening&quot;]
+  LIST[&quot;Populated — space_id IN&quot;]
+  FORGET[&quot;Always first:&lt;br/&gt;forgotten IS NOT TRUE&quot;]
+  VEC[&quot;Semantic arm&quot;]
+  KW[&quot;Keyword arm&quot;]
+  OUT[&quot;Hybrid results&quot;]
+  TOOL[&quot;MCP forget&lt;br/&gt;flag, timestamp, importance zero&quot;]
+  ROW[(&quot;chunks&quot;)]
+  PURGE[&quot;purge-forgotten&lt;br/&gt;older than N days, default 30&quot;]
+
+  CALL --&gt; RESOLVE --&gt; B --&gt; N
+  N --&gt; NONE
+  N --&gt; EMPTY
+  N --&gt; LIST
+  B --&gt; FORGET
+  FORGET --&gt; VEC --&gt; OUT
+  FORGET --&gt; KW --&gt; OUT
+  TOOL --&gt; ROW
+  ROW --&gt; PURGE
+  ROW --&gt; VEC
+  ROW --&gt; KW</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Filter.</strong>
+<code>_build_where_clause(space_ids, since)</code> emits the forgotten
+exclusion unconditionally, then the space clause for the three
+documented cases (<code>services/search.py:285-310</code>).</li>
+<li><strong>Forget.</strong> The MCP tool reads the chunk, refuses if it
+is already forgotten, sets <code>forgotten</code> and
+<code>forgotten_at</code> in the metadata and zeroes
+<code>importance</code> (<code>mcp/server.py:500-525</code>).</li>
+<li><strong>Purge.</strong> <code>purge-forgotten --older-than N</code>
+destroys only what has been forgotten for at least that many days,
+defaulting to thirty, and reports what remains
+(<code>cli.py:203-230</code>).</li>
+<li><strong>Deduplicate.</strong> A unique index on
+<code>(space_id, content_hash)</code> — added because the MCP tool
+checked for an existing hash and inserted in a separate statement, so
+two concurrent calls could both pass the check
+(<code>migrations/004_chunk_content_hash_dedup.sql</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A chunk carries its content, an embedding, an importance, a space,
+and a JSONB metadata bag. The trust axis is one boolean and its
+timestamp, which is a narrow model and an honest one — there is no
+confidence to calibrate, no provenance to misread, and no supersession
+pointer that might go unwritten.</p>
+<p><code>tombstone</code> is withheld, and the near miss is instructive.
+The content hash <em>is</em> value-keyed, and the unique index on
+<code>(space_id, content_hash)</code> does refuse a second write of the
+same text. But its job is concurrency, not correction: the index entry
+lives on the row, so forgetting a memory and storing the same text again
+succeeds, because there is no longer a row to collide with. A record
+keyed on the value of something <em>removed</em> is the mark, and this
+is a record keyed on the value of something <em>present</em>.</p>
+<p><code>bitemporal</code> is absent — <code>forgotten_at</code> and
+<code>created_at</code> are both record-axis — and
+<code>audit_log</code> has no table.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two arms, one builder. That structure is the reason the forgotten
+exclusion cannot go missing from one of them, and the test makes the
+property explicit rather than trusting the structure:
+<code>test_forgotten_check_is_always_present</code> loops over all three
+shapes of the space argument and asserts the clause is in every one.</p>
+<p>The space semantics deserve their own sentence because the middle
+case is the one systems get wrong. Asking for spaces that do not exist
+is not the same as asking for no spaces, and collapsing the first into
+the second is a widening disguised as a default. Here the empty list
+becomes <code>false</code>, the populated list becomes an
+<code>IN</code>, and the unit tests pin the two against each other — one
+asserts <code>false</code> is present and no <code>space_id</code>
+clause is, the other asserts the <code>IN</code> is present and no
+<code>false</code> is.</p>
+<p>The remaining limit is the <code>None</code> case: with no space
+named, a search spans every space. Under the threat model that is
+correct — the document's opening declares a single-tenant, self-hosted
+application where the operator is the only user — and it becomes the
+boundary the moment a deployment stops matching that description.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingestion chunks text and extracts entities; <code>remember</code>
+stores a single memory through MCP. The migrations are the
+best-documented part of the repository, and they read as a record of the
+project's own mistakes:</p>
+<ul>
+<li>004 adds the unique index because <em>"the MCP <code>remember</code>
+tool checked for an existing content hash and then inserted in a
+separate statement. Two concurrent calls could both pass the check
+before either insert ran."</em> It also collapses duplicates already
+committed by the race, because otherwise
+<code>CREATE UNIQUE INDEX</code> fails and <em>"the container will not
+finish booting"</em>.</li>
+<li>006 narrows that index, because once file ingestion also persisted a
+content hash, <em>"one content hash per space"</em> stopped meaning
+<em>"one stored memory per space"</em> — a document may legitimately
+repeat a passage, and under the 004 index ingesting an ordinary file
+failed outright.</li>
+</ul>
+<p>A migration that says which earlier migration it corrects, and why
+the earlier one stopped being right, is worth more than a comment on the
+index itself.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server with <code>remember</code>, <code>recall</code>,
+<code>forget</code>, <code>move_memory</code> and a
+<code>memory://spaces</code> resource, plus REST, a dashboard and a
+local-LLM chat over the operator's own memories.</p>
+<p><code>move_memory</code> rebuilding its graph entries is a small
+correctness detail worth noting: moving a memory between spaces without
+rebuilding the entity edges would leave the graph pointing at the old
+scope.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The threat model is the strongest document in the repository and one
+of the better ones in this corpus. It states the deployment it is built
+for — a developer on their own machine, homelab or single-purpose VPS,
+where they control the host and the network — and then does three things
+most such documents do not.</p>
+<p>It declares what the system is <em>not</em> for: <em>"Memory Vault is
+not built for PHI, payment data, or anything carrying subject-access
+obligations."</em></p>
+<p>It names the gap rather than assuming it away, with a whole section
+on deployments beyond the default model — the compose file publishing
+Postgres on 5432, the CORS default, the default credentials.</p>
+<p>And it offers verification: <em>"You do not have to take the claims
+below on trust. The repository ships a re-runnable pentest script that
+exercises the auth, input-validation and injection defenses against a
+live instance."</em> A security claim with a script attached is a
+different kind of claim.</p>
+<p>The least-privilege migration is in the same spirit and carries the
+honest caveat. It defines three NOLOGIN group roles — DML for the
+application, SELECT for dashboards and backups, DDL only while migrating
+— and states the threat it answers: until then one user did everything,
+so <em>"'drop the chunks table' was in range of the same credential that
+answers /api/search."</em> But it is opt-in by construction: nothing
+creates a login user or changes who the application connects as, and
+<em>"a deployment that ignores this migration entirely keeps working
+exactly as it does today, which is the point — this must not be able to
+lock anyone out of their own database."</em></p>
+<p>That is a defensible trade for a self-hosted tool, and it means the
+default deployment still answers search with a credential that can drop
+the table. The migration supplies the roles; adopting them is an
+operator action the threat model documents.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>589 test functions across 57 files, plus the pentest script; nothing
+was run here. The suite is organised around named regressions —
+<code>test_space_filter_security.py</code>,
+<code>test_purge_forgotten.py</code>,
+<code>test_bad_input_matrix.py</code>,
+<code>test_async_embed_yields_event_loop.py</code>,
+<code>test_chat_think_tag_boundary.py</code> — and the ones behind the
+marks assert both directions on the same store.</p>
+<p>The purge pair is the neatest: <em>"a memory forgotten today must
+survive a 30-day purge"</em> and <em>"a memory forgotten 60 days ago
+should be gone"</em>, with a zero-day variant and a no-op case beside
+them. Four assertions pin a retention rule that would otherwise be a
+number in a default argument.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>An unresolved filter is not an absent filter.</strong> Names
+that resolve to nothing must produce zero rows, not every row. The
+collapse happens through an innocuous <code>or None</code>, and it
+converts a narrowing request into a widening one.</li>
+<li><strong>Emit the exclusion from one builder both arms
+share.</strong> A hybrid search with two query paths has two places to
+forget a rule; one clause list used by both is structurally safer than
+two correct copies.</li>
+<li><strong>Hide first, destroy later, with a floor.</strong> Marking
+forgotten and purging after thirty days gives a mistaken forget a
+recovery window and still keeps the material out of every read in the
+meantime.</li>
+<li><strong>Say which migration you are correcting.</strong> 006
+explains what 004 meant and why it stopped being true. A reader who
+finds a puzzling index learns the whole story from the file that changed
+it.</li>
+<li><strong>Publish what you do not defend.</strong> A threat model that
+names the data classes the system is unsuitable for, and ships a script
+that tests its own claims, is more use to a deployer than a longer list
+of features.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Would a content hash retained past a forget be wanted, so that
+re-storing text the operator explicitly forgot is at least visible? The
+hash is already computed.</li>
+<li>The least-privilege roles are opt-in. Is there a path to making the
+compose file create and use the <code>memory_vault_app</code> login role
+by default without risking the lockout the migration is careful to
+avoid?</li>
+<li>With no space named, a search spans every space. If a second person
+ever gets a token, is that the boundary you would want, or would a
+default space be safer?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Search and scope:
+<code>src/memory_vault/services/search.py:285-315</code> (the builder
+and its three documented cases).</li>
+<li>Forgetting: <code>src/memory_vault/mcp/server.py:500-525</code> (the
+forget tool), <code>:576-590</code> (the forgotten counts),
+<code>:679</code>, <code>:741</code>, <code>:777</code> (the further
+exclusions), <code>src/memory_vault/api/routers/chunks.py:54-80</code>
+(the default and the view caveat),
+<code>src/memory_vault/cli.py:203-230</code>
+(<code>purge-forgotten</code>).</li>
+<li>Migrations: <code>004_chunk_content_hash_dedup.sql</code>,
+<code>006_scope_remember_dedup_index.sql</code>,
+<code>008_token_expiry.sql</code>,
+<code>009_least_privilege_roles.sql</code>.</li>
+<li>Security: <code>docs/threat-model.md</code>,
+<code>scripts/security-pentest.sh</code>, <code>SECURITY.md</code>.</li>
+<li>Tests: <code>tests/test_space_filter_security.py:55-140</code>,
+<code>tests/test_purge_forgotten.py:55-105</code>,
+<code>tests/test_space_delete.py:118</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;forgotten&quot; src/memory_vault --include=&#39;*.py&#39;          # one writer, five read exclusions, one purge
+grep -rn &quot;space_ids&quot; src/memory_vault/services/search.py        # the three cases, all in one builder
+grep -rn &quot;content_hash&quot; src/memory_vault --include=&#39;*.py&#39; --include=&#39;*.sql&#39;   # dedup on live rows; nothing retained past a delete
+grep -rn &quot;valid_from\|as_of\|recorded_at&quot; src/memory_vault --include=&#39;*.py&#39;   # 0 — both timestamps are record-axis</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/MihaiBuilds/memory-vault/commit/84987337c1418d85468c4dd09c28e7a75252c378"><code class="commit-id" title="84987337c1418d85468c4dd09c28e7a75252c378">84987337…</code></a>
+— first reading, at the head of <code>main</code>, 165 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: one auto-run
+surface (a <code>server.json</code> MCP manifest), one build-time
+execution path (a pytest <code>conftest.py</code> collection hook), and
+three dependency manifests changed inside the seven-day cooldown.
+Nothing was installed, built or run — no pip, no Docker, no Postgres
+started, and the committed pentest script was read rather than executed.
+Three marks. <code>tombstone</code> is withheld on a near miss worth
+naming: the content hash is value-keyed and a unique index refuses a
+duplicate write, but the entry lives on the live row, so forgetting a
+memory and storing the same text again succeeds. <code>bitemporal</code>
+is absent — <code>created_at</code> and <code>forgotten_at</code> are
+both record-axis — and <code>audit_log</code> has no table.
+<code>human_review</code> is absent: the operator forgets and purges
+directly, with no approval recorded.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

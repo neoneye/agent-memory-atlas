@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 575 reports.**
+**This page covers all 576 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4993,3 +4993,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 144,686 lines of Rust with 2,033 test functions, 2,831 commits, a Tauri tray doing capture in-process, a daemon ETL, an OAuth crate and an MCP package; no capability marks, which for this category is the expected shape rather than a criticism.
 - Study when: you are building anything that records a screen and need a worked example of an exclusion rule and its tests.
 - Do not copy when: you need the encryption claim to hold end to end — decide who deletes the migration backup and the export snapshot before shipping either.
+
+### [`memory-vault`](../systems/memory-vault/)
+- Best idea: **an unresolved filter is not an absent filter.** Space names that resolve to nothing compile to a hard `false` predicate "rather than silently widening to every space" — closing a bug where `resolve_space_names` returned `[]` and the caller collapsed it to `None` via `or None`, turning a narrowing request into a widening one.
+- Second idea: **emit the exclusion from one builder both arms share.** The semantic and keyword arms take their WHERE clauses from a single function, so the forgotten exclusion has one place to live rather than two places to be forgotten, and a test loops all three shapes of the space argument asserting it is present in each.
+- Third idea: **hide first, destroy later, with a floor.** `forget` flags the row, stamps the time and zeroes the importance; `purge-forgotten` destroys only what has been forgotten at least thirty days, so a mistaken forget has a recovery window while staying out of every read.
+- Fourth idea: **say which migration you are correcting.** Migration 006 explains what 004 meant, why a content-hash uniqueness rule stopped being right once ingestion also wrote hashes, and that under the old index ingesting an ordinary file failed outright.
+- Biggest risk: **with no space named, a search spans every space.** That is deliberate under a threat model whose opening declares a single-tenant, self-hosted application, and it becomes the boundary the moment a deployment stops matching that description. The least-privilege database roles are also opt-in group roles, so the default deployment still answers search with a credential that can drop the table.
+- Most reusable component: the threat model — it names the deployment it is for, declares the data classes the system is unsuitable for, documents the gaps rather than assuming them away, and ships a re-runnable pentest script so the claims can be checked rather than trusted.
+- Maturity impression: MIT, 17,143 lines of Python with 589 test functions across 57 files, 165 commits since March 2026, nine numbered migrations each documenting the race it closes; three capability marks.
+- Study when: you have a scope filter that can resolve to nothing, or you want a model for a threat document that a deployer can act on.
+- Do not copy when: you need a record of what was removed — the content hash is value-keyed but lives on the live row, so forgetting a memory and storing the same text again succeeds.

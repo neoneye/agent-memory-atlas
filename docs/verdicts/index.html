@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 575 reports.</strong></p>
+<p><strong>This page covers all 576 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21981,6 +21981,53 @@ a worked example of an exclusion rule and its tests.</li>
 <li>Do not copy when: you need the encryption claim to hold end to end —
 decide who deletes the migration backup and the export snapshot before
 shipping either.</li>
+</ul>
+<h3 id="memory-vault"><a
+href="../systems/memory-vault/"><code>memory-vault</code></a></h3>
+<ul>
+<li>Best idea: <strong>an unresolved filter is not an absent
+filter.</strong> Space names that resolve to nothing compile to a hard
+<code>false</code> predicate "rather than silently widening to every
+space" — closing a bug where <code>resolve_space_names</code> returned
+<code>[]</code> and the caller collapsed it to <code>None</code> via
+<code>or None</code>, turning a narrowing request into a widening
+one.</li>
+<li>Second idea: <strong>emit the exclusion from one builder both arms
+share.</strong> The semantic and keyword arms take their WHERE clauses
+from a single function, so the forgotten exclusion has one place to live
+rather than two places to be forgotten, and a test loops all three
+shapes of the space argument asserting it is present in each.</li>
+<li>Third idea: <strong>hide first, destroy later, with a
+floor.</strong> <code>forget</code> flags the row, stamps the time and
+zeroes the importance; <code>purge-forgotten</code> destroys only what
+has been forgotten at least thirty days, so a mistaken forget has a
+recovery window while staying out of every read.</li>
+<li>Fourth idea: <strong>say which migration you are
+correcting.</strong> Migration 006 explains what 004 meant, why a
+content-hash uniqueness rule stopped being right once ingestion also
+wrote hashes, and that under the old index ingesting an ordinary file
+failed outright.</li>
+<li>Biggest risk: <strong>with no space named, a search spans every
+space.</strong> That is deliberate under a threat model whose opening
+declares a single-tenant, self-hosted application, and it becomes the
+boundary the moment a deployment stops matching that description. The
+least-privilege database roles are also opt-in group roles, so the
+default deployment still answers search with a credential that can drop
+the table.</li>
+<li>Most reusable component: the threat model — it names the deployment
+it is for, declares the data classes the system is unsuitable for,
+documents the gaps rather than assuming them away, and ships a
+re-runnable pentest script so the claims can be checked rather than
+trusted.</li>
+<li>Maturity impression: MIT, 17,143 lines of Python with 589 test
+functions across 57 files, 165 commits since March 2026, nine numbered
+migrations each documenting the race it closes; three capability
+marks.</li>
+<li>Study when: you have a scope filter that can resolve to nothing, or
+you want a model for a threat document that a deployer can act on.</li>
+<li>Do not copy when: you need a record of what was removed — the
+content hash is value-keyed but lives on the live row, so forgetting a
+memory and storing the same text again succeeds.</li>
 </ul>
         </article>
       </div>
