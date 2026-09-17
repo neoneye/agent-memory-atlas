@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **571 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **572 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -88,6 +88,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <ul class="az">
 <li><a class="az-row" href="../systems/basemode/"><span class="az-id">basemode</span><span class="az-what">An RDF workspace graph whose comments audit its own wiring</span><code class="az-repo">ChristopherKahler/base</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/basic-memory/"><span class="az-id">Basic Memory</span><span class="az-what">Human-editable Markdown graph</span><code class="az-repo">basicmachines-co/basic-memory</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span></span></a></li>
+<li><a class="az-row" href="../systems/beever-atlas/"><span class="az-id">Beever Atlas</span><span class="az-what">The fallback is the copy without the filter</span><code class="az-repo">Beever-AI/beever-atlas</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/beevibe/"><span class="az-id">Beevibe</span><span class="az-what">It deletes the fields nobody reads, and ships a table nobody writes</span><code class="az-repo">beevibe-ai/beevibe</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/bifrost/"><span class="az-id">Bifrost</span><span class="az-what">The tool promises long-term memory; the filename holds a session id</span><code class="az-repo">MegaWiz-Dev-Team/Bifrost</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/bitterbot-desktop/"><span class="az-id">BitterBot Desktop</span><span class="az-what">Two lifecycle columns whose reconciler is not the migration&#x27;s inverse</span><code class="az-repo">Bitterbot-AI/bitterbot-desktop</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Negative evals</span></span></a></li>

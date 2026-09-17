@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 571 reports.**
+**This page covers all 572 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4948,3 +4948,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0, 33,801 lines of Python, 156 commits since April 2026, an 8,179-line safety suite that asserts against source text as well as behaviour — every ledger DELETE scoped by session id, advisory locks only inside transaction helpers, and the English README asserted not to claim authentication the system lacks — plus a registered list of audit findings deliberately left unfixed; one capability mark.
 - Study when: you need a worked example of deletion that survives an offline peer, a mid-flight background job and an in-flight reset.
 - Do not copy when: you need a record keyed on the rejected content — the tombstones key on message identity, so the same sentence written as a new message meets nothing — or a discrete trust state, since the row carries only scores.
+
+### [`beever-atlas`](../systems/beever-atlas/)
+- Best idea: **route deterministically, then call the model once.** The wiki maintainer maps new facts to affected pages with no model call — cluster id to topic page, entity tags to entity pages — debounces a burst into one rewrite per page, and rewrites only the affected sections, preserving title, slug and untouched sections byte-identical so the page's voice does not drift.
+- Second idea: **name the durability gap and bound it.** The dirty set is in-memory only, worst-case loss is one sixty-second debounce window, and the next extraction event re-routes the affected pages — stated in the module docstring rather than discovered in an incident.
+- Third idea: **assert what must not reach the store.** A regression test serialises the filter the search would send and asserts `is_none` does not appear in it, which is how the Python-side exclusion's reason is documented: the store cannot express an is-null filter.
+- Biggest risk: **the fallback is the copy without the filter.** `semantic_search`, `true_hybrid_search` and `pseudo_hybrid_search` each take `include_superseded: bool = False` and drop retired facts after the fetch. `bm25_search` returns objects straight from the query, has no such parameter and no test — and is what four call sites in the capability and agent-tool layers call inside `except Exception` when the hybrid throws. A retired fact returns exactly when retrieval is already degraded.
+- Second risk: **filtering after a top-k silently shrinks the answer**, and `invalid_at` is tested for presence rather than against the clock, so a future-dated invalidation retires a fact immediately. `potential_contradiction` is written by the supersede path and read by no retrieval path.
+- Most reusable component: the scope filter — `channel_id` and tier conjoined into every query the store issues, including the one that lacks the supersession check, with no branch in which a search runs unscoped.
+- Maturity impression: Apache-2.0, 96,884 lines of Python across 284 source files against 389 test files and 3,639 test functions, 680 commits since April 2026, connectors for four chat platforms and adapters for Weaviate, MongoDB, Neo4j and NebulaGraph; three capability marks.
+- Study when: you have a rule your store cannot express as a filter and need to see how that rule fares when it has to be applied by hand on every read method.
+- Do not copy when: you need an as-of read — `invalid_at` is a retirement flag carrying a date, not a validity bound — or a record of what was retired keyed on its content.

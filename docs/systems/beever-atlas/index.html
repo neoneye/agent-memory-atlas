@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-maintaining wiki built from
+team chat, whose retired facts are dropped by default from the semantic
+and hybrid reads — and returned by the keyword search that four call
+sites fall back to when those reads throw.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Beever
+Atlas — Agent Memory Atlas">
+    <meta property="og:description" content="A self-maintaining wiki
+built from team chat, whose retired facts are dropped by default from
+the semantic and hybrid reads — and returned by the keyword search that
+four call sites fall back to when those reads throw.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Beever
+Atlas — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-maintaining wiki
+built from team chat, whose retired facts are dropped by default from
+the semantic and hybrid reads — and returned by the keyword search that
+four call sites fall back to when those reads throw.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Beever Atlas — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Beever Atlas",
+      "description": "A self-maintaining wiki built from team chat, whose retired facts are dropped by default from the semantic and hybrid reads \u2014 and returned by the keyword search that four call sites fall back to when those reads throw.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The fallback is the copy without the
+filter</p>
+          <h1>Beever Atlas</h1>
+          <p class="document-deck">A self-maintaining wiki built from
+team chat, whose retired facts are dropped by default from the semantic
+and hybrid reads — and returned by the keyword search that four call
+sites fall back to when those reads throw.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Beever-AI/beever-atlas">
+              <span>Source</span>
+              <strong>Beever-AI/beever-atlas</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Beever-AI/beever-atlas/commit/7d791af27ef4aa19644cb385c7ca24619bc4f848" title="7d791af27ef4aa19644cb385c7ca24619bc4f848">
+              <span>Analyzed revision</span>
+              <code>7d791af2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Beever-AI--beever-atlas" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Beever-AI--beever-atlas</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Beever Atlas is an Apache-2.0 system that turns a team's Slack,
+Discord, Teams and Mattermost conversations into a wiki that maintains
+itself — 96,884 lines of Python across 284 source files, 389 test files
+and 3,639 test functions, 680 commits since April 2026, with Weaviate
+for facts, MongoDB for pages and a graph store behind both.</p>
+<p>Three marks. Facts are scoped to a channel by a filter compiled into
+every query, a superseded fact is stamped rather than deleted and
+dropped from the default read, and a committed test pins that exclusion
+with its control beside it.</p>
+<p>The finding is where the exclusion is <em>not</em>.</p>
+<p>The store cannot express an is-null filter, so the retired-fact check
+had to move out of the query and into Python after the fetch. Three of
+the four retrieval methods have a post-processing stage and got it:
+<code>semantic_search</code>, <code>true_hybrid_search</code> and
+<code>pseudo_hybrid_search</code>, each with
+<code>include_superseded: bool = False</code>. The fourth,
+<code>bm25_search</code>, returns objects straight from the query and
+never got it.</p>
+<p>And <code>bm25_search</code> is not a corner. Four call sites reach
+it, all with the same shape:</p>
+<pre class="python"><code>except Exception:
+    logger.warning(
+        &quot;search_channel_facts: hybrid search failed, falling back to bm25 for channel=%s&quot;,
+        channel_id,
+    )
+    facts = await store.bm25_search(...)</code></pre>
+<p>So the copy of the read path that omits the supersession filter is
+the one the system runs when the other one has just failed. A fact the
+team retired comes back precisely when retrieval is already degraded,
+and the only signal is a warning line about the fallback, which says
+nothing about what the fallback does differently.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Chat goes in; atomic facts come out; a wiki is kept in step with
+them.</p>
+<p>A fact is small and heavily attributed: its text, where it came from
+— channel, platform, guild, author, message timestamp, thread — three
+kinds of tag, a quality score and an importance, and the pointers that
+make correction possible: <code>valid_at</code>,
+<code>invalid_at</code>, <code>superseded_by</code>,
+<code>supersedes</code>, and <code>potential_contradiction</code>.</p>
+<p>The wiki is downstream. When new facts land, a maintainer routes them
+to the pages they affect <em>deterministically</em> — cluster id to
+topic page, entity tags to entity pages, fact type to role pages, with
+no model call in the routing — then debounces, then makes one model call
+per affected page that rewrites only the affected sections. Title, slug
+and untouched sections are preserved byte-identical, which the module
+gives as the reason: so the page's voice does not drift with every
+rewrite.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — The retired-fact exclusion lives in Python after the fetch because the store cannot filter on null, so it reaches the three methods that post-process and not the keyword search — which is what every hybrid call site falls back to when the hybrid throws.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: The retired-fact exclusion lives in Python after the fetch because the store cannot filter on null, so it reaches the three methods that post-process and not the keyword search — which is what every hybrid call site falls back to when the hybrid throws.
+flowchart TD
+  CHAT[&quot;Slack, Discord, Teams, Mattermost&quot;]
+  EXTRACT[&quot;Extraction worker emits atomic facts&quot;]
+  FACTS[(&quot;Weaviate MemoryFact&lt;br/&gt;channel_id, tier, invalid_at, superseded_by&quot;)]
+  SUP[&quot;supersede_fact&lt;br/&gt;stamps invalid_at and superseded_by&quot;]
+  CONTRA[&quot;potential_contradiction = True&lt;br/&gt;written, never read on a read path&quot;]
+  CALLER[&quot;Capability or agent tool&quot;]
+  HYB[&quot;true_hybrid_search or semantic_search&quot;]
+  POST[&quot;Python post-filter&lt;br/&gt;drop facts with invalid_at set&quot;]
+  FAIL{&quot;hybrid raised&quot;}
+  BM25[&quot;bm25_search&lt;br/&gt;no post-filter stage&quot;]
+  OUT[&quot;Facts returned to the agent&quot;]
+  MAINT[&quot;Wiki maintainer routes deterministically&lt;br/&gt;then one model call per affected page&quot;]
+  PAGES[(&quot;MongoDB wiki pages, versioned&quot;)]
+
+  CHAT --&gt; EXTRACT --&gt; FACTS
+  SUP --&gt; FACTS
+  SUP --&gt; CONTRA
+  CALLER --&gt; HYB
+  HYB --&gt; FAIL
+  FAIL --&gt;|&quot;no&quot;| POST --&gt; OUT
+  FAIL --&gt;|&quot;yes&quot;| BM25 --&gt; OUT
+  FACTS --&gt; HYB
+  FACTS --&gt; BM25
+  FACTS --&gt; MAINT --&gt; PAGES</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Scope.</strong> Every query method builds
+<code>Filter.by_property("channel_id").equal(channel_id)</code>
+conjoined with a tier filter before running — the paginated list, the
+count, both hybrids, the semantic search and the keyword search
+(<code>stores/weaviate_store.py:529</code>, <code>:625</code>,
+<code>:882</code>, <code>:927</code>, <code>:987</code>).</li>
+<li><strong>Supersede.</strong> <code>supersede_fact</code> sets
+<code>invalid_at</code> to now and <code>superseded_by</code> to the
+successor's id on the old fact, and sets
+<code>potential_contradiction=True</code> where a conflict was detected
+(<code>:1108-1150</code>).</li>
+<li><strong>Exclude.</strong> Each of the three post-processing methods
+loops the results and skips a fact whose <code>invalid_at</code> is set
+unless the caller asked otherwise (<code>:904</code>,
+<code>:1012</code>, <code>:1087</code>).</li>
+<li><strong>Fall back.</strong> Four sites wrap the hybrid call in
+<code>try/except Exception</code> and call <code>bm25_search</code> on
+failure (<code>capabilities/memory.py:196</code>, <code>:303</code>,
+<code>:398</code>, <code>agents/tools/memory_tools.py:185</code>).</li>
+<li><strong>Maintain.</strong> <code>plan_updates</code> routes fact ids
+to page ids with no model call, adds the pairs to an in-memory dirty
+set, debounces for sixty seconds, then calls <code>apply_update</code>
+once per page (<code>services/wiki_maintainer.py</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>AtomicFact</code> carries the correction vocabulary in full: a
+validity pair, both supersession directions, and a contradiction flag.
+Three observations about it.</p>
+<p><strong>The stamp is a boolean in practice.</strong> The exclusion
+tests <code>fact.invalid_at is not None</code> rather than comparing it
+to the clock, so a fact invalidated with a future timestamp is withheld
+from the moment the stamp is written rather than from the moment it
+names. That makes <code>invalid_at</code> a retirement marker that
+happens to carry a date, not a validity bound — which is why
+<code>bitemporal</code> is withheld despite the field pair being
+present. There is no as-of read: <code>valid_at</code> is filterable as
+a range on the paginated list, <code>invalid_at</code> is not consulted
+there at all, and nothing resolves what a fact said at an earlier
+time.</p>
+<p><strong><code>potential_contradiction</code> is written and never
+read.</strong> The supersede path sets it, several construction sites
+initialise it to <code>False</code>, the store schema declares it, and
+no retrieval path filters or ranks on it. The material for a "this pair
+disagrees" surface exists and nothing consumes it.</p>
+<p><strong>Supersession keeps the old row.</strong> Nothing is deleted,
+and <code>superseded_by</code> names the successor, so the history is
+intact in the store even though no read path walks it.
+<code>tombstone</code> is withheld because nothing is keyed on the
+retired content — the same sentence extracted again from a later message
+is a new fact with no relationship to the one it repeats.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Four methods, one collection, and the difference between them is the
+whole report.</p>
+<p>The scope filter is in the query on all four, which is the right
+place: a fact from another channel is never read into the process. The
+supersession filter is in Python on three, and the reason is documented
+by a test rather than by a comment —
+<code>test_true_hybrid_search_no_is_none_filter</code> serialises the
+filter that would be sent and asserts the string <code>is_none</code>
+does not appear in it. The store could not answer "where invalid_at is
+null", so the check moved to the caller's side of the network.</p>
+<p>That placement has a cost the code does not mention. A retired fact
+still matches the query, still occupies one of the <code>limit</code>
+slots Weaviate returns, and is discarded afterwards — so a topic with
+many superseded facts returns fewer live ones than the caller asked for,
+silently. Filtering after a top-k is always this trade; it is worth
+naming because the supersession feature's whole purpose is to keep
+retired material out of an answer.</p>
+<p>And <code>bm25_search</code> has no post-fetch stage at all. It
+builds its filter, runs the query, maps the objects and returns. There
+is no <code>include_superseded</code> parameter to pass and no loop to
+add the check to, which is exactly how the omission survived review: the
+method is four lines of filter and one return, and nothing about it
+looks unfinished.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The wiki maintainer is the best-designed piece here and deserves
+reading on its own terms.</p>
+<p>Routing is deterministic and the module says so twice — cluster id to
+topic page, entity tags to entity pages, fact type to role pages,
+<strong>no model call in the routing step</strong>. Only the rewrite
+calls a model, once per affected page, and only the affected sections
+are rewritten; title, slug and everything untouched are preserved
+byte-identical so the page's voice does not drift.</p>
+<p>Debouncing is explained in the same register: a burst of N extraction
+events touching one page within the sixty-second window collapses into a
+single rewrite carrying all N events' fact ids, so the maintainer does
+not issue a model call per event.</p>
+<p>And then the durability paragraph, which is the kind of thing most
+projects leave out:</p>
+<blockquote>
+<p>Persistence: the dirty-set is in-memory only. If the maintainer
+process crashes mid-debounce window, pending updates are lost.
+Worst-case loss is one debounce window (default 60s) of pending
+rewrites; the next extraction event for the affected pages re-routes
+them to a fresh dirty-set. The <code>on_extraction_done</code> event
+itself is not durable (out of scope).</p>
+</blockquote>
+<p>A named gap with a stated bound and the recovery behaviour is worth
+more than a durable queue nobody tested.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, a chat bot, a web front end, and a Google ADK agent
+layer whose memory tools are the fourth caller of the unfiltered
+fallback. The capability layer wraps the store, and the three functions
+an agent reaches most directly — <code>search_channel_facts</code>,
+<code>search_media_references</code>, <code>get_recent_activity</code> —
+each carry their own copy of the same try/except fallback.</p>
+<p>Four copies of one fallback, none of which re-applies the filter the
+path it fell back from applies by default. This atlas has <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-09-16-the-second-copy-of-the-rule.md">written
+about that shape separately</a>, and the note's advice is the diagnosis
+here: ask which copy the failure path reads. In this system the failure
+path <em>is</em> the copy without the rule.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The scope boundary is solid and uniform. Every read filters on
+channel and tier in the query; there is no unscoped branch, no nullable
+owner, and no admin path in the store interface. It is a workspace
+boundary rather than an authenticated one — the caller says which
+channel, and the store enforces consistency with what it was told —
+which is the ordinary arrangement for a system whose authentication
+lives at the connector.</p>
+<p>The supersession boundary is not uniform, and the gap is narrow,
+specific and reachable:</p>
+<ul>
+<li><code>semantic_search</code>, <code>true_hybrid_search</code>,
+<code>pseudo_hybrid_search</code>: retired facts dropped by default,
+tested.</li>
+<li><code>bm25_search</code>: retired facts returned, no parameter, no
+test.</li>
+<li>Reached by: four <code>except Exception</code> fallbacks in the
+capability and agent-tool layers.</li>
+</ul>
+<p>Nothing here is careless. The Python-side filter exists for a real
+store limitation, the regression test that pins it is well written, and
+the method that lacks it is the one with no place to put it. That
+combination — a rule that must be applied by hand, in a language-side
+loop, on every method that returns facts — is precisely the condition
+under which a fourth method gets written without it.</p>
+<p><code>audit_log</code> is withheld. Wiki pages are versioned with
+archived snapshots and a version number, which is a history of the
+<em>document</em>; there is no append-only record of fact mutations, and
+the supersede operation updates the old row in place rather than
+appending an event.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>389 test files and 3,639 test functions; nothing was run here. The
+suite is structured around named regressions, and the nullstate file is
+a good example of the form: it states the rule in its docstring, asserts
+the negative property about what must not reach the store, and asserts
+the behaviour that the workaround has to preserve.</p>
+<p>The exclusion pair is a proper negative eval — two facts, one
+retired, a default call asserting one result and its identity, and the
+same call with the flag flipped asserting two. An empty store fails the
+second assertion rather than satisfying the first.</p>
+<p>What is missing is a test at the level where the gap lives. Both
+cases test the store methods directly; neither exercises a capability
+function, and no test drives the <code>except Exception</code> branch to
+see what the fallback returns. A test that made the hybrid raise and
+asserted the fallback's result still excluded retired facts would have
+caught this before it shipped.</p>
+<p>No benchmark and no retrieval eval.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>A rule that cannot live in the query will be missed by a
+method that has no loop.</strong> If a store forces a filter into
+application code, put the filter in one helper that every read must pass
+its results through, and make the raw query private. Three correct
+copies and one missing one is the predictable outcome of a
+convention.</li>
+<li><strong>Check what your fallback does differently.</strong> A
+degraded path is written under pressure to return <em>something</em>; it
+is the least likely code to re-apply a rule and the most likely to run
+when a system is already unwell.</li>
+<li><strong>Filtering after a top-k silently shrinks the
+answer.</strong> If retired material is common, the caller asking for
+ten gets fewer than ten and is not told. Either over-fetch deliberately
+or say so in the result.</li>
+<li><strong>Compare a timestamp to the clock, or store a
+boolean.</strong> Testing <code>invalid_at is not None</code> gives a
+field that looks temporal and behaves as a flag, which will surprise the
+first person who writes a future-dated invalidation.</li>
+<li><strong>Route deterministically, then call the model once.</strong>
+The maintainer's split — no model in the routing, one model call per
+affected page, unaffected sections preserved byte-identical — is the
+shape that keeps a self-maintaining document from drifting in voice and
+cost.</li>
+<li><strong>Name the durability gap and bound it.</strong> "In-memory
+only; worst case one sixty-second window; the next event re-routes" is
+more useful than silence and more honest than a queue that was never
+exercised.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>bm25_search</code>'s omission intended — a deliberate
+"keyword search sees everything" — or the gap it appears to be? No
+comment or test addresses it either way.</li>
+<li><code>potential_contradiction</code> is written by the supersede
+path and read nowhere. Is a contradiction surface planned, or is the
+flag a leftover?</li>
+<li>With <code>invalid_at</code> tested for presence, is a future-dated
+invalidation a case the system intends to support?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Model: <code>src/beever_atlas/models/domain.py:13-90</code>
+(<code>AtomicFact</code>, with the validity pair, supersession pointers
+and contradiction flag at 74-78).</li>
+<li>Store: <code>src/beever_atlas/stores/weaviate_store.py</code> —
+<code>list_facts</code> (516-582), <code>bm25_search</code> (916-944),
+<code>semantic_search</code> (858-914), <code>true_hybrid_search</code>
+(946-1032), <code>pseudo_hybrid_search</code> (1035-1106),
+<code>supersede_fact</code> (1108-1150).</li>
+<li>Fallback call sites:
+<code>src/beever_atlas/capabilities/memory.py:190-198</code>,
+<code>:296-305</code>, <code>:392-400</code>;
+<code>src/beever_atlas/agents/tools/memory_tools.py:178-187</code>.</li>
+<li>Maintainer:
+<code>src/beever_atlas/services/wiki_maintainer.py:1-40</code> (the flow
+and the durability paragraph).</li>
+<li>Tests:
+<code>tests/agents/tools/test_hybrid_no_nullstate_filter.py:1-210</code>,
+<code>tests/test_true_hybrid_search.py</code>,
+<code>tests/unit/test_contradiction_deferral.py</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;include_superseded&quot; src --include=&#39;*.py&#39;          # declared and used only inside weaviate_store; no caller passes it
+grep -rn &quot;bm25_search&quot; src --include=&#39;*.py&#39; | grep -v &quot;def &quot; # 4 call sites, every one inside an except Exception
+grep -rn &quot;potential_contradiction&quot; src --include=&#39;*.py&#39;      # written by supersede_fact, initialised elsewhere, read by no retrieval path
+grep -rn &quot;invalid_at&quot; src --include=&#39;*.py&#39; | grep -v weaviate_store   # nothing outside the store consults it
+grep -rn &quot;as_of\|asof\|point_in_time&quot; src --include=&#39;*.py&#39;   # 0 — no as-of read</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/Beever-AI/beever-atlas/commit/7d791af27ef4aa19644cb385c7ca24619bc4f848"><code class="commit-id" title="7d791af27ef4aa19644cb385c7ca24619bc4f848">7d791af2…</code></a>
+— first reading, at the head of <code>main</code>, 680 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: two auto-run
+surfaces (<code>.mcp.json</code> and a <code>server.json</code> MCP
+manifest), three build-time execution paths including a
+<code>Makefile</code> default target and two pytest
+<code>conftest.py</code> collection hooks, two unpinned dependency
+surfaces, and three lockfiles unchanged for 77 days so nothing inside
+the cooldown. Nothing was installed, built or run — no uv, no pytest, no
+Docker, no store started. Three marks. <code>bitemporal</code> is
+withheld with the field pair present: <code>invalid_at</code> is tested
+for presence rather than against a clock, so it retires a fact at stamp
+time rather than at the time it names, and nothing reads the store as of
+an earlier moment. <code>tombstone</code> is withheld because nothing is
+keyed on the retired content. <code>audit_log</code> is withheld because
+wiki versions are a history of the document while a fact's supersession
+updates the row in place. <code>human_review</code> is absent. The
+supersession exclusion is awarded as <code>trust_state</code> on the
+default of three retrieval methods, with the fourth —
+<code>bm25_search</code>, reached by four <code>except Exception</code>
+fallbacks — named as the path that does not carry it.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 571 reports.</strong></p>
+<p><strong>This page covers all 572 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21791,6 +21791,55 @@ offline peer, a mid-flight background job and an in-flight reset.</li>
 the tombstones key on message identity, so the same sentence written as
 a new message meets nothing — or a discrete trust state, since the row
 carries only scores.</li>
+</ul>
+<h3 id="beever-atlas"><a
+href="../systems/beever-atlas/"><code>beever-atlas</code></a></h3>
+<ul>
+<li>Best idea: <strong>route deterministically, then call the model
+once.</strong> The wiki maintainer maps new facts to affected pages with
+no model call — cluster id to topic page, entity tags to entity pages —
+debounces a burst into one rewrite per page, and rewrites only the
+affected sections, preserving title, slug and untouched sections
+byte-identical so the page's voice does not drift.</li>
+<li>Second idea: <strong>name the durability gap and bound it.</strong>
+The dirty set is in-memory only, worst-case loss is one sixty-second
+debounce window, and the next extraction event re-routes the affected
+pages — stated in the module docstring rather than discovered in an
+incident.</li>
+<li>Third idea: <strong>assert what must not reach the store.</strong> A
+regression test serialises the filter the search would send and asserts
+<code>is_none</code> does not appear in it, which is how the Python-side
+exclusion's reason is documented: the store cannot express an is-null
+filter.</li>
+<li>Biggest risk: <strong>the fallback is the copy without the
+filter.</strong> <code>semantic_search</code>,
+<code>true_hybrid_search</code> and <code>pseudo_hybrid_search</code>
+each take <code>include_superseded: bool = False</code> and drop retired
+facts after the fetch. <code>bm25_search</code> returns objects straight
+from the query, has no such parameter and no test — and is what four
+call sites in the capability and agent-tool layers call inside
+<code>except Exception</code> when the hybrid throws. A retired fact
+returns exactly when retrieval is already degraded.</li>
+<li>Second risk: <strong>filtering after a top-k silently shrinks the
+answer</strong>, and <code>invalid_at</code> is tested for presence
+rather than against the clock, so a future-dated invalidation retires a
+fact immediately. <code>potential_contradiction</code> is written by the
+supersede path and read by no retrieval path.</li>
+<li>Most reusable component: the scope filter — <code>channel_id</code>
+and tier conjoined into every query the store issues, including the one
+that lacks the supersession check, with no branch in which a search runs
+unscoped.</li>
+<li>Maturity impression: Apache-2.0, 96,884 lines of Python across 284
+source files against 389 test files and 3,639 test functions, 680
+commits since April 2026, connectors for four chat platforms and
+adapters for Weaviate, MongoDB, Neo4j and NebulaGraph; three capability
+marks.</li>
+<li>Study when: you have a rule your store cannot express as a filter
+and need to see how that rule fares when it has to be applied by hand on
+every read method.</li>
+<li>Do not copy when: you need an as-of read — <code>invalid_at</code>
+is a retirement flag carrying a date, not a validity bound — or a record
+of what was retired keyed on its content.</li>
 </ul>
         </article>
       </div>

@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 519 of 571 screened at the report's current pin.**
+**Progress: 520 of 572 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 52 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 229 |
+| Repositories with an auto-run surface (`RUNS`) | 230 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 315 |
-| Repositories with build-time execution (`EXEC`) | 381 |
+| Repositories with build-time execution (`EXEC`) | 382 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -57,6 +57,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`auto-company`](../../content/systems/auto-company.md) | `.claude/settings.json` |
 | [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |
 | [`basic-memory`](../../content/systems/basic-memory.md) | `.claude-plugin/`, `.claude/settings.json`, `server.json`, `smithery.yaml` |
+| [`beever-atlas`](../../content/systems/beever-atlas.md) | `.mcp.json`, `server.json` |
 | [`beevibe`](../../content/systems/beevibe.md) | `.claude-plugin/` |
 | [`buzz`](../../content/systems/buzz.md) | `.vscode/settings.json` |
 | [`byterover`](../../content/systems/byterover.md) | `.claude/settings.json`, `.github/copilot-instructions.md`, `.gitmodules` |
