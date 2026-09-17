@@ -20,6 +20,18 @@ when the work happens.
   under an unchanged mechanism, and two false negatives from this pass's own
   tooling — a positive control stripped by `## History`, and a zsh `for path`
   loop that emptied `$PATH` and made three files compare IDENTICAL.
+- [2026-09-17-the-test-that-cannot-fail.md](2026-09-17-the-test-that-cannot-fail.md) —
+  seven reports re-read at pins that were still their upstream's head, so
+  nothing could be blamed on drift. Six shared one defect: the mechanism has a
+  test and the test asserts something the code cannot violate — `assertIsNotNone`
+  on fields the constructor fills (A-MEM), `count == 0 || count == 1` after
+  deleting one of one (Memvid), a garbage-collection case that re-implements the
+  collector inline and hand-builds the row no production path writes (MetaClaw),
+  three of five trust states with no producer (Gini Agent), and a distribution
+  tested well beside an adaptive half named in no test (LoongFlow). Plus two
+  inverted ranking terms — Generative Agents' recency and Memary's
+  `_select_top_entities` — that survived for the same three reasons, and the
+  three assertions in the same pass that *can* fail and are worth copying.
 - [2026-09-17-the-sentinel-that-means-no-constraint.md](2026-09-17-the-sentinel-that-means-no-constraint.md) —
   five systems read in one pass shared a defect: a parameter whose zero, empty
   list or null means *no constraint* is indistinguishable from the parameter

@@ -49848,6 +49848,45 @@ would build</a>, and the two should be read together.</p>
 reading history lives in each report's own History section; what is
 recorded here is what a reading taught the <em>method</em>, which is the
 part that does not belong to any one system.</p>
+<p><strong>2026-09-17</strong> — <strong>A test that cannot fail is
+worse than no test, because the count goes up and the question stops
+being asked.</strong> Seven reports were re-read at pins that were still
+their upstream's current head, so nothing found could be blamed on
+drift, and six shared one defect: the mechanism has a test whose
+assertion the code cannot violate. <a
+href="../systems/a-mem/">A-MEM</a>'s <code>test_memory_evolution</code>
+asserts <code>assertIsNotNone</code> on three fields the constructor
+fills, so it passes on a note that never evolved — while the defect
+beneath it rewrites the <em>oldest</em> notes in the store rather than
+the neighbours the model was shown. <a
+href="../systems/memvid/">Memvid</a>'s deletion test asserts
+<code>frame_count == 0 || frame_count == 1</code> after deleting one
+frame of one, under a comment saying <em>"Both are valid - the key is no
+panic occurred"</em>. <a href="../systems/metaclaw/">MetaClaw</a>'s
+garbage-collection case never calls the collector: it re-implements the
+routine inline under <em>"Simulate GC"</em> and hand-builds the row
+carrying the forward reference no production path except the merge
+writes. <a href="../systems/gini-agent/">Gini Agent</a>'s five-value
+trust vocabulary has producers for one value. And two systems carried an
+inverted ranking term in the function that decides what the model sees —
+<a href="../systems/generative-agents/">Generative Agents</a>'s recency,
+computed over an ascending sort so the least recently accessed node
+scores 1.0, and <a href="../systems/memary/">Memary</a>'s
+<code>_select_top_entities</code>, which <code>argsort</code>s ascending
+and injects the least-mentioned — both surviving because the term is a
+minority of the score, the output is judged by plausibility, and nothing
+asserts a direction. The same pass produced three assertions that
+<em>can</em> fail and are the transferable half: Gini Agent's scope test
+makes its two fixtures identical apart from the key, GoodAI LTM ships
+the redundancy control twelve lines below the redundancy assertion, and
+Memvid's as-of test is keyed on the identity of a value that was
+corrected. The practice this changes: read the assertion rather than the
+test name, ask what a wrong implementation would return, and grep the
+distinctive mechanism by name — in six of seven systems the untested
+part was the part the report had singled out as interesting. The note is
+<a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-09-17-the-test-that-cannot-fail.md">the
+test that cannot fail</a>.</p>
 <p><strong>2026-09-17</strong> — <strong>A count is a fact about the
 surface it was enumerated from, and the surface can be narrower than the
 thing.</strong> Three of four re-reads in one pass had published a
