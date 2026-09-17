@@ -1016,6 +1016,26 @@ written and the boundary falls back to the API key's workspace — a
 physical partition, which is a different mechanism. The test that would
 have caught the first of these asserts that a list has at least zero
 members, parametrized over every domain and unable to fail.</p>
+<p><a href="../../systems/open-webui/">Open WebUI</a> is the instance
+where half the key is not a predicate at all. The SQL side is ordinary —
+<code>select(Memory).filter_by(user_id=user_id)</code> on every
+user-facing read, and each mutation re-checking
+<code>memory.user_id != user_id</code> before it touches the row — but
+the vector side is <em>partitioned</em>: the collection is
+<code>f'user-memory-{user.id}'</code> at every upsert, delete,
+delete-collection and search, so one person's embeddings are a different
+collection rather than a filtered row set. That is stronger in the way
+the pattern's own tradeoffs section describes as the hard part, because
+there is no query in which the key can be forgotten; and weaker in a way
+worth naming, because it rests on the name being derived correctly at
+each of five call sites rather than on a constraint a store enforces.
+The other half of its interest is what an unscoped helper means:
+<code>get_memory_by_id</code> and <code>delete_memory_by_id</code> sit
+right beside their scoped twins and would each be a leak, and a grep for
+their call sites across the tree returns nothing outside the file that
+defines them. An unscoped accessor with no caller is a hazard rather
+than a defect, and the check that separates the two is one command —
+which is the check to run before reporting either.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

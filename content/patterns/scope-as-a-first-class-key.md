@@ -760,6 +760,22 @@ is in the paths the store's key does not govern.
 
 [create-context-graph](../../systems/create-context-graph/) shows how a scope key can be real on one read path and absent from the one that matters. Every seeded node on the self-hosted backend is merged on name and domain, and four helpers in the generated client carry a null-permissive domain predicate — enough to earn the mark, on the REST routes the front end calls. The agent's own retrieval is a different path entirely: a search for the domain parameter across all twenty-seven bundled ontologies returns zero, so not one of the tool queries the model actually calls carries the predicate, and the free-form query tool only sets the value as a default parameter its query may ignore. Two further weakenings recur elsewhere and are worth naming: the predicate is null-permissive, so every row the memory library writes without the property is visible from every domain; and on the default hosted backend entities are created with no attributes at all, so the key is never written and the boundary falls back to the API key's workspace — a physical partition, which is a different mechanism. The test that would have caught the first of these asserts that a list has at least zero members, parametrized over every domain and unable to fail.
 
+[Open WebUI](../../systems/open-webui/) is the instance where half the key is not
+a predicate at all. The SQL side is ordinary — `select(Memory).filter_by(user_id=user_id)`
+on every user-facing read, and each mutation re-checking `memory.user_id != user_id`
+before it touches the row — but the vector side is *partitioned*: the collection is
+`f'user-memory-{user.id}'` at every upsert, delete, delete-collection and search, so
+one person's embeddings are a different collection rather than a filtered row set.
+That is stronger in the way the pattern's own tradeoffs section describes as the hard
+part, because there is no query in which the key can be forgotten; and weaker in a way
+worth naming, because it rests on the name being derived correctly at each of five call
+sites rather than on a constraint a store enforces. The other half of its interest is
+what an unscoped helper means: `get_memory_by_id` and `delete_memory_by_id` sit right
+beside their scoped twins and would each be a leak, and a grep for their call sites
+across the tree returns nothing outside the file that defines them. An unscoped
+accessor with no caller is a hazard rather than a defect, and the check that separates
+the two is one command — which is the check to run before reporting either.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

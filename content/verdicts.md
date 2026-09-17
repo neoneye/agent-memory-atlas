@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 579 reports.**
+**This page covers all 580 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5039,3 +5039,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 119,845 lines of TypeScript and Python outside tests across 1,248 commits, an eval directory with judge model and thresholds, bench probes for attention dilution and padding leaks, and per-conversation container isolation; two capability marks.
 - Study when: you detect contradictions automatically and have to decide who resolves them, or you are choosing the form of an expiry predicate.
 - Do not copy when: you need to answer what the store *believed* at a past moment — `as_of` answers what had been said by then, over a single axis, and no column records when the store came to hold it.
+
+### [`open-webui`](../systems/open-webui/)
+- Best idea: **partition the vector store by user instead of filtering it.** The collection is `f'user-memory-{user.id}'` at every upsert, delete, delete-collection and search, so one person's embeddings are a different collection rather than a filtered row set — there is no query in which the scope key can be forgotten, only a name that has to be derived right at five call sites, and all five agree.
+- Second idea: **write the argument for the guard next to the guard.** The comment above the relevance filter states that "Vector similarity search always returns the top-K nearest neighbours even when they are completely irrelevant", which is the clearest statement of the top-K problem in this corpus — and the reason the defect below is legible at all.
+- Third idea: **record the turn that produced the memory.** Agent writes stamp `created_by`, `chat_id`, `message_id` and `model` into `meta`, so a memory can be traced back to the exchange that created it; it costs one dict and most stores here do not keep it.
+- Fourth idea: **keep the embedding call off the shared database session, and say why.** Three places carry a comment explaining that the endpoint deliberately does not take the session dependency because an external embedding call takes "1-5+ seconds" — the note a later tidy-up of the dependency injection needs to read.
+- Biggest risk: **the relevance floor is disabled by its own default.** `relevance_threshold = await Config.get('rag.relevance_threshold', 0.0)` is gated by `if results and relevance_threshold > 0.0`, and `config.py:964` sets `RAG_RELEVANCE_THRESHOLD` from an environment variable defaulting to `'0.0'`. On a default install the filter the comment argues for never executes, and all eight nearest neighbours reach the prompt however far away they are.
+- Second risk: the ranking is discarded anyway. Each of the three injected tiers is passed through `sorted(sections[key], key=lambda memory: (memory.casefold(), memory))` before rendering, so neither the vector distances nor the path-rank ordering survives assembly. And correction is destructive — `replace` overwrites `content` in place, `remove` hard-deletes, and nothing records what was there.
+- Third risk: the background reviewer proposing those corrections sees existing memories capped at `[:80]` from a query with no `ORDER BY`, while the only automatic protection against re-adding something is an exact-string dedup on `(user_id, content, type, path)`. The two limits interact in the direction that produces duplicates and mis-targeted replaces.
+- Most reusable component: `search_memory_rows` — a pure function over rows the caller already scoped, narrowing by id, type, path proximity and query tokens with the limit clamped to 100. The scope key is the caller's problem and the filtering is testable without a database.
+- Maturity impression: the "Open WebUI License", a BSD-3 variant whose fourth clause bars altering the branding above fifty users and so is source-available rather than open source; about 114,000 lines of backend Python and 18,391 commits since October 2023 from roughly 900 contributor addresses, with the memory subsystem 1,500 lines of it across three files and four migrations; one capability mark, `scope_enforced`, and no test anywhere in the tree names memory.
+- Study when: you are adding per-user memory to a multi-tenant chat product, or deciding how many tiers of retrieved context a single prompt should carry.
+- Do not copy when: you need the retrieval order to reach the model, or you need to ask what a memory used to say.

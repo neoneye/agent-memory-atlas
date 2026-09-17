@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted chat front-end whose
+per-user memory store is scoped on every read and injected in three
+tiers, with the relevance filter its own comment argues for disabled by
+default.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Open WebUI — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted chat
+front-end whose per-user memory store is scoped on every read and
+injected in three tiers, with the relevance filter its own comment
+argues for disabled by default.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Open
+WebUI — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted chat
+front-end whose per-user memory store is scoped on every read and
+injected in three tiers, with the relevance filter its own comment
+argues for disabled by default.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Open WebUI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Open WebUI",
+      "description": "A self-hosted chat front-end whose per-user memory store is scoped on every read and injected in three tiers, with the relevance filter its own comment argues for disabled by default.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Three tiers and no floor</p>
+          <h1>Open WebUI</h1>
+          <p class="document-deck">A self-hosted chat front-end whose
+per-user memory store is scoped on every read and injected in three
+tiers, with the relevance filter its own comment argues for disabled by
+default.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/open-webui/open-webui">
+              <span>Source</span>
+              <strong>open-webui/open-webui</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/open-webui/open-webui/commit/0a7c15832fb30b1903753e83f81dc7d27e5b0944" title="0a7c15832fb30b1903753e83f81dc7d27e5b0944">
+              <span>Analyzed revision</span>
+              <code>0a7c1583…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/open-webui--open-webui" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>open-webui--open-webui</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Open WebUI is a self-hosted front-end for chat models — a FastAPI
+backend of about 114,000 lines of Python behind a Svelte application,
+18,391 commits from roughly 900 contributor addresses since October
+2023.</p>
+<p>Its licence is a BSD-3 variant with a fourth clause making removal of
+the "Open WebUI" branding "a material breach" in any deployment reaching
+fifty end users in a rolling thirty days, absent written permission or
+an enterprise licence. That is a restriction on modification, so the
+licence is source-available rather than open source, and it constrains
+deployment rather than reading; <code>LICENSE_HISTORY</code> preserves
+the terms that applied to earlier material.</p>
+<p>The part this atlas is about is 1,500 lines across three files —
+<code>models/memories.py</code>, <code>routers/memories.py</code> and
+<code>utils/memory.py</code> — and it qualifies plainly: a memory
+survives the session as a row with a UUID, and both a person and the
+model can correct it by that id.</p>
+<p><strong>The scope key is real, which is worth saying first because
+the file layout suggests otherwise.</strong> The table carries
+<code>user_id</code>, every user-facing read is
+<code>select(Memory).filter_by(user_id=user_id)</code>
+(<code>models/memories.py:117</code>), and each mutation re-checks
+<code>memory.user_id != user_id</code> and raises instead of trusting
+the id it was handed. Two unscoped helpers sit beside the scoped ones —
+<code>get_memory_by_id</code> and <code>delete_memory_by_id</code> — and
+neither has a caller anywhere in the tree. The one unscoped read that
+<em>is</em> called, <code>get_memories()</code>, is the admin
+<code>/reindex</code> endpoint, and it groups by <code>user_id</code>
+before it does anything.</p>
+<p><strong>The finding is a guard that argues for itself and then ships
+off.</strong> <code>query_memory</code> applies a relevance threshold,
+and the comment above it states the reason better than a summary
+can:</p>
+<blockquote>
+<p>"Vector similarity search always returns the top-K nearest neighbours
+even when they are completely irrelevant; applying the same
+RELEVANCE_THRESHOLD used by RAG ensures only genuinely matching memories
+are surfaced"</p>
+</blockquote>
+<p>The code is
+<code>relevance_threshold = await Config.get('rag.relevance_threshold', 0.0)</code>
+followed by <code>if results and relevance_threshold &gt; 0.0</code>
+(<code>routers/memories.py:361-362</code>), and the setting's default is
+<code>float(os.getenv('RAG_RELEVANCE_THRESHOLD', '0.0'))</code>. The
+gate is strictly greater than zero and the default <em>is</em> zero, so
+on a default install the filter never executes. The reasoning was done,
+written down, and left inert.</p>
+<p><strong>And the ranking is discarded even where the filter is
+on.</strong> <code>add_memory_context</code> builds three tiers and then
+sorts each one alphabetically —
+<code>sorted(sections[key], key=lambda memory: (memory.casefold(), memory))</code>
+(<code>utils/memory.py:369</code>) — so the order the model reads
+carries no relevance information at all. The vector search ranks eight
+candidates; the assembly alphabetises them.</p>
+<p>One capability mark, <code>scope_enforced</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a line of text with a filesystem-shaped address. The row
+is <code>id</code>, <code>user_id</code>, <code>type</code>,
+<code>path</code>, <code>content</code>, <code>meta</code>, and two
+epoch timestamps (<code>models/memories.py:15-28</code>), and
+<code>path</code> is what makes it more than a list: it is a free-form
+string like a directory, and retrieval ranks by how close a memory's
+path sits to a path inferred from the query.</p>
+<p><strong><code>type</code> has two values and decides a tier, not a
+standing.</strong> <code>user</code> or <code>context</code>, and
+<code>normalize_memory_type</code> is the whole vocabulary:</p>
+<pre class="python"><code>return &#39;user&#39; if memory_type == &#39;user&#39; else &#39;context&#39;</code></pre>
+<p>Anything else — a typo, a new value from a future client, a model
+inventing a third category — becomes <code>context</code> silently. A
+<code>user</code> memory is injected on every turn unconditionally; a
+<code>context</code> memory has to be retrieved. That is a genre
+assigned at write time, which is why it earns no trust mark: nothing
+about the value records whether the memory is still true.</p>
+<p><strong>A memory has one state: present.</strong> There is no
+candidate, verified, superseded or archived. <code>valid_from</code>,
+<code>valid_to</code>, <code>as_of</code>, <code>expires_at</code> and
+<code>invalid_at</code> return nothing from the model file, and neither
+do <code>confidence</code> or a status column. Correction is
+destructive, which section 7 covers.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — three tiers reach the prompt on every turn — the user tier unconditionally, the neighbourhood by path proximity, the context tier by vector search whose relevance floor is zero unless an operator sets it — and each tier is alphabetised before injection, so the ranking the search computed does not survive assembly</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: three tiers reach the prompt on every turn — the user tier unconditionally, the neighbourhood by path proximity, the context tier by vector search whose relevance floor is zero unless an operator sets it — and each tier is alphabetised before injection, so the ranking the search computed does not survive assembly
+flowchart TB
+    Q[&quot;the last 7 user messages, tail 4,000 chars&quot;] --&gt; PH[&quot;path hints inferred from the query&quot;]
+    SQL[(&quot;memory table&lt;br/&gt;WHERE user_id = ?&quot;)] --&gt; UT[&quot;tier 1: every type=user memory&lt;br/&gt;no limit, no relevance&quot;]
+    SQL --&gt; NB
+    PH --&gt; NB[&quot;tier 2: search_memory_rows&lt;br/&gt;path rank, limit 4 per hint&quot;]
+    Q --&gt; EMB[&quot;EMBEDDING_FUNCTION&quot;]
+    EMB --&gt; VS[&quot;vector search&lt;br/&gt;collection user-memory-&amp;lt;uid&amp;gt;&lt;br/&gt;k = 8&quot;]
+    VS --&gt; TH{&quot;relevance_threshold &amp;gt; 0.0 ?&quot;}
+    TH --&gt;|&quot;no — the default&quot;| CT[&quot;tier 3: all 8 hits kept&quot;]
+    TH --&gt;|&quot;yes, if an operator set it&quot;| CTF[&quot;tier 3: hits below the floor dropped&quot;]
+    UT --&gt; SORT[&quot;each tier sorted alphabetically&quot;]
+    NB --&gt; SORT
+    CT --&gt; SORT
+    CTF --&gt; SORT
+    SORT --&gt; CAP[&quot;per-tier character caps, default 2,000, floor 250&quot;]
+    CAP --&gt; P[&quot;injected into the request&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Three files hold the subsystem, and the split is clean:</p>
+<ul>
+<li><strong><code>models/memories.py</code></strong> (268 lines) — the
+table, the Pydantic mirror, and <code>MemoriesTable</code> with the
+reads, the deletes and <code>apply_memory_operations</code>.</li>
+<li><strong><code>routers/memories.py</code></strong> (630 lines) — the
+HTTP surface, the embedding calls, the per-user vector collection, and
+the admin reindex.</li>
+<li><strong><code>utils/memory.py</code></strong> (602 lines) — the
+in-process filter (<code>search_memory_rows</code>), the three-tier
+assembly (<code>add_memory_context</code>), and the background
+review.</li>
+</ul>
+<p>Four migrations record how the model grew:
+<code>add_memory_type</code>, <code>add_memory_path_and_meta</code>,
+<code>add_memory_user_id_index</code> and a covering index on
+<code>(id, user_id)</code> — the last two being the shape you add once
+the scope predicate is on the hot path.</p>
+<p>The vector side is a partition rather than a predicate.
+<code>f'user-memory-{user.id}'</code> appears at every upsert, delete,
+delete-collection and search (<code>routers/memories.py:173</code>,
+<code>:289</code>, <code>:350</code>), so one user's embeddings are a
+different collection rather than a filtered row set. That is a stronger
+boundary than a <code>WHERE</code> in one sense — there is no query to
+forget the key in — and a weaker one in another, since it rests on the
+collection name being derived correctly at every call site rather than
+on a constraint the store enforces.</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<ul>
+<li><strong>What has to be running:</strong> the backend, a database,
+and a vector store the <code>ASYNC_VECTOR_DB_CLIENT</code> abstraction
+supports.</li>
+<li><strong>Embedding:</strong> <code>EMBEDDING_FUNCTION</code> may be
+an external API. The code routes around the cost explicitly: the add,
+query and update endpoints each carry a note saying they deliberately do
+<em>not</em> take <code>Depends(get_async_session)</code>, so a database
+connection is not held for the "1-5+ seconds" an embedding call can
+take.</li>
+<li><strong>Feature gates:</strong> memory is off unless
+<code>memories.enable</code> is set, and a non-admin additionally needs
+the <code>features.memories</code> permission
+(<code>routers/memories.py:35-47</code>). A model can be excluded by
+<code>model_allows_memory</code>.</li>
+</ul>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Read, scoped.</strong> <code>get_memories_by_user_id</code> —
+<code>select(Memory).filter_by(user_id=user_id)</code>
+(<code>:117</code>). Every user-facing endpoint calls this one.</p>
+<p><strong>Filter, in process.</strong> <code>search_memory_rows</code>
+(<code>utils/memory.py:91</code>) takes a list already scoped by user
+and narrows it by id, by <code>type</code>, by path proximity and by
+query tokens, sorting on path rank then <code>updated_at</code>
+descending, with the limit clamped to at most 100. It is a pure function
+over rows the caller fetched.</p>
+<p><strong>Assemble.</strong> <code>add_memory_context</code>
+(<code>utils/memory.py:289</code>) joins the last seven user messages,
+keeps the trailing 4,000 characters as the query, and fills three
+sections — <code>user</code>, <code>neighborhood</code>,
+<code>context</code> — deduplicating by id with the <code>user</code>
+tier winning. Then the alphabetical sort, then per-tier character caps
+read from config with a floor of 250 and a default of 2,000.</p>
+<p><strong>Write, three ways.</strong> A person posts to
+<code>/add</code>, which stamps
+<code>meta={'created_by': 'manual'}</code>. The model calls a built-in
+tool (<code>tools/builtin.py</code> exposes <code>add_memory</code>,
+<code>list_memory_paths</code>, <code>read_memory_path</code> and a
+scoped delete). And the background review posts operations with
+<code>source='background_review'</code>. Both agent paths go through the
+same <code>/operations</code> endpoint, which stamps provenance the
+manual path does not get: <code>created_by</code>, <code>chat_id</code>,
+<code>message_id</code> and <code>model</code>.</p>
+<p><strong>Correct.</strong> <code>apply_memory_operations</code>
+(<code>models/memories.py:168</code>) takes <code>add</code>,
+<code>replace</code>, <code>move</code> and <code>remove</code>, each
+re-checking ownership.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The table is small enough to quote in full in its own terms:
+<code>id</code> a UUID string and primary key, <code>user_id</code>
+indexed, <code>type</code> defaulting to <code>context</code> at both
+the Python and server level and indexed, <code>path</code> nullable
+text, <code>content</code> text, <code>meta</code> JSON nullable,
+<code>updated_at</code> and <code>created_at</code> big integers holding
+epoch seconds. A covering index on <code>(id, user_id)</code> exists
+because the ownership check reads both.</p>
+<p><strong>What the schema does not carry is the interesting
+half.</strong> No status, no confidence, no validity interval, no
+supersession pointer, no soft-delete flag. The two timestamps are record
+time: when the row appeared and when it last changed. There is no axis
+for when the remembered fact was true, and no read takes an as-of
+parameter, so the store cannot answer <em>what did I believe
+then</em>.</p>
+<p><code>meta</code> is the escape hatch and it is untyped JSON. The
+agent paths put <code>created_by</code>, <code>chat_id</code>,
+<code>message_id</code> and <code>model</code> in it, which is real
+provenance — a memory can be traced back to the turn that produced it —
+but nothing reads those keys on any path, and a <code>replace</code>
+merges the new meta over the old (<code>models/memories.py:229</code>),
+so the <code>created_by</code> of a corrected memory becomes the
+corrector rather than the author.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three tiers, and they are not equally guarded.</p>
+<p><strong>Tier one is unconditional.</strong> Every memory with
+<code>type == 'user'</code> is injected, sorted by
+<code>(path, updated_at, id)</code>, with no limit and no relevance
+test. The only bound is the tier's character cap. A user-tier memory is
+therefore a standing instruction, and the store has no opinion about how
+many of them there should be.</p>
+<p><strong>Tier two is lexical and path-shaped.</strong> For each hint
+<code>memory_path_hints</code> derives from the query,
+<code>search_memory_rows</code> returns at most four
+<code>context</code> memories whose path is related to the hint — by
+path rank, or by the hint appearing in the memory's path or content.</p>
+<p><strong>Tier three is the vector search, and it is the one with the
+floor that is not set.</strong> <code>query_memory</code> embeds the
+query, searches the user's own collection with <code>limit=k</code> (8
+from <code>add_memory_context</code>), and then:</p>
+<pre class="python"><code>relevance_threshold = await Config.get(&#39;rag.relevance_threshold&#39;, 0.0)
+if results and relevance_threshold &gt; 0.0 and results.distances and results.distances[0]:</code></pre>
+<p><code>RAG_RELEVANCE_THRESHOLD</code> defaults to <code>0.0</code>,
+and the branch requires strictly more than <code>0.0</code>, so the
+filtering block is dead on a default install and all eight nearest
+neighbours are kept however far away they are. The comment directly
+above it is an argument for exactly the filter the default disables.</p>
+<p><strong>Then the ranking is thrown away.</strong> Each section is
+alphabetised before it is rendered (<code>utils/memory.py:369</code>).
+Whatever order the vector store returned — and whatever order
+<code>search_memory_rows</code> computed from path rank and recency —
+does not reach the model. For the <code>user</code> tier that costs
+nothing, since it is unranked by design. For the other two it discards
+the only signal that decided which memories were chosen.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>add</code> deduplicates on the exact tuple
+<code>(user_id, content, type, path)</code> and reports
+<code>status: skipped, reason: duplicate</code> on a hit. The key is the
+value rather than the row, which is the right instinct, and it is
+exact-string: a re-assertion differing by a space, a capital letter or a
+trailing full stop inserts a second row. Nothing normalises before
+comparing.</p>
+<p><strong><code>replace</code> overwrites and keeps nothing.</strong>
+<code>memory.content = content</code> with a new <code>updated_at</code>
+(<code>models/memories.py:216-232</code>). The text that was there is
+gone — there is no prior-value column, no supersession row, no event
+carrying the old content. A memory the model corrects has no history,
+and the correction is indistinguishable afterwards from a memory that
+was always right.</p>
+<p><strong><code>remove</code> hard-deletes.</strong>
+<code>await db.delete(memory)</code>. No tombstone, so the same content
+can be re-added the next turn and the store has no way to know it was
+rejected — which is exactly what an automatic reviewer running every
+tenth turn might do.</p>
+<p><strong><code>move</code> changes only <code>path</code>,</strong>
+which makes the address mutable while the id stays put. That is the
+correct split, and it means a path is a label rather than an
+identity.</p>
+<p>Every one of the four re-checks
+<code>memory.user_id != user_id</code> and raises
+<code>ValueError</code> rather than silently doing nothing, and the
+whole batch commits once at the end.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory reaches the model two ways. As <strong>tools</strong>, through
+<code>backend/open_webui/tools/builtin.py</code>:
+<code>list_memory_paths</code>, <code>read_memory_path</code>,
+<code>add_memory</code>, and a delete that calls the ownership-checked
+<code>delete_memory_by_id_and_user_id</code>. And as <strong>injected
+context</strong>, through the single seam at
+<code>utils/middleware.py:2667</code>, which is the only caller of
+<code>add_memory_context</code> in the tree.</p>
+<p>The <strong>background review</strong> is the part that decides what
+to remember without being asked. It is opt-in
+(<code>memories.background_review.enable</code>), fires when the user
+turn count is divisible by <code>memories.review_interval_turns</code> —
+default 10, floored at 1 — and then:</p>
+<pre class="python"><code>task = asyncio.create_task(_review_memory(...))</code></pre>
+<p>fire and forget, with a done-callback whose entire body on failure is
+<code>log.debug('Memory review failed: %s', e)</code>.</p>
+<p><code>_review_memory</code> shows the model the last sixteen
+messages, each truncated to 1,600 characters as a head-and-tail split,
+and a listing of existing memories — <strong>capped at
+eighty</strong>:</p>
+<pre class="python"><code>for memory in (existing_memories or [])[:80]</code></pre>
+<p><code>get_memories_by_user_id</code> has no <code>ORDER BY</code>, so
+which eighty depends on what the database returns. Past that many
+memories, the model being asked to propose a <code>replace</code> is
+choosing an id out of a truncated, unordered view of the store, while
+the only automatic protection against re-adding something — the
+<code>add</code> dedup — is exact-content. The two limits interact in
+the direction that produces duplicates and mis-targeted corrections.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>What holds.</strong> The scope key is applied on every live
+read and re-checked on every mutation, and the unscoped helpers are
+unreachable. The vector collection is per user at every call site.
+Memory is gated twice, by a global setting and a per-user permission.
+Provenance is recorded on agent writes. And the embedding cost is kept
+off the database connection deliberately, with the reason in a
+comment.</p>
+<p><strong><code>scope_enforced</code> is earned</strong> on
+<code>user_id</code> as a read filter plus the per-user collection.</p>
+<p><strong>Everything else is withheld, and three of them for reasons
+worth stating.</strong></p>
+<p><code>audit_log</code>: the mutations do emit events —
+<code>publish_event(request, EVENTS.MEMORY_CREATED, actor=user, subject_id=memory.id, ...)</code>
+carries an actor and a subject. But every sink is a broadcast:
+<code>SocketSessionEventSink</code>, <code>EventFunctionSink</code>,
+<code>WebhookEventSink</code>, <code>NotificationEventSink</code>. None
+writes a row, and <code>events.py</code> contains no insert or commit.
+The record exists as a message, not as state, so nothing in the system's
+own store says a memory was created, replaced or deleted.</p>
+<p><code>tombstone</code>: the <code>add</code> dedup is keyed on the
+value, which is the shape, but it consults <em>live</em> rows. A removed
+memory leaves nothing behind for it to consult.</p>
+<p><code>trust_state</code>: <code>type</code> is a write-time genre,
+and <code>normalize_memory_type</code> collapses every unrecognised
+value into <code>context</code>.</p>
+<p><code>bitemporal</code>, <code>human_review</code>,
+<code>negative_eval</code>: no validity axis and no as-of read; no
+surface where a memory waits for a person — an agent write is live the
+moment it commits; and no test names the memory subsystem at all.</p>
+<p><strong>Three silent degradations, and they compound.</strong> Seven
+bare <code>except Exception</code> blocks in the model return
+<code>None</code> or <code>False</code>, so a database failure and an
+empty store are the same answer — and <code>search_memory_rows</code>
+opens with <code>list(memories or [])</code>, which turns the failure
+into "nothing matched". The vector query inside
+<code>add_memory_context</code> is wrapped in
+<code>except Exception: log.debug(e)</code>, so a vector-store outage
+drops the semantic tier while the other two still fire and the prompt
+looks normal. And the background review is a detached task logging its
+own failure at debug. A deployment can lose the semantic half of its
+memory, or the writer that fills it, and see nothing at a default log
+level.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No test names the memory subsystem.</strong>
+<code>find . -iname "*test*" | grep -i memor</code> returns nothing, and
+the repository's <code>test/</code> directory holds no memory case. That
+is the ground for withholding <code>negative_eval</code>, and it also
+means the scope-key boundary in section 9 is read from the code rather
+than pinned by a committed assertion — the strongest property here is
+the one nothing would catch regressing.</p>
+<p><strong>No paper and no benchmark.</strong> <code>arxiv</code>,
+<code>bibtex</code>, <code>@article</code>, <code>@misc</code> and
+<code>citation</code> return nothing from the README, and there is no
+<code>CITATION.cff</code>. The project makes no accuracy or recall claim
+about its memory, which is the honest posture for a chat front-end, and
+the atlas records it rather than treating the absence as a gap.</p>
+<p><strong>Nothing was executed from this checkout.</strong></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Scope the vector store by collection, not by
+predicate.</strong> One collection per user means there is no query in
+which the key can be forgotten. It costs a correct derivation at each
+call site, which here is five of them and all five agree.</li>
+<li><strong>Record which turn produced a memory.</strong>
+<code>created_by</code>, <code>chat_id</code>, <code>message_id</code>
+and <code>model</code> on every agent write is provenance most stores in
+this corpus do not keep — and it costs one dict.</li>
+<li><strong>Keep the embedding call off the database connection, and say
+why.</strong> Three endpoints carry a note explaining that they skip the
+shared session dependency because an external embedding call can take
+seconds. The next person to "tidy up" the dependency injection will read
+it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A threshold whose default disables it.</strong> If a comment
+has to argue for a filter, the default should be the value the argument
+supports. <code>&gt; 0.0</code> against a default of <code>0.0</code>
+means the code and the comment disagree and the code wins silently.</li>
+<li><strong>Ranking and then alphabetising.</strong> Whatever order
+retrieval computes should be the order assembly preserves, or the
+ranking is work done for nothing.</li>
+<li><strong>A correction that destroys its predecessor.</strong>
+<code>replace</code> on the content column leaves no way to ask what the
+memory used to say, which is the question a reader debugging a wrong
+memory asks first.</li>
+<li><strong>Two limits that interact.</strong> An eighty-row unordered
+view of the store, plus exact-content dedup, plus an automatic reviewer
+proposing replaces by id. Each is defensible alone.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Worth adopting if you want per-user memory inside a chat product and
+a path-shaped namespace is a good fit for how your users think. Set
+<code>RAG_RELEVANCE_THRESHOLD</code> before you rely on the semantic
+tier, and decide what your <code>user</code>-type budget is, because the
+code will not decide it for you.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Will the relevance threshold ever default above zero? The comment
+argues for it, the config plumbing exists, and the only thing between
+them is the default in <code>config.py</code>.</li>
+<li>Does the alphabetical sort predate the vector tier? It costs nothing
+on the unranked <code>user</code> tier and discards the ranking on the
+other two, which reads like a rule written for the first case and
+applied to all three.</li>
+<li>What happens past eighty memories? The reviewer's view truncates
+with no ordering while dedup stays exact-content, and nothing in the
+repository measures the outcome.</li>
+<li>Would a soft delete be cheaper than it looks? A
+<code>deleted_at</code> column would give the <code>add</code> dedup
+something to consult and make a re-added memory detectable, which is the
+one thing the automatic writer can do wrong repeatedly.</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/open_webui/models/memories.py</code></td>
+<td>The table (<code>:15-28</code>), <code>normalize_memory_type</code>
+(<code>:47</code>), the scoped read (<code>:117</code>),
+<code>apply_memory_operations</code> with <code>replace</code>
+(<code>:216</code>) and <code>remove</code> (<code>:251</code>)</td>
+</tr>
+<tr>
+<td><code>backend/open_webui/routers/memories.py</code></td>
+<td>The permission gate (<code>:35</code>), the per-user collection
+(<code>:173</code>, <code>:289</code>, <code>:350</code>),
+<code>query_memory</code> (<code>:332</code>) and its unset threshold
+(<code>:361-362</code>), the admin reindex (<code>:449</code>)</td>
+</tr>
+<tr>
+<td><code>backend/open_webui/utils/memory.py</code></td>
+<td><code>search_memory_rows</code> (<code>:91</code>),
+<code>add_memory_context</code> (<code>:289</code>), the alphabetical
+sort (<code>:369</code>), the review interval (<code>:438</code>), the
+detached task (<code>:446</code>), the eighty-row cap
+(<code>:480</code>)</td>
+</tr>
+<tr>
+<td><code>backend/open_webui/events.py</code></td>
+<td><code>publish_event</code> (<code>:1174</code>) and the four sinks
+it fans out to (<code>:1171</code>) — none durable</td>
+</tr>
+<tr>
+<td><code>backend/open_webui/config.py</code></td>
+<td><code>RAG_RELEVANCE_THRESHOLD</code> default <code>0.0</code>
+(<code>:964</code>)</td>
+</tr>
+<tr>
+<td><code>backend/open_webui/tools/builtin.py</code></td>
+<td>Memory as model-callable tools (<code>:798</code>,
+<code>:829</code>, <code>:921</code>, <code>:1068</code>)</td>
+</tr>
+<tr>
+<td><code>backend/open_webui/utils/middleware.py</code></td>
+<td>The single injection seam (<code>:2667</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<ul>
+<li><code>find . -iname '*test*' | grep -i memor</code> — nothing; no
+test names the memory subsystem.</li>
+<li><code>grep -rniE 'arxiv|bibtex|@article|@misc|citation' README.md</code>
+and <code>ls CITATION*</code> — nothing; no paper.</li>
+<li><code>grep -rniE 'valid_from|valid_to|as_of|expires_at|invalid_at' models/memories.py</code>
+— nothing; no validity axis.</li>
+<li><code>grep -rniE 'confidence|status|score' models/memories.py</code>
+— only the <code>status</code> strings in
+<code>apply_memory_operations</code>'s return values; no column.</li>
+<li><code>grep -rniE 'insert|db.add|commit' backend/open_webui/events.py</code>
+— nothing; the event sinks are broadcasts, which is why
+<code>audit_log</code> is withheld. Note that a first pass searched
+<code>models/memories.py</code> for <code>audit</code> and found
+nothing, and concluded too early: the events are published from the
+<em>router</em>, under a name the search did not cover.</li>
+<li><code>grep -rn 'get_memory_by_id(\|delete_memory_by_id(' backend/open_webui</code>
+— no caller outside the model file, which is what makes the unscoped
+helpers dead rather than dangerous.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/open-webui/open-webui/commit/0a7c15832fb30b1903753e83f81dc7d27e5b0944"><code class="commit-id" title="0a7c15832fb30b1903753e83f81dc7d27e5b0944">0a7c1583…</code></a>
+— first reading, at the request of this atlas's author. About 114,000
+lines of backend Python, 18,391 commits since 6 October 2023 from
+roughly 900 contributor addresses; the memory subsystem is 1,500 lines
+of it. Licence read first because the file is titled "Open WebUI
+License" rather than a standard name: it is BSD-3 with a branding
+condition governing deployments above fifty users, which constrains
+redistribution and not analysis. One mark, <code>scope_enforced</code>,
+on <code>user_id</code> as a read filter and a per-user vector
+collection, with the unscoped helpers confirmed callerless. Screened
+before reading: no auto-run surface, two build-time execution surfaces,
+two unpinned surfaces, nothing inside the seven-day cooldown. Nothing
+was installed and nothing was run. Two absence claims were nearly
+published wrong and are recorded in the appendix for that reason: an
+<code>audit</code> search scoped to the model file missed the
+<code>publish_event</code> calls in the router, and the events turned
+out to matter — they exist, carry an actor, and persist nowhere.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

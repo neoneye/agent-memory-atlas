@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 579 reports.</strong></p>
+<p><strong>This page covers all 580 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -22201,6 +22201,75 @@ predicate.</li>
 <em>believed</em> at a past moment — <code>as_of</code> answers what had
 been said by then, over a single axis, and no column records when the
 store came to hold it.</li>
+</ul>
+<h3 id="open-webui"><a
+href="../systems/open-webui/"><code>open-webui</code></a></h3>
+<ul>
+<li>Best idea: <strong>partition the vector store by user instead of
+filtering it.</strong> The collection is
+<code>f'user-memory-{user.id}'</code> at every upsert, delete,
+delete-collection and search, so one person's embeddings are a different
+collection rather than a filtered row set — there is no query in which
+the scope key can be forgotten, only a name that has to be derived right
+at five call sites, and all five agree.</li>
+<li>Second idea: <strong>write the argument for the guard next to the
+guard.</strong> The comment above the relevance filter states that
+"Vector similarity search always returns the top-K nearest neighbours
+even when they are completely irrelevant", which is the clearest
+statement of the top-K problem in this corpus — and the reason the
+defect below is legible at all.</li>
+<li>Third idea: <strong>record the turn that produced the
+memory.</strong> Agent writes stamp <code>created_by</code>,
+<code>chat_id</code>, <code>message_id</code> and <code>model</code>
+into <code>meta</code>, so a memory can be traced back to the exchange
+that created it; it costs one dict and most stores here do not keep
+it.</li>
+<li>Fourth idea: <strong>keep the embedding call off the shared database
+session, and say why.</strong> Three places carry a comment explaining
+that the endpoint deliberately does not take the session dependency
+because an external embedding call takes "1-5+ seconds" — the note a
+later tidy-up of the dependency injection needs to read.</li>
+<li>Biggest risk: <strong>the relevance floor is disabled by its own
+default.</strong>
+<code>relevance_threshold = await Config.get('rag.relevance_threshold', 0.0)</code>
+is gated by <code>if results and relevance_threshold &gt; 0.0</code>,
+and <code>config.py:964</code> sets <code>RAG_RELEVANCE_THRESHOLD</code>
+from an environment variable defaulting to <code>'0.0'</code>. On a
+default install the filter the comment argues for never executes, and
+all eight nearest neighbours reach the prompt however far away they
+are.</li>
+<li>Second risk: the ranking is discarded anyway. Each of the three
+injected tiers is passed through
+<code>sorted(sections[key], key=lambda memory: (memory.casefold(), memory))</code>
+before rendering, so neither the vector distances nor the path-rank
+ordering survives assembly. And correction is destructive —
+<code>replace</code> overwrites <code>content</code> in place,
+<code>remove</code> hard-deletes, and nothing records what was
+there.</li>
+<li>Third risk: the background reviewer proposing those corrections sees
+existing memories capped at <code>[:80]</code> from a query with no
+<code>ORDER BY</code>, while the only automatic protection against
+re-adding something is an exact-string dedup on
+<code>(user_id, content, type, path)</code>. The two limits interact in
+the direction that produces duplicates and mis-targeted replaces.</li>
+<li>Most reusable component: <code>search_memory_rows</code> — a pure
+function over rows the caller already scoped, narrowing by id, type,
+path proximity and query tokens with the limit clamped to 100. The scope
+key is the caller's problem and the filtering is testable without a
+database.</li>
+<li>Maturity impression: the "Open WebUI License", a BSD-3 variant whose
+fourth clause bars altering the branding above fifty users and so is
+source-available rather than open source; about 114,000 lines of backend
+Python and 18,391 commits since October 2023 from roughly 900
+contributor addresses, with the memory subsystem 1,500 lines of it
+across three files and four migrations; one capability mark,
+<code>scope_enforced</code>, and no test anywhere in the tree names
+memory.</li>
+<li>Study when: you are adding per-user memory to a multi-tenant chat
+product, or deciding how many tiers of retrieved context a single prompt
+should carry.</li>
+<li>Do not copy when: you need the retrieval order to reach the model,
+or you need to ask what a memory used to say.</li>
 </ul>
         </article>
       </div>
