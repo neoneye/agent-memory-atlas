@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A personal assistant whose memory
+expires atoms against the clock rather than on a flag, queues every
+detected contradiction for human review instead of resolving it, and
+refuses to backfill a review timestamp it never observed.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Deus — Agent Memory Atlas">
+    <meta property="og:description" content="A personal assistant whose
+memory expires atoms against the clock rather than on a flag, queues
+every detected contradiction for human review instead of resolving it,
+and refuses to backfill a review timestamp it never observed.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Deus — Agent Memory Atlas">
+    <meta name="twitter:description" content="A personal assistant whose
+memory expires atoms against the clock rather than on a flag, queues
+every detected contradiction for human review instead of resolving it,
+and refuses to backfill a review timestamp it never observed.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Deus — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Deus",
+      "description": "A personal assistant whose memory expires atoms against the clock rather than on a flag, queues every detected contradiction for human review instead of resolving it, and refuses to backfill a review timestamp it never observed.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A contradiction goes to the person, never
+to the invalidator</p>
+          <h1>Deus</h1>
+          <p class="document-deck">A personal assistant whose memory
+expires atoms against the clock rather than on a flag, queues every
+detected contradiction for human review instead of resolving it, and
+refuses to backfill a review timestamp it never observed.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/sliamh11/Deus">
+              <span>Source</span>
+              <strong>sliamh11/Deus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/sliamh11/Deus/commit/2f24c38a2ae42d3161492f0729975b286452f4b4" title="2f24c38a2ae42d3161492f0729975b286452f4b4">
+              <span>Analyzed revision</span>
+              <code>2f24c38a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/sliamh11--Deus" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>sliamh11--Deus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Deus is an MIT-licensed personal assistant that runs on the user's
+own machine — 119,845 lines of TypeScript and Python outside tests and
+vendored code, 1,248 commits, with messaging connectors,
+per-conversation containers, a TUI, and an evolution loop that scores
+its own responses and rewrites its system prompt.</p>
+<p>Two marks, and the one worth reading it for is a policy stated at the
+line that enforces it.</p>
+<p>When the indexer finds that a newer atom contradicts an older one, it
+does not retire the older one. It writes a row:</p>
+<pre class="python"><code># Log to pending_conflicts for user review — never auto-invalidate</code></pre>
+<p>The table holds both texts, both ids, a resolution and the time it
+was resolved. Clearing it is a CLI command a person runs —
+<code>--resolve-conflicts</code> or
+<code>--dismiss-conflict &lt;id&gt;</code> — and the dismissal is
+guarded so the timestamp is write-once.</p>
+<p>The migration that added that timestamp is the detail that shows the
+habit is real rather than incidental:</p>
+<blockquote>
+<p>Historical resolved rows stay NULL on purpose — we never observed
+WHEN they were resolved, so inventing a timestamp would fabricate data.
+New resolutions stamp it going forward.</p>
+</blockquote>
+<p>A schema change that declines to backfill a plausible value, because
+the value was never observed, is the same instinct as the conflict
+policy: do not have the system assert something nobody established.</p>
+<p>The expiry mechanism is the second mark and has a detail of its own.
+Atoms carry <code>expired_at</code> with an <code>expired_reason</code>,
+and the read predicate is
+<code>(e.expired_at IS NULL OR e.expired_at &gt; date('now'))</code> —
+compared against the clock, not tested for presence, so a future-dated
+expiry retires an atom when that date arrives rather than the moment the
+stamp is written.</p>
+<p>Three published claims need qualifying, and section 9 takes them in
+turn.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A conversation becomes atoms: chunks with a type, a confidence, a
+corroboration count, a domain and a category. Entities and relationships
+are extracted alongside into a graph, each carrying first-seen and
+last-seen stamps and an evidence count. Retrieval is hybrid — an FTS5
+lexical arm and a <code>vec0</code> vector arm — with a graph walk and
+spreading activation over the entity layer.</p>
+<p>Two things can take an atom out of an answer. An expiry, which is a
+date the read compares against today. And nothing else — because a
+contradiction does not expire anything. It queues.</p>
+<p>That division is the system's position on correction: automatic
+detection, manual resolution.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — A contradiction between an older and a newer atom is detected automatically and resolved only by a person; the read path's expiry predicate compares against today's date rather than testing whether a stamp is present.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: A contradiction between an older and a newer atom is detected automatically and resolved only by a person; the read path&#39;s expiry predicate compares against today&#39;s date rather than testing whether a stamp is present.
+flowchart TD
+  CONV[&quot;Conversation&quot;]
+  ATOM[&quot;Atomise: confidence, corroborations,&lt;br/&gt;domain, category&quot;]
+  DB[(&quot;entries, entities, relationships&lt;br/&gt;SQLite with vec0 and FTS5&quot;)]
+  DET{&quot;newer contradicts older&quot;}
+  PQ[(&quot;pending_conflicts&lt;br/&gt;both texts, resolution, resolved_at&quot;)]
+  NOAUTO[&quot;Never auto-invalidate&quot;]
+  CLI[&quot;Operator runs --resolve-conflicts&lt;br/&gt;or --dismiss-conflict&quot;]
+  WO[&quot;resolved = 0 guard&lt;br/&gt;resolved_at is write-once&quot;]
+  READ[&quot;Hybrid recall&quot;]
+  PRED[&quot;expired_at IS NULL&lt;br/&gt;OR expired_at &gt; date(&#39;now&#39;)&quot;]
+  OUT[&quot;Atoms returned&quot;]
+
+  CONV --&gt; ATOM --&gt; DB
+  ATOM --&gt; DET
+  DET --&gt;|&quot;yes&quot;| PQ
+  DET --&gt; NOAUTO
+  PQ --&gt; CLI --&gt; WO --&gt; DB
+  DB --&gt; READ --&gt; PRED --&gt; OUT</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Store.</strong> <code>entries</code> gains
+<code>confidence</code>, <code>corroborations</code>,
+<code>source_chunk</code>, <code>expired_at</code>,
+<code>expired_reason</code>, <code>domain</code>, <code>category</code>
+and <code>promoted_at</code> through idempotent <code>ALTER TABLE</code>
+migrations (<code>scripts/memory_indexer.py:355-370</code>).</li>
+<li><strong>Detect.</strong> A contradiction between an older and a
+newer atom inserts into <code>pending_conflicts</code> with
+<code>INSERT OR IGNORE</code>, so re-detecting the same pair does not
+duplicate the review item (<code>:2582-2590</code>).</li>
+<li><strong>Resolve.</strong> <code>cmd_resolve_conflicts</code> and
+<code>cmd_dismiss_conflict</code> set <code>resolved</code>,
+<code>resolution</code> and <code>resolved_at</code> together, the
+latter guarded by <code>resolved = 0</code> (<code>:3355-3380</code>),
+reached from the CLI at <code>:4700-4710</code>.</li>
+<li><strong>Read.</strong> Every atom query carries the expiry
+comparison and <code>orphaned_at IS NULL</code>; relationship queries
+use the stricter <code>expired_at IS NULL</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>entries</code> is the atom table, with the trust fields added
+by migration rather than declared up front — a history visible in the
+code, since each column arrives in a try/except <code>ALTER TABLE</code>
+that tolerates an existing database.</p>
+<p><code>entities</code> carries <code>first_seen</code>,
+<code>last_seen</code> and <code>mention_count</code>;
+<code>relationships</code> carries <code>first_seen</code>,
+<code>last_seen</code>, <code>evidence_count</code>, a
+<code>confidence</code> and an <code>expired_at</code>.</p>
+<p>That list is what makes the documentation's temporal claim worth
+checking, and section 9 does. Briefly: those stamps record when <em>the
+system observed</em> something, which is one axis.
+<code>bitemporal</code> is withheld.</p>
+<p><code>tombstone</code> is withheld because expiry is keyed on the
+atom, not on its content — the same sentence said again is a new atom
+with a fresh id. <code>audit_log</code> has no table of mutations,
+though <code>pending_conflicts</code> is an append-only record of
+detected contradictions and their resolutions, which is a narrower
+thing.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid BM25 and vector, with a stated degradation: if the SQLite
+build has no FTS5, the virtual-table creation is caught and <em>"hybrid
+search degrades to ANN-only"</em>. Naming the degraded mode at the point
+it can occur is better than a requirement in a README.</p>
+<p>The expiry predicate is the mark, and its form is the part to copy.
+<code>expired_at &gt; date('now')</code> means an expiry can be
+scheduled: an atom known to be true until the end of the quarter can be
+stamped now and stays retrievable until then. A presence test —
+<code>expired_at IS NOT NULL</code> — would make every stamp immediate
+and quietly turn a scheduled expiry into a deletion. This atlas read a
+system with exactly that presence test earlier in the same session, so
+the contrast is concrete rather than theoretical.</p>
+<p>The relationship path uses the stricter form, which is a defensible
+asymmetry — an edge that has stopped holding is usually not something
+you schedule — but it is an asymmetry, and nothing in the code says it
+was chosen.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Atomisation assigns a confidence and a corroboration count, so an
+atom restated across conversations accumulates evidence rather than
+duplicating. Entities and relationships are extracted alongside, with
+<code>evidence_count</code> on the edge.</p>
+<p>Contradiction detection is where the design takes its position. The
+alternative — invalidate the older atom automatically — is what most
+systems in this corpus do, and it is the decision the funes rationale <a
+href="../funes/">argues against</a> on the ground that a wrong automatic
+call loses information silently. Deus reaches the same conclusion from
+the other direction: it detects the conflict, stores both texts, and
+waits for a person. The cost is a queue that can grow unattended; the
+<code>resolved_at</code> column exists precisely so the review cadence
+is measurable.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Messaging connectors, per-conversation containers, and a credential
+proxy that the comparison table describes as keeping API keys out of the
+container. The <code>.claude/</code> directory carries four harness hook
+scripts — a format check, a TDD test lock, a numbering gate and a warden
+shim — read here as data and not executed.</p>
+<p>The evolution loop is the distinctive part of the product and sits
+outside this atlas's remit: it scores its own responses, generates
+self-critiques, and rewrites the system prompt. What matters for a
+memory report is that it writes to its own <code>prompt_artifacts</code>
+store rather than to the atom database, so a prompt rewrite cannot
+silently alter what the memory says.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>Three published claims, checked against the tree.</p>
+<p><strong>"Bi-temporal validity."</strong>
+<code>docs/ARCHITECTURE.md</code> describes the semantic graph layer as
+<em>"entity-relationship extraction with bi-temporal validity"</em>. The
+schema's temporal columns are <code>first_seen</code>,
+<code>last_seen</code> and <code>expired_at</code> on relationships, and
+<code>first_seen</code>, <code>last_seen</code> on entities. Those are
+observation stamps — when this system first and last saw the thing —
+plus a retirement date. A bitemporal store separates when a fact was
+true in the world from when the store came to believe it, and answers a
+query as of a past moment; searching the tree for
+<code>valid_from</code>, <code>valid_to</code>, <code>as_of</code> or
+<code>bitemporal</code> outside that document returns nothing in the
+memory path. The capability the doc names is not the capability the
+schema has, and the mark is withheld on the schema.</p>
+<p><strong>"95% recall on the LongMemEval benchmark."</strong> The
+README's headline. The architecture document gives the underlying run in
+full and is more careful: <em>"Evaluated on LongMemEval-S (ICLR 2025),
+<strong>50 examples</strong>, local Ollama embeddings"</em>, with
+Recall@1 at 94%, R@3 and R@5 at 98%, R@10 at 100% and MRR 0.96. So the
+number is real, the run is described, and the benchmark runner is
+committed — but the headline states neither the sample size nor which
+recall metric, and 50 examples is a tenth of LongMemEval-S. A reader who
+takes "95% recall on LongMemEval" at face value will believe something
+more than the architecture document claims.</p>
+<p><strong>"~37K lines (TypeScript + Python)."</strong> The comparison
+table's self-measurement. The table is honestly dated <em>"Last updated:
+April 2026"</em> and the pin here is September, so this is staleness
+rather than error — but <code>src</code> alone is 64,400 lines of
+TypeScript and Python, the tree excluding tests and vendored code is
+119,845, and the figure sits in a table that also reports competitors'
+sizes as though all the rows were measured together. A dated table is
+the right instinct; a five-month-old row in a comparison is still read
+as current.</p>
+<p>None of the three is a fabrication, and the architecture document is
+more careful than the README in every case. The pattern worth naming is
+that the summary surfaces are more confident than the documents behind
+them.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>An <code>eval/</code> directory with datasets for core QA, safety and
+tool use, a judge model, thresholds in JSON, and a parity report; a
+<code>scripts/bench</code> tree with probes for attention dilution and
+padding leaks; and <code>docs/research/</code> write-ups including a
+benchmark-robustness note. Nothing was run here.</p>
+<p><code>negative_eval</code> is withheld. The suite has must-not
+assertions — a consumed expiry marker, a GC pair that asserts a file is
+gone in one case and present in the other — but none asserts that an
+expired atom must not come back from a recall, which is the property the
+expiry predicate exists to provide and the one a regression would break
+silently.</p>
+<p>The contradiction tests are the closest to the marks: one asserts a
+detected conflict persists across a connection close, which is a
+durability property for a review queue that nobody may look at for
+days.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Compare an expiry to the clock, not to null.</strong>
+<code>expired_at &gt; date('now')</code> lets an expiry be scheduled;
+<code>expired_at IS NOT NULL</code> silently turns every scheduled
+expiry into an immediate one.</li>
+<li><strong>Queue the contradiction, and say so where you insert
+it.</strong> A comment at the insert — <em>never auto-invalidate</em> —
+tells the next reader that the missing invalidation call is the design
+rather than an omission.</li>
+<li><strong>Make the resolution timestamp write-once.</strong> A
+<code>resolved = 0</code> guard stops a second dismissal from moving the
+date, which is what makes a review-cadence measurement mean
+anything.</li>
+<li><strong>Do not backfill a value you never observed.</strong> Leaving
+historical rows NULL makes a metric start empty; inventing timestamps
+makes it start wrong, and nothing downstream can tell the difference
+afterwards.</li>
+<li><strong>Keep the headline as careful as the document behind
+it.</strong> "95% recall on LongMemEval" and "Recall@1 94% on 50
+examples of LongMemEval-S with local embeddings" are different claims,
+and only the second is checkable.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is <code>bi-temporal validity</code> a plan for the semantic graph,
+or a description of <code>first_seen</code>/<code>last_seen</code> that
+the term does not fit? The document is otherwise precise, which makes
+the phrase stand out.</li>
+<li>Relationships expire immediately on <code>expired_at IS NULL</code>
+while atoms compare against the clock. Is the asymmetry intended?</li>
+<li>The pending-conflict queue has no bound. Is there a point at which
+an unreviewed contradiction should start affecting retrieval — a warning
+on a hit, say — rather than waiting indefinitely for a person?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>scripts/memory_indexer.py:338-420</code> (atoms,
+embeddings, FTS5, entities, relationships), <code>:477-499</code>
+(<code>pending_conflicts</code> and the <code>resolved_at</code>
+migration).</li>
+<li>Expiry on the read path: <code>:1402</code>, <code>:2199</code>,
+<code>:2552</code>, <code>:2655</code>, <code>:2785-2797</code>,
+<code>:3044</code>, <code>:3139</code>.</li>
+<li>Contradictions: <code>:2582-2590</code> (the insert and its policy
+comment), <code>:3355-3380</code> (resolve and dismiss),
+<code>:4700-4710</code> (the CLI flags).</li>
+<li>Claims: <code>README.md:17</code> (the 95% headline),
+<code>docs/ARCHITECTURE.md:318-338</code> (the full benchmark table and
+the bi-temporal description), <code>docs/benchmarks.md:1-30</code> (the
+dated comparison table).</li>
+<li>Tests:
+<code>evolution/tests/test_memory_indexer_contradiction_commit.py</code>,
+<code>scripts/tests/test_memory_gc.py</code>,
+<code>scripts/tests/test_memory_indexer.py:1652</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;valid_from\|valid_to\|as_of\|bitemporal&quot; src scripts evolution --include=&#39;*.py&#39; --include=&#39;*.ts&#39;
+  # nothing in the memory path; the term appears only in docs/ARCHITECTURE.md
+grep -rn &quot;expired_at IS NULL&quot; scripts/memory_indexer.py        # eight read sites, clock-compared on atoms
+grep -rn &quot;pending_conflicts&quot; --include=&#39;*.py&#39; . | grep -v test # schema, insert, resolve, dismiss, CLI
+grep -rn &quot;expired&quot; scripts/tests evolution/tests | grep assert # a GC file pair; no recall exclusion
+find . -name &#39;*result*&#39; -o -name &#39;*longmemeval*&#39; | grep -v node_modules   # a runner and a cache path, no committed run</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/sliamh11/Deus/commit/2f24c38a2ae42d3161492f0729975b286452f4b4"><code class="commit-id" title="2f24c38a2ae42d3161492f0729975b286452f4b4">2f24c38a…</code></a>
+— first reading, at the head of <code>main</code>, 1,248 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: two auto-run
+surfaces (a <code>.claude/settings.json</code> with five hook families
+and four committed hook scripts), several build-time execution paths
+including an npm <code>prepare</code> that runs husky and a migration
+script and three pytest <code>conftest.py</code> collection hooks. Every
+auto-run surface was read as data and none executed; nothing was
+installed, built or run. Two marks. <code>bitemporal</code> is withheld
+against a documentation claim rather than an absence of intent:
+<code>docs/ARCHITECTURE.md</code> describes the semantic graph as having
+bi-temporal validity, and the schema's temporal columns are observation
+stamps with no as-of read anywhere in the memory path.
+<code>tombstone</code> is withheld because expiry keys on the atom
+rather than its content. <code>negative_eval</code> is withheld because
+no committed case asserts an expired atom stays out of a recall.
+<code>scope_enforced</code> is withheld because isolation is
+per-conversation at the container level rather than a predicate in the
+store. The README's 95% LongMemEval figure and the comparison table's
+~37K-line self-measurement are both recorded as qualifications in
+section 9 rather than as errors: the first is a 50-example run whose own
+table reports Recall@1 at 94%, and the second is a table honestly dated
+five months before this pin.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

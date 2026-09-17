@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 526 of 578 screened at the report's current pin.**
+**Progress: 527 of 579 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 52 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 233 |
+| Repositories with an auto-run surface (`RUNS`) | 234 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 318 |
-| Repositories with build-time execution (`EXEC`) | 388 |
+| Repositories with build-time execution (`EXEC`) | 389 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -86,6 +86,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`deja-vu`](../../content/systems/deja-vu.md) | `.claude-plugin/`, `mcp.json`, `server.json` |
 | [`demarkus`](../../content/systems/demarkus.md) | `.claude-plugin/` |
 | [`dense-mem`](../../content/systems/dense-mem.md) | `.githooks/` |
+| [`deus`](../../content/systems/deus.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`dexto`](../../content/systems/dexto.md) | `.cursor/rules/` |
 | [`dovsg`](../../content/systems/dovsg.md) | `.gitmodules` |
 | [`ecc`](../../content/systems/ecc.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.mcp.json`, `.opencode/`, `.vscode/settings.json`, `hooks/`, `hooks/hooks.json` |

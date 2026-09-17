@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 578 reports.</strong></p>
+<p><strong>This page covers all 579 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -22122,6 +22122,53 @@ store, or you publish user data and need a model for where the scanning
 belongs.</li>
 <li>Do not copy when: an agent consults the memory without a human
 reading both passages — nothing here withholds a superseded claim.</li>
+</ul>
+<h3 id="deus"><a href="../systems/deus/"><code>deus</code></a></h3>
+<ul>
+<li>Best idea: <strong>queue the contradiction, and say so where you
+insert it.</strong> A newer atom contradicting an older one writes both
+texts to <code>pending_conflicts</code> under the comment "Log to
+pending_conflicts for user review — never auto-invalidate", so the
+missing invalidation call reads as the design rather than an omission.
+Only an operator's CLI command clears it.</li>
+<li>Second idea: <strong>compare an expiry to the clock, not to
+null.</strong>
+<code>expired_at IS NULL OR expired_at &gt; date('now')</code> lets an
+expiry be scheduled; a presence test would turn every stamp into an
+immediate retirement, which is what a sibling system in this corpus does
+by accident.</li>
+<li>Third idea: <strong>do not backfill a value you never
+observed.</strong> The migration adding <code>resolved_at</code> leaves
+historical rows NULL because "inventing a timestamp would fabricate
+data", so the review-cadence metric starts empty rather than wrong — and
+the <code>resolved = 0</code> guard makes the timestamp write-once.</li>
+<li>Biggest risk: <strong>the summary surfaces are more confident than
+the documents behind them.</strong> The architecture document describes
+the semantic graph as having bi-temporal validity over a schema whose
+temporal columns are observation stamps with no as-of read; the README's
+"95% recall on the LongMemEval benchmark" is a 50-example run whose own
+table reports Recall@1 at 94%; and the comparison table's "~37K lines"
+is dated five months before this pin, against a tree whose
+<code>src</code> alone is 64,400 lines.</li>
+<li>Second risk: no committed case asserts an expired atom stays out of
+a recall, which is the property the expiry predicate exists to provide
+and the one a regression would break silently. The pending-conflict
+queue is also unbounded, with nothing surfacing an unreviewed
+contradiction at retrieval time.</li>
+<li>Most reusable component: the pending-conflict table and its CLI pair
+— both texts stored, <code>INSERT OR IGNORE</code> so re-detection does
+not duplicate a review item, and a write-once resolution timestamp that
+makes the cadence measurable.</li>
+<li>Maturity impression: MIT, 119,845 lines of TypeScript and Python
+outside tests across 1,248 commits, an eval directory with judge model
+and thresholds, bench probes for attention dilution and padding leaks,
+and per-conversation container isolation; two capability marks.</li>
+<li>Study when: you detect contradictions automatically and have to
+decide who resolves them, or you are choosing the form of an expiry
+predicate.</li>
+<li>Do not copy when: you need to answer what the store believed at a
+past moment — the temporal columns record when this system observed
+something, not when a fact was true.</li>
 </ul>
         </article>
       </div>

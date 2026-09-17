@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 578 reports.**
+**This page covers all 579 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5027,3 +5027,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 22,429 lines of Rust with 281 test functions and three benchmark files, 558 commits since June 2026, integrations for four coding agents and an optional Hub tier; no capability marks, by an argued design choice.
 - Study when: you are weighing an append-only log against a curated store, or you publish user data and need a model for where the scanning belongs.
 - Do not copy when: an agent consults the memory without a human reading both passages — nothing here withholds a superseded claim.
+
+### [`deus`](../systems/deus/)
+- Best idea: **queue the contradiction, and say so where you insert it.** A newer atom contradicting an older one writes both texts to `pending_conflicts` under the comment "Log to pending_conflicts for user review — never auto-invalidate", so the missing invalidation call reads as the design rather than an omission. Only an operator's CLI command clears it.
+- Second idea: **compare an expiry to the clock, not to null.** `expired_at IS NULL OR expired_at > date('now')` lets an expiry be scheduled; a presence test would turn every stamp into an immediate retirement, which is what a sibling system in this corpus does by accident.
+- Third idea: **do not backfill a value you never observed.** The migration adding `resolved_at` leaves historical rows NULL because "inventing a timestamp would fabricate data", so the review-cadence metric starts empty rather than wrong — and the `resolved = 0` guard makes the timestamp write-once.
+- Biggest risk: **the summary surfaces are more confident than the documents behind them.** The architecture document describes the semantic graph as having bi-temporal validity over a schema whose temporal columns are observation stamps with no as-of read; the README's "95% recall on the LongMemEval benchmark" is a 50-example run whose own table reports Recall@1 at 94%; and the comparison table's "~37K lines" is dated five months before this pin, against a tree whose `src` alone is 64,400 lines.
+- Second risk: no committed case asserts an expired atom stays out of a recall, which is the property the expiry predicate exists to provide and the one a regression would break silently. The pending-conflict queue is also unbounded, with nothing surfacing an unreviewed contradiction at retrieval time.
+- Most reusable component: the pending-conflict table and its CLI pair — both texts stored, `INSERT OR IGNORE` so re-detection does not duplicate a review item, and a write-once resolution timestamp that makes the cadence measurable.
+- Maturity impression: MIT, 119,845 lines of TypeScript and Python outside tests across 1,248 commits, an eval directory with judge model and thresholds, bench probes for attention dilution and padding leaks, and per-conversation container isolation; two capability marks.
+- Study when: you detect contradictions automatically and have to decide who resolves them, or you are choosing the form of an expiry predicate.
+- Do not copy when: you need to answer what the store believed at a past moment — the temporal columns record when this system observed something, not when a fact was true.
