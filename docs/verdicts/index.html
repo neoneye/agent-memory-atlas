@@ -1785,16 +1785,40 @@ is a link, not an overwrite, so <code>get_at_time</code> and session
 replay come from the format rather than a bi-temporal schema.</li>
 <li>Biggest risk: the loudest quality claims in the atlas ("+35% SOTA on
 LoCoMo") with no committed raw artifacts found at this commit.</li>
+<li>Second risk: <strong>the deletion test cannot fail.</strong>
+<code>tests/mutation.rs::delete_frame_marks_deleted</code> creates one
+frame, deletes it and asserts
+<code>stats.frame_count == 0 || stats.frame_count == 1</code> under a
+comment reading <em>"Both are valid - the key is no panic occurred"</em>
+— true for any implementation, including one where delete does nothing,
+and the test never queries for the deleted content. The status filter
+that makes deletion real,
+<code>frame.status == FrameStatus::Active</code> in both search
+builders, has no committed case at all.</li>
+<li>Third risk: the order mutations arrived in is not retained. The WAL
+is truncated at checkpoint, so the file keeps each mutation's effect and
+not its sequence; the replay session log would supply that and records
+<code>Put</code> and <code>Find</code>, while the <code>Delete</code>
+and <code>Update</code> variants of its own <code>ActionType</code> enum
+have no producer anywhere in the tree.</li>
 <li>Most reusable component: <code>entity:slot</code> cards with a
 declared cardinality, which turns contradiction detection into a lookup
 and tells you whether a second value is a conflict or an addition.</li>
-<li>Maturity impression: a serious file format with WAL, footer
-recovery, a 1,687-line doctor, and a deployment story of one binary and
-one file.</li>
+<li>Maturity impression: Apache-2.0, a serious file format with WAL,
+footer recovery, a 1,687-line doctor, 497 test functions — 91 in
+<code>tests/</code> and 406 in seventy in-source modules — and a
+deployment story of one binary and one file. Four capability marks:
+<code>bitemporal</code>, <code>audit_log</code>,
+<code>trust_state</code> and <code>negative_eval</code>, the last two
+added on a re-read at the same commit and the third re-grounded from an
+audit module that turns out to report on retrievals rather than
+mutations.</li>
 <li>Study when: you need to answer "what did the agent believe when it
 did that", which nothing else here can.</li>
-<li>Do not copy when: you need multi-tenant scope or epistemic status —
-the ACL is thin and there is no trust state.</li>
+<li>Do not copy when: you need multi-tenant scope, or a judgement about
+truth rather than a lifecycle position — the ACL is thin, and
+<code>Active | Superseded | Deleted</code> says whether a frame may be
+acted on, not whether anyone verified it.</li>
 </ul>
 <h3 id="memoryos"><a
 href="../systems/memoryos/"><code>memoryos</code></a></h3>

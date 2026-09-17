@@ -604,10 +604,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`memvid`](../systems/memvid/)
 - Best idea: immutability as the correction mechanism — a supersession is a link, not an overwrite, so `get_at_time` and session replay come from the format rather than a bi-temporal schema.
 - Biggest risk: the loudest quality claims in the atlas ("+35% SOTA on LoCoMo") with no committed raw artifacts found at this commit.
+- Second risk: **the deletion test cannot fail.** `tests/mutation.rs::delete_frame_marks_deleted` creates one frame, deletes it and asserts `stats.frame_count == 0 || stats.frame_count == 1` under a comment reading *"Both are valid - the key is no panic occurred"* — true for any implementation, including one where delete does nothing, and the test never queries for the deleted content. The status filter that makes deletion real, `frame.status == FrameStatus::Active` in both search builders, has no committed case at all.
+- Third risk: the order mutations arrived in is not retained. The WAL is truncated at checkpoint, so the file keeps each mutation's effect and not its sequence; the replay session log would supply that and records `Put` and `Find`, while the `Delete` and `Update` variants of its own `ActionType` enum have no producer anywhere in the tree.
 - Most reusable component: `entity:slot` cards with a declared cardinality, which turns contradiction detection into a lookup and tells you whether a second value is a conflict or an addition.
-- Maturity impression: a serious file format with WAL, footer recovery, a 1,687-line doctor, and a deployment story of one binary and one file.
+- Maturity impression: Apache-2.0, a serious file format with WAL, footer recovery, a 1,687-line doctor, 497 test functions — 91 in `tests/` and 406 in seventy in-source modules — and a deployment story of one binary and one file. Four capability marks: `bitemporal`, `audit_log`, `trust_state` and `negative_eval`, the last two added on a re-read at the same commit and the third re-grounded from an audit module that turns out to report on retrievals rather than mutations.
 - Study when: you need to answer "what did the agent believe when it did that", which nothing else here can.
-- Do not copy when: you need multi-tenant scope or epistemic status — the ACL is thin and there is no trust state.
+- Do not copy when: you need multi-tenant scope, or a judgement about truth rather than a lifecycle position — the ACL is thin, and `Active | Superseded | Deleted` says whether a frame may be acted on, not whether anyone verified it.
 
 ### [`memoryos`](../systems/memoryos/)
 - Best idea: the promotion rule is a written formula with named coefficients, and the LoCoMo harness ships with its dataset committed beside it.

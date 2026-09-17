@@ -117,7 +117,7 @@ than only correct.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-28</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/memvid--memvid" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -125,7 +125,7 @@ than only correct.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -315,9 +315,18 @@ supersession. Memory cards are structured <code>entity:slot</code>
 values with a cardinality, riding on frames.</p>
 <p>What is absent:</p>
 <ul>
-<li><strong>No trust state.</strong> A card is current, superseded, or
-deleted; nothing marks it candidate, verified, or rejected. Provenance
-is checksums and enrichment lineage, not epistemic status.</li>
+<li><strong>Trust state, on a narrower reading than the first one
+applied.</strong> A frame is <code>Active</code>,
+<code>Superseded</code> or <code>Deleted</code>, and nothing marks it
+candidate, verified or rejected — which is why the first reading called
+the mark absent. The rubric's test is not that vocabulary but <em>"at
+least one state that withholds a memory from being treated as
+true"</em>, and two of the three do exactly that: both search entry
+points filter <code>frame.status == FrameStatus::Active</code> before
+scoring. The mark is carried from 2026-09-17. What remains absent is a
+judgement about truth — the status is a lifecycle position, and
+provenance is checksums and enrichment lineage rather than an epistemic
+claim.</li>
 <li><strong>No value-level tombstone.</strong>
 <code>FrameWalOp::Tombstone</code> marks a <em>frame</em>. Re-ingesting
 the same source produces a new frame with a new id, and the entity:slot
@@ -376,6 +385,13 @@ making re-embedding a query.</li>
 footer recovery on open.</li>
 <li><strong>Checksums per frame</strong>, and a <code>doctor</code>
 proportionate to the format's claims.</li>
+<li><strong>The predecessor survives its correction inside the
+file</strong>, with status, checksum and enrichment provenance intact —
+which is what the <code>audit_log</code> mark rests on here, and a
+stronger answer to <em>what did this say before</em> than a side-table
+of events.</li>
+<li><strong>Two of the three frame statuses withhold a frame from every
+search</strong>, filtered in both search builders before scoring.</li>
 <li><strong>One artifact to deploy</strong>, with search, graph,
 encryption and ACL inside it.</li>
 </ul>
@@ -384,11 +400,22 @@ encryption and ACL inside it.</li>
 <li><strong>Headline benchmark numbers without committed
 artifacts.</strong> "+35% SOTA on LoCoMo" is the strongest quality claim
 in the atlas and the least evidenced at this commit.</li>
-<li><strong>No trust state.</strong></li>
 <li><strong>Frame-keyed correction</strong>, so re-ingestion is visible
 but unblocked.</li>
 <li><strong>A thin ACL</strong> relative to the system, and no
 multi-tenant model.</li>
+<li><strong>The op sequence is not retained.</strong> The WAL is
+truncated at checkpoint, so the file keeps the <em>effect</em> of every
+mutation and not the order they arrived in. The replay session log would
+supply that, and it records <code>Put</code> and <code>Find</code> while
+the <code>Delete</code> and <code>Update</code> variants of its own
+<code>ActionType</code> enum have no producer anywhere in the tree — the
+one surface that could record a correction as an event never does.</li>
+<li><strong><code>audit.rs</code> is not an audit log.</strong> It
+builds a provenance report for a <em>question</em>: which sources
+answered it. That is the rubric's explicit "not this", and this report
+rested its <code>audit_log</code> mark on the name for seven weeks; the
+mark stands on the frame log instead.</li>
 <li><strong>Inferred cardinality</strong> governing conflict semantics,
 so a wrong inference makes a contradiction look like an addition or the
 reverse.</li>
@@ -396,9 +423,41 @@ reverse.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><code>benches/</code>, <code>tests/</code> and <code>data/</code>
-trees exist, and <code>doctor.rs</code> is effectively a self-check
-suite. Nothing was run for this review.</p>
+<p><strong>There are 497 test functions and the first reading counted
+none of them.</strong> <code>tests/</code> holds eleven integration
+files with 91 <code>#[test]</code> functions —
+<code>crash_recovery</code>, <code>doctor_recovery</code>,
+<code>encryption_capsule</code>, <code>lifecycle</code>,
+<code>model_consistency</code>, <code>mutation</code>,
+<code>replay_integrity</code>, <code>search</code>,
+<code>single_file</code>, <code>test_implicit_and</code>,
+<code>xlsx_structured</code> — and <code>src/</code> carries a further
+406 in seventy in-source <code>#[cfg(test)]</code> modules, which is
+where the memory-card logic is covered. Nothing was run for this
+review.</p>
+<p>That split is worth stating because it nearly produced a false
+finding here. A grep for <code>get_at_time</code>,
+<code>get_current</code>, <code>supersede</code> and
+<code>tombstone</code> across <code>tests/</code> returns
+<strong>nothing</strong>, which reads as an untested bitemporal
+mechanism — the mechanism this report's headline mark rests on. It is
+tested, in <code>src/types/memories_track.rs</code>'s own test module,
+and the enumeration was simply too narrow. For a Rust repository,
+<code>tests/</code> is the integration directory and not the suite.</p>
+<p><strong>The deletion test cannot fail.</strong>
+<code>tests/mutation.rs::delete_frame_marks_deleted</code> creates one
+frame, deletes it, reopens the file and asserts:</p>
+<pre class="rust"><code>assert!(
+    stats.frame_count == 0 || stats.frame_count == 1,
+    &quot;Frame count should be 0 or 1 after delete&quot;
+);</code></pre>
+<p>with a comment above it reading <em>"Both are valid - the key is no
+panic occurred"</em>. After deleting the only frame the count is
+necessarily zero or one, so the assertion holds for any implementation,
+including one where delete does nothing. The test never queries for the
+deleted content. The status filter that makes deletion real —
+<code>frame.status == FrameStatus::Active</code> in both search builders
+— has no committed case at all.</p>
 <p>The README's LoCoMo figures could not be traced to committed raw
 results. Per this atlas's standing convention that a reproducible
 harness and a reproduced result are different claims, they are recorded
@@ -491,6 +550,70 @@ afterwards?</li>
 <code>src/memvid/audit.rs</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813"><code class="commit-id" title="e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813">e6bd9f7b…</code></a>
+— re-read at the same commit, still the tip; the last commit upstream is
+14 July 2026 and it edits the README. Nothing in the code could have
+moved, so this reading audited the first one. Screened again: no
+auto-run surface, no build-time execution path beyond the Rust toolchain
+file, nothing inside the cooldown; nothing was installed, built or
+run.</p>
+<p><strong>Two marks added, one re-grounded, and a test that cannot
+fail.</strong></p>
+<p><code>trust_state</code> is carried. The first reading declined it
+because nothing marks a card candidate, verified or rejected — but the
+rubric asks for <em>"at least one state that withholds a memory from
+being treated as true"</em>, and <code>FrameStatus</code> has two: both
+search entry points filter
+<code>frame.status == FrameStatus::Active</code> before scoring, and the
+writers run inside WAL replay rather than being declarative.
+<code>negative_eval</code> is carried on <code>test_get_at_time</code>
+in <code>memories_track.rs</code>: two cards for
+<code>user:location</code>, <code>New York</code> at document date 1000
+and <code>San Francisco</code> at 2000, with the as-of read at 1500
+asserted to return <code>New York</code> and at 2500
+<code>San Francisco</code> — a must-not on a corrected value with its
+own control two lines later.</p>
+<p><code>audit_log</code> stands but not where this report put it. The
+first reading pointed at <em>"an audit module"</em>;
+<code>src/memvid/audit.rs</code> builds a provenance report for a
+<strong>question</strong> — which sources answered it — which is the
+rubric's explicit "not this". The mark belongs to the frame log itself:
+a correction appends a frame carrying <code>supersedes</code>, WAL
+replay marks the predecessor <code>Superseded</code> rather than
+removing it, and a <code>Tombstone</code> op marks its target
+<code>Deleted</code>, so the predecessor and its checksum stay in the
+file. Three limits are now on the record — the WAL is truncated at
+checkpoint, so the <em>order</em> mutations arrived in is not retained;
+the replay session log records <code>Put</code> and <code>Find</code>
+while the <code>Delete</code> and <code>Update</code> variants of its
+own <code>ActionType</code> enum have no producer anywhere in the tree;
+and it sits behind a non-default feature.</p>
+<p><strong>The suite is far larger than the first reading said, and its
+deletion test is unfalsifiable.</strong> <code>tests/</code> holds 91
+<code>#[test]</code> functions across eleven files, and
+<code>src/</code> a further 406 in seventy in-source modules — 497 in
+total, against a first reading that said only that the trees exist.
+<code>tests/mutation.rs::delete_frame_marks_deleted</code> creates one
+frame, deletes it, and asserts
+<code>stats.frame_count == 0 || stats.frame_count == 1</code> under a
+comment reading <em>"Both are valid - the key is no panic
+occurred"</em>; after deleting the only frame that holds for any
+implementation, including one where delete does nothing, and the test
+never queries for the deleted content.</p>
+<p><strong>A near-miss in this reading's own method, recorded because it
+would have been the day's worst error.</strong> A grep for
+<code>get_at_time</code>, <code>get_current</code>,
+<code>supersede</code> and <code>tombstone</code> across
+<code>tests/</code> returns nothing, which reads as an untested
+bitemporal mechanism — the mechanism this report's headline mark rests
+on. It is tested, in the source file's own <code>#[cfg(test)]</code>
+module. For a Rust repository <code>tests/</code> is the integration
+directory, not the suite, and the instrument check that caught it was
+counting <code>#[test]</code> under <code>src/</code>.</p>
+<p><code>stack_storage</code> was empty and <code>stack_source</code>
+seeded; they are now <code>files</code> and <code>reviewed</code>. The
+LoCoMo figures are unchanged and still uncorroborated in the tree.</p>
 <p><strong>2026-07-28</strong> — <a
 href="https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813"><code class="commit-id" title="e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813">e6bd9f7b…</code></a>
 — first reading.</p>

@@ -9,11 +9,16 @@ source_url: https://github.com/memvid/memvid
 archive_name: "memvid--memvid"
 revision: e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813
 revision_url: https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813
-analyzed_at: 2026-07-28
-capabilities: "bitemporal, audit_log"
-stack_storage: ""
+analyzed_at: 2026-09-17
+capabilities: "bitemporal, audit_log, trust_state, negative_eval"
+capability_evidence:
+  bitemporal: "the memory card — when a fact was true, kept apart from when the file recorded it | src/types/memory_card.rs:200, :204, :276-280, src/types/memories_track.rs:381 | a `MemoryCard` carries `event_date` and `document_date` alongside `created_at`, three distinct fields, and `get_at_time(entity, slot, timestamp)` walks the cards for a slot, keeps those whose timestamp precedes the instant asked for, sorts newest-first and returns the first that is not a retraction | src/types/memories_track.rs `test_get_at_time` — two cards for one slot at document dates 1000 and 2000, asserting the value at 1500 and at 2500. The limit worth stating: `effective_timestamp()` coalesces `event_date ?? document_date ?? created_at`, so the axes are stored separately and the shipped read asks them as one — what the file could answer and its API cannot is *what did the store believe then*, independent of when the fact held"
+  audit_log: "the frame log itself — every mutation appends an immutable frame and the predecessor is retained | src/memvid/mutation.rs:1510-1524, :2061-2075, :2723-2736, src/types/common.rs:106 | a correction appends a new frame carrying `supersedes`, and WAL replay calls `mark_frame_superseded(predecessor, frame_id)`, which sets the old frame's status to `Superseded` rather than removing it; a deletion is a `FrameWalOp::Tombstone` that sets `Deleted`. The predecessor, its checksum and its enrichment provenance stay in the file, so what the memory said before a correction is answerable from the store | no test in `tests/` covers it. Three limits belong on the record: the WAL is truncated at checkpoint (`mutation.rs:998`), so the op sequence is not retained, only its effect; the replay session log records `Put` and `Find` and never `Delete` or `Update`, needs an active session, and sits behind a non-default `replay` feature; and `src/memvid/audit.rs`, despite the name, is a retrieval provenance report — the rubric's explicit 'not this' — and is **not** what this mark rests on"
+  trust_state: "frame status, filtered on the search path | src/types/common.rs:106, src/memvid/search/builders.rs:22, src/memvid/search/api.rs:1043, src/memvid/mutation.rs:2074, :2735 | `FrameStatus` is `Active | Superseded | Deleted`, and both search entry points filter `frame.status == FrameStatus::Active` before scoring, so a superseded or tombstoned frame cannot reach a result. The writers are live rather than declarative: WAL replay sets `Superseded` whenever a frame carries `supersedes`, and the `Tombstone` op sets `Deleted` | no committed case asserts the filter; it is read from the two call sites"
+  negative_eval: "the as-of read over a corrected value | src/types/memories_track.rs test module, `test_get_at_time` | the case writes two cards for `user:location` — `New York` at document date 1000 and `San Francisco` at 2000, the second built with `.updates()` — then asserts `get_at_time(\"user\", \"location\", 1500).value == \"New York\"`. The corrected value must not come back for an instant before the correction, asserted by value identity through the real read | its own positive control is the next two lines: the same query at 2500 returns `San Francisco`, so the arrangement can return the newer value and does not at 1500. This is the shape the rubric calls the harder and more useful version — asserted about a value that was corrected"
+stack_storage: "files"
 stack_retrieval: "lexical, vector, graph"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Immutable frame; structured memory card keyed `entity:slot` with a cardinality"
   storage: "One `.mv2` file — payload, internal WAL, TOC, footer, lexical/vector/time indexes, no sidecars"
@@ -23,7 +28,7 @@ matrix:
   scoping: "ACL module over a single file; no multi-tenant model traced"
   integration: "Rust library and CLI over a portable file"
   background: "Enrichment workers, maintenance, doctor"
-  trust: "Checksums per frame, an audit module, enrichment provenance by engine and version"
+  trust: "A three-value frame status filtered on the search path, checksums per frame, and enrichment provenance by engine and version"
   strengths: "Immutable frames plus as-of reads and session replay — the memory can be rewound"
   risks: "Headline benchmark numbers with no committed result artifacts found; correction is frame-keyed"
 ---
@@ -213,9 +218,15 @@ structured `entity:slot` values with a cardinality, riding on frames.
 
 What is absent:
 
-- **No trust state.** A card is current, superseded, or deleted; nothing marks it
-  candidate, verified, or rejected. Provenance is checksums and enrichment
-  lineage, not epistemic status.
+- **Trust state, on a narrower reading than the first one applied.** A frame is
+  `Active`, `Superseded` or `Deleted`, and nothing marks it candidate, verified or
+  rejected — which is why the first reading called the mark absent. The rubric's
+  test is not that vocabulary but *"at least one state that withholds a memory
+  from being treated as true"*, and two of the three do exactly that: both search
+  entry points filter `frame.status == FrameStatus::Active` before scoring. The
+  mark is carried from 2026-09-17. What remains absent is a judgement about
+  truth — the status is a lifecycle position, and provenance is checksums and
+  enrichment lineage rather than an epistemic claim.
 - **No value-level tombstone.** `FrameWalOp::Tombstone` marks a *frame*. Re-ingesting
   the same source produces a new frame with a new id, and the entity:slot lookup
   makes the collision *visible* — which is more than most systems manage — but
@@ -271,6 +282,12 @@ Strengths:
 - **Enrichment tracked by engine kind and version**, making re-embedding a query.
 - **Single-file invariant enforced**, with WAL, TOC and footer recovery on open.
 - **Checksums per frame**, and a `doctor` proportionate to the format's claims.
+- **The predecessor survives its correction inside the file**, with status,
+  checksum and enrichment provenance intact — which is what the `audit_log` mark
+  rests on here, and a stronger answer to *what did this say before* than a
+  side-table of events.
+- **Two of the three frame statuses withhold a frame from every search**, filtered
+  in both search builders before scoring.
 - **One artifact to deploy**, with search, graph, encryption and ACL inside it.
 
 Gaps:
@@ -278,17 +295,56 @@ Gaps:
 - **Headline benchmark numbers without committed artifacts.** "+35% SOTA on
   LoCoMo" is the strongest quality claim in the atlas and the least evidenced at
   this commit.
-- **No trust state.**
 - **Frame-keyed correction**, so re-ingestion is visible but unblocked.
 - **A thin ACL** relative to the system, and no multi-tenant model.
+- **The op sequence is not retained.** The WAL is truncated at checkpoint, so the
+  file keeps the *effect* of every mutation and not the order they arrived in. The
+  replay session log would supply that, and it records `Put` and `Find` while the
+  `Delete` and `Update` variants of its own `ActionType` enum have no producer
+  anywhere in the tree — the one surface that could record a correction as an
+  event never does.
+- **`audit.rs` is not an audit log.** It builds a provenance report for a
+  *question*: which sources answered it. That is the rubric's explicit "not this",
+  and this report rested its `audit_log` mark on the name for seven weeks; the
+  mark stands on the frame log instead.
 - **Inferred cardinality** governing conflict semantics, so a wrong inference
   makes a contradiction look like an addition or the reverse.
 - **Growth with edit history**, unquantified.
 
 ## 10. Tests, Evals, and Benchmarks
 
-`benches/`, `tests/` and `data/` trees exist, and `doctor.rs` is effectively a
-self-check suite. Nothing was run for this review.
+**There are 497 test functions and the first reading counted none of them.**
+`tests/` holds eleven integration files with 91 `#[test]` functions —
+`crash_recovery`, `doctor_recovery`, `encryption_capsule`, `lifecycle`,
+`model_consistency`, `mutation`, `replay_integrity`, `search`, `single_file`,
+`test_implicit_and`, `xlsx_structured` — and `src/` carries a further 406 in
+seventy in-source `#[cfg(test)]` modules, which is where the memory-card logic is
+covered. Nothing was run for this review.
+
+That split is worth stating because it nearly produced a false finding here. A
+grep for `get_at_time`, `get_current`, `supersede` and `tombstone` across
+`tests/` returns **nothing**, which reads as an untested bitemporal mechanism —
+the mechanism this report's headline mark rests on. It is tested, in
+`src/types/memories_track.rs`'s own test module, and the enumeration was simply
+too narrow. For a Rust repository, `tests/` is the integration directory and not
+the suite.
+
+**The deletion test cannot fail.** `tests/mutation.rs::delete_frame_marks_deleted`
+creates one frame, deletes it, reopens the file and asserts:
+
+```rust
+assert!(
+    stats.frame_count == 0 || stats.frame_count == 1,
+    "Frame count should be 0 or 1 after delete"
+);
+```
+
+with a comment above it reading *"Both are valid - the key is no panic
+occurred"*. After deleting the only frame the count is necessarily zero or one,
+so the assertion holds for any implementation, including one where delete does
+nothing. The test never queries for the deleted content. The status filter that
+makes deletion real — `frame.status == FrameStatus::Active` in both search
+builders — has no committed case at all.
 
 The README's LoCoMo figures could not be traced to committed raw results. Per
 this atlas's standing convention that a reproducible harness and a reproduced
@@ -369,5 +425,19 @@ and it is a bet: everything gets simpler except sharing.
 - Access and audit: `src/memvid/acl.rs`, `src/memvid/audit.rs`.
 
 ## History
+
+**2026-09-17** — [`e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813`](https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813) — re-read at the same commit, still the tip; the last commit upstream is 14 July 2026 and it edits the README. Nothing in the code could have moved, so this reading audited the first one. Screened again: no auto-run surface, no build-time execution path beyond the Rust toolchain file, nothing inside the cooldown; nothing was installed, built or run.
+
+**Two marks added, one re-grounded, and a test that cannot fail.**
+
+`trust_state` is carried. The first reading declined it because nothing marks a card candidate, verified or rejected — but the rubric asks for *"at least one state that withholds a memory from being treated as true"*, and `FrameStatus` has two: both search entry points filter `frame.status == FrameStatus::Active` before scoring, and the writers run inside WAL replay rather than being declarative. `negative_eval` is carried on `test_get_at_time` in `memories_track.rs`: two cards for `user:location`, `New York` at document date 1000 and `San Francisco` at 2000, with the as-of read at 1500 asserted to return `New York` and at 2500 `San Francisco` — a must-not on a corrected value with its own control two lines later.
+
+`audit_log` stands but not where this report put it. The first reading pointed at *"an audit module"*; `src/memvid/audit.rs` builds a provenance report for a **question** — which sources answered it — which is the rubric's explicit "not this". The mark belongs to the frame log itself: a correction appends a frame carrying `supersedes`, WAL replay marks the predecessor `Superseded` rather than removing it, and a `Tombstone` op marks its target `Deleted`, so the predecessor and its checksum stay in the file. Three limits are now on the record — the WAL is truncated at checkpoint, so the *order* mutations arrived in is not retained; the replay session log records `Put` and `Find` while the `Delete` and `Update` variants of its own `ActionType` enum have no producer anywhere in the tree; and it sits behind a non-default feature.
+
+**The suite is far larger than the first reading said, and its deletion test is unfalsifiable.** `tests/` holds 91 `#[test]` functions across eleven files, and `src/` a further 406 in seventy in-source modules — 497 in total, against a first reading that said only that the trees exist. `tests/mutation.rs::delete_frame_marks_deleted` creates one frame, deletes it, and asserts `stats.frame_count == 0 || stats.frame_count == 1` under a comment reading *"Both are valid - the key is no panic occurred"*; after deleting the only frame that holds for any implementation, including one where delete does nothing, and the test never queries for the deleted content.
+
+**A near-miss in this reading's own method, recorded because it would have been the day's worst error.** A grep for `get_at_time`, `get_current`, `supersede` and `tombstone` across `tests/` returns nothing, which reads as an untested bitemporal mechanism — the mechanism this report's headline mark rests on. It is tested, in the source file's own `#[cfg(test)]` module. For a Rust repository `tests/` is the integration directory, not the suite, and the instrument check that caught it was counting `#[test]` under `src/`.
+
+`stack_storage` was empty and `stack_source` seeded; they are now `files` and `reviewed`. The LoCoMo figures are unchanged and still uncorroborated in the tree.
 
 **2026-07-28** — [`e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813`](https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813) — first reading.
