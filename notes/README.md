@@ -8,6 +8,14 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-17-the-sentinel-that-means-no-constraint.md](2026-09-17-the-sentinel-that-means-no-constraint.md) —
+  five systems read in one pass shared a defect: a parameter whose zero, empty
+  list or null means *no constraint* is indistinguishable from the parameter
+  being absent, and `||` / `or` / `or None` resolve the ambiguity in the widening
+  direction. ai-maestro's disable-pruning switch that deletes thirty days,
+  memory-vault's unresolved space name that searched every space, Beever Atlas's
+  timestamp tested for presence rather than against the clock, and Pensyve's
+  row-level security that compared against NULL and matched nothing.
 - [2026-09-16-the-second-copy-of-the-rule.md](2026-09-16-the-second-copy-of-the-rule.md) —
   six systems re-read in one pass had drifted for the same reason: a rule
   governing what may be read, what a row's status is, or whether the store opens
