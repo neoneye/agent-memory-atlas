@@ -7,9 +7,9 @@ page_kind: system
 source_name: "SillyTavern/SillyTavern"
 source_url: https://github.com/SillyTavern/SillyTavern
 archive_name: "SillyTavern--SillyTavern"
-revision: 8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8
-revision_url: https://github.com/SillyTavern/SillyTavern/commit/8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8
-analyzed_at: 2026-07-29
+revision: 06bde939fb1e9c4c8d8641d810f0a916b5bce127
+revision_url: https://github.com/SillyTavern/SillyTavern/commit/06bde939fb1e9c4c8d8641d810f0a916b5bce127
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -38,7 +38,7 @@ model decides what to remember.** A person writes an entry, gives it keywords,
 and the entry appears in the prompt when those keywords appear in the
 conversation.
 
-`public/scripts/world-info.js` is 6,289 lines, refined against a very large user
+`public/scripts/world-info.js` is 6,408 lines, refined against a very large user
 base. What that pressure produced is a retrieval system with mechanisms the
 research systems do not have:
 
@@ -51,7 +51,7 @@ research systems do not have:
   again for N messages, or refuse to fire until N messages into the chat.
 - **Recursive activation**, bounded by `world_info_max_recursion_steps` (`:82`),
   where activated entries are themselves scanned for keys — with a per-entry
-  `delayUntilRecursion` (`:4024`) making an entry reachable only through another.
+  `delayUntilRecursion` (`:4104`) making an entry reachable only through another.
 - **A token budget**: `world_info_budget = 25` (`:73`) with a separate
   `world_info_budget_cap` (`:81`), and an insertion strategy choosing between
   evenly, character-first and global-first (`:27`).
@@ -115,7 +115,7 @@ extension, and it writes one rolling summary rather than entries.
 JavaScript, AGPL-3.0, a Node server with a browser front-end. Two memory
 mechanisms, unrelated to each other:
 
-- **World Info** — `public/scripts/world-info.js` (6,289 lines), with lorebooks
+- **World Info** — `public/scripts/world-info.js` (6,408 lines), with lorebooks
   stored as JSON files per world under the user's `worlds/` directory and served
   by `src/endpoints/worldinfo.js`.
 - **The summarize extension** — `public/scripts/extensions/memory/index.js`
@@ -164,17 +164,17 @@ flowchart TB
 
 **Recursion.** `:323` — the recurse buffer is drained only when
 `scanState !== scan_state.MIN_ACTIVATIONS`, so the minimum-activation pass does
-not cascade. `:4643` — `.filter(entry => entry.delayUntilRecursion)` selects the
-entries held back for a later hop; `:4024` declares its default as a number, so
+not cascade. `:4755` — `.filter(entry => entry.delayUntilRecursion)` selects the
+entries held back for a later hop; `:4104` declares its default as a number, so
 it doubles as a recursion *level*.
 
 **Timed effects.** `class WorldInfoTimedEffects` (`:479`) holds the chat, the
 entries, a dry-run flag and a buffer per effect type. `#checkTimedEffectOfType`
 runs for `'sticky'` and `'cooldown'` at `:684-685`, `#checkDelayEffect` at
 `:687`, and `#setTimedEffectOfType` at `:733-734` after an entry fires.
-`isEffectActive('sticky', entry)` gates activation at `:4733`.
+`isEffectActive('sticky', entry)` gates activation at `:4845`.
 
-**Decorators.** `:4763` — `@@activate`, logging *"activated by @@activate
+**Decorators.** `:4875` — `@@activate`, logging *"activated by @@activate
 decorator"*; `:4769` — `@@dont_activate`, logging *"suppressed by
 @@dont_activate decorator"*.
 
@@ -324,12 +324,20 @@ the prompt or does not.
 
 ## 10. Tests, Evals, and Benchmarks
 
-No memory-specific test suite was found for World Info — no fixture asserting
-that a given chat and lorebook produce a given activation set, which for a system
-this intricate is the gap most worth closing. Activation depends on scan depth,
-logic mode, recursion step, three timed effects, decorators, probability and
-budget interacting; that is exactly the shape that benefits from table-driven
-tests, and exactly the shape where a regression is invisible in manual use.
+Two committed tests name World Info and neither tests activation.
+`tests/frontend/WorldInfoRenameChatLore.e2e.js` and its persona counterpart —
+79 and 85 lines of Playwright — assert that renaming a lorebook retargets the
+binding that points at it: `expect(result.hasOldWorld).toBe(false)` beside
+`expect(result.hasNewWorld).toBe(true)`, which is the right pairing for the
+question they ask. The question they ask is about a metadata pointer, not about
+what the lorebook surfaces.
+
+**No fixture asserts that a given chat and lorebook produce a given activation
+set**, which for a system this intricate is the gap most worth closing.
+Activation depends on scan depth, logic mode, recursion step, three timed
+effects, decorators, probability and budget interacting; that is exactly the
+shape that benefits from table-driven tests, and exactly the shape where a
+regression is invisible in manual use.
 
 No benchmarks, and none of the ones in [this atlas's benchmark
 survey](../../benchmarks/) would be meaningful here — they measure recall of
@@ -340,7 +348,8 @@ a volume no benchmark matches.
 `negative_eval` is withheld, and the irony is worth naming: the *entry format*
 supports negative assertions through `NOT_ANY` and `NOT_ALL`, so this system can
 express "must not surface when X" better than most systems in this atlas — and
-nothing tests that it holds.
+nothing tests that it holds. `grep -rn "NOT_ANY\|NOT_ALL" tests/` returns
+nothing, which is the search behind that sentence and the one to re-run.
 
 ## 11. For Your Own Build
 
@@ -418,8 +427,8 @@ mostly express as tuning constants, if at all.
   `scan_state` (43–59), budget (73), cap and recursion steps (81–82), depth
   constants (96–98), `KNOWN_DECORATORS` (100), recurse-buffer gate (323),
   `WorldInfoTimedEffects` (479), effect checks (684–687), effect setting
-  (733–734), `delayUntilRecursion` default (4024), recursion-delayed filter
-  (4643), sticky gate (4733), decorator handling (4763–4770)
+  (733–734), `delayUntilRecursion` default (4104), recursion-delayed filter
+  (4755), sticky gate (4845), decorator handling (4875–4882)
 - `src/endpoints/worldinfo.js` — per-user `worlds/` JSON storage
 
 **Summarisation**
@@ -429,5 +438,7 @@ mostly express as tuning constants, if at all.
 - `public/scripts/extensions/memory/settings.html`
 
 ## History
+
+**2026-09-17** — [`06bde939fb1e9c4c8d8641d810f0a916b5bce127`](https://github.com/SillyTavern/SillyTavern/commit/06bde939fb1e9c4c8d8641d810f0a916b5bce127) — re-read 86 commits past the previous pin. The memory mechanism is unchanged and every finding holds. Of the three files this report rests on, `src/endpoints/worldinfo.js` and the summarize extension's `index.js` are byte-identical by blob sha; `public/scripts/world-info.js` took +147/-28 across four commits — two lorebook-rename fixes, a lorebook sorting control, and an O(n²) fix to entry sorting whose own message states *"Sort order is unchanged"*, which the diff bears out: it replaces two `sortedEntries.indexOf()` calls per comparison with a prebuilt index Map and touches no activation rule. Sixteen of the twenty-one line anchors in the appendix still name the same code; five moved with the insertions and are corrected here — `delayUntilRecursion` 4024→4104, the recursion-delayed filter 4643→4755, the sticky gate 4733→4845 (the first of the file's two, matched by indentation), and decorator handling 4763–4770→4875–4882. One published claim is corrected: World Info now has two committed tests, `WorldInfoRenameChatLore.e2e.js` and `WorldInfoRenamePersonaLore.e2e.js`, so “no memory-specific test suite was found” no longer describes the tree — but they assert that a rename retargets the binding, not that a chat and a lorebook produce an activation set, so the gap the criticism names is open and `negative_eval` stays withheld; `grep -rn "NOT_ANY\|NOT_ALL" tests/` still returns nothing. Marks unchanged at none. Screened again before reading: one auto-run surface, three unpinned surfaces, two dependency files inside the seven-day cooldown. Nothing was installed and nothing was run.
 
 **2026-07-29** — [`8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8`](https://github.com/SillyTavern/SillyTavern/commit/8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8) — first reading.

@@ -106,14 +106,14 @@ activation into a timed state machine.</p>
               <strong>SillyTavern/SillyTavern</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/SillyTavern/SillyTavern/commit/8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8" title="8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8">
+            <a class="meta-pill revision-pill" href="https://github.com/SillyTavern/SillyTavern/commit/06bde939fb1e9c4c8d8641d810f0a916b5bce127" title="06bde939fb1e9c4c8d8641d810f0a916b5bce127">
               <span>Analyzed revision</span>
-              <code>8172dcd0…</code>
+              <code>06bde939…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/SillyTavern--SillyTavern" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -145,7 +145,7 @@ entry shares: <strong>nothing is extracted, and no model decides what to
 remember.</strong> A person writes an entry, gives it keywords, and the
 entry appears in the prompt when those keywords appear in the
 conversation.</p>
-<p><code>public/scripts/world-info.js</code> is 6,289 lines, refined
+<p><code>public/scripts/world-info.js</code> is 6,408 lines, refined
 against a very large user base. What that pressure produced is a
 retrieval system with mechanisms the research systems do not have:</p>
 <ul>
@@ -162,7 +162,7 @@ messages, or refuse to fire until N messages into the chat.</li>
 <li><strong>Recursive activation</strong>, bounded by
 <code>world_info_max_recursion_steps</code> (<code>:82</code>), where
 activated entries are themselves scanned for keys — with a per-entry
-<code>delayUntilRecursion</code> (<code>:4024</code>) making an entry
+<code>delayUntilRecursion</code> (<code>:4104</code>) making an entry
 reachable only through another.</li>
 <li><strong>A token budget</strong>: <code>world_info_budget = 25</code>
 (<code>:73</code>) with a separate <code>world_info_budget_cap</code>
@@ -224,7 +224,7 @@ rather than entries.</p>
 memory mechanisms, unrelated to each other:</p>
 <ul>
 <li><strong>World Info</strong> —
-<code>public/scripts/world-info.js</code> (6,289 lines), with lorebooks
+<code>public/scripts/world-info.js</code> (6,408 lines), with lorebooks
 stored as JSON files per world under the user's <code>worlds/</code>
 directory and served by <code>src/endpoints/worldinfo.js</code>.</li>
 <li><strong>The summarize extension</strong> —
@@ -279,9 +279,9 @@ Paths</h2>
 <code>KNOWN_DECORATORS = ['@@activate', '@@dont_activate']</code>.</p>
 <p><strong>Recursion.</strong> <code>:323</code> — the recurse buffer is
 drained only when <code>scanState !== scan_state.MIN_ACTIVATIONS</code>,
-so the minimum-activation pass does not cascade. <code>:4643</code> —
+so the minimum-activation pass does not cascade. <code>:4755</code> —
 <code>.filter(entry =&gt; entry.delayUntilRecursion)</code> selects the
-entries held back for a later hop; <code>:4024</code> declares its
+entries held back for a later hop; <code>:4104</code> declares its
 default as a number, so it doubles as a recursion <em>level</em>.</p>
 <p><strong>Timed effects.</strong>
 <code>class WorldInfoTimedEffects</code> (<code>:479</code>) holds the
@@ -291,8 +291,8 @@ chat, the entries, a dry-run flag and a buffer per effect type.
 <code>#checkDelayEffect</code> at <code>:687</code>, and
 <code>#setTimedEffectOfType</code> at <code>:733-734</code> after an
 entry fires. <code>isEffectActive('sticky', entry)</code> gates
-activation at <code>:4733</code>.</p>
-<p><strong>Decorators.</strong> <code>:4763</code> —
+activation at <code>:4845</code>.</p>
+<p><strong>Decorators.</strong> <code>:4875</code> —
 <code>@@activate</code>, logging <em>"activated by @@activate
 decorator"</em>; <code>:4769</code> — <code>@@dont_activate</code>,
 logging <em>"suppressed by @@dont_activate decorator"</em>.</p>
@@ -443,13 +443,21 @@ backup is <code>cp</code>.</p>
 is text that either enters the prompt or does not.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>No memory-specific test suite was found for World Info — no fixture
-asserting that a given chat and lorebook produce a given activation set,
-which for a system this intricate is the gap most worth closing.
-Activation depends on scan depth, logic mode, recursion step, three
-timed effects, decorators, probability and budget interacting; that is
-exactly the shape that benefits from table-driven tests, and exactly the
-shape where a regression is invisible in manual use.</p>
+<p>Two committed tests name World Info and neither tests activation.
+<code>tests/frontend/WorldInfoRenameChatLore.e2e.js</code> and its
+persona counterpart — 79 and 85 lines of Playwright — assert that
+renaming a lorebook retargets the binding that points at it:
+<code>expect(result.hasOldWorld).toBe(false)</code> beside
+<code>expect(result.hasNewWorld).toBe(true)</code>, which is the right
+pairing for the question they ask. The question they ask is about a
+metadata pointer, not about what the lorebook surfaces.</p>
+<p><strong>No fixture asserts that a given chat and lorebook produce a
+given activation set</strong>, which for a system this intricate is the
+gap most worth closing. Activation depends on scan depth, logic mode,
+recursion step, three timed effects, decorators, probability and budget
+interacting; that is exactly the shape that benefits from table-driven
+tests, and exactly the shape where a regression is invisible in manual
+use.</p>
 <p>No benchmarks, and none of the ones in <a
 href="../../benchmarks/">this atlas's benchmark survey</a> would be
 meaningful here — they measure recall of extracted facts, and nothing is
@@ -460,7 +468,9 @@ benchmark matches.</p>
 naming: the <em>entry format</em> supports negative assertions through
 <code>NOT_ANY</code> and <code>NOT_ALL</code>, so this system can
 express "must not surface when X" better than most systems in this atlas
-— and nothing tests that it holds.</p>
+— and nothing tests that it holds.
+<code>grep -rn "NOT_ANY\|NOT_ALL" tests/</code> returns nothing, which
+is the search behind that sentence and the one to re-run.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -544,8 +554,8 @@ recursion steps (81–82), depth constants (96–98),
 <code>KNOWN_DECORATORS</code> (100), recurse-buffer gate (323),
 <code>WorldInfoTimedEffects</code> (479), effect checks (684–687),
 effect setting (733–734), <code>delayUntilRecursion</code> default
-(4024), recursion-delayed filter (4643), sticky gate (4733), decorator
-handling (4763–4770)</li>
+(4104), recursion-delayed filter (4755), sticky gate (4845), decorator
+handling (4875–4882)</li>
 <li><code>src/endpoints/worldinfo.js</code> — per-user
 <code>worlds/</code> JSON storage</li>
 </ul>
@@ -557,6 +567,34 @@ debounced <code>saveChat</code></li>
 <li><code>public/scripts/extensions/memory/settings.html</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/SillyTavern/SillyTavern/commit/06bde939fb1e9c4c8d8641d810f0a916b5bce127"><code class="commit-id" title="06bde939fb1e9c4c8d8641d810f0a916b5bce127">06bde939…</code></a>
+— re-read 86 commits past the previous pin. The memory mechanism is
+unchanged and every finding holds. Of the three files this report rests
+on, <code>src/endpoints/worldinfo.js</code> and the summarize
+extension's <code>index.js</code> are byte-identical by blob sha;
+<code>public/scripts/world-info.js</code> took +147/-28 across four
+commits — two lorebook-rename fixes, a lorebook sorting control, and an
+O(n²) fix to entry sorting whose own message states <em>"Sort order is
+unchanged"</em>, which the diff bears out: it replaces two
+<code>sortedEntries.indexOf()</code> calls per comparison with a
+prebuilt index Map and touches no activation rule. Sixteen of the
+twenty-one line anchors in the appendix still name the same code; five
+moved with the insertions and are corrected here —
+<code>delayUntilRecursion</code> 4024→4104, the recursion-delayed filter
+4643→4755, the sticky gate 4733→4845 (the first of the file's two,
+matched by indentation), and decorator handling 4763–4770→4875–4882. One
+published claim is corrected: World Info now has two committed tests,
+<code>WorldInfoRenameChatLore.e2e.js</code> and
+<code>WorldInfoRenamePersonaLore.e2e.js</code>, so “no memory-specific
+test suite was found” no longer describes the tree — but they assert
+that a rename retargets the binding, not that a chat and a lorebook
+produce an activation set, so the gap the criticism names is open and
+<code>negative_eval</code> stays withheld;
+<code>grep -rn "NOT_ANY\|NOT_ALL" tests/</code> still returns nothing.
+Marks unchanged at none. Screened again before reading: one auto-run
+surface, three unpinned surfaces, two dependency files inside the
+seven-day cooldown. Nothing was installed and nothing was run.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/SillyTavern/SillyTavern/commit/8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8"><code class="commit-id" title="8172dcd0ee672d3cd9a5e5f7af134f91a45cd2b8">8172dcd0…</code></a>
 — first reading.</p>
