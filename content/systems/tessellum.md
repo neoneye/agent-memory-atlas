@@ -30,6 +30,16 @@ matrix:
 
 ## 1. Executive Summary
 
+**The source of this report is no longer public.** `TianpeiLuke/Tessellum`
+returns 404 to an anonymous and an authenticated request alike, with no rename
+redirect, while the owner account still resolves — so the repository was removed
+or made private rather than the account being deleted. The pin is not moved and
+nothing below is withdrawn: the atlas forked the repository on 2026-09-16 and
+`6e167169c18e697d50a7045db6f6dce6279ece3f` is present in that fork, whose own
+parent link is now empty. Every path in the appendix is readable there at the
+commit this report describes. What a reader cannot do is check any of it against
+the original.
+
 Tessellum is "[t]yped atomic notes in a graph — a Zettelkasten that scales" —
 MIT, Python, 138,183 lines with 2,905 test functions across 179 test files. Its
 unit is a *tessellum*, a small mosaic tile: a note small enough to make one point
@@ -269,5 +279,7 @@ so a later argument does not reach back into an earlier verdict.
 | `src/tessellum/dks/query_protocol.py:208` | An abstention rather than an answer |
 
 ## History
+
+**2026-09-17** — the upstream repository stopped resolving, one day after the reading below. `TianpeiLuke/Tessellum` returns 404 to an anonymous request and to an authenticated one, and sends no rename redirect, while `github.com/TianpeiLuke` still returns 200 — so the repository went, not the account. The pin is deliberately not moved and nothing is withdrawn: the atlas forked the repository on 2026-09-16, and `6e167169c18e697d50a7045db6f6dce6279ece3f` — authored 2026-09-16T05:53:53Z — is present in that fork, which now reports an empty `parent`, the shape GitHub leaves when an upstream is deleted. The report carries no capability marks, so none is affected. `analyzed_at` is unchanged: the source's availability changed, the reading did not. The screening ledger record is left alone, being keyed to the pinned revision, which has not moved.
 
 **2026-09-16** — [`6e167169c18e697d50a7045db6f6dce6279ece3f`](https://github.com/TianpeiLuke/Tessellum/commit/6e167169c18e697d50a7045db6f6dce6279ece3f) — first reading, at a commit dated 15 September 2026. Screened before opening, from a shallow clone: four files scanned, no auto-run surfaces, no build-time execution points, one unpinned surface and two dependency files inside the seven-day cooldown. Nothing was installed, built or run.
