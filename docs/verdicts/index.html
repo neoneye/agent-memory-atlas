@@ -1468,15 +1468,44 @@ scope enforced, mutation audit, negative eval.</li>
 <h3 id="a-mem"><a href="../systems/a-mem/"><code>a-mem</code></a></h3>
 <ul>
 <li>Best idea: small linked notes whose organization can be reconsidered
-when new memory arrives.</li>
-<li>Biggest risk: rank positions are used as note identities, allowing
-evolution to mutate the wrong neighbor.</li>
+when new memory arrives — the one design question here worth taking
+away, since a store that freezes its metadata at ingestion can never be
+reorganized by later evidence.</li>
+<li>Biggest risk: <strong>the notes the model is shown are not the notes
+the code rewrites.</strong> <code>find_related_memories</code> drops the
+UUIDs it just read and returns the enumeration positions
+<code>[0..n-1]</code>, which <code>process_memory</code> uses to index
+an insertion-ordered list — so the tags and context overwritten belong
+to the <em>oldest notes in the store</em>, not to the nearest
+neighbours, and the substitution is admitted in a comment above the
+lookup: <em>"Since indices are just numbers now, we need to find the
+memory / In memory list using its index number."</em></li>
+<li>Second risk: <strong>the test named for the mechanism cannot fail on
+it.</strong> <code>test_memory_evolution</code> asserts
+<code>assertIsNotNone</code> on each note's <code>tags</code>,
+<code>context</code> and <code>keywords</code>, which the constructor
+sets to <code>[]</code>, <code>"General"</code> and <code>[]</code>
+before any evolution runs. Twenty-two tests, and none asserts that the
+note the model saw is the note that changed.</li>
+<li>Third risk: the constructor calls <code>client.reset()</code>,
+dropping every collection on that in-process Chroma client rather than
+only its own, with <code>Settings(allow_reset=True)</code> passed to
+make the call possible; and the hybrid <code>_search</code> carrying
+that docstring has no caller and would raise <code>AttributeError</code>
+if it acquired one.</li>
 <li>Most reusable component: the proposed Zettelkasten evolution
 protocol, after replacing direct mutation with validated change
-proposals.</li>
-<li>Maturity impression: research prototype; tests are shallow around
-the most consequential behavior and benchmarks live elsewhere.</li>
-<li>Study when: researching adaptive linked-note organization.</li>
+proposals — generate links and metadata revisions into a change set,
+validate every referenced id, record the source neighbourhood and the
+model, then accept or reject atomically.</li>
+<li>Maturity impression: MIT, about 1,700 lines of Python, last upstream
+commit 2025-12-12 and the pin still the tip; the paper is <a
+href="https://arxiv.org/abs/2502.12110">arXiv:2502.12110</a> and the
+README sends reproduction to a different repository, so no harness or
+result artifact is in this tree. No capability marks.</li>
+<li>Study when: researching adaptive linked-note organization, or
+looking for a compact worked example of how an assertion that only
+checks non-null hides the defect underneath it.</li>
 <li>Do not copy as a production core without stable IDs, canonical
 durability, scope, provenance, transactions, and trust state.</li>
 </ul>

@@ -521,11 +521,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need the read path. Substring matching over a full table scan, no score floor, an entity branch that suppresses the semantic store entirely when it hits, and a correction that merges in place rather than linking to what it replaced. Four marks: trust state, scope enforced, mutation audit, negative eval.
 
 ### [`a-mem`](../systems/a-mem/)
-- Best idea: small linked notes whose organization can be reconsidered when new memory arrives.
-- Biggest risk: rank positions are used as note identities, allowing evolution to mutate the wrong neighbor.
-- Most reusable component: the proposed Zettelkasten evolution protocol, after replacing direct mutation with validated change proposals.
-- Maturity impression: research prototype; tests are shallow around the most consequential behavior and benchmarks live elsewhere.
-- Study when: researching adaptive linked-note organization.
+- Best idea: small linked notes whose organization can be reconsidered when new memory arrives — the one design question here worth taking away, since a store that freezes its metadata at ingestion can never be reorganized by later evidence.
+- Biggest risk: **the notes the model is shown are not the notes the code rewrites.** `find_related_memories` drops the UUIDs it just read and returns the enumeration positions `[0..n-1]`, which `process_memory` uses to index an insertion-ordered list — so the tags and context overwritten belong to the *oldest notes in the store*, not to the nearest neighbours, and the substitution is admitted in a comment above the lookup: *"Since indices are just numbers now, we need to find the memory / In memory list using its index number."*
+- Second risk: **the test named for the mechanism cannot fail on it.** `test_memory_evolution` asserts `assertIsNotNone` on each note's `tags`, `context` and `keywords`, which the constructor sets to `[]`, `"General"` and `[]` before any evolution runs. Twenty-two tests, and none asserts that the note the model saw is the note that changed.
+- Third risk: the constructor calls `client.reset()`, dropping every collection on that in-process Chroma client rather than only its own, with `Settings(allow_reset=True)` passed to make the call possible; and the hybrid `_search` carrying that docstring has no caller and would raise `AttributeError` if it acquired one.
+- Most reusable component: the proposed Zettelkasten evolution protocol, after replacing direct mutation with validated change proposals — generate links and metadata revisions into a change set, validate every referenced id, record the source neighbourhood and the model, then accept or reject atomically.
+- Maturity impression: MIT, about 1,700 lines of Python, last upstream commit 2025-12-12 and the pin still the tip; the paper is [arXiv:2502.12110](https://arxiv.org/abs/2502.12110) and the README sends reproduction to a different repository, so no harness or result artifact is in this tree. No capability marks.
+- Study when: researching adaptive linked-note organization, or looking for a compact worked example of how an assertion that only checks non-null hides the defect underneath it.
 - Do not copy as a production core without stable IDs, canonical durability, scope, provenance, transactions, and trust state.
 
 ### [`memora`](../systems/memora/)

@@ -10092,9 +10092,13 @@ through the simple API onto one node named <code>entity_0</code></td>
 <td><code>a-mem</code></td>
 <td><code>MemoryNote</code> with content, tags, context, links, and
 evolution history</td>
-<td>In-process dictionary plus ephemeral Chroma; separate persistent
-retriever utility</td>
-<td>Vector similarity with optional linked-neighbor append</td>
+<td>An in-process dictionary plus an ephemeral Chroma client the
+constructor resets; a separate <code>PersistentChromaRetriever</code> on
+its own <code>PersistentClient</code> exists and the memory system never
+uses it</td>
+<td>Vector similarity, with a linked-neighbour append that the final
+<code>[:k]</code> truncation discards whenever the vector search already
+returned k</td>
 <td>LLM decides links and neighbor metadata mutation before insert</td>
 <td>Delete/re-add update; exact delete without incoming-link
 cleanup</td>
@@ -10103,8 +10107,12 @@ cleanup</td>
 <td>Periodic reindex called consolidation</td>
 <td>No source provenance or trust state</td>
 <td>Small, legible linked-note evolution concept</td>
-<td>Neighbor position/identity bug can mutate wrong notes; destructive
-initialization; no durability</td>
+<td>The evolution path indexes insertion order with a vector rank, so
+the notes rewritten are the first ones ever added rather than the
+neighbours the model was shown; the constructor calls
+<code>client.reset()</code> on a shared in-process Chroma client; the
+test named for evolution asserts only that fields are non-None, which
+they are at construction; no durability</td>
 </tr>
 <tr>
 <td><code>a-memory</code></td>

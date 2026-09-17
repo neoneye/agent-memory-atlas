@@ -5,21 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A compact research implementation
-where LLM-generated notes link to and evolve neighboring memories
-through a Chroma-backed graph.">
+where LLM-generated notes link to and evolve neighbouring memories
+through a Chroma-backed graph — and where the notes the model is shown
+are not the notes the code rewrites.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="A-MEM — Agent Memory Atlas">
     <meta property="og:description" content="A compact research
-implementation where LLM-generated notes link to and evolve neighboring
-memories through a Chroma-backed graph.">
+implementation where LLM-generated notes link to and evolve neighbouring
+memories through a Chroma-backed graph — and where the notes the model
+is shown are not the notes the code rewrites.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="A-MEM — Agent Memory Atlas">
     <meta name="twitter:description" content="A compact research
-implementation where LLM-generated notes link to and evolve neighboring
-memories through a Chroma-backed graph.">
+implementation where LLM-generated notes link to and evolve neighbouring
+memories through a Chroma-backed graph — and where the notes the model
+is shown are not the notes the code rewrites.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>A-MEM — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -41,7 +44,7 @@ memories through a Chroma-backed graph.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "A-MEM",
-      "description": "A compact research implementation where LLM-generated notes link to and evolve neighboring memories through a Chroma-backed graph.",
+      "description": "A compact research implementation where LLM-generated notes link to and evolve neighbouring memories through a Chroma-backed graph \u2014 and where the notes the model is shown are not the notes the code rewrites.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -98,8 +101,9 @@ memories through a Chroma-backed graph.">
           <p class="eyebrow">Evolving Zettelkasten memory</p>
           <h1>A-MEM</h1>
           <p class="document-deck">A compact research implementation
-where LLM-generated notes link to and evolve neighboring memories
-through a Chroma-backed graph.</p>
+where LLM-generated notes link to and evolve neighbouring memories
+through a Chroma-backed graph — and where the notes the model is shown
+are not the notes the code rewrites.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/agiresearch/A-mem">
               <span>Source</span>
@@ -113,7 +117,7 @@ through a Chroma-backed graph.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-27</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/agiresearch--A-mem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -147,18 +151,42 @@ evidence rather than freezing metadata at ingestion time. The current
 implementation, however, is not safe to use as a production memory
 engine:</p>
 <ul>
-<li>The core system is process-local and resets a global in-memory
-Chroma collection on initialization.</li>
-<li>Search is vector-only despite “hybrid” docstrings.</li>
-<li>Neighbor positions are confused with memory identities during
-evolution, so the wrong note can be mutated.</li>
+<li>The core system is process-local, and its constructor calls
+<code>temp_retriever.client.reset()</code> — which drops every
+collection on that in-process Chroma client, not only the one named
+<code>memories</code>. The settings it passes,
+<code>Settings(allow_reset=True)</code>, exist to make that call
+possible.</li>
+<li>Search is vector-only despite “hybrid” docstrings, and the method
+carrying those docstrings has no caller.</li>
+<li><strong>The notes the model is shown are not the notes the code
+rewrites.</strong> <code>find_related_memories</code> discards the UUIDs
+it just read and returns the enumeration positions
+<code>[0, 1, 2, …]</code>; <code>process_memory</code> uses those to
+index <code>list(self.memories.values())</code>, which is
+insertion-ordered. Since the indices are always <code>0..n-1</code>, the
+notes rewritten are the <em>first notes ever added</em>, whatever the
+nearest neighbours were. The code says so itself, in a comment above the
+lookup: <em>"Since indices are just numbers now, we need to find the
+memory / In memory list using its index number."</em></li>
 <li>LLM-authored links are not validated as existing UUIDs.</li>
 <li>No user/project scope, provenance, trust state, or durable
 correction model exists.</li>
 </ul>
+<p>And the test named for the mechanism cannot fail on it:
+<code>test_memory_evolution</code> adds three related notes and then
+asserts <code>assertIsNotNone</code> on each one's <code>tags</code>,
+<code>context</code> and <code>keywords</code> — all three of which
+<code>MemoryNote.__init__</code> sets to <code>[]</code>,
+<code>"General"</code> and <code>[]</code> before any evolution runs. A
+suite that exercises the evolution path and asserts only what the
+constructor guarantees is why a defect of this size can sit in a
+repository that has tests.</p>
 <p>Treat A-MEM as a readable research sketch and source of design
-questions, not as a borrowing-ready library. The paper's experimental
-reproduction lives in a different repository linked from the README.</p>
+questions, not as a borrowing-ready library. MIT-licensed. The paper is
+<a href="https://arxiv.org/abs/2502.12110">arXiv:2502.12110</a> and the
+README sends reproduction to <code>WujiangXu/AgenticMemory</code>, so
+neither the harness nor the results are in this tree.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Memory is a graph-like collection of enriched notes:</p>
 <pre class="text"><code>new note
@@ -239,14 +267,24 @@ source of truth for core operations.</p>
 sentence-transformer and asks Chroma for nearest documents. Both
 <code>search</code> and <code>search_agentic</code> rely on this one
 semantic channel.</p>
-<p><code>search_agentic</code> hydrates metadata, then looks up linked
-memories in the process dictionary. Because the final list is truncated
-to <code>k</code>, appended neighbors often cannot expand the returned
-set when the initial vector search already filled it.</p>
-<p>The internal <code>_search</code> method claims to combine Chroma and
-an embedding retriever but calls the same retriever twice and then
-iterates the second Chroma result as if it were a list of result
-dictionaries. It is not a working hybrid implementation.</p>
+<p><code>search_agentic</code> hydrates metadata from the vector hits,
+then appends linked memories from the process dictionary — and returns
+<code>memories[:k]</code>. The vector loop has already filled the list
+to <code>k</code> whenever the store holds at least that many notes, so
+in the ordinary case every appended neighbour is truncated away before
+the caller sees it. The <code>is_neighbor: True</code> flag the appended
+entries carry is only observable when the vector search came back
+short.</p>
+<p>The internal <code>_search</code> method carries the hybrid docstring
+and <strong>has no caller anywhere in the repository or its
+tests.</strong> It would also fail if one were added: it calls
+<code>self.retriever.search(query, k)</code> twice, and
+<code>ChromaRetriever.search</code> returns a dict, so
+<code>for result in embedding_results</code> iterates the dict's
+<em>keys</em> and <code>result.get('id')</code> is called on a string.
+The hybrid retrieval is not a weak implementation; it is unreachable
+code that would raise <code>AttributeError</code> on its first
+iteration.</p>
 <p>There is no lexical retrieval, rank fusion, scope filter,
 recency/importance reranking, token budget, or evidence-aware result
 format.</p>
@@ -263,13 +301,29 @@ actions.</li>
 <li>New tags for the new note.</li>
 <li>New context and tags for every neighbor.</li>
 </ul>
-<p>The implementation then mutates live objects.
-<code>find_related_memories</code> appends the enumeration position
-<code>i</code>, not the returned document UUID.
-<code>process_memory</code> uses those positions against
-insertion-ordered <code>self.memories.values()</code>. Vector rank
-position is therefore treated as collection position, which can rewrite
-a different memory than the LLM was shown.</p>
+<p>The implementation then mutates live objects, and this is where the
+identity is lost. <code>find_related_memories</code> enumerates
+<code>results['ids'][0]</code> — the real UUIDs — formats each neighbour
+into the prompt as <code>memory index:{i}</code>, and appends
+<code>i</code> to the list it returns, dropping <code>doc_id</code>.
+<code>process_memory</code> then does:</p>
+<pre class="python"><code>noteslist = list(self.memories.values())
+notes_id = list(self.memories.keys())
+...
+memorytmp_idx = indices[i]
+if memorytmp_idx &lt; len(noteslist):
+    notetmp = noteslist[memorytmp_idx]
+    notetmp.tags = tag
+    notetmp.context = context</code></pre>
+<p><code>indices</code> is <code>[0, 1, 2, …]</code> by construction, so
+<code>memorytmp_idx</code> is the vector rank, and
+<code>noteslist</code> is in insertion order. The notes whose tags and
+context get overwritten are therefore the <strong>first ones ever added
+to the store</strong>, and the correspondence to the neighbours the
+model was shown holds only when insertion order happens to match vector
+rank — which it does for the first few notes of a fresh store, and then
+never again. The mutation is not random: it is systematically aimed at
+the oldest notes.</p>
 <p>Update is delete-then-add in Chroma after mutating the live object.
 Delete removes the target but does not clean incoming links. Neither
 operation is atomic across the dictionary and Chroma.</p>
@@ -299,9 +353,12 @@ experiments.</li>
 </ul>
 <p>Limitations:</p>
 <ul>
-<li>Main-system initialization resets a globally named ephemeral
-collection.</li>
-<li>Neighbor identity confusion can corrupt unrelated notes.</li>
+<li>Main-system initialization calls <code>client.reset()</code>, which
+drops every collection on that in-process Chroma client rather than only
+<code>memories</code>. The persistent retriever is unaffected: it builds
+its own <code>PersistentClient</code> over a directory.</li>
+<li>Neighbour identity is not confused so much as discarded: the
+rewritten notes are the oldest in the store.</li>
 <li>Suggested link IDs are accepted without referential validation.</li>
 <li>No locking protects concurrent writes.</li>
 <li>No provenance connects an evolved field to source evidence or model
@@ -315,13 +372,30 @@ inconsistent.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>The repository has focused tests for CRUD, metadata serialization,
-vector top-k, persistent collection access, copied/persistent behavior,
-relationships, and consolidation. The memory-system tests instantiate an
-OpenAI backend and do not inject the included
-<code>MockLLMController</code>; several “evolution” assertions only
-check that metadata fields are non-null. They do not assert correct
-neighbor identity or link validity.</p>
+<p>Twenty-two test functions across two files: CRUD, metadata
+serialization, vector top-k, persistent collection access,
+copied/persistent behaviour, relationships and consolidation. The
+memory-system tests instantiate an OpenAI backend and never inject the
+included <code>MockLLMController</code>, which is defined in
+<code>tests/test_utils.py</code> and referenced nowhere else in the
+repository.</p>
+<p><strong>The evolution assertions are vacuous, and this is the finding
+of the re-reading.</strong> <code>test_memory_evolution</code> adds
+three related notes, then asserts <code>assertIsNotNone</code> on each
+note's <code>tags</code>, <code>context</code> and
+<code>keywords</code>, and again on the same three fields of each search
+result. <code>MemoryNote.__init__</code> sets them to <code>[]</code>,
+<code>"General"</code> and <code>[]</code>, so every assertion holds on
+a note that was never evolved at all. Nothing in the suite asserts that
+the note the model was shown is the note that changed, which is exactly
+the defect in section 7.</p>
+<p><code>negative_eval</code> is withheld, and the nearest thing to it
+is worth naming: <code>test_delete_document</code> adds one document,
+deletes it, and asserts <code>len(results["ids"]) == 0</code>. That is a
+keyed <code>collection.get(ids=[doc_id])</code> rather than a query, and
+the collection holds nothing else at the time, so it asserts that an
+empty store returns nothing rather than that particular material was
+withheld from a result.</p>
 <p>The test suite was not run for this atlas review because it downloads
 embedding models and may call an external LLM.</p>
 <p>The README says experiments across six foundation models outperform
@@ -344,7 +418,14 @@ copies.</li>
 neighbor and link must use a stable memory ID end to end.</p>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li>Using a ranking position as a persistent object identity.</li>
+<li>Using a ranking position as a persistent object identity. The
+comment that admits the substitution — <em>"Since indices are just
+numbers now"</em> — is the moment to stop and thread the id through
+instead.</li>
+<li>Asserting <code>assertIsNotNone</code> on a field the constructor
+initialises. A test named for a mechanism should fail when the mechanism
+does not run, and the cheapest version of that here is to capture a
+neighbour's tags before the write and assert they changed.</li>
 <li>Letting an LLM mutate active neighboring memories without provenance
 or review.</li>
 <li>Naming vector-only retrieval “hybrid.”</li>
@@ -400,10 +481,72 @@ tests.</li>
 <li><code>README.md</code>: architecture and external paper-reproduction
 link.</li>
 </ul>
+<p><strong>Searches recorded for the negative claims</strong> (re-run at
+this pin)</p>
+<pre class="sh"><code>grep -rn &quot;analyze_content&quot; . --include=&quot;*.py&quot;     # one hit: the definition. No caller.
+grep -rn &quot;_search(&quot; . --include=&quot;*.py&quot;            # no caller; the only match is a
+                                                  # test function named test_search,
+                                                  # which exercises the retriever&#39;s own
+                                                  # search and not this method
+grep -rn &quot;MockLLMController&quot; . --include=&quot;*.py&quot;    # one hit: its definition in tests/test_utils.py
+grep -rn &quot;assert&quot; tests/*.py | grep -E &quot;not |!=|None|raises&quot;
+                                                  # every negative-shaped assertion in the
+                                                  # suite; the only content-level one is the
+                                                  # keyed get after a delete
+git rev-list --count &lt;pin&gt;..HEAD                  # 0 — the pin is still the tip of main,
+                                                  # whose last commit is 2025-12-12</code></pre>
+<p>The grep for <code>_search</code> is the reason this block exists: a
+first pass without <code>--include</code> quoted was eaten by the shell
+and returned nothing at all, which would have supported the same
+conclusion for the wrong reason.</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df62bc910ca8d"><code class="commit-id" title="ceffb860f0712bbae97b184d440df62bc910ca8d">ceffb860…</code></a>
+— re-read at the same commit, which is still the tip of
+<code>main</code>: <code>git rev-list --count &lt;pin&gt;..HEAD</code>
+returns 0 and the last commit upstream is 2025-12-12. Nothing had
+changed, so this reading audited the previous one's claims against the
+code rather than looking for drift, and three of them are now stated
+more exactly.</p>
+<p>The positional-identity defect is not that the wrong neighbour
+<em>can</em> be mutated but that the notes rewritten are the
+<strong>oldest in the store</strong>: <code>indices</code> is
+<code>[0..n-1]</code> by construction and it indexes an
+insertion-ordered list, so the correspondence to the neighbours the
+model was shown holds only while insertion order matches vector rank.
+The destructive initialisation is wider than a single collection —
+<code>client.reset()</code> drops every collection on that in-process
+client, with <code>Settings(allow_reset=True)</code> passed to make the
+call possible — and narrower in one respect the previous reading did not
+say: the persistent retriever builds its own
+<code>PersistentClient</code> and is untouched. And the hybrid
+<code>_search</code> is not a weak implementation but unreachable code
+that would raise <code>AttributeError</code> if it were called, because
+it iterates a Chroma result dict and calls <code>.get</code> on the
+resulting string keys.</p>
+<p>The new finding is why a defect that size survives in a repository
+with twenty-two tests: <code>test_memory_evolution</code> asserts
+<code>assertIsNotNone</code> on <code>tags</code>, <code>context</code>
+and <code>keywords</code>, which <code>MemoryNote.__init__</code> sets
+to <code>[]</code>, <code>"General"</code> and <code>[]</code>. The test
+named for the mechanism passes on a note that was never evolved.
+<code>MockLLMController</code> is still defined and still never
+injected. Marks unchanged at none, with the near-miss on
+<code>negative_eval</code> now named: a keyed
+<code>collection.get</code> after a delete, against a collection holding
+nothing else.</p>
+<p><code>stack_source</code> moves from <code>seeded</code> to
+<code>reviewed</code> — Chroma plus an in-process dictionary, one vector
+arm, no lexical channel — and the appendix now carries the searches
+behind the absence claims. Screened again before reading: no auto-run
+surface, one build-time execution path (<code>tests/conftest.py</code>),
+two unpinned manifests, nothing inside the seven-day cooldown. Nothing
+was installed and nothing was run; the suite downloads embedding models
+and calls an external LLM.</p>
 <p><strong>2026-07-27</strong> — <a
 href="https://github.com/agiresearch/A-mem/commit/ceffb860f0712bbae97b184d440df62bc910ca8d"><code class="commit-id" title="ceffb860f0712bbae97b184d440df62bc910ca8d">ceffb860…</code></a>
-— first reading.</p>
+— first reading. Screened before reading; nothing was installed or
+run.</p>
         </article>
       </div>
     </main>
