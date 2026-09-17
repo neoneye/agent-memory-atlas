@@ -967,9 +967,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`goodai-ltm`](../systems/goodai-ltm/)
 - Best idea: targeted update and delete on the interface itself. It is the cleanest demonstration in the atlas that a memory abstraction's first job is to give memories addresses, and the relevant part is two pages long.
-- Biggest risk: no commit since 28 February 2024, no scope key of any kind, and persistence by whole-state serialisation.
+- Second idea: **a redundancy filter with its own control pair.** `test_no_redundancy` retrieves at threshold 0.5 and asserts every pair of returned passages scores at most 40 on token overlap; `test_redundancy_allowed` runs the identical setup at 1.0 and asserts at least one pair scores 50 or more. A must-not on the read path and the proof it is not vacuous, twelve lines apart — which is the shape most suites in this atlas are missing rather than the assertion itself.
+- Biggest risk: no commit since 28 February 2024, no scope key of any kind, and persistence by whole-state serialisation. The one identifier in the tree, the agent's per-session uuid, is spent on seeding a timestamp function and labelling a prompt callback and never reaches a retrieval.
+- Second risk: `redundancy_overlap_threshold` has two defaults — 0.75 in the memory config, 0.6 in the agent that copies its own value in — so the filter behind the report's one mark behaves differently depending on which entry point built the store.
 - Most reusable component: `BaseTextMemory` as a diff target — set it beside ADK's `BaseMemoryService` and AutoGen's `Memory` and the missing methods are obvious in about ninety-one seconds.
-- Maturity impression: unit tests under `goodai/ltm/mem/tests/` with no negative retrieval assertion, and the interesting evaluation story living in a separate benchmark repository.
+- Maturity impression: MIT, 7,687 lines, unit tests under `goodai/ltm/mem/tests/` carrying one negative retrieval assertion and its control, and the interesting evaluation story living in a separate benchmark repository. One capability mark, `negative_eval`, added on a re-read at the same commit.
 - Study when: you are designing a provider contract and want to see what the frameworks dropped.
 - Do not copy when: you intend to run it. Choose something maintained — and then check whether its interface can say "delete that one", because the odds are it cannot.
 

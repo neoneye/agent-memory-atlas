@@ -114,7 +114,7 @@ lifecycle the 2026 framework contracts do not express.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/GoodAI--goodai-ltm" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -122,7 +122,7 @@ lifecycle the 2026 framework contracts do not express.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -386,16 +386,57 @@ illustration of the difference, because it has the first entirely and
 the second not at all.</p>
 <p><strong>No scope means no multi-tenancy story.</strong> One
 <code>TextMemory</code> per user is the answer, and it is the caller's
-to implement.</p>
+to implement. The one identifier in the tree is <code>session_id</code>,
+a uuid the agent mints per session — and its two uses are seeding the
+default timestamp function and labelling a prompt callback. It never
+reaches a retrieval, which is the sharpest form of "no scope": the
+identifier exists and is spent on a clock.</p>
+<p><strong>One knob has two defaults.</strong>
+<code>redundancy_overlap_threshold</code> is <code>0.75</code> in
+<code>goodai/ltm/mem/config.py:108</code> and <code>0.6</code> in
+<code>goodai/ltm/agent.py:105</code>, where the agent copies its own
+value into the memory config it builds. So the filter that earns this
+report's one capability mark behaves differently depending on whether
+you construct the memory directly or let the agent do it, and nothing
+reconciles the two numbers.</p>
 <p><strong>Dormancy is the operational risk.</strong> Two and a half
 years without a commit, against a dependency surface including embedding
 models, sentence-transformers and the OpenAI client. Nothing here is
 broken by that on its own; everything here is exposed to it.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>Unit tests live under <code>goodai/ltm/mem/tests/</code>. No test
-asserts that particular material must <em>not</em> be retrieved, so
-<code>negative_eval</code> is withheld.</p>
+<p>Unit tests live under <code>goodai/ltm/mem/tests/</code>, and
+<strong>this report's first reading said no test asserts that particular
+material must not be retrieved. That was wrong, and the mark is now
+carried.</strong> The pair sits at the top of
+<code>test_mem.py</code>:</p>
+<pre class="python"><code>def test_no_redundancy(self):
+    config.redundancy_overlap_threshold = 0.5
+    ...
+    r_memories = mem.retrieve(query, k=3)
+    for i ...:  for j in range(i + 1, len(r_memories)):
+        cs = get_correctness_score(tokenizer, p1, p2)
+        assert cs &lt;= 40</code></pre>
+<p><code>test_redundancy_allowed</code> is the same text, the same query
+and the same <code>k</code>, with the threshold at 1.0 and the assertion
+inverted — <code>match_count &gt; 0</code> for pairs scoring 50 or more.
+So one case asserts that material too similar to something already
+returned does not appear beside it, and its neighbour proves the
+arrangement returns exactly that material when the filter is off. A
+negative retrieval assertion and its control, twelve lines apart, in the
+first sixty lines of the file the first reading said contained none.</p>
+<p>The honest limit, recorded in the evidence line: the exclusion is a
+property of the result <em>set</em> rather than a named value or a scope
+boundary, so it is the thinnest of the three shapes this mark
+covers.</p>
+<p>Two other tests are near-misses worth naming rather than counting.
+<code>test_separators_and_replacement</code> replaces a fact with
+unrelated text and then asserts the retrieved passage carries
+<code>metadata['replacement']</code> — identity of the survivor, but it
+never queries the replaced text to check the original is gone.
+<code>test_delete_all</code> deletes every key and asserts
+<code>mem.is_empty()</code>, which is a statement about the store rather
+than about a query.</p>
 <p>The evaluation story is the interesting one and it is in a
 <strong>separate repository</strong>.
 <code>GoodAI/goodai-ltm-benchmark</code>, read for this atlas at <a
@@ -513,9 +554,50 @@ here.</li>
 <li><code>goodai/ltm/mem/tests/</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/GoodAI/goodai-ltm/commit/22ca10c21771d0192d550517cb06c3aab6e602aa"><code class="commit-id" title="22ca10c21771d0192d550517cb06c3aab6e602aa">22ca10c2…</code></a>
+— re-read at the same commit, still the tip of the default branch; the
+last commit upstream is 28 February 2024, whose message is <em>"One more
+unit test for testing replace()"</em>. Nothing could have moved, so this
+reading audited the first one. Screened again: no auto-run surface, one
+build-time execution path (<code>setup.py</code>), no unpinned manifest,
+nothing inside the cooldown; nothing was installed and nothing was run.
+MIT, 7,687 lines of Python.</p>
+<p><strong><code>negative_eval</code> is earned, and the first reading's
+sentence that no such test exists is withdrawn.</strong>
+<code>test_no_redundancy</code> sets
+<code>redundancy_overlap_threshold = 0.5</code>, calls the real
+<code>mem.retrieve(query, k=3)</code> and asserts every pair of returned
+passages scores at most 40 on token overlap;
+<code>test_redundancy_allowed</code>, twelve lines below it, runs the
+identical setup at threshold 1.0 and asserts at least one pair scores 50
+or more. A must-not on the retrieval result and its own control, in the
+first sixty lines of the file the first reading described as containing
+neither. The searching error was the same one this session found three
+times: a survey for <code>assert not</code> and <code>not in</code> over
+a suite whose negative assertions are <code>assert cs &lt;= 40</code>
+and <code>assertIsNone</code>.</p>
+<p><strong>Two findings about the code.</strong>
+<code>redundancy_overlap_threshold</code> has two defaults —
+<code>0.75</code> in <code>mem/config.py</code> and <code>0.6</code> in
+<code>agent.py</code>, which copies its own value into the memory config
+it builds — so the filter behind this report's one mark behaves
+differently depending on which entry point constructed the store. And
+the only identifier in the tree, the agent's per-session uuid, is spent
+on seeding the default timestamp function and labelling a prompt
+callback; it never reaches a retrieval, which is a sharper way to say
+"no scope" than the absence of the word.</p>
+<p>Everything else held: the keyed lifecycle is abstract on the base
+interface — <code>add_text</code>, <code>replace_text</code>,
+<code>delete_text</code>, <code>get_text</code> — deletion is removal
+rather than rejection, <code>metadata</code> is a dict nothing reads,
+and the benchmark suite lives in a separate repository.
+<code>stack_source</code> moves from <code>seeded</code> to
+<code>reviewed</code>.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/GoodAI/goodai-ltm/commit/22ca10c21771d0192d550517cb06c3aab6e602aa"><code class="commit-id" title="22ca10c21771d0192d550517cb06c3aab6e602aa">22ca10c2…</code></a>
-— first reading.</p>
+— first reading. Screened before reading; nothing was installed or
+run.</p>
         </article>
       </div>
     </main>

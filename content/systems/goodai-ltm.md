@@ -9,11 +9,13 @@ source_url: https://github.com/GoodAI/goodai-ltm
 archive_name: "GoodAI--goodai-ltm"
 revision: 22ca10c21771d0192d550517cb06c3aab6e602aa
 revision_url: https://github.com/GoodAI/goodai-ltm/commit/22ca10c21771d0192d550517cb06c3aab6e602aa
-analyzed_at: 2026-07-29
-capabilities: ""
+analyzed_at: 2026-09-17
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the retrieval path's redundancy filter | goodai/ltm/mem/tests/test_mem.py:43-57, :58-75, goodai/ltm/mem/config.py:108 | `test_no_redundancy` sets `redundancy_overlap_threshold = 0.5`, adds one text, calls the real `mem.retrieve(query, k=3)` and asserts that **every pair** of returned passages scores at most 40 on a token-overlap measure — material similar to something already returned must not appear beside it. `test_redundancy_allowed` is its paired control: the same text, the same query, threshold 1.0, and an assertion that **at least one** pair scores 50 or more, which proves the arrangement does return redundant passages when the filter is off | non-vacuous by that pairing rather than by an in-case control; the exclusion is a property of the result set (pairwise similarity) rather than one named value, which is the honest limit"
 stack_storage: "memory"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A chunk of text addressed by a `text_key` returned at insert, with optional metadata and a timestamp"
   storage: "In-process chunk queue over a simple vector database, serialised whole through `state_as_text` / `set_state`"
@@ -24,7 +26,7 @@ matrix:
   integration: "A Python library plus example LTM agents; no MCP, no server, no framework binding"
   background: "None"
   trust: "Metadata and timestamps; no provenance, confidence or state"
-  strengths: "Targeted update and delete on the interface itself; a trainable reranker; a companion benchmark suite"
+  strengths: "Targeted update and delete on the interface itself; a redundancy filter on the read path with a committed positive/negative control pair; a trainable reranker; a companion benchmark suite"
   risks: "Dormant since February 2024; whole-state serialisation; no scope key of any kind"
 ---
 
@@ -283,7 +285,18 @@ value, and this library is the clearest illustration of the difference, because
 it has the first entirely and the second not at all.
 
 **No scope means no multi-tenancy story.** One `TextMemory` per user is the
-answer, and it is the caller's to implement.
+answer, and it is the caller's to implement. The one identifier in the tree is
+`session_id`, a uuid the agent mints per session — and its two uses are seeding
+the default timestamp function and labelling a prompt callback. It never reaches
+a retrieval, which is the sharpest form of "no scope": the identifier exists and
+is spent on a clock.
+
+**One knob has two defaults.** `redundancy_overlap_threshold` is `0.75` in
+`goodai/ltm/mem/config.py:108` and `0.6` in `goodai/ltm/agent.py:105`, where the
+agent copies its own value into the memory config it builds. So the filter that
+earns this report's one capability mark behaves differently depending on whether
+you construct the memory directly or let the agent do it, and nothing reconciles
+the two numbers.
 
 **Dormancy is the operational risk.** Two and a half years without a commit,
 against a dependency surface including embedding models, sentence-transformers
@@ -292,8 +305,38 @@ is exposed to it.
 
 ## 10. Tests, Evals, and Benchmarks
 
-Unit tests live under `goodai/ltm/mem/tests/`. No test asserts that particular
-material must *not* be retrieved, so `negative_eval` is withheld.
+Unit tests live under `goodai/ltm/mem/tests/`, and **this report's first reading
+said no test asserts that particular material must not be retrieved. That was
+wrong, and the mark is now carried.** The pair sits at the top of `test_mem.py`:
+
+```python
+def test_no_redundancy(self):
+    config.redundancy_overlap_threshold = 0.5
+    ...
+    r_memories = mem.retrieve(query, k=3)
+    for i ...:  for j in range(i + 1, len(r_memories)):
+        cs = get_correctness_score(tokenizer, p1, p2)
+        assert cs <= 40
+```
+
+`test_redundancy_allowed` is the same text, the same query and the same `k`, with
+the threshold at 1.0 and the assertion inverted — `match_count > 0` for pairs
+scoring 50 or more. So one case asserts that material too similar to something
+already returned does not appear beside it, and its neighbour proves the
+arrangement returns exactly that material when the filter is off. A negative
+retrieval assertion and its control, twelve lines apart, in the first sixty lines
+of the file the first reading said contained none.
+
+The honest limit, recorded in the evidence line: the exclusion is a property of
+the result *set* rather than a named value or a scope boundary, so it is the
+thinnest of the three shapes this mark covers.
+
+Two other tests are near-misses worth naming rather than counting.
+`test_separators_and_replacement` replaces a fact with unrelated text and then
+asserts the retrieved passage carries `metadata['replacement']` — identity of the
+survivor, but it never queries the replaced text to check the original is gone.
+`test_delete_all` deletes every key and asserts `mem.is_empty()`, which is a
+statement about the store rather than about a query.
 
 The evaluation story is the interesting one and it is in a **separate
 repository**. `GoodAI/goodai-ltm-benchmark`, read for this atlas at
@@ -397,4 +440,12 @@ missing methods are obvious in about ninety seconds.
 
 ## History
 
-**2026-07-29** — [`22ca10c21771d0192d550517cb06c3aab6e602aa`](https://github.com/GoodAI/goodai-ltm/commit/22ca10c21771d0192d550517cb06c3aab6e602aa) — first reading.
+**2026-09-17** — [`22ca10c21771d0192d550517cb06c3aab6e602aa`](https://github.com/GoodAI/goodai-ltm/commit/22ca10c21771d0192d550517cb06c3aab6e602aa) — re-read at the same commit, still the tip of the default branch; the last commit upstream is 28 February 2024, whose message is *"One more unit test for testing replace()"*. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, one build-time execution path (`setup.py`), no unpinned manifest, nothing inside the cooldown; nothing was installed and nothing was run. MIT, 7,687 lines of Python.
+
+**`negative_eval` is earned, and the first reading's sentence that no such test exists is withdrawn.** `test_no_redundancy` sets `redundancy_overlap_threshold = 0.5`, calls the real `mem.retrieve(query, k=3)` and asserts every pair of returned passages scores at most 40 on token overlap; `test_redundancy_allowed`, twelve lines below it, runs the identical setup at threshold 1.0 and asserts at least one pair scores 50 or more. A must-not on the retrieval result and its own control, in the first sixty lines of the file the first reading described as containing neither. The searching error was the same one this session found three times: a survey for `assert not` and `not in` over a suite whose negative assertions are `assert cs <= 40` and `assertIsNone`.
+
+**Two findings about the code.** `redundancy_overlap_threshold` has two defaults — `0.75` in `mem/config.py` and `0.6` in `agent.py`, which copies its own value into the memory config it builds — so the filter behind this report's one mark behaves differently depending on which entry point constructed the store. And the only identifier in the tree, the agent's per-session uuid, is spent on seeding the default timestamp function and labelling a prompt callback; it never reaches a retrieval, which is a sharper way to say "no scope" than the absence of the word.
+
+Everything else held: the keyed lifecycle is abstract on the base interface — `add_text`, `replace_text`, `delete_text`, `get_text` — deletion is removal rather than rejection, `metadata` is a dict nothing reads, and the benchmark suite lives in a separate repository. `stack_source` moves from `seeded` to `reviewed`.
+
+**2026-07-29** — [`22ca10c21771d0192d550517cb06c3aab6e602aa`](https://github.com/GoodAI/goodai-ltm/commit/22ca10c21771d0192d550517cb06c3aab6e602aa) — first reading. Screened before reading; nothing was installed or run.

@@ -3001,16 +3001,32 @@ href="../systems/goodai-ltm/"><code>goodai-ltm</code></a></h3>
 the cleanest demonstration in the atlas that a memory abstraction's
 first job is to give memories addresses, and the relevant part is two
 pages long.</li>
+<li>Second idea: <strong>a redundancy filter with its own control
+pair.</strong> <code>test_no_redundancy</code> retrieves at threshold
+0.5 and asserts every pair of returned passages scores at most 40 on
+token overlap; <code>test_redundancy_allowed</code> runs the identical
+setup at 1.0 and asserts at least one pair scores 50 or more. A must-not
+on the read path and the proof it is not vacuous, twelve lines apart —
+which is the shape most suites in this atlas are missing rather than the
+assertion itself.</li>
 <li>Biggest risk: no commit since 28 February 2024, no scope key of any
-kind, and persistence by whole-state serialisation.</li>
+kind, and persistence by whole-state serialisation. The one identifier
+in the tree, the agent's per-session uuid, is spent on seeding a
+timestamp function and labelling a prompt callback and never reaches a
+retrieval.</li>
+<li>Second risk: <code>redundancy_overlap_threshold</code> has two
+defaults — 0.75 in the memory config, 0.6 in the agent that copies its
+own value in — so the filter behind the report's one mark behaves
+differently depending on which entry point built the store.</li>
 <li>Most reusable component: <code>BaseTextMemory</code> as a diff
 target — set it beside ADK's <code>BaseMemoryService</code> and
 AutoGen's <code>Memory</code> and the missing methods are obvious in
 about ninety-one seconds.</li>
-<li>Maturity impression: unit tests under
-<code>goodai/ltm/mem/tests/</code> with no negative retrieval assertion,
-and the interesting evaluation story living in a separate benchmark
-repository.</li>
+<li>Maturity impression: MIT, 7,687 lines, unit tests under
+<code>goodai/ltm/mem/tests/</code> carrying one negative retrieval
+assertion and its control, and the interesting evaluation story living
+in a separate benchmark repository. One capability mark,
+<code>negative_eval</code>, added on a re-read at the same commit.</li>
 <li>Study when: you are designing a provider contract and want to see
 what the frameworks dropped.</li>
 <li>Do not copy when: you intend to run it. Choose something maintained
