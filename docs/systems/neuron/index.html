@@ -113,14 +113,14 @@ and a recall hook the harness runs instead of the model.</p>
               <strong>kovartravis/neuron</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/kovartravis/neuron/commit/79ab049d019994cea114f533fcd0f5c3700e4abf" title="79ab049d019994cea114f533fcd0f5c3700e4abf">
+            <a class="meta-pill revision-pill" href="https://github.com/kovartravis/neuron/commit/148726901057a34772a3948bdd621f200ddc3880" title="148726901057a34772a3948bdd621f200ddc3880">
               <span>Analyzed revision</span>
-              <code>79ab049d…</code>
+              <code>14872690…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kovartravis--neuron" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -327,7 +327,24 @@ itself (an enum with no values, a required field with no default on a
 <li><strong>Dual dispatch and reconcile</strong> —
 <code>DualStorageRouter.transact</code> and <code>reconcile</code> in
 <code>src/storage/dualStorageRouter.ts</code>, with the
-<code>MASS_DELETE_WARN_FRACTION</code> tripwire.</li>
+<code>MASS_DELETE_WARN_FRACTION</code> tripwire. The
+<code>project</code> field it returns on an md-mode mutation is the
+project's own name, taken from a constructor argument that defaults to
+the project root's basename.</li>
+</ul>
+<p><strong>Two names for one project, and only one of them is the
+key.</strong> <code>projectId</code> — the value every SQLite read
+filters on — is a SHA-256 of the absolute <code>projectRoot</code>,
+truncated to sixteen characters (<code>src/index.ts:141</code>).
+<code>projectName</code> is a label, resolved by
+<code>findProjectRoot</code> from the <code>package.json</code>
+<code>name</code> with the scope stripped and the directory basename as
+a fallback, and the module says what that means: it <em>"only ever
+appears in CLI output and the dashboard; nothing is persisted under
+it."</em> Two identities for the same project, deliberately separated,
+with the persisted one keyed on a path rather than on a string a user
+can rename. Most systems in this atlas conflate exactly these.</p>
+<ul>
 <li><strong>Retrieval</strong> — <code>queryGated</code> in
 <code>src/index.ts:693</code>: RRF fusion of a vector leg and an FTS5
 leg (<code>RRF_K = 60</code>), then an FTS-match gate, then a
@@ -738,6 +755,42 @@ validation.</li>
 degradation posture.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/kovartravis/neuron/commit/148726901057a34772a3948bdd621f200ddc3880"><code class="commit-id" title="148726901057a34772a3948bdd621f200ddc3880">14872690…</code></a>
+— re-read eight commits on, 41 files and +1,475/-410, most of it a
+website, a README rewrite and a contributor on-ramp. Marks unchanged at
+<code>scope_enforced</code> and <code>negative_eval</code>, and every
+cited anchor still names the same code: <code>projectId</code> at
+<code>src/index.ts:141</code>, the category read at
+<code>:254-255</code>, the FTS <code>project_id</code> predicate at
+<code>:770</code>, the hard-exclude supersession test at
+<code>index.supersession.test.ts:199-225</code> and the adversarial MRR
+assertion at <code>adversarial-recall.test.ts:230-260</code> — the
+latter two byte-identical by blob sha.</p>
+<p>The code change worth recording is small and points the right way.
+<code>DualStorageRouter</code> had returned
+<code>project: 'neuron'</code> as a literal on md-mode mutations; it
+takes the project name as a constructor argument now, defaulting to the
+project root's basename, and two committed cases pin it — one asserting
+the real name reaches the result, one asserting the basename default.
+The previous reading did not note the literal, which was present at that
+pin.</p>
+<p>What the fix makes visible is worth more than the fix. This project
+keeps two identities and only one is load-bearing:
+<code>projectId</code> is a SHA-256 of the absolute project root and is
+what every SQLite read filters on, while <code>projectName</code> is
+resolved from the <code>package.json</code> <code>name</code> with the
+scope stripped, and the module states the boundary — it <em>"only ever
+appears in CLI output and the dashboard; nothing is persisted under
+it."</em> So a rename moves the label and cannot move the scope key, and
+the basename-dependence the fix removed was never in the persisted
+identity. Section 4 records that, because the usual finding in this
+corpus is the opposite: one string serving as both the display name and
+the partition. Screened again before reading: one auto-run surface
+(<code>.claude/settings.json</code>), two build-time execution surfaces,
+four unpinned surfaces, two dependency files inside the seven-day
+cooldown; <code>CLAUDE.md</code> is addressed to a reading agent and was
+treated as data. Nothing was installed and nothing was run.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/kovartravis/neuron/commit/79ab049d019994cea114f533fcd0f5c3700e4abf"><code class="commit-id" title="79ab049d019994cea114f533fcd0f5c3700e4abf">79ab049d…</code></a>
 — re-pinned 88 commits on, package version 2.4.5; most of the range is

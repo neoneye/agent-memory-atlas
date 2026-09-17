@@ -7,9 +7,9 @@ page_kind: system
 source_name: "kovartravis/neuron"
 source_url: https://github.com/kovartravis/neuron
 archive_name: "kovartravis--neuron"
-revision: 79ab049d019994cea114f533fcd0f5c3700e4abf
-revision_url: https://github.com/kovartravis/neuron/commit/79ab049d019994cea114f533fcd0f5c3700e4abf
-analyzed_at: 2026-09-07
+revision: 148726901057a34772a3948bdd621f200ddc3880
+revision_url: https://github.com/kovartravis/neuron/commit/148726901057a34772a3948bdd621f200ddc3880
+analyzed_at: 2026-09-17
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "project_id on every SQLite read | src/index.ts:101-141,:254-255,:770 | the store hashes the project root into `projectId` at construction and every query carries `m.project_id = ?` beside `superseded_by IS NULL` | src/index.supersession.test.ts:199-225, src/storage/dualStorageRouter.test.ts"
@@ -196,7 +196,19 @@ installed and nothing was run.
   with no values, a required field with no default on a `scan` category).
 - **Dual dispatch and reconcile** — `DualStorageRouter.transact` and
   `reconcile` in `src/storage/dualStorageRouter.ts`, with the
-  `MASS_DELETE_WARN_FRACTION` tripwire.
+  `MASS_DELETE_WARN_FRACTION` tripwire. The `project` field it returns on an
+  md-mode mutation is the project's own name, taken from a constructor argument
+  that defaults to the project root's basename.
+
+**Two names for one project, and only one of them is the key.** `projectId` —
+the value every SQLite read filters on — is a SHA-256 of the absolute
+`projectRoot`, truncated to sixteen characters (`src/index.ts:141`).
+`projectName` is a label, resolved by `findProjectRoot` from the `package.json`
+`name` with the scope stripped and the directory basename as a fallback, and the
+module says what that means: it *"only ever appears in CLI output and the
+dashboard; nothing is persisted under it."* Two identities for the same project,
+deliberately separated, with the persisted one keyed on a path rather than on a
+string a user can rename. Most systems in this atlas conflate exactly these.
 - **Retrieval** — `queryGated` in `src/index.ts:693`: RRF fusion of a vector leg
   and an FTS5 leg (`RRF_K = 60`), then an FTS-match gate, then a cross-encoder
   reranker with `RERANKER_ACCEPT_THRESHOLD = -8`.
@@ -565,6 +577,12 @@ loudness and git rather than prevented.
 - `src/commands/hook.test.ts` — payload building and degradation posture.
 
 ## History
+
+**2026-09-17** — [`148726901057a34772a3948bdd621f200ddc3880`](https://github.com/kovartravis/neuron/commit/148726901057a34772a3948bdd621f200ddc3880) — re-read eight commits on, 41 files and +1,475/-410, most of it a website, a README rewrite and a contributor on-ramp. Marks unchanged at `scope_enforced` and `negative_eval`, and every cited anchor still names the same code: `projectId` at `src/index.ts:141`, the category read at `:254-255`, the FTS `project_id` predicate at `:770`, the hard-exclude supersession test at `index.supersession.test.ts:199-225` and the adversarial MRR assertion at `adversarial-recall.test.ts:230-260` — the latter two byte-identical by blob sha.
+
+The code change worth recording is small and points the right way. `DualStorageRouter` had returned `project: 'neuron'` as a literal on md-mode mutations; it takes the project name as a constructor argument now, defaulting to the project root's basename, and two committed cases pin it — one asserting the real name reaches the result, one asserting the basename default. The previous reading did not note the literal, which was present at that pin.
+
+What the fix makes visible is worth more than the fix. This project keeps two identities and only one is load-bearing: `projectId` is a SHA-256 of the absolute project root and is what every SQLite read filters on, while `projectName` is resolved from the `package.json` `name` with the scope stripped, and the module states the boundary — it *"only ever appears in CLI output and the dashboard; nothing is persisted under it."* So a rename moves the label and cannot move the scope key, and the basename-dependence the fix removed was never in the persisted identity. Section 4 records that, because the usual finding in this corpus is the opposite: one string serving as both the display name and the partition. Screened again before reading: one auto-run surface (`.claude/settings.json`), two build-time execution surfaces, four unpinned surfaces, two dependency files inside the seven-day cooldown; `CLAUDE.md` is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run.
 
 **2026-09-07** — [`79ab049d019994cea114f533fcd0f5c3700e4abf`](https://github.com/kovartravis/neuron/commit/79ab049d019994cea114f533fcd0f5c3700e4abf) — re-pinned 88 commits on, package version 2.4.5; most of the range is the documentation site. On the memory path: the write-time near-duplicate gate widens by cosine and reranks with template boilerplate stripped, an NLI contradiction score is computed for the single candidate as a soft flag the code says must not refuse a write, an injection ledger dedupes per session epoch under a character budget, `neuron init` writes MCP client configuration, store-health signals replace a hand count, and `deleteHistory` left the store class while `neuron memory delete` remains a CLI verb. The schema gate, the supersession exclusion and its tests did not move; two marks stand. Screened before reading: one auto-run surface (`.claude/settings.json`), two build-time execution points, nothing installed or run.
 
