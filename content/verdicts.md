@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 569 reports.**
+**This page covers all 570 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4926,3 +4926,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 97,416 lines of TypeScript across six packages, 183 commits since April 2026, roughly 2,017 test cases, with bounded agent-to-agent negotiation escalating to a person at the round cap; one capability mark.
 - Study when: you are deciding where a dedup boundary belongs, or you want a worked example of per-agent memory whose owner predicate has no optional branch.
 - Do not copy when: a wrong memory needs to be doubted rather than overwritten — `confidence` is gone, a merge rewrites content in place with no record of the prior text, and a correction only lands if it embeds within 0.88 of what it is correcting.
+
+### [`knowl`](../systems/knowl/)
+- Best idea: **keep the losing arm of your own ablation, and say what its losing proves.** The supersession-off run is retained as a permanent committed result because "if this stops looking bad, the metric has broken rather than the product improved" — a negative control aimed at the instrument rather than at the system.
+- Second idea: **document how to misread your own results.** The results log states that a filename says what a run was *for* while only the `retrieval`, `embedding` and `supersede` fields say what it did, records a regression the project reported against itself and then withdrew once it noticed the two runs differed by code state, and forbids subtracting across runs whose embedding preset differs or is absent.
+- Third idea: **resolve history as a filter over the same candidates.** An `asOf` query takes the ranked candidates and swaps in the assertion in force at that instant rather than selecting differently — "Historical resolution is a filter over the same candidates, not a reason to select them differently" — a comment that names the bug where the historical path silently fell back to a whole-phrase LIKE.
+- Fourth idea: **split the record that travels from the record that stays.** The tombstone rides in portable exports and is merged by a monotonic upsert; the forget log stays local and carries the deciding numbers, because usage counts in the export would let "a peer's import overwrite this machine's audit trail with its own -- or with nulls".
+- Fifth idea: **two fingerprints when two things diverge independently.** A `content_hash` and a separate `lifecycle_hash` over status, freshness, supersession, owner and visibility, added because "an import classifying on content alone skipped every lifecycle change".
+- Biggest risk: **the published figure is the best slice.** 98-to-47 is single-hop at 6k; the same ablation at 262k is 87 to 42 and both multi-hop arms sit at or near zero top-one accuracy. The effect that holds across all four pairs is stale leaks — 62 to 2, 28 to 5, 29 to 0, 1 to 0 — which is the more defensible version of the claim.
+- Most reusable component: the cross-repo read — the visibility predicate in the SQL rather than in the caller, so "a peer's repo-private row is never read into this process at all", with the exclusion test flanked by two positive controls on the same query.
+- Maturity impression: Apache-2.0, 65,422 lines of TypeScript against 74,258 lines of tests across 442 files and 3,686 cases, 1,171 commits since June 2026, 28 MCP tools, a benchmark preregistration that declares what it will *not* claim credit for, and a mutation config that states which surface its scores cover; five capability marks.
+- Study when: you need a worked example of measuring your own design claim honestly, or of bitemporal resolution layered over a ranked store.
+- Do not copy when: you need a record keyed on the rejected value — the tombstone here is keyed on the item id, so the same content rewritten under a new id meets nothing.

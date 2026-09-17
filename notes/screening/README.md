@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 517 of 569 screened at the report's current pin.**
+**Progress: 518 of 570 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 52 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 228 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 313 |
-| Repositories with build-time execution (`EXEC`) | 380 |
+| Repositories with an auto-run surface (`RUNS`) | 229 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 314 |
+| Repositories with build-time execution (`EXEC`) | 381 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -124,6 +124,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`khoj`](../../content/systems/khoj.md) | `.devcontainer/devcontainer.json`, `.vscode/settings.json` |
 | [`kipi-system`](../../content/systems/kipi-system.md) | `.claude-plugin/`, `.claude/settings.json`, `.githooks/`, `.mcp.json` |
 | [`klypix-mcp`](../../content/systems/klypix-mcp.md) | `server.json` |
+| [`knowl`](../../content/systems/knowl.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`langchain`](../../content/systems/langchain.md) | `.devcontainer/devcontainer.json`, `.mcp.json`, `.vscode/settings.json` |
 | [`leankg`](../../content/systems/leankg.md) | `.claude-plugin/` |
 | [`leteo`](../../content/systems/leteo.md) | `.claude-plugin/`, `server.json` |

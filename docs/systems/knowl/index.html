@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local knowledge store for coding
+agents that retires a replaced fact instead of letting it compete with
+its successor — with the ablation that proves it committed to the
+repository, including the arm whose job is to keep looking bad.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Knowl — Agent Memory Atlas">
+    <meta property="og:description" content="A local knowledge store for
+coding agents that retires a replaced fact instead of letting it compete
+with its successor — with the ablation that proves it committed to the
+repository, including the arm whose job is to keep looking bad.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Knowl — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local knowledge store
+for coding agents that retires a replaced fact instead of letting it
+compete with its successor — with the ablation that proves it committed
+to the repository, including the arm whose job is to keep looking bad.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Knowl — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Knowl",
+      "description": "A local knowledge store for coding agents that retires a replaced fact instead of letting it compete with its successor \u2014 with the ablation that proves it committed to the repository, including the arm whose job is to keep looking bad.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The off arm is the control on the
+metric</p>
+          <h1>Knowl</h1>
+          <p class="document-deck">A local knowledge store for coding
+agents that retires a replaced fact instead of letting it compete with
+its successor — with the ablation that proves it committed to the
+repository, including the arm whose job is to keep looking bad.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/dat999zx/knowl">
+              <span>Source</span>
+              <strong>dat999zx/knowl</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/dat999zx/knowl/commit/f2252db376fb42f76f5795b3e38d89ed9970a080" title="f2252db376fb42f76f5795b3e38d89ed9970a080">
+              <span>Analyzed revision</span>
+              <code>f2252db3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/dat999zx--knowl" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>dat999zx--knowl</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Knowl is an Apache-2.0 knowledge store for coding agents — 65,422
+lines of TypeScript in <code>src</code> against 74,258 lines in
+<code>tests</code>, 442 test files, 3,686 test cases, 1,171 commits
+since June 2026 — reached over 28 MCP tools or a CLI, with one SQLite
+database per project.</p>
+<p>Five marks, which is rare, and each one is visible in code
+<em>and</em> in a test rather than in a schema alone.</p>
+<p>The design claim is narrow and stated up front: when a fact is
+replaced, the old one is retired instead of competing with the new one.
+The interesting part is that the repository carries the evidence for it,
+as a committed ablation in MemoryAgentBench's own harness — a
+supersession-on run and a supersession-off run over the same 100
+questions.</p>
+<p>And the file that explains those runs contains the single best
+sentence about measurement in this corpus. On why the losing arm is kept
+forever:</p>
+<blockquote>
+<p><strong>Published ablation, OFF arm.</strong> Doubles as the control:
+if this stops looking bad, the metric has broken rather than the product
+improved.</p>
+</blockquote>
+<p>That is a negative control aimed at the <em>instrument</em> rather
+than at the system. Almost every project here that measures itself keeps
+only the number that flatters it; this one keeps the number that must
+stay ugly, and says what its staying ugly is evidence of.</p>
+<p>The same file tells a reader how to misread it — <em>"Compare the
+<code>retrieval</code>, <code>embedding</code> and
+<code>supersede</code> fields, not the filenames"</em> — and records a
+regression the project reported against itself and then withdrew,
+because the two runs differed by code state rather than by retrieval
+mode. <em>"There was no regression."</em></p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An atom is a claim with a lifecycle, and the schema's discipline is
+that the lifecycle is not one column pretending to be four.</p>
+<ul>
+<li><code>status</code> —
+<code>active | deprecated | rejected | archived | superseded</code> —
+decides whether an ordinary read may return it.</li>
+<li><code>freshness</code> — <code>fresh | stale | needs_review</code> —
+is what an automatic drift check flips when the files an item cites
+move.</li>
+<li><code>confidence</code> is a number.</li>
+<li><code>tier</code> — <code>asserted | verified</code> — is standing
+earned by confirmed use, with <code>tierSince</code> recording when the
+current tier began so a reset restarts the climb.</li>
+<li><code>provenance</code> —
+<code>observed | user_stated | inferred</code> — is where it came
+from.</li>
+</ul>
+<p>Beneath the atom sits <code>knowledge_assertions</code>, which is
+where the temporal work happens: an atom's <em>current text</em> lives
+on the row, and the history of what it said and when lives in assertions
+carrying both a validity interval and a record interval.</p>
+<p>Scope is two-level and physical as well as logical: one database per
+project, and within a workspace an atom is either
+<code>repo</code>-private or <code>workspace</code>-visible, with the
+visibility predicate applied in SQL on the cross-repo path.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — A read defaults to active status and resolves through the assertion in force at the requested instant; the cross-repo path applies the visibility predicate in SQL so a peer's private row never enters the process; and every mutation leaves a commit, every destruction a forget-log row.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: A read defaults to active status and resolves through the assertion in force at the requested instant; the cross-repo path applies the visibility predicate in SQL so a peer&#39;s private row never enters the process; and every mutation leaves a commit, every destruction a forget-log row.
+flowchart TD
+  TOOL[&quot;MCP query tool&lt;br/&gt;query, status, tags, asOf, repos, scope&quot;]
+  FTS[&quot;FTS5 BM25 ranking&quot;]
+  LIKE[&quot;LIKE fallback&lt;br/&gt;only when every token is a stop word&quot;]
+  COND{&quot;status supplied&quot;}
+  ACT[&quot;status = active by default&quot;]
+  ASOF{&quot;asOf supplied&quot;}
+  RES[&quot;resolveAsOf&lt;br/&gt;swap in the assertion in force&quot;]
+  DROP[&quot;Item with no assertion&lt;br/&gt;covering that instant is dropped&quot;]
+  OUT[&quot;Ranked candidates&quot;]
+  FED[&quot;Federated peer query&quot;]
+  VIS[&quot;visibility = workspace in SQL&lt;br/&gt;peer private row never read in&quot;]
+  WRITE[&quot;Write or supersede&quot;]
+  ASRT[(&quot;knowledge_assertions&lt;br/&gt;validFrom, validTo, recordedAt, replacedAt&quot;)]
+  ITEM[(&quot;knowledge_items&lt;br/&gt;status, tier, freshness, provenance&quot;)]
+  COMMIT[(&quot;knowledge_commits&lt;br/&gt;plus commit_items index&quot;)]
+  DEL[&quot;Destroy&quot;]
+  FLOG[(&quot;knowledge_forget_log&lt;br/&gt;append-only, not foreign-keyed&quot;)]
+  TOMB[(&quot;knowledge_tombstones&lt;br/&gt;id-keyed, travels in exports&quot;)]
+
+  TOOL --&gt; FTS --&gt; COND
+  FTS -.-&gt;|&quot;no hit&quot;| LIKE --&gt; COND
+  COND --&gt;|&quot;no&quot;| ACT
+  COND --&gt;|&quot;yes&quot;| ASOF
+  ACT --&gt; ASOF
+  ASOF --&gt;|&quot;yes&quot;| RES --&gt; OUT
+  RES --&gt; DROP
+  ASOF --&gt;|&quot;no&quot;| OUT
+  TOOL --&gt; FED --&gt; VIS --&gt; OUT
+  WRITE --&gt; ASRT
+  WRITE --&gt; ITEM
+  WRITE --&gt; COMMIT
+  DEL --&gt; FLOG
+  DEL --&gt; TOMB</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Read.</strong> <code>queryKnowledgeCandidates</code> runs
+FTS5 first and returns its candidates; the <code>LIKE</code> fallback
+below it carries a measurement of when it is actually reached, and a
+correction of a previous comment that claimed otherwise. The status
+default is the <code>else</code> branch of one <code>if</code>
+(<code>src/store/queries.ts:152-230</code>).</li>
+<li><strong>As-of.</strong> <code>resolveAsOf</code> maps each candidate
+through <code>findAssertionAsOf(item.id, asOf)</code> and substitutes
+the historical content and confidence, dropping candidates with no
+assertion covering that instant (<code>queries.ts:269-282</code>,
+<code>assertions.ts:43-51</code>).</li>
+<li><strong>Supersede.</strong> <code>replaceCurrentAssertion</code>
+finds the open assertion, stamps <code>validTo</code> and
+<code>replacedAt</code> on it, and inserts the successor — in one
+client-level transaction (<code>assertions.ts:25-36</code>).</li>
+<li><strong>Cross-repo.</strong>
+<code>listWorkspaceVisibleSkillItems</code> and
+<code>queryFederated</code> put <code>visibility = 'workspace'</code> in
+the SQL, deliberately as a sibling of the index-scoped local function
+rather than an option on it, so a peer database is never opened on the
+mid-turn path (<code>repository.ts:582-605</code>).</li>
+<li><strong>Destroy.</strong> <code>deleteKnowledgeItem</code> reads the
+row first, deletes it, writes the forget-log entry and records the
+id-keyed tombstone (<code>repository.ts:671-700</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>knowledge_items</code> is the densest schema this atlas has
+read that still explains itself, and the comments are about
+<em>fingerprint membership</em> — which is the question most schemas
+leave implicit.</p>
+<p>Two hashes, not one:</p>
+<blockquote>
+<p>Fingerprint of the fields that decide lifecycle rather than content:
+status, freshness, supersession, owner, visibility. Separate from
+<code>content_hash</code> because the two diverge independently, and an
+import classifying on content alone skipped every lifecycle change.</p>
+</blockquote>
+<p>And a field deliberately <em>outside</em> that fingerprint, with the
+reasoning:</p>
+<blockquote>
+<p>Authorship is a fact about how the row came to exist and never
+changes after the write; the lifecycle fingerprint tracks what an import
+or a sync has to reconcile, and including a field that cannot diverge
+would make every atom written across repos look changed to a peer that
+has the same one.</p>
+</blockquote>
+<p><code>lastDriftAt</code> carries the other half of the same
+discipline — a column that is explicitly <em>not</em> a ranking input:
+<em>"this column is read by nothing at retrieval time, so it costs no
+ranking of its own."</em> A schema that says which of its columns the
+ranker may not see is doing something most do not.</p>
+<p><code>knowledge_assertions</code> is the bitemporal table:
+<code>validFrom</code> and <code>validTo</code> for the world,
+<code>recordedAt</code> and <code>replacedAt</code> for the store, with
+an index for each axis. An item may have at most one open assertion —
+<code>createCurrentAssertion</code> throws if one exists — so the
+valid-time line is a chain rather than a set.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The default read returns only <code>active</code> items. That is the
+whole of the <code>trust_state</code> mark and it is one line, which is
+the point: a five-value status is worth nothing unless a read consults
+it, and here the consulting is the default rather than an option a
+caller has to remember.</p>
+<p>The as-of path is the part worth studying. An <code>asOf</code> query
+does not select differently; it takes the same ranked candidates and
+resolves each one through its assertion history. The comment explains
+why, and names the bug that taught them:</p>
+<blockquote>
+<p>An <code>asOf</code> query used to compute these and throw them away,
+dropping to the whole-phrase LIKE below — so "auth token expire" missed
+"Auth token TTL is fifteen minutes", one filler word from a match...
+Historical resolution is a filter over the same candidates, not a reason
+to select them differently.</p>
+</blockquote>
+<p>That is the correct architecture for time travel over a ranked store,
+stated crisply, and arrived at by using the feature rather than by
+reasoning about it.</p>
+<p>The federated path applies its predicate in SQL, and the comment is
+explicit that this is about what enters the process, not about what is
+shown: <em>"a peer's repo-private row is never read into this process at
+all."</em> A filter applied after a fetch protects a response; a filter
+in the query protects the process.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Supersession happens at write time, decided by a
+<code>conflictKey</code> with a <code>conflictScope</code> and a
+<code>conflictExclusive</code> flag on the atom. When the store is not
+confident that a new fact replaces an old one, the README says it leaves
+both active and hands the user a <code>knowl supersede</code> command —
+a deferral to a person rather than a guess, which is the right default
+for an operation whose failure mode is deleting a true claim.</p>
+<p>Destruction is where the design is most careful, and the reasoning is
+in <code>forget-log.ts</code>:</p>
+<blockquote>
+<p>GC computes a precise reason per candidate — "State item stale for 47
+days and never retrieved" — reports it in the run result, and then drops
+it: the tombstone was written with the hardcoded literal
+<code>'purged'</code>, so every purge in the store said the same word.
+The deciding numbers existed for the length of one function call. That
+makes a collection policy unfalsifiable after the fact.</p>
+</blockquote>
+<p>So the forget log exists to make the collector's own policy testable
+against what it did. The separation from the tombstone is argued rather
+than assumed: the tombstone travels in exports and is merged by a
+monotonic upsert, so putting usage numbers there would push local
+retrieval telemetry into every export and let a peer's import overwrite
+this machine's audit trail <em>"with its own — or with nulls."</em> Two
+records, one portable and one local, because they answer different
+questions and have different threat models.</p>
+<p><code>tombstone</code> is nonetheless withheld.
+<code>knowledge_tombstones</code> is keyed on the item id — its job is
+to stop an import resurrecting a deleted row — so the same content
+written again under a fresh id meets no record of its own rejection. It
+is the most legitimate id-keyed deletion marker in the corpus and it is
+still not a value-keyed one.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>28 MCP tools, and the tool surface is costed: a note explains that
+fetch-by-id is a parameter rather than a thirty-first tool because
+<em>"the tool list already costs ~6,700 tokens per session."</em> The
+same note gives the reason the parameter exists at all — 262 atoms on a
+real store exceed the content ceiling, and <em>"truncation with no way
+to read the rest is not disclosure, it is loss with a warning
+label."</em></p>
+<p>The workspace surface tells an agent what it may reach without
+quoting it: the session card names the linked repos and says their
+workspace-visible knowledge is searchable, with <code>repos</code> as
+the filter. Naming the peers without their content is a deliberate
+middle ground between hiding the workspace and spending context on
+it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The measurement discipline is the reason this report runs long, so it
+is worth laying out what is actually committed and what the headline
+compresses.</p>
+<p>The README's claim is <em>"Turn that off and retrieval drops from 98%
+to 47%"</em>, and both numbers are in the tree:
+<code>cr-sh-6k-supersede-on.json</code> reports a top-one accuracy of
+0.98 with 2 stale leaks, <code>cr-sh-6k-supersede-off.json</code>
+reports 0.47 with 62. The claim is real and checkable, which already
+puts it ahead of most performance claims this atlas reads.</p>
+<p>What the headline compresses is which slice it is. Reading all four
+ablation pairs in the directory:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Instance</th>
+<th>supersede on</th>
+<th>supersede off</th>
+<th>stale leaks on → off</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>single-hop 6k</td>
+<td>0.98</td>
+<td>0.47</td>
+<td>2 → 62</td>
+</tr>
+<tr>
+<td>single-hop 262k</td>
+<td>0.87</td>
+<td>0.42</td>
+<td>5 → 28</td>
+</tr>
+<tr>
+<td>multi-hop 6k</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0 → 29</td>
+</tr>
+<tr>
+<td>multi-hop 262k</td>
+<td>0.02</td>
+<td>0.01</td>
+<td>0 → 1</td>
+</tr>
+</tbody>
+</table></div>
+<p>The published figure is the best of the four. At 262k the same
+ablation is 87 to 42, and on the multi-hop instances top-one accuracy is
+at or near zero in <em>both</em> arms — the mechanism cannot rescue a
+question type the retrieval does not answer. The repository does not
+hide this: the scaling section of the results README walks the corpus
+sizes and the files are all committed under names that say what they
+are.</p>
+<p>And the effect that holds across every pair is not accuracy, it is
+stale leaks: 62 → 2, 28 → 5, 29 → 0, 1 → 0. Supersession's robust,
+measured contribution is that fewer retired facts come back, including
+on the instances where nothing improves the answer. That is the more
+defensible version of the claim and it is the one the data supports
+everywhere.</p>
+<p>Three more things in that results README deserve copying:</p>
+<ul>
+<li><strong>A stated misreading trap.</strong> <em>"A filename says what
+the run was <em>for</em>; only those fields say what it actually
+did."</em></li>
+<li><strong>A withdrawn regression.</strong> A run's 26 stale leaks were
+read as a regression against 3 until someone noticed it predated the
+flag. <em>"There was no regression."</em></li>
+<li><strong>A rule about arithmetic across runs.</strong> The default
+embedding preset changed on a known date and moved two instances <em>in
+opposite directions from each other</em>, so: <em>"Never subtract across
+two runs whose <code>embedding</code> differs or is absent."</em></li>
+</ul>
+<p>Alongside this sits
+<code>benchmarks/accuracy/preregistration.json</code>, dated 2026-07-13,
+declaring the protocol's objective, what is in scope, and — unusually —
+what is excluded from the leaderboard: latency, throughput, RAM, storage
+size, token usage, cost and setup effort. Preregistering what you will
+<em>not</em> claim credit for is a practice this corpus has not seen
+before.</p>
+<p>The test suite carries more lines than the source, and the
+mutation-testing configuration is honest about its own limits: sixteen
+suites that assert against a built bundle are excluded from mutation
+runs because nothing rebuilds the bundle between mutants, so <em>"their
+exclusion is not a shortcut — it is the measured reason mutation scores
+for this repo must be read as covering the in-process surface
+only."</em></p>
+<p><code>human_review</code> is withheld. The
+<code>knowl supersede</code> hand-off is a person deciding a conflict
+the store would not guess at, which is close — but no field records who
+decided, and the <code>tier</code> promotion to <code>verified</code> is
+earned by counted confirmations rather than by an approver.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>442 test files, 3,686 cases, and 74,258 lines of test code against
+65,422 of source; nothing was run here. The workspace suites are the
+ones that matter for the marks, and they are built as small real stores
+— two project directories, a manifest, two repos joined to a workspace —
+rather than as mocks, which is why the private-row exclusion is a
+meaningful assertion rather than a check on a stub.</p>
+<p>The federated suite also pins the contracts around the exclusion: a
+named repo holding nothing returns an empty array under its own key
+rather than an empty object, <em>"asking about <code>b</code> by name
+and getting <code>{}</code> back cannot be told apart from asking and
+getting no response at all"</em>; a repo name that matches nothing is
+reported rather than quietly not searched; an absent peer is reported
+rather than swallowed; and the peer database is asserted byte-identical
+after the query.</p>
+<p>Two benchmark harnesses are committed with their data and results —
+the MemoryAgentBench conflict-resolution instances, and an accuracy
+protocol with a preregistration and a
+<code>systems.lock.json</code>.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Keep the losing arm, and say what its losing
+proves.</strong> An ablation's off arm retained as a permanent control
+turns a marketing number into a regression test on the instrument: if
+the bad arm stops looking bad, the metric broke.</li>
+<li><strong>Write down how to misread your own results.</strong>
+Filenames drift from what a run did. A results log that names the three
+fields that actually identify a run — and forbids subtracting across
+runs that differ in them — prevents the comparison that produces a
+phantom regression.</li>
+<li><strong>Resolve history as a filter over the same
+candidates.</strong> Selecting differently for an as-of query means the
+historical path silently uses a worse matcher, and nobody notices
+because the results look plausible.</li>
+<li><strong>Split the record that travels from the record that
+stays.</strong> One is merged by peers and must be small and monotonic;
+the other is local audit and must be complete. Merging them lets an
+import overwrite your own history with nulls.</li>
+<li><strong>Say which columns the ranker may not read.</strong> A drift
+timestamp that exists for promotion and is explicitly absent from
+retrieval cannot accidentally become a ranking signal in someone's next
+patch.</li>
+<li><strong>Two hashes when two things diverge independently.</strong>
+Classifying an import on content alone skipped every lifecycle change
+here; the fix was a second fingerprint over exactly the fields that
+decide lifecycle.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Multi-hop top-one accuracy is at or near zero in both ablation arms.
+Is that a property of the benchmark instance, the retriever, or the atom
+granularity?</li>
+<li>The tombstone that travels is id-keyed. Is a content-keyed record of
+a rejected claim wanted, or is re-asserting a retired fact considered
+legitimate?</li>
+<li><code>knowl supersede</code> hands a conflict to a person. Would
+recording who resolved it — and when — be useful for the same
+falsifiability reason the forget log exists?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema: <code>src/store/schema.ts:4-73</code>
+(<code>knowledge_items</code>, the two hashes, the
+<code>writtenBy</code> note, <code>lastDriftAt</code>),
+<code>:75-93</code> (commits and the commit-items index),
+<code>:95-105</code> (assertions), <code>:108-130</code> (evidence),
+<code>:139-153</code> (<code>knowledge_access</code>),
+<code>:283-305</code> (cloud publish gate and the never-publish
+list).</li>
+<li>Queries: <code>src/store/queries.ts:143-230</code> (the status
+default, the visibility filter, the measured LIKE fallback),
+<code>:269-282</code> (<code>resolveAsOf</code>).</li>
+<li>Assertions: <code>src/store/assertions.ts</code> —
+<code>createCurrentAssertion</code> (14-22),
+<code>replaceCurrentAssertion</code> (24-36),
+<code>findAssertionAsOf</code> (43-51).</li>
+<li>Repository: <code>src/store/repository.ts:582-605</code>
+(workspace-visible SQL), <code>:609-651</code>
+(<code>createKnowledgeCommit</code>), <code>:671-700</code> (delete,
+forget log, tombstone).</li>
+<li>Forget log and tombstones:
+<code>src/store/forget-log.ts:1-40</code>,
+<code>src/store/tombstones.ts</code>.</li>
+<li>MCP: <code>src/mcp/tools.ts:804-936</code> (fetch-by-id,
+<code>asOf</code>), <code>:606-613</code> (the workspace card).</li>
+<li>Benchmarks:
+<code>benchmarks/memoryagentbench/results/README.md</code> (the
+misreading trap, the withdrawn regression, the embedding rule, the
+ablation table), <code>results/cr-sh-6k-supersede-{on,off}.json</code>,
+<code>results/cr-sh-262k-supersede-{on,off}.json</code>,
+<code>results/cr-mh-6k-supersede-{on,off}.json</code>,
+<code>benchmarks/accuracy/preregistration.json</code>.</li>
+<li>Tests: <code>tests/workspace/federated-query.test.ts:102-160</code>,
+<code>tests/workspace/federated-scope.test.ts:90-150</code>,
+<code>vitest.mutation.config.ts:5-25</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>python3 - &lt;&lt;&#39;PY&#39;   # every committed ablation pair, read from the result files
+import json,glob,os
+for f in sorted(glob.glob(&#39;benchmarks/memoryagentbench/results/*.json&#39;)):
+    d=json.load(open(f)); r=d.get(&#39;report&#39;,{})
+    print(os.path.basename(f), d.get(&#39;supersede&#39;), r.get(&#39;topOneAccuracy&#39;), r.get(&#39;staleLeaks&#39;))
+PY
+grep -rn &quot;visibility, &#39;workspace&#39;)&quot; src --include=&#39;*.ts&#39;      # 1 — the cross-repo predicate
+grep -rn &quot;knowledge_tombstones&quot; src --include=&#39;*.ts&#39;          # keyed on item id; no content key anywhere
+grep -rn &quot;createKnowledgeCommit(&quot; src --include=&#39;*.ts&#39;        # derive, merge, promote, blast-radius, tier
+grep -rn &quot;approver\|approved_by\|reviewed_by&quot; src --include=&#39;*.ts&#39;   # 0 — no stored approver</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/dat999zx/knowl/commit/f2252db376fb42f76f5795b3e38d89ed9970a080"><code class="commit-id" title="f2252db376fb42f76f5795b3e38d89ed9970a080">f2252db3…</code></a>
+— first reading, at the head of <code>main</code>, 1,171 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: three auto-run
+surfaces, one build-time execution path, 32 floating dependency ranges
+behind a committed lockfile, four files changed inside the seven-day
+cooldown, and <code>CLAUDE.md</code> read as data. Nothing was
+installed, built or run — no npm, no vitest, no benchmark executed; the
+committed result files were read as data. Five marks.
+<code>tombstone</code> is withheld with the mechanism present and well
+argued: <code>knowledge_tombstones</code> is keyed on the item id so an
+import cannot resurrect a deleted row, which is a different guarantee
+from a record keyed on the value. <code>human_review</code> is withheld
+because the <code>knowl supersede</code> hand-off records no decider and
+the <code>verified</code> tier is earned by counted confirmations rather
+than granted by a person. The published 98-to-47 ablation figure was
+checked against the committed runs and is the single-hop 6k pair; the
+same ablation at 262k is 87 to 42, and both multi-hop pairs sit at or
+near zero top-one accuracy in both arms, while the stale-leak reduction
+holds across all four.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
