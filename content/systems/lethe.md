@@ -9,11 +9,14 @@ source_url: https://github.com/deeplethe/lethe
 archive_name: "deeplethe--lethe"
 revision: b6053b7bdacc78a91b9ea4bb25f32edad278c495
 revision_url: https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495
-analyzed_at: 2026-07-30
+analyzed_at: 2026-09-17
 capabilities: "audit_log, negative_eval"
+capability_evidence:
+  audit_log: "the `event` table, which the schema's own comment calls the append-only event log | lethe/schema.sql:37-50, lethe/core.py:111-120, :151, :477, :493, :508, :568, :576, :701, :715 | `event(id AUTOINCREMENT, memory_id, kind, depth_before, depth_after, timestamp, meta)` with three indexes, written by `_log_event` from every mutation verb — `inscribe`, the control-plane depth changes, `supersede`, `edit` (carrying the new text in `meta` so time travel can reconstruct it), `purge`, `flow` and `promote`. `_purge` logs the purge *before* the three DELETEs, so the record of a deletion survives the deletion | no `DELETE FROM event` or `UPDATE event` exists anywhere in the package, so the log is append-only in practice as well as by intent; a `recall` event is written to the same table, which is the half the rubric does not count"
+  negative_eval: "the ForgetEval harness, over the real recall path | bench/forgeteval/tests.py:104-124, :128-155 | each amnesia case inscribes several facts, releases one subject, calls `a.recall_texts(query, k)` and joins the result — then asserts the released material is absent *and* a sibling is present in one expression: `return \"dana\" not in blob and \"eve\" in blob`, and `\"dune\" not in blob and \"marathon\" in blob`. The purge group asserts hard-deleted content does not resurface *\"even via fuzzy semantic match\"* | the positive control is inside each case rather than beside it, so no case can pass on an empty recall, and the same contract runs against six adapters including systems other than this one — which is also why the author's own system placing third is checkable rather than asserted"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A row with text and a `depth ∈ ℝ` — 1.0 just inscribed, (0,1) sinking, 0 submerged but present, above 1 pinned"
   storage: "SQLite with three synced tables — the row store, a `vec0` vector index, and a non-contentless FTS5 index so DELETE reaches it"
@@ -306,5 +309,13 @@ vector index.
 | `recipes/` | — | OTP TTL, GDPR purge receipt, belief revision, time travel |
 
 ## History
+
+**2026-09-17** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, no build-time execution path, one unpinned manifest, nothing inside the cooldown; nothing was installed or run.
+
+Both marks now carry evidence records, and writing them confirmed two details worth stating rather than assuming. `_purge` logs the `purge` event **before** it issues the three DELETEs, so the record of a deletion survives the deletion — which is the ordering the Merkle receipt depends on and the opposite of what several systems in this corpus do. And nothing in the package issues `DELETE FROM event` or `UPDATE event`, so the log is append-only in practice as well as in the schema comment that calls it that.
+
+The headline risk re-verified: `inscribe` consults no purge record, no hash list and no receipt, so a purged text can be written again the next second. The receipt module is explicit about what it does and does not promise — it signs *"at time T, this system acknowledged the deletion of records with these text hashes, when the event log's Merkle root was R"* — and the `purged_text_hashes` it carries are for a verifier rather than for the write path. That is the gap between provable forgetting and enforced forgetting, and this repository is the clearest place in the atlas to see the difference.
+
+Marks unchanged at two; `stack_source` moves from `seeded` to `reviewed`. The [benchmarks page](../../benchmarks/)'s account of ForgetEval was checked against the same pin and holds, including the six adapters and the paper's framing.
 
 **2026-07-30** — [`b6053b7bdacc78a91b9ea4bb25f32edad278c495`](https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495) — first reading.

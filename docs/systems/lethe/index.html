@@ -121,7 +121,7 @@ log.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/deeplethe--lethe" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -482,6 +482,36 @@ store was not established.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — re-read at the same commit, confirmed
+still the tip by <code>git ls-remote</code> before a
+<code>--depth 1</code> clone. Nothing could have moved, so this reading
+audited the first one. Screened again: no auto-run surface, no
+build-time execution path, one unpinned manifest, nothing inside the
+cooldown; nothing was installed or run.</p>
+<p>Both marks now carry evidence records, and writing them confirmed two
+details worth stating rather than assuming. <code>_purge</code> logs the
+<code>purge</code> event <strong>before</strong> it issues the three
+DELETEs, so the record of a deletion survives the deletion — which is
+the ordering the Merkle receipt depends on and the opposite of what
+several systems in this corpus do. And nothing in the package issues
+<code>DELETE FROM event</code> or <code>UPDATE event</code>, so the log
+is append-only in practice as well as in the schema comment that calls
+it that.</p>
+<p>The headline risk re-verified: <code>inscribe</code> consults no
+purge record, no hash list and no receipt, so a purged text can be
+written again the next second. The receipt module is explicit about what
+it does and does not promise — it signs <em>"at time T, this system
+acknowledged the deletion of records with these text hashes, when the
+event log's Merkle root was R"</em> — and the
+<code>purged_text_hashes</code> it carries are for a verifier rather
+than for the write path. That is the gap between provable forgetting and
+enforced forgetting, and this repository is the clearest place in the
+atlas to see the difference.</p>
+<p>Marks unchanged at two; <code>stack_source</code> moves from
+<code>seeded</code> to <code>reviewed</code>. The <a
+href="../../benchmarks/">benchmarks page</a>'s account of ForgetEval was
+checked against the same pin and holds, including the six adapters and
+the paper's framing.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495"><code class="commit-id" title="b6053b7bdacc78a91b9ea4bb25f32edad278c495">b6053b7b…</code></a>
 — first reading.</p>
