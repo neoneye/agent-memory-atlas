@@ -9,23 +9,23 @@ source_url: https://github.com/volcengine/MineContext
 archive_name: "volcengine--MineContext"
 revision: 171c7a9ea8091e326ddcf0f10718aa1b58c83c65
 revision_url: https://github.com/volcengine/MineContext/commit/171c7a9ea8091e326ddcf0f10718aa1b58c83c65
-analyzed_at: 2026-07-29
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "sqlite, chroma, qdrant"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A typed context with an event time, a confidence and an importance score, keeping its raw properties beneath it — plus todo rows with an open/done lifecycle"
   storage: "SQLite for structured rows, with ChromaDB or Qdrant for vectors"
   retrieval: "Vector search per context type, plus tool-shaped retrieval for todos, activity and entities"
   write: "Passive capture from screenshots, folders, vault documents and web links, then LLM extraction and typed merge"
-  update_delete: "Update and delete exist on the API; no UI is wired to them and no rejected-value record is kept"
+  update_delete: "Update and delete exist on the API and nothing in `frontend/src` calls either; the only todo endpoints in the tree sit under `/api/debug/`, and no rejected-value record is kept"
   scoping: "None on contexts or todos; user_id appears only on the chat conversations table"
   integration: "An Electron desktop app over a FastAPI server, with generated daily and weekly reports"
   background: "Continuous capture, typed merging, and a SmartTodoManager that generates commitments from observed activity"
   trust: "Integer confidence and importance scores on extracted data; no status and no provenance chain to the screenshot"
   strengths: "Event time separate from record time and allowed to be future; raw properties retained under every extracted context"
-  risks: "No tests in the Python package; commitments are inferred from screen capture and nothing reviews them"
+  risks: "No test file anywhere in the tree; commitments are inferred from screen capture, and the only endpoints that list, update or generate them are under `/api/debug/` and are called by nothing"
 ---
 
 ## 1. Executive Summary
@@ -60,7 +60,13 @@ tasks with due dates and priorities. It remembers commitments you did not make.
 The weaknesses are of a piece with that. There are **no tests** in the Python
 package. Contexts and todos carry no scope key. Nothing in the desktop UI is wired
 to the delete endpoint the server exposes, so a wrong inferred commitment has no
-review path. And a confidence integer is doing the work a trust state would.
+review path — and the 2026-09-18 re-reading found that narrower and sharper than
+first stated: the **only** endpoints in the tree that list, update or generate
+todos are `GET /api/debug/todos`, `PATCH /api/debug/todos/{todo_id}` and
+`POST /api/debug/generate/todos`, and nothing calls any of them, in the frontend
+or anywhere else. The memory of commitments this system infers from watching a
+screen is reachable only through a route namespace the project itself labels
+*debug*. And a confidence integer is doing the work a trust state would.
 
 ## 2. Mental Model
 
@@ -450,5 +456,15 @@ most interesting thing here and the one with the highest cost when it is wrong.
 `verify_folder_monitor.py`
 
 ## History
+
+**2026-09-18** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, one build-time execution path (`frontend/package.json`), four unpinned manifests, nothing inside the cooldown; nothing was installed, built or run.
+
+Both absence claims were re-run at a wider path and both hold, one of them more sharply. `POST /contexts/delete` exists in `server/routes/context.py:67` and a grep for `contexts/` across the whole of `frontend/src` returns nothing — the only two files that mention "contexts" at all use it as a heatmap count field and a chat payload key. So the delete endpoint really has no caller, which is the claim the [Acontext](../acontext/) report cites this one for.
+
+**The todo surface is narrower than first stated.** The only endpoints in the tree that list, update or generate todos are `GET /api/debug/todos`, `PATCH /api/debug/todos/{todo_id}` and `POST /api/debug/generate/todos`, all in `server/routes/debug.py`, and a grep for `api/debug` across the frontend and the rest of the repository returns no caller. The inferred-commitment memory is reachable only through a namespace the project labels *debug*, which is a stronger statement of "nothing reviews them" than the first reading made.
+
+And the no-tests claim was re-verified with the enumeration widened after a near-miss on another report the same night: there is no test directory, no `conftest.py`, no `*_test.py`, no `pytest.ini` and no `*.spec.ts` anywhere in the tree. The one path matching `-iname "*test*"` is a UI component folder called `latest-activity-card`, which is a false positive from the word *latest*.
+
+Marks unchanged at none; `stack_source` moves from `seeded` to `reviewed`.
 
 **2026-07-29** — [`171c7a9ea8091e326ddcf0f10718aa1b58c83c65`](https://github.com/volcengine/MineContext/commit/171c7a9ea8091e326ddcf0f10718aa1b58c83c65) — first reading.

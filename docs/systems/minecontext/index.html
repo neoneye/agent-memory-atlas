@@ -113,7 +113,7 @@ them from what it watched you do.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/volcengine--MineContext" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -169,8 +169,16 @@ you did not make.</p>
 <p>The weaknesses are of a piece with that. There are <strong>no
 tests</strong> in the Python package. Contexts and todos carry no scope
 key. Nothing in the desktop UI is wired to the delete endpoint the
-server exposes, so a wrong inferred commitment has no review path. And a
-confidence integer is doing the work a trust state would.</p>
+server exposes, so a wrong inferred commitment has no review path — and
+the 2026-09-18 re-reading found that narrower and sharper than first
+stated: the <strong>only</strong> endpoints in the tree that list,
+update or generate todos are <code>GET /api/debug/todos</code>,
+<code>PATCH /api/debug/todos/{todo_id}</code> and
+<code>POST /api/debug/generate/todos</code>, and nothing calls any of
+them, in the frontend or anywhere else. The memory of commitments this
+system infers from watching a screen is reachable only through a route
+namespace the project itself labels <em>debug</em>. And a confidence
+integer is doing the work a trust state would.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is a <strong>typed context</strong>, and the type is a claim
 about what kind of thing was learned:</p>
@@ -614,6 +622,41 @@ table, <code>get_todos</code>, <code>update_todo_status</code>)</p>
 <code>example_document_processor.py</code>,
 <code>verify_folder_monitor.py</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit, confirmed
+still the tip by <code>git ls-remote</code> before a
+<code>--depth 1</code> clone. Nothing could have moved, so this reading
+audited the first one. Screened again: no auto-run surface, one
+build-time execution path (<code>frontend/package.json</code>), four
+unpinned manifests, nothing inside the cooldown; nothing was installed,
+built or run.</p>
+<p>Both absence claims were re-run at a wider path and both hold, one of
+them more sharply. <code>POST /contexts/delete</code> exists in
+<code>server/routes/context.py:67</code> and a grep for
+<code>contexts/</code> across the whole of <code>frontend/src</code>
+returns nothing — the only two files that mention "contexts" at all use
+it as a heatmap count field and a chat payload key. So the delete
+endpoint really has no caller, which is the claim the <a
+href="../acontext/">Acontext</a> report cites this one for.</p>
+<p><strong>The todo surface is narrower than first stated.</strong> The
+only endpoints in the tree that list, update or generate todos are
+<code>GET /api/debug/todos</code>,
+<code>PATCH /api/debug/todos/{todo_id}</code> and
+<code>POST /api/debug/generate/todos</code>, all in
+<code>server/routes/debug.py</code>, and a grep for
+<code>api/debug</code> across the frontend and the rest of the
+repository returns no caller. The inferred-commitment memory is
+reachable only through a namespace the project labels <em>debug</em>,
+which is a stronger statement of "nothing reviews them" than the first
+reading made.</p>
+<p>And the no-tests claim was re-verified with the enumeration widened
+after a near-miss on another report the same night: there is no test
+directory, no <code>conftest.py</code>, no <code>*_test.py</code>, no
+<code>pytest.ini</code> and no <code>*.spec.ts</code> anywhere in the
+tree. The one path matching <code>-iname "*test*"</code> is a UI
+component folder called <code>latest-activity-card</code>, which is a
+false positive from the word <em>latest</em>.</p>
+<p>Marks unchanged at none; <code>stack_source</code> moves from
+<code>seeded</code> to <code>reviewed</code>.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/volcengine/MineContext/commit/171c7a9ea8091e326ddcf0f10718aa1b58c83c65"><code class="commit-id" title="171c7a9ea8091e326ddcf0f10718aa1b58c83c65">171c7a9e…</code></a>
 — first reading.</p>
