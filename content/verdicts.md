@@ -365,12 +365,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: users will delete conversations and expect what was learned in them to go too, or you want evidence that memory quality was measured.
 
 ### [`gini-agent`](../systems/gini-agent/)
-- Best idea: bi-temporal units with `rejected` and `conflicted` states, four RRF-fused recall channels, and architecture decisions recorded as ADRs.
-- Biggest risk: `conflicted` is modelled with no visible workflow to resolve it, and rejection has no value-level tombstone.
-- Most reusable component: the `memory_units` schema, and the ADR practice itself.
-- Maturity impression: a faithful local reimplementation of a published memory model, with unusually good written rationale.
-- Study when: you want a trust-and-time-aware unit schema you can implement in plain SQLite.
-- Do not copy when: you need the conflict workflow the schema implies but does not ship.
+- Best idea: **a scope test that removes its own escape route.** The isolation case seeds two agents with the same text *and the same embedding*, so the only difference between the units is `agent_id`, then asserts in both directions that each agent's recall holds its own and not the other's, by id. A scope test whose two fixtures differ in content can pass for the wrong reason; this one cannot.
+- Second idea: bi-temporal units — `occurred_start`/`occurred_end` and `mentioned_at` kept apart from `created_at` — four RRF-fused recall channels each filtering bank and agent, and architecture decisions recorded as ADRs that name the failure which motivated them.
+- Biggest risk: **the trust model is four-fifths schema.** `status` is CHECK-constrained to `proposed | active | archived | rejected | conflicted`, and no path in the runtime writes three of those five. The only production write of a non-default status is one statement archiving `observation` rows, and the generic status setter's single caller passes only usage fields. The first reading called this a missing resolution workflow; there is nothing to resolve.
+- Second risk: rejection has no value-level tombstone, so an equivalent claim can be retained again under a new id.
+- Most reusable component: the `memory_units` schema, the four-channel fusion, and the ADR practice itself.
+- Maturity impression: a faithful local reimplementation of a published memory model with unusually good written rationale, and four capability marks — `scope_enforced`, `bitemporal`, `trust_state` and `negative_eval`, the last added on a re-read at the same commit.
+- Study when: you want a trust-and-time-aware unit schema you can implement in plain SQLite, or a worked example of how to write a scope test that means something.
+- Do not copy when: you need the conflict workflow the schema implies — the vocabulary ships and the writers do not.
 
 ### [`moltis`](../systems/moltis/)
 - Best idea: a no-embeddings mode that is a constructor and a predicate rather than a degraded state, plus content-hash file addressing.

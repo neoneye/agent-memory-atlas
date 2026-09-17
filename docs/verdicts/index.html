@@ -989,19 +989,41 @@ was measured.</li>
 <h3 id="gini-agent"><a
 href="../systems/gini-agent/"><code>gini-agent</code></a></h3>
 <ul>
-<li>Best idea: bi-temporal units with <code>rejected</code> and
-<code>conflicted</code> states, four RRF-fused recall channels, and
-architecture decisions recorded as ADRs.</li>
-<li>Biggest risk: <code>conflicted</code> is modelled with no visible
-workflow to resolve it, and rejection has no value-level tombstone.</li>
-<li>Most reusable component: the <code>memory_units</code> schema, and
-the ADR practice itself.</li>
+<li>Best idea: <strong>a scope test that removes its own escape
+route.</strong> The isolation case seeds two agents with the same text
+<em>and the same embedding</em>, so the only difference between the
+units is <code>agent_id</code>, then asserts in both directions that
+each agent's recall holds its own and not the other's, by id. A scope
+test whose two fixtures differ in content can pass for the wrong reason;
+this one cannot.</li>
+<li>Second idea: bi-temporal units —
+<code>occurred_start</code>/<code>occurred_end</code> and
+<code>mentioned_at</code> kept apart from <code>created_at</code> — four
+RRF-fused recall channels each filtering bank and agent, and
+architecture decisions recorded as ADRs that name the failure which
+motivated them.</li>
+<li>Biggest risk: <strong>the trust model is four-fifths
+schema.</strong> <code>status</code> is CHECK-constrained to
+<code>proposed | active | archived | rejected | conflicted</code>, and
+no path in the runtime writes three of those five. The only production
+write of a non-default status is one statement archiving
+<code>observation</code> rows, and the generic status setter's single
+caller passes only usage fields. The first reading called this a missing
+resolution workflow; there is nothing to resolve.</li>
+<li>Second risk: rejection has no value-level tombstone, so an
+equivalent claim can be retained again under a new id.</li>
+<li>Most reusable component: the <code>memory_units</code> schema, the
+four-channel fusion, and the ADR practice itself.</li>
 <li>Maturity impression: a faithful local reimplementation of a
-published memory model, with unusually good written rationale.</li>
+published memory model with unusually good written rationale, and four
+capability marks — <code>scope_enforced</code>, <code>bitemporal</code>,
+<code>trust_state</code> and <code>negative_eval</code>, the last added
+on a re-read at the same commit.</li>
 <li>Study when: you want a trust-and-time-aware unit schema you can
-implement in plain SQLite.</li>
+implement in plain SQLite, or a worked example of how to write a scope
+test that means something.</li>
 <li>Do not copy when: you need the conflict workflow the schema implies
-but does not ship.</li>
+— the vocabulary ships and the writers do not.</li>
 </ul>
 <h3 id="moltis"><a
 href="../systems/moltis/"><code>moltis</code></a></h3>

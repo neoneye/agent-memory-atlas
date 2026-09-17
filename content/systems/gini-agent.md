@@ -1,7 +1,7 @@
 ---
 title: Gini Agent
 eyebrow: Reimplemented memory model
-description: A local reimplementation of the Hindsight memory model with four RRF-fused recall channels, bi-temporal units, rejected and conflicted states, and memory decisions recorded as ADRs.
+description: A local reimplementation of the Hindsight memory model with four RRF-fused recall channels, bi-temporal units, an agent boundary tested in both directions — and a five-value trust model of which one value is ever written.
 root: ../..
 page_kind: system
 source_name: Open-Curiosity/gini-agent
@@ -9,23 +9,28 @@ source_url: https://github.com/Open-Curiosity/gini-agent
 archive_name: "Open-Curiosity--gini-agent"
 revision: 6c5d85ed0ecd7fe8567124bd4890b16c329970d8
 revision_url: https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124bd4890b16c329970d8
-analyzed_at: 2026-07-27
-capabilities: "trust_state, bitemporal, scope_enforced"
+analyzed_at: 2026-09-17
+capabilities: "trust_state, bitemporal, scope_enforced, negative_eval"
+capability_evidence:
+  scope_enforced: "every recall channel and the unit table | packages/runtime/src/memory/recall.ts:203, :242, :353, :383, packages/runtime/src/state/memory-db.ts:257 | `memory_units` carries `bank_id` and `agent_id`, and all four fused channels filter on both — the vector scan, the FTS join, the id rehydration and the temporal scan each read `WHERE bank_id = ? AND agent_id = ? AND status = 'active'`. `recall` throws when no `agentId` is supplied rather than defaulting | packages/runtime/src/memory/recall.test.ts:376 seeds two agents with **identical text and identical embeddings**, differing only in `agent_id`, and asserts in both directions that each agent's recall contains its own unit and not the other's; :410 asserts a fresh agent's pool is empty against a populated sibling; :429 asserts the missing-`agentId` call rejects"
+  bitemporal: "the memory unit's time columns | packages/runtime/src/state/memory-db.ts:262-264, :271-272, packages/runtime/src/memory/temporal.ts | `occurred_start` and `occurred_end` record when the fact held, `mentioned_at` when it was said, and `created_at` / `updated_at` when the row was written — three distinct axes rather than one timestamp, with a temporal recall channel that matches units against a query date range | packages/runtime/src/memory/recall.test.ts:154 `matches units within the query date range`"
+  trust_state: "the unit status, filtered on every read | packages/runtime/src/state/memory-db.ts:270, :945-947, packages/runtime/src/memory/recall.ts:203 | `status` is a CHECK-constrained five-value column — `proposed | active | archived | rejected | conflicted` — and every recall channel admits only `active`, so any other value withholds the unit from retrieval | no committed case asserts the filter. The producer test matters here and narrows the mark: the only production write of a non-default status in the whole tree is `UPDATE memory_units SET status = 'archived'` for `network = 'observation'` rows (`memory-db.ts:945`). `proposed`, `rejected` and `conflicted` appear in the type union and the CHECK constraint and are written by nothing, and the one generic status setter, `updateMemoryUnitStats`, has a single caller that passes only `lastUsedAt` and `bumpUsageCount`"
+  negative_eval: "the recall path across an agent boundary | packages/runtime/src/memory/recall.test.ts:376-408, :410-428 | `recall against one agent never surfaces another agent's units` inserts one unit per agent with the **same text and the same embedding**, so the only difference is `agent_id`, then asserts `fromA.units.some(e => e.unit.id === onlyB.id)` is `false` and the mirror for B — the exclusion is asserted by id, in both directions, through the real `recall` | each half carries its own positive control in the same expectation pair (`onlyA.id` present in A's result), so neither direction can pass on an empty pool; a second case asserts a fresh agent's pool is empty while a sibling agent's is populated"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "`memory_units` with network, status, confidence, bi-temporal occurrence"
   storage: "SQLite (`memory_banks`, `entities`, `entity_mentions`, `memory_links`)"
   retrieval: "Four channels — semantic, BM25, graph spreading activation, temporal — fused by RRF then reranked"
   write: "`retain.ts`; `proposed` status as a candidate tier"
-  update_delete: "`rejected` and `conflicted` states, `archived`, supersession"
+  update_delete: "A five-value status column of which only `archived` is ever written, by an observation-pruning statement; `proposed`, `rejected` and `conflicted` are declared and have no producer"
   scoping: "`agent_id` enforced across every channel and the HTTP API"
   integration: "CLI, HTTP, web UI"
   background: "`reflect.ts` consolidation, `reinforce.ts`"
   trust: "Per-unit `embedding_model`, source task and session ids"
-  strengths: "Bi-temporal columns and a rejected/conflicted trust model, with decisions kept as ADRs"
-  risks: "Conflict state has no visible resolution workflow; no value tombstone"
+  strengths: "Bi-temporal columns, an agent boundary asserted in both directions by a test that makes the two units identical apart from the key, and decisions kept as ADRs"
+  risks: "Three of the five declared statuses have no writer anywhere in the tree, so the conflict and rejection model is a schema rather than a mechanism; no value tombstone"
 ---
 
 ## 1. Executive Summary
@@ -43,7 +48,7 @@ That makes it the atlas's first **second implementation of a memory model it alr
 
 **Memory decisions are recorded as ADRs.** `docs/adr/agent-memory-isolation.md` documents making agent id the isolation key across all four recall channels, and states the failure that forced it: before isolation, "a 'coding' agent's pinned memories would pollute the 'research' agent's recall and vice versa." The atlas has thirty-odd systems and almost no written record of *why* any of them made the choices they did; Gini keeps one.
 
-The main reservation is unusual for this atlas: the design is strong enough that the gaps are subtle. `conflicted` and `rejected` exist as states, but no operator-facing resolution workflow comparable to [RainBox](../rainbox/)'s review page was found, and no memory-quality benchmark is committed.
+The main reservation is unusual for this atlas: the design is strong enough that the gaps are subtle — and the sharpest one is narrower than the first reading said. `conflicted` and `rejected` do not merely lack a resolution workflow: **nothing in the tree ever writes them.** A grep for either value across `packages/runtime/src`, excluding tests, returns the type union, the CHECK constraint and a set of unrelated promotion and pairing outcomes. The only production write of a non-default status is one statement, `UPDATE memory_units SET status = 'archived'` for `network = 'observation'` rows, and the generic setter that could write any status — `updateMemoryUnitStats` — has a single caller, which passes `lastUsedAt` and `bumpUsageCount`. The trust model is four-fifths schema. No memory-quality benchmark is committed either.
 
 ## 2. Mental Model
 
@@ -72,7 +77,7 @@ Three axes are worth separating out.
 
 **Epistemic kind (`network`).** `world` (how things are), `experience` (what happened to me), `opinion` (a view held), `observation` (what was seen). Distinguishing an *opinion* from a *world fact* at the schema level is rare and consequential — a stated preference and a verifiable fact should not decay, conflict, or corroborate the same way.
 
-**Lifecycle state (`status`).** `proposed` is a candidate tier, `rejected` is a durable negative judgment, and `conflicted` marks a unit known to disagree with another. Together with `confidence`, this is a genuine trust model.
+**Lifecycle state (`status`).** `proposed` is meant as a candidate tier, `rejected` as a durable negative judgment, and `conflicted` as a unit known to disagree with another. The column is the best-designed trust vocabulary in this part of the corpus and three of its five values have no producer: at this commit the only status a unit can acquire after insertion is `archived`, and only by being an `observation` the pruning statement reached. The mark is carried on that one state, because it is written by live code and every recall channel admits `status = 'active'` only — a unit that acquires it is withheld from all four channels. What is not carried is the story the schema tells.
 
 **Time.** `occurred_start`/`occurred_end` versus `mentioned_at` is [bi-temporal fact validity](../../patterns/bi-temporal-fact-validity/) — the pattern the atlas credits to [Graphiti](../graphiti/), implemented here as ordinary columns.
 
@@ -160,7 +165,7 @@ Beyond `memory_units`, the schema carries `memory_banks`, `entities`, `entity_me
 
 Gaps relative to the strongest models here:
 
-- **`conflicted` and `rejected` exist without a visible resolution surface.** The states are modelled; what an operator does about a conflicted unit was not found in the inspected code. Compare RainBox, whose four resolution options (supersede, reject, not-conflict, scoped exception) are the point of having the state.
+- **`conflicted` and `rejected` are never written, let alone resolved.** The first reading recorded a missing resolution surface; the producer test at the re-read found there is nothing to resolve — no code path sets either value. Compare RainBox, whose four resolution options (supersede, reject, not-conflict, scoped exception) are the point of having the state, and which writes the state in the first place.
 - **No rejected-*value* tombstone.** A rejected unit is a rejected row; nothing was found preventing an equivalent claim from being retained again under a new id.
 - **`confidence` has no documented provenance** — how it is set, and whether anything updates it, was not traced.
 
@@ -180,7 +185,7 @@ A CLI (`cli/commands/memory.ts`), an HTTP surface (`/api/memory*`), and web quer
 
 Strengths:
 
-- **A real trust model**: `proposed`/`active`/`archived`/`rejected`/`conflicted` plus `confidence`.
+- **A trust vocabulary worth copying**, `proposed`/`active`/`archived`/`rejected`/`conflicted` plus `confidence`, with the CHECK constraint that keeps it honest — noting that only `archived` is reached by any code here.
 - **Epistemic kind on every unit**, separating opinion from world fact.
 - **Bi-temporal columns**, cheaply.
 - **Per-unit embedder identity.**
@@ -191,7 +196,7 @@ Strengths:
 
 Gaps:
 
-- **No visible conflict-resolution workflow** for the `conflicted` state.
+- **No writer at all** for the `conflicted`, `rejected` or `proposed` states, so there is no workflow to be missing.
 - **No value-level tombstone**, so re-retention of a rejected claim appears possible.
 - **Channel weights undefended** by any committed evaluation.
 - **No memory-quality benchmark** found.
@@ -200,6 +205,25 @@ Gaps:
 ## 10. Tests, Evals, and Benchmarks
 
 Per-module tests (`recall.test.ts`, `retain.test.ts`, `reflect.test.ts`, `embedding.test.ts`, `integration.test.ts`, `migrate-pinned-to-user-md.test.ts`) sit alongside the implementation, and `integration.test.ts` asserts end-to-end behaviour including that a follow-up task records recalled units. Nothing was run for this review.
+
+**The isolation suite is the best thing in the file and this report missed it.**
+`recall.test.ts`'s `describe("recall — per-agent isolation")` seeds two agents in
+one instance with the *same text and the same embedding* — so the only difference
+is `agent_id` — and then asserts, in both directions, that each agent's recall
+contains its own unit and not the other's, by id:
+
+```ts
+const fromA = await recall(makeConfig(instance), { agentId: agentA, query: "swordfish" });
+expect(fromA.units.some((entry) => entry.unit.id === onlyA.id)).toBe(true);
+expect(fromA.units.some((entry) => entry.unit.id === onlyB.id)).toBe(false);
+```
+
+Making the two units identical apart from the key is what raises this above the
+usual scope test: it cannot pass because the query happened to match one and not
+the other. Two further cases assert that a fresh agent's pool is empty beside a
+populated sibling, and that `recall` without an `agentId` rejects rather than
+defaulting. `negative_eval` is carried from the 2026-09-17 reading on this
+evidence.
 
 No memory-quality benchmark was found. Given that the recall implementation cites specific equations from a published model, the natural evaluation — does this implementation reproduce the source model's reported behaviour? — is absent, and would be unusually easy to justify here.
 
@@ -256,5 +280,13 @@ Do not copy:
 - Tests: `packages/runtime/src/memory/*.test.ts`, `integration.test.ts`.
 
 ## History
+
+**2026-09-17** — [`6c5d85ed0ecd7fe8567124bd4890b16c329970d8`](https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124bd4890b16c329970d8) — re-read at the same commit, still the tip; the last commit upstream removes a README section. Nothing in the code could have moved, so this reading audited the first one. Screened again: no auto-run surface, no build-time execution path, four unpinned manifests, nothing inside the cooldown; `AGENTS.md` and `CLAUDE.md` were read as data. Nothing was installed or run.
+
+**`negative_eval` is added, on the best scope test in this part of the corpus.** `recall.test.ts` seeds two agents in one instance with the same text *and the same embedding*, so the only difference between the two units is `agent_id`, then asserts in both directions that each agent's recall contains its own unit and not the other's, by id. Making the units identical apart from the key removes the usual escape — it cannot pass because the query matched one and not the other. Two further cases assert an empty pool for a fresh agent beside a populated sibling, and that `recall` without an `agentId` rejects.
+
+**The trust model is four-fifths schema, which the first reading reported as a missing workflow.** It recorded that `conflicted` and `rejected` exist without a resolution surface. The producer test run at this reading found there is nothing to resolve: no path in `packages/runtime/src` writes either value, nor `proposed`. The only production write of a non-default status in the tree is `UPDATE memory_units SET status = 'archived'` for `network = 'observation'` rows, and the generic setter that could write any status has one caller, which passes `lastUsedAt` and `bumpUsageCount`. `trust_state` is still carried — `archived` is written by live code and every recall channel admits `status = 'active'` only, so acquiring it withholds a unit from all four — but the mark now rests on one state rather than five, and the evidence record says so.
+
+Everything else held: four channels fused by RRF, each filtering `bank_id` and `agent_id`; `occurred_start`/`occurred_end` and `mentioned_at` kept apart from `created_at`/`updated_at`; ADRs recording the failures that motivated the decisions. Marks go from three to four, all four now carrying evidence records. `stack_source` moves from `seeded` to `reviewed`.
 
 **2026-07-27** — [`6c5d85ed0ecd7fe8567124bd4890b16c329970d8`](https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124bd4890b16c329970d8) — first reading.
