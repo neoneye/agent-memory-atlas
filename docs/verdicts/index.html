@@ -8771,14 +8771,31 @@ record that carries the experiment's own parameters, and the
 <code>hooks-off</code>/<code>hooks-on</code> harness whose cost records
 mark each token count <code>MEASURED</code>, <code>ESTIMATED</code> or
 <code>UNKNOWN</code> so an analysis cannot average the two.</li>
-<li>Maturity impression: MIT, ~108,000 lines with ~195,000 lines of
-tests, and the cohort tests use pre-computed session ids that hash into
-a known arm rather than mocking the hash. At this commit the shipped
-<code>hooks.json</code> states that every context-injection hook is
-disabled for an instrumented baseline, leaving four safety guards
-registered — so the loop this repository exists to close is deliberately
-switched off, and every mechanism for running the trial is committed
-while no result is.</li>
+<li>Second idea: an inventory of what is deliberately dark, with the
+mechanical half generated and the semantic half authored.
+<code>hook_inventory.yaml</code> declares per hook its owner, ticket,
+whether it can refuse a tool call, the canary that proves it does, the
+mask bit it gates on and whether that bit is even defined, and whether
+it exits under the mode that is the default outside the operator's
+workspace. An undeclared registration fails a merge gate; the same
+parity check runs fail-closed in CI and warn-only at session start, and
+both choices are argued from the outage each would otherwise cause.</li>
+<li>Biggest risk, second: registration was never the only switch. Three
+of the four ways a hook here goes dark are per-machine or per-session
+facts no repository gate can see, and building that inventory found a
+guard registered under a named carve-out and cleared in the operator's
+own live mask.</li>
+<li>Maturity impression: MIT, ~112,000 lines with ~241,000 lines of
+tests across 2,502 commits, and the cohort tests use pre-computed
+session ids that hash into a known arm rather than mocking the hash. The
+shipped <code>hooks.json</code> still states that every
+context-injection hook is disabled for an instrumented baseline, now
+with 28 narrowly-scoped guards registered beside that sentence — and the
+consumer marketplace ships a two-skill plugin with zero hooks, so the
+loop this repository exists to close is not merely switched off but
+absent from what a customer installs. Every mechanism for running the
+trial is committed while no result is. One capability mark,
+<code>negative_eval</code>.</li>
 <li>Study when: you want to hold out a control cohort in a memory system
 and need the smallest honest version of it.</li>
 <li>Do not copy when: you need a memory store. This half has none — no

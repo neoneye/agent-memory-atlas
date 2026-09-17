@@ -318,7 +318,7 @@ def scan_hook_payloads(root: Path, out: list) -> int:
             continue  # already reported by the auto-run table
         scanned += 1
         out.append((
-            "NOTE ",
+            "NOTE",
             where,
             "git hook payload, not installed here — inert until something copies it "
             "into .git/hooks or points core.hooksPath at it; read it before running any setup",
@@ -355,7 +355,7 @@ def scan_msbuild(root: Path, out: list) -> int:
                 ))
             if MSBUILD_EXEC.search(text):
                 out.append((
-                    "EXEC ",
+                    "EXEC",
                     rel(root, p),
                     "MSBuild Exec or Pre/PostBuildEvent runs a command during `dotnet build`",
                 ))
