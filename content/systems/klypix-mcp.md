@@ -7,14 +7,14 @@ page_kind: system
 source_name: "dahshanlabs/klypix-mcp"
 source_url: https://github.com/dahshanlabs/klypix-mcp
 archive_name: "dahshanlabs--klypix-mcp"
-revision: ea6beaadb75f2d4b447f7d7105a8e02da1c19657
-revision_url: https://github.com/dahshanlabs/klypix-mcp/commit/ea6beaadb75f2d4b447f7d7105a8e02da1c19657
-analyzed_at: 2026-09-09
+revision: a2b85fd76d0c26b82989dd9321f3421f3c3792f2
+revision_url: https://github.com/dahshanlabs/klypix-mcp/commit/a2b85fd76d0c26b82989dd9321f3421f3c3792f2
+analyzed_at: 2026-09-17
 capabilities: "trust_state, audit_log, human_review, negative_eval"
 capability_evidence:
-  trust_state: "archived containment, withheld from the injected brief and labelled in search | src/klypix-format.mjs:1751,1760,1961,1985,6353 | \"archived\" is a containment fact — the card's parent container is titled Archive — and the two read paths treat it differently on purpose. `structToBrief`, which builds the always-on session-start context, drops archived cards outright with `texts.filter(c => !isArchived(c))` and reports the count as withheld rather than silently. The explicit search path keeps them and labels them instead, on the stated ground that an archived card can be the right answer to \"what did we try?\", so `structToMarkdown` prefixes a banner reading \"N card(s) below are marked archived — superseded, consolidated or retired. Read them as history, not as the current state.\" One state withholds on the default read path; the exception is documented and deliberate | test/archived-visibility.mjs"
+  trust_state: "archived containment, withheld from the injected brief and labelled in search | src/klypix-format.mjs:1869,1760,1961,1985,6353 | \"archived\" is a containment fact — the card's parent container is titled Archive — and the two read paths treat it differently on purpose. `structToBrief`, which builds the always-on session-start context, drops archived cards outright with `texts.filter(c => !isArchived(c))` and reports the count as withheld rather than silently. The explicit search path keeps them and labels them instead, on the stated ground that an archived card can be the right answer to \"what did we try?\", so `structToMarkdown` prefixes a banner reading \"N card(s) below are marked archived — superseded, consolidated or retired. Read them as history, not as the current state.\" One state withholds on the default read path; the exception is documented and deliberate | test/archived-visibility.mjs"
   audit_log: "the graveyard, where a deleted card keeps its bytes | src/brain-graveyard.mjs, src/brain-history.mjs | a delete removes the card from canvas.json's `order` and moves its bytes to `graveyard/` rather than dropping them, so the deletion is recoverable and the record of what was deleted survives it. The module states why the Archive container was not reused: archived cards are still in `order`, so routing deletes there would make a deleted card reappear on the canvas. `brain-history.mjs` adds restore points, with a header auditing which write paths were already lossless and naming the two that were not — a human deleting a card, and a multi-select delete | test/brain-graveyard.mjs, test/brain-history.mjs"
-  human_review: "the garden approval code, which the agent cannot obtain | src/klypix-core.mjs:970-984,1064 | consolidation is two-phase: a dry run returns the over-grown areas for the calling agent to synthesize, and apply requires `approve: \"<code>\"` derived from the exact candidate set plus the day. The code is deliberately not printed in the dry-run response — the human runs `npx klypix-mcp garden-code` out of band, reviews the plan, and pastes it in. The comment records what it replaced and why: apply \"used to be a bare flag the dry-run TEXT invited the agent to set — a model-proposes-model-approves loop with zero human in it\", and \"an agent that never showed the human the plan never gets the code\". Stale approvals die when the selection or the day changes | test/brain-garden.mjs"
+  human_review: "the garden approval code, which the agent cannot obtain | src/klypix-core.mjs:1246-1260,1371 | consolidation is two-phase: a dry run returns the over-grown areas for the calling agent to synthesize, and apply requires `approve: \"<code>\"` derived from the exact candidate set plus the day. The code is deliberately not printed in the dry-run response — the human runs `npx klypix-mcp garden-code` out of band, reviews the plan, and pastes it in. The comment records what it replaced and why: apply \"used to be a bare flag the dry-run TEXT invited the agent to set — a model-proposes-model-approves loop with zero human in it\", and \"an agent that never showed the human the plan never gets the code\". Stale approvals die when the selection or the day changes | test/brain-garden.mjs"
   negative_eval: "archived cards must not read as current fact | test/archived-visibility.mjs | the suite exists because three high-traffic read paths rendered archived cards indistinguishably from live ones — `structToMarkdown` printed no marker and never printed `area` at all, `opSearchCanvases` printed matches unlabelled, and a raw card count announced \"2013 cards\" for 1605 live. The cases assert the labelling holds on a populated brain rather than that a result is empty, which is the right shape: the file states that matching stays recall-first on purpose and that the fix is labelling, not hiding | this is the test"
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
@@ -269,11 +269,48 @@ strings a human can read and correct with a text editor.
   lexical scoring, then reciprocal-rank fusion with the semantic arm, then
   correction and fulfilment overlays.
 - **Retrieval, per-prompt.** `scoreCardsAgainstQuery` via `promptRetrieve` in the
-  hook, `topK=5`, `minScore=3`.
+  hook, `topK=5`, `minScore=HOOK_LEXICAL_MIN_SCORE` (4), with
+  `rankLexicalMissFallback` as the second lane on a lexical miss — cosine × 10
+  plus a recency bump, `floor = 0.30`, gated by `FALLBACK_MIN_CONTENT_TOKENS`
+  (4).
 - **Context assembly.** `structToBrief` (`BUDGET_CHARS` 13,500, written to
   `.claude/brain-brief.md`) and `structToUltraBrief` (`ULTRA_BUDGET_CHARS` 1,800,
   the SessionStart stdout tier). `statusContextToMarkdown` computes a status
   section with a 4,200-character budget that structural lines bypass.
+**The surface every session touches was the one nothing measured, and the fix is
+the interesting part.** The per-prompt hook lane runs on every prompt in every
+Claude Code session; its semantic fallback ranking lived inline in the hook, so
+no harness could import it. Two things followed from that. Its cosine floor of
+0.30 *"had never trimmed once in 165 logged prompts"* — a guard in the code, in
+the path, that had never been observed refusing anything. And the enrichment
+sidecar meant to teach cards the asker's language was measured at 36 % questions
+and 18 % acknowledgements, *"like \"300mb is ok\""*.
+
+`rankLexicalMissFallback` (`src/klypix-format.mjs:2502`) is that lane extracted as
+a primitive: the production hook calls it (`src/global-brain-hook.mjs:3633`) and
+the harness and unit tests import the same export, which is what makes the
+measured number the shipped number — the module says so, *"[t]he harness reads
+these exports, so the number it measures is the number the hook ships."*
+
+**Both bars are priced rather than picked.** The comment above
+`HOOK_LEXICAL_MIN_SCORE` carries the sweep — 110 real founder prompts, 35 with a
+gold card and 75 that should inject nothing, against the author's real
+2,695-card brain — and tabulates the alternatives it rejected: `minScore` 3 fired
+on 97 % of real prompts and injected nothing on only 27 % of junk; 4 fires on
+91 % and stays silent on 69 % of junk; 5 fires on 74 % and reaches 81 %. The
+one-gold cost of the change, 29 % to 26 % on n=35, is called *"inside noise"*
+rather than free. `FALLBACK_MIN_CONTENT_TOKENS` is set the same way: every junk
+prompt that reached the fallback carried one to three content tokens, the real
+ones four or more.
+
+**And the two bars it could not justify ship as `null`.** `minTop` and `margin`
+are parameters of the same function, and the sweep found no cosine rule
+separating real prompts from junk, so they default to null and the health row
+records `top1` instead — leaving the field to decide later. The unit suite still
+proves they *can* fire: a floor above every cosine yields no hits, and a `minTop`
+of 0.9 shuts the lane. A guard that ships inert and is tested to bite is a
+different object from one that has never been exercised.
+
 - **Correction detection.** `detectContradictions` and `correctionOverlaysFor`,
   both keyed on `hasCorrectionCue` — the same case-sensitive predicate used at
   capture, deliberately shared so the three surfaces cannot disagree.
@@ -740,6 +777,12 @@ story is not in this repository.
   `BENCHMARKS.md`.
 
 ## History
+
+**2026-09-17** — [`a2b85fd76d0c26b82989dd9321f3421f3c3792f2`](https://github.com/dahshanlabs/klypix-mcp/commit/a2b85fd76d0c26b82989dd9321f3421f3c3792f2) — re-read eleven commits on, 40 files and +5,435 lines, across releases 1.85.0 and 1.86.0. Marks unchanged at `trust_state`, `audit_log`, `human_review` and `negative_eval`. `brain-graveyard.mjs`, `brain-history.mjs` and the three tests behind those marks — `archived-visibility.mjs`, `brain-graveyard.mjs`, `brain-history.mjs` — are byte-identical by blob sha, so the audit rows, the archived-visibility exclusion and the negative case rest on unmoved evidence. Eight anchors moved with the new code and are corrected; `structToBrief` also gained `freshness` and `summary` parameters.
+
+The release worth the re-read is 1.86.0, and section 4 records it. The per-prompt hook lane runs on every prompt of every session and had never been measured, because its semantic fallback ranking lived inline in the hook where no harness could import it. Two consequences were measurable once someone looked: its cosine floor of 0.30 *"had never trimmed once in 165 logged prompts"* — a guard in the path that had never been observed refusing anything — and the enrichment sidecar meant to teach cards the asker's language was 36% questions and 18% acknowledgements *"like \"300mb is ok\""*.
+
+`rankLexicalMissFallback` is that lane as a primitive the production hook calls and the harness imports, which is what ties the measured number to the shipped one — stated in the module as *"[t]he harness reads these exports, so the number it measures is the number the hook ships."* Both new bars are priced rather than chosen: the sweep table sits above `HOOK_LEXICAL_MIN_SCORE` with the rejected alternatives and their costs, over 110 real founder prompts against a real 2,695-card brain, and the one-gold cost of the change is reported as *"inside noise"* rather than as zero. The two bars the sweep could not justify — `minTop` and `margin` — ship as `null` with the reason written down, and the unit suite still proves they can fire. Screened again before reading: one auto-run surface, no build-time execution surface, one unpinned surface, two dependency files inside the seven-day cooldown. Nothing was installed and nothing was run.
 
 **2026-09-09** — [`ea6beaadb75f2d4b447f7d7105a8e02da1c19657`](https://github.com/dahshanlabs/klypix-mcp/commit/ea6beaadb75f2d4b447f7d7105a8e02da1c19657) — second reading, 142 commits on at `v1.84.0`: 232 files, 34,523 insertions, of which 4,026 land inside the seven paths this report's appendix names. Screened before reading: one auto-run surface (the MCP server manifest's start command), two manifests inside the seven-day cooldown, one unpinned surface with a lockfile beside it; nothing was installed and no suite was run.
 

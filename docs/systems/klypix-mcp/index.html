@@ -116,14 +116,14 @@ the control loses nothing.</p>
               <strong>dahshanlabs/klypix-mcp</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/dahshanlabs/klypix-mcp/commit/ea6beaadb75f2d4b447f7d7105a8e02da1c19657" title="ea6beaadb75f2d4b447f7d7105a8e02da1c19657">
+            <a class="meta-pill revision-pill" href="https://github.com/dahshanlabs/klypix-mcp/commit/a2b85fd76d0c26b82989dd9321f3421f3c3792f2" title="a2b85fd76d0c26b82989dd9321f3421f3c3792f2">
               <span>Analyzed revision</span>
-              <code>ea6beaad…</code>
+              <code>a2b85fd7…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-09</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/dahshanlabs--klypix-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -414,13 +414,56 @@ lexical scoring, then reciprocal-rank fusion with the semantic arm, then
 correction and fulfilment overlays.</li>
 <li><strong>Retrieval, per-prompt.</strong>
 <code>scoreCardsAgainstQuery</code> via <code>promptRetrieve</code> in
-the hook, <code>topK=5</code>, <code>minScore=3</code>.</li>
+the hook, <code>topK=5</code>,
+<code>minScore=HOOK_LEXICAL_MIN_SCORE</code> (4), with
+<code>rankLexicalMissFallback</code> as the second lane on a lexical
+miss — cosine × 10 plus a recency bump, <code>floor = 0.30</code>, gated
+by <code>FALLBACK_MIN_CONTENT_TOKENS</code> (4).</li>
 <li><strong>Context assembly.</strong> <code>structToBrief</code>
 (<code>BUDGET_CHARS</code> 13,500, written to
 <code>.claude/brain-brief.md</code>) and <code>structToUltraBrief</code>
 (<code>ULTRA_BUDGET_CHARS</code> 1,800, the SessionStart stdout tier).
 <code>statusContextToMarkdown</code> computes a status section with a
-4,200-character budget that structural lines bypass.</li>
+4,200-character budget that structural lines bypass. <strong>The surface
+every session touches was the one nothing measured, and the fix is the
+interesting part.</strong> The per-prompt hook lane runs on every prompt
+in every Claude Code session; its semantic fallback ranking lived inline
+in the hook, so no harness could import it. Two things followed from
+that. Its cosine floor of 0.30 <em>"had never trimmed once in 165 logged
+prompts"</em> — a guard in the code, in the path, that had never been
+observed refusing anything. And the enrichment sidecar meant to teach
+cards the asker's language was measured at 36 % questions and 18 %
+acknowledgements, <em>"like "300mb is ok""</em>.</li>
+</ul>
+<p><code>rankLexicalMissFallback</code>
+(<code>src/klypix-format.mjs:2502</code>) is that lane extracted as a
+primitive: the production hook calls it
+(<code>src/global-brain-hook.mjs:3633</code>) and the harness and unit
+tests import the same export, which is what makes the measured number
+the shipped number — the module says so, <em>"[t]he harness reads these
+exports, so the number it measures is the number the hook
+ships."</em></p>
+<p><strong>Both bars are priced rather than picked.</strong> The comment
+above <code>HOOK_LEXICAL_MIN_SCORE</code> carries the sweep — 110 real
+founder prompts, 35 with a gold card and 75 that should inject nothing,
+against the author's real 2,695-card brain — and tabulates the
+alternatives it rejected: <code>minScore</code> 3 fired on 97 % of real
+prompts and injected nothing on only 27 % of junk; 4 fires on 91 % and
+stays silent on 69 % of junk; 5 fires on 74 % and reaches 81 %. The
+one-gold cost of the change, 29 % to 26 % on n=35, is called <em>"inside
+noise"</em> rather than free. <code>FALLBACK_MIN_CONTENT_TOKENS</code>
+is set the same way: every junk prompt that reached the fallback carried
+one to three content tokens, the real ones four or more.</p>
+<p><strong>And the two bars it could not justify ship as
+<code>null</code>.</strong> <code>minTop</code> and <code>margin</code>
+are parameters of the same function, and the sweep found no cosine rule
+separating real prompts from junk, so they default to null and the
+health row records <code>top1</code> instead — leaving the field to
+decide later. The unit suite still proves they <em>can</em> fire: a
+floor above every cosine yields no hits, and a <code>minTop</code> of
+0.9 shuts the lane. A guard that ships inert and is tested to bite is a
+different object from one that has never been exercised.</p>
+<ul>
 <li><strong>Correction detection.</strong>
 <code>detectContradictions</code> and
 <code>correctionOverlaysFor</code>, both keyed on
@@ -970,6 +1013,43 @@ files), <code>src/brain-doctor.mjs</code>,
 <code>BENCHMARKS.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/dahshanlabs/klypix-mcp/commit/a2b85fd76d0c26b82989dd9321f3421f3c3792f2"><code class="commit-id" title="a2b85fd76d0c26b82989dd9321f3421f3c3792f2">a2b85fd7…</code></a>
+— re-read eleven commits on, 40 files and +5,435 lines, across releases
+1.85.0 and 1.86.0. Marks unchanged at <code>trust_state</code>,
+<code>audit_log</code>, <code>human_review</code> and
+<code>negative_eval</code>. <code>brain-graveyard.mjs</code>,
+<code>brain-history.mjs</code> and the three tests behind those marks —
+<code>archived-visibility.mjs</code>, <code>brain-graveyard.mjs</code>,
+<code>brain-history.mjs</code> — are byte-identical by blob sha, so the
+audit rows, the archived-visibility exclusion and the negative case rest
+on unmoved evidence. Eight anchors moved with the new code and are
+corrected; <code>structToBrief</code> also gained <code>freshness</code>
+and <code>summary</code> parameters.</p>
+<p>The release worth the re-read is 1.86.0, and section 4 records it.
+The per-prompt hook lane runs on every prompt of every session and had
+never been measured, because its semantic fallback ranking lived inline
+in the hook where no harness could import it. Two consequences were
+measurable once someone looked: its cosine floor of 0.30 <em>"had never
+trimmed once in 165 logged prompts"</em> — a guard in the path that had
+never been observed refusing anything — and the enrichment sidecar meant
+to teach cards the asker's language was 36% questions and 18%
+acknowledgements <em>"like "300mb is ok""</em>.</p>
+<p><code>rankLexicalMissFallback</code> is that lane as a primitive the
+production hook calls and the harness imports, which is what ties the
+measured number to the shipped one — stated in the module as <em>"[t]he
+harness reads these exports, so the number it measures is the number the
+hook ships."</em> Both new bars are priced rather than chosen: the sweep
+table sits above <code>HOOK_LEXICAL_MIN_SCORE</code> with the rejected
+alternatives and their costs, over 110 real founder prompts against a
+real 2,695-card brain, and the one-gold cost of the change is reported
+as <em>"inside noise"</em> rather than as zero. The two bars the sweep
+could not justify — <code>minTop</code> and <code>margin</code> — ship
+as <code>null</code> with the reason written down, and the unit suite
+still proves they can fire. Screened again before reading: one auto-run
+surface, no build-time execution surface, one unpinned surface, two
+dependency files inside the seven-day cooldown. Nothing was installed
+and nothing was run.</p>
 <p><strong>2026-09-09</strong> — <a
 href="https://github.com/dahshanlabs/klypix-mcp/commit/ea6beaadb75f2d4b447f7d7105a8e02da1c19657"><code class="commit-id" title="ea6beaadb75f2d4b447f7d7105a8e02da1c19657">ea6beaad…</code></a>
 — second reading, 142 commits on at <code>v1.84.0</code>: 232 files,
