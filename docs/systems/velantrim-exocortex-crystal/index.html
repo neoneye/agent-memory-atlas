@@ -186,32 +186,34 @@ it to <code>Validated</code>. <code>Contradicted</code>,
 answer only when its <code>truth_status</code> is exactly
 <code>VERIFIED</code>, its state is <code>Validated</code> or
 <code>ImmutableCore</code>, and its <code>restricted</code> bit is
-exactly false — a pure predicate that fails closed on any missing field.
-<strong>A curator decides.</strong> The review queue lists
+exactly false — a pure predicate that fails closed on any missing
+field.</p>
+<p><strong>A curator decides.</strong> The review queue lists
 <code>Observed</code> facts with a diagnosis, <code>approve</code>
 refuses a <code>conflict</code> until <code>resolve_conflict</code> has
 been called and overrides a blocked gate only with a named actor and a
 reason, <code>reject</code> collapses, and each decision is staged under
 a compare-and-swap on the fact's revision and projected to the canon
 through an outbox (<code>core/review.py</code>,
-<code>core/review_decision_store.py</code>). <strong>A rejected value is
-remembered.</strong> The immune memory (<code>core/immune.py</code>) is
-a table of claim patterns keyed on their normalized text, each with a
-type, a severity and the actor who recorded it; <code>ingest</code>, the
-importer and the review diagnosis screen every claim against it before
-the guardian and the truth gate, and a claim that contains a recorded
-pattern whole-token is refused with <code>Immune:</code> in the reason
-and stays <code>Observed</code> in L1. A curator records a pattern from
-the CLI, and in strict mode with learning on, the ingest path records a
-contradicted claim itself. The only way past a recorded pattern is a
-force approval with a named actor and a reason, audited as
-<code>review_force_approve</code>. <strong>Every compliance event is
-chained.</strong> <code>audit_log</code> rows seal
+<code>core/review_decision_store.py</code>).</p>
+<p><strong>A rejected value is remembered.</strong> The immune memory
+(<code>core/immune.py</code>) is a table of claim patterns keyed on
+their normalized text, each with a type, a severity and the actor who
+recorded it; <code>ingest</code>, the importer and the review diagnosis
+screen every claim against it before the guardian and the truth gate,
+and a claim that contains a recorded pattern whole-token is refused with
+<code>Immune:</code> in the reason and stays <code>Observed</code> in
+L1. A curator records a pattern from the CLI, and in strict mode with
+learning on, the ingest path records a contradicted claim itself. The
+only way past a recorded pattern is a force approval with a named actor
+and a reason, audited as <code>review_force_approve</code>.</p>
+<p><strong>Every compliance event is chained.</strong>
+<code>audit_log</code> rows seal
 <code>seq|ts|event|fact_id|detail|prev_hash</code> in
 <code>entry_hash</code>, a checkpoint row pins the head so a deleted
 suffix shows, and an HMAC signs entries when a key is configured
-(<code>core/audit.py</code>, <code>core/memory.py:298-360</code>).
-<strong>Exclusion is tested on populated reads</strong>: the queue
+(<code>core/audit.py</code>, <code>core/memory.py:298-360</code>).</p>
+<p><strong>Exclusion is tested on populated reads</strong>: the queue
 returns an ordinary pending claim beside a restricted one reduced to a
 stub, and a graph walk returns its results while skipping a stale
 terminal hit and the neighbour it would have reached.</p>

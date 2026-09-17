@@ -600,32 +600,37 @@ orphan every bucket whose path carries one — *"Two slugs is the correct end
 state, not one."* Nothing joins on the CLI's slug, so the defect was in the
 documentation and not the store (`store.py:50`).
 
-The slug is a directory name, a stamped column in the index, and a read-path
-filter in both. **Every latest-read names two things**: a `Route` — the
-project's own pointer only, or own-then-global — and an `Admit` rule — any
-payload, or only one whose stamp is this project's or nobody's
-(`store.py:1406`, `:1414`). Both are required keywords with no default, *"so an
-omitted argument is a TypeError instead of a silently unsafe answer"*, and the
-one reader the persist path uses, `read_own_stream_latest` (`store.py:1521`),
-takes no policy argument at all: nothing an environment variable can reach may
-change what carry writes. The comment where the previous single `fallback` flag
-was deleted names the reason: *"fallback named a mechanism while callers
-reasoned about a policy; four defects shipped from its default."* One of the
-four was the session-start injection — a project with no bucket of its own was
-briefed with another project's checkpoint on its first session, on the one
-path with no human reader (#784). The injection route falls back to the global
+The slug is a directory name, a stamped column in the index, and a
+read-path filter in both. **Every latest-read names two things**: a
+`Route` — the project's own pointer only, or own-then-global — and an
+`Admit` rule — any payload, or only one whose stamp is this project's or
+nobody's (`store.py:1406`, `:1414`). Both are required keywords with no
+default, *"so an omitted argument is a TypeError instead of a silently
+unsafe answer"*, and the one reader the persist path uses,
+`read_own_stream_latest` (`store.py:1521`), takes no policy argument at
+all: nothing an environment variable can reach may change what carry
+writes.
+
+The comment where the previous single `fallback` flag was deleted names
+the reason: *"fallback named a mechanism while callers reasoned about a
+policy; four defects shipped from its default."* One of the four was the
+session-start injection — a project with no bucket of its own was briefed
+with another project's checkpoint on its first session, on the one path
+with no human reader (#784). The injection route falls back to the global
 pointer only when the project is unknown or the operator opted in with
 `DAIMON_BRIEF_GLOBAL_FALLBACK` (`briefing.injection_read_route`,
-`briefing.py:349`), and a refused foreign payload leaves behind a `Marker` of
-exactly two header fields, slug and created, *"and NOTHING more"* — because
-stdout inside an agent session is checkpoint input, a wider marker would copy
-foreign content into this project's checkpoint (scar 0055). The contract is a
-forty-cell table, ten store states by four route-and-admit pairs, each cell
-marked by *why* it holds — forced by shipped behaviour, definitional, or
-additive — in `test_read_contract.py`, and a manifest test pins that
-own-then-global never appears in the four modules that persist what they read
-or hand out ids (scar 0063). The display path keeps its old shape: a header
-saying activity is elsewhere, never a hundred foreign lines under a warning.
+`briefing.py:349`), and a refused foreign payload leaves behind a `Marker`
+of exactly two header fields, slug and created, *"and NOTHING more"* —
+because stdout inside an agent session is checkpoint input, a wider marker
+would copy foreign content into this project's checkpoint (scar 0055).
+
+The contract is a forty-cell table, ten store states by four
+route-and-admit pairs, each cell marked by *why* it holds — forced by
+shipped behaviour, definitional, or additive — in `test_read_contract.py`,
+and a manifest test pins that own-then-global never appears in the four
+modules that persist what they read or hand out ids (scar 0063). The
+display path keeps its old shape: a header saying activity is elsewhere,
+never a hundred foreign lines under a warning.
 
 **Tenant scope is a host decision, not a caller's.** `DAIMON_TENANT_SCOPED`
 (`config.py:390`) makes every caller-chosen cross-project address a refusal —

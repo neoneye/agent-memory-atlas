@@ -50,37 +50,44 @@ index, an NLI filter, a PostgreSQL runtime — and a signed architecture
 checkpoint.
 
 Five mechanisms earn five marks. **A fact has a state and a status.** It
-enters as `Observed`; the truth gate (`core/truth_gate.py`) requires a source,
-refuses a `WORLD_FACT` whose `source_status` is `LLM_OUTPUT` as a fixed
-invariant no environment variable can lift, and applies a confidence floor to
-world facts and interpretations while letting subjective claims through as
-experience; admission moves it to `Validated`. `Contradicted`, `Deprecated`
-and `Collapsed` are terminal, and `is_strict_canonical`
-(`core/canonical_view.py:160-245`) lets a fact ground an answer only when its
-`truth_status` is exactly `VERIFIED`, its state is `Validated` or
-`ImmutableCore`, and its `restricted` bit is exactly false — a pure predicate
-that fails closed on any missing field. **A curator decides.** The review
-queue lists `Observed` facts with a diagnosis, `approve` refuses a `conflict`
-until `resolve_conflict` has been called and overrides a blocked gate only
-with a named actor and a reason, `reject` collapses, and each decision is
-staged under a compare-and-swap on the fact's revision and projected to the
-canon through an outbox (`core/review.py`, `core/review_decision_store.py`).
-**A rejected value is remembered.** The immune memory (`core/immune.py`) is a
-table of claim patterns keyed on their normalized text, each with a type, a
-severity and the actor who recorded it; `ingest`, the importer and the review
-diagnosis screen every claim against it before the guardian and the truth
-gate, and a claim that contains a recorded pattern whole-token is refused with
-`Immune:` in the reason and stays `Observed` in L1. A curator records a pattern
-from the CLI, and in strict mode with learning on, the ingest path records a
-contradicted claim itself. The only way past a recorded pattern is a force
-approval with a named actor and a reason, audited as `review_force_approve`.
+enters as `Observed`; the truth gate (`core/truth_gate.py`) requires a
+source, refuses a `WORLD_FACT` whose `source_status` is `LLM_OUTPUT` as a
+fixed invariant no environment variable can lift, and applies a confidence
+floor to world facts and interpretations while letting subjective claims
+through as experience; admission moves it to `Validated`. `Contradicted`,
+`Deprecated` and `Collapsed` are terminal, and `is_strict_canonical`
+(`core/canonical_view.py:160-245`) lets a fact ground an answer only when
+its `truth_status` is exactly `VERIFIED`, its state is `Validated` or
+`ImmutableCore`, and its `restricted` bit is exactly false — a pure
+predicate that fails closed on any missing field.
+
+**A curator decides.** The review queue lists `Observed` facts with a
+diagnosis, `approve` refuses a `conflict` until `resolve_conflict` has
+been called and overrides a blocked gate only with a named actor and a
+reason, `reject` collapses, and each decision is staged under a
+compare-and-swap on the fact's revision and projected to the canon through
+an outbox (`core/review.py`, `core/review_decision_store.py`).
+
+**A rejected value is remembered.** The immune memory (`core/immune.py`)
+is a table of claim patterns keyed on their normalized text, each with a
+type, a severity and the actor who recorded it; `ingest`, the importer and
+the review diagnosis screen every claim against it before the guardian and
+the truth gate, and a claim that contains a recorded pattern whole-token
+is refused with `Immune:` in the reason and stays `Observed` in L1. A
+curator records a pattern from the CLI, and in strict mode with learning
+on, the ingest path records a contradicted claim itself. The only way past
+a recorded pattern is a force approval with a named actor and a reason,
+audited as `review_force_approve`.
+
 **Every compliance event is chained.** `audit_log` rows seal
-`seq|ts|event|fact_id|detail|prev_hash` in `entry_hash`, a checkpoint row pins
-the head so a deleted suffix shows, and an HMAC signs entries when a key is
-configured (`core/audit.py`, `core/memory.py:298-360`). **Exclusion is tested
-on populated reads**: the queue returns an ordinary pending claim beside a
-restricted one reduced to a stub, and a graph walk returns its results while
-skipping a stale terminal hit and the neighbour it would have reached.
+`seq|ts|event|fact_id|detail|prev_hash` in `entry_hash`, a checkpoint row
+pins the head so a deleted suffix shows, and an HMAC signs entries when a
+key is configured (`core/audit.py`, `core/memory.py:298-360`).
+
+**Exclusion is tested on populated reads**: the queue returns an ordinary
+pending claim beside a restricted one reduced to a stub, and a graph walk
+returns its results while skipping a stale terminal hit and the neighbour
+it would have reached.
 
 The boundary of the `tombstone` mark is worth drawing here, because Crystal
 has two records that look alike. Erasure (`core/erasure.py`) is physical — L1,

@@ -96,36 +96,42 @@ compact summary with document ids. The changelog's unreleased section removes
 what preceded it: an `auto-recall` hook that searched the knowledge base
 after every shell, grep and web call *"passively, implicitly."*
 
-Three marks: `scope_enforced` for recall's project-first, opt-in-user index
-selection; `negative_eval` for the ten-case isolation suite that asserts the
-other scope's title absent beside the active scope's title present; and
-`human_review` for `teamai review` over a queue of machine-written codebase
-sections and for the merge request in front of every learning. Three findings
-sit against the design. **Supersession is unwired.** The merge-request
-importer computes which session learnings a new draft supersedes by keyword
-overlap and warns about them (`src/import-mr.ts:218-247`); the `supersedes`
-field on `LearningDraft` (`src/types.ts:1495-1502`) is read by nothing else in
-the tree. **Forgetting reaches a learning through a mirror, not through a record.**
+Three marks: `scope_enforced` for recall's project-first, opt-in-user
+index selection; `negative_eval` for the ten-case isolation suite that
+asserts the other scope's title absent beside the active scope's title
+present; and `human_review` for `teamai review` over a queue of
+machine-written codebase sections and for the merge request in front of
+every learning.
+
+Three findings sit against the design. **Supersession is unwired.** The
+merge-request importer computes which session learnings a new draft
+supersedes by keyword overlap and warns about them
+(`src/import-mr.ts:218-247`); the `supersedes` field on `LearningDraft`
+(`src/types.ts:1495-1502`) is read by nothing else in the tree.
+
+**Forgetting reaches a learning through a mirror, not through a record.**
 `teamai remove` appends a name to a committed `<type>/.removed` file
 (`src/resources/base.ts:108-116`); the next pull reads it and deletes that
 rule, skill or agent from every installed tool directory on every member's
-machine (`src/pull.ts:708-758`), and the push scan skips a name it lists, so a
-member's residual copy cannot re-upload it (`src/resources/skills.ts:319`,
-`rules.ts:35`, `agents.ts:59`). `REMOVABLE_TYPES` is skills, rules, agents and
-MCP (`src/remove.ts:10`), and learnings are in neither that list nor the
-tombstone cleanup. What a learning gets instead is `mirrorLearnings`
-(`src/utils/learnings-mirror.ts:17-83`), which treats `~/.teamai/learnings/`
-as a cache the repository owns: it removes the root Markdown files and the
-active-namespace files the repository no longer holds, drops a namespace
-directory the member's projects stopped naming, and only then copies. Both
-`pull` (`src/pull.ts:864-870`) and `contribute` (`src/contribute.ts:67`) call
-it, so a prune or an archive reaches every user-scope member's cache and the
-index built from it. The two mechanisms differ in what they leave behind. The
-`.removed` file is a record a later write consults, and it outlives the
-resource; the mirror is a comparison against present state, so a member who
-was offline for the deletion gets it on their next pull, and nothing anywhere
-records that the team rejected the document — a learning re-contributed under
-a new filename is a new document with a new hash.
+machine (`src/pull.ts:708-758`), and the push scan skips a name it lists,
+so a member's residual copy cannot re-upload it
+(`src/resources/skills.ts:319`, `rules.ts:35`, `agents.ts:59`).
+`REMOVABLE_TYPES` is skills, rules, agents and MCP (`src/remove.ts:10`),
+and learnings are in neither that list nor the tombstone cleanup. What a
+learning gets instead is `mirrorLearnings`
+(`src/utils/learnings-mirror.ts:17-83`), which treats
+`~/.teamai/learnings/` as a cache the repository owns: it removes the root
+Markdown files and the active-namespace files the repository no longer
+holds, drops a namespace directory the member's projects stopped naming,
+and only then copies. Both `pull` (`src/pull.ts:864-870`) and `contribute`
+(`src/contribute.ts:67`) call it, so a prune or an archive reaches every
+user-scope member's cache and the index built from it. The two mechanisms
+differ in what they leave behind. The `.removed` file is a record a later
+write consults, and it outlives the resource; the mirror is a comparison
+against present state, so a member who was offline for the deletion gets
+it on their next pull, and nothing anywhere records that the team rejected
+the document — a learning re-contributed under a new filename is a new
+document with a new hash.
 
 **Deleting a deployed skill is conditional.** `skillSafeToRemove`
 (`src/pull.ts:318-324`) returns false when the team-repo source cannot be

@@ -186,7 +186,7 @@ a harness plugin at the same version, an npm CLI at 0.1.2 and a browser
 demo on Cloudflare Pages that stores nothing. The screen found no
 auto-run surface; five manifests were inside the seven-day cooldown and
 nothing was installed or run.</p>
-<p>Four things here are memory in the atlas's sense, and they are wired
+<p>Five things here are memory in the atlas's sense, and they are wired
 together. The canvas persists — one IndexedDB key per canvas with a
 debounced folder backup as a real <code>.thoughtdag.json</code> file —
 and a generation's input is a deterministic walk of the graph
@@ -201,33 +201,35 @@ content blanked (<code>upstreamFingerprint</code>,
 recorded one; a stale answer still enters downstream context, prefixed
 <em>"[Stale: this answer was written against an earlier version of its
 upstream]"</em> (<code>:132,:328</code>), and <em>Replay</em>
-regenerates stale nodes in dependency order. Second, an <strong>ambient
-memory</strong> (<code>lib/memory.ts</code>): after an ordinary
-generation a background judge on the cheapest model proposes one
-sentence in one of three categories — preference, identity, project —
-and a constitution written in code, not in the prompt, decides
-admission: identity only when the user <em>stated</em> it, never
-inferred; a credential pattern blocks; three additions per canvas per
-session; duplicates and unknown update targets refused
-(<code>admissionCheck</code>, <code>:100-118</code>); every write shows
-a toast with <strong>Undo</strong>, and project entries stop flowing
-into context after 45 days without being deleted. Third, <strong>Session
-Atlas</strong>: the desktop shell fences the session directories of
-Claude Code, Codex, DeepSeek Harness and Pi
+regenerates stale nodes in dependency order.</p>
+<p>Second, an <strong>ambient memory</strong>
+(<code>lib/memory.ts</code>): after an ordinary generation a background
+judge on the cheapest model proposes one sentence in one of three
+categories — preference, identity, project — and a constitution written
+in code, not in the prompt, decides admission: identity only when the
+user <em>stated</em> it, never inferred; a credential pattern blocks;
+three additions per canvas per session; duplicates and unknown update
+targets refused (<code>admissionCheck</code>, <code>:100-118</code>);
+every write shows a toast with <strong>Undo</strong>, and project
+entries stop flowing into context after 45 days without being
+deleted.</p>
+<p>Third, <strong>Session Atlas</strong>: the desktop shell fences the
+session directories of Claude Code, Codex, DeepSeek Harness and Pi
 (<code>desktop/main.js:116-124</code>), reads them and never writes
 them, and mirrors a session onto a canvas turn by turn with tool calls
 as attachments, appending idempotently past a per-session ledger as the
-source grows. Fourth, the <strong>why layer</strong>: a CLI that reduces
-those same session files to an event index of what each turn did to
-which files, papers and URLs, answers <code>why &lt;path&gt;</code>,
+source grows.</p>
+<p>Fourth, the <strong>why layer</strong>: a CLI that reduces those same
+session files to an event index of what each turn did to which files,
+papers and URLs, answers <code>why &lt;path&gt;</code>,
 <code>find "&lt;phrase&gt;"</code> and <code>recall</code>, and serves
-the four questions read-only over MCP. Fifth, an <strong>agent
-lane</strong>, a preview from 0.4.9: the model picker lists Pi's and
-Codex's own models, and picking one hands the node's compiled context
-and question to that runtime in a working directory — a fresh session
-carrying the wired context as one block, or, when the question hangs
-directly off the tail of a session the canvas subscribes to, the
-question alone into that session
+the four questions read-only over MCP.</p>
+<p>Fifth, an <strong>agent lane</strong>, a preview from 0.4.9: the
+model picker lists Pi's and Codex's own models, and picking one hands
+the node's compiled context and question to that runtime in a working
+directory — a fresh session carrying the wired context as one block, or,
+when the question hangs directly off the tail of a session the canvas
+subscribes to, the question alone into that session
 (<code>lib/agents/agent-runtime.ts</code>, <code>agentOutbound</code>).
 A guard loaded into every Pi run
 (<code>runtime/agents/pi-guard.mjs</code>) asks the person, on the node,

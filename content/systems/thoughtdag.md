@@ -47,7 +47,7 @@ demo on Cloudflare Pages that stores nothing. The screen found no
 auto-run surface; five manifests were inside the seven-day cooldown and
 nothing was installed or run.
 
-Four things here are memory in the atlas's sense, and they are wired
+Five things here are memory in the atlas's sense, and they are wired
 together. The canvas persists — one IndexedDB key per canvas with a
 debounced folder backup as a real `.thoughtdag.json` file — and a
 generation's input is a deterministic walk of the graph
@@ -59,38 +59,44 @@ everything upstream of the node with the node's own content blanked
 (`slices/nodes.ts:251-260`) marks a node **stale** when the live
 fingerprint drifts from the recorded one; a stale answer still enters
 downstream context, prefixed *"[Stale: this answer was written against an
-earlier version of its upstream]"* (`:132,:328`), and *Replay*
-regenerates stale nodes in dependency order. Second, an **ambient
-memory** (`lib/memory.ts`): after an ordinary generation a background
-judge on the cheapest model proposes one sentence in one of three
-categories — preference, identity, project — and a constitution written
-in code, not in the prompt, decides admission: identity only when the
-user *stated* it, never inferred; a credential pattern blocks; three
-additions per canvas per session; duplicates and unknown update targets
-refused (`admissionCheck`, `:100-118`); every write shows a toast with
-**Undo**, and project entries stop flowing into context after 45 days
-without being deleted. Third, **Session Atlas**: the desktop shell fences
-the session directories of Claude Code, Codex, DeepSeek Harness and Pi
+earlier version of its upstream]"* (`:132,:328`), and *Replay* regenerates
+stale nodes in dependency order.
+
+Second, an **ambient memory** (`lib/memory.ts`): after an ordinary
+generation a background judge on the cheapest model proposes one sentence
+in one of three categories — preference, identity, project — and a
+constitution written in code, not in the prompt, decides admission:
+identity only when the user *stated* it, never inferred; a credential
+pattern blocks; three additions per canvas per session; duplicates and
+unknown update targets refused (`admissionCheck`, `:100-118`); every write
+shows a toast with **Undo**, and project entries stop flowing into context
+after 45 days without being deleted.
+
+Third, **Session Atlas**: the desktop shell fences the session directories
+of Claude Code, Codex, DeepSeek Harness and Pi
 (`desktop/main.js:116-124`), reads them and never writes them, and mirrors
 a session onto a canvas turn by turn with tool calls as attachments,
 appending idempotently past a per-session ledger as the source grows.
+
 Fourth, the **why layer**: a CLI that reduces those same session files to
 an event index of what each turn did to which files, papers and URLs,
-answers `why <path>`, `find "<phrase>"` and `recall`, and serves the
-four questions read-only over MCP. Fifth, an **agent lane**, a preview
-from 0.4.9: the model picker lists Pi's and Codex's own models, and
-picking one hands the node's compiled context and question to that
-runtime in a working directory — a fresh session carrying the wired
-context as one block, or, when the question hangs directly off the tail
-of a session the canvas subscribes to, the question alone into that
-session (`lib/agents/agent-runtime.ts`, `agentOutbound`). A guard loaded
-into every Pi run (`runtime/agents/pi-guard.mjs`) asks the person, on the
-node, before a tool reaches outside the working directory, and Codex reads
-the same guard file as its approval and sandbox policy. The finished turn
-is adopted from the runtime's session file, its tool calls become
-footprint attachments excluded from context by default, and downstream
-context carries one line naming the files the turn touched with the
-contents withheld (`store/context-builder.ts:221-283`).
+answers `why <path>`, `find "<phrase>"` and `recall`, and serves the four
+questions read-only over MCP.
+
+Fifth, an **agent lane**, a preview from 0.4.9: the model picker lists
+Pi's and Codex's own models, and picking one hands the node's compiled
+context and question to that runtime in a working directory — a fresh
+session carrying the wired context as one block, or, when the question
+hangs directly off the tail of a session the canvas subscribes to, the
+question alone into that session (`lib/agents/agent-runtime.ts`,
+`agentOutbound`). A guard loaded into every Pi run
+(`runtime/agents/pi-guard.mjs`) asks the person, on the node, before a
+tool reaches outside the working directory, and Codex reads the same guard
+file as its approval and sandbox policy. The finished turn is adopted from
+the runtime's session file, its tool calls become footprint attachments
+excluded from context by default, and downstream context carries one line
+naming the files the turn touched with the contents withheld
+(`store/context-builder.ts:221-283`).
 
 **What it records is unusual: not what the model concluded, but what it
 was shown.** At dispatch the streaming slice writes a `commit` event
