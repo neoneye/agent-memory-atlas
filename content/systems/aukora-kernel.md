@@ -9,11 +9,15 @@ source_url: https://github.com/aumara-xyz/aukora-kernel
 archive_name: "aumara-xyz--aukora-kernel"
 revision: b441edc4d17de778d30ae955f46408edae39bffe
 revision_url: https://github.com/aumara-xyz/aukora-kernel/commit/b441edc4d17de778d30ae955f46408edae39bffe
-analyzed_at: 2026-07-29
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, audit_log, negative_eval"
+capability_evidence:
+  scope_enforced: "the local recall, and the Convex path's principal binding | apps/symbiote/memory/memory.ts:142-154, apps/symbiote/convex/aumlokMemory.ts:53 | `recall` filters `e.payload.chainKey === chainKey && e.status === 'active' && e.payload.operation === 'remember' && e.content != null` before sorting by seq. The predicate is always applied — an absent argument falls back to `DEFAULT_CHAIN` rather than to no filter, which is the difference between this and a scope that disappears when the caller omits it. On the Convex path the recall head binds owner root id and key together | tests/aumlokMemory.test.ts:152 asserts an unrelated principal's recall returns `ok: false` while the owner's returns the value, in the same case"
+  audit_log: "the independent receipts log beside the entry store | apps/symbiote/memory/memory.ts:35, :66, :89, :188-196 | every write appends a receipt to a separate JSONL file whose records carry the contentHash and never the plaintext, and the append is documented FAIL-CLOSED — it throws rather than degrading to best-effort, because a row without a receipt would read as unbacked. `verifyChain` cross-checks the entry store against that independent log, so an in-place edit of either file alone is detectable; a `forget` appends its own receipt, which is what keeps an erasure audited | the module states its own limit inline: it is a hash chain and not a signature, so an attacker who rewrites both files consistently is not caught. No committed case drives the receipts path on the local store"
+  negative_eval: "recall across a revoked delegation and a forged proof-of-possession | tests/aumlokMemory.test.ts:152-168 | after one authorized write of `the secret`, the case asserts the owner reads it, the delegated subject reads it, an unrelated principal gets `ok: false`, then revokes the manifest and asserts the subject's recall is severed **while the owner's still returns the value** — the positive control sits inside the same assertion sequence, so the refusal cannot be an empty store. The sibling case asserts a spoofed principal, a spoofed owner and a right-key-wrong-domain signature each return `reader_pop_invalid` | these assert on an authority boundary rather than on a corrected value; and the local JSONL path, as opposed to the Convex one, has no equivalent case"
 stack_storage: "files"
 stack_retrieval: ""
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A hash-chained entry — payload (actor, chainKey, seq, operation, tier, contentHash) plus plaintext that a forget erases"
   storage: "Two paths: a local JSONL store with an independent JSONL receipts log, and a Convex `aukora_memory` table behind a delegation-manifest pipeline"
@@ -328,6 +332,17 @@ more interesting:
    [encryption note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-07-29-what-survives-encryption.md)
    argued for, sitting in production-shaped code with the check missing.
 
+**`trust_state` is withheld, and the distinction is narrow enough to state.**
+Entries carry `status: 'active' | 'tombstoned'`, that status is stored rather
+than recomputed, and `recall` filters on it — two of the three things the mark
+needs. What is missing is the third: a state that expresses a judgement about
+the *content*. Here `tombstoned` means the plaintext is gone; `active` means it
+is present. That is a presence flag, and a deletion flag is not a trust
+vocabulary. The systems that hold the mark carry a state like `superseded` —
+a row the store still has, still returns to an auditor, and no longer believes,
+which is the rubric's *"I have this on record but do not believe it"*. Aukora
+never occupies that position: a row it distrusts is a row it has erased.
+
 **Human review is withheld** and the near-miss is worth a sentence: AUMLOK
 unlocks a *session*, after which writes pass the lock check for the window. An
 operator authorizes the window; nobody adjudicates the item.
@@ -478,5 +493,7 @@ whose recall is already good.
 - `tests/nodeImportMemory.test.ts`, `tests/aumlokPrivacy.test.ts`
 
 ## History
+
+**2026-09-18** — [`b441edc4d17de778d30ae955f46408edae39bffe`](https://github.com/aumara-xyz/aukora-kernel/commit/b441edc4d17de778d30ae955f46408edae39bffe) — re-read at the same commit. Nothing upstream had moved, so any error found is the atlas's own. The three marks were re-derived from the code rather than inherited, and each now carries an evidence record naming the file, the symbol and the committed case that drives it. `scope_enforced` was checked against the failure mode that cost Cortex the same mark on 2026-09-17 — a scope argument that disappears when the caller omits it — and holds here, because `chainKey` falls back to `DEFAULT_CHAIN` and the predicate is therefore applied on every read rather than only when asked for. `trust_state` was considered and withheld: `active | tombstoned` is a presence flag, not a trust vocabulary (§9).
 
 **2026-07-29** — [`b441edc4d17de778d30ae955f46408edae39bffe`](https://github.com/aumara-xyz/aukora-kernel/commit/b441edc4d17de778d30ae955f46408edae39bffe) — first reading.

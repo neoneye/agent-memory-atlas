@@ -261,6 +261,11 @@ Gaps:
 - **The supersession lineage the collector consults is written only by the merge path**, so consolidation's superseded rows are deleted as orphans.
 - **`confidence` without a verification path.**
 - **Ten samples is a low bar** for eight simultaneous comparisons; the gate is closer to a smoke test than a statistical one.
+- **The same engine ships in a second repository.** `metaclaw/memory/store.py`,
+  `consolidator.py` and `models.py` are byte-identical to
+  `simplemem/evolver/` in the same lab's [SimpleMem](../simplemem/), so the
+  findings here and there describe one code base — including the
+  `garbage_collect` gap above. Two reports, one piece of evidence.
 - **The whole memory package is vendored twice and has diverged**, not merely duplicated: seven of eighteen modules differ, `store.py` by 414 changed lines and `manager.py` by 178, and the sidecar's store takes a non-reentrant `threading.Lock` where the main copy takes an `RLock`. Both copies' `list_active` are identical, so the marks hold either way, but "MetaClaw's memory" names two code bases and a reader has to say which one they mean.
 
 ## 10. Tests, Evals, and Benchmarks
