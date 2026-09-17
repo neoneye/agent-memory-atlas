@@ -46,6 +46,13 @@ when the work happens.
   `second-me` analyses in prose and files as `sqlite, chroma`. No report: it is a
   literature map, not a memory system.
 
+- [2026-09-11-candidate-triage-v2.md](2026-09-11-candidate-triage-v2.md) —
+  handoff: adapt the existing intake to Scout's updated candidate feed. The
+  second of the two specifications behind `scripts/triage`.
+- [2026-09-11-candidate-triage.md](2026-09-11-candidate-triage.md) —
+  the original specification and implementation plan for candidate triage: what
+  stands between Scout's index and the twenty repositories a day this atlas can
+  read properly, and the `claim`/`result` contract it exposes to the analysis.
 - [2026-09-10-archive-what-is-outstanding.md](2026-09-10-archive-what-is-outstanding.md) —
   396 of 397 cited repositories are forked into the archive org and every report
   carries an `archive_name`. What is missing: the pinned commits are reachable
@@ -406,6 +413,21 @@ when the work happens.
   asks where exactly it happens, which is one level deeper than the rubric ever
   requires. Three weeks of a correct mark, one hour of writing four fields to
   find its boundary.
+- [2026-08-20-a-benchmark-that-grades-progress-and-a-churn-nobody-measures.md](2026-08-20-a-benchmark-that-grades-progress-and-a-churn-nobody-measures.md) —
+  triage. A terminal-agent benchmark and a 2022 reinforcement-learning paper,
+  neither a memory system, both integrated into pages already arguing for what
+  they contain. Recorded beside NanoClaw.
+- [2026-08-20-a-console-with-no-store-and-two-measured-absences.md](2026-08-20-a-console-with-no-store-and-two-measured-absences.md) —
+  triage. A desktop agent harness, a Google Research post and an Anthropic
+  experiment report: one excluded on the scope test, two integrated as
+  measurements.
+- [2026-08-20-a-run-record-and-the-cost-completion-hides.md](2026-08-20-a-run-record-and-the-cost-completion-hides.md) —
+  triage. A reproducibility CLI and a measurement paper, neither agent memory,
+  one carrying a number this atlas had wanted for a year. Recorded beside Hestia.
+- [2026-08-20-three-out-of-scope-and-the-field-that-says-it-could-not-read.md](2026-08-20-three-out-of-scope-and-the-field-that-says-it-could-not-read.md) —
+  triage. Three of eleven repositories submitted that day are not agent memory,
+  and one carries a field this atlas had argued for without ever finding a
+  worked example.
 - [2026-08-19-a-re-pin-is-a-claim-about-the-whole-report.md](2026-08-19-a-re-pin-is-a-claim-about-the-whole-report.md) —
   Verifying the one criticism an upstream said it had closed, then advancing the
   pin, left the report pinning 3.12.0 and describing 3.11 in two other places.
