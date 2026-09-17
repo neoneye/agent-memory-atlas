@@ -103,6 +103,32 @@ not more care; it is naming the surface in the claim.
   always compare equal. Test for emptiness before testing for equality, and make
   the control fire before believing the absence.
 
+## A postscript: the check that would have accused six correct paragraphs
+
+thoughtdag's "Four things" was found by splitting the paragraph, not by looking
+for it. That invited an obvious follow-up — scan the corpus for enumerative leads
+whose enumeration does not match — so it was written and run.
+
+It produced six accusations and **every one was wrong.** agentdatabase says
+"Three mechanisms are worth the report" and describes the first, with the other
+two in the paragraphs that follow; the scan only looked inside one paragraph.
+mettaclaw, nexusmem and reflexion each state three items and bold fewer than
+three, because bold is emphasis in their prose and not an enumerator.
+memory-compiler and provem *do* bold all three — `**value**`, and the scan
+required a bolded run of at least six characters.
+
+Three different ways to be wrong, and the common cause is the subject of this
+note: the scan counted a proxy for the enumeration rather than the enumeration,
+and the proxy was narrower than the thing in two directions at once.
+
+The atlas has already paid for this lesson and written it down.
+`check_mark_agreement.py` had a branch counting stated mark totals; it was
+removed because *"a checker that has to guess which of four things a sentence
+counts will accuse correct prose, which costs more than the drift it catches."*
+The same reasoning applies here, so no check shipped — the finding is that the
+corpus's enumerative leads are sound, with one known exception that a human
+reading found.
+
 The two projects here that found their own instance both did it the same way — by
 hitting the symptom in use, then writing the mechanism into a commit message or a
 test docstring rather than leaving it in the diff. Neither would be recoverable
