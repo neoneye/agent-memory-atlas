@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 576 reports.**
+**This page covers all 577 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5004,3 +5004,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 17,143 lines of Python with 589 test functions across 57 files, 165 commits since March 2026, nine numbered migrations each documenting the race it closes; three capability marks.
 - Study when: you have a scope filter that can resolve to nothing, or you want a model for a threat document that a deployer can act on.
 - Do not copy when: you need a record of what was removed — the content hash is value-keyed but lives on the live row, so forgetting a memory and storing the same text again succeeds.
+
+### [`open-graph-memory`](../systems/open-graph-memory/)
+- Best idea: **delete the gate when its endpoint goes.** Two milestones' evaluators and gates were removed when `/v1/query` was retired, with the reason recorded — "structured graph endpoints cannot honestly reproduce answer, citation, retrieval-mode, or fallback metrics." The alternative is repointing a benchmark at the nearest surviving surface and letting the number quietly mean something else.
+- Second idea: **a historical baseline should be reproducible and inert.** The retired milestone's numbers survive as retained JSONL scored by an evaluator that never calls a model or a store, "keeping published baselines reproducible without presenting those metrics as a current runtime check."
+- Third idea: **prove isolation through the front door.** The M4 gate boots a fresh Postgres through Compose, creates a second tenant with its own token and dataset, and drives the public graph routes as the outsider — asserting that the two tenants' same-named entities have different ids and that every one of the primary's paths returns 404.
+- Fourth idea: **put the must-not cases in the golden set.** The M3 fixture's labels "deliberately exclude the ambiguous and unsupported relations: a deterministic extractor must not invent either", with thresholds frozen at 1.0 so precision measures invention rather than only coverage.
+- Biggest risk: **the list you wrote down is not read.** `excluded_relations` names the two relations a correct extractor must not produce and no code loads it. The rule survives because the precision threshold is 1.0, but a failing gate reports `relation_precision=0.900 < 1.000` instead of naming the relation that was invented — and the next person to edit the file will assume it is scored.
+- Most reusable component: the gate wrapper that reads its thresholds out of the same golden file that defines the labels, so a threshold and the fixture it judges cannot drift apart in separate edits.
+- Maturity impression: MIT, 24,508 lines of Python with 260 test functions, 203 commits since July 2026, alembic migrations, an ARQ worker, a web app, a Python SDK and a contracts package; three capability marks.
+- Study when: you publish a benchmark number and need a model for what to do with it when the thing it measured changes.
+- Do not copy when: you need a record of what was retired keyed on its content — supersession here points at a successor and nothing is keyed on the old text.
