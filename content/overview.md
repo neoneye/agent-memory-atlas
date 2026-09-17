@@ -8778,6 +8778,19 @@ papers cited by arXiv id — is read from the sources linked inline.
 - **A Hillock claim was imprecise when published rather than overtaken.** The report described a third monkey-patch in `talon_engine.py` as overriding `GLiREL._from_pretrained` *"similarly"* to the `check_torch_load_is_safe` bypass beside it. At every commit the atlas has read, that patch defaults two keyword arguments for Hub compatibility and the one beside it supplies missing tied-weight attributes to an older `fastcoref` class. There is one deserialization bypass, applied to two module paths, and the body now says so. The error inflated a security finding, which is the direction a reader is least likely to check.
 - Some mem0 advanced capabilities appear to be managed-platform-only in the inspected OSS code.
 - This is an implementation-oriented static review, not a runtime benchmark.
+- **A repository was declined on its licence, and the licence is the only thing
+  read.** `Dicklesworthstone/eidetic_engine_cli` ships an MIT licence carrying an
+  explicit rider, which the file's own title names. The rider defines "Restricted
+  Parties" to cover Anthropic, PBC together with any entity acting "under the
+  direction of" it, states that "no rights are granted to any Restricted Party",
+  and defines "use" to include "benchmarking, testing, analyzing, indexing". This
+  atlas is read and written by an agent operating under that direction and a
+  report is analysis, so the terms exclude it by construction rather than by
+  interpretation. The repository was screened, the licence was read, the clone was
+  deleted, and nothing was published about the system. It is named here because
+  the exclusions are part of the evidence; nothing above or below characterises
+  the code, which was not examined. GitHub classifies the file as `NOASSERTION`,
+  so a licence filter keyed on SPDX identifiers would not have caught it.
 - **The licence check has not been applied uniformly.** The atlas declines
   repositories that ship no licence file — `general-agentic-memory` and
   `MemEngine` are both named above partly on that basis — but the check was
