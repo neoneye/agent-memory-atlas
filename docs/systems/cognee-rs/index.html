@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust reimplementation of cognee
+that authorizes a caller's dataset ids inside the search orchestrator
+rather than at the HTTP edge, proves with a recording retriever that a
+foreign id never reaches the store, and calls its delete mode soft while
+removing the row.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cognee-RS — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust reimplementation of
+cognee that authorizes a caller's dataset ids inside the search
+orchestrator rather than at the HTTP edge, proves with a recording
+retriever that a foreign id never reaches the store, and calls its
+delete mode soft while removing the row.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cognee-RS — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust reimplementation of
+cognee that authorizes a caller's dataset ids inside the search
+orchestrator rather than at the HTTP edge, proves with a recording
+retriever that a foreign id never reaches the store, and calls its
+delete mode soft while removing the row.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cognee-RS — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Cognee-RS",
+      "description": "A Rust reimplementation of cognee that authorizes a caller's dataset ids inside the search orchestrator rather than at the HTTP edge, proves with a recording retriever that a foreign id never reaches the store, and calls its delete mode soft while removing the row.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The authorization check is one layer below
+the one that documents it</p>
+          <h1>Cognee-RS</h1>
+          <p class="document-deck">A Rust reimplementation of cognee
+that authorizes a caller's dataset ids inside the search orchestrator
+rather than at the HTTP edge, proves with a recording retriever that a
+foreign id never reaches the store, and calls its delete mode soft while
+removing the row.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/topoteretes/cognee-rs">
+              <span>Source</span>
+              <strong>topoteretes/cognee-rs</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/topoteretes/cognee-rs/commit/2fa09d1847c7f6689012e75ce0bce35065e0d559" title="2fa09d1847c7f6689012e75ce0bce35065e0d559">
+              <span>Analyzed revision</span>
+              <code>2fa09d18…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/topoteretes--cognee-rs" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>topoteretes--cognee-rs</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cognee-RS is a Rust implementation of <a href="../cognee/">cognee</a>
+— 269,864 lines across 30 crates, 236 commits since June 2026,
+dual-licensed MIT/Apache-2.0, with 3,809 test functions in 215 test
+files. It is a full reimplementation rather than a binding: ingestion,
+the cognify pipeline, the graph and vector layers, the retrievers, an
+HTTP server, a CLI, and bindings back out to Python, TypeScript, Java,
+iOS and C. The stated goal is a drop-in companion to the Python SDK, and
+parity with Python is an explicit design constraint that shows up
+everywhere, including in a comment asking a future maintainer
+<em>not</em> to fix a <code>top_k &lt;= 0</code> behaviour because it
+would break the cross-SDK tests.</p>
+<p>Two marks, and the first is placed somewhere worth noting. The HTTP
+layer has a permission helper,
+<code>check_permission_via_handles</code>, used by the dataset and
+delete routers — and in an open-source build it returns
+<code>Ok(())</code>, because the real resolution lives in closed crates.
+Read only that file and you would conclude the search path is
+unguarded.</p>
+<p>It is not, because the check that matters is one layer down. The
+search orchestrator authorizes the caller's dataset ids against a
+readable set it derives from the requester before any retriever runs,
+and the test that proves it does not stop at the status code:</p>
+<blockquote>
+<p><code>retriever must not run for a dataset the caller does not own</code></p>
+</blockquote>
+<p>A recording retriever asserts <code>last_params().is_none()</code>
+after a 403 — the store was never queried, not merely that the answer
+was refused — and the next test asserts the owned id reaches the
+retriever and is what it is scoped to. That pair earns both marks.</p>
+<p>The finding to carry away is smaller and sits in the delete crate.
+<code>DeleteMode</code> has two variants, <code>Soft</code> and
+<code>Hard</code>, and <code>Soft</code> is the HTTP DTO's
+<code>#[default]</code>. The only branch on that enum in the whole
+service decides whether an orphan sweep runs afterwards. A soft delete
+removes the dataset and its data; the service's own test asserts
+<code>dataset should be gone</code>. Nothing is kept, nothing is marked,
+and nothing is recoverable — which is a defensible deletion design and
+an indefensible name for it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory here is a graph built from documents, owned by datasets, owned
+by users. The public surface is four verbs — <code>remember</code>
+ingests and builds the graph, <code>recall</code> auto-routes retrieval
+over it, <code>improve</code> refines it from feedback,
+<code>forget</code> deletes — layered over the Python-parity REST API
+that preceded them.</p>
+<p>Scope is dataset ownership, and the important structural decision is
+where it is enforced. Rather than authorize at the edge and trust the
+core, the orchestrator resolves and authorizes immediately before
+dispatching to a retriever, so every caller of the orchestrator — HTTP,
+CLI, the language bindings — inherits the same check without repeating
+it. The cost is that the HTTP router's own permission helper looks
+toothless in isolation, which it is; the benefit is that a new entry
+point cannot forget the check.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Ownership is checked inside the orchestrator rather than at the HTTP edge, so every entry point inherits it — but only when the caller supplies a dataset filter; an unfiltered search skips the branch entirely.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Ownership is checked inside the orchestrator rather than at the HTTP edge, so every entry point inherits it — but only when the caller supplies a dataset filter; an unfiltered search skips the branch entirely.
+flowchart TD
+  HTTP[&quot;POST /v1/search or /v1/recall&quot;]
+  EDGE[&quot;check_permission_via_handles&lt;br/&gt;open build has no ACL wired, so it passes through&quot;]
+  CLI[&quot;CLI and language bindings&quot;]
+  ORCH[&quot;SearchOrchestrator::search&quot;]
+  FILTER{&quot;dataset_ids or datasets supplied&quot;}
+  NOSCOPE[&quot;No owner scope applied&lt;br/&gt;matches Python&quot;]
+  READABLE[&quot;readable_dataset_ids&lt;br/&gt;one listing query, not one per id&quot;]
+  ACL[&quot;ACL grants&lt;br/&gt;closed crate&quot;]
+  OWNED[&quot;Datasets the requester owns&lt;br/&gt;plus tenant filter&quot;]
+  AUTH{&quot;every requested id in the readable set&quot;}
+  DENY[&quot;403 PermissionDeniedError&lt;br/&gt;retriever never called&quot;]
+  ROUTE[&quot;Auto-route to a retriever&quot;]
+  RET[&quot;Chunk, entity, hybrid, temporal, graph completion&quot;]
+  STORE[(&quot;Graph, vector and relational stores&quot;)]
+  TEL[&quot;Telemetry POST&lt;br/&gt;search route sends the query text&quot;]
+
+  HTTP --&gt; EDGE --&gt; ORCH
+  HTTP --&gt; TEL
+  CLI --&gt; ORCH
+  ORCH --&gt; FILTER
+  FILTER --&gt;|&quot;no&quot;| NOSCOPE --&gt; ROUTE
+  FILTER --&gt;|&quot;yes&quot;| READABLE
+  READABLE --&gt; ACL
+  READABLE --&gt; OWNED
+  READABLE --&gt; AUTH
+  AUTH --&gt;|&quot;no&quot;| DENY
+  AUTH --&gt;|&quot;yes&quot;| ROUTE --&gt; RET --&gt; STORE</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Authorize.</strong> <code>authorize_dataset_ids</code>
+checks both the caller's explicit ids and the ids that names resolve to
+against <code>readable_dataset_ids</code>; a mixed batch is denied whole
+(<code>crates/search/src/orchestration/search_orchestrator.rs:249-345</code>).</li>
+<li><strong>Resolve the readable set.</strong> With an
+<code>AclDb</code> wired,
+<code>authorized_dataset_ids_with_roles(requester, "read")</code> —
+direct, tenant and role grants. Without one,
+<code>list_datasets_by_owner</code>, with a tenant filter so a caller
+scoped to one tenant cannot pass another tenant's id
+(<code>:287-320</code>).</li>
+<li><strong>Skip when unfiltered.</strong> The authorization branch is
+entered only when <code>dataset_ids</code> is non-empty, and
+<code>datasets: Some(vec![])</code> is treated as <code>None</code> —
+"no resolution and no scope filter" (<code>:382-425</code>).</li>
+<li><strong>Delete.</strong> <code>DeleteService::execute</code> removes
+in dependency order — relational, graph, vector, file storage — and
+branches on the mode exactly once, to decide whether to sweep orphan
+entities, entity types and edge types afterwards
+(<code>crates/delete/src/lib.rs:555-580</code>).</li>
+<li><strong>Roll back a run.</strong> <code>RunSweeper</code> selects
+the same artifact-deletion path by <em>pipeline run</em> rather than by
+dataset, which is how a failed cognify is undone
+(<code>crates/delete/src/sweep.rs</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is the graph cognify builds: documents, chunks, entities,
+entity types, text summaries and typed edges, each with a vector
+payload, in collections the delete path enumerates as a fallback when a
+backend cannot list its own (<code>DocumentChunk</code>,
+<code>Entity</code>, <code>EntityType</code>, <code>TextSummary</code>,
+<code>EdgeType</code>).</p>
+<p>There is no epistemic status on a node, which is why
+<code>trust_state</code> is withheld. The nearest candidate is a whole
+crate named for the idea, and reading it is worthwhile precisely because
+it is <em>not</em> a trust state. <code>crates/truth-subspace</code> is
+alignment math over centroids, and its module header states the design
+rule:</p>
+<blockquote>
+<p>Everything else here is NEUTRAL when inputs are missing/empty/zero:
+<code>align::truth_score</code> returns <code>0.5</code> and
+<code>align::truth_factor</code> returns <code>1.0</code>, so callers
+that pass nothing leave baseline scoring untouched.</p>
+</blockquote>
+<p>That is a reranking weight, default-off behind
+<code>use_truth_weight</code> / <code>build_truth_subspace</code>, and a
+score standing beside a ranking rather than a state withholding a memory
+from a read. The atlas's distinction between the two exists for exactly
+this case.</p>
+<p><code>tombstone</code> is withheld because deletion keeps nothing. No
+record is keyed on a removed value, so the same content ingested again
+is simply new.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A query is auto-routed — <code>route_query</code> picks a search type
+with a confidence, and when the caller supplied a type <em>and</em>
+asked for auto-routing the router still runs so that the override is
+recorded, which is a small honesty about what the router would have
+chosen. Retrievers cover chunks, entities, a hybrid of both, a temporal
+retriever and graph completion.</p>
+<p>The scope work is in <code>recall_scope.rs</code>, and it carries the
+regression that justifies the mark. A test named
+<code>run_graph_forwards_dataset_ids_to_the_retriever</code> exists
+because <code>POST /v1/recall</code> once deserialised
+<code>dataset_ids</code> and then dropped it on the way to the
+orchestrator — <em>"so an id filter returned unfiltered results"</em>. A
+scope key that is parsed, validated and then not forwarded is the most
+common way this capability fails in the corpus, and it is worth noting
+that the fix here was a test asserting the value arrives at the
+retriever rather than a comment saying it should.</p>
+<p>The same module states a second limit in the open: the caller's
+identity is converted to a UUID only when a dataset filter is in play,
+and <em>"without one the graph search has no owner scope to apply and
+the value is simply not forwarded"</em>. An unfiltered recall is
+unscoped. That matches Python, it is written down, and it means the mark
+certifies that the key reaches the query when the caller supplies one —
+not that every read is owner-bounded.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingestion runs a pipeline whose runs are registered with a status,
+which is what makes the rollback path possible: <code>RunSweeper</code>
+deletes the artifacts of one run rather than of a dataset, so a cognify
+that failed halfway can be undone without touching what earlier runs
+wrote.</p>
+<p>Deletion is the part worth reading closely. The service removes in
+dependency order so no orphaned references remain, supports a dry-run
+preview that reports the same counts without executing, and then:</p>
+<pre class="rust"><code>if matches!(request.mode, DeleteMode::Hard) {
+    let (oe, oet, sweep_warnings) = self.sweep_orphan_nodes().await?;
+    ...
+}</code></pre>
+<p>That is the only place the mode is consulted. Everything before it
+has already deleted the data, in both modes. The comment above it
+explains why the sweep is hard-only — running it on soft would make the
+Rust soft delete <em>more</em> destructive than Python's, because it
+would remove degree-one nodes Python preserves — and a
+<code>TODO(B6.4)</code> records the resulting divergence honestly:
+Python's soft path prunes nodes orphaned by the deletion through a
+provenance-scoped traversal, Rust currently leaves them, and closing the
+gap needs a deletion-scoped cleanup rather than the global degree
+heuristic.</p>
+<p>So the reasoning behind the branch is sound and documented. What is
+left is a public enum whose <code>Soft</code> variant is the HTTP
+default and deletes the row, with the service's own test asserting the
+dataset is gone afterwards. Anyone reading <code>mode: "soft"</code> in
+an API request and expecting recoverability will be wrong, and nothing
+in the DTO says otherwise.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, an HTTP server with an OpenAPI surface, and bindings for
+Python, TypeScript, Java, iOS and C, with a cross-SDK end-to-end harness
+that exercises them against the same server. The parity discipline is
+unusual and visible: router doc comments cite the Python file and line
+range they mirror, and at least one behaviour that looks like a bug is
+pinned in place with an explanation that changing it would diverge from
+Python and break the cross-SDK tests.</p>
+<p>One consequence of that discipline is worth stating for an operator
+rather than for a reviewer. Telemetry is on by default — the workspace
+records it as a locked decision, for Python parity — and fires a
+fire-and-forget POST to an external analytics endpoint on every public
+API call, with three documented opt-outs:
+<code>TELEMETRY_DISABLED</code> set to anything, <code>ENV=test</code>
+or <code>ENV=dev</code>, or a <code>--no-default-features</code> build
+in which the code compiles to a no-op.</p>
+<p>Most routes send metadata: <code>recall</code> sends the search type,
+<code>remember</code> sends the entry type. The Python-parity
+<code>POST /api/v1/search</code> route sends
+<code>"query": payload.query.clone()</code> along with
+<code>system_prompt</code> and <code>node_name</code>, and the sanitiser
+that runs over caller-supplied properties replaces values by uuid5 only
+for keys named <code>url</code>. So in a default build of the server,
+the text of a search query on that route leaves the machine. The
+operator-facing document is thorough about identity, salt derivation and
+opt-outs, and describes <code>additional_properties</code> as
+caller-supplied without listing what the routers put there; this is the
+one entry in that list that is content rather than shape.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The authorization code is the best-documented code in the repository,
+and it argues for its own shape rather than asserting it. On why the
+readable set is fetched once instead of checked per id:</p>
+<blockquote>
+<p><code>dataset_ids</code> is client-supplied and unbounded, so a
+per-id loop lets any authenticated caller amplify one request into N
+database round-trips, and on an authorization path that is the wrong
+bound to hand the requester.</p>
+</blockquote>
+<p>On what the open build cannot do, in both directions: a dataset
+shared with the caller — granted directly, by tenant, or by a role — is
+readable in Python and denied here, because ownership is the only signal
+available without the closed ACL crate; and conversely the open path
+skips Python's check that the owner's own <code>read</code> grant is
+still present, so <em>"an owner whose grant was revoked is admitted here
+and denied in Python."</em> Naming a divergence that makes your own
+implementation more permissive is rarer than naming one that makes it
+stricter.</p>
+<p>And on the gate itself: <em>"if neither is wired this returns an
+empty set, i.e. fails closed rather than open should that gate ever be
+removed."</em></p>
+<p><code>audit_log</code> is withheld, and the reason is a gap rather
+than a judgement call. The Python implementation earns that mark on a
+provenance ledger — append-only, hash-chained, <code>sequence_id</code>
+and <code>previous_checksum</code> per entry. Nothing in this tree
+corresponds to it: no <code>provenance_entries</code>, no checksum
+chain, no ledger crate. Search history is recorded and deleted per user,
+which is a retrieval log and the other half of the pattern. In a port
+this thorough about parity, the absence reads as not-yet rather than
+declined.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>3,809 test functions across 215 test files in 30 crates; nothing was
+run here. The scope tests in the orchestrator alone number a dozen, and
+their names are the specification:
+<code>dataset_name_resolution_is_owner_scoped</code>,
+<code>explicit_ids_are_tenant_scoped_without_an_acl</code>,
+<code>mixed_dataset_ids_deny_the_whole_batch</code>,
+<code>errors_when_dataset_ids_supplied_without_user_id</code>,
+<code>acl_alone_authorizes_without_a_dataset_resolver</code>,
+<code>empty_dataset_ids_fall_back_to_dataset_names</code>.</p>
+<p>The recording retriever is the technique worth copying. Asserting a
+403 proves the caller was refused; asserting that the retriever's
+<code>last_params()</code> is <code>None</code> proves the store was
+never asked. Those are different claims, and only the second one rules
+out a backend that ran the query and discarded the result — which is
+what a fail-open cache or a mis-ordered check would produce.</p>
+<p>There is also a cross-SDK end-to-end harness and a Locust performance
+suite under <code>e2e-cross-sdk/</code>, both with unpinned requirement
+files, which is what the screening flagged.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Put the authorization where the retrieval is.</strong> An
+edge check protects the entry points that exist today. A check
+immediately before dispatch protects the CLI, the bindings and the entry
+point somebody adds next year, and it is the difference between this
+repository's search path being guarded and looking unguarded.</li>
+<li><strong>Prove the store was never queried, not just that the caller
+was refused.</strong> A recording double whose parameters you assert are
+absent is a few lines and catches the entire class of bug where the
+answer is filtered after the data has already been fetched.</li>
+<li><strong>Do not let the requester choose the cost of authorizing
+them.</strong> One listing query bounded by the caller's own grants,
+membership-checked locally, instead of a loop over a client-supplied
+list.</li>
+<li><strong>Name the mode after what it does.</strong> <code>Soft</code>
+here means "without the orphan sweep" and reads as "recoverable". Either
+keep something, or call it what it is.</li>
+<li><strong>Write down which direction a degradation errs in.</strong>
+"Denies things Python allows" and "admits things Python denies" are both
+divergences and only one of them is safe; this repository says which of
+its divergences are which, per case.</li>
+<li><strong>Check what your analytics payload carries, per route, not
+per policy.</strong> The policy here is careful — hashed identities,
+three opt-outs, a written document. The query text still goes, because
+one route passes it into the properties bag and the sanitiser only
+hashes keys named <code>url</code>.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the provenance ledger planned for the port, or deliberately left
+to the Python side? It is the mechanism the Python implementation's
+audit mark rests on.</li>
+<li><code>Soft</code> and <code>Hard</code> are public in the HTTP DTO
+with <code>Soft</code> as default. Is the intent that soft becomes a
+real soft delete later, or is the name inherited?</li>
+<li>The search route's telemetry payload carries the query text for
+Python parity while <code>recall</code> carries only the search type. Is
+that a deliberate parity obligation on the legacy route, or an oversight
+the four-verb API quietly fixed?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Authorization:
+<code>crates/search/src/orchestration/search_orchestrator.rs</code> —
+<code>readable_dataset_ids</code> and its reasoning (249-320),
+<code>authorize_dataset_ids</code> (328-345), the <code>search</code>
+scope block (382-425), the scope tests (1632-2400).</li>
+<li>Recall scope: <code>crates/search/src/recall_scope.rs</code> —
+<code>RecallOptions</code> and the tenant note (26-47),
+<code>run_graph</code> (425-510), the dropped-<code>dataset_ids</code>
+regression (943-1019).</li>
+<li>HTTP permissions: <code>crates/http-server/src/permissions.rs</code>
+(the open-build pass-through),
+<code>crates/http-server/src/routers/search.rs:120-180</code>.</li>
+<li>Deletion: <code>crates/delete/src/lib.rs</code> —
+<code>DeleteMode</code> (88-92), the single mode branch and its TODO
+(546-580); <code>crates/delete/src/authorized.rs</code>;
+<code>crates/delete/src/sweep.rs</code>.</li>
+<li>Truth subspace:
+<code>crates/truth-subspace/src/lib.rs:1-28</code>.</li>
+<li>Telemetry: <code>crates/http-server/src/telemetry.rs</code>,
+<code>crates/http-server/Cargo.toml:44-49</code> (the default feature
+set), <code>crates/telemetry/src/lib.rs:1-45</code>,
+<code>crates/telemetry/src/sanitize.rs</code>,
+<code>crates/telemetry/src/real.rs:174</code>,
+<code>docs/observability/send_telemetry.md</code>.</li>
+<li>Tests:
+<code>crates/http-server/tests/test_search_post.rs:212-271</code>,
+<code>crates/delete/tests/authorized_delete_integration.rs</code>,
+<code>crates/delete/tests/hard_mode_orphan_sweep.rs</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;previous_checksum\|provenance_entries&quot; crates --include=&#39;*.rs&#39;   # 0 — no ledger in the port
+grep -rn &quot;check_permission_via_handles&quot; crates/http-server/src            # datasets and delete routers only, not search
+grep -rn &quot;matches!(request.mode, DeleteMode&quot; crates/delete/src/lib.rs     # 1 — the orphan sweep, the only mode branch
+grep -rn &quot;sanitize_nested_properties&quot; crates/telemetry/src                # one call site, names = [&quot;url&quot;]
+grep -rn -A 14 &quot;telemetry::emit&quot; crates/http-server/src/routers/ | grep -E &#39;&quot;(query|text|content|prompt)&quot;&#39;   # search.rs only
+grep -rn &quot;enum .*Status\|status:&quot; crates/models/src                        # pipeline and operation-result fields, no epistemic status</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/topoteretes/cognee-rs/commit/2fa09d1847c7f6689012e75ce0bce35065e0d559"><code class="commit-id" title="2fa09d1847c7f6689012e75ce0bce35065e0d559">2fa09d18…</code></a>
+— first reading, at the head of <code>main</code>, 236 commits in at
+workspace version 0.2.0. The Python <a href="../cognee/">cognee</a> is a
+separate report, read two days earlier; this one judges the Rust tree on
+its own code. Screened with <code>scripts/screen_repo.py</code> first:
+no auto-run surface, five build-time execution paths including two
+pytest <code>conftest.py</code> collection hooks and an npm
+<code>postinstall</code>, four unpinned dependency surfaces, and 47
+files changed inside the seven-day cooldown. Nothing was installed,
+built or run — no cargo, no npm, no pip, no server started. Two marks.
+<code>trust_state</code> is withheld with a whole crate named for the
+idea present: the truth-subspace values are a reranking weight, neutral
+at 0.5 and 1.0 when unset and default-off, which is a score beside a
+ranking rather than a state that withholds. <code>tombstone</code> is
+withheld because both delete modes remove the row and nothing is keyed
+on what was removed. <code>audit_log</code> is withheld on an absence
+that is specific rather than general: the hash-chained provenance ledger
+the Python implementation carries has no counterpart in this tree.
+<code>bitemporal</code> and <code>human_review</code> are absent.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

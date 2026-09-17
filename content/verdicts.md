@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 566 reports.**
+**This page covers all 567 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4894,3 +4894,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MPL-2.0, 125,343 lines of Rust, 282 commits past the fork point across 281 files, 962 test functions in the core crate, twenty-two written spec contracts one of which is validated against the source by a test; three capability marks.
 - Study when: you need a worked example of bitemporality in an embedded engine rather than assembled over one, or you want to see how a fork documents an inherited bug — three of four sites upstream's, one its own, named site by site.
 - Do not copy when: you need a tombstone keyed on the value or an epistemic status field; a retraction here is keyed on the logical key and its valid time, so the same content written again is a fresh live row.
+
+### [`cognee-rs`](../systems/cognee-rs/)
+- Best idea: **authorize where the retrieval happens, not at the edge.** The HTTP permission helper passes through in an open build because the grant resolution lives in closed crates; the check that matters runs inside the search orchestrator, immediately before dispatch, so the CLI, the language bindings and whatever entry point is added next inherit it without repeating it.
+- Second idea: **do not let the requester choose the cost of authorizing them.** `readable_dataset_ids` fetches the caller's readable set in one listing query and membership-checks locally, rather than looping over a client-supplied and unbounded id list — "on an authorization path that is the wrong bound to hand the requester" — and returns an empty set, failing closed, if neither an ACL nor a dataset resolver is wired.
+- Third idea: **assert the store was never queried.** A recording retriever asserts `last_params().is_none()` after a foreign dataset id returns 403. A status-code assertion proves the caller was refused; this one rules out a path that fetched the rows and discarded them, and the owned-id case sits immediately beside it as the control.
+- Biggest risk: **the delete mode named soft removes the row.** `DeleteMode::Soft` is the HTTP DTO's default, and the only branch on that enum in the service decides whether an orphan sweep runs afterwards — everything before it has already deleted in both modes, with the service's own test asserting the dataset is gone. The reasoning for the branch is sound and documented; the name is not.
+- Most reusable component: the doc comment on `readable_dataset_ids`, which states in which *direction* the open build diverges from Python per case — a dataset shared with the caller is readable in Python and denied here, while an owner whose grant was revoked is admitted here and denied in Python. Naming a divergence that makes your own build more permissive is rarer than naming one that makes it stricter.
+- Maturity impression: MIT OR Apache-2.0, 269,864 lines of Rust across 30 crates, 236 commits since June 2026, 3,809 test functions in 215 files, bindings for Python, TypeScript, Java, iOS and C with a cross-SDK harness; two capability marks.
+- Study when: you are porting a system and want a model for recording parity divergences, or you need an authorization check that new entry points cannot forget.
+- Do not copy when: you need the provenance ledger the Python implementation carries — there is no counterpart here — or you run the Python-parity search route in a default build without reading what its telemetry payload carries, which includes the caller's query text.
