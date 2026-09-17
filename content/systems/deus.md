@@ -28,7 +28,7 @@ matrix:
   background: "An evolution loop that scores its own responses, generates self-critiques and rewrites the system prompt, plus periodic compression into weekly and monthly digests"
   trust: "A confidence and a corroboration count on an atom, an expiry with a stated reason that the read path honours against the clock, and a pending-conflict queue that only a person clears"
   strengths: "An expiry compared to the clock rather than tested for presence; a contradiction policy that queues for review and says so at the insert site; a write-once resolution timestamp; and a migration that declines to backfill a value it never observed rather than fabricating one"
-  risks: "The architecture document describes the semantic graph as having bi-temporal validity, and the schema's temporal columns are all observation-axis with no as-of read anywhere; the README's 95% LongMemEval figure is a 50-example run whose own table reports Recall@1 at 94%, and the headline drops the sample size; and the comparison table's ~37K-line self-measurement is five months stale against a tree whose `src` alone is 64,400 lines"
+  risks: "The architecture document describes the semantic graph as having bi-temporal validity over a schema carrying one temporal axis — the session date an `as_of` read travels, plus observation stamps and a retirement date — with no column recording when the store came to believe anything; the README's 95% LongMemEval figure is a 50-example run whose own table reports Recall@1 at 94%, and the headline drops the sample size; and the comparison table's ~37K-line self-measurement is five months stale against a tree whose `src` alone is 64,400 lines"
 ---
 
 ## 1. Executive Summary
@@ -139,7 +139,8 @@ try/except `ALTER TABLE` that tolerates an existing database.
 
 That list is what makes the documentation's temporal claim worth checking, and
 section 9 does. Briefly: those stamps record when *the system observed*
-something, which is one axis. `bitemporal` is withheld.
+something, which is one axis — the axis the `as_of` read travels. `bitemporal`
+is withheld for the missing second axis, not for a missing query.
 
 `tombstone` is withheld because expiry is keyed on the atom, not on its content —
 the same sentence said again is a new atom with a fresh id. `audit_log` has no
@@ -202,11 +203,19 @@ layer as *"entity-relationship extraction with bi-temporal validity"*. The
 schema's temporal columns are `first_seen`, `last_seen` and `expired_at` on
 relationships, and `first_seen`, `last_seen` on entities. Those are observation
 stamps — when this system first and last saw the thing — plus a retirement date.
-A bitemporal store separates when a fact was true in the world from when the
-store came to believe it, and answers a query as of a past moment; searching the
-tree for `valid_from`, `valid_to`, `as_of` or `bitemporal` outside that document
-returns nothing in the memory path. The capability the doc names is not the
-capability the schema has, and the mark is withheld on the schema.
+A bitemporal store needs two things: a validity axis separate from the record
+axis, and a read that resolves as of a past moment. Deus has the second. The
+search function takes `as_of`, binds it into the query, post-filters the
+full-text arm separately — *"FTS results bypass the ANN date filter"* — renders
+the result under an `as-of` heading, and exposes it as a CLI argument
+(`scripts/memory_indexer.py:1375`, `:1406-1408`, `:1492-1494`, `:1731-1732`,
+`:4768`). What it does not have is the first. The axis that read travels is the
+entry's `date`, the date of the session the atom came from, and there is no
+second column recording when the store came to believe it — so the query answers
+*what had been said by then*, not *what this memory held to be true then* as
+against *what it holds now*. One axis with time travel over it is not
+bitemporality, and the mark is withheld on that rather than on an absence of
+temporal reads.
 
 **"95% recall on the LongMemEval benchmark."** The README's headline. The
 architecture document gives the underlying run in full and is more careful:
@@ -293,8 +302,10 @@ review queue that nobody may look at for days.
 **Searches recorded for the negative claims**
 
 ```sh
-grep -rn "valid_from\|valid_to\|as_of\|bitemporal" src scripts evolution --include='*.py' --include='*.ts'
-  # nothing in the memory path; the term appears only in docs/ARCHITECTURE.md
+grep -rn "as_of" scripts/memory_indexer.py
+  # 7 hits: the search parameter, its SQL bind, the FTS post-filter, the rendered heading, the CLI arg
+grep -rn "valid_from\|valid_to\|bitemporal" src scripts evolution --include='*.py' --include='*.ts'
+  # 0 — no second temporal axis; "bi-temporal" appears only in docs/ARCHITECTURE.md
 grep -rn "expired_at IS NULL" scripts/memory_indexer.py        # eight read sites, clock-compared on atoms
 grep -rn "pending_conflicts" --include='*.py' . | grep -v test # schema, insert, resolve, dismiss, CLI
 grep -rn "expired" scripts/tests evolution/tests | grep assert # a GC file pair; no recall exclusion
@@ -310,8 +321,8 @@ with five hook families and four committed hook scripts), several build-time
 execution paths including an npm `prepare` that runs husky and a migration script
 and three pytest `conftest.py` collection hooks. Every auto-run surface was read
 as data and none executed; nothing was installed, built or run. Two marks.
-`bitemporal` is withheld against a documentation claim rather than an absence of
-intent: `docs/ARCHITECTURE.md` describes the semantic graph as having bi-temporal
+`bitemporal` is withheld for a missing axis rather than a missing query — an
+`as_of` read exists and travels the session date; `docs/ARCHITECTURE.md` describes the semantic graph as having bi-temporal
 validity, and the schema's temporal columns are observation stamps with no as-of
 read anywhere in the memory path. `tombstone` is withheld because expiry keys on
 the atom rather than its content. `negative_eval` is withheld because no committed

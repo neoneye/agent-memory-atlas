@@ -22144,12 +22144,13 @@ data", so the review-cadence metric starts empty rather than wrong — and
 the <code>resolved = 0</code> guard makes the timestamp write-once.</li>
 <li>Biggest risk: <strong>the summary surfaces are more confident than
 the documents behind them.</strong> The architecture document describes
-the semantic graph as having bi-temporal validity over a schema whose
-temporal columns are observation stamps with no as-of read; the README's
-"95% recall on the LongMemEval benchmark" is a 50-example run whose own
-table reports Recall@1 at 94%; and the comparison table's "~37K lines"
-is dated five months before this pin, against a tree whose
-<code>src</code> alone is 64,400 lines.</li>
+the semantic graph as having bi-temporal validity over a schema carrying
+a single temporal axis — an <code>as_of</code> read exists and travels
+the session date, but nothing records when the store came to believe a
+thing; the README's "95% recall on the LongMemEval benchmark" is a
+50-example run whose own table reports Recall@1 at 94%; and the
+comparison table's "~37K lines" is dated five months before this pin,
+against a tree whose <code>src</code> alone is 64,400 lines.</li>
 <li>Second risk: no committed case asserts an expired atom stays out of
 a recall, which is the property the expiry predicate exists to provide
 and the one a regression would break silently. The pending-conflict
@@ -22166,9 +22167,10 @@ and per-conversation container isolation; two capability marks.</li>
 <li>Study when: you detect contradictions automatically and have to
 decide who resolves them, or you are choosing the form of an expiry
 predicate.</li>
-<li>Do not copy when: you need to answer what the store believed at a
-past moment — the temporal columns record when this system observed
-something, not when a fact was true.</li>
+<li>Do not copy when: you need to answer what the store
+<em>believed</em> at a past moment — <code>as_of</code> answers what had
+been said by then, over a single axis, and no column records when the
+store came to hold it.</li>
 </ul>
         </article>
       </div>

@@ -243,8 +243,9 @@ that tolerates an existing database.</p>
 <code>confidence</code> and an <code>expired_at</code>.</p>
 <p>That list is what makes the documentation's temporal claim worth
 checking, and section 9 does. Briefly: those stamps record when <em>the
-system observed</em> something, which is one axis.
-<code>bitemporal</code> is withheld.</p>
+system observed</em> something, which is one axis — the axis the
+<code>as_of</code> read travels. <code>bitemporal</code> is withheld for
+the missing second axis, not for a missing query.</p>
 <p><code>tombstone</code> is withheld because expiry is keyed on the
 atom, not on its content — the same sentence said again is a new atom
 with a fresh id. <code>audit_log</code> has no table of mutations,
@@ -304,13 +305,22 @@ schema's temporal columns are <code>first_seen</code>,
 <code>last_seen</code> and <code>expired_at</code> on relationships, and
 <code>first_seen</code>, <code>last_seen</code> on entities. Those are
 observation stamps — when this system first and last saw the thing —
-plus a retirement date. A bitemporal store separates when a fact was
-true in the world from when the store came to believe it, and answers a
-query as of a past moment; searching the tree for
-<code>valid_from</code>, <code>valid_to</code>, <code>as_of</code> or
-<code>bitemporal</code> outside that document returns nothing in the
-memory path. The capability the doc names is not the capability the
-schema has, and the mark is withheld on the schema.</p>
+plus a retirement date. A bitemporal store needs two things: a validity
+axis separate from the record axis, and a read that resolves as of a
+past moment. Deus has the second. The search function takes
+<code>as_of</code>, binds it into the query, post-filters the full-text
+arm separately — <em>"FTS results bypass the ANN date filter"</em> —
+renders the result under an <code>as-of</code> heading, and exposes it
+as a CLI argument (<code>scripts/memory_indexer.py:1375</code>,
+<code>:1406-1408</code>, <code>:1492-1494</code>,
+<code>:1731-1732</code>, <code>:4768</code>). What it does not have is
+the first. The axis that read travels is the entry's <code>date</code>,
+the date of the session the atom came from, and there is no second
+column recording when the store came to believe it — so the query
+answers <em>what had been said by then</em>, not <em>what this memory
+held to be true then</em> as against <em>what it holds now</em>. One
+axis with time travel over it is not bitemporality, and the mark is
+withheld on that rather than on an absence of temporal reads.</p>
 <p><strong>"95% recall on the LongMemEval benchmark."</strong> The
 README's headline. The architecture document gives the underlying run in
 full and is more careful: <em>"Evaluated on LongMemEval-S (ICLR 2025),
@@ -408,8 +418,10 @@ dated comparison table).</li>
 <code>scripts/tests/test_memory_indexer.py:1652</code>.</li>
 </ul>
 <p><strong>Searches recorded for the negative claims</strong></p>
-<pre class="sh"><code>grep -rn &quot;valid_from\|valid_to\|as_of\|bitemporal&quot; src scripts evolution --include=&#39;*.py&#39; --include=&#39;*.ts&#39;
-  # nothing in the memory path; the term appears only in docs/ARCHITECTURE.md
+<pre class="sh"><code>grep -rn &quot;as_of&quot; scripts/memory_indexer.py
+  # 7 hits: the search parameter, its SQL bind, the FTS post-filter, the rendered heading, the CLI arg
+grep -rn &quot;valid_from\|valid_to\|bitemporal&quot; src scripts evolution --include=&#39;*.py&#39; --include=&#39;*.ts&#39;
+  # 0 — no second temporal axis; &quot;bi-temporal&quot; appears only in docs/ARCHITECTURE.md
 grep -rn &quot;expired_at IS NULL&quot; scripts/memory_indexer.py        # eight read sites, clock-compared on atoms
 grep -rn &quot;pending_conflicts&quot; --include=&#39;*.py&#39; . | grep -v test # schema, insert, resolve, dismiss, CLI
 grep -rn &quot;expired&quot; scripts/tests evolution/tests | grep assert # a GC file pair; no recall exclusion
@@ -425,7 +437,8 @@ including an npm <code>prepare</code> that runs husky and a migration
 script and three pytest <code>conftest.py</code> collection hooks. Every
 auto-run surface was read as data and none executed; nothing was
 installed, built or run. Two marks. <code>bitemporal</code> is withheld
-against a documentation claim rather than an absence of intent:
+for a missing axis rather than a missing query — an <code>as_of</code>
+read exists and travels the session date;
 <code>docs/ARCHITECTURE.md</code> describes the semantic graph as having
 bi-temporal validity, and the schema's temporal columns are observation
 stamps with no as-of read anywhere in the memory path.

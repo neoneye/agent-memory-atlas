@@ -286,7 +286,7 @@ detector proves the plumbing and nothing about detection.
 **Searches recorded for the negative claims**
 
 ```sh
-grep -rn "superseded\|supersede" src --include='*.rs'        # 0 — nothing supersedes; the log is append-only by design
+grep -rn "superseded\|supersede" src --include='*.rs'        # 2, both "reap superseded versions" of the Lance dataset; no memory supersession
 grep -rn "status\|confidence" src/memory --include='*.rs'    # no trust field on a chunk
 grep -rn "valid_from\|as_of\|recorded_at" src --include='*.rs'   # one timestamp per chunk, when it was said
 grep -rn "fn .*not_\|assert!(!" src/commands/recall.rs       # query-classification assertions, no retrieval exclusion
