@@ -9,11 +9,13 @@ source_url: https://github.com/mindverse/Second-Me
 archive_name: "mindverse--Second-Me"
 revision: d0e40251d9de61b3340b8d0d7d83150669f1885a
 revision_url: https://github.com/mindverse/Second-Me/commit/d0e40251d9de61b3340b8d0d7d83150669f1885a
-analyzed_at: 2026-07-29
+analyzed_at: 2026-09-17
 capabilities: "human_review"
+capability_evidence:
+  human_review: "the memories page and the document deletion behind it, standing between an upload and the training that makes it permanent | lpm_kernel/file_data/document_service.py:519-620, lpm_kernel/api/domains/documents/routes.py:194-215 | uploaded material is listed for the person and `delete_file_by_name` removes it in seven steps — the `memories` row, the file on disk, the document embedding from Chroma's `document_collection`, the chunk embeddings from `chunk_collection`, the `ChunkModel` rows and the `Document` row. Embedding is a separate explicit `POST /documents/<id>/chunk/embedding` and training is a separate job again, so a person can inspect and remove a document while it is still only an L0 row | no test covers the cascade or any other part of the memory pipeline; the four files matching `test` are two vendored `gguf-py` cases and an MLX smoke check. Two limits belong on the record: each Chroma deletion sits in its own `try/except` that logs and continues, so a partial delete is possible with only a log line; and the cascade touches neither the versioned L1 biography nor the trained weights, so review is only pre-hoc with respect to the layer that cannot be edited"
 stack_storage: "sqlite, chroma"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Three layers — a document with its raw content, a versioned biography and shades derived from it, and the model weights trained on both"
   storage: "SQLite for documents, chunks and the versioned L1 tables; ChromaDB for embeddings; GGUF files for the model"
@@ -308,6 +310,18 @@ rubric's preferred shape, and rarer here than after-the-fact deletion. It is wor
 noting that this is also the only review that can work: after training, there is
 nothing to review.
 
+**Two qualifications from the 2026-09-17 re-reading, neither of which moves the
+mark.** The cascade's two Chroma deletions each sit in their own
+`try/except Exception` that logs and continues
+(`document_service.py:585`, `:598`), so a vector store that refuses either
+delete leaves the SQLite rows gone and the embeddings present, with a log line
+as the only signal — the deletion is seven steps and none of them is
+transactional. And the review is pre-hoc only with respect to the layers the
+delete cannot reach: embedding is a separate explicit
+`POST /documents/<id>/chunk/embedding` and training a separate job again, so a
+document sits as an L0 row until someone advances it, which is what makes the
+surface a genuine gate rather than a file manager.
+
 The privacy design is the project's foundation and it is coherent — local
 training, local inference, local storage, no vendor. The corresponding hazard is
 the one this report keeps returning to: personal documents get compiled into
@@ -454,5 +468,13 @@ what this report is mainly evidence for.
 `space_repository.py`, `space_schema.py`
 
 ## History
+
+**2026-09-17** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, one build-time execution path (the `Makefile`), four unpinned manifests, nothing inside the cooldown; nothing was installed, built or run.
+
+Every claim held, including the two absence claims re-run at a wider path: four files in the tree match `test` and all four are vendored `gguf-py` cases or an MLX smoke check, so nothing tests the memory pipeline; and the deletion cascade was read end to end — the `memories` row, the file, the document embedding from Chroma's `document_collection`, the chunk embeddings from `chunk_collection`, the `ChunkModel` rows and the `Document` row, and neither L1 nor the weights.
+
+**Two qualifications were added to the `human_review` mark, which now carries an evidence record.** Each of the two Chroma deletions sits in its own `try/except Exception` that logs and continues, so a vector store that refuses either one leaves the SQLite rows deleted and the embeddings present, with a log line as the only signal; the seven-step cascade is not transactional. And what makes the memories page a gate rather than a file manager is that embedding is a separate explicit `POST /documents/<id>/chunk/embedding` and training a separate job again — a document stays an L0 row until a person advances it, which is why the review is genuinely before the effect that cannot be undone.
+
+Marks unchanged at one; `stack_source` moves from `seeded` to `reviewed`.
 
 **2026-07-29** — [`d0e40251d9de61b3340b8d0d7d83150669f1885a`](https://github.com/mindverse/Second-Me/commit/d0e40251d9de61b3340b8d0d7d83150669f1885a) — first reading.
