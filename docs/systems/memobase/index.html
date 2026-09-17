@@ -116,7 +116,7 @@ default.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/memodb-io--memobase" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -528,6 +528,27 @@ and asserts <em>that memory's id</em> is absent from the result. The
 first tests that a filter does not over-return; only the second asserts
 that named material must not be retrieved.
 <strong><code>negative_eval</code> is withheld.</strong></p>
+<p>The 2026-09-18 reading found a third case in the same file that is
+the strongest of that family and still not the mark. At
+<code>:70-79</code> a user is created, a profile is added,
+<code>len(d.profiles) == 1</code> is asserted, the user is deleted, and
+then <code>get_user</code> is asserted to fail <em>and</em>
+<code>get_user_profiles(u_id, project_id)</code> to return zero — a read
+after a cascade delete, through the real scoped controller, with its
+positive control two lines above rather than beside it. It is the same
+shape as A-MEM's keyed get after a delete and AutoGen's query after
+<code>clear()</code>: an emptied key returns nothing. What it does not
+do is name material that must stay out of a result that has other
+material in it.</p>
+<p><strong>And no committed case crosses a project boundary.</strong>
+All 95 project references in the server suite are
+<code>DEFAULT_PROJECT_ID</code>, so the strongest structural scope in
+this corpus has no test that two projects cannot see each other. That
+matters less here than it would elsewhere — the key is in the primary
+key, so an insert without it is rejected by Postgres and a read with the
+wrong one addresses a different row — but it is the gap, and it is the
+one an adopter who moves this schema to a filter-based store would
+inherit without noticing.</p>
 <p><code>docs/experiments/900-chats/</code> holds a ShareGPT-derived
 transcript set, and <code>docs/experiments/locomo-benchmark/</code>
 holds the LoCoMo number and the artifacts behind it. That is unusually
@@ -716,6 +737,35 @@ committed code.</li>
 <code>fixture/memobase/*.json</code>;
 <code>docs/experiments/900-chats/</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit, confirmed
+still the tip by <code>git ls-remote</code> before a
+<code>--depth 1</code> clone. Nothing could have moved, so this reading
+audited the previous two. Screened again: no auto-run surface, five
+build-time execution paths including two pytest <code>conftest.py</code>
+collection hooks, four unpinned manifests, nothing inside the cooldown;
+nothing was installed, built or run.</p>
+<p><code>scope_enforced</code> now carries an evidence record, and
+writing it produced the sharpest way to state what this system does
+differently: the scope is not a predicate a query must remember but a
+<strong>component of the primary key</strong> — seven memory tables
+declare <code>PrimaryKeyConstraint("id", "project_id")</code>, so a row
+without a project cannot exist and two projects' rows are different
+rows. The honest gap on the same record: no committed case crosses a
+project boundary, because all 95 project references in the server suite
+are <code>DEFAULT_PROJECT_ID</code>.</p>
+<p>A third near-miss case was added to section 10, and it is the
+strongest of its family without being the mark:
+<code>test_controller.py:70-79</code> creates a user, adds a profile,
+asserts one profile is there, deletes the user, and asserts
+<code>get_user_profiles</code> returns zero through the real scoped
+controller. Read after a cascade delete, with the positive control two
+lines above — the same shape as A-MEM's keyed get and AutoGen's query
+after <code>clear()</code>, and still not an assertion that named
+material stays out of a populated result.</p>
+<p>Everything else held, including the LoCoMo re-aggregation the
+previous reading did by hand. Marks unchanged at one;
+<code>stack_source</code> moves from <code>seeded</code> to
+<code>reviewed</code>.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a11c3be8da901"><code class="commit-id" title="358c16bbc6d687937d79bc2f984a11c3be8da901">358c16bb…</code></a>
 — same pin, five corrections, the first of them load-bearing and wrong

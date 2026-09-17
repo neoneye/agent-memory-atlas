@@ -9,11 +9,13 @@ source_url: https://github.com/memodb-io/memobase
 archive_name: "memodb-io--memobase"
 revision: 358c16bbc6d687937d79bc2f984a11c3be8da901
 revision_url: https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a11c3be8da901
-analyzed_at: 2026-07-29
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "every memory table, in the primary key itself rather than in a predicate | src/server/api/memobase_server/models/database.py:280, :322, :388, :446, :497, :558 and the sibling tables | seven memory tables declare `PrimaryKeyConstraint(\"id\", \"project_id\")`, so a row cannot exist without a project and two projects\u2019 rows are different rows rather than rows a query must remember to filter. `project_id` also appears in the foreign keys, the indexes, the read-path arguments and the Redis cache keys, and every controller entry point takes it as a positional argument | no committed case crosses a project boundary: all 95 project references in the server suite are `DEFAULT_PROJECT_ID`. That matters less here than it would elsewhere, because the enforcement is structural — an insert without the key is rejected by the database and a read with the wrong key addresses a different row — but it is the honest gap, and the report says so"
 stack_storage: "postgres"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A free-text memo of at most five sentences, keyed by topic and subtopic, plus tagged events and their embedded gists"
   storage: "Postgres with pgvector; composite (id, project_id) primary keys on all seven memory tables"
@@ -397,6 +399,24 @@ under another, and asserts *that memory's id* is absent from the result. The fir
 tests that a filter does not over-return; only the second asserts that named
 material must not be retrieved. **`negative_eval` is withheld.**
 
+The 2026-09-18 reading found a third case in the same file that is the strongest
+of that family and still not the mark. At `:70-79` a user is created, a profile
+is added, `len(d.profiles) == 1` is asserted, the user is deleted, and then
+`get_user` is asserted to fail *and* `get_user_profiles(u_id, project_id)` to
+return zero — a read after a cascade delete, through the real scoped controller,
+with its positive control two lines above rather than beside it. It is the same
+shape as A-MEM's keyed get after a delete and AutoGen's query after `clear()`:
+an emptied key returns nothing. What it does not do is name material that must
+stay out of a result that has other material in it.
+
+**And no committed case crosses a project boundary.** All 95 project references
+in the server suite are `DEFAULT_PROJECT_ID`, so the strongest structural scope
+in this corpus has no test that two projects cannot see each other. That matters
+less here than it would elsewhere — the key is in the primary key, so an insert
+without it is rejected by Postgres and a read with the wrong one addresses a
+different row — but it is the gap, and it is the one an adopter who moves this
+schema to a filter-based store would inherit without noticing.
+
 `docs/experiments/900-chats/` holds a ShareGPT-derived transcript set, and
 `docs/experiments/locomo-benchmark/` holds the LoCoMo number and the artifacts
 behind it. That is unusually complete for this atlas and it is worth judging on
@@ -561,6 +581,14 @@ the dispute to stick.
 `docs/experiments/900-chats/`
 
 ## History
+
+**2026-09-18** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the previous two. Screened again: no auto-run surface, five build-time execution paths including two pytest `conftest.py` collection hooks, four unpinned manifests, nothing inside the cooldown; nothing was installed, built or run.
+
+`scope_enforced` now carries an evidence record, and writing it produced the sharpest way to state what this system does differently: the scope is not a predicate a query must remember but a **component of the primary key** — seven memory tables declare `PrimaryKeyConstraint("id", "project_id")`, so a row without a project cannot exist and two projects' rows are different rows. The honest gap on the same record: no committed case crosses a project boundary, because all 95 project references in the server suite are `DEFAULT_PROJECT_ID`.
+
+A third near-miss case was added to section 10, and it is the strongest of its family without being the mark: `test_controller.py:70-79` creates a user, adds a profile, asserts one profile is there, deletes the user, and asserts `get_user_profiles` returns zero through the real scoped controller. Read after a cascade delete, with the positive control two lines above — the same shape as A-MEM's keyed get and AutoGen's query after `clear()`, and still not an assertion that named material stays out of a populated result.
+
+Everything else held, including the LoCoMo re-aggregation the previous reading did by hand. Marks unchanged at one; `stack_source` moves from `seeded` to `reviewed`.
 
 **2026-08-31** — [`358c16bbc6d687937d79bc2f984a11c3be8da901`](https://github.com/memodb-io/memobase/commit/358c16bbc6d687937d79bc2f984a11c3be8da901) — same pin, five corrections, the first of them load-bearing and wrong in the direction of asserting an absence. Section 10 said no LoCoMo harness or result was committed and used that to discount the published number as a claim rather than an artifact. `docs/experiments/locomo-benchmark/` is a full harness forked from mem0's evaluation directory, with four committed result files under `fixture/memobase/`; re-aggregating `memobase_eval_0710_3000.json` reproduces the README's 75.78 overall across 1,540 graded questions, and the 35 MB `results_*.json` files carry the rendered memory block and per-question latency that produced each answer. Section 10 judges it on its merits instead — a single vendor-run pass under a topic schema written for the dataset, with the baseline rows transcribed from the Mem0 paper rather than re-run. `profile_validate_mode` was called possibly-dead configuration; it is consumed at `merge_yolo.py:35-37` and `merge.py:82-98` and gates whether a first-time memo reaches the merge model at all, so the open question is dropped and section 7 states the mechanism. The `organize_profile` few-shot collapses eleven subtopics into three and discards two of them, not into two. Section 1 said every table's primary key is `(id, project_id)`; that holds for the seven memory tables and not for `Project` or `Billing`. The profile-read citation moves from `controllers/profile.py:212`, which sits in a delete, to `get_user_profiles()` at line 75 and its filter at line 95. Also established: `merge.py` is unwired at `chat/__init__.py:14` and `merge_yolo` is the live merge path, which answers the open question about which one runs. No capability mark moved; `scope_enforced` was re-checked in both directions and gained evidence, the Redis profile cache being keyed on `user_profiles::{project_id}::{user_id}`.
 
