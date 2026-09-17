@@ -7,9 +7,9 @@ page_kind: system
 source_name: "OmniNode-ai/omnimemory"
 source_url: https://github.com/OmniNode-ai/omnimemory
 archive_name: "OmniNode-ai--omnimemory"
-revision: 6d340f89715abea95021f8eeef4280adef0d2dee
-revision_url: https://github.com/OmniNode-ai/omnimemory/commit/6d340f89715abea95021f8eeef4280adef0d2dee
-analyzed_at: 2026-09-09
+revision: 59874e5b3359972d7313b4eb6266ca241111ed15
+revision_url: https://github.com/OmniNode-ai/omnimemory/commit/59874e5b3359972d7313b4eb6266ca241111ed15
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "postgres, graph, qdrant, redis, files, delegated"
 stack_retrieval: ""
@@ -399,6 +399,10 @@ six checker controls `:293-390`, the seam pin `:446`, the residual test `:472`)
 `docs/migrations/MARKET_MIGRATION_BOUNDARY.md`
 
 ## History
+
+**2026-09-17** — [`59874e5b3359972d7313b4eb6266ca241111ed15`](https://github.com/OmniNode-ai/omnimemory/commit/59874e5b3359972d7313b4eb6266ca241111ed15) — re-read twenty commits on and the memory subsystem did not move. Marks unchanged at none. Every file this report anchors is byte-identical by blob sha: both enums, `model_audit_metadata.py`, `model_trust_score.py`, `contract_topics.py`, `dispatch_handlers.py` and `plugin.py`. What changed is twelve files of dependency bumps, a `commit-msg` hook, a CI-alignment test and a lock refresh by a bot; the three source files it touched — `handler_subscription.py`, `adapter_filesystem.py` and `introspection.py` — are none of the ones the findings rest on.
+
+All three absence claims were re-run rather than carried forward, and all three hold. `AuditMetadata(` has no constructor anywhere in `src`, so the audit model is still never written. `TrustScore(` has none either. And `lifecycle_state` still appears in no retrieval query: its only SQL sites are the lifecycle orchestrator's own expire and tick sweeps, and `handler_memory_retrieval.py` does not mention it — so an expired or archived memory is still not filtered out on the read path. That is the report's central finding and it is unchanged at this pin. Screened again before reading: no auto-run surface, four build-time execution surfaces, no unpinned surface, one dependency file inside the seven-day cooldown. Nothing was installed and nothing was run.
 
 **2026-09-09** — [`6d340f89715abea95021f8eeef4280adef0d2dee`](https://github.com/OmniNode-ai/omnimemory/commit/6d340f89715abea95021f8eeef4280adef0d2dee) — second reading, 54 commits along the default `dev` branch. Screened before reading; nothing was installed and no suite was run.
 
