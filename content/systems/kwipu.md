@@ -7,9 +7,9 @@ page_kind: system
 source_name: "benmaster82/Kwipu"
 source_url: https://github.com/benmaster82/Kwipu
 archive_name: "benmaster82--Kwipu"
-revision: 908f0e4e300578a22c5fadd4538f75ff7ccfc0b6
-revision_url: https://github.com/benmaster82/Kwipu/commit/908f0e4e300578a22c5fadd4538f75ff7ccfc0b6
-analyzed_at: 2026-09-07
+revision: 01dd7d40fd5b071fc158aec4fcd69b85be4c0a22
+revision_url: https://github.com/benmaster82/Kwipu/commit/01dd7d40fd5b071fc158aec4fcd69b85be4c0a22
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "graph, lexical, vector"
@@ -25,7 +25,7 @@ matrix:
   background: "A watchdog observer on the folder with a five-second debounce and an MD5 filter against phantom events, in the REPL only; nothing else runs unattended, and nothing rewrites the graph except the full rebuild a deletion forces"
   trust: "None on a fact: no provenance beyond the file path a node carries, no time beyond a frontmatter date copied as text, no confidence, no state; the manifest refuses to load a store built with a different embedding model, which is a guard on the index, not on a claim"
   strengths: "Structural triples from wikilinks and frontmatter cost no model call and survive the model's misses; the embedding-model manifest stops a silent mixed-space index; the prompt's rule seven gives the model an out instead of a guess; content hashing keeps editor save storms from rebuilding anything"
-  risks: "A wikilink triple outlives the link that produced it; deletion is a full rebuild of the whole vault; the MCP server never watches the folder, so an agent reads the vault as it was at its first query; the temporal retriever fires on every query and scores any capitalised token; no test, no benchmark, six unpinned dependencies; 22 commits and quiet since 18 May 2026"
+  risks: "A wikilink triple outlives the link that produced it; deletion is a full rebuild of the whole vault; the MCP server never watches the folder, so an agent reads the vault as it was at its first query; the temporal retriever fires on every query and scores any capitalised token; no case asserts that particular material must not be retrieved, and no benchmark scores the anti-hallucination prompt the README names; six unpinned dependencies"
 ---
 
 ## 1. Executive Summary
@@ -79,9 +79,10 @@ agent reads the vault as it stood at its first query for the life of the
 server process.
 
 No mark. Nothing here is a tombstone, a state, a validity time, a scope key,
-an audit record, a review surface or a negative test, and the design does
-not reach for any of them: it is a reader over notes a person keeps
-elsewhere, and its correctness rests on the notes.
+an audit record or a review surface, and the design does not reach for any of
+them: it is a reader over notes a person keeps elsewhere, and its correctness
+rests on the notes. A test suite does exist — section 10 — and what it does not
+contain is a case about what a query must not return.
 
 ## 2. Mental Model
 
@@ -293,7 +294,15 @@ index, not its mutations.
 **Human review — withheld.** The person edits notes in an editor; nothing
 in Kwipu shows a triple or lets one be corrected.
 
-**Negative evaluation — withheld.** There is no test.
+**Negative evaluation — withheld, and now for a reason rather than an absence.**
+A suite exists. What it does not contain is a case asserting that particular
+material must not come back from a *query*. Its must-not assertions are real and
+paired — with `include_chunks=False` the snapshot loader must exclude chunk nodes
+and provenance links while still holding semantic ones, and a malformed relation
+must be absent from a snapshot whose three well-formed links are asserted present
+— but they are about the graph the display bridge assembles, not about what a
+retrieval returns. `tests/test_query_api.py` covers status codes, citation
+dedup and CORS; its only `assertNotIn` is a response header.
 
 **What is guarded.** The manifest check refuses to load an index built with
 a different embedding model, which prevents a mixed vector space silently;
@@ -304,11 +313,25 @@ guarantee depends on a flag.
 
 ## 10. Tests, Evals, and Benchmarks
 
-None. No file under the repository is a test, and no README line cites a
-benchmark or a paper; the README's *"anti-hallucination prompt"* is a claim
-about the prompt's wording. Eight example notes under
-`knowledge_base/examples/` — people, a project, a licence, a meeting — are
-the whole fixture, and nothing runs against them.
+Six files under `tests/`, 75 test functions, `unittest` throughout: 110
+`assertEqual`, 34 `assertFalse`, 31 `assertRaises`, seven `assertNotIn`. The
+weight sits where the risk is — `test_geode_graph.py` is the largest, and
+`test_storage.py` drives an `InterProcessFileLock` across real processes and
+threads rather than mocking the contention out.
+
+What the suite does is pin failure modes at the seams: an index built by a
+different embedding model is refused, a revision change retries the answer and
+its provenance together, a repeated revision change surfaces as storage
+unavailable, a missing graph is a 503 rather than an empty answer, and an
+`OSError` from Ollama stays a 502. `test_bridge_graph.py` asserts the snapshot
+survives malformed records and reports how many it skipped — one noisy, three
+malformed nodes, two malformed relations — which is a count a reader can check
+against the fixture.
+
+No benchmark and no paper; the README's *"anti-hallucination prompt"* remains a
+claim about the prompt's wording, and nothing scores whether the prompt holds.
+The eight example notes under `knowledge_base/examples/` are still the only
+corpus fixture.
 
 ## 11. For Your Own Build
 
@@ -379,10 +402,18 @@ rg -n 'upsert_triplet' geode_graph.py                                 # :752 —
 rg -c 'Observer|FileWatcher' kwipu_mcp_server.py                      # 0: no watcher over MCP
 rg -c -i 'user_id|namespace|tenant|scope' geode_graph.py kwipu_mcp_server.py   # 0: no scope
 rg -c -i 'created_at|updated_at|timestamp' geode_graph.py             # 0: no record time on anything
-find . -name 'test*' -not -path './.git/*'                            # none
+find . -name 'test*' -not -path './.git/*'        # 6 files under tests/
 rg -c -i 'arxiv|doi\.org|citation' README.md                          # 0: no paper
 ```
 
 ## History
+
+**2026-09-17** — [`01dd7d40fd5b071fc158aec4fcd69b85be4c0a22`](https://github.com/benmaster82/Kwipu/commit/01dd7d40fd5b071fc158aec4fcd69b85be4c0a22) — re-read two commits on, 42 files and +15,937 lines, almost all of it a test suite where the previous reading found none. Marks unchanged at none.
+
+The recorded search is the one that moved. This report's appendix carried `find . -name 'test*' -not -path './.git/*'` against the answer `# none`; it now returns six files under `tests/` holding 75 test functions in `unittest` style — 110 `assertEqual`, 34 `assertFalse`, 31 `assertRaises`, seven `assertNotIn`. Section 10 is rewritten from *"None"* to what the suite actually pins: an index built by a different embedding model refused, a revision change retrying the answer and its provenance together, a missing graph as a 503 rather than an empty answer, an `OSError` from Ollama staying a 502, and `test_storage.py` driving an `InterProcessFileLock` across real processes and threads rather than mocking the contention away.
+
+`negative_eval` stays withheld and the reason changes from an absence to a distinction. The suite's must-not assertions are real and paired — with `include_chunks=False` the snapshot loader must exclude chunk nodes and provenance links while still holding semantic ones, and a malformed relation must be absent from a snapshot whose three well-formed links are asserted present, with the skip counts stated as one noisy, three malformed nodes and two malformed relations. They are about the graph the display bridge assembles rather than about what a retrieval returns; `tests/test_query_api.py` covers status codes, citation dedup and CORS, and its only `assertNotIn` is a response header.
+
+Worth recording as method: the first pass over this suite reported zero assertions, because the search used `assert ` with a trailing space and every assertion here is `self.assertEqual`-style. The suite is `unittest`, not pytest, and a vocabulary chosen for one framework says nothing about a repository using the other. Screened again before reading: no auto-run surface, no build-time execution surface, no unpinned surface, nothing inside the cooldown. Nothing was installed and nothing was run.
 
 **2026-09-07** — [`908f0e4e300578a22c5fadd4538f75ff7ccfc0b6`](https://github.com/benmaster82/Kwipu/commit/908f0e4e300578a22c5fadd4538f75ff7ccfc0b6) — first reading, at the head of `main`, the last commit of 18 May 2026. Screened first: no auto-run surface, no build-time execution, one unpinned manifest with six requirements carrying no version; nothing installed or run, the read made from a full clone. No mark; the finding is the structural triple that outlives its link. LlamaIndex's own behaviour under `delete_ref_doc` was not read — the open question says which claim depends on it.

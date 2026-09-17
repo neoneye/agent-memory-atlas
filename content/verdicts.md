@@ -3369,7 +3369,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: **triples from the note's own structure before triples from a model.** Every wikilink and frontmatter key becomes a relation in code, with the relation inferred from the surrounding line in six languages, and the model's extraction is added on top rather than relied on.
 - Biggest risk: **a wikilink triple has no document behind it.** An edit replaces the note's chunks by path and re-upserts its triples, so a relation the edit removed stays in the graph until a deletion anywhere forces the full rebuild; over MCP the folder is never watched at all.
 - Most reusable component: `lang_config.py` — stop words, temporal keywords, date forms and relation patterns for six languages behind `tokenize`, `detect_language`, `extract_date_tokens` and `infer_relation`, with no model in the path.
-- Maturity impression: MIT, 22 commits from 21 April to 18 May 2026 by two authors and nothing since, 1,800 lines of Python, six unpinned requirements, no tests, no benchmark. No capability mark.
+- Maturity impression: MIT, 22 commits from 21 April to 18 May 2026 by two authors and nothing since, 1,800 lines of Python, six unpinned requirements, 75 test functions across six files, no benchmark. No capability mark.
 - Study when: you want to ask a local Obsidian vault questions with file citations and no cloud, or you want a worked example of structural extraction ahead of a model.
 - Do not copy when: you edit notes often and expect the graph to follow, your vault is large enough that a Python scan of every chunk per query matters, or an agent needs to write.
 
