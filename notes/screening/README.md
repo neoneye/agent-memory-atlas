@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 520 of 572 screened at the report's current pin.**
+**Progress: 521 of 573 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 52 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 230 |
+| Repositories with an auto-run surface (`RUNS`) | 231 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 315 |
-| Repositories with build-time execution (`EXEC`) | 382 |
+| Repositories with build-time execution (`EXEC`) | 383 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -202,6 +202,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`ouroboros-agent-os`](../../content/systems/ouroboros-agent-os.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`ownmem`](../../content/systems/ownmem.md) | `.claude-plugin/` |
 | [`ox`](../../content/systems/ox.md) | `.claude-plugin/`, `.claude/settings.json`, `.opencode/` |
+| [`pensyve`](../../content/systems/pensyve.md) | `.claude-plugin/`, `server.json`, `smithery.yaml` |
 | [`people-context`](../../content/systems/people-context.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`perseus-vault`](../../content/systems/perseus-vault.md) | `server.json`, `smithery.yaml` |
 | [`plur`](../../content/systems/plur.md) | `.claude-plugin/`, `.githooks/`, `server.json` |

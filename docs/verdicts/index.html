@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 572 reports.</strong></p>
+<p><strong>This page covers all 573 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21840,6 +21840,55 @@ every read method.</li>
 <li>Do not copy when: you need an as-of read — <code>invalid_at</code>
 is a retirement flag carrying a date, not a validity bound — or a record
 of what was retired keyed on its content.</li>
+</ul>
+<h3 id="pensyve"><a
+href="../systems/pensyve/"><code>pensyve</code></a></h3>
+<ul>
+<li>Best idea: <strong>sabotage the statement to test the
+backstop.</strong> <code>rls_alone_blocks_cross_namespace_access</code>
+defines <code>SABOTAGED_DELETE</code> as the production delete minus its
+namespace predicate, runs it from another namespace and asserts the row
+survives. A cross-tenant test with both layers live passes either way
+and proves nothing about which one held.</li>
+<li>Second idea: <strong>disable the backstop to test the
+predicate.</strong> A test gating layer 1 calls <code>relax_rls</code>
+first, because otherwise "a cross-namespace assertion passes on the
+policies alone and proves nothing about the namespace_id predicate it
+was written for". Defence in depth makes both layers' tests
+unfalsifiable unless you can turn each off.</li>
+<li>Third idea: <strong>announce the condition that disables your safety
+net.</strong> <code>FORCE</code> cannot remove <code>BYPASSRLS</code>,
+which a managed-Postgres owner typically carries, so startup reports the
+role's own exemptions — because such a role "makes FORCE enforce nothing
+with no other symptom".</li>
+<li>Fourth idea: <strong>put the status filter in the
+statement.</strong> Supersession is bound as
+<code>($2 OR superseded_by IS NULL)</code> inside the query, so a
+retired memory never occupies a result slot on its way to being
+discarded, and a new read method has no post-processing stage in which
+to forget the rule.</li>
+<li>Biggest risk: <strong>the activity feed is written at the tool
+boundary with its result discarded.</strong> Every
+<code>log_activity</code> call site is in the MCP tool server as
+<code>let _ = …</code>, outside the mutating transaction, mixing
+<code>recall</code> with <code>forget</code> — so a mutation reaching
+storage another way leaves no row and a failed write is silent.</li>
+<li>Most reusable component: the two documented ways row-level security
+had been inert — a transaction-local GUC set in a standalone statement,
+which is its own implicit transaction, so every policy compared against
+NULL; and a table owner's exemption from its own policies until
+<code>FORCE</code>. Either passes review because the configuration looks
+right.</li>
+<li>Maturity impression: Apache-2.0, 113,429 lines of Rust with 1,393
+test functions, 752 commits since March 2026, SQLite and Postgres behind
+one storage trait, an MCP server and gateway, and bindings for Python,
+Go, TypeScript and WebAssembly; three capability marks.</li>
+<li>Study when: you enforce a tenant boundary in more than one place and
+need each layer's test to prove its own layer.</li>
+<li>Do not copy when: you need an as-of read — <code>event_time</code>
+is stored as distinct from the encoding timestamp and nothing queries it
+— or an account of what changed, as opposed to a feed of what the tools
+did.</li>
 </ul>
         </article>
       </div>

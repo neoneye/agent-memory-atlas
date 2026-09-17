@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 572 reports.**
+**This page covers all 573 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4959,3 +4959,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 96,884 lines of Python across 284 source files against 389 test files and 3,639 test functions, 680 commits since April 2026, connectors for four chat platforms and adapters for Weaviate, MongoDB, Neo4j and NebulaGraph; three capability marks.
 - Study when: you have a rule your store cannot express as a filter and need to see how that rule fares when it has to be applied by hand on every read method.
 - Do not copy when: you need an as-of read — `invalid_at` is a retirement flag carrying a date, not a validity bound — or a record of what was retired keyed on its content.
+
+### [`pensyve`](../systems/pensyve/)
+- Best idea: **sabotage the statement to test the backstop.** `rls_alone_blocks_cross_namespace_access` defines `SABOTAGED_DELETE` as the production delete minus its namespace predicate, runs it from another namespace and asserts the row survives. A cross-tenant test with both layers live passes either way and proves nothing about which one held.
+- Second idea: **disable the backstop to test the predicate.** A test gating layer 1 calls `relax_rls` first, because otherwise "a cross-namespace assertion passes on the policies alone and proves nothing about the namespace_id predicate it was written for". Defence in depth makes both layers' tests unfalsifiable unless you can turn each off.
+- Third idea: **announce the condition that disables your safety net.** `FORCE` cannot remove `BYPASSRLS`, which a managed-Postgres owner typically carries, so startup reports the role's own exemptions — because such a role "makes FORCE enforce nothing with no other symptom".
+- Fourth idea: **put the status filter in the statement.** Supersession is bound as `($2 OR superseded_by IS NULL)` inside the query, so a retired memory never occupies a result slot on its way to being discarded, and a new read method has no post-processing stage in which to forget the rule.
+- Biggest risk: **the activity feed is written at the tool boundary with its result discarded.** Every `log_activity` call site is in the MCP tool server as `let _ = …`, outside the mutating transaction, mixing `recall` with `forget` — so a mutation reaching storage another way leaves no row and a failed write is silent.
+- Most reusable component: the two documented ways row-level security had been inert — a transaction-local GUC set in a standalone statement, which is its own implicit transaction, so every policy compared against NULL; and a table owner's exemption from its own policies until `FORCE`. Either passes review because the configuration looks right.
+- Maturity impression: Apache-2.0, 113,429 lines of Rust with 1,393 test functions, 752 commits since March 2026, SQLite and Postgres behind one storage trait, an MCP server and gateway, and bindings for Python, Go, TypeScript and WebAssembly; three capability marks.
+- Study when: you enforce a tenant boundary in more than one place and need each layer's test to prove its own layer.
+- Do not copy when: you need an as-of read — `event_time` is stored as distinct from the encoding timestamp and nothing queries it — or an account of what changed, as opposed to a feed of what the tools did.

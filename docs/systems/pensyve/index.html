@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A memory runtime whose namespace
+boundary is a predicate in the SQL and row-level security behind it —
+with a test that deletes the predicate from a production statement and
+asserts the row survives, and a startup that says out loud when the
+database role makes the backstop inert.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Pensyve — Agent Memory Atlas">
+    <meta property="og:description" content="A memory runtime whose
+namespace boundary is a predicate in the SQL and row-level security
+behind it — with a test that deletes the predicate from a production
+statement and asserts the row survives, and a startup that says out loud
+when the database role makes the backstop inert.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Pensyve — Agent Memory Atlas">
+    <meta name="twitter:description" content="A memory runtime whose
+namespace boundary is a predicate in the SQL and row-level security
+behind it — with a test that deletes the predicate from a production
+statement and asserts the row survives, and a startup that says out loud
+when the database role makes the backstop inert.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Pensyve — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Pensyve",
+      "description": "A memory runtime whose namespace boundary is a predicate in the SQL and row-level security behind it \u2014 with a test that deletes the predicate from a production statement and asserts the row survives, and a startup that says out loud when the database role makes the backstop inert.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">It sabotages its own DELETE to prove the
+second layer holds</p>
+          <h1>Pensyve</h1>
+          <p class="document-deck">A memory runtime whose namespace
+boundary is a predicate in the SQL and row-level security behind it —
+with a test that deletes the predicate from a production statement and
+asserts the row survives, and a startup that says out loud when the
+database role makes the backstop inert.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/major7apps/pensyve">
+              <span>Source</span>
+              <strong>major7apps/pensyve</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/major7apps/pensyve/commit/9ec26ade242a9360a69dc130356d54311dca1c87" title="9ec26ade242a9360a69dc130356d54311dca1c87">
+              <span>Analyzed revision</span>
+              <code>9ec26ade…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/major7apps--pensyve" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>major7apps--pensyve</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Pensyve is an Apache-2.0 memory runtime for agents — 113,429 lines of
+Rust with 1,393 test functions, 752 commits since March 2026, SQLite or
+Postgres behind one storage trait, reached through an MCP server, a
+gateway, a CLI and bindings for Python, Go, TypeScript and
+WebAssembly.</p>
+<p>Three marks, and the scope one is the strongest case this atlas has
+read.</p>
+<p>Most systems here enforce a tenant boundary with a predicate in a
+query builder and stop. Pensyve has that —
+<code>namespace_id = $n</code> in every handwritten statement, which the
+code calls <em>"the load-bearing layer in every deployment"</em> — and
+behind it, Postgres row-level security as an explicit backstop <em>"for
+a query that forgets layer 1 — which is exactly the bug PR #218
+found"</em>.</p>
+<p>What makes it worth reading is that the module documents two separate
+ways the backstop had been present and doing nothing.</p>
+<p>The first is a bug worth memorising. The connection helper set the
+scoping variable with
+<code>set_config('pensyve.namespace_id', $1, true)</code> as a
+standalone statement. The <code>true</code> means transaction-local; a
+standalone statement is its own implicit transaction; so Postgres
+discarded the setting before the query it was meant to scope ever ran,
+and <em>"every policy compared against NULL and matched nothing."</em>
+Row-level security was enabled, the policies were correct, and the whole
+layer was inert.</p>
+<p>The second: Postgres exempts a table's owner from its own policies,
+and the application connected as the schema owner — so
+<code>ENABLE ROW LEVEL SECURITY</code> alone changed nothing until
+<code>FORCE</code> was moved into the schema that every startup
+applies.</p>
+<p>And the test that proves the fix is the best of its kind in this
+corpus. It takes the production delete statement, removes the namespace
+predicate, and runs it across namespaces:</p>
+<pre class="rust"><code>// `delete_memory_by_id_in_namespace`&#39;s statement, minus its namespace
+// predicate. The real one reads:
+//     DELETE FROM episodic_memories WHERE id = $1 AND namespace_id = $2
+const SABOTAGED_DELETE: &amp;str = &quot;DELETE FROM episodic_memories WHERE id = $1&quot;;</code></pre>
+<p>Seed a memory in namespace A, open a connection scoped to namespace
+B, run that, and assert A's row is still there. The assertion is about
+the backstop alone, because the primary defence has been deliberately
+deleted for the duration of the test.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A namespace owns memories. Four kinds live under it — episodic,
+semantic, procedural and observation — each with a salience fixed at
+encoding, a storage strength that only ever increases, an event time
+held apart from the encoding timestamp, and the supersession pair that
+retires it.</p>
+<p>Scope is two things at once, and the project is careful to keep them
+separate in its own head. Layer 1 is the predicate a human wrote into
+each statement. Layer 2 is a policy the database applies whether or not
+the human remembered. They are tested apart, and the reason is stated: a
+cross-namespace test that runs with both layers live <em>"passes on the
+policies alone and proves nothing about the <code>namespace_id</code>
+predicate it was written for"</em>.</p>
+<p>That predicate is not redundant, and the module says exactly when it
+is the only thing standing: on SQLite, which has no policies, and on a
+Postgres whose role carries <code>BYPASSRLS</code> — which
+<code>FORCE</code> cannot remove.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Two independent scope layers, each tested with the other disabled — and a startup check for the one condition that silently defeats the backstop, a role carrying BYPASSRLS, which FORCE cannot remove.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Two independent scope layers, each tested with the other disabled — and a startup check for the one condition that silently defeats the backstop, a role carrying BYPASSRLS, which FORCE cannot remove.
+flowchart TD
+  CALL[&quot;Storage method&lt;br/&gt;_in_namespace variants&quot;]
+  SQL[&quot;Layer 1: namespace_id predicate&lt;br/&gt;in the handwritten statement&quot;]
+  CONN[&quot;scoped_conn binds the GUC&lt;br/&gt;at session scope on every acquisition&quot;]
+  POL[&quot;Layer 2: row-level security&lt;br/&gt;FORCE on every policied table&quot;]
+  DB[(&quot;Postgres with pgvector&quot;)]
+  LITE[(&quot;SQLite — layer 1 only&quot;)]
+  BOOT[&quot;Startup reads the schema state&quot;]
+  SKIP[&quot;Skip the DDL when the digest matches&lt;br/&gt;so a DML-only role can serve&quot;]
+  EXEMPT[&quot;Report whether the role is exempt&lt;br/&gt;BYPASSRLS defeats FORCE silently&quot;]
+  T1[&quot;Layer 1 test&lt;br/&gt;calls relax_rls first&quot;]
+  T2[&quot;Layer 2 test&lt;br/&gt;runs the statement with the predicate deleted&quot;]
+
+  CALL --&gt; SQL --&gt; DB
+  CALL --&gt; CONN --&gt; POL --&gt; DB
+  CALL --&gt; LITE
+  BOOT --&gt; SKIP
+  BOOT --&gt; EXEMPT
+  T1 -.-&gt;|&quot;un-forces the policies&quot;| SQL
+  T2 -.-&gt;|&quot;sabotaged statement&quot;| POL</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Bind the scope.</strong> <code>scoped_conn</code> sets the
+namespace GUC at session scope on every acquisition, including the
+unscoped path, after the transaction-local form was found to evaporate
+before the query ran. Two tests gate both halves: the setting must
+survive to the next statement, and must <em>not</em> survive into the
+next checkout.</li>
+<li><strong>Force the policies.</strong>
+<code>postgres_schema.sql</code> carries the
+<code>FORCE ROW LEVEL SECURITY</code> statements, so every startup
+enforces rather than depending on an operator having run a separate
+file; a test pins that the schema forces every policied table <em>and
+only those</em>.</li>
+<li><strong>Filter the read.</strong> Listings bind
+<code>WHERE namespace_id = $1 AND ($2 OR superseded_by IS NULL)</code>;
+retrieval joins add
+<code>AND memory.superseded_by IS NULL AND memory.invalid_at IS NULL</code>
+(<code>storage/postgres.rs:837-1000</code>).</li>
+<li><strong>Start unprivileged.</strong> Startup reads
+<code>pensyve_schema_state</code> and skips the DDL batch when the
+applied digest matches this build, so the serving role needs only DML
+grants — because an owner is exempt until <code>FORCE</code>, and a
+managed-Postgres owner usually also carries <code>BYPASSRLS</code>,
+which <code>FORCE</code> cannot remove.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Four memory kinds share a common spine. The fields that matter
+here:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>superseded_by</code></td>
+<td>the successor's id, set when a memory is retired</td>
+</tr>
+<tr>
+<td><code>invalid_at</code></td>
+<td>when it stopped being valid because it was superseded</td>
+</tr>
+<tr>
+<td><code>event_time</code></td>
+<td><em>"When the described event occurred (may differ from encoding
+timestamp)"</em></td>
+</tr>
+<tr>
+<td><code>salience</code></td>
+<td>fixed at encoding, modulates decay</td>
+</tr>
+<tr>
+<td><code>storage_strength</code></td>
+<td><em>"monotonically increases, never decays"</em></td>
+</tr>
+<tr>
+<td><code>agent_id</code>, <code>user_id</code></td>
+<td>multi-tenant scope, nullable for legacy rows</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>bitemporal</code> is withheld, and the reason is narrow.
+<code>event_time</code> is a genuine validity timestamp held apart from
+the encoding time — the docstring says so — but no query filters on it
+and nothing reads the store as of a past moment. The axis is recorded
+and never asked about, which is one field short of the mark rather than
+a missing idea.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A retrieval engine fuses vector, lexical and graph signals with
+reciprocal rank fusion, with a reranker, an activation model and decay
+over salience and storage strength.</p>
+<p>The detail worth taking is where the supersession filter sits. It is
+a bound parameter <em>inside</em> the statement —
+<code>($2 OR superseded_by IS NULL)</code> — not a loop over the
+results. Two consequences follow. A retired memory never occupies one of
+the <code>limit</code> slots the database returns, so a caller asking
+for ten live memories gets ten. And the "include superseded" escape
+cannot be forgotten by a new read method that has no post-processing
+stage, because there is no post-processing stage to forget.</p>
+<p>This atlas read <a href="../beever-atlas/">a system with the opposite
+placement</a> in the same session, where the filter had to run in
+application code because the store could not express an is-null filter,
+and the one read method with no loop never got it. Pensyve's store can
+express it, and the difference in outcome is exactly the difference in
+placement.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Observation, extraction and consolidation pipelines feed the store,
+with a surprise signal and a salience estimate deciding what is worth
+keeping, and a classifier routing it to a memory kind.</p>
+<p>Correction is supersession rather than deletion: the prior memory
+keeps its row and gains a pointer to its successor plus the time it
+stopped being valid. Nothing is keyed on the retired content, so
+<code>tombstone</code> is withheld — the same sentence observed again is
+a new memory.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server with a tool layer, a gateway exposing REST, a CLI, and
+four language bindings over the same core. The tool layer is also where
+the activity feed is written, and that is where <code>audit_log</code>
+fails.</p>
+<p><code>activity_events</code> is a real table — id, event type,
+namespace, a JSON detail and a timestamp, indexed by namespace and date
+— and the insert is append-only. But every call site is in the MCP tool
+server, written as
+<code>let _ = state.storage .log_activity(...)</code>, so the result is
+discarded and a failed write is silent; the row is written outside the
+transaction that performed the mutation; and the event types mix
+mutations with retrievals — <code>recall</code> sits beside
+<code>forget</code> and <code>observe</code>. A mutation that reaches
+storage by any path other than an MCP tool leaves no row at all. That is
+an activity feed for a UI rather than an account of what changed, which
+is the distinction the mark draws.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The scope work is the reason to read this repository, and its
+methodology generalises past Postgres.</p>
+<p><strong>Two layers, tested apart.</strong> The fixture provisions as
+a <code>NOSUPERUSER NOBYPASSRLS</code> role so both layers are live —
+<em>"that is the deployed shape"</em> — and a test that means to gate
+layer 1 calls <code>relax_rls</code> first to un-force the policies.
+Without that step the test would pass on the backstop and say nothing
+about the predicate it was written for. Most projects that build defence
+in depth never notice that it makes each layer's test unfalsifiable;
+this one built the switch to turn the other layer off.</p>
+<p><strong>The failure modes are named.</strong> Two ways RLS was
+present and inert, one caught by a PR and one by conversion work, both
+with the mechanism spelled out — a transaction-local GUC set outside a
+transaction, and an owner's exemption from its own policies. Either is
+the kind of thing that passes review because the configuration looks
+right.</p>
+<p><strong>The residual risk is announced at startup.</strong>
+<code>FORCE</code> cannot remove <code>BYPASSRLS</code>, so a role that
+carries it defeats layer 2 entirely — and, in the module's words,
+<em>"makes FORCE enforce nothing with no other symptom."</em> The answer
+was to make the symptom: startup reports whether the role is exempt. A
+system that tells the operator when its own backstop is disabled is
+doing something almost nothing here does.</p>
+<p><strong>The checklist was retired when it emptied.</strong> A test
+named <code>enforced_rls_fails_closed_for_unscoped_methods</code> used
+to assert that three unscoped methods read and deleted nothing under
+enforcement <em>while still reporting success</em>. As each method
+gained a scoped variant the assertion flipped and moved into that
+method's own test, and when the list was empty the checklist was
+deleted. A gate that shrinks to nothing and is then removed, rather than
+lingering as a passing test over an empty set, is good hygiene.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>1,393 test functions; nothing was run here. The live-Postgres suite
+skips with an explicit message when
+<code>PENSYVE_TEST_DATABASE_URL</code> is unset so the ordinary
+<code>cargo test</code> stays green without a database, and CI sets it.
+Every test in that file provisions its own database and unprivileged
+role and drops both, so nothing is written to the database the URL names
+— which is the right shape for a suite that must run as a superuser to
+test what a non-superuser cannot do.</p>
+<p>There is a <code>benchmarks</code> directory, a
+<code>pensyve-benchmarks</code> crate, a <code>loadtest</code> crate and
+a <code>results</code> directory, which I did not read in depth; no
+claim in the README was checked against them in this reading.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Sabotage the statement to test the backstop.</strong>
+Copying a production query, deleting its scope predicate and asserting
+nothing crosses is the only way to learn whether your second layer is
+load-bearing. A cross-tenant test with both layers live passes either
+way.</li>
+<li><strong>And disable the backstop to test the predicate.</strong>
+Defence in depth makes both layers' tests unfalsifiable unless you can
+turn each off. Build the switch with the second layer.</li>
+<li><strong>A transaction-local setting outside a transaction is
+discarded.</strong> <code>set_config(..., true)</code> in a standalone
+statement silently scopes nothing, and every policy then compares
+against NULL and matches nothing — enabled, correct, and inert.</li>
+<li><strong>The owner is exempt from its own policies.</strong>
+<code>ENABLE ROW LEVEL SECURITY</code> does nothing for an application
+connecting as the table owner. <code>FORCE</code> fixes that;
+<code>BYPASSRLS</code> defeats <code>FORCE</code>, and only the role's
+own attributes will tell you.</li>
+<li><strong>Announce the condition that disables your safety
+net.</strong> If a deployment choice can make a control inert with no
+other symptom, the control's job includes saying so at startup.</li>
+<li><strong>Put the status filter in the statement.</strong> A
+supersession check bound as a parameter cannot be forgotten by a new
+read method and does not spend result slots on rows it is about to
+discard.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>event_time</code> is stored as explicitly distinct from the
+encoding timestamp and no read consults it. Is an as-of query intended,
+or is the field for display?</li>
+<li>Would moving <code>log_activity</code> inside the storage mutation —
+and not discarding its result — be wanted, or is the feed deliberately a
+tool-layer convenience?</li>
+<li>On SQLite there is one layer by construction. Is that documented for
+deployers choosing a backend, beyond the note in this test module?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Scope and its tests:
+<code>pensyve-core/src/storage/postgres/live_rls.rs:1-100</code> (the
+two layers, the three fixed failure modes, and which layer each test
+gates), <code>:2309-2340</code>
+(<code>rls_alone_blocks_cross_namespace_access</code> and
+<code>SABOTAGED_DELETE</code>).</li>
+<li>Schema: <code>pensyve-core/src/storage/postgres_schema.sql</code>
+(policies and the <code>FORCE</code> statements;
+<code>activity_events</code> at 343-351).</li>
+<li>Reads: <code>pensyve-core/src/storage/postgres.rs:837-1000</code>
+(namespace and supersession bound together),
+<code>pensyve-core/src/storage/sqlite.rs</code>.</li>
+<li>Types: <code>pensyve-core/src/types.rs:308-640</code> (the four
+memory kinds, with <code>superseded_by</code> and
+<code>invalid_at</code> on each and <code>event_time</code> at
+332-334).</li>
+<li>Activity feed:
+<code>pensyve-core/src/storage/postgres.rs:5965-6000</code>,
+<code>pensyve-mcp-tools/src/server.rs</code> (the call sites, each
+<code>let _ = …</code>).</li>
+<li>Surrounding: <code>pensyve-core/src/retrieval/engine.rs</code>,
+<code>pensyve-core/src/consolidation/</code>,
+<code>pensyve-core/src/gdpr.rs</code>,
+<code>pensyve-core/src/namespace_export.rs</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;as_of\|point_in_time&quot; pensyve-core/src --include=&#39;*.rs&#39;    # 0 — event_time is stored and never queried as of
+grep -rn &quot;log_activity(&quot; --include=&#39;*.rs&#39; . | grep -v &quot;fn &quot;          # every call site is in the MCP tool server, each `let _ =`
+grep -rn &quot;superseded_by IS NULL\|invalid_at IS NULL&quot; pensyve-core/src/storage/*.rs   # bound in the statements, both backends
+grep -rn &quot;approver\|approved_by\|reviewed_by&quot; pensyve-core/src --include=&#39;*.rs&#39;      # 0 — no approval surface</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/major7apps/pensyve/commit/9ec26ade242a9360a69dc130356d54311dca1c87"><code class="commit-id" title="9ec26ade242a9360a69dc130356d54311dca1c87">9ec26ade…</code></a>
+— first reading, at the head of <code>main</code>, 752 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: three auto-run
+surfaces (a Claude Code plugin marketplace manifest, a
+<code>server.json</code> MCP manifest and a <code>smithery.yaml</code>
+packaging manifest), and four dependency manifests changed inside the
+seven-day cooldown including <code>Cargo.lock</code>. Nothing was
+installed, built or run — no cargo, no uv, no Postgres started, and the
+live-database suite was read rather than executed. Three marks.
+<code>bitemporal</code> is withheld one field short:
+<code>event_time</code> is documented as distinct from the encoding
+timestamp and no query filters on it, so there is no as-of read.
+<code>tombstone</code> is withheld because supersession keys on the row
+and nothing is keyed on the retired content. <code>audit_log</code> is
+withheld on where the writer sits rather than on an absence —
+<code>activity_events</code> is append-only and namespace-scoped, and
+every call site is in the MCP tool server with the result discarded,
+outside the mutating transaction, mixing <code>recall</code> with
+<code>forget</code>, so a mutation arriving by another path leaves no
+row. <code>human_review</code> is absent.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **572 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **573 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -526,6 +526,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 <ul class="az">
 <li><a class="az-row" href="../systems/palazzo/"><span class="az-id">Palazzo</span><span class="az-what">An audit log that can refuse a delete</span><code class="az-repo">calibrae/palazzo</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></a></li>
+<li><a class="az-row" href="../systems/pensyve/"><span class="az-id">Pensyve</span><span class="az-what">It sabotages its own DELETE to prove the second layer holds</span><code class="az-repo">major7apps/pensyve</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/people-context/"><span class="az-id">people-context</span><span class="az-what">Narrow by default, widened on purpose</span><code class="az-repo">JinyangWang27/people-context</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/perseus-vault/"><span class="az-id">Perseus Vault</span><span class="az-what">Claims audited against artifacts</span><code class="az-repo">Perseus-Computing-LLC/perseus-vault</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/pi/"><span class="az-id">Pi</span><span class="az-what">Branchable session substrate</span><code class="az-repo">earendil-works/pi</code><span class="az-caps"></span></a></li>
