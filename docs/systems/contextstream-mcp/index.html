@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="The open-source Rust client for a
+closed memory service, whose most careful work is deciding which project
+a folder is allowed to write to — a random marker in Git's common
+directory, matched against the checkout-local config, with creating it
+kept deliberately apart from reading it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ContextStream MCP
+Server — Agent Memory Atlas">
+    <meta property="og:description" content="The open-source Rust client
+for a closed memory service, whose most careful work is deciding which
+project a folder is allowed to write to — a random marker in Git's
+common directory, matched against the checkout-local config, with
+creating it kept deliberately apart from reading it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ContextStream MCP
+Server — Agent Memory Atlas">
+    <meta name="twitter:description" content="The open-source Rust
+client for a closed memory service, whose most careful work is deciding
+which project a folder is allowed to write to — a random marker in Git's
+common directory, matched against the checkout-local config, with
+creating it kept deliberately apart from reading it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ContextStream MCP Server — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ContextStream MCP Server",
+      "description": "The open-source Rust client for a closed memory service, whose most careful work is deciding which project a folder is allowed to write to \u2014 a random marker in Git's common directory, matched against the checkout-local config, with creating it kept deliberately apart from reading it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A path is not an identity</p>
+          <h1>ContextStream MCP Server</h1>
+          <p class="document-deck">The open-source Rust client for a
+closed memory service, whose most careful work is deciding which project
+a folder is allowed to write to — a random marker in Git's common
+directory, matched against the checkout-local config, with creating it
+kept deliberately apart from reading it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/contextstream/mcp-server">
+              <span>Source</span>
+              <strong>contextstream/mcp-server</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/contextstream/mcp-server/commit/cdf0b38658a54bad5335e00bf022d10f7901a465" title="cdf0b38658a54bad5335e00bf022d10f7901a465">
+              <span>Analyzed revision</span>
+              <code>cdf0b386…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/contextstream--mcp-server" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>contextstream--mcp-server</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>The ContextStream MCP server is the MIT-licensed Rust client for a
+hosted memory service — 229,967 lines across seven crates and 455
+commits since December 2025, with 2,820 committed test functions. Its
+own NOTICE is unusually direct about what it is: <em>"This MCP server is
+a client library that connects to the ContextStream API"</em>, and the
+platform <em>"includes proprietary backend services not included in this
+repository."</em></p>
+<p>That settles what can be read here and what cannot. The memories —
+decisions, events, docs, transcripts, lessons — live behind an HTTPS
+boundary. What this repository decides is <strong>which project a
+machine is allowed to speak for</strong>, and that turns out to be where
+its most careful work is.</p>
+<p>The header of <code>checkout_identity.rs</code> states the threat in
+one sentence:</p>
+<blockquote>
+<p>A canonical path is not sufficient identity: a folder or repository
+can be deleted and another one can later appear at the same path.</p>
+</blockquote>
+<p>The answer is a random, versioned marker written into Git's common
+directory and copied into the checkout-local config, with a rule that
+matters more than either: <em>"Creating the marker is intentionally
+separate from reading it so ordinary init, context, and hook paths
+cannot silently bless a replacement folder."</em> An automatic writer
+must find both copies and must find them equal.</p>
+<p>One mark. <code>scope_enforced</code> is earned on that binding and
+on the read cache beside it, both of which are in this repository and
+both of which are tested. <code>trust_state</code> is withheld although
+the vocabulary for it is here — <code>active</code>,
+<code>superseded</code>, <code>disputed</code>, <code>verified</code> —
+because the state is stored and the filter applied on the far side of
+the API, and a string put on a wire is not a filter this atlas can
+read.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Three boundaries, stacked, and it is worth keeping them apart because
+only two of them are visible here.</p>
+<p><strong>The account boundary</strong> is the API key or JWT. It
+decides what the service will return and none of that decision is in
+this repository.</p>
+<p><strong>The scope boundary</strong> is a workspace id and a project
+id resolved before every call. They come from the initialised session, a
+folder mapping, a task-auth override, the client config, or an explicit
+tool argument, in a stated precedence, and they go on the wire as
+parameters.</p>
+<p><strong>The checkout boundary</strong> is local and is the one this
+client enforces itself. A folder is bound to a project only if a marker
+it cannot have guessed is present in two places and agrees with itself.
+Nothing about that binding is asked of the server.</p>
+<p>The reason the third exists is that the first two are not enough for
+a writer that nobody typed a command to start. A managed git hook fires
+on <code>post-commit</code> with no human in the loop; the path it is
+standing in is whatever is at that path today. Path-as-identity is
+exactly the assumption that fails, and this client refuses to make
+it.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Two boundaries live in this repository — the checkout binding that an automatic writer must satisfy before it may attribute anything, and the per-caller partition on the shared read cache — while the store, the statuses and the retention are behind the API.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Two boundaries live in this repository — the checkout binding that an automatic writer must satisfy before it may attribute anything, and the per-caller partition on the shared read cache — while the store, the statuses and the retention are behind the API.
+flowchart TD
+  HOOK[&quot;Managed git hook&lt;br/&gt;post-commit, pre-push, post-checkout, post-merge&quot;]
+  AGENT[&quot;Agent calls one of six MCP tools&quot;]
+  RESOLVE[&quot;resolve_read_scope / resolve_write_scope&lt;br/&gt;session, folder map, task auth, config, argument&quot;]
+  CONSTRAIN[&quot;constrain_event_scope&lt;br/&gt;hook scope may never override the checkout&quot;]
+  BIND[&quot;validate_checkout_scope&quot;]
+  G1[&quot;checkout root equal&quot;]
+  G2[&quot;workspace id equal&quot;]
+  G3[&quot;project id equal&quot;]
+  G4[&quot;repository fingerprint equal&lt;br/&gt;marker in Git common dir vs local config&quot;]
+  G5[&quot;remote identity equal&quot;]
+  DROP[&quot;Quiet no-op&lt;br/&gt;nothing is attributed&quot;]
+  MIN[&quot;Serializer whitelist&lt;br/&gt;opaque checkout id or nothing&quot;]
+  CACHE[&quot;Warm cache key&lt;br/&gt;length-framed SHA-256 over caller, scope, query&quot;]
+  ANON[&quot;No caller identity&lt;br/&gt;key is None, cache bypassed&quot;]
+  API[&quot;ContextStream API&quot;]
+  STORE[(&quot;Proprietary store&lt;br/&gt;statuses, retention, tenancy&quot;)]
+
+  HOOK --&gt; CONSTRAIN --&gt; BIND
+  AGENT --&gt; RESOLVE --&gt; CACHE
+  CACHE --&gt; ANON
+  CACHE --&gt; API
+  BIND --&gt; G1 --&gt; G2 --&gt; G3 --&gt; G4 --&gt; G5
+  G5 --&gt;|&quot;all five hold&quot;| MIN --&gt; API
+  G1 -.-&gt;|&quot;any one fails&quot;| DROP
+  G4 -.-&gt; DROP
+  API --&gt; STORE</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Bind.</strong> <code>validate_checkout_scope</code> reads
+the checkout-local config with a JSON parser that rejects duplicate
+keys, then compares the canonical root, the workspace id, the project
+id, the stored <code>repository_fingerprint</code> against the one
+currently derivable from the checkout, and the configured remote
+identity — returning a distinct typed error for each
+(<code>crates/mcp-session/src/checkout_identity.rs:712-815</code>).</li>
+<li><strong>Capture.</strong> <code>capture</code> in
+<code>git_common.rs</code> resolves scope, calls
+<code>constrain_event_scope</code> under the comment <em>"Incoming
+hook/environment scope may never override the checkout"</em>, validates
+the binding, substitutes <code>binding.checkout_id</code> for
+<code>repo_path</code>, canonicalises the remote, and then re-resolves
+the config a second time immediately before sending — dropping project
+scope rather than misattributing if ownership changed in between
+(<code>crates/mcp-server/src/hook_handlers/git_common.rs:386-430</code>).</li>
+<li><strong>Minimise.</strong> <code>vcs_local_event_body</code> runs
+<code>sanitize_checkout_id</code>, which accepts only
+<code>checkout-v1:&lt;uuid&gt;</code> and returns <code>None</code> for
+anything else, and <code>sanitize_repository_url</code>, which requires
+http or https and strips credentials, query and fragment
+(<code>crates/mcp-client/src/client.rs:16944</code>,
+<code>:16991-17005</code>).</li>
+<li><strong>Resolve.</strong> <code>resolve_read_scope</code> prefers
+the initialised session over a task-auth override, adopts a folder
+mapping only when no workspace was passed explicitly, drops a stale
+folder workspace that is no longer accessible, and ignores an explicit
+project id belonging to a different workspace — attaching a
+human-readable note each time
+(<code>crates/mcp-tools/src/domains/scope.rs:627-760</code>).</li>
+<li><strong>Cache.</strong>
+<code>memory_search_cache_key_for_caller</code> returns
+<code>None</code> without a caller identity, and both the lookup and the
+insert are gated on the key being present
+(<code>crates/mcp-tools/src/domains/memory.rs:51-68</code>,
+<code>:1845-1873</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is a typed node the service holds. This repository defines
+the wire shape and the rendering, and the decision type is the one worth
+reading: <code>CreateDecisionInput</code> carries a title, content, a
+<code>rationale</code>, <code>alternatives</code> as strings or
+<code>{option, rejected_reason}</code> objects, a <code>scope</code>, a
+<code>confidence</code>, a <code>supersedes</code> pointer that accepts
+an id <em>or</em> lookup text, a category and tags
+(<code>crates/mcp-tools/src/domains/memory.rs:2410-2425</code>).</p>
+<p>A rejected alternative recorded with its reason is the material a
+tombstone is made of. Nothing in this repository consults it on a write,
+and whether the service does is not visible here, so
+<code>tombstone</code> is withheld with the material named rather than
+on an absence.</p>
+<p>Status is a constant:</p>
+<pre class="rust"><code>pub const DECISION_STATUSES: &amp;[&amp;str] = &amp;[&quot;active&quot;, &quot;superseded&quot;, &quot;disputed&quot;, &quot;verified&quot;, &quot;all&quot;];</code></pre>
+<p><code>normalize_decision_status</code> lowercases and rejects
+anything outside it with a message naming the valid set
+(<code>:2251-2265</code>). The documented default is
+<code>active</code>, applied by the server. So the vocabulary, the
+validation and the rendering are here; the stored field and the filter
+that withholds a superseded decision from a default read are not. That
+is the whole of the <code>trust_state</code> judgement: this atlas
+certifies filters it can read, and this one is on the other side of an
+HTTPS call.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A read is a tool action that posts a query with the resolved
+workspace and project, then renders the returned envelope as text an
+agent can act on. Two things in that path are local and both are
+decisions rather than plumbing.</p>
+<p><strong>The renderer does not guess.</strong>
+<code>render_decisions_envelope</code> carries the comment <em>"Missing
+typed fields render as <code>unknown</code> / <code>none</code>; nothing
+is inferred"</em>, and prints <code>status=unknown</code> when the
+payload has no status rather than defaulting to active
+(<code>:2304-2345</code>). The committed parity-eval corpus pins that:
+the case <code>decisions-about-x</code> requires the markers
+<code>status=unknown</code> and
+<code>[PARTIAL] decisions_envelope:</code> together, so a degraded
+fallback cannot quietly present itself as a typed answer
+(<code>crates/mcp-tools/src/domains/parity_eval_tests.rs</code>).</p>
+<p><strong>The cache fails closed.</strong> A thirty-second per-process
+warm cache sits in front of <code>memory(action="search")</code>, keyed
+by a length-framed SHA-256 over the caller identity, workspace, project,
+query, node type and limit. The framing is the point: each field is
+written as its length and then its bytes, so no crafted query can
+impersonate another field boundary, and a sibling test is named
+<code>length_framing_prevents_delimiter_and_optional_field_collisions</code>.
+<code>AnonymousHttp</code> and <code>Local</code> return
+<code>None</code> from <code>atlas_user_scope_token</code>, the comment
+stating that <em>"anonymous HTTP must bypass caches entirely"</em> — and
+because the key is <code>None</code>, both the read and the write are
+skipped rather than falling back to a shared bucket
+(<code>crates/mcp-types/src/config.rs:594-618</code>).</p>
+<p>A hit is labelled. The cached text is returned with a
+<code>[MEMORY_CACHED]</code> prefix naming the window and how to
+refresh, so an agent reading a thirty-second-old answer is told that is
+what it is.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The interesting writer is the one no one invoked. Managed hooks on
+<code>post-commit</code>, <code>pre-push</code>,
+<code>post-checkout</code> and <code>post-merge</code> dispatch into
+<code>git_common.rs</code>, whose header sets the posture: every helper
+is fail-open, git runs with <code>GIT_OPTIONAL_LOCKS=0</code> and an
+800-millisecond timeout with stderr discarded, and <em>"Git must never
+be blocked or slowed by capture."</em></p>
+<p>Fail-open is the right default for a hook and the dangerous one for
+attribution, which is why the scope handling underneath it is not
+fail-open at all. The binding must validate or nothing is sent. The wire
+field that used to carry a filesystem path carries an opaque
+<code>checkout-v1:&lt;uuid&gt;</code>. A session hint deposited by the
+editor's PostToolUse handler is applied only within a 120-second window
+so <em>"stale tags from old sessions never attach."</em> And the config
+is read a second time immediately before the request, with a comment
+explaining why: managed hooks are observers, they never persist or
+rebind scope, and if ownership changed the project scope is dropped
+rather than guessed.</p>
+<p>The minimisation rules are stated to be enforced twice, and the
+documentation says so out loud — <em>"when the validated checkout
+binding is converted to an event and again immediately before the HTTP
+request is built"</em> (<code>docs/data-handling.md</code>). A second
+copy of a rule is usually how a rule rots. This one is the shape that
+survives: the second copy is a whitelist rather than a repetition of the
+first copy's logic, it can only narrow, and a committed case proves it —
+<code>vcs_local_event_body_drops_raw_paths_and_invalid_remotes</code>
+passes <code>/Users/alice/private-project</code> and asserts the field
+is absent from the body, not sanitised into it
+(<code>crates/mcp-client/src/client.rs:22641-22656</code>).</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Six registered tools, over stdio or an HTTP gateway, with tool sets
+that vary by tier — <code>LIGHT_TOOLS</code> and
+<code>STANDARD_TOOLS</code> are asserted in
+<code>registry_tests.rs</code> not to contain particular entries, which
+is how a tier promise is kept honest.</p>
+<p>Two details reach the agent as text rather than as silence. Scope
+recovery is reported: when a write fails because the project scope was
+stale and the caller did <em>not</em> supply the scope explicitly,
+<code>recover_write_scope_after_project_error</code> retries at a
+recovered scope and <code>attach_scope_recovery_metadata</code> adds
+<code>scope_recovered</code>, <code>stale_project_id</code> and
+<code>requested_project_id</code> to the result, so the agent can see
+that the write did not land where it aimed
+(<code>scope.rs:523-600</code>). And notices carry a guard of their own:
+<code>rules_notice_never_names_a_phantom_tool</code> iterates every
+notice template and asserts none references a tool that does not exist —
+a small test against the particular failure of telling an agent to call
+something that is not there.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The identity layer is where this repository spends its care, and the
+test names are the fastest way to see the threat model. Twenty-two cases
+in <code>checkout_identity.rs</code> cover, among others: a symlinked
+git config rejected, a symlinked marker directory rejected, a symlinked
+folder marker rejected, oversized gitdir metadata rejected, an oversized
+git config rejected <em>without unbounded reading</em>, non-git
+directories failing closed <strong>without creating metadata</strong>, a
+checkout config with duplicate keys rejected, an invalid checkout id
+failing closed, a relative <code>gitdir</code> file resolved from the
+checkout root, a linked worktree reading both the common and the
+worktree config, and concurrent explicit establishment converging on a
+single identity. The constants beside them are bounds rather than round
+numbers: 4 KB of gitdir metadata, 256 KB of git config, eight levels of
+config include depth.</p>
+<p>Two more, in <code>session_tests.rs</code>, are about not keeping
+what should not be kept: a repository remote is normalised to strip
+<code>alice:secret@</code> before it becomes project identity, and an
+invalid remote produces an error that is asserted <em>not</em> to echo
+its own input — so a malformed URL carrying a token does not end up in a
+log line.</p>
+<p>What cannot be checked from here is larger than what can. Whether a
+<code>superseded</code> decision is actually withheld from a default
+read, whether a purge deletes, whether two tenants are separated in the
+store — all of that is behind the API, and the honest description of
+this report is that it is a reading of a client. The data-handling
+document is specific about defaults and the controls that turn them off,
+which is more than most such documents do; it is still a statement about
+a service, not a mechanism in a tree.</p>
+<p>Two local behaviours are worth naming as risks. Project scope accepts
+a <em>name</em> as well as a UUID, matched after lowercasing and
+stripping spaces, underscores and hyphens (<code>scope.rs:45-95</code>)
+— so <code>my-project</code>, <code>My Project</code> and
+<code>myproject</code> are one scope, and two genuinely different
+projects named that way collide with no warning. And scope recovery,
+careful as it is, still turns a refused write into a write somewhere
+else; it is gated on the caller not having asked for a scope explicitly,
+and it is reported back, which is the right pair of constraints, but an
+agent that ignores result metadata will not notice.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>2,820 test functions, 26,995 lines in dedicated test files, run by
+<code>cargo test</code>. Nothing was run here.</p>
+<p>The parity eval corpus is the most unusual piece. Each case names the
+prompt an agent would send, the tool and action that must answer it, and
+the exact text markers the rendered result must contain, run against a
+routing mock of the hosted API so both the typed contract and the 404
+fallbacks are exercised without network access. It is an eval over
+<em>rendering</em> — whether the agent-visible text carries the markers
+an agent needs — rather than over retrieval quality, which is the half a
+client can legitimately test.</p>
+<p><code>negative_eval</code> is withheld. The repository has genuine
+must-not assertions — credentials absent from a normalised remote, a raw
+path absent from a request body, a raw query absent from a cache key, a
+task-auth workspace asserted with <code>assert_ne!</code> not to win —
+and each has a positive control in its own case. None of them is an
+assertion about material that must not be <em>retrieved</em>; the store
+that would have to be queried for that is not in this repository.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Do not let a path be an identity.</strong> A folder can be
+deleted and replaced; a repository can be re-cloned by someone else. If
+an automatic writer attributes content by path, it will eventually
+attribute one project's work to another. A random marker written once
+and compared thereafter costs almost nothing.</li>
+<li><strong>Separate minting from checking.</strong> The rule that makes
+the marker work is that creating it is a different code path from
+reading it, so no ordinary call can bless a replacement folder as a side
+effect. Any "create if missing" on an identity check quietly removes the
+protection it was added for.</li>
+<li><strong>Fail open on the work, fail closed on the
+attribution.</strong> A commit hook must not break
+<code>git commit</code>, so quiet no-ops are correct — but the quiet
+no-op has to be the <em>default</em> when scope cannot be proved, not
+the fallback after an attempt to guess.</li>
+<li><strong>If you must duplicate an invariant, make the second copy a
+whitelist.</strong> Two copies of the same sanitising logic drift. A
+first copy that constructs the value and a second that accepts only one
+exact shape cannot drift in the dangerous direction, and the test writes
+itself.</li>
+<li><strong>Length-frame anything you hash into a key.</strong>
+Concatenating fields with a delimiter lets one field impersonate a
+boundary in another. Writing each field as length-then-bytes is two
+lines and closes it, and it is worth a test named for the collision it
+prevents.</li>
+<li><strong>Say when an answer is cached.</strong> A thirty-second warm
+cache that returns silently is a memory that lies about freshness.
+Prefixing the text with the window and how to refresh costs one line and
+makes the staleness the agent's problem to reason about rather than an
+invisible one.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The decision statuses are validated here and applied there. Does the
+service withhold a <code>superseded</code> decision from a default read,
+or rank it down? The client cannot tell, and the difference matters to
+anything built on it.</li>
+<li><code>alternatives</code> carries <code>rejected_reason</code> per
+option. Is a rejected option ever consulted when a later decision is
+written, or is it documentation?</li>
+<li>Project-name matching normalises away spaces, underscores and
+hyphens. Is there a uniqueness constraint on the normalised form
+server-side, or can two projects in one workspace normalise to the same
+key?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Checkout identity:
+<code>crates/mcp-session/src/checkout_identity.rs</code> — the header
+threat statement (1-11), <code>RepositoryFingerprint</code> (35-70),
+<code>validate_checkout_binding</code> (696-708),
+<code>validate_checkout_scope</code> (712-815), the 22 tests
+(1883-2460).</li>
+<li>Hook capture:
+<code>crates/mcp-server/src/hook_handlers/git_common.rs</code> — the
+fail-open header (1-28), <code>capture</code> (386-430).</li>
+<li>Minimisation: <code>crates/mcp-client/src/client.rs:16944</code>,
+<code>:16991-17005</code> (<code>sanitize_checkout_id</code>,
+<code>sanitize_repository_url</code>), <code>:22641-22656</code> (the
+dropped-path test).</li>
+<li>Scope resolution: <code>crates/mcp-tools/src/domains/scope.rs</code>
+— <code>parse_project_scope_id</code> (45-95),
+<code>resolve_write_scope</code> (506-521),
+<code>recover_write_scope_after_project_error</code> (523-576),
+<code>attach_scope_recovery_metadata</code> (578-600),
+<code>resolve_read_scope</code> (627-760), the tests (1242-1554).</li>
+<li>Decisions: <code>crates/mcp-tools/src/domains/memory.rs</code> —
+<code>DECISION_STATUSES</code> (2232),
+<code>normalize_decision_status</code> (2251-2265),
+<code>render_decisions_envelope</code> (2304-2400),
+<code>CreateDecisionInput</code> (2410-2425),
+<code>DecisionActionInput</code> (2429-2441), the
+status-<code>all</code> lookup (2538-2546).</li>
+<li>Cache: <code>crates/mcp-tools/src/domains/memory.rs:33-110</code>,
+<code>:1845-1873</code>,
+<code>crates/mcp-tools/src/domains/result_cache.rs</code>,
+<code>crates/mcp-types/src/config.rs:594-618</code>.</li>
+<li>Evals and tests:
+<code>crates/mcp-tools/src/domains/parity_eval_tests.rs</code>,
+<code>memory_tests.rs:370-389</code>,
+<code>session_tests.rs:113-135</code>,
+<code>notices.rs:170-190</code>.</li>
+<li>Documentation: <code>docs/data-handling.md</code>,
+<code>docs/architecture.md</code>, <code>NOTICE</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;assert!(!.*contains\|assert_ne!&quot; crates --include=&#39;*.rs&#39;   # must-not assertions: secrets, paths, cache keys, scope ids — none over retrieved material
+grep -rn &quot;append&quot; crates/mcp-server/src --include=&#39;*.rs&#39; | grep -i &quot;log\|audit\|jsonl&quot;   # 0 — no local append-only mutation record
+grep -rn &quot;DECISION_STATUSES&quot; crates --include=&#39;*.rs&#39;   # 4: the constant, its validator, and two schema descriptions — no filter applied locally
+grep -rn &quot;validate_checkout_binding&quot; crates --include=&#39;*.rs&#39;   # 5 call sites outside the definition
+grep -riE &quot;arxiv|bibtex|@article|citation|doi\.org&quot; --include=&#39;*.md&#39; . | grep -v node_modules   # 0</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/contextstream/mcp-server/commit/cdf0b38658a54bad5335e00bf022d10f7901a465"><code class="commit-id" title="cdf0b38658a54bad5335e00bf022d10f7901a465">cdf0b386…</code></a>
+— first reading, at the head of <code>main</code>, 455 commits and nine
+months in. Screened with <code>scripts/screen_repo.py</code> first: one
+auto-run surface (<code>server.json</code>, an MCP manifest declaring a
+start command), two build-time execution paths (a cargo
+<code>build.rs</code> and an npm <code>prepublishOnly</code>), and ten
+dependency manifests changed within the seven-day cooldown,
+<code>Cargo.lock</code> among them. Nothing was installed, built or run
+— no cargo, no npm, no binary downloaded, and the install script in the
+README was read as text. One mark. <code>trust_state</code> is withheld
+with its vocabulary present: <code>DECISION_STATUSES</code> is a
+constant here and the validator rejects anything outside it, but the
+stored status and the filter that withholds a superseded decision are in
+a backend this repository does not contain. <code>tombstone</code> is
+withheld with its material named — <code>alternatives</code> carries a
+<code>rejected_reason</code> per option and nothing here reads one back.
+<code>audit_log</code>, <code>human_review</code> and
+<code>bitemporal</code> are withheld for the same reason: no local store
+holds an event, an approver or a validity axis.
+<code>negative_eval</code> is withheld because the genuine must-not
+assertions in the tree are about what is <em>sent</em> and
+<em>keyed</em>, not about what is retrieved.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

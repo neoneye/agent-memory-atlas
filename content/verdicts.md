@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 564 reports.**
+**This page covers all 565 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4874,3 +4874,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 133,039 lines of TypeScript across 526 files and 1,103 commits since October 2025, 56 test files — exactly one of which covers this subsystem; one capability mark.
 - Study when: you are deciding where a memory's tenancy boundary belongs, or you want a worked example of a write path that runs on a schedule while its consumer was never connected.
 - Do not copy when: an option's zero means "off". `options.retentionDays || DEFAULT` turns the documented way to disable pruning into a thirty-day delete, and `options.minConfidence || 0.5` turns the documented zero threshold into a floor that hides low-confidence memories from every query while leaving them visible in the list view.
+
+### [`contextstream-mcp`](../systems/contextstream-mcp/)
+- Best idea: **a random marker, and minting it is a different code path from checking it.** `checkout_identity.rs` opens by naming the threat — a canonical path is not sufficient identity, because a folder can be deleted and another appear at the same path — and answers it with a versioned marker in Git's common directory copied into the checkout-local config, kept honest by the rule beside it: creating the marker is deliberately separate from reading it "so ordinary init, context, and hook paths cannot silently bless a replacement folder."
+- Second idea: **fail open on the work, fail closed on the attribution.** A managed git hook must never slow `git commit`, so every helper is a quiet no-op on error — but the scope underneath is not fail-open at all. Five equalities must hold before a field reaches the wire, the config is re-read immediately before sending, and a scope that changed mid-flight drops project attribution rather than guessing.
+- Third idea: **make the second copy of a rule a whitelist.** The data-handling document says the minimisation rules are enforced twice on purpose; the second enforcement accepts only `checkout-v1:<uuid>` and nothing else, with a committed case passing `/Users/alice/private-project` and asserting the field is absent from the body rather than sanitised into it.
+- Biggest risk: **the memory itself is not in this repository.** The NOTICE says the platform includes proprietary backend services not included here, so whether a superseded decision is withheld from a default read, whether a purge deletes, and whether two tenants are separated are all unverifiable from the tree. The decision statuses are defined and validated here and applied there.
+- Most reusable component: the length-framed cache key — each field written as length-then-bytes before a SHA-256, so no crafted query can impersonate a field boundary, with a caller who has no identity getting `None` and bypassing the shared cache entirely on both the read and the write.
+- Maturity impression: MIT, 229,967 lines of Rust across seven crates, 455 commits since December 2025, 2,820 test functions including 22 on checkout identity alone — symlinked markers rejected, oversized metadata rejected, non-git directories failing closed without creating metadata; one capability mark.
+- Study when: an automatic writer in your system attributes content by filesystem path, or you need a worked example of a client that is honest in its rendering about what it does not know.
+- Do not copy when: you need the scope key to be an authenticated boundary rather than a resolved parameter, or your project names could collide once spaces, underscores and hyphens are stripped — this resolver treats `my-project`, `My Project` and `myproject` as one scope.

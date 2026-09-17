@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 564 reports.</strong></p>
+<p><strong>This page covers all 565 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21435,6 +21435,56 @@ to disable pruning into a thirty-day delete, and
 <code>options.minConfidence || 0.5</code> turns the documented zero
 threshold into a floor that hides low-confidence memories from every
 query while leaving them visible in the list view.</li>
+</ul>
+<h3 id="contextstream-mcp"><a
+href="../systems/contextstream-mcp/"><code>contextstream-mcp</code></a></h3>
+<ul>
+<li>Best idea: <strong>a random marker, and minting it is a different
+code path from checking it.</strong> <code>checkout_identity.rs</code>
+opens by naming the threat — a canonical path is not sufficient
+identity, because a folder can be deleted and another appear at the same
+path — and answers it with a versioned marker in Git's common directory
+copied into the checkout-local config, kept honest by the rule beside
+it: creating the marker is deliberately separate from reading it "so
+ordinary init, context, and hook paths cannot silently bless a
+replacement folder."</li>
+<li>Second idea: <strong>fail open on the work, fail closed on the
+attribution.</strong> A managed git hook must never slow
+<code>git commit</code>, so every helper is a quiet no-op on error — but
+the scope underneath is not fail-open at all. Five equalities must hold
+before a field reaches the wire, the config is re-read immediately
+before sending, and a scope that changed mid-flight drops project
+attribution rather than guessing.</li>
+<li>Third idea: <strong>make the second copy of a rule a
+whitelist.</strong> The data-handling document says the minimisation
+rules are enforced twice on purpose; the second enforcement accepts only
+<code>checkout-v1:&lt;uuid&gt;</code> and nothing else, with a committed
+case passing <code>/Users/alice/private-project</code> and asserting the
+field is absent from the body rather than sanitised into it.</li>
+<li>Biggest risk: <strong>the memory itself is not in this
+repository.</strong> The NOTICE says the platform includes proprietary
+backend services not included here, so whether a superseded decision is
+withheld from a default read, whether a purge deletes, and whether two
+tenants are separated are all unverifiable from the tree. The decision
+statuses are defined and validated here and applied there.</li>
+<li>Most reusable component: the length-framed cache key — each field
+written as length-then-bytes before a SHA-256, so no crafted query can
+impersonate a field boundary, with a caller who has no identity getting
+<code>None</code> and bypassing the shared cache entirely on both the
+read and the write.</li>
+<li>Maturity impression: MIT, 229,967 lines of Rust across seven crates,
+455 commits since December 2025, 2,820 test functions including 22 on
+checkout identity alone — symlinked markers rejected, oversized metadata
+rejected, non-git directories failing closed without creating metadata;
+one capability mark.</li>
+<li>Study when: an automatic writer in your system attributes content by
+filesystem path, or you need a worked example of a client that is honest
+in its rendering about what it does not know.</li>
+<li>Do not copy when: you need the scope key to be an authenticated
+boundary rather than a resolved parameter, or your project names could
+collide once spaces, underscores and hyphens are stripped — this
+resolver treats <code>my-project</code>, <code>My Project</code> and
+<code>myproject</code> as one scope.</li>
 </ul>
         </article>
       </div>
