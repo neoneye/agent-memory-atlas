@@ -550,7 +550,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`loongflow`](../systems/loongflow/)
 - Best idea: recall by Boltzmann sampling at a temperature driven by the store's measured diversity — the only stochastic retrieval in the atlas.
 - Biggest risk: selection quality is bounded entirely by a `score` nothing validates, and the same query can return different memories with no seed or replay path.
-- Most reusable component: the diversity-to-temperature loop, including the 20% smoothing and the explicit min/max bounds.
+- Second idea: **the selector is tested as a distribution, not as a value.** Repeated draws are asserted to favour higher scores, and low temperature asserted to concentrate more than high — `np.mean(low_temp_selections) > np.mean(high_temp_selections)`. No single lucky draw satisfies any of those, which is the right way to pin a stochastic mechanism and is rare in this corpus.
+- Second risk: **the adaptive half is named in no test.** A grep for `diversity` across `tests/` returns nothing, so the two functions that distinguish this system from every other retrieval here are exercised by nothing — and both carry a defect visible on reading: the comment says *"Sigmoid adjustment"* above arithmetic that reduces to `2 * diversity`, a straight line, and `sample_size`, documented as a count of solution *pairs*, is a count of solutions, so the default 50 yields up to 1,225 comparisons.
+- Most reusable component: the diversity-to-temperature loop, including the 20% smoothing and the explicit min/max bounds — read the two defects above before lifting it.
 - Maturity impression: two unrelated memory models in one package — a conventional tier stack and a genuinely novel selection mechanism — with the control constants undefended.
 - Study when: memory feeds a search or generate-and-test loop and deterministic top-*k* keeps returning the same dead end.
 - Do not copy when: recall must be reproducible, or the memories are facts rather than attempts.

@@ -9,11 +9,11 @@ source_url: https://github.com/baidu-baige/LoongFlow
 archive_name: "baidu-baige--LoongFlow"
 revision: 945c78bc1554f8281aac40320b3599bd68d528d7
 revision_url: https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7
-analyzed_at: 2026-07-27
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "redis, memory, delegated"
 stack_retrieval: ""
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Message in graded tiers; `Solution` with score and timestamp in the evolving population"
   storage: "In-memory or Redis for the population; pluggable storage for graded tiers"
@@ -24,8 +24,8 @@ matrix:
   integration: "LoongFlow agent SDK"
   background: "Auto-compression between tiers"
   trust: "Score on each solution; no trust state on messages"
-  strengths: "The only stochastic recall in the atlas, with temperature driven by measured diversity"
-  risks: "Two unrelated memory models under one package; the graded stack is conventional"
+  strengths: "The only stochastic recall in the atlas, and the Boltzmann selector is tested as a distribution rather than a value — repeated draws asserted to favour higher scores, and low temperature asserted to concentrate more than high"
+  risks: "Two unrelated memory models under one package; the diversity function that makes the temperature adaptive is named in no test, its docstring says sigmoid where the arithmetic is linear, and its `sample_size` samples solutions while documenting pairs"
 ---
 
 ## 1. Executive Summary
@@ -50,6 +50,23 @@ and the temperature is driven by a measured property of the population itself:
 def _calculate_diversity(solutions, sample_size=50) -> float:
     """Normalized diversity score between 0 (identical) and 1 (max diversity)"""
 ```
+
+Two details in those twenty lines are worth a reader's attention before they
+copy them.
+
+**The adjustment is linear and the comment says sigmoid.** The line above it
+reads *"Sigmoid adjustment for smoother transitions"*; the arithmetic is
+`adjustment_factor = 1 + (2 * diversity - 1)`, which is `2 * diversity` — a
+straight line through the origin, clamped into `[min_temp, max_temp]` and then
+blended 80/20 with the current temperature. Nothing sigmoid happens. The blend is
+what actually smooths the transition, and it is the part with no comment.
+
+**`sample_size` samples solutions, not pairs.** The docstring calls it *"Number
+of solution pairs to sample for diversity estimation"*, and the code is
+`np.random.choice(len(solutions), size=min(sample_size, len(solutions)))`
+followed by a double loop over the sample — so the default 50 yields up to 1,225
+pairwise comparisons, not 50. An adopter tuning the parameter for cost would be
+off by a square.
 
 **Every other system in this atlas retrieves deterministically.** Rank by some blend of similarity, recency, and importance; take the top *k*. LoongFlow's evolutionary memory deliberately returns a *worse* remembered solution some of the time, with the probability governed by a temperature that rises when the population has collapsed toward sameness and falls when it is already varied.
 
@@ -201,9 +218,38 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-Tests exist under `tests/agentsdk/memory`. Nothing was run for this review, and no memory-quality benchmark was found.
+Ten test files sit under `tests/agentsdk/memory`, split between `grade/` and
+`evolution/`, and the split in their quality is the thing to report.
 
-The measurement this design invites is whether adaptive temperature beats a fixed one — a comparison the code is structured to support, since temperature is a parameter, and which nothing in the repository appears to have run.
+**The Boltzmann selector is tested as a distribution, which is the right way to
+test a stochastic mechanism and is rare in this corpus.** `test_score_priority`
+draws repeatedly and asserts the mean index of the selected solution exceeds a
+threshold; `test_weight_priority` does the same for weights; and
+`test_temperature_effect` asserts that selections at a low temperature
+concentrate on higher-scoring solutions than at a high one —
+`np.mean(low_temp_selections) > np.mean(high_temp_selections)`. None of those can
+be satisfied by a single lucky draw.
+
+**The function that makes the temperature adaptive is named in no test.** A grep
+for `diversity` across `tests/` returns nothing. Every Boltzmann case passes an
+explicit temperature, so `_calculate_diversity` and
+`_adaptive_temperature_by_diversity` — the pair that distinguishes this system
+from every other retrieval in the atlas — are exercised by nothing, which is why
+the linear-versus-sigmoid mismatch and the pairs-versus-solutions sampling in
+section 3 could both be introduced without a failure.
+
+**One file named like a test contains none.**
+`grade/compressor/test_message_compression.py` is 292 lines whose docstring says
+*"This file generate test message to compress"*; it defines
+`generate_test_messages()` and no `test_`-prefixed function, so pytest collects
+the module and runs nothing. It is a fixture generator with a test file's name,
+which inflates any count made by listing files rather than cases — this report's
+first reading counted the directory.
+
+Nothing was run for this review, and no memory-quality benchmark was found. The
+measurement this design invites is whether adaptive temperature beats a fixed
+one — a comparison the code is structured to support, since temperature is a
+parameter, and which nothing in the repository appears to have run.
 
 ## 11. For Your Own Build
 
@@ -251,5 +297,15 @@ Do not copy:
 - Tests: `tests/agentsdk/memory`.
 
 ## History
+
+**2026-09-17** — [`945c78bc1554f8281aac40320b3599bd68d528d7`](https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7) — re-read at the same commit, still the tip; the last commit upstream is 9 April 2026. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, no build-time execution path, fifteen unpinned dependency surfaces, nothing inside the cooldown; `AGENTS.md` and `CLAUDE.md` were read as data. Nothing was installed or run.
+
+**The distinctive mechanism is the untested one.** The Boltzmann selector itself is tested well and unusually — as a distribution rather than a value, with repeated draws asserted to favour higher scores and low temperature asserted to concentrate more than high. But a grep for `diversity` across `tests/` returns nothing: every case passes an explicit temperature, so `_calculate_diversity` and `_adaptive_temperature_by_diversity`, the pair that makes this the only adaptive stochastic recall in the atlas, are exercised by nothing.
+
+**Two defects in that untested pair, both visible on reading.** The comment says *"Sigmoid adjustment for smoother transitions"* above `adjustment_factor = 1 + (2 * diversity - 1)`, which is `2 * diversity` — a straight line; the smoothing that does happen is the unremarked 80/20 blend with the current temperature. And `sample_size`, documented as *"Number of solution pairs to sample"*, is passed to `np.random.choice` over the solution list and then double-looped, so the default 50 produces up to 1,225 comparisons rather than 50.
+
+**One file named like a test contains none.** `grade/compressor/test_message_compression.py` is 292 lines defining `generate_test_messages()` and no `test_`-prefixed function — a fixture generator with a test filename, which inflates a count made by listing files. The first reading's section 10 said only that *"Tests exist under `tests/agentsdk/memory`"*, which counted the directory rather than the cases.
+
+Marks unchanged at none. `stack_retrieval` stays empty — the graded tiers return by recency and the population by sampling, and neither is a lexical, vector or graph arm — and `stack_source` moves from `seeded` to `reviewed` now that the fields have been checked against the code rather than inferred.
 
 **2026-07-27** — [`945c78bc1554f8281aac40320b3599bd68d528d7`](https://github.com/baidu-baige/LoongFlow/commit/945c78bc1554f8281aac40320b3599bd68d528d7) — first reading.

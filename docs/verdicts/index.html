@@ -1644,8 +1644,24 @@ atlas.</li>
 <li>Biggest risk: selection quality is bounded entirely by a
 <code>score</code> nothing validates, and the same query can return
 different memories with no seed or replay path.</li>
+<li>Second idea: <strong>the selector is tested as a distribution, not
+as a value.</strong> Repeated draws are asserted to favour higher
+scores, and low temperature asserted to concentrate more than high —
+<code>np.mean(low_temp_selections) &gt; np.mean(high_temp_selections)</code>.
+No single lucky draw satisfies any of those, which is the right way to
+pin a stochastic mechanism and is rare in this corpus.</li>
+<li>Second risk: <strong>the adaptive half is named in no test.</strong>
+A grep for <code>diversity</code> across <code>tests/</code> returns
+nothing, so the two functions that distinguish this system from every
+other retrieval here are exercised by nothing — and both carry a defect
+visible on reading: the comment says <em>"Sigmoid adjustment"</em> above
+arithmetic that reduces to <code>2 * diversity</code>, a straight line,
+and <code>sample_size</code>, documented as a count of solution
+<em>pairs</em>, is a count of solutions, so the default 50 yields up to
+1,225 comparisons.</li>
 <li>Most reusable component: the diversity-to-temperature loop,
-including the 20% smoothing and the explicit min/max bounds.</li>
+including the 20% smoothing and the explicit min/max bounds — read the
+two defects above before lifting it.</li>
 <li>Maturity impression: two unrelated memory models in one package — a
 conventional tier stack and a genuinely novel selection mechanism — with
 the control constants undefended.</li>
