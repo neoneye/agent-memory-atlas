@@ -1035,10 +1035,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`memary`](../systems/memary/)
 - Best idea: separating "what I know" from "what I am attending to", with a salience model small enough to read in one sitting — the smallest legible instance of reinforcement-by-frequency in the atlas.
 - Biggest risk: `_select_top_entities` sorts ascending, so the *least*-mentioned entities are the ones injected. The ranking signal has no test on its consumer.
+- Second risk: the graph's only deletion is `MATCH (n) DETACH DELETE n` behind a button labelled "Clear Memory DB", and it runs *after* both JSON stores are cleared, inside a `try/except` that logs and continues — so a graph that refuses the delete leaves the counts and the stream empty while every triplet survives. And the per-user FalkorDB database, the project's multi-agent story, takes `user_id` with a default of the constant `'falkor'`.
 - Most reusable component: the idea, not the code — capture without a model, and a two-store split you can reimplement in an afternoon.
 - Maturity impression: the shipped package has no tests; the real ones live in a development sandbox and cover the serialization layer. Last commit October 2024, with Python pinned at ≤ 3.11.9.
 - Study when: you are learning how a graph-backed agent memory fits together and want a clear, honest demonstration.
-- Do not copy when: you need to answer for what the system believes. A wrong triplet cannot be removed, a wrong entity name cannot be merged, and the only quality signal counts mentions rather than accuracy.
+- Do not copy when: you need to answer for what the system believes. A wrong triplet can only be removed by removing all of them, a wrong entity name cannot be merged, and the only quality signal counts mentions rather than accuracy.
 
 ### [`memmachine`](../systems/memmachine/)
 - Best idea: provenance that actually resolves — the source is kept and cited, so a support engineer has something to look at when a user says the assistant believes something false.

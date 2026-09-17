@@ -22016,10 +22016,13 @@ streams</td>
 list injected alongside</td>
 <td>Chat turns append entity mentions; graph triplets are extracted from
 the agent's own web-search output</td>
-<td>Age-based truncation and index-based removal on the JSON lists;
-nothing deletes from the graph</td>
-<td>None in the read path; FalkorDB deployments get a per-user database,
-Neo4j deployments get one shared graph</td>
+<td>Age-based truncation and index-based removal on the JSON lists; the
+graph has exactly one deletion, <code>MATCH (n) DETACH DELETE n</code>,
+behind a Streamlit button that clears everything</td>
+<td>None in the read path; a FalkorDB deployment gets a database named
+after <code>user_id</code>, which defaults to the constant
+<code>falkor</code>, and a Neo4j deployment gets the single database
+<code>neo4j</code></td>
 <td>A Python <code>ChatAgent</code> class with a tool registry, plus a
 Streamlit app</td>
 <td>None</td>
@@ -22028,8 +22031,9 @@ enter the graph unverified</td>
 <td>The smallest legible instance of reinforcement-by-frequency, and an
 honest single-file store</td>
 <td><code>_select_top_entities</code> sorts ascending, so the
-least-mentioned entities are the ones injected; the graph has no delete
-path</td>
+least-mentioned entities are the ones injected; the only graph deletion
+removes every node, and it runs after the JSON stores are already
+cleared, inside a try/except that only logs</td>
 </tr>
 <tr>
 <td><code>membase</code></td>

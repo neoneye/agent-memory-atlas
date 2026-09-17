@@ -9,23 +9,23 @@ source_url: https://github.com/kingjulio8238/Memary
 archive_name: "kingjulio8238--Memary"
 revision: b2331a2c0844d66f69acd607b9e4dbaba56552c1
 revision_url: https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1
-analyzed_at: 2026-07-29
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "graph, files"
-stack_retrieval: ""
-stack_source: "seeded"
+stack_retrieval: "graph"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An entity mention with a timestamp, and an entity with a cumulative mention count; graph triplets underneath"
   storage: "Neo4j or FalkorDB for the graph, plus two flat JSON files for the streams"
   retrieval: "LlamaIndex KnowledgeGraphRAGRetriever, with a count-ranked entity list injected alongside"
   write: "Chat turns append entity mentions; graph triplets are extracted from the agent's own web-search output"
-  update_delete: "Age-based truncation and index-based removal on the JSON lists; nothing deletes from the graph"
-  scoping: "None in the read path; FalkorDB deployments get a per-user database, Neo4j deployments get one shared graph"
+  update_delete: "Age-based truncation and index-based removal on the JSON lists; the graph has exactly one deletion, `MATCH (n) DETACH DELETE n`, behind a Streamlit button that clears everything"
+  scoping: "None in the read path; a FalkorDB deployment gets a database named after `user_id`, which defaults to the constant `falkor`, and a Neo4j deployment gets the single database `neo4j`"
   integration: "A Python `ChatAgent` class with a tool registry, plus a Streamlit app"
   background: "None"
   trust: "Mention count stands in for confidence; external search results enter the graph unverified"
   strengths: "The smallest legible instance of reinforcement-by-frequency, and an honest single-file store"
-  risks: "`_select_top_entities` sorts ascending, so the least-mentioned entities are the ones injected; the graph has no delete path"
+  risks: "`_select_top_entities` sorts ascending, so the least-mentioned entities are the ones injected; the only graph deletion removes every node, and it runs after the JSON stores are already cleared, inside a try/except that only logs"
 ---
 
 ## 1. Executive Summary
@@ -189,7 +189,10 @@ the kind [Verel](../verel/) hardened.
 Scoping deserves a precise statement because it is a near-miss rather than an
 absence. With FalkorDB, `base_agent.py:87` constructs
 `FalkorDBGraphStore(self.falkordb_url, database=user_id)` — a *separate database
-per user*, which the README presents as the multi-agent story. That is real
+per user*, which the README presents as the multi-agent story. **The parameter
+defaults to the constant `'falkor'`** (`base_agent.py:60`), so the isolation
+exists only for a caller who passes a real identifier; a deployment that takes
+the defaults puts every user in one database called `falkor`. That is real
 isolation, and it is stronger than a filter in one sense: there is no query that
 can cross it. It is not what this atlas marks as `scope_enforced`, for two
 reasons. It is physical separation chosen at construction time rather than a
@@ -253,10 +256,21 @@ chunk. So Memary's long-term factual store is populated exclusively by
 **unverified external web search, triggered by its own recall failures**, with no
 record of which query produced which triplet and no way to remove one afterwards.
 
-Correction does not exist. There is no supersession, no contradiction detection,
-no delete path into the graph, and the JSON-side removals are index- and
-age-based rather than content-based. A wrong triplet is permanent for the lifetime
-of the database.
+Correction does not exist. There is no supersession and no contradiction
+detection, and the JSON-side removals are index- and age-based rather than
+content-based.
+
+**The graph has exactly one deletion and it removes everything.** This report
+previously said there is no delete path into the graph; there is, and its shape
+is worth more than its absence would have been. `ChatAgent.clearMemory` runs
+`self.graph_store.query("MATCH (n) DETACH DELETE n")`, and the Streamlit app
+exposes it as a button labelled *"Clear Memory DB"*. Two properties follow. The
+only granularity available is *all of it*, so a wrong triplet is still permanent
+unless you are willing to lose every right one with it. And the order is
+unfortunate: the two JSON stores are cleared first, then the graph query runs
+inside a `try/except` that logs the error and continues — so a graph that refuses
+the delete leaves an installation whose entity counts and memory stream are empty
+while every triplet survives, with nothing but a log line to say so.
 
 ### Operational cost
 
@@ -410,5 +424,15 @@ October 2024 and the README pins Python at ≤ 3.11.9.
 `dev/KG_memory_stream/tests/test_entity_knowledge_store.py`
 
 ## History
+
+**2026-09-17** — [`b2331a2c0844d66f69acd607b9e4dbaba56552c1`](https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1) — re-read at the same commit, still the tip; the last commit upstream is 19 October 2024. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, no build-time execution path, three unpinned manifests, nothing inside the cooldown; nothing was installed and nothing was run.
+
+The headline holds exactly. `_select_top_entities` is still `np.argsort(entity_counts)[:TOP_ENTITIES]` — ascending — so the entities injected under the heading *"Knowledge Entity Store:"* are the least-mentioned ones, and nothing in the repository tests the function.
+
+**One claim is corrected and it makes the finding sharper.** This report said there is no delete path into the graph. There is one: `ChatAgent.clearMemory` runs `MATCH (n) DETACH DELETE n`, exposed in the Streamlit app as a button labelled *"Clear Memory DB"*. The only granularity is everything, and the sequence is the interesting part — both JSON stores are cleared before the graph query, which runs inside a `try/except` that logs and continues, so a graph that refuses the delete leaves the counts and the stream empty while every triplet survives.
+
+**And the scope near-miss is narrower than published.** The per-user FalkorDB database is real, but `user_id` defaults to the constant `'falkor'`, so a deployment that takes the defaults puts every user in one database — the isolation exists for a caller who passes an identifier and for nobody else.
+
+Marks unchanged at none: the only tests are the two under `dev/KG_memory_stream/tests/`, fourteen assertions between them, all `assertEqual` over the serialization layer, and a survey using `assertNotIn|assertFalse|assertIsNone|assertRaises` as well as the bare forms returns nothing. `stack_retrieval` was empty and seeded; it is now `graph`, reviewed — a `KnowledgeGraphRAGRetriever` over the graph store with no vector or lexical arm of its own in this tree.
 
 **2026-07-29** — [`b2331a2c0844d66f69acd607b9e4dbaba56552c1`](https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1) — first reading.

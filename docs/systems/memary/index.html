@@ -113,7 +113,7 @@ the one line that uses them sorts the wrong way.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kingjulio8238--Memary" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -307,14 +307,18 @@ kind <a href="../verel/">Verel</a> hardened.</p>
 than an absence. With FalkorDB, <code>base_agent.py:87</code> constructs
 <code>FalkorDBGraphStore(self.falkordb_url, database=user_id)</code> — a
 <em>separate database per user</em>, which the README presents as the
-multi-agent story. That is real isolation, and it is stronger than a
-filter in one sense: there is no query that can cross it. It is not what
-this atlas marks as <code>scope_enforced</code>, for two reasons. It is
-physical separation chosen at construction time rather than a stored
-scope key applied on the read path, so nothing scopes the two JSON files
-that sit beside the graph; and the Neo4j branch three lines below has no
-equivalent, so the property is a function of which backend you
-picked.</p>
+multi-agent story. <strong>The parameter defaults to the constant
+<code>'falkor'</code></strong> (<code>base_agent.py:60</code>), so the
+isolation exists only for a caller who passes a real identifier; a
+deployment that takes the defaults puts every user in one database
+called <code>falkor</code>. That is real isolation, and it is stronger
+than a filter in one sense: there is no query that can cross it. It is
+not what this atlas marks as <code>scope_enforced</code>, for two
+reasons. It is physical separation chosen at construction time rather
+than a stored scope key applied on the read path, so nothing scopes the
+two JSON files that sit beside the graph; and the Neo4j branch three
+lines below has no equivalent, so the property is a function of which
+backend you picked.</p>
 <p>The <code>count</code> field is the only thing resembling trust, and
 section 6 explains why it does not work.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
@@ -366,10 +370,23 @@ eight triplets per chunk. So Memary's long-term factual store is
 populated exclusively by <strong>unverified external web search,
 triggered by its own recall failures</strong>, with no record of which
 query produced which triplet and no way to remove one afterwards.</p>
-<p>Correction does not exist. There is no supersession, no contradiction
-detection, no delete path into the graph, and the JSON-side removals are
-index- and age-based rather than content-based. A wrong triplet is
-permanent for the lifetime of the database.</p>
+<p>Correction does not exist. There is no supersession and no
+contradiction detection, and the JSON-side removals are index- and
+age-based rather than content-based.</p>
+<p><strong>The graph has exactly one deletion and it removes
+everything.</strong> This report previously said there is no delete path
+into the graph; there is, and its shape is worth more than its absence
+would have been. <code>ChatAgent.clearMemory</code> runs
+<code>self.graph_store.query("MATCH (n) DETACH DELETE n")</code>, and
+the Streamlit app exposes it as a button labelled <em>"Clear Memory
+DB"</em>. Two properties follow. The only granularity available is
+<em>all of it</em>, so a wrong triplet is still permanent unless you are
+willing to lose every right one with it. And the order is unfortunate:
+the two JSON stores are cleared first, then the graph query runs inside
+a <code>try/except</code> that logs the error and continues — so a graph
+that refuses the delete leaves an installation whose entity counts and
+memory stream are empty while every triplet survives, with nothing but a
+log line to say so.</p>
 <h3 id="operational-cost">Operational cost</h3>
 <ul>
 <li><strong>Synchronous?</strong> Yes for mentions, and they are
@@ -527,6 +544,42 @@ repository.</li>
 <code>dev/KG_memory_stream/tests/test_memory_stream.py</code>,
 <code>dev/KG_memory_stream/tests/test_entity_knowledge_store.py</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1"><code class="commit-id" title="b2331a2c0844d66f69acd607b9e4dbaba56552c1">b2331a2c…</code></a>
+— re-read at the same commit, still the tip; the last commit upstream is
+19 October 2024. Nothing could have moved, so this reading audited the
+first one. Screened again: no auto-run surface, no build-time execution
+path, three unpinned manifests, nothing inside the cooldown; nothing was
+installed and nothing was run.</p>
+<p>The headline holds exactly. <code>_select_top_entities</code> is
+still <code>np.argsort(entity_counts)[:TOP_ENTITIES]</code> — ascending
+— so the entities injected under the heading <em>"Knowledge Entity
+Store:"</em> are the least-mentioned ones, and nothing in the repository
+tests the function.</p>
+<p><strong>One claim is corrected and it makes the finding
+sharper.</strong> This report said there is no delete path into the
+graph. There is one: <code>ChatAgent.clearMemory</code> runs
+<code>MATCH (n) DETACH DELETE n</code>, exposed in the Streamlit app as
+a button labelled <em>"Clear Memory DB"</em>. The only granularity is
+everything, and the sequence is the interesting part — both JSON stores
+are cleared before the graph query, which runs inside a
+<code>try/except</code> that logs and continues, so a graph that refuses
+the delete leaves the counts and the stream empty while every triplet
+survives.</p>
+<p><strong>And the scope near-miss is narrower than published.</strong>
+The per-user FalkorDB database is real, but <code>user_id</code>
+defaults to the constant <code>'falkor'</code>, so a deployment that
+takes the defaults puts every user in one database — the isolation
+exists for a caller who passes an identifier and for nobody else.</p>
+<p>Marks unchanged at none: the only tests are the two under
+<code>dev/KG_memory_stream/tests/</code>, fourteen assertions between
+them, all <code>assertEqual</code> over the serialization layer, and a
+survey using
+<code>assertNotIn|assertFalse|assertIsNone|assertRaises</code> as well
+as the bare forms returns nothing. <code>stack_retrieval</code> was
+empty and seeded; it is now <code>graph</code>, reviewed — a
+<code>KnowledgeGraphRAGRetriever</code> over the graph store with no
+vector or lexical arm of its own in this tree.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/kingjulio8238/Memary/commit/b2331a2c0844d66f69acd607b9e4dbaba56552c1"><code class="commit-id" title="b2331a2c0844d66f69acd607b9e4dbaba56552c1">b2331a2c…</code></a>
 — first reading.</p>

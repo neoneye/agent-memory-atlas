@@ -3246,6 +3246,14 @@ legible instance of reinforcement-by-frequency in the atlas.</li>
 <li>Biggest risk: <code>_select_top_entities</code> sorts ascending, so
 the <em>least</em>-mentioned entities are the ones injected. The ranking
 signal has no test on its consumer.</li>
+<li>Second risk: the graph's only deletion is
+<code>MATCH (n) DETACH DELETE n</code> behind a button labelled "Clear
+Memory DB", and it runs <em>after</em> both JSON stores are cleared,
+inside a <code>try/except</code> that logs and continues — so a graph
+that refuses the delete leaves the counts and the stream empty while
+every triplet survives. And the per-user FalkorDB database, the
+project's multi-agent story, takes <code>user_id</code> with a default
+of the constant <code>'falkor'</code>.</li>
 <li>Most reusable component: the idea, not the code — capture without a
 model, and a two-store split you can reimplement in an afternoon.</li>
 <li>Maturity impression: the shipped package has no tests; the real ones
@@ -3254,8 +3262,9 @@ commit October 2024, with Python pinned at ≤ 3.11.9.</li>
 <li>Study when: you are learning how a graph-backed agent memory fits
 together and want a clear, honest demonstration.</li>
 <li>Do not copy when: you need to answer for what the system believes. A
-wrong triplet cannot be removed, a wrong entity name cannot be merged,
-and the only quality signal counts mentions rather than accuracy.</li>
+wrong triplet can only be removed by removing all of them, a wrong
+entity name cannot be merged, and the only quality signal counts
+mentions rather than accuracy.</li>
 </ul>
 <h3 id="memmachine"><a
 href="../systems/memmachine/"><code>memmachine</code></a></h3>
