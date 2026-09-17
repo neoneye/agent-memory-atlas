@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 511 of 563 screened at the report's current pin.**
+**Progress: 512 of 564 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 52 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 223 |
-| Repositories with a dependency surface inside the cooldown (`FRESH`) | 310 |
-| Repositories with build-time execution (`EXEC`) | 375 |
+| Repositories with an auto-run surface (`RUNS`) | 224 |
+| Repositories with a dependency surface inside the cooldown (`FRESH`) | 311 |
+| Repositories with build-time execution (`EXEC`) | 376 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -42,6 +42,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`agentrecall-x`](../../content/systems/agentrecall-x.md) | `smithery.yaml` |
 | [`agentrt`](../../content/systems/agentrt.md) | `.gitmodules` |
 | [`agno`](../../content/systems/agno.md) | `.cursorrules` |
+| [`ai-maestro`](../../content/systems/ai-maestro.md) | `.gitmodules`, `hooks/` |
 | [`ai-memory`](../../content/systems/ai-memory.md) | `hooks/` |
 | [`aidememo`](../../content/systems/aidememo.md) | `.claude-plugin/`, `.mcp.json` |
 | [`aimee`](../../content/systems/aimee.md) | `.claude/hooks/` |

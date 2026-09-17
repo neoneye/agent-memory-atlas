@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A multi-agent desktop orchestrator
+whose agents each get a CozoDB file, a nightly LLM consolidation pass
+that distils conversations into categorised long-term memories, and a
+context builder to splice those memories into a prompt that no code in
+the repository calls.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AI Maestro — Agent Memory Atlas">
+    <meta property="og:description" content="A multi-agent desktop
+orchestrator whose agents each get a CozoDB file, a nightly LLM
+consolidation pass that distils conversations into categorised long-term
+memories, and a context builder to splice those memories into a prompt
+that no code in the repository calls.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI
+Maestro — Agent Memory Atlas">
+    <meta name="twitter:description" content="A multi-agent desktop
+orchestrator whose agents each get a CozoDB file, a nightly LLM
+consolidation pass that distils conversations into categorised long-term
+memories, and a context builder to splice those memories into a prompt
+that no code in the repository calls.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AI Maestro — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AI Maestro",
+      "description": "A multi-agent desktop orchestrator whose agents each get a CozoDB file, a nightly LLM consolidation pass that distils conversations into categorised long-term memories, and a context builder to splice those memories into a prompt that no code in the repository calls.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The consolidation runs nightly and nothing
+reads it back</p>
+          <h1>AI Maestro</h1>
+          <p class="document-deck">A multi-agent desktop orchestrator
+whose agents each get a CozoDB file, a nightly LLM consolidation pass
+that distils conversations into categorised long-term memories, and a
+context builder to splice those memories into a prompt that no code in
+the repository calls.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/23blocks-OS/ai-maestro">
+              <span>Source</span>
+              <strong>23blocks-OS/ai-maestro</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/23blocks-OS/ai-maestro/commit/e68294a42824a08e761c338b1ce77d0d44e4fbed" title="e68294a42824a08e761c338b1ce77d0d44e4fbed">
+              <span>Analyzed revision</span>
+              <code>e68294a4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/23blocks-OS--ai-maestro" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>23blocks-OS--ai-maestro</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AI Maestro is an MIT-licensed multi-agent orchestrator — a Next.js
+desktop application, 133,039 lines of TypeScript across 526 files, 1,103
+commits since October 2025 — that runs a fleet of coding agents on one
+host and gives each of them a database. <code>lib/memory/</code> is
+2,238 lines of long-term memory over the CozoDB schema in
+<code>lib/cozo-schema-memory.ts</code>, and it is a complete
+biological-tier design: raw conversation messages are short-term memory,
+a nightly LLM pass distils them into categorised long-term memories,
+near-duplicates reinforce rather than multiply, and memories that have
+been reinforced enough times and lived long enough are promoted from
+<code>warm</code> to <code>long</code>.</p>
+<p>One mark is earned. <code>scope_enforced</code> holds because
+<code>agent_id</code> is stored on every row and bound as a predicate on
+every long-term read — though the separation that does the work is that
+each agent gets its own file, and the column is a second copy of that
+boundary rather than the boundary itself.</p>
+<p><strong>The pass that writes these memories runs every night at two.
+The function that would put them in front of an agent has no
+caller.</strong> <code>buildMemoryContext</code>
+(<code>lib/memory/search.ts:297-358</code>) does exactly what the name
+says: it searches the memories for a query, adds the top preferences and
+patterns, and returns a markdown block for an LLM prompt. Its only
+invocation in the repository is the <code>view === 'context'</code>
+branch of the long-term memory endpoint
+(<code>services/agents-memory-service.ts:682-688</code>), and a search
+of the tree for a caller that requests that view returns the branch
+itself and nothing else. The React viewer asks for
+<code>limit=100</code>, <code>view=stats</code> and
+<code>view=graph</code>; nothing asks for <code>view=context</code>, and
+no prompt-assembly path imports the function. The write side is wired
+end to end and automatic; the read side terminates in a viewer.</p>
+<p>That asymmetry is the frame for the rest of the reading, because the
+defects below are all on paths that no consumer currently exercises —
+which is precisely why they are still there.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An agent here is a directory. <code>AgentDatabase</code>'s
+constructor builds
+<code>~/.aimaestro/agents/&lt;agentId&gt;/agent.db</code> and creates
+the directory if it is missing (<code>lib/cozo-db.ts:27-38</code>);
+initialisation then auto-migrates four schemas into it — metadata, RAG,
+memory, and a fifth-phase tracking schema. Everything an agent remembers
+is in that one SQLite file, and nothing in the memory code opens two of
+them at once.</p>
+<p>Memory is two-tier by relation rather than by column. Short-term is
+<code>messages</code>, <code>msg_vec</code> and <code>msg_terms</code> —
+raw conversation text, its embeddings, its term scores. Long-term is
+<code>memories</code> and <code>memory_vec</code>, populated only by the
+consolidation pass. The bridge between them is
+<code>consolidated_conversations</code>, a marker keyed on the
+conversation file that stops a conversation being extracted twice.</p>
+<p>The schema header states the lineage plainly: HOT/WARM/COLD tiers
+from Claude-Cognitive, System 1/2 separation from Cipher, graph
+relationships from Cognee (<code>lib/cozo-schema-memory.ts:9-12</code>).
+Two of the three arrived. The System 1/2 split is real and load-bearing
+— <code>MemorySystem = 1 | 2</code> with <code>fact</code>,
+<code>decision</code> and <code>preference</code> on one side and
+<code>pattern</code>, <code>insight</code> and <code>reasoning</code> on
+the other. The graph is real: <code>memory_links</code> carries a typed
+relationship and <code>getRelatedMemories</code> traverses it
+recursively. The tiers are the one that shrank.
+<code>MemoryTier = 'warm' | 'long'</code> (<code>:29</code>) has two
+values, not three, and the word HOT appears exactly once in
+<code>lib/</code>, in that header comment.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Consolidation is scheduled, automatic and reaches the memories table; the context builder that would read those memories back into a prompt is reachable only through a query-string view that nothing in the repository requests.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Consolidation is scheduled, automatic and reaches the memories table; the context builder that would read those memories back into a prompt is reachable only through a query-string view that nothing in the repository requests.
+flowchart TD
+  SWEEP[&quot;Host sweep walks the agents directory&quot;]
+  SCHED[&quot;Per-agent schedule file&lt;br/&gt;hourly index, 02:00 consolidate&quot;]
+  RUNNER[&quot;runDueTasks by agent id&quot;]
+  IDX[&quot;runIndex&quot;]
+  CONS[&quot;runConsolidate&lt;br/&gt;returns ok true unconditionally&quot;]
+  SELF[&quot;Agent fetches its own HTTP API&quot;]
+  SVC[&quot;triggerConsolidation service&quot;]
+  LLM[&quot;Ollama, else Claude API&quot;]
+  DUP[&quot;checkDuplicate&lt;br/&gt;neighbour search in same category&quot;]
+  BUMP[&quot;access_count plus one&lt;br/&gt;on every neighbour inspected&quot;]
+  NEW[&quot;createMemory plus embedding&quot;]
+  REIN[&quot;reinforceMemory&quot;]
+  DB[(&quot;memories, memory_vec, memory_links&lt;br/&gt;one CozoDB file per agent&quot;)]
+  MSG[(&quot;messages, msg_vec, msg_terms&quot;)]
+  API[&quot;GET api agents id memory long-term&quot;]
+  VIEW[&quot;React MemoryViewer&lt;br/&gt;list, stats, graph&quot;]
+  CTX[&quot;buildMemoryContext&lt;br/&gt;no caller&quot;]
+  PROMPT[&quot;An agent&#39;s prompt&quot;]
+
+  SWEEP --&gt; SCHED --&gt; RUNNER
+  RUNNER --&gt; IDX --&gt; MSG
+  RUNNER --&gt; CONS --&gt; SELF --&gt; SVC
+  MSG --&gt; SVC
+  SVC --&gt; LLM --&gt; DUP
+  DUP --&gt; BUMP
+  BUMP --&gt; DB
+  DUP --&gt;|&quot;distance under 0.15&quot;| REIN --&gt; DB
+  DUP --&gt;|&quot;otherwise&quot;| NEW --&gt; DB
+  DB --&gt; API --&gt; VIEW
+  API -.-&gt;|&quot;view equals context, never requested&quot;| CTX
+  CTX -.-&gt; PROMPT</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schedule.</strong> <code>defaultSchedule</code> seeds every
+agent with two tasks: <code>memory-index</code> every hour and
+<code>memory-consolidate</code> at 02:00, both enabled
+(<code>lib/agent-schedule.ts:92-101</code>).</li>
+<li><strong>Sweep.</strong> <code>sweepAgentMemory</code> lists
+<code>~/.aimaestro/agents</code>, filters to directories that have a
+database, and calls <code>runDueTasks(agentId)</code> for each —
+deliberately without hydrating an <code>Agent</code> object, because
+those live in a ten-slot LRU (<code>lib/memory/sweep.ts</code>, and the
+test file's header records the measurement that forced it: eight of 125
+databases written in seven days).</li>
+<li><strong>Consolidate.</strong> <code>runConsolidate</code> resolves
+the agent, takes its subconscious and calls
+<code>triggerConsolidation</code>, which issues an HTTP POST from the
+process to its own API (<code>lib/agent.ts:318-363</code>). The service
+prepares conversations and calls <code>consolidateMemories</code>
+(<code>services/agents-memory-service.ts:547</code>).</li>
+<li><strong>Extract.</strong> A provider is chosen by preference with
+<code>auto</code> trying Ollama first and falling back to the Claude API
+(<code>lib/memory/consolidate.ts:44-77</code>). Each extracted memory is
+embedded, checked against its nearest neighbours in the same category,
+and either reinforces one or becomes a row
+(<code>consolidate.ts:84-122</code>, <code>:253-262</code>).</li>
+<li><strong>Read.</strong> <code>searchMemoriesByEmbedding</code> runs
+an HNSW query over <code>memory_vec</code> with <code>k</code> at twice
+the limit, joins <code>*memories</code>, binds <code>agent_id</code>,
+applies a confidence floor and the optional category and tier filters
+(<code>lib/cozo-schema-memory.ts:344-356</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> is keyed on <code>memory_id</code> alone;
+everything else, <code>agent_id</code> included, is a value column
+(<code>lib/cozo-schema-memory.ts:88-108</code>):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>agent_id</code></td>
+<td>the scope predicate — a value column, so the filter is a scan, not a
+key prefix</td>
+</tr>
+<tr>
+<td><code>tier</code></td>
+<td><code>warm</code> or <code>long</code>; <code>long</code> is set by
+promotion, never at creation</td>
+</tr>
+<tr>
+<td><code>system</code></td>
+<td>1 for knowledge, 2 for reasoning, derived from the category</td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td><code>fact</code>, <code>decision</code>, <code>preference</code>,
+<code>pattern</code>, <code>insight</code>, <code>reasoning</code></td>
+</tr>
+<tr>
+<td><code>content</code>, <code>context</code></td>
+<td>the extracted sentence and its free-text surroundings</td>
+</tr>
+<tr>
+<td><code>source_conversations</code>,
+<code>source_message_ids</code></td>
+<td>provenance, stored as strings</td>
+</tr>
+<tr>
+<td><code>confidence</code></td>
+<td>a float from the extracting model</td>
+</tr>
+<tr>
+<td><code>created_at</code>, <code>last_reinforced_at</code>,
+<code>promoted_at</code>, <code>last_accessed_at</code></td>
+<td>four record-axis timestamps and no validity axis</td>
+</tr>
+<tr>
+<td><code>reinforcement_count</code>, <code>access_count</code></td>
+<td>the two counters that decide promotion and rank</td>
+</tr>
+</tbody>
+</table></div>
+<p>There is no status column. Nothing on the row says a memory was
+rejected, retracted, superseded or reviewed; <code>status</code> exists
+in this schema only on <code>consolidation_runs</code>, where it
+describes a job. That is the reason <code>trust_state</code> is
+withheld: <code>confidence</code> is a continuous score the ranking
+uses, not a discrete stored state that withholds a row from a read, and
+<code>tier</code> — the only stored discrete value that does filter the
+read path — is a lifecycle position computed from reinforcement count
+and age, not a statement about whether the memory is believed.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The semantic path is a single Datalog rule: an HNSW probe over
+<code>memory_vec</code> binding a distance, joined to
+<code>*memories</code>, then <code>agent_id</code> equality, then
+<code>confidence &gt;= minConfidence</code>, then optional category
+membership and tier equality, ordered by distance and limited
+(<code>lib/cozo-schema-memory.ts:344-356</code>). The probe asks for
+<code>k = limit * 2</code> candidates before any of those filters apply,
+so a tightly filtered query can come back short of its limit while
+matching rows exist — the usual cost of filtering after an
+approximate-nearest-neighbour probe rather than inside it.</p>
+<p>Two details in that rule are worth stating exactly.</p>
+<p><strong>The confidence floor cannot be turned off.</strong>
+<code>const minConfidence = options.minConfidence || 0.5</code>
+(<code>:330</code>). The long-term endpoint documents
+<code>minConfidence</code> with a default of 0 and passes exactly that:
+<code>parseFloat(searchParams.get('minConfidence') || '0')</code>
+(<code>app/api/agents/[id]/memory/long-term/route.ts:19</code>,
+<code>:37</code>). Zero is falsy, so the documented "no threshold"
+request applies a 0.5 floor, and any memory the extracting model scored
+below 0.5 is unreachable through the query path. It is still visible in
+the unfiltered list view, which is why the discrepancy is easy to miss:
+the viewer's default listing shows a memory that its own search will not
+return.</p>
+<p><strong>The graph expansion drops the scope predicate.</strong>
+<code>getRelatedMemories</code> walks <code>memory_links</code>
+recursively and resolves each hit with
+<code>*memories{memory_id, content}</code> — no <code>agent_id</code>
+clause (<code>:450</code>). Inside a per-agent database that excludes
+nothing, since every row belongs to the same agent. It matters as a
+shape rather than as a leak today: <code>includeRelatedByDefault</code>
+is <code>true</code> (<code>lib/memory/types.ts</code>), so the default
+search path is the one that lost the predicate, and the day these files
+are merged or a shared store is introduced, that is the path that will
+not notice.</p>
+<p>The graph <em>view</em> in the service keeps the predicate on both
+ends, scoping the link query through
+<code>*memories{memory_id: from_memory_id, agent_id}</code> before
+returning nodes and links
+(<code>services/agents-memory-service.ts:655-662</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>One function writes the <code>memories</code> relation:
+<code>createMemory</code>, called once, from
+<code>consolidate.ts:253-262</code>, with <code>agent_id</code> set to
+the agent whose database was opened. A single writer is worth saying
+plainly, because it is what makes the scope claim checkable at all —
+there is no second path that could stamp a row with a different
+agent.</p>
+<p>Before that call, <code>checkDuplicate</code> embeds the candidate
+and searches its own store for near neighbours in the same category,
+treating a distance under 0.15 as a duplicate and reinforcing the match
+instead of creating a row (<code>consolidate.ts:84-122</code>).</p>
+<p>It performs that search through
+<code>searchMemoriesByEmbedding</code>, which — as its last act before
+returning — issues one <code>:update memories</code> per returned row,
+incrementing <code>access_count</code> and setting
+<code>last_accessed_at</code>
+(<code>lib/cozo-schema-memory.ts:360-371</code>). So the nightly write
+pass marks up to five existing memories as <em>accessed</em> for every
+candidate it considers, whether or not anything read them.
+<code>access_count</code> is reported in the stats rollup and shown in
+the viewer as a measure of how often a memory has been used. On a store
+whose only reader is a human opening a panel, the dominant contributor
+to that number is the consolidator checking whether it was about to
+write the same thing again.</p>
+<p>Promotion is the other write, and it exists twice.
+<code>promoteMemory</code> in the schema module sets
+<code>tier: 'long'</code> and <code>promoted_at</code> for one id
+(<code>lib/cozo-schema-memory.ts:668-682</code>);
+<code>promoteMemories</code> in the consolidation module scans for
+eligible rows and then issues the identical
+<code>:update memories</code> inline in its own loop rather than calling
+it (<code>consolidate.ts:397-414</code>). Both are exported from
+<code>lib/memory/index.ts</code>. Two copies of one rule, and the copy
+that runs is the inline one — the pattern this atlas has <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-09-16-the-second-copy-of-the-rule.md">collected
+elsewhere</a>, arriving here in its mildest form: today the copies
+agree.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The HTTP surface is per-agent and complete: GET for status and
+history, POST to trigger consolidation, PATCH to promote or prune, and a
+separate long-term route with GET, DELETE and PATCH for querying,
+deleting and editing individual memories.
+<code>components/MemoryViewer.tsx</code> drives all of it.</p>
+<p>What is absent is the loop back into an agent's own context. The
+application knows how to wake an agent with a prompt —
+<code>runPrompt</code> sends scheduled instructions through the same
+wake chain as any other message, with a comment explaining that a
+schedule firing into the void would be worse than no schedule
+(<code>lib/agent-schedule-runner.ts:56-67</code>). No equivalent exists
+for memory. An agent's consolidated facts, preferences and patterns are
+assembled on demand only if an HTTP caller asks for a view that nothing
+asks for.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>A scheduled consolidation cannot report failure.</strong> The
+chain is traceable end to end. <code>runConsolidation</code> catches its
+own errors and records them on <code>lastConsolidationResult</code> —
+<code>{ success: false, error: 'HTTP 500' }</code> on a bad response, an
+error object on a throw — and returns normally either way
+(<code>lib/agent.ts:325-359</code>). <code>triggerConsolidation</code>
+returns that object (<code>:368-371</code>). And
+<code>runConsolidate</code> ends
+<code>return { ok: true, detail: JSON.stringify(result ?? {}).slice(0, 200) }</code>
+(<code>lib/agent-schedule-runner.ts:53</code>) — <code>ok: true</code>,
+unconditionally, with the failure serialised into a 200-character string
+in the detail field.</p>
+<p>The sharp part is that the repository already knows this failure.
+<code>tests/memory-sweep.test.ts:70-92</code> is a committed case named
+for it — <em>counts a returned <code>{success:false}</code> as failed,
+not indexed</em> — whose comment records the consequence:
+<code>runIndexDelta</code> reports failure by returning rather than
+throwing, and catching only exceptions made a host with a misconfigured
+embedding provider report "17 indexed, 0 failed, 0 messages" for months.
+The lesson was applied to the <code>index</code> branch and the
+<code>consolidate</code> branch beside it still returns a literal.</p>
+<p><strong>Two documented zero-valued switches are swallowed by falsy
+defaults.</strong> The confidence floor is one (section 6). The other
+deletes. <code>pruneShortTermMemory</code> opens with
+<code>const retentionDays = options.retentionDays || DEFAULT_MEMORY_SETTINGS.retention.shortTermDays</code>,
+and the very next statement is
+<code>if (retentionDays === 0) { console.log('Pruning disabled (retentionDays = 0)') ; return { pruned: 0 } }</code>
+(<code>consolidate.ts:433-438</code>). The default is 30
+(<code>types.ts</code>), so the guard can never fire from a caller:
+<code>0 || 30</code> is 30. The PATCH route passes
+<code>body.retentionDays</code> straight through
+(<code>app/api/agents/[id]/memory/consolidate/route.ts:67</code>), which
+makes <code>{"action":"prune","retentionDays":0}</code> — the documented
+way to ask for no pruning — a request that hard-deletes every message
+older than thirty days in consolidated conversations. The off switch is
+the delete switch.</p>
+<p><strong>Deletion is unconditional.</strong> <code>dedupe.ts</code>
+removes duplicate message rows and their dependents by key, dependents
+first so a half-finished run leaves recoverable orphans rather than
+invisible garbage — a careful ordering, and the module header records
+the measured sizes that motivated it (1.8 GB at 6.8× duplication, 3.1 GB
+at 9.5×). Nothing keyed on what was removed is retained, and no write
+path consults a record of a previously rejected value, which is why
+<code>tombstone</code> is withheld.
+<code>consolidated_conversations</code> is the nearest thing, and it is
+an idempotency marker keyed on the conversation file — a record that
+work was done on a resource, not that a value was refused.</p>
+<p><strong>Every query is assembled by string interpolation.</strong>
+<code>escapeForCozo</code> handles backslashes, single quotes, newlines,
+carriage returns and tabs, in that order, and is used consistently for
+the string values in this subsystem. Numbers are not escaped, but the
+routes parse them with <code>parseInt</code>/<code>parseFloat</code>
+before they arrive. One edge: <code>escapeForCozo</code> returns the
+bare token <code>null</code> for any falsy input, so an empty string
+becomes a null literal rather than an empty quoted string — in the scope
+predicate that fails closed, matching nothing.</p>
+<p><strong><code>cozo-node</code> is a floating range.</strong>
+<code>"cozo-node": "^0.7.6"</code> — the storage engine under every
+agent's memory arrives from whatever the caret resolves to at install
+time.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>56 test files, 9,771 lines, run by <code>vitest run</code>. Exactly
+one covers this subsystem: <code>tests/memory-sweep.test.ts</code>,
+eight cases over <code>lib/memory/sweep.ts</code>. They are good tests —
+each one is named for the property it protects rather than the function
+it calls, and three of them carry a comment recording the production
+failure that produced them. They assert that the sweep indexes all 125
+agents rather than the ten a registry could hold, that it works from an
+agent id without hydrating an object, that a returned
+<code>{success:false}</code> counts as failed, that one corrupt database
+does not strand the others, and that <code>limit</code>,
+<code>only</code> and <code>minAgeMs</code> are honoured.</p>
+<p>Nothing tests the consolidation, the deduplication threshold, the
+promotion rule, the prune window, the scope predicate or the search.
+There is no retrieval assertion of any kind over <code>memories</code>,
+positive or negative, so <code>negative_eval</code> is withheld — not on
+a vacuous exclusion, but on the absence of any committed case that reads
+the relation back.</p>
+<p>No benchmark, no eval harness, no measured retrieval quality. The
+numbers the repository does record are operational and honest about
+their provenance: the duplication factors in the dedupe header, the
+eight-of-125 measurement in the sweep test header.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>A memory that nothing reads back is a write-amplification
+feature.</strong> The expensive half of this design — nightly LLM
+extraction, embedding, near-neighbour deduplication — is built,
+scheduled and running. Wire the cheap half first: a system that injects
+memories with no consolidation beats one that consolidates with no
+injection, and it tells you immediately whether the memories are worth
+extracting.</li>
+<li><strong><code>x || default</code> is wrong for any option whose zero
+means something.</strong> Both defects in section 9 are that one
+operator. <code>??</code> costs one character and turns "disable
+pruning" back into disabling pruning.</li>
+<li><strong>A maintenance task that returns a literal reports
+nothing.</strong> If a runner wraps work that signals failure by
+returning, the wrapper has to read the return value. This repository
+proved that in a test and then shipped the sibling branch without it —
+which is the general case, not a lapse: the fix goes where the incident
+was, and the identical code beside it is not part of the incident.</li>
+<li><strong>Do not let a write-path lookup touch read
+statistics.</strong> Reusing the search function for deduplication was
+the obvious economy and it corrupted <code>access_count</code>, the one
+signal that would tell you which memories matter. Give the write path a
+search that does not record an access.</li>
+<li><strong>One store per tenant is a real boundary; the column beside
+it is a convention.</strong> Per-agent database files make cross-agent
+leakage impossible by construction, which is stronger than any
+predicate. But then the predicate stops being tested by anything, and a
+path that drops it — as the graph expansion here has — is invisible
+until the day the stores merge.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Was <code>view=context</code> ever called from a client that has
+since been removed, or has the read-back path never been connected? The
+git history would answer it; this reading is at one pin.</li>
+<li>The header cites HOT/WARM/COLD and the type has two values. Was a
+third tier removed, or did the lineage note outrun the
+implementation?</li>
+<li><code>related_memories</code> is a column on <code>memories</code>
+<em>and</em> <code>memory_links</code> is a relation. Only the relation
+is written. What was the column for?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and queries: <code>lib/cozo-schema-memory.ts</code> — the
+<code>memories</code> relation (88-108), <code>createMemory</code>
+(180-223), the semantic search (310-384) with its confidence floor (330)
+and access bump (360-371), the by-category read (389-421),
+<code>getRelatedMemories</code> (425-461) with the unscoped join at 450,
+the stats rollup (607-663), <code>promoteMemory</code> (668-682).</li>
+<li>Consolidation: <code>lib/memory/consolidate.ts</code> — provider
+selection (44-77), <code>checkDuplicate</code> (84-122), the single
+<code>createMemory</code> call (253-262), <code>promoteMemories</code>
+(370-423), <code>pruneShortTermMemory</code> (425-464).</li>
+<li>Search and context: <code>lib/memory/search.ts</code> —
+<code>searchMemories</code> (35-82), the recent-memories read (229-258),
+<code>buildMemoryContext</code> (297-358).</li>
+<li>Dedupe: <code>lib/memory/dedupe.ts</code>, whole file, header
+included.</li>
+<li>Sweep: <code>lib/memory/sweep.ts</code>,
+<code>tests/memory-sweep.test.ts</code>.</li>
+<li>Scheduling: <code>lib/agent-schedule.ts:90-101</code>,
+<code>lib/agent-schedule-runner.ts:45-54</code>
+(<code>runConsolidate</code>) and <code>:56-67</code>
+(<code>runPrompt</code>, for contrast).</li>
+<li>Agent side: <code>lib/cozo-db.ts:22-72</code>,
+<code>lib/agent.ts:318-371</code>.</li>
+<li>Service and routes:
+<code>services/agents-memory-service.ts:608-720</code>,
+<code>app/api/agents/[id]/memory/consolidate/route.ts</code>,
+<code>app/api/agents/[id]/memory/long-term/route.ts</code>,
+<code>app/api/memory/sweep/route.ts</code>.</li>
+<li>Escaping: <code>lib/cozo-utils.ts</code>.</li>
+<li>Plan document: <code>docs/LONG-TERM-MEMORY.md</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;buildMemoryContext&quot; --include=&#39;*.ts&#39; --include=&#39;*.tsx&#39; . | grep -v node_modules   # 3: definition, re-export, one caller
+grep -rn &quot;view=context\|view: &#39;context&#39;\|&#39;context&#39;&quot; app components lib/memory services | grep -i view   # 1 hit, the branch itself
+grep -rn &quot;createMemory(&quot; lib app services            # 2: the definition and one call site
+grep -rn &quot;&#39;hot&#39;\|&#39;cold&#39;\|HOT\|COLD&quot; lib              # 1 hit, the lineage comment
+grep -rn &quot;status&quot; lib/cozo-schema-memory.ts | grep -v consolidation_runs   # 0 on the memories relation
+ls tests | grep -i &quot;memor\|consolidat\|dedupe\|cozo&quot;  # 1 file</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/23blocks-OS/ai-maestro/commit/e68294a42824a08e761c338b1ce77d0d44e4fbed"><code class="commit-id" title="e68294a42824a08e761c338b1ce77d0d44e4fbed">e68294a4…</code></a>
+— first reading, at the head of <code>main</code>, 1,103 commits and
+eleven months in. Screened with <code>scripts/screen_repo.py</code>
+first: two auto-run surfaces both verified benign —
+<code>.gitmodules</code> points at an uninitialised plugins submodule,
+and <code>hooks/</code> is React hooks in TypeScript rather than git
+hooks — one manifest inside the seven-day cooldown, one build-time
+execution path, two floating dependency surfaces, and
+<code>CLAUDE.md</code> read as data. Nothing was installed, built or
+run: no npm, no vitest, no database opened. One mark.
+<code>trust_state</code> is withheld because the <code>memories</code>
+relation has no status column and the only stored discrete value that
+filters a read — <code>tier</code> — is a lifecycle position computed
+from a counter and an age. <code>tombstone</code> is withheld because
+both deletion paths are unconditional and nothing keyed on a removed
+value is consulted on write; <code>consolidated_conversations</code> is
+keyed on the resource, not the value. <code>human_review</code> is
+withheld on a producer test: the viewer can edit and delete a memory,
+but no field records an approver and no surface writes one.
+<code>audit_log</code> is withheld because
+<code>consolidation_runs</code> is a mutable job record, not an
+append-only account of what changed in the store.
+<code>bitemporal</code> is withheld because all four timestamps on the
+row are record-axis. <code>negative_eval</code> is withheld because no
+committed test reads the <code>memories</code> relation at all.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

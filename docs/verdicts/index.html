@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 563 reports.</strong></p>
+<p><strong>This page covers all 564 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21391,6 +21391,50 @@ whose scope test cannot be skipped.</li>
 <li>Do not copy when: you need the verified flag the schema advertises —
 it has consumers and no producer — or a record of what was deleted,
 since the content hash that would key one is never read back.</li>
+</ul>
+<h3 id="ai-maestro"><a
+href="../systems/ai-maestro/"><code>ai-maestro</code></a></h3>
+<ul>
+<li>Best idea: <strong>one database file per agent, created by the
+constructor.</strong> <code>AgentDatabase</code> opens
+<code>~/.aimaestro/agents/&lt;agentId&gt;/agent.db</code> and
+auto-migrates four schemas into it, so cross-agent leakage is impossible
+by construction rather than by predicate — a stronger boundary than any
+read filter, and the reason the <code>agent_id</code> column beside it
+is a convention rather than the enforcement.</li>
+<li>Second idea: <strong>run maintenance off the filesystem, not off the
+resident-object cache.</strong> Consolidation and indexing used to fire
+from timers on <code>Agent</code> objects living in a ten-slot LRU; the
+test file records the measurement that ended it — eight of 125 databases
+written in seven days. The sweep now lists the agents directory and runs
+due tasks by id, with committed cases pinning that a returned
+<code>{success:false}</code> counts as failed and that one corrupt
+database does not strand the rest.</li>
+<li>Biggest risk: <strong>the read-back path has no caller.</strong>
+<code>buildMemoryContext</code> searches the memories for a query, adds
+the top preferences and patterns and returns a prompt block; its only
+invocation is a <code>view === 'context'</code> branch of the long-term
+endpoint, and nothing in the repository requests that view. The nightly
+LLM extraction, the embedding and the deduplication all run; the
+memories reach a React viewer and stop there.</li>
+<li>Most reusable component: <code>lib/memory/dedupe.ts</code> —
+duplicate message rows removed by identity
+<code>(conversation_file, ts, text)</code>, dependents deleted before
+their parents so a half-finished run leaves recoverable orphans rather
+than invisible garbage, batched to bound query text, with a header
+recording the measured sizes that forced it.</li>
+<li>Maturity impression: MIT, 133,039 lines of TypeScript across 526
+files and 1,103 commits since October 2025, 56 test files — exactly one
+of which covers this subsystem; one capability mark.</li>
+<li>Study when: you are deciding where a memory's tenancy boundary
+belongs, or you want a worked example of a write path that runs on a
+schedule while its consumer was never connected.</li>
+<li>Do not copy when: an option's zero means "off".
+<code>options.retentionDays || DEFAULT</code> turns the documented way
+to disable pruning into a thirty-day delete, and
+<code>options.minConfidence || 0.5</code> turns the documented zero
+threshold into a floor that hides low-confidence memories from every
+query while leaving them visible in the list view.</li>
 </ul>
         </article>
       </div>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 563 reports.**
+**This page covers all 564 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4865,3 +4865,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, 1,537 commits, 148,121 non-test lines across seventeen workspace packages with a 40,651-line memory subsystem and 270 cases in its tests, heavy on failure paths — dead-lettering, provider reconciliation, bounded recovery, API-version drift, and a refusal to construct a client against a non-loopback cleartext endpoint; three capability marks.
 - Study when: you are designing a memory record contract and want a worked example of which axes to keep separate, or you want a read gate whose scope test cannot be skipped.
 - Do not copy when: you need the verified flag the schema advertises — it has consumers and no producer — or a record of what was deleted, since the content hash that would key one is never read back.
+
+### [`ai-maestro`](../systems/ai-maestro/)
+- Best idea: **one database file per agent, created by the constructor.** `AgentDatabase` opens `~/.aimaestro/agents/<agentId>/agent.db` and auto-migrates four schemas into it, so cross-agent leakage is impossible by construction rather than by predicate — a stronger boundary than any read filter, and the reason the `agent_id` column beside it is a convention rather than the enforcement.
+- Second idea: **run maintenance off the filesystem, not off the resident-object cache.** Consolidation and indexing used to fire from timers on `Agent` objects living in a ten-slot LRU; the test file records the measurement that ended it — eight of 125 databases written in seven days. The sweep now lists the agents directory and runs due tasks by id, with committed cases pinning that a returned `{success:false}` counts as failed and that one corrupt database does not strand the rest.
+- Biggest risk: **the read-back path has no caller.** `buildMemoryContext` searches the memories for a query, adds the top preferences and patterns and returns a prompt block; its only invocation is a `view === 'context'` branch of the long-term endpoint, and nothing in the repository requests that view. The nightly LLM extraction, the embedding and the deduplication all run; the memories reach a React viewer and stop there.
+- Most reusable component: `lib/memory/dedupe.ts` — duplicate message rows removed by identity `(conversation_file, ts, text)`, dependents deleted before their parents so a half-finished run leaves recoverable orphans rather than invisible garbage, batched to bound query text, with a header recording the measured sizes that forced it.
+- Maturity impression: MIT, 133,039 lines of TypeScript across 526 files and 1,103 commits since October 2025, 56 test files — exactly one of which covers this subsystem; one capability mark.
+- Study when: you are deciding where a memory's tenancy boundary belongs, or you want a worked example of a write path that runs on a schedule while its consumer was never connected.
+- Do not copy when: an option's zero means "off". `options.retentionDays || DEFAULT` turns the documented way to disable pruning into a thirty-day delete, and `options.minConfidence || 0.5` turns the documented zero threshold into a floor that hides low-confidence memories from every query while leaving them visible in the list view.
