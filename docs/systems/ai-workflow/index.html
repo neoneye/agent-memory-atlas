@@ -112,14 +112,14 @@ memory.</p>
               <strong>Taki7980/Ai-workflow</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Taki7980/Ai-workflow/commit/c1686a372398fd58d2abd77372d8638af8212ab2" title="c1686a372398fd58d2abd77372d8638af8212ab2">
+            <a class="meta-pill revision-pill" href="https://github.com/Taki7980/Ai-workflow/commit/ae3d3851cd89d7e6d521b79203a3cdbb99d74318" title="ae3d3851cd89d7e6d521b79203a3cdbb99d74318">
               <span>Analyzed revision</span>
-              <code>c1686a37…</code>
+              <code>ae3d3851…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-30</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Taki7980--Ai-workflow" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -300,16 +300,33 @@ than assumed away: the sequence is taken from the maximum because
 keep generating collisions"</em>, and the single-writer assumption is
 stated rather than implied — <em>"workflow has one writer; add a file
 lock only if concurrent capture is introduced."</em></p>
-<p><strong>Recall</strong> — <code>brain-recall.ps1</code>. Query split
-on whitespace, terms of three characters or more, each index row scored
-by how many terms it contains, top <em>N</em> by score. The full entry
-is then pulled out of <code>brain.md</code> by reconstructing the header
-from the index row's own cells and matching it as a regex — again for a
-stated reason: <em>"Historical entries reused IDs. Match the full
-indexed header so each duplicate ID still recalls its own lesson without
-rewriting history."</em> Output carries
-<code>relevance_score: N/M</code>, so the caller sees how much of the
-query matched.</p>
+<p><strong>Recall</strong> — <code>brain-recall.ps1</code>, and it is a
+ranked retrieval. The script dot-sources
+<code>math-algorithms.ps1</code> and scores each index row with
+<code>Get-BM25PlusScore</code> over the query terms, the row's tokens,
+the average document length and the corpus document frequencies, then
+multiplies by <code>Get-EbbinghausRetention</code> — <em>R(t) =
+exp(-delta_t / (tau * (1 + ln(1 + R_m))))</em> — at
+<code>TauDays 60.0</code>, and keeps the product as the composite score.
+A row scoring zero on BM25+ is dropped before the retention factor is
+reached.</p>
+<p>Two details decide what that is worth. <strong>The reinforcement term
+never varies:</strong> the one call site passes
+<code>-ReinforcementCount 1</code>, so <code>R_m</code> is a constant
+and the decay is a function of age alone, which is the parameter a
+retention model exists to make responsive. <strong>And every maths call
+is behind a <code>Get-Command … -ErrorAction SilentlyContinue</code>
+guard</strong> — if <code>math-algorithms.ps1</code> fails to load,
+BM25+ falls back to <em>"Fallback term count"</em>, retention stays at
+<code>1.0</code>, and the output still reports a
+<code>CompositeScore</code>. The degradation is silent and the score
+keeps its name. The full entry is then pulled out of
+<code>brain.md</code> by reconstructing the header from the index row's
+own cells and matching it as a regex — again for a stated reason:
+<em>"Historical entries reused IDs. Match the full indexed header so
+each duplicate ID still recalls its own lesson without rewriting
+history."</em> Output carries <code>relevance_score: N/M</code>, so the
+caller sees how much of the query matched.</p>
 <p><strong>Compilation</strong> — <code>compile-hot-cache.ps1</code>
 parses the lessons file into JSONL rows carrying
 <code>error_signature</code>, an <code>error_signature_hash</code> of
@@ -372,14 +389,13 @@ is not offered — so <code>scope_enforced</code> is withheld.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Keyword overlap, twice, with different thresholds and very different
 consequences.</p>
-<p><code>brain-recall.ps1</code> scores every index row by how many
-query terms appear in it and returns the top five with their scores. It
-searches the <strong>index only</strong> — the full entries in
-<code>brain.md</code> are fetched by id after ranking, never scanned —
-so a term that appears in an entry's body but not in its keyword row
-cannot be found. That is a deliberate and defensible design for a token
-budget, and it means the keyword line is the whole retrieval
-surface.</p>
+<p><code>brain-recall.ps1</code> ranks every index row by BM25+ times
+retention and returns the top five with their scores. It searches the
+<strong>index only</strong> — the full entries in <code>brain.md</code>
+are fetched by id after ranking, never scanned — so a term that appears
+in an entry's body but not in its keyword row cannot be found. That is a
+deliberate and defensible design for a token budget, and it means the
+keyword line is the whole retrieval surface.</p>
 <p><code>brief.ps1</code>'s hot-cache lookup is the same scoring with an
 admission rule:</p>
 <pre class="powershell"><code>if ($score -ge 2 -or ($score -ge 1 -and $terms.Count -eq 1)) { $hotCacheHit = $line; break }</code></pre>
@@ -594,8 +610,9 @@ source files and is scoped away from the workspace.</li>
 <p><strong>Store</strong></p>
 <ul>
 <li><code>ai-workspace/agents/brain/brain.md</code>,
-<code>brain-index.md</code> — the two-file brain, both empty at this
-commit.</li>
+<code>brain-index.md</code> — the two-file brain, 209 and 232 bytes of
+header at this commit and no entries in either; each says so in as many
+words.</li>
 <li><code>ai-workspace/agents/lessons-learned.md</code> — protocol and
 template.</li>
 <li><code>ai-workspace/generated/hot-cache.jsonl</code>,
@@ -606,7 +623,7 @@ and 172 bytes.</li>
 <ul>
 <li><code>ai-workspace/scripts/brain-capture.ps1</code> — the id rule,
 the two appends, the single-writer comment.</li>
-<li><code>ai-workspace/scripts/complete-task.ps1:18-27</code> — the
+<li><code>ai-workspace/scripts/complete-task.ps1:19-27</code> — the
 handoff gate.</li>
 <li><code>ai-workspace/scripts/compile-hot-cache.ps1:55-80</code> — the
 signature hash and the hardcoded <code>status</code>.</li>
@@ -636,6 +653,43 @@ comparison and the <code>ai-workspace</code> exclusion.</li>
 <code>navigation.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/Taki7980/Ai-workflow/commit/ae3d3851cd89d7e6d521b79203a3cdbb99d74318"><code class="commit-id" title="ae3d3851cd89d7e6d521b79203a3cdbb99d74318">ae3d3851…</code></a>
+— re-read four commits on, +871 lines. Marks unchanged at none, and the
+store still holds nothing: <code>brain.md</code> and
+<code>brain-index.md</code> are byte-identical to the previous pin,
+<code>hot-cache.jsonl</code> is one byte and
+<code>incident-cache.jsonl</code> is three.</p>
+<p>Retrieval was rewritten. <code>brain-recall.ps1</code> gained 132
+lines and now dot-sources a new 359-line
+<code>math-algorithms.ps1</code> — BM25+, Ebbinghaus retention, Jaccard,
+Shannon entropy and a personalised PageRank among ten functions —
+scoring each index row with <code>Get-BM25PlusScore</code> and
+multiplying by <code>Get-EbbinghausRetention</code> at
+<code>TauDays 60.0</code>. Section 6 records it, with the two things
+that bound what it buys: the sole call site passes
+<code>-ReinforcementCount 1</code>, so the decay's reinforcement term is
+a constant and age is the only live variable; and every maths call sits
+behind a <code>Get-Command … -ErrorAction SilentlyContinue</code> guard,
+so a failure to load the module drops BM25+ to a raw term count and
+retention to <code>1.0</code> while the output still reports a
+<code>CompositeScore</code> under the same name. A probabilistic ranker
+over a corpus of zero entries is the position this project is in.</p>
+<p>One appendix line is corrected rather than re-pinned. It called the
+two brain files <em>"both empty at this commit"</em>; they are 209 and
+232 bytes of header and each carries an explicit placeholder —
+<code>brain.md</code> says <em>"(No entries yet — entries are added by
+complete-task.ps1 and brain-capture.ps1)"</em> and
+<code>brain-index.md</code> holds an empty table with the same note. The
+substance was right and the word was wrong: no entries exist, and the
+files say so, which is better evidence than emptiness would have been.
+Section 5 had it right at both pins. One anchor moved,
+<code>complete-task.ps1:18-27</code>→<code>:19-27</code>;
+<code>compile-hot-cache.ps1</code>'s cited lines are unchanged. Screened
+again before reading: no auto-run surface, no build-time execution
+surface, no unpinned surface, nothing inside the cooldown;
+<code>AGENTS.md</code> is addressed to a reading agent and was treated
+as data. Nothing was installed and nothing was run.</p>
 <p><strong>2026-08-30</strong> — <a
 href="https://github.com/Taki7980/Ai-workflow/commit/c1686a372398fd58d2abd77372d8638af8212ab2"><code class="commit-id" title="c1686a372398fd58d2abd77372d8638af8212ab2">c1686a37…</code></a>
 — first reading, at the sixth commit. The screen scanned one file: there

@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Taki7980/Ai-workflow"
 source_url: https://github.com/Taki7980/Ai-workflow
 archive_name: "Taki7980--Ai-workflow"
-revision: c1686a372398fd58d2abd77372d8638af8212ab2
-revision_url: https://github.com/Taki7980/Ai-workflow/commit/c1686a372398fd58d2abd77372d8638af8212ab2
-analyzed_at: 2026-08-30
+revision: ae3d3851cd89d7e6d521b79203a3cdbb99d74318
+revision_url: https://github.com/Taki7980/Ai-workflow/commit/ae3d3851cd89d7e6d521b79203a3cdbb99d74318
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -17,7 +17,7 @@ stack_source: "reviewed"
 matrix:
   memory_unit: "A brain entry — id, date, type, dense keywords, problem, solution, and optionally root cause, failed approaches, files changed and a lesson — or a lessons-learned block compiled into a JSONL row keyed by a hash of its symptom"
   storage: "Markdown and JSONL files under `ai-workspace/`: a two-file brain, a lessons file, an Obsidian vault, and two generated caches"
-  retrieval: "Keyword overlap. `brain-recall.ps1` scores index rows by matched terms; `brief.ps1` classifies the query by regex and consults the caches and the brain in a fixed order"
+  retrieval: "BM25+ over the index rows, multiplied by an Ebbinghaus retention factor, with a raw term count as the fallback when the maths module is absent; `brief.ps1` classifies the query by regex and consults the caches and the brain in a fixed order"
   write: "`brain-capture.ps1` appends an index row and a full entry; `complete-task.ps1` validates the handoff and captures at task end; the agent appends to `lessons-learned.md` by a prose protocol and a compiler turns it into a cache"
   update_delete: "None. Every write is an append and nothing revises or removes an entry; correction means editing the Markdown by hand"
   scoping: "None. One workspace, one brain, no key on any record that a query filters by"
@@ -173,9 +173,22 @@ counting rows would keep generating collisions"*, and the single-writer
 assumption is stated rather than implied — *"workflow has one writer; add a file
 lock only if concurrent capture is introduced."*
 
-**Recall** — `brain-recall.ps1`. Query split on whitespace, terms of three
-characters or more, each index row scored by how many terms it contains, top *N*
-by score. The full entry is then pulled out of `brain.md` by reconstructing the
+**Recall** — `brain-recall.ps1`, and it is a ranked retrieval. The script
+dot-sources `math-algorithms.ps1` and scores each index row with
+`Get-BM25PlusScore` over the query terms, the row's tokens, the average document
+length and the corpus document frequencies, then multiplies by
+`Get-EbbinghausRetention` — *R(t) = exp(-delta_t / (tau * (1 + ln(1 + R_m))))* —
+at `TauDays 60.0`, and keeps the product as the composite score. A row scoring
+zero on BM25+ is dropped before the retention factor is reached.
+
+Two details decide what that is worth. **The reinforcement term never varies:**
+the one call site passes `-ReinforcementCount 1`, so `R_m` is a constant and the
+decay is a function of age alone, which is the parameter a retention model
+exists to make responsive. **And every maths call is behind a
+`Get-Command … -ErrorAction SilentlyContinue` guard** — if `math-algorithms.ps1`
+fails to load, BM25+ falls back to *"Fallback term count"*, retention stays at
+`1.0`, and the output still reports a `CompositeScore`. The degradation is
+silent and the score keeps its name. The full entry is then pulled out of `brain.md` by reconstructing the
 header from the index row's own cells and matching it as a regex — again for a
 stated reason: *"Historical entries reused IDs. Match the full indexed header so
 each duplicate ID still recalls its own lesson without rewriting history."*
@@ -241,8 +254,8 @@ so `scope_enforced` is withheld.
 Keyword overlap, twice, with different thresholds and very different
 consequences.
 
-`brain-recall.ps1` scores every index row by how many query terms appear in it and
-returns the top five with their scores. It searches the **index only** — the full
+`brain-recall.ps1` ranks every index row by BM25+ times retention and returns the
+top five with their scores. It searches the **index only** — the full
 entries in `brain.md` are fetched by id after ranking, never scanned — so a term
 that appears in an entry's body but not in its keyword row cannot be found. That
 is a deliberate and defensible design for a token budget, and it means the
@@ -457,7 +470,8 @@ plainly about a repository whose ideas are otherwise worth borrowing.
 
 **Store**
 - `ai-workspace/agents/brain/brain.md`, `brain-index.md` — the two-file brain,
-  both empty at this commit.
+  209 and 232 bytes of header at this commit and no entries in either; each
+  says so in as many words.
 - `ai-workspace/agents/lessons-learned.md` — protocol and template.
 - `ai-workspace/generated/hot-cache.jsonl`, `incident-cache.jsonl`,
   `last-session.md` — 1, 3 and 172 bytes.
@@ -465,7 +479,7 @@ plainly about a repository whose ideas are otherwise worth borrowing.
 **Write path**
 - `ai-workspace/scripts/brain-capture.ps1` — the id rule, the two appends, the
   single-writer comment.
-- `ai-workspace/scripts/complete-task.ps1:18-27` — the handoff gate.
+- `ai-workspace/scripts/complete-task.ps1:19-27` — the handoff gate.
 - `ai-workspace/scripts/compile-hot-cache.ps1:55-80` — the signature hash and the
   hardcoded `status`.
 
@@ -486,5 +500,11 @@ plainly about a repository whose ideas are otherwise worth borrowing.
   `ai-workspace/agents/conventions.md`, `navigation.md`.
 
 ## History
+
+**2026-09-17** — [`ae3d3851cd89d7e6d521b79203a3cdbb99d74318`](https://github.com/Taki7980/Ai-workflow/commit/ae3d3851cd89d7e6d521b79203a3cdbb99d74318) — re-read four commits on, +871 lines. Marks unchanged at none, and the store still holds nothing: `brain.md` and `brain-index.md` are byte-identical to the previous pin, `hot-cache.jsonl` is one byte and `incident-cache.jsonl` is three.
+
+Retrieval was rewritten. `brain-recall.ps1` gained 132 lines and now dot-sources a new 359-line `math-algorithms.ps1` — BM25+, Ebbinghaus retention, Jaccard, Shannon entropy and a personalised PageRank among ten functions — scoring each index row with `Get-BM25PlusScore` and multiplying by `Get-EbbinghausRetention` at `TauDays 60.0`. Section 6 records it, with the two things that bound what it buys: the sole call site passes `-ReinforcementCount 1`, so the decay's reinforcement term is a constant and age is the only live variable; and every maths call sits behind a `Get-Command … -ErrorAction SilentlyContinue` guard, so a failure to load the module drops BM25+ to a raw term count and retention to `1.0` while the output still reports a `CompositeScore` under the same name. A probabilistic ranker over a corpus of zero entries is the position this project is in.
+
+One appendix line is corrected rather than re-pinned. It called the two brain files *"both empty at this commit"*; they are 209 and 232 bytes of header and each carries an explicit placeholder — `brain.md` says *"(No entries yet — entries are added by complete-task.ps1 and brain-capture.ps1)"* and `brain-index.md` holds an empty table with the same note. The substance was right and the word was wrong: no entries exist, and the files say so, which is better evidence than emptiness would have been. Section 5 had it right at both pins. One anchor moved, `complete-task.ps1:18-27`→`:19-27`; `compile-hot-cache.ps1`'s cited lines are unchanged. Screened again before reading: no auto-run surface, no build-time execution surface, no unpinned surface, nothing inside the cooldown; `AGENTS.md` is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run.
 
 **2026-08-30** — [`c1686a372398fd58d2abd77372d8638af8212ab2`](https://github.com/Taki7980/Ai-workflow/commit/c1686a372398fd58d2abd77372d8638af8212ab2) — first reading, at the sixth commit. The screen scanned one file: there is no manifest, lockfile or hook in the tree, so it saw only `AGENTS.md` and flagged it as agent-directed, which was read as data. The execution surface is fourteen PowerShell scripts the screen does not parse; they were read by hand — appends to Markdown, JSONL writes under `generated/`, `git` invocations for HEADs and dirty state, SHA-256 hashing, no network — and not run, so every claim in this report comes from reading them rather than from executing them. No marks. The report is organised around the router in `brief.ps1`, because that is where the design's care and its gap sit two branches apart: an index row is hash-validated before it is trusted, and a cached fix is admitted on two keyword matches and answered with an instruction to stop investigating.
