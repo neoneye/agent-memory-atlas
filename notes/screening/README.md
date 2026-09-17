@@ -9,19 +9,19 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 527 of 579 screened at the report's current pin.**
+**Progress: 577 of 579 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
-off, and 52 report(s) have no record at all.
+off, and 2 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 234 |
+| Repositories with an auto-run surface (`RUNS`) | 259 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 318 |
-| Repositories with build-time execution (`EXEC`) | 389 |
-| Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
-| Repositories that could not be screened | 0 |
+| Repositories with build-time execution (`EXEC`) | 418 |
+| Repositories where the screen saw nothing (`NOTHING SCANNED`) | 4 |
+| Repositories that could not be screened | 2 |
 
 ## Auto-run surfaces
 
@@ -54,6 +54,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`areev`](../../content/systems/areev.md) | `.githooks/` |
 | [`argo`](../../content/systems/argo.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `.opencode/`, `.vscode/settings.json` |
 | [`athena`](../../content/systems/athena.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
+| [`aurora`](../../content/systems/aurora.md) | `.mcp.json` |
 | [`auto-company`](../../content/systems/auto-company.md) | `.claude/settings.json` |
 | [`autogen`](../../content/systems/autogen.md) | `.devcontainer/devcontainer.json`, `.gitattributes`, `.github/copilot-instructions.md` |
 | [`basic-memory`](../../content/systems/basic-memory.md) | `.claude-plugin/`, `.claude/settings.json`, `server.json`, `smithery.yaml` |
@@ -67,20 +68,29 @@ These execute without a command being typed. Read before opening the tree.
 | [`claude-mem-lite`](../../content/systems/claude-mem-lite.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`claude-self-reflect`](../../content/systems/claude-self-reflect.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json` |
 | [`claude-total-memory`](../../content/systems/claude-total-memory.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
+| [`claudest`](../../content/systems/claudest.md) | `.claude-plugin/` |
 | [`claudinio-brain`](../../content/systems/claudinio-brain.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`codemem`](../../content/systems/codemem.md) | `.claude-plugin/`, `.opencode/` |
 | [`cognee`](../../content/systems/cognee.md) | `.devcontainer/devcontainer.json` |
 | [`cognicore`](../../content/systems/cognicore.md) | `.claude-plugin/`, `.cursorrules` |
+| [`commonground`](../../content/systems/commonground.md) | `.gitmodules` |
 | [`compartment`](../../content/systems/compartment.md) | `.claude-plugin/`, `mcp.json`, `server.json` |
+| [`context-keeper`](../../content/systems/context-keeper.md) | `hooks/`, `server.json` |
+| [`context-mem`](../../content/systems/context-mem.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json`, `server.json` |
 | [`context-mode`](../../content/systems/context-mode.md) | `.claude-plugin/`, `.claude/settings.json`, `hooks/`, `hooks/hooks.json` |
 | [`contextstream-mcp`](../../content/systems/contextstream-mcp.md) | `server.json` |
+| [`continuity-v2`](../../content/systems/continuity-v2.md) | `hooks/` |
+| [`continuous-claude`](../../content/systems/continuous-claude.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`core-redplanet`](../../content/systems/core-redplanet.md) | `.claude-plugin/` |
 | [`cortana`](../../content/systems/cortana.md) | `.githooks/` |
 | [`cortex`](../../content/systems/cortex.md) | `.github/copilot-instructions.md` |
 | [`cortex-engine`](../../content/systems/cortex-engine.md) | `.githooks/`, `hooks/` |
 | [`cortex-hypermnesia`](../../content/systems/cortex-hypermnesia.md) | `.claude-plugin/`, `.claude/settings.json`, `.devcontainer/devcontainer.json`, `server.json` |
+| [`cortexgraph`](../../content/systems/cortexgraph.md) | `.envrc`, `.github/copilot-instructions.md`, `.vscode/settings.json`, `server.json`, `smithery.yaml` |
+| [`craft`](../../content/systems/craft.md) | `.claude-plugin/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`csm`](../../content/systems/csm.md) | `.mcp.json`, `hooks/`, `hooks/hooks.json` |
 | [`ctx`](../../content/systems/ctx.md) | `.claude-plugin/`, `.cursor/rules/`, `.github/copilot-instructions.md` |
+| [`daem0n-mcp`](../../content/systems/daem0n-mcp.md) | `.claude-plugin/`, `.opencode/`, `hooks/` |
 | [`daimon`](../../content/systems/daimon.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`deer-flow`](../../content/systems/deer-flow.md) | `.github/copilot-instructions.md` |
 | [`deja-vu`](../../content/systems/deja-vu.md) | `.claude-plugin/`, `mcp.json`, `server.json` |
@@ -147,22 +157,27 @@ These execute without a command being typed. Read before opening the tree.
 | [`mem9`](../../content/systems/mem9.md) | `.claude-plugin/` |
 | [`memanto`](../../content/systems/memanto.md) | `.gitattributes` |
 | [`memcontinuum`](../../content/systems/memcontinuum.md) | `hooks/` |
+| [`memcp`](../../content/systems/memcp.md) | `hooks/` |
 | [`memex-zero-rag`](../../content/systems/memex-zero-rag.md) | `.mcp.json` |
 | [`memex-zettel`](../../content/systems/memex-zettel.md) | `.claude-plugin/`, `.cursorrules`, `hooks/`, `hooks/hooks.json`, `server.json`, `smithery.yaml` |
 | [`memoir`](../../content/systems/memoir.md) | `.claude-plugin/` |
 | [`memoir-cli`](../../content/systems/memoir-cli.md) | `server.json` |
+| [`memomind`](../../content/systems/memomind.md) | `.claude/settings.local.json` |
 | [`memora`](../../content/systems/memora.md) | `.claude-plugin/` |
 | [`memorix`](../../content/systems/memorix.md) | `.gitmodules`, `.opencode/`, `server.json` |
 | [`memory-engine`](../../content/systems/memory-engine.md) | `.claude-plugin/` |
 | [`memory-project`](../../content/systems/memory-project.md) | `hooks/` |
+| [`memory-ts`](../../content/systems/memory-ts.md) | `hooks/` |
 | [`memory-vault`](../../content/systems/memory-vault.md) | `server.json` |
 | [`mempalace`](../../content/systems/mempalace.md) | `.claude-plugin/`, `.devcontainer/devcontainer.json`, `.mcp.json`, `hooks/`, `mcp.json` |
 | [`memsearch`](../../content/systems/memsearch.md) | `.claude-plugin/` |
+| [`memspec`](../../content/systems/memspec.md) | `hooks/` |
 | [`memtomem`](../../content/systems/memtomem.md) | `.claude-plugin/` |
 | [`memv`](../../content/systems/memv.md) | `.claude/settings.json`, `.claude/settings.local.json` |
 | [`mengram`](../../content/systems/mengram.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`mentedb`](../../content/systems/mentedb.md) | `.github/copilot-instructions.md` |
 | [`meridian`](../../content/systems/meridian.md) | `.claude/settings.json`, `.githooks/` |
+| [`midas`](../../content/systems/midas.md) | `server.json` |
 | [`mindreader`](../../content/systems/mindreader.md) | `mcp.json` |
 | [`mirix`](../../content/systems/mirix.md) | `.cursorrules`, `.vscode/settings.json` |
 | [`mnemonic`](../../content/systems/mnemonic.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `.opencode/` |
@@ -171,6 +186,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`mnemoverse-mcp-memory-server`](../../content/systems/mnemoverse-mcp-memory-server.md) | `server.json` |
 | [`mnesio`](../../content/systems/mnesio.md) | `.mcp.json` |
 | [`mnestic`](../../content/systems/mnestic.md) | `.gitmodules` |
+| [`moltbrain`](../../content/systems/moltbrain.md) | `.claude-plugin/` |
 | [`moltis`](../../content/systems/moltis.md) | `.claude/hooks/`, `.claude/settings.json` |
 | [`muninn`](../../content/systems/muninn.md) | `.claude/settings.json` |
 | [`muninndb`](../../content/systems/muninndb.md) | `.claude/hooks/`, `.claude/settings.json` |
@@ -191,6 +207,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`omi`](../../content/systems/omi.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.githooks/` |
 | [`omniclaude`](../../content/systems/omniclaude.md) | `.claude-plugin/` |
 | [`open-second-brain`](../../content/systems/open-second-brain.md) | `.claude-plugin/`, `.githooks/`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
+| [`openakashic`](../../content/systems/openakashic.md) | `server.json`, `smithery.yaml` |
 | [`openclaw`](../../content/systems/openclaw.md) | `.claude/settings.json`, `.vscode/tasks.json` |
 | [`opencode`](../../content/systems/opencode.md) | `.opencode/` |
 | [`openconcho`](../../content/systems/openconcho.md) | `.vscode/settings.json` |
@@ -200,6 +217,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`openmasq`](../../content/systems/openmasq.md) | `.githooks/` |
 | [`opensre`](../../content/systems/opensre.md) | `.claude/settings.json`, `.devcontainer/devcontainer.json` |
 | [`openviking`](../../content/systems/openviking.md) | `.claude-plugin/` |
+| [`ori-mnemos`](../../content/systems/ori-mnemos.md) | `.claude/settings.json`, `server.json`, `smithery.yaml` |
 | [`origintrail-dkg`](../../content/systems/origintrail-dkg.md) | `.cursor/mcp.json`, `.cursor/rules/` |
 | [`osiris`](../../content/systems/osiris.md) | `.claude/settings.json`, `.githooks/`, `.mcp.json` |
 | [`ouroboros-agent-os`](../../content/systems/ouroboros-agent-os.md) | `.claude-plugin/`, `.claude/settings.json`, `.mcp.json`, `hooks/`, `hooks/hooks.json` |
@@ -211,6 +229,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`plur`](../../content/systems/plur.md) | `.claude-plugin/`, `.githooks/`, `server.json` |
 | [`pond`](../../content/systems/pond.md) | `.envrc`, `server.json` |
 | [`prism-coder`](../../content/systems/prism-coder.md) | `.claude-plugin/`, `.claude/settings.json`, `.gitmodules`, `server.json`, `smithery.yaml` |
+| [`pro-workflow`](../../content/systems/pro-workflow.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json` |
 | [`provem`](../../content/systems/provem.md) | `.gitattributes` |
 | [`pydantic-ai-harness`](../../content/systems/pydantic-ai-harness.md) | `.claude/settings.json` |
 | [`qwen-code`](../../content/systems/qwen-code.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
@@ -219,9 +238,11 @@ These execute without a command being typed. Read before opening the tree.
 | [`re-call`](../../content/systems/re-call.md) | `.claude-plugin/`, `hooks/`, `server.json` |
 | [`reasonix`](../../content/systems/reasonix.md) | `.githooks/` |
 | [`redis-agent-memory-server`](../../content/systems/redis-agent-memory-server.md) | `.devcontainer/devcontainer.json` |
+| [`reflexion`](../../content/systems/reflexion.md) | `.gitmodules` |
 | [`rekal`](../../content/systems/rekal.md) | `.claude-plugin/`, `.gitattributes` |
 | [`remem-mcp`](../../content/systems/remem-mcp.md) | `server.json` |
 | [`rememora`](../../content/systems/rememora.md) | `.claude-plugin/` |
+| [`reporecall`](../../content/systems/reporecall.md) | `.claude/settings.json`, `.mcp.json` |
 | [`repowise`](../../content/systems/repowise.md) | `.claude-plugin/`, `server.json` |
 | [`ripwire`](../../content/systems/ripwire.md) | `.mcp.json`, `hooks/` |
 | [`ruflo`](../../content/systems/ruflo.md) | `.claude-plugin/`, `.claude/settings.json`, `.githooks/` |
@@ -229,12 +250,14 @@ These execute without a command being typed. Read before opening the tree.
 | [`sage-memory`](../../content/systems/sage-memory.md) | `.claude/settings.json`, `server.json` |
 | [`second-brain-cloudflare`](../../content/systems/second-brain-cloudflare.md) | `.cursor/rules/` |
 | [`serena`](../../content/systems/serena.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `.vscode/settings.json`, `server.json` |
+| [`shisad`](../../content/systems/shisad.md) | `.gitattributes` |
 | [`shodh-memory`](../../content/systems/shodh-memory.md) | `.claude/hooks/`, `.claude/settings.json`, `.mcp.json`, `hooks/` |
 | [`signetai`](../../content/systems/signetai.md) | `.githooks/` |
 | [`silica`](../../content/systems/silica.md) | `.claude-plugin/`, `hooks/`, `hooks/hooks.json`, `mcp.json`, `server.json` |
 | [`sillytavern`](../../content/systems/sillytavern.md) | `.vscode/settings.json` |
 | [`silverbullet`](../../content/systems/silverbullet.md) | `.vscode/settings.json` |
 | [`slowave`](../../content/systems/slowave.md) | `server.json` |
+| [`smythos-sre`](../../content/systems/smythos-sre.md) | `.claude/settings.local.json`, `.cursor/rules/` |
 | [`state-memory-mcp`](../../content/systems/state-memory-mcp.md) | `.cursor/mcp.json`, `.cursor/rules/`, `.github/copilot-instructions.md`, `server.json` |
 | [`superlocalmemory`](../../content/systems/superlocalmemory.md) | `.claude-plugin/`, `.gitattributes` |
 | [`swafra`](../../content/systems/swafra.md) | `.claude/hooks/` |
@@ -261,6 +284,15 @@ These execute without a command being typed. Read before opening the tree.
 | [`waggle`](../../content/systems/waggle.md) | `.mcp.json`, `server.json`, `smithery.yaml` |
 | [`wenlan`](../../content/systems/wenlan.md) | `.claude-plugin/`, `.claude/hooks/`, `.claude/settings.json`, `.githooks/` |
 | [`windie-sandbox`](../../content/systems/windie-sandbox.md) | `.gitmodules` |
+| [`windieos`](../../content/systems/windieos.md) | `.vscode/settings.json` |
+| [`yourmemory`](../../content/systems/yourmemory.md) | `server.json` |
 | [`zep`](../../content/systems/zep.md) | `.cursor/mcp.json` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |
+
+## Not screened
+
+| System | Status | Detail |
+| --- | --- | --- |
+| `always-on-memory-agent` | clone-failed | fatal: repository 'https://github.com/GoogleCloudPlatform/generative-ai/tree/main/gemini/agents/always-on-memory-agent/' |
+| `humans` | clone-failed | fatal: repository 'https://github.com/munch2u-a11y/HUMANs/' not found |
 
