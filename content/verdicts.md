@@ -405,12 +405,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need a correction that survives the next automatic write. `manage_memory` and the dashboard both correct a row and neither records that a value was rejected, so the consolidation pass re-reads the same chat log and can restore what the user just removed.
 
 ### [`metaclaw`](../systems/metaclaw/)
-- Best idea: candidate retrieval policies replayed offline and promoted only on non-regression across eight metrics.
-- Biggest risk: the loop optimizes lexical-overlap proxies, and its promotion thresholds are hand-chosen constants.
+- Best idea: candidate retrieval policies replayed offline and promoted only on non-regression across eight metrics, with a minimum sample count and a cap on newly introduced zero-retrieval samples. Nothing else in this atlas can tell you whether its retrieval weights are right.
+- Second idea: what the loop is allowed to tune. Usage data moves the retrieval policy — mode, budgets, weights — and never a memory's confidence, so telemetry changes how memory is *found* and not whether it is *believed*. Several systems here blur exactly that line.
+- Third idea: a review queue that is actually drained. A candidate the automatic gate refuses is enqueued, and two operator verbs — approve, which promotes, and reject, which does not — each remove it and append to a review history. It adjudicates the policy rather than any memory's content, which is why the human-review mark is withheld, but it is more than most systems offer for anything.
+- Biggest risk: the loop optimizes lexical-overlap proxies, and its promotion thresholds are hand-chosen constants governing a loop built to remove hand-chosen constants. Ten samples is a low bar for eight simultaneous comparisons.
+- Second risk: **the supersession lineage is one-directional and the garbage collector reads the other direction.** `supersede()` writes `superseded_by` on the superseded row; the forward `supersedes` list is written only by the merge path, and `garbage_collect` builds its live set from that forward list — so every unit the consolidator supersedes is an orphan by the collector's definition and is hard-deleted, with no event logged for the deletion. The committed test for it never calls `garbage_collect`: it re-implements the routine inline under a comment reading *"Simulate GC"*, on a hand-built row carrying the reference no production path except the merge writes.
+- Third risk: the memory package is vendored twice and the copies have diverged — seven of eighteen modules differ, `store.py` by 414 changed lines, including an `RLock` in the main package that is a plain `Lock` in the plugin sidecar. "MetaClaw's memory" names two code bases.
 - Most reusable component: `promotion.py`'s `MemoryPromotionCriteria` and the replay-then-gate loop in `self_upgrade.py`.
-- Maturity impression: substantial and unusually well evidenced, with committed benchmark fixtures and dedicated memory ablations.
-- Study when: you cannot justify your retrieval weights and want a safe way to change them.
-- Do not copy when: you need trust semantics — the memory model has no rejected state and no verification path.
+- Maturity impression: MIT, substantial and unusually well evidenced — committed benchmark fixtures, dedicated memory ablations, and an 11,440-line memory suite with 529 cases. Four capability marks: `scope_enforced`, `trust_state`, `audit_log` and `negative_eval`, three of them added on a re-read at the same commit.
+- Study when: you cannot justify your retrieval weights and want a safe way to change them, or you want the cleanest statement of which signals may tune retrieval and which may not.
+- Do not copy when: you need a rejected-value record or a verification path for confidence — `archived` removes a unit from play and nothing stops the same content being extracted again.
 
 ### [`nanobot`](../systems/nanobot/)
 - Best idea: two cursors over an append-only archive, with a Dream pass that refuses to advance after tool errors.

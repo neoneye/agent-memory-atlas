@@ -113,7 +113,7 @@ when it beats the incumbent on eight measured deltas.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-27</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/aiming-lab--MetaClaw" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -121,7 +121,7 @@ when it beats the incumbent on eight measured deltas.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -174,10 +174,51 @@ how much to inject, which mode, what weights — never a memory's
 confidence. Usage data changes how memory is <em>found</em>, not whether
 it is <em>believed</em>. That is the distinction the atlas should have
 drawn explicitly, and MetaClaw draws it in code.</p>
-<p>The reservations are ordinary: the memory model itself has no
-rejected state, the replay metrics are overlap-based proxies rather than
-task outcomes, and the promotion gate's thresholds are themselves
-hand-chosen defaults.</p>
+<p>The reservations are ordinary: the memory model has no rejected
+state, the replay metrics are overlap-based proxies rather than task
+outcomes, and the promotion gate's thresholds are themselves hand-chosen
+defaults.</p>
+<p><strong>Three findings from re-reading it at the same commit belong
+here rather than in the fine print.</strong></p>
+<p><strong>The store carries more of the rubric than the first reading
+credited.</strong> <code>list_active</code> — the only read the
+retriever uses — is <code>WHERE scope_id = ? AND status = ?</code>, so
+the three-value <code>MemoryStatus</code> filters retrieval rather than
+merely annotating a row, and it has live writers on five supersession
+call sites and an expiry pass that compares <code>expires_at</code> to
+the clock rather than testing it for presence. A
+<code>memory_events</code> table records one row per mutation from eight
+call sites and is on by default. And
+<code>tests/test_memory_system.py</code> — 11,440 lines and 529 cases, a
+file the first reading did not open — puts two managers on one store and
+asserts each user's material is absent from the other's retrieval
+result. Three marks are added on that basis, taking the report from one
+to four.</p>
+<p><strong>The forward half of the supersession lineage is written in
+one place, and the garbage collector reads only that half.</strong>
+<code>supersede()</code> sets <code>status</code> and
+<code>superseded_by</code> on the old row; the new row's
+<code>supersedes</code> list is populated <strong>only</strong> by the
+merge path (<code>store.py:651</code>). <code>garbage_collect</code>
+computes <code>orphans = superseded_ids - referenced</code>, where
+<code>referenced</code> is gathered from active rows'
+<code>supersedes</code> lists — so every unit superseded by the
+consolidator or the manager's dedup is an orphan by that definition and
+is hard-deleted on the next collection, with no event logged for the
+deletion. The lineage the design relies on is invisible to the one
+routine that deletes on the strength of it.</p>
+<p><strong>The memory package is vendored twice, and the copies have
+diverged.</strong>
+<code>openclaw-metaclaw-memory/sidecar/metaclaw/memory/</code> is a
+second copy of all eighteen modules; seven differ, <code>store.py</code>
+by 414 changed lines and <code>manager.py</code> by 178. The differences
+are not cosmetic in kind: the main copy takes a
+<code>threading.RLock</code> and the sidecar a
+<code>threading.Lock</code>, and the main copy logs FTS failures at
+debug where the sidecar swallows them with <code>pass</code>. A reader
+adopting the plugin is not running the code in
+<code>metaclaw/memory/</code>, and this report's anchors are to the main
+package.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Two objects matter, and keeping them apart is the whole design.</p>
 <p><strong>The memory unit</strong> — ordinary, and deliberately so:</p>
@@ -340,13 +381,38 @@ href="../../patterns/skills-as-procedural-memory/">skills as procedural
 memory</a> pattern, though without Voyager's execution gate.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><code>MemoryStatus</code> is
-<code>active | superseded | archived</code>, with
-<code>superseded_by</code> carrying correction lineage and
-<code>expires_at</code> providing TTL. <code>scope_id</code> runs
-through the store, the retriever, the policy, and the metrics, so
-policies are tuned per scope rather than globally — a detail that
-matters, since the right injection budget for a small project differs
-from a large one.</p>
+<code>active | superseded | archived</code>, and it is not decoration:
+<code>list_active</code> filters on it in SQL, so only an active unit
+can reach a prompt. <code>superseded_by</code> carries correction
+lineage, <code>expires_at</code> is a TTL the read path compares to the
+clock (<code>not u.expires_at or u.expires_at &gt; now_iso</code>)
+rather than testing for presence — which is the shape a sibling system
+in this corpus got wrong by accident. <code>scope_id</code> runs through
+the store, the retriever, the policy and the metrics, so policies are
+tuned per scope rather than globally — a detail that matters, since the
+right injection budget for a small project differs from a large one.</p>
+<p><strong>The lineage is one-directional and the collector reads the
+other direction.</strong> <code>supersede()</code> writes
+<code>status</code> and <code>superseded_by</code> on the superseded
+row. The forward list, <code>supersedes</code>, is written in exactly
+one place — the merge path at <code>store.py:651</code>,
+<code>supersedes=[id_a, id_b]</code> — and <code>garbage_collect</code>
+derives its <code>referenced</code> set from active rows'
+<code>supersedes</code> lists. Five live <code>supersede()</code> call
+sites in <code>consolidator.py</code> and <code>manager.py</code> write
+neither, so their superseded rows are orphans by that definition and are
+removed by <code>DELETE FROM memories</code> on the next collection.
+What survives a collection is the lineage of merges; what does not is
+the lineage of consolidation.</p>
+<p><strong>Temporal:</strong> <code>created_at</code> and
+<code>updated_at</code> are record time, <code>expires_at</code> is a
+validity end. There is no validity start and no as-of read, so
+<code>bitemporal</code> is withheld.</p>
+<p><strong>Tombstone:</strong> withheld. <code>archived</code> and
+<code>superseded</code> remove a unit from retrieval, and the dedup key
+in the consolidator is content-derived rather than a record of a
+rejected value, so nothing prevents the same content being re-extracted
+and admitted again.</p>
 <p>Gaps against the strongest models here:</p>
 <ul>
 <li><strong>No rejected state and no tombstone.</strong>
@@ -408,6 +474,19 @@ policy change is auditable.</li>
 <li><strong>Reinforcement kept in its own field</strong>, separate from
 confidence.</li>
 <li>Per-scope policies rather than one global setting.</li>
+<li><strong>A drained review queue for the policy, which is the nearest
+thing here to human review.</strong> A candidate the automatic gate
+refuses is appended to a queue; <code>approve_review_candidate</code>
+promotes it and removes it, <code>reject_review_candidate</code> removes
+it without promoting, and both append to a review history. It
+adjudicates the policy that governs retrieval rather than any memory's
+content, which is why <code>human_review</code> is withheld — but a
+queue with two operator verbs that both drain it is more than most
+systems here offer for anything.</li>
+<li><strong>A per-memory annotation table</strong>
+(<code>add_annotation(memory_id, content, author)</code>) with an author
+field, which is a place a person can comment on a memory without being a
+place a person approves one.</li>
 </ul>
 <p>Gaps:</p>
 <ul>
@@ -418,13 +497,32 @@ hand-chosen constants governing a loop built to remove hand-chosen
 constants.</li>
 <li><strong>No rejected-value tombstone</strong>; <code>archived</code>
 is not durable against re-derivation.</li>
+<li><strong>Two mutations write no event.</strong>
+<code>update_content</code> rewrites a memory's text in place with no
+<code>_log_event</code> call and no record of the prior content, and
+<code>garbage_collect</code> hard-deletes orphaned superseded rows
+without one. The audit table therefore records that something was
+superseded and not that it was later destroyed.</li>
+<li><strong>Event logging is best-effort by construction</strong>:
+<code>_log_event</code>'s body ends in
+<code>except Exception: pass</code>, so an audit row can fail to appear
+without any signal.</li>
+<li><strong>The supersession lineage the collector consults is written
+only by the merge path</strong>, so consolidation's superseded rows are
+deleted as orphans.</li>
 <li><strong><code>confidence</code> without a verification
 path.</strong></li>
 <li><strong>Ten samples is a low bar</strong> for eight simultaneous
 comparisons; the gate is closer to a smoke test than a statistical
 one.</li>
-<li>Very large <code>manager.py</code>, duplicated between the package
-and the plugin sidecar.</li>
+<li><strong>The whole memory package is vendored twice and has
+diverged</strong>, not merely duplicated: seven of eighteen modules
+differ, <code>store.py</code> by 414 changed lines and
+<code>manager.py</code> by 178, and the sidecar's store takes a
+non-reentrant <code>threading.Lock</code> where the main copy takes an
+<code>RLock</code>. Both copies' <code>list_active</code> are identical,
+so the marks hold either way, but "MetaClaw's memory" names two code
+bases and a reader has to say which one they mean.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
@@ -441,6 +539,28 @@ reproducible against a pinned agent setup. <code>scripts/</code> carries
 <p><strong>Dedicated memory ablation scripts are rare here.</strong>
 Most systems in this atlas measure end-to-end task performance, if
 anything; MetaClaw isolates the memory subsystem's contribution.</p>
+<p><strong>The unit suite is substantial and the first reading did not
+name it.</strong> <code>tests/test_memory_system.py</code> is 11,440
+lines and 529 test functions with 1,301 assertions, and its negative
+assertions are where the <code>negative_eval</code> mark comes from:
+<code>test_scope_isolation_in_request_flow</code> ingests one turn per
+user against a shared store and asserts each user's material is absent
+from the other's <code>retrieve_for_prompt</code> result, with the
+failure message written into the assertion — <em>"User A saw User B's
+memory"</em>. A workspace case at <code>:240</code> and an entity case
+at <code>:2528</code> are the same shape. The orphan-collection
+behaviour has a case at <code>:3000</code>, and it is the clearest
+example in this report of a test that asserts an intention while
+bypassing the mechanism. It never calls
+<code>store.garbage_collect</code>: under a comment reading
+<em>"Simulate GC: remove superseded not referenced by active units"</em>
+it re-implements the routine's three steps inline and asserts against
+its own copy. And it constructs the surviving unit as
+<code>MemoryUnit(memory_id="gc-active", …, supersedes=["gc-old-referenced"])</code>
+by hand — supplying exactly the forward reference that no production
+path except the merge writes. So the case passes on a store no
+production path can produce, and a change to
+<code>garbage_collect</code> itself would not fail it.</p>
 <p>Neither the suites nor the benchmarks were run for this review, and
 no published headline numbers were reproduced. The measurement the
 design most needs and does not obviously have is a link from its replay
@@ -544,10 +664,85 @@ policy state: <code>policy_store.py</code>.</li>
 <code>scripts/run_memory_ablation*.py</code>,
 <code>scripts/run_v03_benchmark*.py</code>.</li>
 </ul>
+<p><strong>Searches recorded for the negative claims</strong> (run at
+this pin)</p>
+<pre class="sh"><code>grep -rn &quot;MemoryStatus.SUPERSEDED\|status = &#39;archived&#39;&quot; metaclaw openclaw-metaclaw-memory --include=&quot;*.py&quot;
+                            # every writer of status: supersede(), expire_stale(), two
+                            # archive paths in the manager. The state has live writers.
+grep -rn &quot;supersedes=&quot; metaclaw --include=&quot;*.py&quot;
+                            # two hits outside the row hydrator: the merge path and the
+                            # CLI import. Nothing else writes the forward list.
+grep -rn &quot;\.supersede(\|garbage_collect(&quot; metaclaw openclaw-metaclaw-memory --include=&quot;*.py&quot;
+                            # five non-merge supersede call sites; garbage_collect reachable
+                            # from the CLI and the manager
+grep -rn &quot;_enable_event_log&quot; metaclaw/memory/store.py     # default True, no caller overrides it
+grep -rniE &quot;def .*(approve|review|pending|confirm)&quot; metaclaw/memory
+                            # the review queue is over policy candidates, not memory content
+grep -rniE &quot;valid_from|as_of&quot; metaclaw/memory              # nothing: one validity bound only
+git rev-list --count &lt;pin&gt;..HEAD                            # 0 — the pin is still the tip of main</code></pre>
+<p>The negative-assertion survey needed two passes and the first was
+wrong: a grep for <code>assert not</code> and <code>not in</code> over
+an eleven-thousand-line <code>unittest</code> file returned nothing at
+all, because every assertion in it is <code>self.assertNotIn</code> or
+<code>self.assertFalse</code>. The mark in this report rests on cases
+that first search reported as absent.</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8acc8aa47b3b21"><code class="commit-id" title="922caf3a1cd093fb316e95183a8acc8aa47b3b21">922caf3a…</code></a>
+— re-read at the same commit, which is still the tip of
+<code>main</code>: <code>rev-list --count &lt;pin&gt;..HEAD</code>
+returns 0 and the last upstream commit is 2026-06-07. Nothing upstream
+had moved, so this reading audited the first one against the code, and
+the store turned out to carry more of the rubric than the first reading
+credited. Screened again: no auto-run surface, two build-time execution
+paths, five unpinned manifests, nothing inside the seven-day cooldown;
+nothing was installed and nothing was run.</p>
+<p><strong>Three marks are added, taking the report from one to
+four.</strong> <code>trust_state</code>, because
+<code>MemoryStatus</code> is filtered in <code>list_active</code>'s SQL
+rather than merely stored, and has live writers on five supersession
+call sites plus an expiry pass that compares <code>expires_at</code> to
+the clock. <code>audit_log</code>, because <code>memory_events</code> is
+a named append-only table written by <code>_log_event</code> from eight
+mutation sites, enabled by default with no caller overriding it, and
+read back by <code>get_event_log</code>. And <code>negative_eval</code>,
+because <code>tests/test_memory_system.py</code> — 11,440 lines and 529
+cases, a file the first reading never opened — puts two managers on one
+store and asserts each user's material is absent from the other's
+<code>retrieve_for_prompt</code> result. The first reading's absence
+claims were as wide as the paths it enumerated, which here were
+<code>benchmark/</code> and <code>scripts/</code> and not
+<code>tests/</code>.</p>
+<p><strong>Two findings about the code, both checkable in one command
+each.</strong> The supersession lineage is one-directional:
+<code>supersede()</code> writes <code>superseded_by</code> on the old
+row, the forward <code>supersedes</code> list is written only by the
+merge path, and <code>garbage_collect</code> derives its live set from
+that forward list — so every unit the consolidator supersedes is an
+orphan by the collector's definition and is hard-deleted, with no event
+recorded. And the memory package is vendored twice with the copies
+diverged — seven of eighteen modules differ, <code>store.py</code> by
+414 changed lines, including an <code>RLock</code> in the main copy that
+is a plain <code>Lock</code> in the sidecar — so "MetaClaw's memory"
+names two code bases.</p>
+<p>The committed test for the collector is the sharpest instance of a
+pattern this atlas keeps finding: it never calls
+<code>garbage_collect</code>, re-implementing the routine inline under a
+comment that says <em>"Simulate GC"</em>, and it hand-builds the
+surviving unit with the <code>supersedes</code> reference no production
+path except the merge writes. It passes on a store the system cannot
+produce.</p>
+<p><code>stack_storage</code> and <code>stack_retrieval</code> were
+empty and seeded; they are now <code>sqlite</code> and
+<code>lexical, vector</code> from the FTS table and the embedding arm,
+and the source is <code>reviewed</code>. The appendix carries the
+searches, including the one that first returned nothing because an
+eleven-thousand-line <code>unittest</code> file has no bare
+<code>assert not</code> in it.</p>
 <p><strong>2026-07-27</strong> — <a
 href="https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8acc8aa47b3b21"><code class="commit-id" title="922caf3a1cd093fb316e95183a8acc8aa47b3b21">922caf3a…</code></a>
-— first reading.</p>
+— first reading. Screened before reading; nothing was installed or
+run.</p>
         </article>
       </div>
     </main>
