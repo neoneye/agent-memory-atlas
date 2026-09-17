@@ -7,9 +7,9 @@ page_kind: system
 source_name: "silverbulletmd/silverbullet"
 source_url: https://github.com/silverbulletmd/silverbullet
 archive_name: "silverbulletmd--silverbullet"
-revision: 6331add131438431da8ee384949964828c791b2c
-revision_url: https://github.com/silverbulletmd/silverbullet/commit/6331add131438431da8ee384949964828c791b2c
-analyzed_at: 2026-09-07
+revision: b75489128cc162c01592d358f2759dc4cb064a17
+revision_url: https://github.com/silverbulletmd/silverbullet/commit/b75489128cc162c01592d358f2759dc4cb064a17
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -43,14 +43,14 @@ Every read of `/.fs/{path}` returns an `ETag` of the form `"sha256:<hash>"`
 over the bytes. A write may carry `If-Match: "sha256:<hash>"`, and a create
 may carry `If-None-Match: *`; a precondition that does not hold returns `412`
 rather than overwriting (`docs/HTTP API.md:47-50`,
-`server/src/handlers/fs.rs:230-262`). An ETag list the server cannot evaluate
+`server/src/handlers/fs.rs:225-267`). An ETag list the server cannot evaluate
 fails closed. A client that wants the server to resolve the collision sends
 `POST /.fs/{path}` with the text it started from and the text it proposes,
 each with its hash; the handler takes a per-path lock, fast-forwards when the
 file is unchanged, otherwise runs a three-way line merge and writes back
 either the clean result or the page with Git-style conflict markers between
 the two sides, capped at one hundred conflicting hunks
-(`fs.rs:445-640`, `server-merge/src/diff3.rs:12`).
+(`fs.rs:452-693`, `server-merge/src/diff3.rs:12`).
 
 The second mechanism is **attribution that reaches the history**. A write
 carries the acting account from the session, an opaque `X-Client-Id`, and an
@@ -61,7 +61,7 @@ expected write or as external — a script, another editor, a coding agent
 touching the folder — and the revision engine commits each author's dirty
 paths separately, thirty seconds after quiet and at least every five
 minutes, with the account's name and email as git author and *SilverBullet*
-as committer (`server/src/revisions/engine.rs:9-27,316-336`,
+as committer (`server/src/revisions/engine.rs:11-34,684-705`,
 `store.rs:178-206`). An agent that edits the space through the API is a named
 author; one that edits the files directly is *External*.
 
@@ -159,48 +159,73 @@ change event.
 `ETag`. `X-Sync-Mode: true` marks a request from the client rather than an
 outside caller (`docs/HTTP API.md:11`).
 
-**Conditional write.** `handle_fs_put` (`fs.rs:288`) calls
-`evaluate_preconditions` (`fs.rs:230-262`): `If-None-Match: *` passes only
+**Conditional write.** `handle_fs_put` (`fs.rs:283`) calls
+`evaluate_preconditions` (`fs.rs:225-267`): `If-None-Match: *` passes only
 when the file is absent, any other `If-None-Match` value fails closed,
 `If-Match: *` passes only when the file exists, and `If-Match: "sha256:…"`
 is compared against the current hash. A failure returns `412`. Delete
-(`fs.rs:360`) takes the same preconditions.
+(`fs.rs:363`) takes the same preconditions.
 
-**Reconcile.** `handle_fs_reconcile` (`fs.rs:445-517`) parses a body of
+**Reconcile.** `handle_fs_reconcile` (`fs.rs:452-530`) parses a body of
 `baseHash`, `baseText`, `proposedHash`, `proposedText`, checks that each
 hash is the SHA-256 of its text, refuses input that already holds markers,
-takes `fs_guard.path_lock(path)` and calls `reconcile_locked` (`fs.rs:573`),
+takes `fs_guard.path_lock(path)` and calls `reconcile_locked` (`fs.rs:589`),
 which reads the current file and branches on its hash: absent or equal to
 the base, apply; equal to the proposed, no-op; otherwise `merge(base,
 proposed, current)` from `server-merge/src/diff3.rs:12`, clean or
 conflicted, with `CONFLICT_HUNK_LIMIT` of 100 (`fs.rs:44`),
 `MERGE_SIZE_LIMIT` of one mebibyte on either text
-(`server-common/src/space/disk.rs:464`) and three attempts against a racing
+(`server-common/src/space/disk.rs:454`) and three attempts against a racing
 writer (`fs.rs:49`). The write goes through
-`write_and_record` (`fs.rs:547-560`), which records the hash and the expected
+`write_and_record` (`fs.rs:563-583`), which records the hash and the expected
 write so the watcher attributes the change correctly.
 
 **Attribution.** `WriteAttribution { actor, client_id, source }` is built
 from the session's `Actor`, `X-Client-Id` and `X-Source` (`fs.rs:20-38`).
 The watcher turns it into an `EventOrigin`; `attribution_for`
-(`engine.rs:316-336`) maps an origin with no user kind to `External`, a user
+(`engine.rs:684-705`) maps an origin with no user kind to `External`, a user
 with a name to `Account`, a user with only an email to an account named from
-it, and a user with neither to `LocalUser`. `identity_for` (`engine.rs:75-77`)
+it, and a user with neither to `LocalUser`. `identity_for` (`engine.rs:190-192`)
 renders `Account` as its name and email, `LocalUser` and `System` as
 *SilverBullet*, `External` as *External*.
 
-**Commit.** `RevisionStore::commit_staged` (`store.rs:178-206`) stages the
+**Commit.** `RevisionStore::commit_staged` (`store.rs:209-234`) stages the
 paths with `git add -A -f -- :(literal)…` and commits with
 `GIT_AUTHOR_NAME`/`GIT_AUTHOR_EMAIL` from the attribution and a fixed
-committer of *SilverBullet* (`store.rs:6-7`), skipping the commit when the
+committer of *SilverBullet* (`store.rs:7-8`), skipping the commit when the
 index is clean. The engine batches by author: one commit per author per
-quiet period (`engine.rs:9-13`: quiet 30 s, maximum interval 300 s, sweep
+quiet period (`engine.rs:11-15`: quiet 30 s, maximum interval 300 s, sweep
 3,600 s).
 
 **Identity.** `server/src/auth/identity.rs:10-14` — `UserProfile { username,
 full_name, email }` resolved from the verified username on a request; on a
 multi-space server an admin or the user sets the name and email that become
 the git author.
+
+**Sync and conflict recovery.** The revision store reaches a remote. `sync.rs`
+drives fetch, merge and push against a configured upstream and answers with a
+typed failure rather than a string: `GitMissing`, `MissingManagedKey`,
+`UnsafeTransport`, `NoRemote`, `NoUpstream`, `DetachedHead`, `AuthFailed`,
+`HostUnreachable`, `UnrelatedHistories`, `PushRejected`, `MergeInProgress`,
+`RemoteBranchMissing`. Each names a condition an operator can act on, which is
+the difference between a sync that failed and a sync that says why.
+
+Credentials are per space. `keys.rs` keeps one key under `git-keys/<space_id>`
+beside a managed `known_hosts`, and refuses a transport it cannot verify with
+`UnsafeTransport` rather than falling back to an unauthenticated one — a
+refusal, not a warning. The space id is the key's scope, so one space's
+credential cannot reach another's remote; it scopes the credential rather than
+the read, which is why it earns no scope mark.
+
+A conflicted repository is a state the server can be in and reports on.
+`/.revisions/_sync` returns sync status and triggers a run; `/.revisions/_conflicts`
+lists conflicts, and `/.revisions/_conflicts/{id}` and `.../{id}/{side}` resolve
+one by taking a side. `CONFLICT_RETRY` re-ticks a conflicted repository every 60
+seconds whatever the configured pull interval says, and the constant's comment
+states the reason plainly: *"Only a tick can close a resolved merge, and while
+`MERGE_HEAD` exists every commit is refused -- so the post-commit trigger, the
+sole other caller, can never fire."* A system that documents why its retry
+cannot be event-driven has traced the deadlock rather than tuned around it.
 
 ## 5. Memory Data Model
 
@@ -227,7 +252,7 @@ the store, as with a Logseq graph or a Joplin profile.
 **Trust:** none on content. What the system knows about a change is who made
 it, and that knowledge lives in the event origin and the commit author, not
 on the page. The `-- @name` notation lets a person sign a block
-(`docs/Concepts/Authorship.md:13-14`); it is a label the writer chose, not an
+(`docs/Authorship.md:13-14`); it is a label the writer chose, not an
 authenticated fact, and the documentation says it does not cascade. An
 agent can be given an identity with `identity.define`
 (`docs/API/identity.md:11-16`) so its blocks and mentions have a name; the
@@ -266,11 +291,11 @@ What the system adds is the contract around the write:
   cannot interleave, and a merge that fails the size or hunk limits returns
   `409` with nothing written.
 - **Conflict markers are content.** The marker line carries `SB sha256:` and
-  the side's hash (`docs/Features/Collaboration.md:38-41`); a page holding
+  the side's hash (`docs/Collaboration.md:40`); a page holding
   markers is refused as input to a further merge until a person cleans it.
 - **Idempotence.** Proposing the text the file already holds is a no-op that
   refreshes the hash cache and records no write
-  (`fs.rs:1676`, the test that says so).
+  (`fs.rs:1687`, the test that says so).
 
 **Delete** is a conditional file delete. With revisions managed the commit
 records the removal under the author; without, the bytes are gone.
@@ -297,7 +322,7 @@ There is no agent surface by design; the file API is the surface. What an
 agent gets:
 
 - **Authentication** as a single-space bearer token `SB_AUTH_TOKEN`
-  (`docs/Install/Configuration.md:32`) or as an account on a multi-space
+  (`docs/Install/Configuration.md:51`) or as an account on a multi-space
   server, with the account's read or write role per space.
 - **The ETag contract**, the same one the client uses, so an agent can hold
   a page's hash across its reasoning and fail rather than clobber if a person
@@ -354,18 +379,21 @@ times against one.
 end-to-end cases in 51 files. The ones that carry this report:
 
 - `server/src/handlers/fs.rs` — 39 tests in the file, including
-  `reconcile_fast_forward_applies_proposed` (line 1594),
-  `reconcile_records_an_expected_write_for_the_applied_revision` (1638),
-  `reconcile_idempotent_when_current_already_matches_proposed` (1676),
-  `reconcile_clean_merge_combines_non_overlapping_edits` (1717), and the
+  `reconcile_fast_forward_applies_proposed` (line 1605),
+  `reconcile_records_an_expected_write_for_the_applied_revision` (1649),
+  `reconcile_idempotent_when_current_already_matches_proposed` (1687),
+  `reconcile_clean_merge_combines_non_overlapping_edits` (1728), and the
   header cases for a valid, an unrecognised and an oversized `X-Client-Id`
-  and `X-Source` (1167-1221).
+  and `X-Source` (1178-1232).
 - `server/src/revisions/store.rs` — `commit_batch_commits_writes_and_deletes_with_author`
-  (474), `commit_batch_with_no_effective_change_creates_no_commit` (516), a
-  pathspec-magic case (557).
-- `e2e/attribution-label.test.ts:106` — *caret label names the account that
-  made the edit*, the collaboration cursor showing the account behind a
-  remote change.
+  (531), `commit_batch_with_no_effective_change_creates_no_commit` (573), a
+  pathspec-magic case (648).
+- No end-to-end case covers the caret label. `e2e/attribution-label.test.ts`
+  held one — *caret label names the account that made the edit* — and the
+  suite was restructured into `e2e/oidc/` without it; `caret label` and
+  `attribution` return nothing anywhere under `e2e/` at this commit. The
+  attribution path keeps its unit coverage in `store.rs` and `engine.rs`; what
+  it lost is the case that exercised it through a browser.
 - `server-merge` — the diff3 walker's own cases.
 
 No memory benchmark applies. There is nothing to extract or rank; what could
@@ -426,17 +454,18 @@ does.
 
 **File API**
 
-- `server/src/router.rs` — the `/.fs/{*path}` routes: GET (236), PUT (239),
-  DELETE (240), POST reconcile with an 8 MB body limit (241–244)
+- `server/src/router.rs` — the `/.fs/{*path}` routes: GET (244), PUT (247),
+  DELETE (248), POST reconcile with an 8 MB body limit (249–252); the
+  `/.revisions/_sync` and `/.revisions/_conflicts` routes (255–265)
 - `server/src/handlers/fs.rs` — `VALID_WRITE_SOURCES` (22), `client_id_header`
   (27), `source_header` (37), `CONFLICT_HUNK_LIMIT` (44),
   `MAX_RECONCILE_ATTEMPTS` (49), `handle_fs_get` (86), `evaluate_preconditions`
-  (230–262), `handle_fs_put` (288), `handle_fs_delete` (360),
-  `handle_fs_reconcile` (445–517), `write_and_record` (547–560),
-  `reconcile_locked` (573–640)
+  (225–267), `handle_fs_put` (283), `handle_fs_delete` (363),
+  `handle_fs_reconcile` (452–530), `write_and_record` (563–583),
+  `reconcile_locked` (589–693)
 - `server-merge/src/diff3.rs` — `MergeOutcome` (7), `merge` (12)
-- `server-common/src/space/disk.rs` — `MERGE_SIZE_LIMIT` (464),
-  `is_merge_eligible` (468)
+- `server-common/src/space/disk.rs` — `MERGE_SIZE_LIMIT` (454),
+  `is_merge_eligible` (458)
 - `server-common/src/reconcile.rs` — `ReconcileRequest` and the response
   variants
 - `server/src/handlers/events.rs` — `/.events`
@@ -456,13 +485,14 @@ does.
 - `docs/Features/Revisions.md`, `docs/Features/Collaboration.md` (31–41),
   `docs/Concepts/Authorship.md` (13–36), `docs/API/identity.md` (11–16),
   `docs/Features/Space Manager.md` (57–60), `docs/Security.md` (11, 27),
-  `docs/Install/Configuration.md` (32), `docs/Concepts/Object Index.md`
+  `docs/Install/Configuration.md` (51), `docs/Concepts/Object Index.md`
 
 **Tests**
 
-- `server/src/handlers/fs.rs` — 39 tests (1167–2027)
-- `server/src/revisions/store.rs` — tests (474–727)
-- `e2e/attribution-label.test.ts` (106)
+- `server/src/handlers/fs.rs` — 39 tests (760–2066)
+- `server/src/revisions/store.rs` — 24 tests (453–920)
+- `server/src/revisions/` — 110 test functions across engine, store, sync,
+  keys, git and conflicts
 
 **Searches recorded for the negative claims**
 
@@ -475,5 +505,13 @@ does.
   the API page.
 
 ## History
+
+**2026-09-17** — [`b75489128cc162c01592d358f2759dc4cb064a17`](https://github.com/silverbulletmd/silverbullet/commit/b75489128cc162c01592d358f2759dc4cb064a17) — re-read 91 commits on, 931 files and about 51,600 insertions. The file API this report is about is unchanged in substance: `VALID_WRITE_SOURCES`, `client_id_header`, `source_header`, `CONFLICT_HUNK_LIMIT`, `MAX_RECONCILE_ATTEMPTS` and `handle_fs_get` are all at the same lines, `server-merge/src/diff3.rs` and `server-common/src/reconcile.rs` are byte-identical by blob sha, and every precondition, lock and merge-limit behaviour re-verified. Marks unchanged at none.
+
+What arrived is a sync layer over the revision store — 4,796 insertions across `server/src/revisions/`, including two files that did not exist at the previous pin: `sync.rs` (974 lines) and `keys.rs` (525). Section 4 records it: a typed `SyncError` taxonomy rather than a message, one managed key per space under `git-keys/<space_id>` with a `known_hosts` beside it, `UnsafeTransport` as a refusal rather than a downgrade, and `/.revisions/_sync` and `/.revisions/_conflicts` endpoints that replace the previous pin's `/.revisions/` pair. `CONFLICT_RETRY` carries the sharpest comment in the change, explaining why the retry cannot be event-driven.
+
+Twenty-two of the report's line anchors moved and are corrected against this commit — `handle_fs_put` 283, `handle_fs_delete` 363, `handle_fs_reconcile` 452–530, `write_and_record` 563–583, `reconcile_locked` 589–693, `attribution_for` 684–705, `identity_for` 190–192, `commit_staged` 209–234, the four reconcile tests, and the `/.fs` routes, which the router now declares alongside a listing route that was present at both pins. Three cited paths no longer resolve because the project flattened its docs and restructured its end-to-end suite: `docs/Concepts/Authorship.md` is `docs/Authorship.md`, `docs/Features/Collaboration.md` is `docs/Collaboration.md` with the conflict paragraph merged into line 40, and `SB_AUTH_TOKEN` moved to `Configuration.md:51`.
+
+One published claim is withdrawn rather than re-pinned. `e2e/attribution-label.test.ts:106` — *caret label names the account that made the edit* — was deleted in the e2e restructure and has no successor: `caret label` and `attribution` both return nothing under `e2e/` at this commit, so the attribution path has unit coverage and no browser-level case. The negative claim behind the stack summary was re-run and still holds: embeddings, vector search and MCP return zero hits across `server` and `server-common`. Screened again before reading: one auto-run surface, six build-time execution surfaces, one unpinned surface, five dependency files inside the seven-day cooldown. Nothing was installed and nothing was run.
 
 **2026-09-07** — [`6331add131438431da8ee384949964828c791b2c`](https://github.com/silverbulletmd/silverbullet/commit/6331add131438431da8ee384949964828c791b2c) — first reading.

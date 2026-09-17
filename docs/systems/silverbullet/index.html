@@ -115,14 +115,14 @@ that made the change.</p>
               <strong>silverbulletmd/silverbullet</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/silverbulletmd/silverbullet/commit/6331add131438431da8ee384949964828c791b2c" title="6331add131438431da8ee384949964828c791b2c">
+            <a class="meta-pill revision-pill" href="https://github.com/silverbulletmd/silverbullet/commit/b75489128cc162c01592d358f2759dc4cb064a17" title="b75489128cc162c01592d358f2759dc4cb064a17">
               <span>Analyzed revision</span>
-              <code>6331add1…</code>
+              <code>b7548912…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/silverbulletmd--silverbullet" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -162,7 +162,7 @@ may carry <code>If-Match: "sha256:&lt;hash&gt;"</code>, and a create may
 carry <code>If-None-Match: *</code>; a precondition that does not hold
 returns <code>412</code> rather than overwriting
 (<code>docs/HTTP API.md:47-50</code>,
-<code>server/src/handlers/fs.rs:230-262</code>). An ETag list the server
+<code>server/src/handlers/fs.rs:225-267</code>). An ETag list the server
 cannot evaluate fails closed. A client that wants the server to resolve
 the collision sends <code>POST /.fs/{path}</code> with the text it
 started from and the text it proposes, each with its hash; the handler
@@ -170,7 +170,7 @@ takes a per-path lock, fast-forwards when the file is unchanged,
 otherwise runs a three-way line merge and writes back either the clean
 result or the page with Git-style conflict markers between the two
 sides, capped at one hundred conflicting hunks
-(<code>fs.rs:445-640</code>,
+(<code>fs.rs:452-693</code>,
 <code>server-merge/src/diff3.rs:12</code>).</p>
 <p>The second mechanism is <strong>attribution that reaches the
 history</strong>. A write carries the acting account from the session,
@@ -183,7 +183,7 @@ classifies each change as the server's own expected write or as external
 revision engine commits each author's dirty paths separately, thirty
 seconds after quiet and at least every five minutes, with the account's
 name and email as git author and <em>SilverBullet</em> as committer
-(<code>server/src/revisions/engine.rs:9-27,316-336</code>,
+(<code>server/src/revisions/engine.rs:11-34,684-705</code>,
 <code>store.rs:178-206</code>). An agent that edits the space through
 the API is a named author; one that edits the files directly is
 <em>External</em>.</p>
@@ -276,29 +276,29 @@ Paths</h2>
 the client rather than an outside caller
 (<code>docs/HTTP API.md:11</code>).</p>
 <p><strong>Conditional write.</strong> <code>handle_fs_put</code>
-(<code>fs.rs:288</code>) calls <code>evaluate_preconditions</code>
-(<code>fs.rs:230-262</code>): <code>If-None-Match: *</code> passes only
+(<code>fs.rs:283</code>) calls <code>evaluate_preconditions</code>
+(<code>fs.rs:225-267</code>): <code>If-None-Match: *</code> passes only
 when the file is absent, any other <code>If-None-Match</code> value
 fails closed, <code>If-Match: *</code> passes only when the file exists,
 and <code>If-Match: "sha256:…"</code> is compared against the current
 hash. A failure returns <code>412</code>. Delete
-(<code>fs.rs:360</code>) takes the same preconditions.</p>
+(<code>fs.rs:363</code>) takes the same preconditions.</p>
 <p><strong>Reconcile.</strong> <code>handle_fs_reconcile</code>
-(<code>fs.rs:445-517</code>) parses a body of <code>baseHash</code>,
+(<code>fs.rs:452-530</code>) parses a body of <code>baseHash</code>,
 <code>baseText</code>, <code>proposedHash</code>,
 <code>proposedText</code>, checks that each hash is the SHA-256 of its
 text, refuses input that already holds markers, takes
 <code>fs_guard.path_lock(path)</code> and calls
-<code>reconcile_locked</code> (<code>fs.rs:573</code>), which reads the
+<code>reconcile_locked</code> (<code>fs.rs:589</code>), which reads the
 current file and branches on its hash: absent or equal to the base,
 apply; equal to the proposed, no-op; otherwise
 <code>merge(base, proposed, current)</code> from
 <code>server-merge/src/diff3.rs:12</code>, clean or conflicted, with
 <code>CONFLICT_HUNK_LIMIT</code> of 100 (<code>fs.rs:44</code>),
 <code>MERGE_SIZE_LIMIT</code> of one mebibyte on either text
-(<code>server-common/src/space/disk.rs:464</code>) and three attempts
+(<code>server-common/src/space/disk.rs:454</code>) and three attempts
 against a racing writer (<code>fs.rs:49</code>). The write goes through
-<code>write_and_record</code> (<code>fs.rs:547-560</code>), which
+<code>write_and_record</code> (<code>fs.rs:563-583</code>), which
 records the hash and the expected write so the watcher attributes the
 change correctly.</p>
 <p><strong>Attribution.</strong>
@@ -306,27 +306,58 @@ change correctly.</p>
 the session's <code>Actor</code>, <code>X-Client-Id</code> and
 <code>X-Source</code> (<code>fs.rs:20-38</code>). The watcher turns it
 into an <code>EventOrigin</code>; <code>attribution_for</code>
-(<code>engine.rs:316-336</code>) maps an origin with no user kind to
+(<code>engine.rs:684-705</code>) maps an origin with no user kind to
 <code>External</code>, a user with a name to <code>Account</code>, a
 user with only an email to an account named from it, and a user with
 neither to <code>LocalUser</code>. <code>identity_for</code>
-(<code>engine.rs:75-77</code>) renders <code>Account</code> as its name
-and email, <code>LocalUser</code> and <code>System</code> as
+(<code>engine.rs:190-192</code>) renders <code>Account</code> as its
+name and email, <code>LocalUser</code> and <code>System</code> as
 <em>SilverBullet</em>, <code>External</code> as <em>External</em>.</p>
 <p><strong>Commit.</strong> <code>RevisionStore::commit_staged</code>
-(<code>store.rs:178-206</code>) stages the paths with
+(<code>store.rs:209-234</code>) stages the paths with
 <code>git add -A -f -- :(literal)…</code> and commits with
 <code>GIT_AUTHOR_NAME</code>/<code>GIT_AUTHOR_EMAIL</code> from the
 attribution and a fixed committer of <em>SilverBullet</em>
-(<code>store.rs:6-7</code>), skipping the commit when the index is
+(<code>store.rs:7-8</code>), skipping the commit when the index is
 clean. The engine batches by author: one commit per author per quiet
-period (<code>engine.rs:9-13</code>: quiet 30 s, maximum interval 300 s,
-sweep 3,600 s).</p>
+period (<code>engine.rs:11-15</code>: quiet 30 s, maximum interval 300
+s, sweep 3,600 s).</p>
 <p><strong>Identity.</strong>
 <code>server/src/auth/identity.rs:10-14</code> —
 <code>UserProfile { username, full_name, email }</code> resolved from
 the verified username on a request; on a multi-space server an admin or
 the user sets the name and email that become the git author.</p>
+<p><strong>Sync and conflict recovery.</strong> The revision store
+reaches a remote. <code>sync.rs</code> drives fetch, merge and push
+against a configured upstream and answers with a typed failure rather
+than a string: <code>GitMissing</code>, <code>MissingManagedKey</code>,
+<code>UnsafeTransport</code>, <code>NoRemote</code>,
+<code>NoUpstream</code>, <code>DetachedHead</code>,
+<code>AuthFailed</code>, <code>HostUnreachable</code>,
+<code>UnrelatedHistories</code>, <code>PushRejected</code>,
+<code>MergeInProgress</code>, <code>RemoteBranchMissing</code>. Each
+names a condition an operator can act on, which is the difference
+between a sync that failed and a sync that says why.</p>
+<p>Credentials are per space. <code>keys.rs</code> keeps one key under
+<code>git-keys/&lt;space_id&gt;</code> beside a managed
+<code>known_hosts</code>, and refuses a transport it cannot verify with
+<code>UnsafeTransport</code> rather than falling back to an
+unauthenticated one — a refusal, not a warning. The space id is the
+key's scope, so one space's credential cannot reach another's remote; it
+scopes the credential rather than the read, which is why it earns no
+scope mark.</p>
+<p>A conflicted repository is a state the server can be in and reports
+on. <code>/.revisions/_sync</code> returns sync status and triggers a
+run; <code>/.revisions/_conflicts</code> lists conflicts, and
+<code>/.revisions/_conflicts/{id}</code> and
+<code>.../{id}/{side}</code> resolve one by taking a side.
+<code>CONFLICT_RETRY</code> re-ticks a conflicted repository every 60
+seconds whatever the configured pull interval says, and the constant's
+comment states the reason plainly: <em>"Only a tick can close a resolved
+merge, and while <code>MERGE_HEAD</code> exists every commit is refused
+-- so the post-commit trigger, the sole other caller, can never
+fire."</em> A system that documents why its retry cannot be event-driven
+has traced the deadlock rather than tuned around it.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><strong>The page is the unit and the hash is its identity.</strong> A
 page has a path, a content type, a modification time and a SHA-256;
@@ -353,9 +384,9 @@ boundary is the store, as with a Logseq graph or a Joplin profile.</p>
 a change is who made it, and that knowledge lives in the event origin
 and the commit author, not on the page. The <code>-- @name</code>
 notation lets a person sign a block
-(<code>docs/Concepts/Authorship.md:13-14</code>); it is a label the
-writer chose, not an authenticated fact, and the documentation says it
-does not cascade. An agent can be given an identity with
+(<code>docs/Authorship.md:13-14</code>); it is a label the writer chose,
+not an authenticated fact, and the documentation says it does not
+cascade. An agent can be given an identity with
 <code>identity.define</code> (<code>docs/API/identity.md:11-16</code>)
 so its blocks and mentions have a name; the name is declared by whoever
 writes the definition.</p>
@@ -395,12 +426,11 @@ clients editing one page cannot interleave, and a merge that fails the
 size or hunk limits returns <code>409</code> with nothing written.</li>
 <li><strong>Conflict markers are content.</strong> The marker line
 carries <code>SB sha256:</code> and the side's hash
-(<code>docs/Features/Collaboration.md:38-41</code>); a page holding
-markers is refused as input to a further merge until a person cleans
-it.</li>
+(<code>docs/Collaboration.md:40</code>); a page holding markers is
+refused as input to a further merge until a person cleans it.</li>
 <li><strong>Idempotence.</strong> Proposing the text the file already
 holds is a no-op that refreshes the hash cache and records no write
-(<code>fs.rs:1676</code>, the test that says so).</li>
+(<code>fs.rs:1687</code>, the test that says so).</li>
 </ul>
 <p><strong>Delete</strong> is a conditional file delete. With revisions
 managed the commit records the removal under the author; without, the
@@ -427,7 +457,7 @@ What an agent gets:</p>
 <ul>
 <li><strong>Authentication</strong> as a single-space bearer token
 <code>SB_AUTH_TOKEN</code>
-(<code>docs/Install/Configuration.md:32</code>) or as an account on a
+(<code>docs/Install/Configuration.md:51</code>) or as an account on a
 multi-space server, with the account's read or write role per
 space.</li>
 <li><strong>The ETag contract</strong>, the same one the client uses, so
@@ -489,22 +519,28 @@ ones that carry this report:</p>
 <ul>
 <li><code>server/src/handlers/fs.rs</code> — 39 tests in the file,
 including <code>reconcile_fast_forward_applies_proposed</code> (line
-1594),
+1605),
 <code>reconcile_records_an_expected_write_for_the_applied_revision</code>
-(1638),
+(1649),
 <code>reconcile_idempotent_when_current_already_matches_proposed</code>
-(1676),
+(1687),
 <code>reconcile_clean_merge_combines_non_overlapping_edits</code>
-(1717), and the header cases for a valid, an unrecognised and an
+(1728), and the header cases for a valid, an unrecognised and an
 oversized <code>X-Client-Id</code> and <code>X-Source</code>
-(1167-1221).</li>
+(1178-1232).</li>
 <li><code>server/src/revisions/store.rs</code> —
-<code>commit_batch_commits_writes_and_deletes_with_author</code> (474),
+<code>commit_batch_commits_writes_and_deletes_with_author</code> (531),
 <code>commit_batch_with_no_effective_change_creates_no_commit</code>
-(516), a pathspec-magic case (557).</li>
-<li><code>e2e/attribution-label.test.ts:106</code> — <em>caret label
-names the account that made the edit</em>, the collaboration cursor
-showing the account behind a remote change.</li>
+(573), a pathspec-magic case (648).</li>
+<li>No end-to-end case covers the caret label.
+<code>e2e/attribution-label.test.ts</code> held one — <em>caret label
+names the account that made the edit</em> — and the suite was
+restructured into <code>e2e/oidc/</code> without it;
+<code>caret label</code> and <code>attribution</code> return nothing
+anywhere under <code>e2e/</code> at this commit. The attribution path
+keeps its unit coverage in <code>store.rs</code> and
+<code>engine.rs</code>; what it lost is the case that exercised it
+through a browser.</li>
 <li><code>server-merge</code> — the diff3 walker's own cases.</li>
 </ul>
 <p>No memory benchmark applies. There is nothing to extract or rank;
@@ -567,22 +603,23 @@ mutation log.</li>
 <p><strong>File API</strong></p>
 <ul>
 <li><code>server/src/router.rs</code> — the <code>/.fs/{*path}</code>
-routes: GET (236), PUT (239), DELETE (240), POST reconcile with an 8 MB
-body limit (241–244)</li>
+routes: GET (244), PUT (247), DELETE (248), POST reconcile with an 8 MB
+body limit (249–252); the <code>/.revisions/_sync</code> and
+<code>/.revisions/_conflicts</code> routes (255–265)</li>
 <li><code>server/src/handlers/fs.rs</code> —
 <code>VALID_WRITE_SOURCES</code> (22), <code>client_id_header</code>
 (27), <code>source_header</code> (37), <code>CONFLICT_HUNK_LIMIT</code>
 (44), <code>MAX_RECONCILE_ATTEMPTS</code> (49),
 <code>handle_fs_get</code> (86), <code>evaluate_preconditions</code>
-(230–262), <code>handle_fs_put</code> (288),
-<code>handle_fs_delete</code> (360), <code>handle_fs_reconcile</code>
-(445–517), <code>write_and_record</code> (547–560),
-<code>reconcile_locked</code> (573–640)</li>
+(225–267), <code>handle_fs_put</code> (283),
+<code>handle_fs_delete</code> (363), <code>handle_fs_reconcile</code>
+(452–530), <code>write_and_record</code> (563–583),
+<code>reconcile_locked</code> (589–693)</li>
 <li><code>server-merge/src/diff3.rs</code> — <code>MergeOutcome</code>
 (7), <code>merge</code> (12)</li>
 <li><code>server-common/src/space/disk.rs</code> —
-<code>MERGE_SIZE_LIMIT</code> (464), <code>is_merge_eligible</code>
-(468)</li>
+<code>MERGE_SIZE_LIMIT</code> (454), <code>is_merge_eligible</code>
+(458)</li>
 <li><code>server-common/src/reconcile.rs</code> —
 <code>ReconcileRequest</code> and the response variants</li>
 <li><code>server/src/handlers/events.rs</code> —
@@ -611,14 +648,15 @@ preconditions (47–50), <code>/.revisions/</code> (57–63)</li>
 <code>docs/API/identity.md</code> (11–16),
 <code>docs/Features/Space Manager.md</code> (57–60),
 <code>docs/Security.md</code> (11, 27),
-<code>docs/Install/Configuration.md</code> (32),
+<code>docs/Install/Configuration.md</code> (51),
 <code>docs/Concepts/Object Index.md</code></li>
 </ul>
 <p><strong>Tests</strong></p>
 <ul>
-<li><code>server/src/handlers/fs.rs</code> — 39 tests (1167–2027)</li>
-<li><code>server/src/revisions/store.rs</code> — tests (474–727)</li>
-<li><code>e2e/attribution-label.test.ts</code> (106)</li>
+<li><code>server/src/handlers/fs.rs</code> — 39 tests (760–2066)</li>
+<li><code>server/src/revisions/store.rs</code> — 24 tests (453–920)</li>
+<li><code>server/src/revisions/</code> — 110 test functions across
+engine, store, sync, keys, git and conflicts</li>
 </ul>
 <p><strong>Searches recorded for the negative claims</strong></p>
 <ul>
@@ -632,6 +670,57 @@ core.</li>
 undocumented in the API page.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/silverbulletmd/silverbullet/commit/b75489128cc162c01592d358f2759dc4cb064a17"><code class="commit-id" title="b75489128cc162c01592d358f2759dc4cb064a17">b7548912…</code></a>
+— re-read 91 commits on, 931 files and about 51,600 insertions. The file
+API this report is about is unchanged in substance:
+<code>VALID_WRITE_SOURCES</code>, <code>client_id_header</code>,
+<code>source_header</code>, <code>CONFLICT_HUNK_LIMIT</code>,
+<code>MAX_RECONCILE_ATTEMPTS</code> and <code>handle_fs_get</code> are
+all at the same lines, <code>server-merge/src/diff3.rs</code> and
+<code>server-common/src/reconcile.rs</code> are byte-identical by blob
+sha, and every precondition, lock and merge-limit behaviour re-verified.
+Marks unchanged at none.</p>
+<p>What arrived is a sync layer over the revision store — 4,796
+insertions across <code>server/src/revisions/</code>, including two
+files that did not exist at the previous pin: <code>sync.rs</code> (974
+lines) and <code>keys.rs</code> (525). Section 4 records it: a typed
+<code>SyncError</code> taxonomy rather than a message, one managed key
+per space under <code>git-keys/&lt;space_id&gt;</code> with a
+<code>known_hosts</code> beside it, <code>UnsafeTransport</code> as a
+refusal rather than a downgrade, and <code>/.revisions/_sync</code> and
+<code>/.revisions/_conflicts</code> endpoints that replace the previous
+pin's <code>/.revisions/</code> pair. <code>CONFLICT_RETRY</code>
+carries the sharpest comment in the change, explaining why the retry
+cannot be event-driven.</p>
+<p>Twenty-two of the report's line anchors moved and are corrected
+against this commit — <code>handle_fs_put</code> 283,
+<code>handle_fs_delete</code> 363, <code>handle_fs_reconcile</code>
+452–530, <code>write_and_record</code> 563–583,
+<code>reconcile_locked</code> 589–693, <code>attribution_for</code>
+684–705, <code>identity_for</code> 190–192, <code>commit_staged</code>
+209–234, the four reconcile tests, and the <code>/.fs</code> routes,
+which the router now declares alongside a listing route that was present
+at both pins. Three cited paths no longer resolve because the project
+flattened its docs and restructured its end-to-end suite:
+<code>docs/Concepts/Authorship.md</code> is
+<code>docs/Authorship.md</code>,
+<code>docs/Features/Collaboration.md</code> is
+<code>docs/Collaboration.md</code> with the conflict paragraph merged
+into line 40, and <code>SB_AUTH_TOKEN</code> moved to
+<code>Configuration.md:51</code>.</p>
+<p>One published claim is withdrawn rather than re-pinned.
+<code>e2e/attribution-label.test.ts:106</code> — <em>caret label names
+the account that made the edit</em> — was deleted in the e2e restructure
+and has no successor: <code>caret label</code> and
+<code>attribution</code> both return nothing under <code>e2e/</code> at
+this commit, so the attribution path has unit coverage and no
+browser-level case. The negative claim behind the stack summary was
+re-run and still holds: embeddings, vector search and MCP return zero
+hits across <code>server</code> and <code>server-common</code>. Screened
+again before reading: one auto-run surface, six build-time execution
+surfaces, one unpinned surface, five dependency files inside the
+seven-day cooldown. Nothing was installed and nothing was run.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/silverbulletmd/silverbullet/commit/6331add131438431da8ee384949964828c791b2c"><code class="commit-id" title="6331add131438431da8ee384949964828c791b2c">6331add1…</code></a>
 — first reading.</p>
