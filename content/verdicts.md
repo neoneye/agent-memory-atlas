@@ -113,7 +113,7 @@ and the two should not be read with the same confidence.
 
 ### [`swafra`](../systems/swafra/)
 - Best idea: compact source-diverse hybrid retrieval with explicit graph exploration and no required cloud model.
-- Biggest risk: non-atomic global JSON state plus a benchmark that scores far more than the advertised `k`.
+- Biggest risk: the correction path answers a relation table and a value matcher that disagree, so "I stopped using X" closes nothing — on top of non-atomic global JSON state and a benchmark that scores far more than the advertised `k`.
 - Most reusable component: the conceptual `search_knowledge()` -> `graph_walk()` -> best-per-source composition, not the persistence implementation.
 - Maturity impression: promising alpha prototype with significant code/docs/artifact drift and no ordinary tests.
 - Study when: learning how little code a local MCP graph-RAG memory can require.

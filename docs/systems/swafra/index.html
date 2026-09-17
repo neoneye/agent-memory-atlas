@@ -113,7 +113,7 @@ cannot see.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-29</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kunal12203--swafra" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -506,6 +506,104 @@ facts as superseding, so a plain restatement never triggers the check at
 all.</p>
 <p>That is the difference between a supersession record and a tombstone,
 and it is one field in one hash.</p>
+<p><strong>And the sentences that most clearly retract something are the
+ones that close nothing.</strong> Supersession is decided by
+<code>_values_refer_to_same_slot()</code>
+(<code>engine/facts.py:281</code>), whose only caller is
+<code>detect_conflicts</code> at line 358. That function has two paths.
+Path 1 fires when the new transition fact carries an explicit
+<code>old_value</code>, and matches it against the old fact's value by
+substring or token overlap. Path 2 is the fallback for a transition with
+no <code>old_value</code> — and it returns <code>0.7</code> only
+<code>if rel_a == rel_b</code>, where <code>rel_b</code> is the
+transition's relation and <code>rel_a</code> the candidate's.</p>
+<p>Those two can never be equal. A transition's relation comes from
+<code>_TRANSITION_PATTERNS</code> and is one of
+<code>switched_to</code>, <code>changed_to</code>, <code>stopped</code>,
+<code>replaced</code>; a state fact's comes from
+<code>_RELATION_SLOTS</code> and is one of <code>uses</code>,
+<code>prefers</code>, <code>drinks</code>, <code>eats</code>, and so on
+— and <code>detect_conflicts</code> skips any candidate with
+<code>is_transition</code> set (line 355) before the score is computed,
+so the one case where the relations could match is excluded one line
+earlier. <strong>Path 2 is unreachable.</strong> A transition that does
+not name its old value supersedes nothing, ever.</p>
+<p>Driving the two functions directly at this commit — extraction and
+conflict detection only, no store, no embedder — gives the whole
+table:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>the user writes</th>
+<th>extracted as</th>
+<th>closes <code>uses = Notion</code>?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"I switched from Notion to Obsidian."</td>
+<td><code>switched_to</code>, old_value <code>Notion</code></td>
+<td>yes, 0.95</td>
+</tr>
+<tr>
+<td>"I use Obsidian instead of Notion."</td>
+<td><code>switched_to</code>, old_value <code>Notion</code></td>
+<td>yes, 0.95</td>
+</tr>
+<tr>
+<td>"I replaced Notion with Obsidian."</td>
+<td><code>replaced</code>, old_value <code>Notion</code></td>
+<td>yes, 0.95</td>
+</tr>
+<tr>
+<td>"I switched to Obsidian."</td>
+<td><code>switched_to</code>, old_value <code>None</code></td>
+<td><strong>no</strong></td>
+</tr>
+<tr>
+<td>"I moved to Obsidian."</td>
+<td><code>changed_to</code>, old_value <code>None</code></td>
+<td><strong>no</strong></td>
+</tr>
+<tr>
+<td>"I stopped using Notion."</td>
+<td><code>stopped</code>, old_value <code>None</code></td>
+<td><strong>no</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>The last row is the one that matters. <code>stopped</code> is the
+only relation in the vocabulary whose entire purpose is retraction,
+<code>_SLOT_EQUIVALENCES</code> lists it against nine state relations —
+so the compatibility table says a "stopped" fact may supersede
+<code>uses</code>, <code>prefers</code>, <code>drinks</code> and the
+rest — and its regex has a single capture group, so it can never produce
+an <code>old_value</code>, so the value matcher refuses every pairing
+the relation table just permitted. The two halves of the mechanism
+disagree, and the half that runs second wins silently.</p>
+<p>The consequence is not "supersession is weak": it is that the
+correction path fires only when one sentence names both the old and the
+new value. "I stopped using Notion" leaves <code>uses = Notion</code>
+active and unpenalised, which is the outcome a user would least expect
+from the sentence they were most sure about.</p>
+<p>Two smaller findings sit in the same function. <code>replaced</code>
+appears in exactly one entry of <code>_SLOT_EQUIVALENCES</code> — under
+<code>uses</code> — so "I replaced my usual coffee with tea" does not
+touch a <code>drinks</code> fact. And the module's docstring
+(<em>"pattern extraction + embedding similarity to detect when two facts
+refer to the same slot"</em>), the function's own docstring (<em>"Only
+fall back to embedding if substring fails"</em>) and the comment at line
+306 all describe an embedding fallback that is not in the code:
+<code>embed</code> and <code>cosine_sim</code> are imported at
+<code>engine/facts.py:19</code> and never called anywhere in the file.
+Slot matching is substring and token overlap, and nothing else.</p>
+<p>One extraction artefact is worth recording because it survives in the
+store. The state pattern's value group is non-greedy up to sentence end,
+so "I use Obsidian instead of Notion" yields <em>both</em> the correct
+transition and an active state fact
+<code>uses = "Obsidian instead of Notion"</code>. The junk row is never
+superseded by anything, and its value is what
+<code>get_active_facts</code> would return.</p>
 <h3 id="storage-definitions">Storage Definitions</h3>
 <p>The JSON schema is implicit dictionary construction in
 <code>add_knowledge()</code>:</p>
@@ -597,9 +695,13 @@ title, so it is neither a full content hash nor a stable title key.</li>
 so distinct sources sharing a title collapse at retrieval time.</li>
 <li>There is no user, agent, session, project, workspace, tenant, or
 visibility scope.</li>
-<li>There is no version chain, correction relation, contradiction
-record, rejection tombstone, TTL, pin, sensitivity label, uncertainty,
-or verification state.</li>
+<li>The correction relation exists but only on the two subordinate rows:
+a chunk carries <code>superseded_by</code>, and a fact carries
+<code>superseded_by</code> plus <code>valid_until</code>. A
+<em>source</em> has no version chain, and there is no rejection
+tombstone, TTL, pin, sensitivity label, uncertainty, or verification
+state. <code>confidence</code> is a constant written at extraction — 0.9
+for a transition — and never revised.</li>
 <li>The raw embedding vector is duplicated into JSON for every
 chunk.</li>
 </ul>
@@ -675,7 +777,9 @@ silently;</li>
 <li>the <code>SCIMAP_EMBED_BACKEND</code> variable documented and set by
 benchmarks is never read by the engine;</li>
 <li>no dedupe operates across differently titled identical sources;</li>
-<li>no correction/conflict flow exists;</li>
+<li>the correction flow that does exist reaches only the ranker, and
+fires only for a sentence naming both the old and the new value (section
+4);</li>
 <li>the facts chunk can overemphasize noisy regex matches;</li>
 <li>no input is classified as untrusted before later prompt injection by
 a client.</li>
@@ -769,9 +873,20 @@ backends, with no foreign key in the SQLite schema;</li>
 is documented and set by the benchmark but read nowhere in
 <code>engine/</code> or <code>swafra/</code>;</li>
 <li>no access control or multi-user scoping;</li>
-<li>no trust/verification state — <code>confidence</code> is a score
-written once and never revised, and <code>valid_until</code>
-distinguishes current from historical, not believed from doubted;</li>
+<li><strong><code>trust_state</code> is withheld</strong>, and the
+near-miss is the strongest candidate the field offers: a chunk's
+<code>superseded_by</code> is a nullable pointer to the row that
+replaced it, not a discrete status, and a fact's correction shows up as
+a <code>valid_until</code> timestamp plus the same pointer. What reaches
+the reader from them is a <em>score</em> —
+<code>decay *= (1.0 - penalty * 0.85)</code> at
+<code>engine/graph.py:434</code>, where <code>penalty</code> is the
+ratio of stale to total facts on the chunk — which is the
+confidence-score shape the definition excludes. The chunk path is the
+other extreme: <code>search_knowledge</code> drops superseded chunks
+outright, so nothing is retained-but-distrusted, it is simply gone from
+every read. <code>confidence</code> itself is written once at extraction
+and never revised;</li>
 <li>no prompt-injection fencing for recalled content;</li>
 <li>no differentiation between user text and assistant text in stored
 exchange content;</li>
@@ -804,6 +919,11 @@ Benchmarks</h2>
 <p>There are no ordinary tests in the repository. The only quality
 evidence is LongMemEval retrieval code and committed result JSON, and as
 of this revision the code no longer runs.</p>
+<p>The negative claim, re-checked at this revision against all 57
+tracked files — <code>git ls-files | grep -i 'test\|spec'</code> returns
+nothing, and <code>grep -rn 'def test_' --include='*.py' .</code> counts
+zero — so it is the absence of test files, not the absence of a
+directory named <code>tests/</code>.</p>
 <p><strong>The harness is broken.</strong>
 <code>bench/run_eval.py:27</code> reads</p>
 <pre class="python"><code>from scimap_engine import add_knowledge, get_context, _save_json, _CHUNKS_FILE, _EDGES_FILE, _SOURCES_FILE</code></pre>
@@ -1066,6 +1186,22 @@ bridge)</li>
 <li><code>swafra/BENCHMARK.md</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/kunal12203/swafra/commit/669e7bdbcbcd421deb172a05f8fe52b741c0e915"><code class="commit-id" title="669e7bdbcbcd421deb172a05f8fe52b741c0e915">669e7bdb…</code></a>
+— re-read at the same commit as the previous reading. Nothing upstream
+had moved, so every correction here is the atlas's own. The fact
+lifecycle was driven directly this time rather than read: extraction and
+conflict detection were executed on a set of retraction sentences, which
+showed that <code>_values_refer_to_same_slot</code>'s second path is
+unreachable and that "I stopped using X" — the one sentence built for
+retraction — closes nothing. Section 4 now carries that table. Two
+contradictions between sections were removed: section 5 claimed no
+correction relation and section 7 claimed no correction flow, while
+section 4 described both. <code>trust_state</code> was considered and
+withheld on the distinction that <code>superseded_by</code> is a pointer
+to a successor, and what reaches the reader from it is a score, not a
+status. <code>stack_source</code> goes from seeded to reviewed. Still no
+marks.</p>
 <p><strong>2026-07-29</strong> — <a
 href="https://github.com/kunal12203/swafra/commit/669e7bdbcbcd421deb172a05f8fe52b741c0e915"><code class="commit-id" title="669e7bdbcbcd421deb172a05f8fe52b741c0e915">669e7bdb…</code></a>
 — Re-read. The project had built its correction path between readings,
