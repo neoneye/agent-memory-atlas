@@ -1,21 +1,22 @@
 ---
 title: "OpenZync Core"
 eyebrow: "Facts with a validity window"
-description: "A FastAPI memory backend where one LLM call turns a message into fact triples carrying a validity window, every retrieval filters on that window through a single shared predicate with an as-of parameter threaded end to end, row-level security backs the tenant key the search SQL itself leaves to the auth layer, and a retracted fact is invisible to the conflict scan that would have caught it coming back."
+description: "A FastAPI memory backend where one LLM call turns a message into fact triples carrying a validity window, every retrieval filters on that window through a single shared predicate with an as-of parameter threaded end to end, row-level security backs the tenant key the search SQL itself leaves to the auth layer, and a retracted triple is refused on re-assertion by a tombstone keyed on its normalized subject, predicate and object."
 root: ../..
 page_kind: system
 source_name: "openzync/openzync-core"
 source_url: https://github.com/openzync/openzync-core
 archive_name: "openzync--openzync-core"
-revision: cf05de752d903d84c2a56802418bda1e311bb7f2
-revision_url: https://github.com/openzync/openzync-core/commit/cf05de752d903d84c2a56802418bda1e311bb7f2
-analyzed_at: 2026-09-08
-capabilities: "bitemporal, scope_enforced, audit_log, negative_eval"
+revision: da95554bd9989fdf50858816a0b79bbdd275c816
+revision_url: https://github.com/openzync/openzync-core/commit/da95554bd9989fdf50858816a0b79bbdd275c816
+analyzed_at: 2026-09-17
+capabilities: "tombstone, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
-  bitemporal: "validity time on the fact, held apart from record time, and applied by one predicate every read path shares | models/fact.py:122-128, repositories/fact_repository.py:34-58, services/hybrid_retriever.py:491-493, :597-599, repositories/fact_repository.py:842, migrations/versions/0024_add_temporal_exclusion_facts.py:66-80 | a fact carries `valid_from` and `valid_to` for when it was true and `invalid_at` for a hard retraction, beside the `created_at`/`updated_at` of the row itself; `_effective_at_clause(t)` builds one boolean expression — not retracted at `t`, and `t` inside `[valid_from, valid_to)` — and both search legs, the point-in-time reader and the project-wide reader all apply it, with an `as_of` parameter threaded from the route through the retriever to the graph backends; a GiST exclusion constraint over `tstzrange(valid_from, valid_to)` enforces non-overlap in the database. The limit worth stating: `valid_from` defaults to insert time, so unless the extractor emits an explicit window the validity axis collapses onto record time | tests/integration/test_fact_supersession.py:681-757, tests/integration/test_temporal_conflicts.py:600-703"
-  scope_enforced: "a project key on every search leg and Postgres row-level security under it | dependencies/project_auth.py:34, services/hybrid_retriever.py:405, :488, :543, :596, migrations/versions/0001_initial_schema.py:266-316, dependencies/db.py:73-83 | `require_project_membership` gates every project-scoped route, all four SQL legs of hybrid search carry `project_id` in the WHERE clause, and beneath that eleven tables including `episodes` and `facts` have RLS policies matching `organization_id` against `current_setting('app.org_id')`, with the setting written per request and per worker job. The gap is worth naming precisely, because it is two methods rather than the search path: both BM25 legs compile `WHERE project_id = :project_id AND organization_id = :org_id` (repositories/fact_repository.py:1145, :1180-1181; repositories/episode_repository.py:456, :484-485), while their vector siblings take no organisation parameter at all (fact_repository.py:1086, episode_repository.py:410) so a caller could not supply one. The graph leg is org-scoped by namespace (packages/graph_backend/falkordb.py:171, :1603-1606) and the conflict scan on the write path filters `Fact.organization_id` directly (repositories/fact_repository.py:569). So the organisation key reaches the write path, the graph leg and the two BM25 legs, and is absent only from the two vector ones. The RLS layer under it fails closed rather than open: the policy reads `current_setting('app.org_id')` without `missing_ok`, so an unset session raises instead of returning rows, and `dependencies/db.py:73-83` writes both GUCs transaction-locally so a pooled connection cannot carry a previous request's organisation | tests/integration/test_fact_supersession.py:31-32 (org isolation of the conflict scan); the cross-tenant suite at tests/security/test_cross_tenant.py:50 is skipped and CI never runs that directory"
+  tombstone: "the fact invalidation service — the retraction gate consulted on both write paths | services/fact_invalidation_service.py:395-404, :448-465, :504-521, repositories/fact_repository.py:576 | a retracted fact becomes a tombstone keyed on the *value*: `find_retracted_by_match_keys` fetches rows whose `invalid_at` is set, and they are grouped by `_name_identity_of_fact` — the normalized `(subject, predicate, object)`. Before either insert path writes, `_candidate_conflicts` is run against that set and a match skips the row entirely, logging `fact_invalidation.tombstone_skip` and emitting no supersession event. The gate is deliberately narrower than supersession and the code says so: *\"Superseded/expired-only rows (invalid_at NULL) never match — re-assertion after supersession still inserts\"*, so only a retraction refuses a re-assertion | tests/integration/test_fact_supersession.py:1199 (same SPO), :1253 (a case variant whose content differs, chosen so the skip cannot come from the identical-content path), :1542 (tombstone wins over a live row), :1585 — the control, where neither matches and the insert happens"
+  bitemporal: "validity time on the fact, held apart from record time, and applied by one predicate every read path shares | models/fact.py:121-127, repositories/fact_repository.py:34-58, services/hybrid_retriever.py:492-494, :597-599, repositories/fact_repository.py:896, migrations/versions/0024_add_temporal_exclusion_facts.py:66-80 | a fact carries `valid_from` and `valid_to` for when it was true and `invalid_at` for a hard retraction, beside the `created_at`/`updated_at` of the row itself; `_effective_at_clause(t)` builds one boolean expression — not retracted at `t`, and `t` inside `[valid_from, valid_to)` — and both search legs, the point-in-time reader and the project-wide reader all apply it, with an `as_of` parameter threaded from the route through the retriever to the graph backends; a GiST exclusion constraint over `tstzrange(valid_from, valid_to)` enforces non-overlap in the database. The limit worth stating: `valid_from` defaults to insert time, so unless the extractor emits an explicit window the validity axis collapses onto record time | tests/integration/test_fact_supersession.py:683-763, tests/integration/test_temporal_conflicts.py:600-703"
+  scope_enforced: "a project key on every search leg and Postgres row-level security under it | dependencies/project_auth.py:34, services/hybrid_retriever.py:406, :489, :544, :597, migrations/versions/0001_initial_schema.py:266-316, dependencies/db.py:73-83 | `require_project_membership` gates every project-scoped route, all four SQL legs of hybrid search carry `project_id` in the WHERE clause, and beneath that eleven tables including `episodes` and `facts` have RLS policies matching `organization_id` against `current_setting('app.org_id')`, with the setting written per request and per worker job. The gap is worth naming precisely, because it is two methods rather than the search path: both BM25 legs compile `WHERE project_id = :project_id AND organization_id = :org_id` (repositories/fact_repository.py:1199, :1180-1181; repositories/episode_repository.py:456, :484-485), while their vector siblings take no organisation parameter at all (fact_repository.py:1138, episode_repository.py:410) so a caller could not supply one. The graph leg is org-scoped by namespace (packages/graph_backend/falkordb.py:171, :1603-1606) and the conflict scan on the write path filters `Fact.organization_id` directly (repositories/fact_repository.py:569). So the organisation key reaches the write path, the graph leg and the two BM25 legs, and is absent only from the two vector ones. The RLS layer under it fails closed rather than open: the policy reads `current_setting('app.org_id')` without `missing_ok`, so an unset session raises instead of returning rows, and `dependencies/db.py:83-93` writes both GUCs transaction-locally so a pooled connection cannot carry a previous request's organisation | tests/integration/test_fact_supersession.py:31-32 (org isolation of the conflict scan); the cross-tenant suite at tests/security/test_cross_tenant.py:50 is skipped and CI never runs that directory"
   audit_log: "an append-only audit row for every mutating request, written off the request path | middleware/audit.py:333-344, services/worker/tasks/audit_log.py:72, services/audit_log_service.py:70, models/audit_log.py:1-66, workers/tasks/merge_duplicate_entities.py:473 | the audit middleware enqueues a `write_audit_log` job for every non-exempt HTTP request — only health, metrics and docs are exempt — carrying the organisation, the actor and its type, the action, the resource type and id, a details blob, the caller's address and a trace id; the worker inserts into `audit_logs`, a model documented as immutable and append-only that deliberately omits `updated_at`; the entity-merge worker writes a second record with a before-and-after payload | routers/audit_log.py:39, :81-82 (org-scoped, permission-gated read)"
-  negative_eval: "a superseded fact given the same embedding as its successor and asserted absent from both legs | tests/integration/test_fact_supersession.py:681-757 | the case ingests a claim, supersedes it, then writes the identical embedding onto both rows so the superseded one must rank if the temporal filter fails, and asserts the successor present and the predecessor absent in the vector leg and again in the BM25 leg — a positive control in the same assertion block, run against a real Postgres through testcontainers and executed by CI | tests/integration/test_temporal_conflicts.py:600-703, test_fact_supersession_api.py:346, test_graph_backend_postgres.py:792"
+  negative_eval: "a superseded fact given the same embedding as its successor and asserted absent from both legs | tests/integration/test_fact_supersession.py:683-763 | the case ingests a claim, supersedes it, then writes the identical embedding onto both rows so the superseded one must rank if the temporal filter fails, and asserts the successor present and the predecessor absent in the vector leg and again in the BM25 leg — a positive control in the same assertion block, run against a real Postgres through testcontainers and executed by CI | tests/integration/test_temporal_conflicts.py:600-703, test_fact_supersession_api.py:346, test_graph_backend_postgres.py:792"
 stack_storage: "postgres, graph"
 stack_retrieval: "vector, lexical, graph"
 stack_source: "reviewed"
@@ -30,7 +31,7 @@ matrix:
   background: "Enrichment, embedding, entity linking, blob text extraction, audit writes, entity merging, community summarisation, observation computation, webhook delivery, user summaries, orphan-blob cleanup, and cron jobs that reconcile stalled enrichment and expire graph edges"
   trust: "A confidence float on a fact, thresholded at 0.3 once at extraction time and never read again; no status, no state, and no filter on it at read time"
   strengths: "One temporal predicate shared by every read path rather than re-derived per query; an as-of parameter threaded from the route to the graph backends; a database-level exclusion constraint backing the application's temporal logic; row-level security under the application's own scope checks; a negative test that forces the ranking to fail if the filter does"
-  risks: "A retracted or superseded fact is invisible to the conflict scan that runs before the next write, so the same triple is simply inserted again; the two vector search legs carry the project key but cannot carry the organisation key, which their BM25 siblings and the graph leg do, leaving those two to a route guard above and a fail-closed row-level security policy below; the cross-tenant test suite is skipped and CI never runs it; `episodes.token_count` is returned to clients and written by nothing; community summaries are hardcoded empty in the retriever that the README says assembles them"
+  risks: "A superseded fact is still invisible to the conflict scan, so a triple closed by supersession rather than retraction is inserted again — the gate is deliberately narrow and the code says so; the two vector search legs carry the project key but cannot carry the organisation key, which their BM25 siblings and the graph leg do, leaving those two to a route guard above and a fail-closed row-level security policy below; the cross-tenant suite runs now but CI still collects only `tests/unit/` and `tests/integration/`, so nothing runs it; `episodes.token_count` is returned to clients and written by nothing; community summaries are hardcoded empty in the retriever that the README says assembles them"
 ---
 
 ## 1. Executive Summary
@@ -58,10 +59,10 @@ as are incomplete triples and windows born dead with `valid_from >= valid_to`
 
 **Validity time is real here, and it is applied through one predicate rather
 than re-derived per query.** `_effective_at_clause(t)`
-(`repositories/fact_repository.py:34-58`) builds the boolean expression that
+(`repositories/fact_repository.py:33-57`) builds the boolean expression that
 says a fact is effective at `t`: not hard-retracted at `t`, and `t` inside
 `[valid_from, valid_to)`. Both search legs apply it
-(`services/hybrid_retriever.py:491-493`, `:597-599`), so does the point-in-time
+(`services/hybrid_retriever.py:492-494`, `:597-599`), so does the point-in-time
 reader and so does the project-wide reader, and an `as_of` parameter is threaded
 from the route through the retriever into the graph backends. A GiST exclusion
 constraint over `tstzrange(valid_from, valid_to)` enforces the non-overlap in
@@ -77,36 +78,40 @@ enqueues a durable row for every non-exempt request. `negative_eval` on a test
 that gives a superseded fact the *same embedding* as its successor, so the
 superseded row must rank if the temporal filter fails, then asserts the
 successor present and the predecessor absent in both the vector and the BM25 leg
-(`tests/integration/test_fact_supersession.py:681-757`).
+(`tests/integration/test_fact_supersession.py:683-763`).
 
-Four findings sit against the design. **A retracted fact cannot stop its own
-return.** The conflict scan that runs before a write applies the same effective-at
-clause (`repositories/fact_repository.py:571`), and the database-level guard is
-scoped to live rows too (`0024:78`, `WHERE (invalid_at IS NULL)`), so a triple
-someone retracted is invisible to the check that would have caught it coming
-back, and it is simply inserted again. The `fact_invalidation_events` table
-records why each fact died and is read by exactly one function, which serves a
-history endpoint. The same conflict-scan query *does* filter
-`Fact.organization_id` (`:569`), so the organisation key is present on the write
-path and the gap is specific to the read one.
+Four findings sit against the design. **A retraction stops its own return and a
+supersession does not, and the line between them is drawn on purpose.** The
+conflict scan that looks for facts to supersede still applies the effective-at
+clause (`repositories/fact_repository.py:569`) and sees only live rows, so a
+triple closed by supersession is inserted again. A *retracted* triple is refused:
+before either insert path runs, `find_retracted_by_match_keys`
+(`repositories/fact_repository.py:576`) fetches the rows whose `invalid_at` is
+set, groups them by normalized subject, predicate and object, and a match skips
+the write outright — logging `fact_invalidation.tombstone_skip` and emitting no
+supersession event (`services/fact_invalidation_service.py:448-465`, `:504-521`).
+The comment above the fetch states the boundary rather than leaving it to be
+inferred: *"Superseded/expired-only rows (invalid_at NULL) never match —
+re-assertion after supersession still inserts."* That is the `tombstone` mark, and
+it is keyed on the value rather than on the row.
 
 **The organisation key is missing from the two vector legs, and only those.**
 The BM25 legs take it and use it: `search_by_bm25(query, project_id, org_id, …)`
 compiles `WHERE project_id = :project_id AND organization_id = :org_id` in both
-repositories (`repositories/fact_repository.py:1145`, `:1180-1181`;
-`repositories/episode_repository.py:456`, `:484-485`). Their vector siblings do
+repositories (`repositories/fact_repository.py:1199`, `:1180-1181`;
+`repositories/episode_repository.py:463`, `:484-485`). Their vector siblings do
 not — `search_by_vector(embedding, project_id, limit)` has no organisation
-parameter at all (`fact_repository.py:1086`, `episode_repository.py:410`), so a
+parameter at all (`fact_repository.py:1138`, `episode_repository.py:410`), so a
 caller could not pass the key if it wanted to. The graph leg is org-scoped by
 namespace: `org_id` is a required argument to `retrieve_graph`
-(`services/hybrid_retriever.py:657`, `packages/graph_backend/falkordb.py:1603-1606`)
+(`services/hybrid_retriever.py:658`, `packages/graph_backend/falkordb.py:1603-1606`)
 and the backend selects a graph named `f"openzync_{org_id}_{project_id}"`
 (`:171`).
 
 That the two halves of the same pair disagree — one accepting the key, one
 unable to — is what makes this read as an oversight rather than a decision.
 Several repository methods carry the filter conditionally
-(`fact_repository.py:224`, `:792`, `:848`, `:915`), so the pattern exists
+(`fact_repository.py:222`, `:792`, `:848`, `:915`), so the pattern exists
 throughout; the vector search signatures are where it was not repeated.
 
 **Underneath the SQL, row-level security fails closed**, which is worth
@@ -115,7 +120,7 @@ establishing rather than assuming. The policy reads
 current_setting('app.org_id')::UUID` (`migrations/versions/0001_initial_schema.py:275-277`).
 The bypass check passes `missing_ok`; the org check does not, so a session where
 `app.org_id` was never set raises rather than returning rows — the failure is an
-error, not a silent full-table read. `dependencies/db.py:73-83` sets both GUCs
+error, not a silent full-table read. `dependencies/db.py:83-93` sets both GUCs
 with `set_config(..., true)`, which is transaction-local, so a pooled connection
 cannot carry a previous request's organisation into the next one.
 
@@ -123,14 +128,15 @@ So the missing predicate is a defence-in-depth gap rather than a live leak: a
 route guard above, a fail-closed policy below, and one layer between them that
 does not restate the boundary.
 
-**The cross-tenant tests do not run, and they are the ones that would settle
-it.** `TestCrossTenantIsolation` carries a class-level
-`@pytest.mark.skip(reason="Requires real DB + 3 seeded organizations")`
-(`tests/security/test_cross_tenant.py:50`), and no CI job names that directory:
-`.github/workflows/ci.yml` invokes `pytest tests/unit/` and
-`pytest tests/unit/ tests/integration/`. The property is written down and
-nothing executes it, so the isolation this design does hold is asserted by
-reading rather than by running. **Two documented things are
+**The cross-tenant tests can run, and nothing runs them.**
+`TestCrossTenantIsolation` holds eight cases over three seeded organisations and
+carries no skip — the `@pytest.mark.skip(reason="Requires real DB + 3 seeded
+organizations")` that gated the class is gone, and the fixtures it wanted exist.
+What has not moved is the collection: `.github/workflows/ci.yml` invokes
+`pytest tests/unit/` and `pytest tests/unit/ tests/integration/`, and no job
+names `tests/security/`. So the property is written down, executable, and still
+never executed — a narrower gap than a skip, and a stranger one, because the
+remaining distance is a path in a workflow file. **Two documented things are
 not there:** `episodes.token_count` is described in the model, returned to every
 client and written by no code, and the community summaries the README places in
 the assembled context are a hardcoded empty list in the retriever
@@ -236,7 +242,7 @@ graph per organisation and project, keyed
   drops facts under the 0.3 confidence floor (`:33`, `:58`), incomplete triples
   (`:66`) and windows where `valid_from >= valid_to` (`:81-92`), then resolves
   subject and object against known graph entities (`:120-172`).
-- **Filter by time.** `repositories/fact_repository.py:34-58` is the one
+- **Filter by time.** `repositories/fact_repository.py:33-57` is the one
   predicate. Its docstring names the trap it exists for: supersession closes a
   window rather than setting `invalid_at`, *"so filtering only on `invalid_at IS
   NULL` would let superseded facts leak into queries."*
@@ -246,17 +252,17 @@ graph per organisation and project, keyed
   `RRF_K = 60`, applied to episodes and facts separately (`:234-242`) while
   entities bypass it (`:244-245`). An optional cross-encoder reranks afterwards
   (`:248-256`).
-- **Supersede or retract.** `repositories/fact_repository.py:593` writes
+- **Supersede or retract.** `repositories/fact_repository.py:649` writes
   `valid_to = now` on the predecessor, called from
-  `services/fact_invalidation_service.py:430`, `:471`, `:694`; the retract route
+  `services/fact_invalidation_service.py:467`, `:471`, `:694`; the retract route
   is `routers/facts.py:191-241`. Both append to `fact_invalidation_events`
-  (`repositories/fact_repository.py:676`), whose only reader is
+  (`repositories/fact_repository.py:732`), whose only reader is
   `get_fact_history` (`:719-744`).
 - **Audit.** `middleware/audit.py:333-344` enqueues one job per non-exempt
-  request; `services/worker/tasks/audit_log.py:72` and
+  request; `services/worker/tasks/audit_log.py:71` and
   `services/audit_log_service.py:70` write the row.
 - **Scope.** `dependencies/project_auth.py:34` gates the routes;
-  `dependencies/db.py:73-83` sets `app.org_id` per request and each worker sets
+  `dependencies/db.py:83-93` sets `app.org_id` per request and each worker sets
   it per job; the RLS policies were created in the initial migration
   (`0001_initial_schema.py:266-316`) and extended to the graph tables in `0020`
   and `0025`.
@@ -267,7 +273,7 @@ An **episode** (`models/episode.py:25-123`): id, organisation, project, session,
 user, role, content, metadata, embedding, `token_count`, sequence number, an
 enrichment status bitmask, a soft-delete flag, and record timestamps.
 
-A **fact** (`models/fact.py:26-153`): id, project, user, organisation — the last
+A **fact** (`models/fact.py:25-152`): id, project, user, organisation — the last
 carrying a comment that its integrity is *"application-enforced, not
 DB-enforced"* (`:79-82`) — content, subject, predicate, object with their types
 and optional entity ids, confidence, source episode, `valid_from`, `valid_to`,
@@ -285,12 +291,12 @@ time_expired (`0048:126-130`).
 **Scoping:** organisation and project columns, RLS policies, route guards.
 `scope_enforced` earned.
 
-**Tombstone:** withheld — see section 9.
+**Tombstone:** earned — see section 9.
 
 **A column with no writer.** `episodes.token_count` is documented in the model
 as the message's approximate token count (`:38`), declared with a server
 default of 0 in the migration (`0001:114`), and returned to every API consumer
-(`schemas/mappers.py:93`). The insert names ten columns and that is not one of
+(`schemas/mappers.py:92`). The insert names ten columns and that is not one of
 them (`repositories/episode_repository.py:102-107`); it appears in the
 statement only inside the `RETURNING` list (`:111`), read straight back out at
 `:133`. `rg -n "UPDATE episodes"` finds nine statements and none touches it.
@@ -339,9 +345,12 @@ reads.
 the predecessor's window and names the successor; retraction stamps
 `invalid_at`. Both write an event naming the kind.
 
-**What the write path does not do** is consult the dead. The conflict scan that
+**What the write path consults, and what it does not.** The conflict scan that
 looks for facts to supersede applies the effective-at clause
-(`repositories/fact_repository.py:569-571`), so it sees only live rows.
+(`repositories/fact_repository.py:567-569`), so it sees only live rows — a
+superseded triple is invisible to it. The retracted set is fetched separately and
+consulted before either insert path, so the dead are consulted exactly once and
+only the hard-retracted ones speak.
 
 ### Operational cost
 
@@ -377,8 +386,8 @@ by a per-request session setting that workers set too. What the search SQL does
 not carry is the organisation key: the retriever holds it and uses it for a
 metrics label. Two repository methods make the asymmetry visible — the BM25
 searches filter on the organisation while their vector siblings take no
-organisation parameter at all (`repositories/fact_repository.py:1180-1181`
-against `:1114`; `repositories/episode_repository.py:485` against `:434`) —
+organisation parameter at all (`repositories/fact_repository.py:1233-1234`
+against `:1114`; `repositories/episode_repository.py:492` against `:434`) —
 though both vector methods are dead code with no production caller.
 
 **Audit log — awarded.** Every non-exempt request produces a durable row with
@@ -393,14 +402,25 @@ possibility that the assertion passes because the row ranked badly. It must rank
 the filter is what keeps it out. Both legs are asserted, with the successor's
 presence in the same block.
 
-**Tombstone — withheld, and the near-miss is precise.** Everything needed is
-present: a retraction that keeps the row, a `superseded_by_fact_id` naming the
-successor, and a `fact_invalidation_events` table recording why each fact died
-with a constrained kind. What is missing is a consultation. The conflict scan
-that runs before a write filters to live facts, the database's exclusion
-constraint carries `WHERE (invalid_at IS NULL)`, and the invalidation events are
-read by one function serving a history endpoint. Retract a fact and re-assert
-the identical triple and nothing objects.
+**Tombstone — earned, on a gate narrower than the retraction machinery around
+it.** The pieces were always present: a retraction that keeps the row, a
+`superseded_by_fact_id` naming the successor, and a `fact_invalidation_events`
+table recording why each fact died with a constrained kind. What was missing was
+the consultation, and it exists: `find_retracted_by_match_keys` pulls the rows
+whose `invalid_at` is set, `_name_identity_of_fact` keys them on the normalized
+`(subject, predicate, object)`, and both insert paths test an incoming entry
+against that set before writing. A match skips the row and emits no event.
+
+Four committed cases hold it, and the fourth is what makes the other three mean
+something: re-asserting the same triple is skipped
+(`tests/integration/test_fact_supersession.py:1199`); a **case variant** whose
+content differs is skipped too, and the test's own docstring explains that the
+content was chosen so the skip cannot come from the identical-content path
+(`:1253`); a tombstone beats a live row (`:1542`); and when neither matches, the
+insert happens (`:1585`) — the control that stops the gate passing by refusing
+everything. The exclusion constraint still carries `WHERE (invalid_at IS NULL)`
+and the invalidation events are still read by one history endpoint; neither is
+what earns this.
 
 **Trust state — withheld.** A confidence float, thresholded once at extraction
 and never read on a retrieval path. There is no status on a fact or an episode;
@@ -470,9 +490,9 @@ in the tree, so coverage as configured measures nothing.
 
 ### Avoid
 
-- **A retraction the write path cannot see.** Recording why a fact died and then
-  scanning only live facts before the next write means the retraction informs a
-  history endpoint and nothing else.
+- **A test suite nothing collects.** Removing a skip makes a suite runnable;
+  naming its directory in CI makes it run. This repository has done the first
+  and not the second, and the difference is invisible from the test file.
 - **A scope key that lives in the route guard and the database but not the
   query.** Two of the three layers here are real; the missing one is the layer a
   reader inspecting the SQL would check.
@@ -492,14 +512,16 @@ or a system that runs without a model.
 
 ## 12. Open Questions
 
-- Will the conflict scan ever see the dead? Dropping the effective-at clause
-  from that one query, or checking the invalidation events beside it, is what
-  separates a history endpoint from a tombstone.
+- Will a *superseded* triple ever be refused on re-assertion? The retracted set
+  is consulted and the superseded set is not, which the code states as a choice
+  rather than an omission — the open question is whether that line survives
+  contact with a corpus where supersession is the common case.
 - Will the organisation key reach the search SQL? RLS covers it today, and the
   two vector repository methods that omit the key while their BM25 siblings
   carry it suggest the asymmetry is an oversight rather than a decision.
-- What unskips the cross-tenant suite? It needs a real database and three
-  seeded organisations, which the integration suite already provisions.
+- What collects the cross-tenant suite? The skip is gone and the fixtures
+  exist; `tests/security/` is simply absent from every pytest invocation in
+  `.github/workflows/ci.yml`.
 - Is the confidence float worth keeping? It is computed by the model,
   thresholded once, carried on every row and returned in every result, and no
   read path consults it.
@@ -538,6 +560,14 @@ rg -i 'FORCE ROW LEVEL SECURITY' .                         # none: the app role'
 ```
 
 ## History
+
+**2026-09-17** — [`da95554bd9989fdf50858816a0b79bbdd275c816`](https://github.com/openzync/openzync-core/commit/da95554bd9989fdf50858816a0b79bbdd275c816) — re-read 29 commits on, 290 files and +5,226/-1,907. **Marks move from four to five: `tombstone` is earned.** The first finding recorded against this design was that a retracted fact could not stop its own return, and the project closed it. `find_retracted_by_match_keys` fetches rows whose `invalid_at` is set, `_name_identity_of_fact` keys them on the normalized `(subject, predicate, object)`, and both insert paths test an incoming entry against that set before writing — a match skips the row, logs `fact_invalidation.tombstone_skip` and emits no supersession event. It is keyed on the value rather than the row, which is what the mark asks for.
+
+The gate is deliberately narrower than the machinery around it, and the code says so rather than leaving it to be inferred: *"Superseded/expired-only rows (invalid_at NULL) never match — re-assertion after supersession still inserts."* So the risk survives in a sharper form — supersession does not refuse a re-assertion — and section 12's open question is rewritten to ask about that rather than about the dead in general. Four committed cases hold the gate, and the fourth is what makes the others mean something: the same triple skipped, a case variant skipped with the test's own docstring explaining that its content was chosen so the skip cannot come from the identical-content path, a tombstone beating a live row, and — the control — neither matching, insert happens.
+
+The isolation finding is half closed and got stranger. `TestCrossTenantIsolation` carried a class-level `@pytest.mark.skip(reason="Requires real DB + 3 seeded organizations")`; commit `ce40f9f` added the three org fixtures and removed the skip, and the class holds eight cases. `.github/workflows/ci.yml` still invokes only `pytest tests/unit/` and `pytest tests/unit/ tests/integration/`, and no job names `tests/security/` — so the suite is runnable and uncollected, a narrower gap than a skip and a harder one to see, because nothing in the test file shows it.
+
+Eighteen line anchors moved and are corrected against this commit; one was resolved by inferring an offset and then re-checked against the file, which put it two lines from where the inference had it. `dependencies/project_auth.py`, `services/audit_log_service.py`, `models/audit_log.py` and the audit middleware's enqueue at `middleware/audit.py:333-344` are byte-identical or unmoved, so the `audit_log` evidence stands as written. The bitemporal predicate is unchanged and gained a comment separating supersession from retraction. Screened again before reading: no auto-run surface, eight build-time execution surfaces, two unpinned surfaces, one dependency file inside the seven-day cooldown. Nothing was installed and nothing was run.
 
 **2026-09-13** — re-read at the same commit; `cf05de752d903d84c2a56802418bda1e311bb7f2` is still the repository head, so nothing upstream has moved and `analyzed_at` is unchanged. Both of the report's first two findings hold, and **one of them was published wider than the code supports.**
 

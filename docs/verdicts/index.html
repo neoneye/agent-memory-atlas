@@ -13999,25 +13999,31 @@ retraction flag, so a filter on the flag alone would leak.</li>
 <li>Second idea: <strong>a GiST exclusion constraint over the validity
 range</strong>, so an overlapping window is a write error rather than a
 ranking anomaly nobody notices.</li>
-<li>Biggest risk: <strong>the conflict scan that runs before a write
-applies that same effective-at clause</strong>, so a retracted or
-superseded triple is invisible to the check that would have caught it
-coming back, and the invalidation events that record why each fact died
-are read only by a history endpoint.</li>
+<li>Biggest risk: <strong>the gate covers retraction and not
+supersession, and that is a choice the code states.</strong> A retracted
+triple is refused on re-assertion — the retracted set is fetched by
+normalized subject/predicate/object and consulted before either insert
+path — while a triple closed by supersession is invisible to the
+conflict scan, which still applies the effective-at clause and sees only
+live rows. The comment draws the line itself:
+<em>"Superseded/expired-only rows (invalid_at NULL) never match —
+re-assertion after supersession still inserts."</em> Whether that
+survives a corpus where supersession is the common case is the open
+question.</li>
 <li>Most reusable component: the negative test that gives the superseded
 fact the same embedding as its successor, so it must rank if the filter
 fails — the shape every exclusion test should take.</li>
 <li>Maturity impression: AGPL-3.0 with a commercial-licence file, 562
 commits since 5 June 2026 by two authors, 72,199 lines of Python beside
 89,713 lines of tests holding 3,542 functions, 54 migrations, Postgres
-with pgvector and a pluggable graph backend; four of seven capability
+with pgvector and a pluggable graph backend; five of seven capability
 marks.</li>
 <li>Study when: <em>when was this true</em> is a real question for you
 and the answer has to survive being asked about the past.</li>
-<li>Do not copy when: you need correction that prevents re-assertion, a
-review surface, any notion of a claim's standing beyond a float, or a
-system that runs without a model — an episode never becomes a fact
-without one.</li>
+<li>Do not copy when: you need re-assertion refused after a
+<em>supersession</em> rather than a retraction, a review surface, any
+notion of a claim's standing beyond a float, or a system that runs
+without a model.</li>
 </ul>
 <h3 id="sibyl-memory"><a
 href="../systems/sibyl-memory/"><code>sibyl-memory</code></a></h3>
