@@ -9,11 +9,15 @@ source_url: https://github.com/aiming-lab/SimpleMem
 archive_name: "aiming-lab--SimpleMem"
 revision: db80b6a7c591e0ea730a058e9f5fc4eb06572299
 revision_url: https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299
-analyzed_at: 2026-07-30
-capabilities: "scope_enforced, audit_log"
+analyzed_at: 2026-09-18
+capabilities: "scope_enforced, audit_log, trust_state"
+capability_evidence:
+  scope_enforced: "every EvolveMem read | simplemem/evolver/store.py:397, :469, :490, :605, :737, :809, :1325 | `scope_id = ?` appears in the WHERE clause of each read the store exposes — the event log, the status-filtered listings, the type listing, the full scope dump and the garbage collector — and several pair it with `status = 'active'`. The text pillar the papers are about has no scope key at all, which is the asymmetry the report is built around | no committed case crosses a scope boundary: a grep for `scope_id` through `tests/` and `cross/tests/` returns no assertion about two scopes"
+  audit_log: "the `memory_events` table in EvolveMem’s own SQLite file | simplemem/evolver/store.py:397 and the `_log_event` call sites | one row per mutation, read back by a scope-filtered query ordered by `event_id DESC`, and written from the mutation verbs including `supersede`, which logs before it changes the row | no test covers the log; and the event kinds cover the store’s own verbs rather than the text pillar, which has no audit at all"
+  trust_state: "the EvolveMem memory status, filtered on the read path | simplemem/evolver/models.py:21-24, simplemem/evolver/store.py:469, :490, :605, :1447-1459, simplemem/evolver/manager.py:1096, :2380 | `MemoryStatus` is `active | superseded | archived`, and the listings read `WHERE scope_id = ? AND status = 'active'`, so neither of the other two states can reach a caller. Both are written by live code: `store.supersede` sets `superseded` from three consolidator call sites and the merge path, and four `UPDATE memories SET status = ?` statements in the manager write `archived` | no committed case asserts the filter. The mark is added on 2026-09-18 for the same reason and on the same code as [MetaClaw](../metaclaw/)’s — see the History entry: these two repositories ship the identical engine"
 stack_storage: "sqlite, lancedb"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A `MemoryEntry` — a lossless restatement with pronouns resolved and times absolute, plus keywords, timestamp, location, persons, entities and topic"
   storage: "LanceDB behind a small vector-store wrapper for the text pillar; a separate SQLite schema with seven tables for EvolveMem"
@@ -220,6 +224,31 @@ The gap is that it audits the pillar nobody benchmarks. The text store that the
 papers, the claims and the skill are about writes no events, because it has no
 mutations to write: nothing there ever changes after it is added.
 
+**EvolveMem is not this repository's own code.** `simplemem/evolver/store.py`,
+`consolidator.py` and `models.py` are **byte-identical** to
+`metaclaw/metaclaw/memory/` in [MetaClaw](../metaclaw/), the same lab's other
+repository — same `MemoryStatus` enum, same `supersede`, same `_log_event`, same
+`garbage_collect`. So two reports in this atlas describe one engine, and
+whatever is true of it is true once rather than twice. Read the two together as
+one piece of evidence, not as corroboration.
+
+That matters here for one finding in particular, which the MetaClaw reading
+turned up on 2026-09-17 and which applies verbatim: **`garbage_collect` reads
+the half of the supersession lineage that almost nothing writes.** It builds its
+`referenced` set from active rows' forward `supersedes` lists, and that list is
+written in exactly one place — the merge path at `store.py:651`,
+`supersedes=[id_a, id_b]`. The three `supersede()` calls in `consolidator.py`
+write only the backward `superseded_by`. So every memory the consolidator
+supersedes is an orphan by the collector's own definition and is hard-deleted on
+the next collection, with no event logged for the deletion — in a store whose
+audit log is otherwise the best-built thing in it.
+
+**`trust_state` is earned, and was missed at the first reading.** The same three
+listings that carry `scope_id = ?` carry `status = 'active'`, so a superseded or
+archived unit cannot reach a caller, and both non-default states have live
+writers. The rubric asks for a discrete status with at least one state that
+withholds a memory from being treated as true; this has two.
+
 **No tombstone, and the shape of the miss is unusual.** EvolveMem supersedes by
 status and logs `supersede` with `by=<id>`, which is record-keyed like every
 supersession here. But the text pillar cannot even express removal, so a value
@@ -338,5 +367,15 @@ tested of the three.
 | `tests/test_vector_store*.py` | 636 | The root test suite, in full |
 
 ## History
+
+**2026-09-18** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, three build-time execution paths including a pytest `conftest.py`, seven unpinned manifests, nothing inside the cooldown; nothing was installed or run.
+
+**The finding is that EvolveMem is not this repository's code.** `simplemem/evolver/store.py`, `consolidator.py` and `models.py` are byte-identical to `metaclaw/metaclaw/memory/` in the same lab's [MetaClaw](../metaclaw/), which was re-read the previous night. Two reports in this atlas therefore describe one engine. Everything the MetaClaw reading found in that engine applies here without re-derivation — including the defect worth repeating: `garbage_collect` builds its live set from active rows' forward `supersedes` lists, which only the merge path writes, so every unit the consolidator supersedes is an orphan by the collector's definition and is hard-deleted, with no event logged.
+
+**`trust_state` is added**, for the same reason and on the same code as MetaClaw's: `MemoryStatus` is `active | superseded | archived`, the listings filter `status = 'active'` beside `scope_id = ?`, and both non-default states have live writers — `store.supersede` from three consolidator sites and the merge, four `UPDATE memories SET status = ?` statements writing `archived` in the manager. All three marks now carry evidence records.
+
+Everything else held: the text pillar still has no scope key, no status, no delete and no update, and `clear()` is its whole removal vocabulary. The nearest thing to a negative retrieval assertion in the suite is `test_lancedb_backend_escapes_filter_values`, which passes a filter value of `finance' OR TRUE` and asserts the result is empty — an injection that must not widen a result rather than named material that must not be returned, so `negative_eval` stays withheld.
+
+`stack_source` moves from `seeded` to `reviewed`. Marks go from two to three.
 
 **2026-07-30** — [`db80b6a7c591e0ea730a058e9f5fc4eb06572299`](https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299) — first reading.

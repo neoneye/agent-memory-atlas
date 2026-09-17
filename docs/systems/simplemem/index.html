@@ -121,7 +121,7 @@ the first one lacks.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-30</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/aiming-lab--SimpleMem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -129,7 +129,7 @@ the first one lacks.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -349,6 +349,36 @@ to lose provenance — record their source ids in <code>detail</code>.</p>
 store that the papers, the claims and the skill are about writes no
 events, because it has no mutations to write: nothing there ever changes
 after it is added.</p>
+<p><strong>EvolveMem is not this repository's own code.</strong>
+<code>simplemem/evolver/store.py</code>, <code>consolidator.py</code>
+and <code>models.py</code> are <strong>byte-identical</strong> to
+<code>metaclaw/metaclaw/memory/</code> in <a
+href="../metaclaw/">MetaClaw</a>, the same lab's other repository — same
+<code>MemoryStatus</code> enum, same <code>supersede</code>, same
+<code>_log_event</code>, same <code>garbage_collect</code>. So two
+reports in this atlas describe one engine, and whatever is true of it is
+true once rather than twice. Read the two together as one piece of
+evidence, not as corroboration.</p>
+<p>That matters here for one finding in particular, which the MetaClaw
+reading turned up on 2026-09-17 and which applies verbatim:
+<strong><code>garbage_collect</code> reads the half of the supersession
+lineage that almost nothing writes.</strong> It builds its
+<code>referenced</code> set from active rows' forward
+<code>supersedes</code> lists, and that list is written in exactly one
+place — the merge path at <code>store.py:651</code>,
+<code>supersedes=[id_a, id_b]</code>. The three <code>supersede()</code>
+calls in <code>consolidator.py</code> write only the backward
+<code>superseded_by</code>. So every memory the consolidator supersedes
+is an orphan by the collector's own definition and is hard-deleted on
+the next collection, with no event logged for the deletion — in a store
+whose audit log is otherwise the best-built thing in it.</p>
+<p><strong><code>trust_state</code> is earned, and was missed at the
+first reading.</strong> The same three listings that carry
+<code>scope_id = ?</code> carry <code>status = 'active'</code>, so a
+superseded or archived unit cannot reach a caller, and both non-default
+states have live writers. The rubric asks for a discrete status with at
+least one state that withholds a memory from being treated as true; this
+has two.</p>
 <p><strong>No tombstone, and the shape of the miss is unusual.</strong>
 EvolveMem supersedes by status and logs <code>supersede</code> with
 <code>by=&lt;id&gt;</code>, which is record-keyed like every
@@ -522,6 +552,44 @@ filtering</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit, confirmed
+still the tip by <code>git ls-remote</code> before a
+<code>--depth 1</code> clone. Nothing could have moved, so this reading
+audited the first one. Screened again: no auto-run surface, three
+build-time execution paths including a pytest <code>conftest.py</code>,
+seven unpinned manifests, nothing inside the cooldown; nothing was
+installed or run.</p>
+<p><strong>The finding is that EvolveMem is not this repository's
+code.</strong> <code>simplemem/evolver/store.py</code>,
+<code>consolidator.py</code> and <code>models.py</code> are
+byte-identical to <code>metaclaw/metaclaw/memory/</code> in the same
+lab's <a href="../metaclaw/">MetaClaw</a>, which was re-read the
+previous night. Two reports in this atlas therefore describe one engine.
+Everything the MetaClaw reading found in that engine applies here
+without re-derivation — including the defect worth repeating:
+<code>garbage_collect</code> builds its live set from active rows'
+forward <code>supersedes</code> lists, which only the merge path writes,
+so every unit the consolidator supersedes is an orphan by the
+collector's definition and is hard-deleted, with no event logged.</p>
+<p><strong><code>trust_state</code> is added</strong>, for the same
+reason and on the same code as MetaClaw's: <code>MemoryStatus</code> is
+<code>active | superseded | archived</code>, the listings filter
+<code>status = 'active'</code> beside <code>scope_id = ?</code>, and
+both non-default states have live writers — <code>store.supersede</code>
+from three consolidator sites and the merge, four
+<code>UPDATE memories SET status = ?</code> statements writing
+<code>archived</code> in the manager. All three marks now carry evidence
+records.</p>
+<p>Everything else held: the text pillar still has no scope key, no
+status, no delete and no update, and <code>clear()</code> is its whole
+removal vocabulary. The nearest thing to a negative retrieval assertion
+in the suite is <code>test_lancedb_backend_escapes_filter_values</code>,
+which passes a filter value of <code>finance' OR TRUE</code> and asserts
+the result is empty — an injection that must not widen a result rather
+than named material that must not be returned, so
+<code>negative_eval</code> stays withheld.</p>
+<p><code>stack_source</code> moves from <code>seeded</code> to
+<code>reviewed</code>. Marks go from two to three.</p>
 <p><strong>2026-07-30</strong> — <a
 href="https://github.com/aiming-lab/SimpleMem/commit/db80b6a7c591e0ea730a058e9f5fc4eb06572299"><code class="commit-id" title="db80b6a7c591e0ea730a058e9f5fc4eb06572299">db80b6a7…</code></a>
 — first reading.</p>
