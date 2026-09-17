@@ -9,7 +9,7 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 522 of 574 screened at the report's current pin.**
+**Progress: 523 of 575 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
 off, and 52 report(s) have no record at all.
@@ -17,9 +17,9 @@ Neither counts as screened.
 
 | Result | Count |
 | --- | ---: |
-| Repositories with an auto-run surface (`RUNS`) | 231 |
+| Repositories with an auto-run surface (`RUNS`) | 232 |
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 316 |
-| Repositories with build-time execution (`EXEC`) | 384 |
+| Repositories with build-time execution (`EXEC`) | 385 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 2 |
 | Repositories that could not be screened | 0 |
 
@@ -160,6 +160,7 @@ These execute without a command being typed. Read before opening the tree.
 | [`memv`](../../content/systems/memv.md) | `.claude/settings.json`, `.claude/settings.local.json` |
 | [`mengram`](../../content/systems/mengram.md) | `.claude-plugin/`, `.mcp.json`, `server.json` |
 | [`mentedb`](../../content/systems/mentedb.md) | `.github/copilot-instructions.md` |
+| [`meridian`](../../content/systems/meridian.md) | `.claude/settings.json`, `.githooks/` |
 | [`mindreader`](../../content/systems/mindreader.md) | `mcp.json` |
 | [`mirix`](../../content/systems/mirix.md) | `.cursorrules`, `.vscode/settings.json` |
 | [`mnemonic`](../../content/systems/mnemonic.md) | `.devcontainer/devcontainer.json`, `.github/copilot-instructions.md`, `.opencode/` |

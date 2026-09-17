@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 574 reports.**
+**This page covers all 575 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4982,3 +4982,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 362,473 lines of Rust with 4,172 test functions, 2,922 commits since March 2024, a Python wheel with no required runtime dependencies, a Bolt server, a C ABI and an MCP server; one capability mark, this being an engine rather than a memory system.
 - Study when: you are putting validity time under a graph an agent will traverse, or you want a worked example of a tool surface that adapts to the data in front of it.
 - Do not copy when: you need to distinguish a correction from a change in the world — that needs the record axis this engine does not have.
+
+### [`meridian`](../systems/meridian/)
+- Best idea: **filter before the write, not on the read.** An ignored application's pixels never reach the database, so no later query bug can expose them, and the guarantee fits in one sentence a user can check.
+- Second idea: **say that an exclusion is forward-only.** Adding an app to the ignore list feels like it should scrub history and does not; the setting says so in capitals rather than leaving it to be discovered.
+- Third idea: **test the suffix trap.** `youtube.com` must drop `m.youtube.com` and must not drop `notyoutube.com`; `Messages` must drop three casings and must not drop `Messages Pro`. One assertion each, and the bug this rule usually ships with.
+- Fourth idea: **gate retention on the consumer's watermark.** Capture frames are deleted only at or below the ETL watermark, so a retention window and a slow interpreter are independent rather than racing.
+- Biggest risk: **two plaintext copies that nothing deletes.** The encryption migration writes `meridian.db.plaintext-backup-<timestamp>` beside the database and the only code that touches it afterwards lists it; the MCP package, whose WebAssembly SQLite cannot open a SQLCipher file, exports a snapshot to the temp directory on every read and never unlinks it. After a migration and one agent read, the screen-activity database exists three times, twice in the clear.
+- Most reusable component: `CaptureIgnore::should_drop_frame` and its table of assertions — an exact, trimmed, case-insensitive app match beside a host match at domain granularity, each with its false case pinned.
+- Maturity impression: MIT, 144,686 lines of Rust with 2,033 test functions, 2,831 commits, a Tauri tray doing capture in-process, a daemon ETL, an OAuth crate and an MCP package; no capability marks, which for this category is the expected shape rather than a criticism.
+- Study when: you are building anything that records a screen and need a worked example of an exclusion rule and its tests.
+- Do not copy when: you need the encryption claim to hold end to end — decide who deletes the migration backup and the export snapshot before shipping either.

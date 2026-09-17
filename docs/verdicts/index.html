@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 574 reports.</strong></p>
+<p><strong>This page covers all 575 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21938,6 +21938,49 @@ adapts to the data in front of it.</li>
 <li>Do not copy when: you need to distinguish a correction from a change
 in the world — that needs the record axis this engine does not
 have.</li>
+</ul>
+<h3 id="meridian"><a
+href="../systems/meridian/"><code>meridian</code></a></h3>
+<ul>
+<li>Best idea: <strong>filter before the write, not on the
+read.</strong> An ignored application's pixels never reach the database,
+so no later query bug can expose them, and the guarantee fits in one
+sentence a user can check.</li>
+<li>Second idea: <strong>say that an exclusion is forward-only.</strong>
+Adding an app to the ignore list feels like it should scrub history and
+does not; the setting says so in capitals rather than leaving it to be
+discovered.</li>
+<li>Third idea: <strong>test the suffix trap.</strong>
+<code>youtube.com</code> must drop <code>m.youtube.com</code> and must
+not drop <code>notyoutube.com</code>; <code>Messages</code> must drop
+three casings and must not drop <code>Messages Pro</code>. One assertion
+each, and the bug this rule usually ships with.</li>
+<li>Fourth idea: <strong>gate retention on the consumer's
+watermark.</strong> Capture frames are deleted only at or below the ETL
+watermark, so a retention window and a slow interpreter are independent
+rather than racing.</li>
+<li>Biggest risk: <strong>two plaintext copies that nothing
+deletes.</strong> The encryption migration writes
+<code>meridian.db.plaintext-backup-&lt;timestamp&gt;</code> beside the
+database and the only code that touches it afterwards lists it; the MCP
+package, whose WebAssembly SQLite cannot open a SQLCipher file, exports
+a snapshot to the temp directory on every read and never unlinks it.
+After a migration and one agent read, the screen-activity database
+exists three times, twice in the clear.</li>
+<li>Most reusable component:
+<code>CaptureIgnore::should_drop_frame</code> and its table of
+assertions — an exact, trimmed, case-insensitive app match beside a host
+match at domain granularity, each with its false case pinned.</li>
+<li>Maturity impression: MIT, 144,686 lines of Rust with 2,033 test
+functions, 2,831 commits, a Tauri tray doing capture in-process, a
+daemon ETL, an OAuth crate and an MCP package; no capability marks,
+which for this category is the expected shape rather than a
+criticism.</li>
+<li>Study when: you are building anything that records a screen and need
+a worked example of an exclusion rule and its tests.</li>
+<li>Do not copy when: you need the encryption claim to hold end to end —
+decide who deletes the migration backup and the export snapshot before
+shipping either.</li>
 </ul>
         </article>
       </div>

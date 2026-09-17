@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A screen-activity memory that
+turns a day at the keyboard into a timeline, with an ignore list applied
+before the write and a SQLCipher database — beside a migration backup
+and an MCP export that each leave the same data in the clear.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Meridian — Agent Memory Atlas">
+    <meta property="og:description" content="A screen-activity memory
+that turns a day at the keyboard into a timeline, with an ignore list
+applied before the write and a SQLCipher database — beside a migration
+backup and an MCP export that each leave the same data in the clear.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Meridian — Agent Memory Atlas">
+    <meta name="twitter:description" content="A screen-activity memory
+that turns a day at the keyboard into a timeline, with an ignore list
+applied before the write and a SQLCipher database — beside a migration
+backup and an MCP export that each leave the same data in the clear.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Meridian — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Meridian",
+      "description": "A screen-activity memory that turns a day at the keyboard into a timeline, with an ignore list applied before the write and a SQLCipher database \u2014 beside a migration backup and an MCP export that each leave the same data in the clear.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Encrypted at rest, and two plaintext copies
+nothing deletes</p>
+          <h1>Meridian</h1>
+          <p class="document-deck">A screen-activity memory that turns a
+day at the keyboard into a timeline, with an ignore list applied before
+the write and a SQLCipher database — beside a migration backup and an
+MCP export that each leave the same data in the clear.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Meridiona/meridian">
+              <span>Source</span>
+              <strong>Meridiona/meridian</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Meridiona/meridian/commit/a100468211b3f1f79c1d71ff01921d9cc47327bb" title="a100468211b3f1f79c1d71ff01921d9cc47327bb">
+              <span>Analyzed revision</span>
+              <code>a1004682…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Meridiona--meridian" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Meridiona--meridian</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Meridian is an MIT-licensed desktop tool that watches a day of screen
+activity and turns it into a timeline, a daily summary and updated
+tickets — 144,686 lines of Rust with 2,033 test functions, 2,831
+commits, a Tauri tray doing capture in-process, a daemon running the
+ETL, and an MCP server so an agent can read the result.</p>
+<p>It carries no capability marks, and for this category that is the
+expected outcome rather than a criticism: there is no trust state on an
+OCR frame, no tenancy in a single-user local database, no mutation
+ledger, and nothing keyed on a removed value. What a memory of this kind
+is judged on is what it captures, what it refuses to capture, and what
+leaves the machine — so that is what this report is about.</p>
+<p>The refusal machinery is good. An ignore list drops a frame
+<strong>before it is written</strong>, matching an app name exactly or
+the focused tab's URL at domain granularity, and the setting states its
+own limit in capitals: <em>"GOING FORWARD ONLY; already captured history
+is left untouched."</em> The unit tests assert both polarities,
+including the trap a naive implementation fails —
+<code>youtube.com</code> in the list must drop
+<code>m.youtube.com</code> and must <strong>not</strong> drop
+<code>notyoutube.com</code>.</p>
+<p>The database is SQLCipher-encrypted with a raw 256-bit key, and the
+module explains why it is applied as a raw key rather than a passphrase:
+full-entropy material is already in hand, so key derivation <em>"only
+adds latency, not security."</em></p>
+<p>And then there are two plaintext copies.</p>
+<p>The first is deliberate. Migrating an existing plaintext database to
+encryption writes the original to
+<code>meridian.db.plaintext-backup-&lt;timestamp&gt;</code> beside it.
+The only code that looks at that file afterwards is a helper that
+<em>lists</em> leftovers to tell a fresh install apart from a crashed
+migration. Nothing in the tree deletes it.</p>
+<p>The second is structural. The MCP package reads the database with a
+WebAssembly SQLite build that cannot open a SQLCipher file, so on every
+read it shells out to <code>meridian db-export-plaintext</code> and
+reads the resulting snapshot from the system temp directory. That
+snapshot is created, returned to the caller, and never unlinked anywhere
+in the package.</p>
+<p>So a machine where the encryption migration has run and an agent has
+read the memory once holds the screen-activity database three times:
+encrypted where it belongs, in the clear beside it, and in the clear in
+<code>/tmp</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>The tray captures; the daemon interprets. That split is stated as an
+inversion of the usual ownership — <code>capture_frames</code> is
+<em>written by the tray</em> and <em>read by the daemon</em>, and the
+module says so twice because every other table in the database runs the
+other way.</p>
+<p>A frame is an app name, a window name, a timestamp and extracted
+text. The text column is a deliberate either/or: OCR output in one,
+accessibility-tree text in the other, exactly one populated per row,
+mirroring the upstream schema this replaced so the reader could be
+repointed mechanically.</p>
+<p>Above the frames, an ETL builds sessions, detects gaps, and produces
+the day's timeline, tasks and worklog drafts.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — The ignore list drops a frame before the write, and the retention pass only prunes below the ETL watermark — while two paths leave the same data in the clear, the migration backup beside the database and the temp snapshot the MCP reader needs because its SQLite cannot open an encrypted file.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: The ignore list drops a frame before the write, and the retention pass only prunes below the ETL watermark — while two paths leave the same data in the clear, the migration backup beside the database and the temp snapshot the MCP reader needs because its SQLite cannot open an encrypted file.
+flowchart TD
+  SCREEN[&quot;Screen, windows, focused URL&quot;]
+  ENGINE[&quot;Tray capture engine&quot;]
+  IGN{&quot;CaptureIgnore&lt;br/&gt;app name exact, URL by domain&quot;}
+  DROP[&quot;Dropped before the write&quot;]
+  FRAMES[(&quot;capture_frames&lt;br/&gt;inside the SQLCipher database&quot;)]
+  ETL[&quot;Daemon ETL&lt;br/&gt;sessions, gaps, timeline&quot;]
+  WM[&quot;Retention prune&lt;br/&gt;id below watermark and older than cutoff&quot;]
+  MIG[&quot;Plaintext to encrypted migration&quot;]
+  BAK[(&quot;meridian.db.plaintext-backup-timestamp&lt;br/&gt;listed, never deleted&quot;)]
+  MCP[&quot;MCP server&quot;]
+  WASM[&quot;sql.js cannot open SQLCipher&quot;]
+  SNAP[(&quot;Temp-dir plaintext snapshot&lt;br/&gt;never unlinked&quot;)]
+  AGENT[&quot;Agent reads the timeline&quot;]
+
+  SCREEN --&gt; ENGINE --&gt; IGN
+  IGN --&gt;|&quot;match&quot;| DROP
+  IGN --&gt;|&quot;no match&quot;| FRAMES
+  FRAMES --&gt; ETL --&gt; WM
+  MIG --&gt; FRAMES
+  MIG --&gt; BAK
+  MCP --&gt; WASM --&gt; SNAP --&gt; AGENT
+  FRAMES -.-&gt;|&quot;db-export-plaintext&quot;| SNAP</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Ignore.</strong>
+<code>CaptureIgnore::should_drop_frame(app, url)</code> is built from
+the two settings lists at the frame consumer; the app match is exact and
+case-insensitive after trimming, the URL match is on the host at domain
+granularity with subdomains included
+(<code>tray/src-tauri/src/capture_ignore.rs</code>, wired at
+<code>tray/src-tauri/src/lib.rs:1699-1815</code>).</li>
+<li><strong>Write.</strong> <code>insert_capture_frame</code> writes one
+row per frame, populating exactly one of the two text columns
+(<code>meridian-core/src/capture.rs</code>).</li>
+<li><strong>Retain.</strong> The prune deletes with
+<code>WHERE id &lt;= ?1 AND timestamp &lt; ?2</code>, the first bound
+being the ETL watermark, so a frame is never removed before it has been
+processed (<code>src/etl/capture_retention.rs:64-125</code>).</li>
+<li><strong>Encrypt.</strong> <code>open_pool_with_key</code> applies
+<code>PRAGMA key = "x'&lt;hex&gt;'"</code> with a 64-hex-character key;
+<code>encrypt_in_place</code> upgrades an existing plaintext database
+and leaves the timestamped backup
+(<code>meridian-core/src/db_crypto.rs:600-645</code>).</li>
+<li><strong>Export.</strong> <code>export_plaintext</code> attaches a
+new database and runs <code>sqlcipher_export</code>, overwriting the
+output if it exists (<code>:647-690</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no belief here to model. A frame records what was on screen,
+not a claim about the world, and nothing on the row carries a status, a
+confidence or a provenance beyond which of the two extraction methods
+produced the text.</p>
+<p>That is why every capability mark is absent, and the absences are of
+the uninteresting kind: <code>trust_state</code> because an OCR frame is
+an observation rather than an assertion; <code>bitemporal</code> because
+a frame has one timestamp, when it was seen, which is both axes at once
+for a screenshot; <code>tombstone</code> because retention deletes by id
+range with nothing keyed on content; <code>audit_log</code> because no
+table records mutations; <code>scope_enforced</code> because there is
+one user and one database, and the ignore list is a write filter rather
+than a read predicate; and <code>human_review</code> because nothing is
+approved before it takes effect.</p>
+<p>The one design decision in the row worth naming is the either/or text
+column, which preserves the distinction between what was read off the
+pixels and what was read out of the accessibility tree. A downstream
+consumer that cares about reliability can tell them apart; the reader
+that does not care coalesces them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Timeline and session queries over the rolled-up tables, plus an MCP
+server for an agent. The MCP path is where this report's second finding
+lives, and it is worth being precise about the mechanism rather than the
+blame: <code>sql.js</code> is a WebAssembly SQLite with no SQLCipher
+support, so it genuinely cannot open the file. Exporting a snapshot is a
+reasonable way to make an agent-facing reader work at all.</p>
+<p>What is missing is the other half of the transaction. The snapshot
+path appears exactly once in the package — where it is constructed — and
+there is no <code>unlink</code>, no cleanup on process exit, and no
+expiry. The key reaches the exporting child process through
+<code>MERIDIAN_DB_KEY</code> in its environment.</p>
+<p>The package also carries, in a comment above that path, a cross-user
+bug it already found and fixed. An earlier version derived the snapshot
+filename from an 8-byte prefix of the path hash, and:</p>
+<blockquote>
+<p>"/Users/a" is exactly eight bytes, which makes
+<code>/Users/alice/...</code> and <code>/Users/alison/...</code>
+collide. Since the caches key on <code>dbPath</code> rather than on this
+derived path, two paths can be resolved concurrently, and a collision
+lets one database's export overwrite the other between its export and
+its read — serving one user's data for a request against another's.</p>
+</blockquote>
+<p>Finding that, explaining it in the code, and widening the hash is
+exactly right. It also shows the authors are thinking about this path
+carefully, which makes the missing cleanup look like an oversight rather
+than a position.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The ignore list is the mechanism that matters and it is built
+correctly. Dropping before the write rather than filtering on read means
+an ignored app's pixels never reach the database, so a later bug in a
+query cannot expose them. The settings comment states the matching rules
+and the forward-only limit, and there is a separate
+<code>capture_secondary_monitors</code> toggle with its own reason given
+— a second monitor can show a meeting or a personal window the user does
+not want tracked.</p>
+<p>The tests are the part to copy. <code>should_drop_frame</code> is
+asserted true for <code>"Messages"</code>, <code>"messages"</code> and
+<code>"  MESSAGES  "</code>, and asserted <strong>false</strong> for
+<code>"Messages Pro"</code> — so an exact match cannot become a prefix
+match — and for <code>"Slack"</code> and for a frame with no app name.
+On the URL side, <code>youtube.com</code> drops
+<code>https://m.youtube.com/</code> and <code>http://youtube.com</code>,
+and does <strong>not</strong> drop <code>https://notyoutube.com/</code>.
+That last assertion is the one that separates a domain match from a
+string-suffix match, and it is the bug this rule usually ships with.</p>
+<p>The retention prune is equally careful in a smaller way: deleting
+only rows at or below the ETL watermark means the retention window can
+never race the interpreter and delete a frame that has not yet been
+turned into a session.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server package reads the database and exposes the timeline to
+an agent, and the tray carries a Claude Code settings file with session
+hooks and committed git hooks — all read here as data, none
+executed.</p>
+<p>The ETL carries one agent-aware behaviour worth noting: frames from a
+VS Code window whose terminal tab is running a coding agent are skipped,
+to avoid double-counting work the indexer already accounts for. The
+tests around that skip are about a subtle consequence rather than the
+skip itself — a skipped frame must still advance the gap detector's
+clock, because otherwise six minutes of back-to-back agent frames look
+like a six-minute absence and the session is split by a spurious sleep
+gap. <em>A skip must not look like an absence</em> is a good general
+statement of the problem with any filter applied inside a time
+series.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>For a tool that records the screen, the security posture is the whole
+assessment, so here is the balance as read.</p>
+<p><strong>What is done well.</strong> Capture can be excluded per app
+and per domain, before the write, with semantics documented and tested
+in both directions. The database is encrypted at rest with a
+correctly-applied raw key. Retention cannot outrun the ETL. A cross-user
+collision in the export path was found and fixed with the reasoning left
+in place. The README's privacy paragraph is short and does not
+overclaim: activity stays in one encrypted database, only what a summary
+needs goes to the configured provider, diagnostics are opt-out and
+stripped.</p>
+<p><strong>What is not.</strong> Two copies of that database can exist
+in the clear, and nothing in the repository removes either:</p>
+<ul>
+<li><code>meridian.db.plaintext-backup-&lt;timestamp&gt;</code>, written
+by the encryption migration and only ever <em>listed</em> afterwards, by
+a helper whose stated job is to tell a fresh install from a crashed
+one.</li>
+<li><code>$TMPDIR/meridian-mcp-plaintext-&lt;hash&gt;.db</code>, written
+on every MCP read and returned to the caller with no cleanup path.</li>
+</ul>
+<p>Neither is hidden — both are documented in the code that creates them
+— and the first is a defensible safety net for a migration that must not
+lose data. But the claim a user reads is <em>"one encrypted database on
+your machine"</em>, and after a migration and one agent read it is one
+encrypted database and two unencrypted ones. For screen-capture
+material, where the threat model includes another process or another
+user on the same machine, that is the finding.</p>
+<p>A smaller note in the same area: the export passes the database key
+to a child process through its environment, which is readable from
+outside the process on some platforms.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>2,033 test functions; nothing was run here. The ones that bear on
+this report are the ignore-filter unit tests and the ETL skip
+integration tests, and both are written the way this atlas likes — each
+names the failure it prevents, and the ETL file's header lists its
+invariants before any code.</p>
+<p>No capability mark is earned by them, and <code>negative_eval</code>
+is the one worth explaining rather than merely omitting. The must-not
+assertions here are about what is <em>written</em> — an ignored app's
+frame must be dropped — and about the shape of a derived timeline. None
+asserts that particular material must not come back from a query, which
+is the property the mark names. In a capture system the two are closely
+related, since not writing is how not retrieving is achieved; they are
+still different assertions, and only one of them survives a bug in the
+read path.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Filter before the write, not on the read.</strong> An
+ignored application's pixels that never reach the database cannot be
+exposed by a later query bug. It also makes the guarantee explainable to
+a user in one sentence.</li>
+<li><strong>Say that an exclusion is forward-only.</strong> Adding an
+app to an ignore list feels like it should scrub the history, and does
+not. Putting that in the setting's own documentation — in capitals, here
+— is the difference between a surprise and a decision.</li>
+<li><strong>Test the suffix trap.</strong> A domain rule that drops
+<code>m.youtube.com</code> must not drop <code>notyoutube.com</code>,
+and an app rule that drops <code>Messages</code> must not drop
+<code>Messages Pro</code>. Both are one assertion each and both are the
+bug that ships.</li>
+<li><strong>Delete the plaintext you made.</strong> A migration backup
+and an export snapshot are each reasonable to create and each need an
+owner for their removal. A file whose only subsequent reader is a helper
+that lists it has nobody deleting it.</li>
+<li><strong>A skip must not look like an absence.</strong> Filtering
+inside a time series moves the clock as well as the data; a skipped
+frame that does not advance the gap detector turns a filter into a
+phantom six-minute nap.</li>
+<li><strong>Gate retention on the consumer's watermark.</strong>
+Deleting only what has already been processed makes a retention window
+and a slow interpreter independent rather than a race.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the migration backup meant to be removed after a successful
+startup, or kept indefinitely as a recovery path? Nothing in the tree
+does either deliberately.</li>
+<li>Could the MCP reader hold the snapshot in memory, or unlink it after
+opening, so a read leaves nothing behind? The current file survives the
+process.</li>
+<li>The ignore list matches an app name exactly. Is a window-title rule
+wanted for applications that show both work and private content in the
+same process?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Capture and ignore: <code>meridian-core/src/capture.rs:1-30</code>
+(the inverted ownership and the either/or text column),
+<code>tray/src-tauri/src/capture_ignore.rs</code> (the filter and its
+tests at 140-166), <code>tray/src-tauri/src/lib.rs:1699-1815</code> (the
+wiring), <code>meridian-core/src/settings.rs:308-326</code>
+(<code>ignored_apps</code>, <code>ignored_urls</code>,
+<code>capture_secondary_monitors</code> and their documented
+semantics).</li>
+<li>Encryption: <code>meridian-core/src/db_crypto.rs:1-25</code>
+(callers and key format), <code>:314-345</code>
+(<code>interrupted_migration_leftovers</code>), <code>:600-645</code>
+(<code>encrypt_in_place</code> and the backup), <code>:647-690</code>
+(<code>export_plaintext</code>).</li>
+<li>MCP reader:
+<code>packages/meridian-mcp/src/db-cache.ts:100-145</code> (the snapshot
+path, the collision comment and the export call).</li>
+<li>Retention: <code>src/etl/capture_retention.rs:64-125</code>.</li>
+<li>ETL skip: <code>tests/etl_coding_agent_skip.rs:1-30</code> (the
+invariants), <code>tests/etl_gaps.rs</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;remove_file&quot; --include=&#39;*.rs&#39; . | grep -i &quot;backup\|plaintext&quot;   # 0 — neither plaintext copy is deleted
+grep -rn &quot;meridian-mcp-plaintext&quot; --include=&#39;*.ts&#39; .                      # 1 — the construction, no unlink
+grep -rn &quot;ignored_apps\|ignored_urls&quot; --include=&#39;*.rs&#39; .                  # settings, the filter, the wiring
+grep -rn &quot;capture_frames&quot; --include=&#39;*.rs&#39; . | grep -i &quot;delete\|prune&quot;    # the watermark-gated retention pass</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/Meridiona/meridian/commit/a100468211b3f1f79c1d71ff01921d9cc47327bb"><code class="commit-id" title="a100468211b3f1f79c1d71ff01921d9cc47327bb">a1004682…</code></a>
+— first reading, at the head of <code>main</code>, 2,831 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: two auto-run
+surfaces (a <code>.claude/settings.json</code> carrying session hooks
+and four committed git hooks), and three build-time execution paths
+including two cargo build scripts and an npm
+<code>prepublishOnly</code>. Both auto-run surfaces were read as data
+and neither executed; nothing was installed, built or run, and no
+capture was started. No capability marks, which for a screen-capture
+memory is the expected shape rather than a criticism: a frame is an
+observation with no status to filter on, one timestamp rather than two
+axes, one user and one database rather than a scope, and a retention
+prune by id range with nothing keyed on content.
+<code>negative_eval</code> is withheld on a distinction — the ignore
+filter's tests assert what must not be <em>written</em>, which is how
+this system achieves what is not retrieved, but is not an assertion
+about what a query returns. Three separate absence claims in this
+reading were wrong on the first search and corrected on a second: the
+ignore list, the retention pass and the per-app controls all exist under
+vocabulary the first greps missed.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
