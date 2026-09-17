@@ -420,24 +420,28 @@ free tiers, about 30,000 input and 94,000 output tokens per model.
 ## 8. Agent Integration
 
 A model sees the compiled messages with a role as system prompt, the
-`[Memory]` block, materials, references, the chain, and the question;
-it may call web and scholarly search and any MCP tool the proxy is
-configured with. It cannot edit the graph. An external agent sees four
-read-only questions over MCP and, inside DeepSeek Harness, the same four
-as native tools plus a canvas that can send it a real turn with the wired
-context injected first. Claude Code and Codex get adapter documents that
-tell them to run `why --check` before editing a file and to open the
-current session on the canvas by a protocol link or a local bridge that
-copies the session file and never modifies the source. Pi and Codex,
-picked as models, get the canvas's compiled context as one block ahead of
-the question in a fresh session, the materials copied to disk with a note
-saying where, and their own tools in the working directory; on a
-continued session they get the question alone, because the session file
-holds the rest. What a runtime asks — a confirm, a pick, a line, a text —
-lands on the node as a card and goes back through the shell or, inside
-the harness, through `POST /approvals/:id`; a stop withdraws every open
-question; *allow this location* adds a directory to the canvas's allow
-list and rewrites the guard file mid-run.
+`[Memory]` block, materials, references, the chain, and the question; it
+may call web and scholarly search and any MCP tool the proxy is configured
+with. It cannot edit the graph.
+
+An external agent sees four read-only questions over MCP and, inside
+DeepSeek Harness, the same four as native tools plus a canvas that can
+send it a real turn with the wired context injected first.
+
+Claude Code and Codex get adapter documents that tell them to run `why
+--check` before editing a file and to open the current session on the
+canvas by a protocol link or a local bridge that copies the session file
+and never modifies the source.
+
+Pi and Codex, picked as models, get the canvas's compiled context as one
+block ahead of the question in a fresh session, the materials copied to
+disk with a note saying where, and their own tools in the working
+directory; on a continued session they get the question alone, because the
+session file holds the rest. What a runtime asks — a confirm, a pick, a
+line, a text — lands on the node as a card and goes back through the shell
+or, inside the harness, through `POST /approvals/:id`; a stop withdraws
+every open question; *allow this location* adds a directory to the
+canvas's allow list and rewrites the guard file mid-run.
 
 The person's surfaces are the whole design: the canvas, the node panel
 with its versions and *will send* preview, the sliding reviewer node, the

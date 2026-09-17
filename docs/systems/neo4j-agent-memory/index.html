@@ -427,18 +427,19 @@ repeat add takes the <code>ON MATCH</code> arm, keeps the pre-existing
 node's id — and returned the freshly minted one anyway, addressing what
 the commit calls a ghost entity. No second node is created, which is why
 the repair belongs in the return value rather than in a caller-side name
-lookup. <code>add_relationship</code> MATCHes both endpoints before
-MERGEing the edge, so a pair of ids matching no node wrote zero rows and
-the method still returned a <code>Relationship</code>; it now raises
+lookup.</p>
+<p><code>add_relationship</code> MATCHes both endpoints before MERGEing
+the edge, so a pair of ids matching no node wrote zero rows and the
+method still returned a <code>Relationship</code>; it now raises
 <code>NotFoundError</code> naming both ids and telling the caller to use
 the ids stored on the nodes rather than ones minted client-side
-(<code>memory/long_term.py:1058-1069</code>). Aliases were written into
-the JSON metadata blob while the alias lookup reads a top-level
-<code>aliases</code> property — which is what the merge query already
-wrote — so an entity was never findable by an alias passed to
-<code>add_entity</code>; <code>aliases</code> is now a top-level list
-everywhere, appended on match, with a metadata fallback in the parser so
-rows written earlier still read back. And
+(<code>memory/long_term.py:1058-1069</code>).</p>
+<p>Aliases were written into the JSON metadata blob while the alias
+lookup reads a top-level <code>aliases</code> property — which is what
+the merge query already wrote — so an entity was never findable by an
+alias passed to <code>add_entity</code>; <code>aliases</code> is now a
+top-level list everywhere, appended on match, with a metadata fallback
+in the parser so rows written earlier still read back. And
 <code>merge_duplicate_entities</code> carried subqueries for
 <code>MENTIONS</code> and <code>SAME_AS</code> only, against a docstring
 promising that relationships were transferred, so a merge silently

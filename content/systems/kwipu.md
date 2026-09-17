@@ -41,24 +41,27 @@ installed or run.
 
 The memory is a LlamaIndex `PropertyGraphIndex` persisted to
 `storage_graph/` (`geode_graph.py:91`). A note becomes a document keyed by
-its path, its frontmatter becomes `fm_*` metadata, and three kinds of triple
-land in the graph: from every `[[wikilink]]` a `(note, relation, target)`
-whose relation is inferred from the line around the link by per-language
-patterns (`:397-422`, `lang_config.py:170-322`); from frontmatter keys in
-six languages a fixed relation — `ruolo` and `role` and `rolle` all become
-*Has role* (`:426-516`); and from each chunk up to twenty triples a model
-extracts under a prompt that wants proper nouns (`:822-834`). The first two
-cost no model call and are injected after the model's pass by
-`upsert_triplet` (`:745-753`). Retrieval is four sub-retrievers under one
-query engine (`:857-912`): a synonym retriever that asks the model for
-fifteen keywords and walks the graph three hops (normal mode only), a
-vector retriever over the chunks with the same depth, a BM25 pass written
-by hand over every text node in the graph (`:165-268`), and a scan that
-adds three for a date token, two for a temporal word, one per token on a
-tag line and one and a half for a capitalised name (`:271-334`). The
-synthesis prompt uses only the context, cites file names in brackets, and
-answers *"I don't have enough information in your local files"* when it
-cannot (`:115-138`).
+its path, its frontmatter becomes `fm_*` metadata, and three kinds of
+triple land in the graph: from every `[[wikilink]]` a `(note, relation,
+target)` whose relation is inferred from the line around the link by
+per-language patterns (`:397-422`, `lang_config.py:170-322`); from
+frontmatter keys in six languages a fixed relation — `ruolo` and `role`
+and `rolle` all become *Has role* (`:426-516`); and from each chunk up to
+twenty triples a model extracts under a prompt that wants proper nouns
+(`:822-834`).
+
+The first two cost no model call and are injected after the model's pass
+by `upsert_triplet` (`:745-753`).
+
+Retrieval is four sub-retrievers under one query engine (`:857-912`): a
+synonym retriever that asks the model for fifteen keywords and walks the
+graph three hops (normal mode only), a vector retriever over the chunks
+with the same depth, a BM25 pass written by hand over every text node in
+the graph (`:165-268`), and a scan that adds three for a date token, two
+for a temporal word, one per token on a tag line and one and a half for a
+capitalised name (`:271-334`). The synthesis prompt uses only the context,
+cites file names in brackets, and answers *"I don't have enough
+information in your local files"* when it cannot (`:115-138`).
 
 The finding is in the update path. A modified note is handled by
 `update_document` (`:701-743`): delete the document by its path with

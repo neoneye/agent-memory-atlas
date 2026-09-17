@@ -55,20 +55,24 @@ Three decisions define it, and each is stated in a comment with the
 measurement that forced it. Extraction reads the **wire** — the redacted
 replay the model has already received — and answers in fakes, which are
 un-redacted locally through the conversation's vault; not one new byte of
-real data leaves, and the vault doubles as the hallucination filter, because
-an entity the model invented resolves to nothing in the real text and is
-dropped (`memory/extract.ts:22-33`). Selection happens **client-side on real
-values**, because the model only holds fakes that are not even stable across
-conversations since a per-conversation salt was introduced, so it *cannot*
-judge which card is relevant (`memory/select.ts:20-38`); the selected
-entities are then forced into the vault before the user's message is
-redacted, so the same name maps to the same fake in the block and in the
-text even under the regex engine. And a card **updates rather than
-stacks**: a fact carrying a deadline, a budget or a contact replaces the
-sentence with the old one, a restatement keeps the richer wording, and what
-was removed goes into a three-deep history a person can restore, because *"a
-consolidation that overwrites its evidence in silence is the measured failure
-mode of agent memories"* (`memory/memoryTypes.ts:21-30`).
+real data leaves, and the vault doubles as the hallucination filter,
+because an entity the model invented resolves to nothing in the real text
+and is dropped (`memory/extract.ts:22-33`).
+
+Selection happens **client-side on real values**, because the model only
+holds fakes that are not even stable across conversations since a
+per-conversation salt was introduced, so it *cannot* judge which card is
+relevant (`memory/select.ts:20-38`); the selected entities are then forced
+into the vault before the user's message is redacted, so the same name
+maps to the same fake in the block and in the text even under the regex
+engine.
+
+And a card **updates rather than stacks**: a fact carrying a deadline, a
+budget or a contact replaces the sentence with the old one, a restatement
+keeps the richer wording, and what was removed goes into a three-deep
+history a person can restore, because *"a consolidation that overwrites
+its evidence in silence is the measured failure mode of agent memories"*
+(`memory/memoryTypes.ts:21-30`).
 
 It is strongest as a study in where the leaks are. The forced list is
 filtered for words of the common lexicon after a note titled « dossiers »

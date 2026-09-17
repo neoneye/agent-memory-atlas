@@ -698,24 +698,29 @@ workspaces; otherwise the bridge's working directory; otherwise a machine-level
 session binds the core's `/mcp` endpoint rather than dying."* Every rung is
 logged, so `mcp.log` always names the one that bound.
 
-Rung five is a deliberate trade and the report's sharpest reservation about the
-process model. A session that cannot establish its workspace does not fail; it
-reads and writes somebody else's graph — specifically the home one. The
-mitigation is `brief` called with a `project`: a name, an id or any absolute
-path inside a registered root rebinds the running session and returns that
-project's brief in one call (`crates/engram-mcp/src/lib.rs:871-897`), refusing
-an unregistered selector *with the known roster* and leaving the binding
-untouched when it refuses, so a hallucinated path can never birth a graph.
-Sessions stranded on rungs four or five get a one-line hint above their brief
-pointing at it. Folding the rebind into `brief` is the field lesson from the
-project's issue #4, where an injected *"call `brief` first"* overruled a
-workspace rule that said `set_project` first; one tool means there is no wrong
-first call left to make. The clients that need it are named in the docs —
-Windsurf and Devin CLI advertise roots and never answer them — and `setup`
-writes each client what it can consume: a `SessionStart` brief hook for Claude
-Code, Codex, Devin CLI and Bob (Devin and Codex only accept injected context
-inside a `hookSpecificOutput` JSON envelope, so the two share one wrapper), an
-`always_on` rule for Windsurf, and an `AGENTS.md` block for the rest.
+Rung five is a deliberate trade and the report's sharpest reservation
+about the process model. A session that cannot establish its workspace
+does not fail; it reads and writes somebody else's graph — specifically
+the home one.
+
+The mitigation is `brief` called with a `project`: a name, an id or any
+absolute path inside a registered root rebinds the running session and
+returns that project's brief in one call
+(`crates/engram-mcp/src/lib.rs:871-897`), refusing an unregistered
+selector *with the known roster* and leaving the binding untouched when it
+refuses, so a hallucinated path can never birth a graph.
+
+Sessions stranded on rungs four or five get a one-line hint above their
+brief pointing at it. Folding the rebind into `brief` is the field lesson
+from the project's issue #4, where an injected *"call `brief` first"*
+overruled a workspace rule that said `set_project` first; one tool means
+there is no wrong first call left to make. The clients that need it are
+named in the docs — Windsurf and Devin CLI advertise roots and never
+answer them — and `setup` writes each client what it can consume: a
+`SessionStart` brief hook for Claude Code, Codex, Devin CLI and Bob (Devin
+and Codex only accept injected context inside a `hookSpecificOutput` JSON
+envelope, so the two share one wrapper), an `always_on` rule for Windsurf,
+and an `AGENTS.md` block for the rest.
 
 The pane's Processes census shows each live session's current binding. Bridges
 hold a 15-second-heartbeat lease that expires after 45 seconds, so a crashed

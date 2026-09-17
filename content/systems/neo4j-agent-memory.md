@@ -311,25 +311,29 @@ handed out an id addressing no node, and `add_relationship` then acknowledged th
 write that id was used for, so the failure surfaced only as missing data much
 later.
 
-`add_entity` MERGEs on `(name, type)`, so a repeat add takes the `ON MATCH` arm,
-keeps the pre-existing node's id — and returned the freshly minted one anyway,
-addressing what the commit calls a ghost entity. No second node is created, which
-is why the repair belongs in the return value rather than in a caller-side name
-lookup. `add_relationship` MATCHes both endpoints before MERGEing the edge, so a
-pair of ids matching no node wrote zero rows and the method still returned a
-`Relationship`; it now raises `NotFoundError` naming both ids and telling the
-caller to use the ids stored on the nodes rather than ones minted client-side
-(`memory/long_term.py:1058-1069`). Aliases were written into the JSON metadata
-blob while the alias lookup reads a top-level `aliases` property — which is what
-the merge query already wrote — so an entity was never findable by an alias
-passed to `add_entity`; `aliases` is now a top-level list everywhere, appended on
-match, with a metadata fallback in the parser so rows written earlier still read
-back. And `merge_duplicate_entities` carried subqueries for `MENTIONS` and
-`SAME_AS` only, against a docstring promising that relationships were
-transferred, so a merge silently dropped `RELATED_TO` in both directions, both
-provenance edges and the v0.2 audit edges. All are now copied onto the survivor
-tagged `migrated_from`, and *copied* rather than moved so the merge stays
-reversible.
+`add_entity` MERGEs on `(name, type)`, so a repeat add takes the `ON
+MATCH` arm, keeps the pre-existing node's id — and returned the freshly
+minted one anyway, addressing what the commit calls a ghost entity. No
+second node is created, which is why the repair belongs in the return
+value rather than in a caller-side name lookup.
+
+`add_relationship` MATCHes both endpoints before MERGEing the edge, so a
+pair of ids matching no node wrote zero rows and the method still returned
+a `Relationship`; it now raises `NotFoundError` naming both ids and
+telling the caller to use the ids stored on the nodes rather than ones
+minted client-side (`memory/long_term.py:1058-1069`).
+
+Aliases were written into the JSON metadata blob while the alias lookup
+reads a top-level `aliases` property — which is what the merge query
+already wrote — so an entity was never findable by an alias passed to
+`add_entity`; `aliases` is now a top-level list everywhere, appended on
+match, with a metadata fallback in the parser so rows written earlier
+still read back. And `merge_duplicate_entities` carried subqueries for
+`MENTIONS` and `SAME_AS` only, against a docstring promising that
+relationships were transferred, so a merge silently dropped `RELATED_TO`
+in both directions, both provenance edges and the v0.2 audit edges. All
+are now copied onto the survivor tagged `migrated_from`, and *copied*
+rather than moved so the merge stays reversible.
 
 Two details generalise past this store. A write and a read that disagree about
 where a field lives are the same defect as two copies of a predicate that
