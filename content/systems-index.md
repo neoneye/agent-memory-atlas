@@ -684,7 +684,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/virtualwife/"><span class="az-id">VirtualWife</span><span class="az-what">normalize_scores does not normalize</span><code class="az-repo">yakami129/VirtualWife</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/vista/"><span class="az-id">VISTA</span><span class="az-what">Frames as memory, a checkpoint before compaction</span><code class="az-repo">joshhhhhan/VISTA</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/vllm-semantic-router/"><span class="az-id">vLLM Semantic Router</span><span class="az-what">A full memory system inside a router</span><code class="az-repo">vllm-project/semantic-router</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
-<li><a class="az-row" href="../systems/voyager/"><span class="az-id">Voyager</span><span class="az-what">Procedural skill memory</span><code class="az-repo">MineDojo/Voyager</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/voyager/"><span class="az-id">Voyager</span><span class="az-what">Procedural skill memory</span><code class="az-repo">MineDojo/Voyager</code><span class="az-caps"><span class="az-cap">Human review</span></span></a></li>
 </ul>
 
 ## W

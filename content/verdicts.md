@@ -473,10 +473,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need agent memory rather than corpus QA — scope, correction, and time all have to be added.
 
 ### [`voyager`](../systems/voyager/)
-- Best idea: memory written only after the environment verifies the procedure worked.
+- Best idea: memory written only after the environment verifies the procedure worked — the strongest write gate in this atlas, available because the memory is executable.
+- Second idea: **one signature for the automatic judge and the human one.** `check_task_success` returns `(success, critique)` whether a model produced it or a person did, so `critic_agent_mode="manual"` turns the write gate into a human decision — `Success? (y/n)`, a critique, a confirmation loop — without a second code path. That return is what `add_new_skill` is gated on, which is why the report now carries `human_review`; the limit is that the person is asked about task success rather than shown the skill.
 - Biggest risk: a frozen 2023 artifact that generalizes from a single verified run and keeps no failure memory.
+- Second risk: the whole library is concatenated into the JavaScript preamble sent to the environment on **every step**, growing without bound — the model prompt is separately capped at five retrieved skills, so the cost lands where it is hardest to notice. And a rewrite writes the new code to `{name}V{i}.js` while `{name}.js` keeps the oldest version, so the plainest filename on disk holds the stalest content.
 - Most reusable component: the verified write gate, and description-indexed / code-retrieved storage.
-- Maturity impression: a 127-line memory subsystem inside a research agent; unmaintained since July 2023.
+- Maturity impression: MIT, a 127-line memory subsystem inside a research agent, unmaintained since July 2023, with no test file anywhere in the tree — its one checked invariant is a bare `assert` that the vector count matches `len(self.skills)` on every write, with the fix in its message. One capability mark, `human_review`.
 - Study when: your agent's actions have observable outcomes and competence is worth remembering, not just facts.
 - Do not copy when: procedures will be executed outside a sandbox, or success is a matter of judgment rather than observation.
 

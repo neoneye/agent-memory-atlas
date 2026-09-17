@@ -9,11 +9,13 @@ source_url: https://github.com/MineDojo/Voyager
 archive_name: "MineDojo--Voyager"
 revision: 55e45a880755d0c8c66ca7fb5fe7962ac8974f89
 revision_url: https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89
-analyzed_at: 2026-07-27
-capabilities: ""
+analyzed_at: 2026-09-17
+capabilities: "human_review"
+capability_evidence:
+  human_review: "the write gate — whether a task counts as solved, which is the only thing that admits a skill to the library | voyager/agents/critic.py:20, :79-89, :131-132, voyager/voyager.py:221, :353-354 | `CriticAgent` takes a `mode` asserted to be `auto` or `manual`; under `manual`, `check_task_success` calls `human_check_task_success`, which asks a person `Success? (y/n)`, takes a free-text critique, and loops until they answer `Confirm?`. Its return is `info['success']`, and `add_new_skill` is called only inside `if info['success']` — so in that mode a person decides whether a memory is written, before it is written. The default is `auto`, where a model answers the same question | none — the repository has no test suite at all, so the surface is read from the code; the near-miss worth stating is that the human is asked about task success rather than shown the skill, so what is adjudicated is the evidence for the memory rather than its content"
 stack_storage: "chroma, files"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Executable JavaScript skill plus generated description"
   storage: "`skills.json` and flat files, Chroma index over descriptions"
@@ -21,11 +23,11 @@ matrix:
   write: "Written only when a critic verifies environment success"
   update_delete: "Same-name rewrite; old versions on disk but unreachable"
   scoping: "Single agent checkpoint directory"
-  integration: "Research rollout loop; prompt injection of retrieved code"
+  integration: "Research rollout loop; the prompt carries the retrieved five, the environment payload carries the whole library"
   background: "None"
-  trust: "Verified execution is the provenance"
+  trust: "Verified execution is the provenance, by a critic that is a model under the default mode and a person under `manual`"
   strengths: "Environment-verified write gate — the strongest in the atlas"
-  risks: "Unbounded skill concatenation into prompts; no failure memory; frozen since 2023"
+  risks: "The full library is concatenated into the JavaScript preamble sent to the environment on every step, growing without bound — the model prompt itself is capped at five retrieved skills; a rewrite leaves the original filename holding the oldest code; no failure memory; frozen since 2023"
 ---
 
 ## 1. Executive Summary
@@ -47,7 +49,9 @@ if info["success"]:
 
 The second idea worth stealing is the **split between retrieval key and payload**: an LLM writes a natural-language description of the code, the description is embedded and searched, and the *code* is what gets returned. Programs make poor embedding targets; their descriptions make good ones.
 
-The limits are those of a 127-line research component: no scope, no provenance, no decay, a versioning scheme that keeps history on disk but makes it unreachable, unbounded prompt growth, and one hardcoded task exclusion standing in for any real "is this worth remembering?" policy.
+The limits are those of a 127-line research component: no scope, no provenance, no decay, a versioning scheme whose disk layout points at the wrong file, unbounded growth in the payload sent to the environment, and one hardcoded task exclusion standing in for any real "is this worth remembering?" policy.
+
+**Re-reading it at the same commit adds a mark and corrects two claims.** `human_review` is earned on the write gate: `CriticAgent` takes a `mode` of `auto` or `manual`, and under `manual` the question that decides whether a skill is remembered is put to a person — `Success? (y/n)`, then a critique, then a confirmation loop — with `add_new_skill` called only inside `if info["success"]`. The default is `auto`, where a model answers the same question, and the two modes are the same seam. What the person adjudicates is the evidence rather than the skill's text, which is the honest limit to state beside the mark.
 
 ## 2. Mental Model
 
@@ -161,11 +165,13 @@ def programs(self):
         programs += f"{primitives}\n\n"
 ```
 
-Every stored skill plus every hand-written primitive is concatenated. This is what makes skills compose — a new program can call an old one — and it is also an **unbounded context**: the string grows with every skill learned, with no budget, no relevance filter, and no eviction. The `retrieve_skills` path is bounded at k=5; this path is not.
+Every stored skill plus every hand-written primitive is concatenated, and this is what makes skills compose — a new program can call an old one. It is unbounded: the string grows with every skill learned, with no budget, no relevance filter and no eviction.
+
+**Where it goes is not the prompt, which this report previously got wrong.** `skill_manager.programs` is passed to `self.env.step(code, programs=...)` (`voyager.py:217`, `:241`) — it is the JavaScript preamble the generated code is evaluated against inside the Mineflayer bridge, sent on every step. The action agent's *prompt* is assembled separately in `action.py:91` from six to eight named base primitives plus the retrieved list, and that list is `retrieve_skills`, capped at `k = min(count, 5)`. So the model's context is bounded and the environment payload is not: the cost of a large library lands on every environment step rather than on the context window.
 
 ### Versioning that keeps history but loses access
 
-On a name collision the manager deletes the Chroma entry, finds the next free `{name}V{i}.js`, writes the code there, and overwrites `skills[program_name]` in place:
+On a name collision the manager deletes the Chroma entry, finds the next free `{name}V{i}.js`, writes **the new code** there, and overwrites `skills[program_name]` in place — so the file named after the skill keeps the *oldest* version and the newest code lives under a `V{i}` suffix, while `skills.json` and the vector index hold the newest:
 
 ```python
 if program_name in self.skills:
@@ -231,6 +237,7 @@ Its relevance to this atlas is architectural. [Hermes Agent](../hermes-agent/) s
 Strengths:
 
 - **Empirical write gate** — the strongest verification signal in the atlas, because the artifact is executable.
+- **A human mode on that gate.** `critic_agent_mode="manual"` routes the success question to a person, who answers, writes a critique and confirms in a loop before anything is remembered. It is the same seam the model answers under the default, which is the cheapest way to build a review surface: make the automatic judge and the human judge return the same tuple.
 - **Retrieval key separated from payload.**
 - **Authoritative store with a checked projection**, and a loud consistency assertion.
 - **Failures feed reasoning, not memory.**
@@ -238,9 +245,9 @@ Strengths:
 
 Gaps:
 
-- **Unbounded `programs` concatenation** injected into prompts.
+- **Unbounded `programs` concatenation** sent to the environment on every step; the model prompt is capped at five retrieved skills.
 - **No relevance threshold** on retrieved skills.
-- **Supersession without lineage**; old versions are on disk but unreachable.
+- **Supersession without lineage**, and the disk layout inverts what a reader expects: the new code is written under `{name}V{i}.js` while `{name}.js` keeps the oldest version, so the file named after the skill is the one no longer in use. The retrievable copy — `skills.json` and the vector row — is always the newest.
 - **No failure memory**, so dead ends can be rediscovered.
 - **No utility signal**, so the library cannot self-prune.
 - **Single-context verification** — success once is treated as general capability.
@@ -248,9 +255,11 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-No test suite for `SkillManager` was found in this checkout. The project's evaluation is the paper's Minecraft benchmark — tech-tree milestones, distance travelled, items unlocked — which is a task-completion measure, not a memory-quality measure. Nothing evaluates retrieval precision over the skill library, or how often a retrieved skill is actually reused versus ignored.
+There is no test suite in this checkout at all — not for `SkillManager` and not for anything else; `find . -iname "*test*"` over the tree returns no Python test file. The project's evaluation is the paper's Minecraft benchmark — tech-tree milestones, distance travelled, items unlocked — which is a task-completion measure, not a memory-quality measure. Nothing evaluates retrieval precision over the skill library, or how often a retrieved skill is actually reused versus ignored.
 
-The repository has been unchanged since July 2023, so this report describes an artifact, not a maintained project.
+The one assertion the write path does carry is worth naming because it is the kind most repositories skip: `assert self.vectordb._collection.count() == len(self.skills), "vectordb is not synced with skills.json"` runs on every successful write, so a divergence between the authoritative JSON and its vector projection is loud rather than silent. It is a bare `assert`, which `python -O` removes, and it is the only invariant in the component that is checked at all.
+
+The repository has been unchanged since July 2023 — the pin is still the tip of `main`, whose last commit is 27 July 2023 — so this report describes an artifact, not a maintained project.
 
 ## 11. For Your Own Build
 
@@ -261,12 +270,13 @@ The repository has been unchanged since July 2023, so this report describes an a
 - **Let failures inform reasoning without entering memory.** Retry with critique; store only outcomes.
 - **Compose memory into capability.** Retrieved skills become primitives for new ones.
 - **Assert cross-store consistency** with an error message that states the fix.
+- **Give the automatic judge and the human judge one signature.** `check_task_success` returns `(success, critique)` whether a model or a person produced it, so switching to human adjudication is a constructor argument rather than a second code path.
 
 ### Avoid
 
-- **Unbounded prompt growth** from concatenating the entire library.
+- **Unbounded growth in the environment payload** from concatenating the entire library on every step, and a disk layout where the file named after a skill holds its oldest version.
 - **Top-k with no score threshold** for artifacts that will be executed.
-- **Version files without lineage** — history retained, history unreachable.
+- **Version files without lineage**, and a naming scheme where the un-suffixed file is the stale one.
 - **Discarding failures entirely.**
 - **A hardcoded exclusion** in place of a memory-worthiness policy.
 - **Generalizing from a single verified execution.**
@@ -282,8 +292,8 @@ Borrow:
 Do not copy:
 
 - The retrieval path; add a score threshold, metadata filters, and a token budget before injecting executable artifacts.
-- The versioning scheme; add explicit supersession with lineage.
-- The unbounded `programs` property.
+- The versioning scheme; add explicit supersession with lineage, and do not let the plainest filename hold the oldest content.
+- The unbounded `programs` property — and note that its cost is paid on every environment step rather than in the context window, which is the harder kind of cost to notice.
 - Anything at all without a sandbox, if stored code will be executed in a setting where inputs are not trusted.
 
 ## 12. Open Questions
@@ -306,4 +316,12 @@ Do not copy:
 
 ## History
 
-**2026-07-27** — [`55e45a880755d0c8c66ca7fb5fe7962ac8974f89`](https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89) — first reading.
+**2026-09-17** — [`55e45a880755d0c8c66ca7fb5fe7962ac8974f89`](https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89) — re-read at the same commit, which is still the tip of `main`; the last commit upstream is 27 July 2023. Nothing could have changed, so this reading audited the first one against the code. Screened again: no auto-run surface, one build-time execution path (`setup.py`), four unpinned manifests, nothing inside the seven-day cooldown; nothing was installed and nothing was run. MIT, and `find . -iname "*test*"` returns no test file anywhere in the tree.
+
+**`human_review` is earned, and the report previously carried no marks.** `CriticAgent`'s `mode` is asserted to be `auto` or `manual`; under `manual`, `check_task_success` calls `human_check_task_success`, which asks a person `Success? (y/n)`, takes a free-text critique and loops until they confirm. That return value is `info["success"]`, and `add_new_skill` runs only inside `if info["success"]` — so in that mode a person decides whether a skill enters the library, before it does. The default is `auto`, where a model answers the same question through the same seam, which is the design worth copying: one signature for the automatic judge and the human one. The limit stated beside the mark is that the person is asked about task success rather than shown the skill, so what is adjudicated is the evidence for the memory rather than its text.
+
+**Two published claims are corrected.** The unbounded `programs` concatenation does not go into a prompt: it is passed to `env.step(code, programs=...)` as the JavaScript preamble the generated code is evaluated against, on every step. The action agent's prompt is assembled separately from six to eight named base primitives plus `retrieve_skills`, capped at `k = min(count, 5)` — so the context window is bounded and the environment payload is not. And the versioning is not "old versions on disk but unreachable": on a name collision the *new* code is written under `{name}V{i}.js` while `{name}.js` keeps the oldest version, so the plainest filename holds the stalest content while `skills.json` and the vector row hold the newest.
+
+Everything else held: the write gate, the description-indexed retrieval that returns code, the discarded similarity scores, the hardcoded `Deposit useless items into the chest at` exclusion, and the one invariant the component checks — a bare `assert` that the Chroma count matches `len(self.skills)` on every write, with the fix in its message. `stack_source` moves from `seeded` to `reviewed`.
+
+**2026-07-27** — [`55e45a880755d0c8c66ca7fb5fe7962ac8974f89`](https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89) — first reading. Screened before reading; nothing was installed or run.

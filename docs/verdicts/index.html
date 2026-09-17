@@ -1291,13 +1291,34 @@ scope, correction, and time all have to be added.</li>
 href="../systems/voyager/"><code>voyager</code></a></h3>
 <ul>
 <li>Best idea: memory written only after the environment verifies the
-procedure worked.</li>
+procedure worked — the strongest write gate in this atlas, available
+because the memory is executable.</li>
+<li>Second idea: <strong>one signature for the automatic judge and the
+human one.</strong> <code>check_task_success</code> returns
+<code>(success, critique)</code> whether a model produced it or a person
+did, so <code>critic_agent_mode="manual"</code> turns the write gate
+into a human decision — <code>Success? (y/n)</code>, a critique, a
+confirmation loop — without a second code path. That return is what
+<code>add_new_skill</code> is gated on, which is why the report now
+carries <code>human_review</code>; the limit is that the person is asked
+about task success rather than shown the skill.</li>
 <li>Biggest risk: a frozen 2023 artifact that generalizes from a single
 verified run and keeps no failure memory.</li>
+<li>Second risk: the whole library is concatenated into the JavaScript
+preamble sent to the environment on <strong>every step</strong>, growing
+without bound — the model prompt is separately capped at five retrieved
+skills, so the cost lands where it is hardest to notice. And a rewrite
+writes the new code to <code>{name}V{i}.js</code> while
+<code>{name}.js</code> keeps the oldest version, so the plainest
+filename on disk holds the stalest content.</li>
 <li>Most reusable component: the verified write gate, and
 description-indexed / code-retrieved storage.</li>
-<li>Maturity impression: a 127-line memory subsystem inside a research
-agent; unmaintained since July 2023.</li>
+<li>Maturity impression: MIT, a 127-line memory subsystem inside a
+research agent, unmaintained since July 2023, with no test file anywhere
+in the tree — its one checked invariant is a bare <code>assert</code>
+that the vector count matches <code>len(self.skills)</code> on every
+write, with the fix in its message. One capability mark,
+<code>human_review</code>.</li>
 <li>Study when: your agent's actions have observable outcomes and
 competence is worth remembering, not just facts.</li>
 <li>Do not copy when: procedures will be executed outside a sandbox, or

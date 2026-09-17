@@ -115,7 +115,7 @@ verifies they worked and retrieved by natural-language description.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-27</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/MineDojo--Voyager" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -123,7 +123,7 @@ verifies they worked and retrieved by natural-language description.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -173,10 +173,21 @@ of the code, the description is embedded and searched, and the
 <em>code</em> is what gets returned. Programs make poor embedding
 targets; their descriptions make good ones.</p>
 <p>The limits are those of a 127-line research component: no scope, no
-provenance, no decay, a versioning scheme that keeps history on disk but
-makes it unreachable, unbounded prompt growth, and one hardcoded task
-exclusion standing in for any real "is this worth remembering?"
-policy.</p>
+provenance, no decay, a versioning scheme whose disk layout points at
+the wrong file, unbounded growth in the payload sent to the environment,
+and one hardcoded task exclusion standing in for any real "is this worth
+remembering?" policy.</p>
+<p><strong>Re-reading it at the same commit adds a mark and corrects two
+claims.</strong> <code>human_review</code> is earned on the write gate:
+<code>CriticAgent</code> takes a <code>mode</code> of <code>auto</code>
+or <code>manual</code>, and under <code>manual</code> the question that
+decides whether a skill is remembered is put to a person —
+<code>Success? (y/n)</code>, then a critique, then a confirmation loop —
+with <code>add_new_skill</code> called only inside
+<code>if info["success"]</code>. The default is <code>auto</code>, where
+a model answers the same question, and the two modes are the same seam.
+What the person adjudicates is the evidence rather than the skill's
+text, which is the honest limit to state beside the mark.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>The memory unit is a named program plus its generated
 description:</p>
@@ -310,17 +321,30 @@ def programs(self):
         programs += f&quot;{entry[&#39;code&#39;]}\n\n&quot;
     for primitives in self.control_primitives:
         programs += f&quot;{primitives}\n\n&quot;</code></pre>
-<p>Every stored skill plus every hand-written primitive is concatenated.
-This is what makes skills compose — a new program can call an old one —
-and it is also an <strong>unbounded context</strong>: the string grows
-with every skill learned, with no budget, no relevance filter, and no
-eviction. The <code>retrieve_skills</code> path is bounded at k=5; this
-path is not.</p>
+<p>Every stored skill plus every hand-written primitive is concatenated,
+and this is what makes skills compose — a new program can call an old
+one. It is unbounded: the string grows with every skill learned, with no
+budget, no relevance filter and no eviction.</p>
+<p><strong>Where it goes is not the prompt, which this report previously
+got wrong.</strong> <code>skill_manager.programs</code> is passed to
+<code>self.env.step(code, programs=...)</code>
+(<code>voyager.py:217</code>, <code>:241</code>) — it is the JavaScript
+preamble the generated code is evaluated against inside the Mineflayer
+bridge, sent on every step. The action agent's <em>prompt</em> is
+assembled separately in <code>action.py:91</code> from six to eight
+named base primitives plus the retrieved list, and that list is
+<code>retrieve_skills</code>, capped at <code>k = min(count, 5)</code>.
+So the model's context is bounded and the environment payload is not:
+the cost of a large library lands on every environment step rather than
+on the context window.</p>
 <h3 id="versioning-that-keeps-history-but-loses-access">Versioning that
 keeps history but loses access</h3>
 <p>On a name collision the manager deletes the Chroma entry, finds the
-next free <code>{name}V{i}.js</code>, writes the code there, and
-overwrites <code>skills[program_name]</code> in place:</p>
+next free <code>{name}V{i}.js</code>, writes <strong>the new
+code</strong> there, and overwrites <code>skills[program_name]</code> in
+place — so the file named after the skill keeps the <em>oldest</em>
+version and the newest code lives under a <code>V{i}</code> suffix,
+while <code>skills.json</code> and the vector index hold the newest:</p>
 <pre class="python"><code>if program_name in self.skills:
     self.vectordb._collection.delete(ids=[program_name])
     i = 2
@@ -413,6 +437,12 @@ Trust</h2>
 <ul>
 <li><strong>Empirical write gate</strong> — the strongest verification
 signal in the atlas, because the artifact is executable.</li>
+<li><strong>A human mode on that gate.</strong>
+<code>critic_agent_mode="manual"</code> routes the success question to a
+person, who answers, writes a critique and confirms in a loop before
+anything is remembered. It is the same seam the model answers under the
+default, which is the cheapest way to build a review surface: make the
+automatic judge and the human judge return the same tuple.</li>
 <li><strong>Retrieval key separated from payload.</strong></li>
 <li><strong>Authoritative store with a checked projection</strong>, and
 a loud consistency assertion.</li>
@@ -422,11 +452,16 @@ capability.</li>
 </ul>
 <p>Gaps:</p>
 <ul>
-<li><strong>Unbounded <code>programs</code> concatenation</strong>
-injected into prompts.</li>
+<li><strong>Unbounded <code>programs</code> concatenation</strong> sent
+to the environment on every step; the model prompt is capped at five
+retrieved skills.</li>
 <li><strong>No relevance threshold</strong> on retrieved skills.</li>
-<li><strong>Supersession without lineage</strong>; old versions are on
-disk but unreachable.</li>
+<li><strong>Supersession without lineage</strong>, and the disk layout
+inverts what a reader expects: the new code is written under
+<code>{name}V{i}.js</code> while <code>{name}.js</code> keeps the oldest
+version, so the file named after the skill is the one no longer in use.
+The retrievable copy — <code>skills.json</code> and the vector row — is
+always the newest.</li>
 <li><strong>No failure memory</strong>, so dead ends can be
 rediscovered.</li>
 <li><strong>No utility signal</strong>, so the library cannot
@@ -439,14 +474,25 @@ to confront.</li>
 </ul>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>No test suite for <code>SkillManager</code> was found in this
-checkout. The project's evaluation is the paper's Minecraft benchmark —
+<p>There is no test suite in this checkout at all — not for
+<code>SkillManager</code> and not for anything else;
+<code>find . -iname "*test*"</code> over the tree returns no Python test
+file. The project's evaluation is the paper's Minecraft benchmark —
 tech-tree milestones, distance travelled, items unlocked — which is a
 task-completion measure, not a memory-quality measure. Nothing evaluates
 retrieval precision over the skill library, or how often a retrieved
 skill is actually reused versus ignored.</p>
-<p>The repository has been unchanged since July 2023, so this report
-describes an artifact, not a maintained project.</p>
+<p>The one assertion the write path does carry is worth naming because
+it is the kind most repositories skip:
+<code>assert self.vectordb._collection.count() == len(self.skills), "vectordb is not synced with skills.json"</code>
+runs on every successful write, so a divergence between the
+authoritative JSON and its vector projection is loud rather than silent.
+It is a bare <code>assert</code>, which <code>python -O</code> removes,
+and it is the only invariant in the component that is checked at
+all.</p>
+<p>The repository has been unchanged since July 2023 — the pin is still
+the tip of <code>main</code>, whose last commit is 27 July 2023 — so
+this report describes an artifact, not a maintained project.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
@@ -462,15 +508,21 @@ memory.</strong> Retry with critique; store only outcomes.</li>
 become primitives for new ones.</li>
 <li><strong>Assert cross-store consistency</strong> with an error
 message that states the fix.</li>
+<li><strong>Give the automatic judge and the human judge one
+signature.</strong> <code>check_task_success</code> returns
+<code>(success, critique)</code> whether a model or a person produced
+it, so switching to human adjudication is a constructor argument rather
+than a second code path.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>Unbounded prompt growth</strong> from concatenating the
-entire library.</li>
+<li><strong>Unbounded growth in the environment payload</strong> from
+concatenating the entire library on every step, and a disk layout where
+the file named after a skill holds its oldest version.</li>
 <li><strong>Top-k with no score threshold</strong> for artifacts that
 will be executed.</li>
-<li><strong>Version files without lineage</strong> — history retained,
-history unreachable.</li>
+<li><strong>Version files without lineage</strong>, and a naming scheme
+where the un-suffixed file is the stale one.</li>
 <li><strong>Discarding failures entirely.</strong></li>
 <li><strong>A hardcoded exclusion</strong> in place of a
 memory-worthiness policy.</li>
@@ -489,8 +541,11 @@ memory.</li>
 <ul>
 <li>The retrieval path; add a score threshold, metadata filters, and a
 token budget before injecting executable artifacts.</li>
-<li>The versioning scheme; add explicit supersession with lineage.</li>
-<li>The unbounded <code>programs</code> property.</li>
+<li>The versioning scheme; add explicit supersession with lineage, and
+do not let the plainest filename hold the oldest content.</li>
+<li>The unbounded <code>programs</code> property — and note that its
+cost is paid on every environment step rather than in the context
+window, which is the harder kind of cost to notice.</li>
 <li>Anything at all without a sandbox, if stored code will be executed
 in a setting where inputs are not trusted.</li>
 </ul>
@@ -524,9 +579,58 @@ rarely as cleanly observable?</li>
 <li>Prompts: <code>voyager/prompts/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89"><code class="commit-id" title="55e45a880755d0c8c66ca7fb5fe7962ac8974f89">55e45a88…</code></a>
+— re-read at the same commit, which is still the tip of
+<code>main</code>; the last commit upstream is 27 July 2023. Nothing
+could have changed, so this reading audited the first one against the
+code. Screened again: no auto-run surface, one build-time execution path
+(<code>setup.py</code>), four unpinned manifests, nothing inside the
+seven-day cooldown; nothing was installed and nothing was run. MIT, and
+<code>find . -iname "*test*"</code> returns no test file anywhere in the
+tree.</p>
+<p><strong><code>human_review</code> is earned, and the report
+previously carried no marks.</strong> <code>CriticAgent</code>'s
+<code>mode</code> is asserted to be <code>auto</code> or
+<code>manual</code>; under <code>manual</code>,
+<code>check_task_success</code> calls
+<code>human_check_task_success</code>, which asks a person
+<code>Success? (y/n)</code>, takes a free-text critique and loops until
+they confirm. That return value is <code>info["success"]</code>, and
+<code>add_new_skill</code> runs only inside
+<code>if info["success"]</code> — so in that mode a person decides
+whether a skill enters the library, before it does. The default is
+<code>auto</code>, where a model answers the same question through the
+same seam, which is the design worth copying: one signature for the
+automatic judge and the human one. The limit stated beside the mark is
+that the person is asked about task success rather than shown the skill,
+so what is adjudicated is the evidence for the memory rather than its
+text.</p>
+<p><strong>Two published claims are corrected.</strong> The unbounded
+<code>programs</code> concatenation does not go into a prompt: it is
+passed to <code>env.step(code, programs=...)</code> as the JavaScript
+preamble the generated code is evaluated against, on every step. The
+action agent's prompt is assembled separately from six to eight named
+base primitives plus <code>retrieve_skills</code>, capped at
+<code>k = min(count, 5)</code> — so the context window is bounded and
+the environment payload is not. And the versioning is not "old versions
+on disk but unreachable": on a name collision the <em>new</em> code is
+written under <code>{name}V{i}.js</code> while <code>{name}.js</code>
+keeps the oldest version, so the plainest filename holds the stalest
+content while <code>skills.json</code> and the vector row hold the
+newest.</p>
+<p>Everything else held: the write gate, the description-indexed
+retrieval that returns code, the discarded similarity scores, the
+hardcoded <code>Deposit useless items into the chest at</code>
+exclusion, and the one invariant the component checks — a bare
+<code>assert</code> that the Chroma count matches
+<code>len(self.skills)</code> on every write, with the fix in its
+message. <code>stack_source</code> moves from <code>seeded</code> to
+<code>reviewed</code>.</p>
 <p><strong>2026-07-27</strong> — <a
 href="https://github.com/MineDojo/Voyager/commit/55e45a880755d0c8c66ca7fb5fe7962ac8974f89"><code class="commit-id" title="55e45a880755d0c8c66ca7fb5fe7962ac8974f89">55e45a88…</code></a>
-— first reading.</p>
+— first reading. Screened before reading; nothing was installed or
+run.</p>
         </article>
       </div>
     </main>
