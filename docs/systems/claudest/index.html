@@ -110,14 +110,14 @@ a removable entry, and verifies each deletion actually happened.</p>
               <strong>gupsammy/claudest</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/gupsammy/claudest/commit/1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9" title="1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9">
+            <a class="meta-pill revision-pill" href="https://github.com/gupsammy/claudest/commit/9088bf8d355551cd2d86a3a06d7f2bd46c712a87" title="9088bf8d355551cd2d86a3a06d7f2bd46c712a87">
               <span>Analyzed revision</span>
-              <code>1c634ac0…</code>
+              <code>9088bf8d…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-17</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/gupsammy--claudest" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -242,7 +242,7 @@ completion condition <code>:133</code>),
 (the batch and poison-pill contract <code>:1-21</code>, the selection
 predicate <code>:40</code>, the success and failure updates
 <code>:52-59</code>), <code>hooks/import_conversations.py</code>
-<code>:391</code>.</p>
+<code>:410</code>.</p>
 <p><strong>Inject</strong> — <code>hooks/memory-context.py</code> (the
 two selection algorithms <code>:1-16</code>).</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
@@ -317,17 +317,26 @@ part</strong> and is worth separating into its three independent guards:
 did not happen cannot be marked done. Any one of the three alone would
 be insufficient; together they are the most careful treatment of
 agent-initiated memory deletion in this atlas.</p>
-<p><strong>The risk is the test count.</strong> Two test files against
-8,800 lines of hooks that run on every session start and edit the user's
-<code>CLAUDE.md</code> and <code>MEMORY.md</code>. The protocol is
+<p><strong>The risk is what the tests do not reach.</strong> The suite
+is substantial — twenty test files carrying 476 test functions over
+8,800 lines of plugin Python — and <code>tests/claude-memory/</code>
+alone holds seventeen of those files and 414 of those functions,
+covering parsing, search, summarisation, the sync hook, security and the
+import pipeline. The consolidation protocol is the part none of it
+touches: exactly one test file so much as mentions consolidation, and
+what it tests is config writing. So the mechanism that edits the user's
+<code>CLAUDE.md</code> and <code>MEMORY.md</code> on every session is
 specified in prose for an LLM to follow, and prose is not enforced — the
 ordering rule, the removal requirement and the verification step are all
 instructions the model may skip under pressure, with nothing failing
-loudly if it does.</p>
+loudly if it does. <code>grep -rli consolidat tests/</code> is the
+search behind that, and it returns one path.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>No paper, no benchmark, no committed results.</strong> Two
-test files at the repository root against eight plugins.</p>
+<p><strong>No paper, no benchmark, no committed results</strong> — but
+the unit tests are not thin: twenty files and 476 test functions,
+seventeen files and 414 functions of them under
+<code>tests/claude-memory/</code>.</p>
 <p>The verification step inside <code>SKILL.md</code> is, in effect, a
 runtime test the agent performs on itself — <code>Glob</code> after
 <code>trash</code>, and the completion condition is stated as a
@@ -384,8 +393,12 @@ prose.</strong> The ordering rule, the removal requirement and the
 verification step are instructions to a model, and nothing fails loudly
 when they are skipped. The <code>Glob</code> check is scriptable; so is
 "did this run produce any removals".</li>
-<li><strong>Do not run 8,800 lines of session hooks on two test
-files</strong> when those hooks edit the user's memory files.</li>
+<li><strong>Count the tests against the mechanism, not against the
+repository.</strong> 476 test functions is a healthy number and it is
+the wrong number to be reassured by here: the one mechanism that edits
+the user's memory files on every session is the one no test drives. A
+suite can be large and still leave the dangerous path uncovered, and the
+total hides it.</li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>Worth adopting if you use Claude Code and want session history
@@ -426,7 +439,7 @@ the <code>Glob</code> verification and its stated failure mode
 contract <code>:1-21</code>, <code>BATCH_SIZE</code> <code>:21</code>,
 the selection <code>:40</code>, the success and poison-pill updates
 <code>:52-59</code>), <code>hooks/import_conversations.py</code>
-(<code>:391</code>)</p>
+(<code>:410</code>)</p>
 <p><strong>Injection</strong> —
 <code>plugins/claude-memory/hooks/memory-context.py</code> (the two
 selection algorithms and the fallthrough <code>:1-16</code>),
@@ -441,6 +454,43 @@ selection algorithms and the fallthrough <code>:1-16</code>),
 <code>hook_executions</code> <code>:190</code>,
 <code>token_import_log</code> <code>:200</code>)</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/gupsammy/claudest/commit/9088bf8d355551cd2d86a3a06d7f2bd46c712a87"><code class="commit-id" title="9088bf8d355551cd2d86a3a06d7f2bd46c712a87">9088bf8d…</code></a>
+— re-read two commits past the previous pin, both memory-scoping fixes.
+<code>SKILL.md</code>, <code>memory-auditor.md</code>,
+<code>backfill_summaries.py</code> and <code>memory-context.py</code>
+are byte-identical by blob sha, so the approval gate, the three deletion
+guards and the injection paths are unchanged and
+<code>human_review</code> stands. What moved is project identity. The
+INSERT branch of <code>import_project</code> had used
+<code>ON CONFLICT(path) DO UPDATE SET key</code>, so — in the commit's
+own words — <em>"a brand-new directory whose lossy fallback path matched
+an existing project silently stole that project's row"</em>; it now
+pre-checks the path and falls back to the encoded directory key before a
+plain INSERT. Four committed cases arrived with it, and one pairs its
+negative with a control:
+<code>test_new_project_fallback_collision_does_not_rekey_other_project</code>
+asserts the existing row's path is unchanged while the new project lands
+under its own key, and
+<code>test_trusted_cwd_renames_existing_project</code> asserts a rename
+still happens when the cwd is trusted, so the guard cannot pass by
+refusing everything. These assert about a write decision rather than a
+retrieval, so they do not move <code>negative_eval</code>. The companion
+commit cut <code>BACKUP_RETENTION</code> from 10 to 3 and added
+<code>BACKUP_MIN_INTERVAL_HOURS = 24</code>. One anchor moved,
+<code>import_conversations.py</code>
+<code>:391</code>→<code>:410</code>, and was re-verified at the new pin.
+One published claim is corrected in two places: this report said “two
+test files”, and the repository carried twenty test files and 470 test
+functions at the previous pin, 476 at this one — seventeen files and 414
+functions of them under <code>tests/claude-memory/</code>. The
+criticism's substance survives the correction and sharpens:
+<code>grep -rli consolidat tests/</code> returns exactly one path, and
+what it tests is config writing, so the consolidation protocol remains
+the part of this system that nothing exercises. Screened again before
+reading: one auto-run surface, two build-time execution surfaces, one
+unpinned surface; <code>CLAUDE.md</code> is addressed to a reading agent
+and was treated as data. Nothing was installed and nothing was run.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/gupsammy/claudest/commit/1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9"><code class="commit-id" title="1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9">1c634ac0…</code></a>
 — first reading, covering the <code>claude-memory</code> plugin of the
