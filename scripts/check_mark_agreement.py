@@ -22,9 +22,23 @@ resolves — either the mark is wrong or the paragraph is, and the build cannot
 tell which. That is the point: this check does not decide, it refuses to let a
 report ship while it disagrees with itself.
 
-One thing is checked, against the body only: **a mark the prose withholds and the
-frontmatter awards** — "`scope_enforced` is withheld", "the `tombstone` mark is
-not awarded", "withholds the `trust_state` mark".
+Two things are checked, against the body only, and they are the same assertion in
+opposite directions:
+
+1. **A mark the prose withholds and the frontmatter awards** — "`scope_enforced`
+   is withheld", "the `tombstone` mark is not awarded", "withholds the
+   `trust_state` mark".
+2. **A mark the prose awards and the frontmatter lacks** — "earns the
+   `tombstone` mark", "the `audit_log` mark stands". This is what a re-score
+   that *removes* a mark leaves behind, and it is the more dangerous direction:
+   a reader who trusts the sentence credits the system with a capability no
+   surface of this site counts. The corpus writes this phrasing 69 times across
+   53 reports, and every one of them agreed when the branch was added, so it
+   ships clean rather than with a backlog — unlike the denial branch, which
+   found four defects on its first run.
+
+Both branches require the flag name beside a verb applied *to the mark*. Neither
+counts anything, for the reason the next paragraph gives.
 
 A *stated total* — "Five marks." — was tried and removed, and the reason is
 worth keeping. "N marks" in this corpus means four different things: the marks
@@ -90,6 +104,32 @@ DENIAL = re.compile(
     re.I | re.S,
 )
 
+#: Award stated *about a mark*, the mirror of DENIAL. Every branch names the flag
+#: and a verb of award applied to it; none of them counts marks, because "N marks"
+#: means four different things in this corpus and the branch that tried was
+#: removed for accusing correct prose.
+#:
+#: `earns the X mark` deliberately requires "the", so it cannot match `earns no X
+#: mark` — which DENIAL already owns. Likewise `the X mark is awarded` cannot
+#: reach `the X mark is not awarded`, because the negation sits between.
+AWARD = re.compile(
+    rf"earns?\s+the\s+`?(?P<a1>{FLAG_ALT})`?\s+mark"
+    rf"|carr(?:y|ies)\s+the\s+`?(?P<a2>{FLAG_ALT})`?\s+mark"
+    rf"|awards?\s+the\s+`?(?P<a3>{FLAG_ALT})`?\s+mark"
+    rf"|the\s+`?(?P<a4>{FLAG_ALT})`?\s+mark\s+(?:is|was)\s+(?:earned|awarded|granted)"
+    rf"|the\s+`?(?P<a5>{FLAG_ALT})`?\s+mark\s+stands"
+    rf"|`?(?P<a6>{FLAG_ALT})`?\s+(?:is|was)\s+earned",
+    re.I | re.S,
+)
+
+#: A modal or negation immediately before an award phrase makes it hypothetical
+#: or denied — "a stored status **would** earn the `trust_state` mark, but this is
+#: a score" is correct writing on a report that does not carry it. No such
+#: sentence exists in the corpus today; the guard is here so the branch stays
+#: quiet when one is written. Variable-width lookbehind is unavailable in `re`,
+#: so the preceding characters are inspected instead.
+HEDGE = re.compile(r"\b(?:would|could|might|may|should|if|unless|had|to|not|no|never)\s+$", re.I)
+
 #: Asterisks and code ticks sit inside these phrases — "**`negative_eval` is
 #: withheld**" — and are stripped before matching. Underscores are *not*, because
 #: four of the seven flag names contain one and stripping it turns `trust_state`
@@ -116,15 +156,27 @@ def problems_in(slug: str, text: str) -> list[str]:
     if marks is None:
         return []
     body = body_of(text)
+    plain = MARKUP.sub("", body)
     found = []
 
-    for match in DENIAL.finditer(MARKUP.sub("", body)):
+    for match in DENIAL.finditer(plain):
         flag = next(g for g in match.groups() if g)
         if flag.lower() in marks:
             phrase = " ".join(match.group(0).split())
             found.append(
                 f"{slug}: the body says {phrase!r}, but the frontmatter awards {flag.lower()}"
             )
+
+    for match in AWARD.finditer(plain):
+        flag = next(g for g in match.groups() if g)
+        if flag.lower() in marks:
+            continue
+        if HEDGE.search(plain[max(0, match.start() - 24):match.start()]):
+            continue
+        phrase = " ".join(match.group(0).split())
+        found.append(
+            f"{slug}: the body says {phrase!r}, but the frontmatter does not carry {flag.lower()}"
+        )
     return found
 
 
@@ -157,6 +209,25 @@ def self_test() -> int:
             '  tombstone: "a malformed tombstone is refused | v.js | x | tests/"\n---\nProse.\n',
             0,
         ),
+        # --- the award direction: a mark the prose grants and frontmatter lacks ---
+        # What a re-score that removes a mark leaves behind.
+        ("bad-award", report("audit_log", "The dedup path consults it, so it earns the `tombstone` mark."), 1),
+        ("bad-award-stands", report("audit_log", "The `bitemporal` mark stands on that reading."), 1),
+        ("bad-award-passive", report("audit_log", "The `scope_enforced` mark is awarded here."), 1),
+        ("bad-award-bare", report("audit_log", "The predicate reaches the query, so `scope_enforced` is earned."), 1),
+        # The same sentences about a mark the report DOES carry: plain agreement,
+        # and the common case — 37 of them in this corpus.
+        ("ok-award", report("tombstone", "The dedup path consults it, so it earns the `tombstone` mark."), 0),
+        ("ok-award-unticked", report("tombstone", "It earns the tombstone mark."), 0),
+        # Hypothetical award on a report that does not carry the mark: correct
+        # writing, and the false positive this branch must not produce.
+        ("ok-award-modal", report("audit_log", "A stored status would earn the `trust_state` mark, but this is a float."), 0),
+        ("ok-award-infinitive", report("audit_log", "That is not enough to earn the `human_review` mark."), 0),
+        # DENIAL owns this phrasing; the award branch must not also claim it.
+        ("ok-earns-no", report("audit_log", "An event cannot be false, so it earns no `tombstone` mark."), 0),
+        ("ok-not-awarded", report("audit_log", "The `tombstone` mark is not awarded here."), 0),
+        # `## History` records past states on purpose, in this direction too.
+        ("ok-award-history", report("audit_log", "Prose.\n## History\n\n**2026-01-01** — it earns the `tombstone` mark."), 0),
     ]
     failures = 0
     for name, text, expected in cases:
@@ -191,7 +262,8 @@ def main(root: str) -> int:
             print(f"  {problem}", file=sys.stderr)
         print(
             "A re-score updates `capabilities:`; the sentence that argued the other "
-            "way has to move with it. Fix whichever side is wrong.",
+            "way has to move with it, whichever direction the score moved. Fix "
+            "whichever side is wrong.",
             file=sys.stderr,
         )
         return 1
