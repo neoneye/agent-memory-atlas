@@ -7,9 +7,9 @@ page_kind: system
 source_name: "TriliumNext/Trilium"
 source_url: https://github.com/TriliumNext/Trilium
 archive_name: "TriliumNext--Trilium"
-revision: 2d2c2108ed464d241c8b0e9438d8e19a35cf62be
-revision_url: https://github.com/TriliumNext/Trilium/commit/2d2c2108ed464d241c8b0e9438d8e19a35cf62be
-analyzed_at: 2026-09-07
+revision: d78999ffc9f887437475fa1bd3417684b37af935
+revision_url: https://github.com/TriliumNext/Trilium/commit/d78999ffc9f887437475fa1bd3417684b37af935
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "sqlite"
 stack_retrieval: "lexical"
@@ -372,7 +372,7 @@ system; the assistant's memory is the chat note.
   `icon_tools.ts`, `skill_tools.ts`
 - `assets/llm/skills/` — four sheets; `assets/schema.sql` — `revisions`
   with `source` (46-52); `becca/entities/brevision.ts` (34-67),
-  `bnote.ts` — `saveRevision` (1550)
+  `bnote.ts` — `saveRevision` (1583)
 
 **Server**
 
@@ -411,5 +411,11 @@ system; the assistant's memory is the chat note.
   no other tool records the actor.
 
 ## History
+
+**2026-09-17** — [`d78999ffc9f887437475fa1bd3417684b37af935`](https://github.com/TriliumNext/Trilium/commit/d78999ffc9f887437475fa1bd3417684b37af935) — re-read 655 commits on, and the memory mechanism did not move. Seventeen of the eighteen line anchors name the same code at the new pin, including every `saveRevision({ source: "llm" })` call at 119, 162 and 222, the `revisions` table's `source TEXT DEFAULT 'auto' NOT NULL` at `schema.sql:52`, `brevision.ts`'s `row.source || "auto"` fallback at 67, and the whole tool registry. One anchor moved: `bnote.ts`'s `saveRevision` 1550→1583. Marks unchanged at none.
+
+The `services/llm` tree hash does differ between the pins, which is worth recording because the per-file check said otherwise: eight sampled files were byte-identical while the directory had changed. The difference is `providers/local.ts` (+73), its spec (+24) and `model_prices.json` — the local provider and a price table, not the memory path. A tree comparison is what caught it; a file sample would have reported the subsystem unchanged.
+
+All three of the appendix's recorded searches were re-run and hold: `embedding` still matches only provider option names in `openai.ts`, `google.ts`, `base_provider.ts` and their specs with no vector index; `saveRevision` in `note_tools.spec.ts` is still stubbed to a no-op at 39 and 163 and still never asserted, so the revision source remains untested; and `saveRevision` across `tools/*.ts` is still three hits, all in `note_tools.ts`, so no other tool records the actor. Screened again before reading: three auto-run surfaces — `.envrc`, `.mcp.json` and `.vscode/settings.json` — four build-time execution surfaces, three unpinned surfaces, nineteen dependency files inside the seven-day cooldown; `CLAUDE.md` is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run.
 
 **2026-09-07** — [`2d2c2108ed464d241c8b0e9438d8e19a35cf62be`](https://github.com/TriliumNext/Trilium/commit/2d2c2108ed464d241c8b0e9438d8e19a35cf62be) — first reading.
