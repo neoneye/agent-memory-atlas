@@ -8,6 +8,18 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-17-the-instrument-that-narrowed-the-thing-it-measured.md](2026-09-17-the-instrument-that-narrowed-the-thing-it-measured.md) —
+  three of four re-reads in one pass had published a count or an absence the
+  repository did not support, each measured through a filter nobody knew was
+  there. Ori Mnemos's `.gitignore` allowlist hid 21 of 57 test files so the
+  atlas counted 35; Claudest's "two test files" stood against twenty files and
+  470 tests, and the criticism it supported got stronger once recomputed against
+  the mechanism instead of the repository; AgenticTrading's `negative_eval`
+  search covered two directories and missed the 1,796-line suite inside the
+  memory package. Plus five of SillyTavern's twenty-one line anchors moving
+  under an unchanged mechanism, and two false negatives from this pass's own
+  tooling — a positive control stripped by `## History`, and a zsh `for path`
+  loop that emptied `$PATH` and made three files compare IDENTICAL.
 - [2026-09-17-the-sentinel-that-means-no-constraint.md](2026-09-17-the-sentinel-that-means-no-constraint.md) —
   five systems read in one pass shared a defect: a parameter whose zero, empty
   list or null means *no constraint* is indistinguishable from the parameter
