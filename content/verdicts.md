@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 567 reports.**
+**This page covers all 568 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4904,3 +4904,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT OR Apache-2.0, 269,864 lines of Rust across 30 crates, 236 commits since June 2026, 3,809 test functions in 215 files, bindings for Python, TypeScript, Java, iOS and C with a cross-SDK harness; two capability marks.
 - Study when: you are porting a system and want a model for recording parity divergences, or you need an authorization check that new entry points cannot forget.
 - Do not copy when: you need the provenance ledger the Python implementation carries — there is no counterpart here — or you run the Python-parity search route in a default build without reading what its telemetry payload carries, which includes the caller's query text.
+
+### [`kipi-system`](../systems/kipi-system/)
+- Best idea: **measure whether the human review is real.** Every assistant-proposed decision records the operator's disposition — approved, modified, or rejected — and `sycophancy-harness.py` computes the approval ratio across the decision log, alerting at 0.7 over five or more tagged decisions. Recording an approval is ordinary; treating a high approval rate as a defect is not.
+- Second idea: **do not ask the model to audit the failure mode it has.** The harness runs *after* the LLM audit agent and re-derives the number with deterministic checks "the agent cannot reliably perform (because the agent itself is sycophantic)". Its standalone mode was extracted because the check had only ever run behind a pipeline artifact "while an instance sat at pi~=0.88 with nothing able to notice".
+- Third idea: **an absence should say why it is absent.** A source retired in its leading fifteen lines is skipped before parsing and recorded in `retired_sources` with the deciding reference, "so a consumer can tell empty-because-retired from empty-because-none" — and no warning is emitted, because warnings mean a missing file. The window is fifteen lines because scanning the body "would let a canonical file that DISCUSSES a retirement retire itself".
+- Fourth idea: **separate certainty from origin.** `confidence` is a number, `provenance` is a six-value enum, and the scar says why both are needed: a model-inferred guess and a founder-stated fact were byte-indistinguishable at recall. A score cannot carry that distinction.
+- Biggest risk: **the permission allowlist grants `Bash(python3:*)`, `Bash(node:*)` and `Bash(npx:*)`** while the deny list blocks `curl | bash`, `sudo`, `rm -rf` and destructive git. An interpreter on the allow list reaches everything the deny list forbids, so the deny list documents intent and catches accidents rather than constraining. Separately, eight of the eleven SessionStart commands end in `2>/dev/null || true`, so a memory surface that stops working stops silently.
+- Most reusable component: `memory_conventions.py` — one vocabulary table imported by both the write-side hook and the sweep, written after the same enum was hardcoded in two lints that shipped different vocabularies, where "nothing collided, because their file scopes differ, so the drift was invisible rather than absent".
+- Maturity impression: MIT, 218,595 lines of Python across 622 files, 1,222 commits since March 2026, 228 test files and 3,536 test functions, packaged as a plugin with an MCP server and launchd timers; three capability marks.
+- Study when: you need a governance mechanism that can fail a self-report, or a worked example of a markdown memory whose frontmatter conventions are enforced at write time rather than asserted in a style guide.
+- Do not copy when: you need an as-of read — `as_of` is a real validity axis here with nothing that queries the store at a past date — or a record of what was deleted, since deletion is deliberately reserved for memories that were never true.

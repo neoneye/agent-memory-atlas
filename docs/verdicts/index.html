@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 567 reports.</strong></p>
+<p><strong>This page covers all 568 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21583,6 +21583,63 @@ points cannot forget.</li>
 implementation carries — there is no counterpart here — or you run the
 Python-parity search route in a default build without reading what its
 telemetry payload carries, which includes the caller's query text.</li>
+</ul>
+<h3 id="kipi-system"><a
+href="../systems/kipi-system/"><code>kipi-system</code></a></h3>
+<ul>
+<li>Best idea: <strong>measure whether the human review is
+real.</strong> Every assistant-proposed decision records the operator's
+disposition — approved, modified, or rejected — and
+<code>sycophancy-harness.py</code> computes the approval ratio across
+the decision log, alerting at 0.7 over five or more tagged decisions.
+Recording an approval is ordinary; treating a high approval rate as a
+defect is not.</li>
+<li>Second idea: <strong>do not ask the model to audit the failure mode
+it has.</strong> The harness runs <em>after</em> the LLM audit agent and
+re-derives the number with deterministic checks "the agent cannot
+reliably perform (because the agent itself is sycophantic)". Its
+standalone mode was extracted because the check had only ever run behind
+a pipeline artifact "while an instance sat at pi~=0.88 with nothing able
+to notice".</li>
+<li>Third idea: <strong>an absence should say why it is absent.</strong>
+A source retired in its leading fifteen lines is skipped before parsing
+and recorded in <code>retired_sources</code> with the deciding
+reference, "so a consumer can tell empty-because-retired from
+empty-because-none" — and no warning is emitted, because warnings mean a
+missing file. The window is fifteen lines because scanning the body
+"would let a canonical file that DISCUSSES a retirement retire
+itself".</li>
+<li>Fourth idea: <strong>separate certainty from origin.</strong>
+<code>confidence</code> is a number, <code>provenance</code> is a
+six-value enum, and the scar says why both are needed: a model-inferred
+guess and a founder-stated fact were byte-indistinguishable at recall. A
+score cannot carry that distinction.</li>
+<li>Biggest risk: <strong>the permission allowlist grants
+<code>Bash(python3:*)</code>, <code>Bash(node:*)</code> and
+<code>Bash(npx:*)</code></strong> while the deny list blocks
+<code>curl | bash</code>, <code>sudo</code>, <code>rm -rf</code> and
+destructive git. An interpreter on the allow list reaches everything the
+deny list forbids, so the deny list documents intent and catches
+accidents rather than constraining. Separately, eight of the eleven
+SessionStart commands end in <code>2&gt;/dev/null || true</code>, so a
+memory surface that stops working stops silently.</li>
+<li>Most reusable component: <code>memory_conventions.py</code> — one
+vocabulary table imported by both the write-side hook and the sweep,
+written after the same enum was hardcoded in two lints that shipped
+different vocabularies, where "nothing collided, because their file
+scopes differ, so the drift was invisible rather than absent".</li>
+<li>Maturity impression: MIT, 218,595 lines of Python across 622 files,
+1,222 commits since March 2026, 228 test files and 3,536 test functions,
+packaged as a plugin with an MCP server and launchd timers; three
+capability marks.</li>
+<li>Study when: you need a governance mechanism that can fail a
+self-report, or a worked example of a markdown memory whose frontmatter
+conventions are enforced at write time rather than asserted in a style
+guide.</li>
+<li>Do not copy when: you need an as-of read — <code>as_of</code> is a
+real validity axis here with nothing that queries the store at a past
+date — or a record of what was deleted, since deletion is deliberately
+reserved for memories that were never true.</li>
 </ul>
         </article>
       </div>

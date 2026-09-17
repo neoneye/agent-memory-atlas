@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A markdown memory for a founder's
+operating system whose decision log records who proposed each decision
+and what the operator did with it — and whose deterministic harness
+computes how often the operator simply approved, because the agent
+auditing that cannot be trusted to audit itself.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Kipi
+System — Agent Memory Atlas">
+    <meta property="og:description" content="A markdown memory for a
+founder's operating system whose decision log records who proposed each
+decision and what the operator did with it — and whose deterministic
+harness computes how often the operator simply approved, because the
+agent auditing that cannot be trusted to audit itself.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Kipi
+System — Agent Memory Atlas">
+    <meta name="twitter:description" content="A markdown memory for a
+founder's operating system whose decision log records who proposed each
+decision and what the operator did with it — and whose deterministic
+harness computes how often the operator simply approved, because the
+agent auditing that cannot be trusted to audit itself.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Kipi System — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Kipi System",
+      "description": "A markdown memory for a founder's operating system whose decision log records who proposed each decision and what the operator did with it \u2014 and whose deterministic harness computes how often the operator simply approved, because the agent auditing that cannot be trusted to audit itself.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">It measures whether its own human oversight
+is real</p>
+          <h1>Kipi System</h1>
+          <p class="document-deck">A markdown memory for a founder's
+operating system whose decision log records who proposed each decision
+and what the operator did with it — and whose deterministic harness
+computes how often the operator simply approved, because the agent
+auditing that cannot be trusted to audit itself.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/assafkip/kipi-system">
+              <span>Source</span>
+              <strong>assafkip/kipi-system</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/assafkip/kipi-system/commit/30b51f1f11e76352c90b12ea198d037688105f45" title="30b51f1f11e76352c90b12ea198d037688105f45">
+              <span>Analyzed revision</span>
+              <code>30b51f1f…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/assafkip--kipi-system" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>assafkip--kipi-system</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (40%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Kipi System is an MIT-licensed personal operating system for a
+founder — 218,595 lines of Python across 622 files, 1,222 commits since
+March 2026, 228 test files and 3,536 test functions — packaged as a
+Claude Code plugin with an MCP server, session-start hooks, committed
+git hooks and a fleet of instances cloned from one skeleton. The memory
+is markdown files with frontmatter, plus JSON and JSONL ledgers.</p>
+<p>It is also, in part, the author's actual business memory:
+relationships, a founder profile, market intelligence. This report
+describes the machinery and not its contents.</p>
+<p>Three marks, and the middle one is the reason to read the repository.
+Most systems in this corpus that earn <code>human_review</code> have a
+place where a person approves something. This one has that — every
+decision carries an origin tag, and an assistant-proposed decision
+records what the operator did with it: approved, modified, or rejected.
+Then it does something the corpus has not shown before: it computes how
+often the answer was <em>approved</em>, and treats a high number as a
+defect.</p>
+<p><code>sycophancy-harness.py</code> runs <strong>after</strong> the
+agent that audits for sycophancy, and says why:</p>
+<blockquote>
+<p>Validates the agent's output and runs independent deterministic
+checks the agent cannot reliably perform (because the agent itself is
+sycophantic).</p>
+</blockquote>
+<p>It alerts when the approval ratio reaches 0.7 across at least five
+tagged decisions, citing <a
+href="https://arxiv.org/abs/2602.19141">Chandra et al. (2026)</a> on
+sycophancy and delusional spiraling. And the commit that made it
+runnable on its own carries the measurement that forced it: the check
+<em>"only ever ran behind /q-morning's bus file while an instance sat at
+pi~=0.88 with nothing able to notice."</em></p>
+<p>An oversight mechanism that measures whether the oversight is real,
+finds its own rate at 0.88, and publishes the number, is a different
+kind of artifact from a review queue.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory here is files a person and an agent both edit, so every
+mechanism is either a gate on the write or a filter on what gets
+assembled for the read.</p>
+<p>Four independent axes ride on a memory file's frontmatter, and
+keeping them independent is the design:</p>
+<ul>
+<li><code>confidence</code>, a number in zero to one;</li>
+<li><code>provenance</code>, one of <code>explicit_statement</code>,
+<code>inferred</code>, <code>corrected</code>, <code>validated</code>,
+<code>observed</code>, <code>imported</code>;</li>
+<li><code>status</code>, <code>current</code> or
+<code>superseded</code>, with <code>superseded_by</code> and
+<code>supersedes</code> naming the other memory by slug;</li>
+<li><code>as_of</code>, the date the claim was actually true.</li>
+</ul>
+<p>The reason for the first two is recorded as a scar: <em>"kipi
+auto-memory stored facts with no certainty signal, so a model-inferred
+guess and a founder-stated fact were byte-indistinguishable at
+recall."</em> Those are different failures — one is uncertainty, the
+other is origin — and collapsing them into a single score loses the
+distinction that matters when the memory turns out to be wrong.</p>
+<p>A fifth axis is derived rather than declared: <strong>earned
+trust</strong>, scored from an append-only log of how each recalled
+memory actually performed.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — The write side is a blocking gate on frontmatter; the read side splits into a digest that drops retired sources and a set of session-start hooks that annotate rather than withhold.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: The write side is a blocking gate on frontmatter; the read side splits into a digest that drops retired sources and a set of session-start hooks that annotate rather than withhold.
+flowchart TD
+  AGENT[&quot;Agent edits a memory file&quot;]
+  HOOK[&quot;PostToolUse validator&lt;br/&gt;self-scoped to the memory dir&quot;]
+  BLOCK[&quot;exit 2, write blocked&lt;br/&gt;confidence outside 0 to 1, or unknown provenance&quot;]
+  TABLE[(&quot;One vocabulary table&lt;br/&gt;imported by the gate and the sweep&quot;)]
+  FILE[(&quot;Memory file&lt;br/&gt;confidence, provenance, status, as_of, decay&quot;)]
+  OPER[&quot;Operator dispositions a decision&lt;br/&gt;APPROVED, MODIFIED or REJECTED&quot;]
+  DEC[(&quot;Canonical decision log&quot;)]
+  PI[&quot;sycophancy-harness&lt;br/&gt;runs after the audit agent&quot;]
+  ALERT[&quot;Alert at ratio 0.7&lt;br/&gt;over five or more tagged decisions&quot;]
+  MCP[&quot;MCP morning digest&quot;]
+  RET{&quot;first fifteen lines retire it&quot;}
+  DROP[&quot;Skipped, and recorded in retired_sources&lt;br/&gt;with the deciding reference&quot;]
+  PARSE[&quot;Parsed into the digest&quot;]
+  SURF[&quot;Session-start surfaces&lt;br/&gt;low confidence, low-trust provenance, staleness&quot;]
+  CTX[&quot;Session context&lt;br/&gt;treat these sceptically&quot;]
+  OUT[(&quot;outcomes.jsonl&lt;br/&gt;single writer, flock, id dedup&quot;)]
+  REFL[&quot;memory_reflect scores earned trust&quot;]
+
+  AGENT --&gt; HOOK --&gt; BLOCK
+  HOOK --&gt; FILE
+  TABLE --&gt; HOOK
+  TABLE --&gt; MCP
+  OPER --&gt; DEC --&gt; PI --&gt; ALERT
+  FILE --&gt; MCP --&gt; RET
+  RET --&gt;|&quot;yes&quot;| DROP
+  RET --&gt;|&quot;no&quot;| PARSE
+  FILE --&gt; SURF --&gt; CTX
+  CTX --&gt; OUT --&gt; REFL --&gt; FILE</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Gate the write.</strong>
+<code>memory-confidence-validator.py</code> is a PostToolUse hook scoped
+by path substring to the auto-memory directory; every other path exits
+zero fast. A <code>confidence</code> outside zero to one or a
+<code>provenance</code> outside the enum exits 2, which blocks the write
+and feeds stderr back to the model. Absent fields pass — the fields are
+optional.</li>
+<li><strong>Share the vocabulary.</strong>
+<code>memory_conventions.py</code> and
+<code>provenance_vocabulary.py</code> are each one table with two
+readers, the write-side hook and the sweep, with a literal fallback for
+an instance mid-update and a paired test asserting the fallback matches
+the table.</li>
+<li><strong>Retire on read.</strong> <code>_retirement</code> in the
+MCP's <code>morning_init.py</code> reads the first fifteen lines only,
+matches <code>status: superseded</code> or an uppercase
+<code>SUPERSEDED</code> banner, and returns the deciding
+<code>ASK-nnn</code> reference. The caller skips that source and records
+the retirement.</li>
+<li><strong>Annotate on read.</strong>
+<code>memory-confidence-surface.py</code> scans at session start and
+prints a warning block for memories below the 0.5 confidence threshold
+or whose provenance is <code>inferred</code> or <code>observed</code>,
+<em>"so the model treats those memories skeptically"</em>. It always
+exits zero and never blocks.</li>
+<li><strong>Score what worked.</strong>
+<code>memory_outcomes.record_outcome</code> is the single writer of
+<code>outcomes.jsonl</code>, appending <code>useful</code>,
+<code>dead_end</code> or <code>corrected</code> events;
+<code>memory_reflect.py</code> reads the log and promotes a memory to
+<em>preferred</em> on a corroboration gate counting distinct useful
+outcomes.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is a markdown file whose frontmatter carries the four axes
+above. Two decisions in <code>memory_conventions.py</code> are worth
+quoting because they are the kind of thing usually left implicit.</p>
+<p>On correction versus deletion:</p>
+<blockquote>
+<p>A memory that turns out to be WRONG is superseded, not deleted.
+Deletion stays reserved for a memory that was NEVER true (a mis-file, a
+test artifact), where there is no successor to point at and nothing to
+learn from the correction.</p>
+</blockquote>
+<p>On the default for the hundred files that predate the convention:</p>
+<blockquote>
+<p>a convention that made them all invalid on day one would be a gate
+unsatisfiable for its own population — which is how a gate gets switched
+off and then protects nothing.</p>
+</blockquote>
+<p>And on <code>as_of</code>, which is a validity axis stated as
+one:</p>
+<blockquote>
+<p><code>as_of</code> means "when the claim was actually true", which is
+NOT the file's mtime: a memory rewritten for formatting today can still
+be as-of a fact verified three months ago. Callers that judge staleness
+must use this and never the filesystem timestamp.</p>
+</blockquote>
+<p>That is a genuine valid-time axis held apart from the record axis,
+and it is used — the lint skips non-current memories and flags a current
+one whose <code>as_of</code> predates the cutoff. What is missing is the
+other half: nothing reads the store <em>as of</em> a past date, so there
+is no way to ask what this system believed last March.
+<code>bitemporal</code> is withheld on that, with the axis present and
+named.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two read paths, and they answer the trust axes differently.</p>
+<p><strong>The digest withholds.</strong> The MCP's
+<code>canonical_digest</code> walks the canonical sources and, for each,
+checks retirement before parsing. The fifteen-line window is the detail
+that makes it work: a retired document's body is usually <em>about</em>
+the retirement, so a whole-file scan would let a live document that
+merely discusses a retirement retire itself. The banner regex is
+uppercase-only for the same reason — <em>"a banner, not prose"</em>.</p>
+<p>What happens to the retired source is the part worth copying. It is
+not silently dropped, and it does not produce a warning either, because
+warnings in this system mean a missing file. It is recorded:</p>
+<pre class="python"><code>digest[&quot;retired_sources&quot;][key] = retirement
+continue</code></pre>
+<p>with the deciding <code>ASK-nnn</code>, <em>"so a consumer can tell
+empty-because-retired from empty-because-none."</em> An empty field that
+says why it is empty is rare anywhere in this corpus, and it is exactly
+what a downstream agent needs in order not to go looking for the content
+again.</p>
+<p><strong>The surfaces annotate.</strong> The confidence, scores and
+freshness hooks do not remove anything. They print a block into session
+context naming the memories whose confidence is low or whose provenance
+is <code>inferred</code> or <code>observed</code>, and tell the model to
+verify before asserting. That is a weaker mechanism than withholding and
+an honest one: these memories may still be true, and the system's own
+framing is <em>"the recall-side push; the validator is the write-side
+gate."</em></p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The validator is a blocking hook, which is the strongest available
+shape for a harness rule: a write that declares a confidence of 1.5 or a
+provenance of <code>guessed</code> does not land, and the reason is
+returned to the model rather than to a log nobody reads.</p>
+<p>Its header also carries the best scar in the repository, and it is
+the one this atlas has <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-09-16-the-second-copy-of-the-rule.md">written
+about separately</a>:</p>
+<blockquote>
+<p>this set was hardcoded here, and three days later a second lint
+shipped a DIFFERENT vocabulary for the same idea. Nothing collided,
+because their file scopes differ, so the drift was invisible rather than
+absent.</p>
+</blockquote>
+<p><em>Invisible rather than absent</em> is the precise statement of why
+a duplicated rule is dangerous even when nothing has broken yet. The fix
+is the one this corpus keeps arriving at from both directions: one
+table, read at runtime by every consumer, with the inevitable literal
+fallback pinned by a test that asserts it still matches.</p>
+<p>The outcome log is the other write path and it is unusually careful
+for a personal tool. <code>record_outcome</code> is the single writer;
+deduplication is by a caller-supplied <code>event_id</code> because the
+corroboration gate counts <em>distinct</em> useful outcomes and a
+replayed event must not count twice; an flock makes check-then-append
+atomic; a prior truncated line without a trailing newline is normalised
+under the same lock so the new record cannot be concatenated onto it and
+lost; and one <code>_is_valid_event</code> predicate gates both the
+dedup set and the read, so a parseable-but-incomplete line neither
+pollutes deduplication nor comes back as an event. Each of those is
+attributed in the docstring to the review finding that produced it.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>This repository is installed into a harness, which is why the
+screening flagged four auto-run surfaces: a plugin marketplace manifest,
+<code>.mcp.json</code>, committed git hooks, and
+<code>.claude/settings.json</code> with SessionStart, UserPromptSubmit,
+PreToolUse, PostToolUse and Stop hooks. Nothing here was executed; the
+files were read as data.</p>
+<p>The settings file is worth reading as a design artifact. Its deny
+list blocks <code>sudo</code>, <code>rm -rf</code>,
+<code>git push --force</code>, <code>git reset --hard</code>,
+<code>git rebase</code>, <code>chmod 777</code>,
+<code>curl * | bash</code>, and reads and edits of <code>.env</code>,
+<code>credentials*</code>, <code>*.pem</code> and <code>*.key</code>.
+That is a considered list.</p>
+<p>It is also advisory, because the allow list grants
+<code>Bash(python3:*)</code>, <code>Bash(node:*)</code> and
+<code>Bash(npx:*)</code>. An interpreter on the allow-list reaches
+everything the deny-list forbids — a Python one-liner can unlink a tree
+or read a key file without the string <code>rm</code> or
+<code>.env</code> appearing in the command. This atlas has <a
+href="../diffmem/">met the same shape before</a>, where a command
+allowlist was satisfied by a prefix check while the real execution
+happened one layer down. The right reading is that the deny list
+documents intent and catches accidents, and that the interpreters are
+the actual privilege boundary.</p>
+<p>The SessionStart chain runs eleven commands, and eight of them end in
+<code>2&gt;/dev/null || true</code>. A memory surface that starts
+failing — a renamed path, a syntax error after an edit — stops producing
+its block and the session looks normal. The two hooks that do not
+swallow their errors are the git health check and
+<code>session-start.py</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The sycophancy machinery is the reason this report exists, so it is
+worth being precise about what it does.</p>
+<p>The system already records who originated each decision.
+<code>[USER-DIRECTED]</code> means the operator said it;
+<code>[SYSTEM-INFERRED]</code> means the system derived it; and
+<code>[CLAUDE-RECOMMENDED -&gt; APPROVED | MODIFIED | REJECTED]</code>
+records that the assistant proposed something and what the operator then
+did with it. Those three dispositions are defined in the rule file, in
+the operator's terms: approved, changed it, declined it.</p>
+<p>Recording the disposition is the ordinary half. The unusual half is
+computing the ratio. If nearly every assistant recommendation is
+approved unmodified, the approval is not evidence of judgement, and a
+memory built from those decisions is a record of the model's suggestions
+with a human signature on it. The harness makes that measurable, sets a
+threshold at 0.7 with a minimum of five tagged decisions so a small
+sample cannot trip it, and — critically — does not ask the LLM audit
+agent for the number, because <em>"the agent itself is
+sycophantic."</em> The deterministic check exists precisely where
+self-assessment is least reliable.</p>
+<p>The measurement it reports on itself is 0.88, on an instance where
+the check could not run because it sat behind a pipeline artifact.</p>
+<p>Three other things belong in this section.</p>
+<p><strong><code>audit_log</code> is withheld, and not for want of
+append-only ledgers.</strong> There are two, both good.
+<code>outcomes.jsonl</code> records how each recalled memory performed —
+which is a feedback log, the half of the pattern this atlas's definition
+explicitly excludes. <code>judgments.jsonl</code> is append-only and
+hash-chained, with <code>sequence</code> and
+<code>prev_receipt_sha256</code>, an exclusive lock held across read,
+build, append and anchor because <em>"capture is a
+read-modify-append"</em> and one interleaved triage would break the
+chain, and corrections appended as superseding receipts rather than
+edits. But those receipts <em>are</em> the stored unit, not a record of
+changes to some other store: an append-only store is not an audit log of
+itself. Either ledger's mechanics would clear the bar if it were pointed
+at memory mutations.</p>
+<p><strong><code>tombstone</code> is withheld by the project's own
+rule.</strong> Deletion is reserved for a memory that was never true,
+and nothing is keyed on the removed content, so the same claim written
+again is simply a new memory.</p>
+<p><strong>The repository is one person's memory as well as its
+machinery.</strong> Canonical files hold relationships, a founder
+profile including stated accommodations, and market intelligence. That
+is the author's choice to publish and not this report's subject; it is
+worth noting because anyone cloning this as a template inherits a layout
+where personal content and enforcement code live in the same tree, and
+the <code>.claude/settings.json</code> deny list on <code>.env</code>
+and credentials does not cover the canonical markdown.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>228 test files and 3,536 test functions; nothing was run here. The
+pairing is consistent — <code>memory-lint.py</code> has
+<code>test_memory_lint.py</code>,
+<code>memory-confidence-validator.py</code> has both
+<code>test_memory_confidence_validator.py</code> and
+<code>test_memory_confidence_wiring.py</code>, and the wiring test is
+the one that matters most: a validator that is correct but not
+registered as a hook protects nothing.</p>
+<p>The morning-init tests are the strongest set, and they read as a
+record of production failures rather than a coverage exercise: a retired
+source shipping as live content, a section split that treated every
+heading as a peer so a section with nested children parsed to an empty
+body, a last-match-wins assignment that overwrote a section's items with
+another section's. Each names its incident by reference in the
+docstring.</p>
+<p>One test refuses to invent its fixture:</p>
+<blockquote>
+<p>A fixture written from memory would test the author's belief about
+the template; this file IS the template every instance ships with, so it
+is the only input that can prove the parser stopped recording it.</p>
+</blockquote>
+<p>Reading the repository's own shipped canonical file as the test
+input, rather than a hand-written approximation of it, is a small
+discipline that catches the case where the parser and the template drift
+apart.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Record the disposition, then measure the
+distribution.</strong> "A human approved it" is only oversight if the
+human sometimes does not. One ratio over a tagged decision log turns a
+governance claim into a number that can fail.</li>
+<li><strong>Do not ask the model to audit the failure mode it
+has.</strong> The deterministic harness runs after the agent and
+re-derives the number independently. Any self-assessment of sycophancy,
+calibration or bias needs a check outside the thing being assessed.</li>
+<li><strong>An absence should say why it is absent.</strong>
+<code>retired_sources</code> costs one dictionary entry and
+distinguishes "this was retired, here is the decision" from "there was
+nothing" — which is the difference between a consumer that moves on and
+one that goes looking again.</li>
+<li><strong>Scope a retirement marker to a header window.</strong> A
+retired document usually discusses its own retirement. Matching anywhere
+in the body makes every document about deprecation
+self-deprecating.</li>
+<li><strong>Separate certainty from origin.</strong> A confidence score
+cannot express "the founder said this" versus "the model inferred it",
+and at recall those need different treatment even at the same
+confidence.</li>
+<li><strong>Make the grandfather default explicit.</strong> Turning on a
+convention that every existing file violates produces a gate people
+switch off. Absent means <code>current</code>, and the lint reports the
+gap as "add on next edit".</li>
+<li><strong>An interpreter on the allow list is the allow list.</strong>
+A deny-list of dangerous commands beside <code>Bash(python3:*)</code>
+documents intent; it does not constrain.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>What is the current approval ratio across instances? The harness
+makes it computable and the repository records one historical value;
+nothing in the tree publishes a series.</li>
+<li><code>as_of</code> is a real validity axis with no as-of read. Is a
+"what did we believe in March" query intended, or is the axis only there
+to drive staleness?</li>
+<li>The confidence and provenance surfaces annotate rather than
+withhold. Is there a threshold at which a low-trust memory should be
+kept out of context entirely, and would the operator want to be told
+when that happened?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Conventions:
+<code>q-system/.q-system/scripts/memory_conventions.py:26-60</code>
+(<code>STATUS_VALUES</code>, <code>DEFAULT_STATUS</code>,
+<code>effective_status</code>, <code>as_of_date</code>),
+<code>provenance_vocabulary.py</code>.</li>
+<li>Write gate:
+<code>q-system/.q-system/scripts/memory-confidence-validator.py:1-60</code>.</li>
+<li>Sweep:
+<code>q-system/.q-system/scripts/memory-lint.py:195-215</code>.</li>
+<li>Surfaces:
+<code>q-system/.q-system/scripts/memory-confidence-surface.py:1-35</code>,
+<code>memory-scores-surface.py</code>,
+<code>memory-freshness-check.py</code>.</li>
+<li>Digest and retirement:
+<code>plugins/kipi-core/kipi-mcp/src/kipi_mcp/morning_init.py:188-197</code>,
+<code>:434-441</code>, <code>:462-498</code>.</li>
+<li>Outcome log:
+<code>q-system/.q-system/scripts/memory_outcomes.py:1-28</code>,
+<code>memory_reflect.py</code>.</li>
+<li>Judgment receipts:
+<code>plugins/prd-os/scripts/judgment_compiler.py:1-30</code>,
+<code>:228-250</code>, <code>:1465-1469</code>.</li>
+<li>Sycophancy:
+<code>q-system/.q-system/sycophancy-harness.py:1-60</code>,
+<code>.claude/rules/sycophancy-core.md:28-30</code>,
+<code>q-system/canonical/decisions.md:9</code>.</li>
+<li>Harness surfaces: <code>.claude/settings.json</code> (permissions at
+2-58, hooks from 70), <code>.mcp.json</code>, <code>.githooks/</code>,
+<code>.claude-plugin/marketplace.json</code>.</li>
+<li>Tests:
+<code>plugins/kipi-core/kipi-mcp/tests/test_morning_init.py:257-300</code>,
+<code>q-system/.q-system/scripts/test_memory_confidence_wiring.py</code>,
+<code>test_memory_lint.py</code>,
+<code>test_memory_outcomes.py</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;effective_status&quot; --include=&#39;*.py&#39; . | grep -v test_    # the sweep only; the digest matches the marker itself
+grep -rn &quot;superseded&quot; --include=&#39;*.py&#39; . -l                      # write gate, sweep, MCP digest, judgment compiler
+grep -rn &quot;as_of&quot; --include=&#39;*.py&#39; . | grep -i &quot;query\|as-of read&quot;  # 0 — the axis drives staleness, nothing reads at a past date
+grep -rn &quot;CLAUDE-RECOMMENDED -&gt;&quot; --include=&#39;*.md&#39; .claude/ q-system/canonical/   # the vocabulary and the log header
+grep -c &quot;|| true&quot; .claude/settings.json                          # eight of eleven SessionStart commands swallow failure</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/assafkip/kipi-system/commit/30b51f1f11e76352c90b12ea198d037688105f45"><code class="commit-id" title="30b51f1f11e76352c90b12ea198d037688105f45">30b51f1f…</code></a>
+— first reading, at the head of <code>main</code>, 1,222 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: four auto-run
+surfaces — a Claude Code plugin marketplace manifest,
+<code>.mcp.json</code> declaring three npx-launched servers,
+<code>.claude/settings.json</code> with five hook families, and
+committed git hooks — four pytest <code>conftest.py</code> collection
+hooks, and two dependency files changed inside the seven-day cooldown.
+All four auto-run surfaces were read as data and none was executed;
+nothing was installed, built or run, and <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> were read as data rather than as instructions.
+Three marks. <code>bitemporal</code> is withheld with its axis present:
+<code>as_of</code> is a validity date explicitly held apart from the
+file's mtime, and nothing reads the store as of a past date.
+<code>audit_log</code> is withheld on the definition rather than on an
+absence — <code>outcomes.jsonl</code> is a feedback log, which the mark
+excludes, and <code>judgments.jsonl</code> is append-only and
+hash-chained but its receipts are the stored unit rather than a record
+of changes to another store. <code>tombstone</code> is withheld by the
+project's own stated rule: deletion is reserved for a memory that was
+never true, and nothing is keyed on removed content.
+<code>scope_enforced</code> is withheld because instance separation is
+by directory, with no predicate in a read.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
