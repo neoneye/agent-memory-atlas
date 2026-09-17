@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A shared workspace for people and
+agents whose memory facts climb a three-tier scope ladder after every
+session — with an audit table for those decisions that has a migration,
+an adapter, a dashboard counter and no wired writer.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Beevibe — Agent Memory Atlas">
+    <meta property="og:description" content="A shared workspace for
+people and agents whose memory facts climb a three-tier scope ladder
+after every session — with an audit table for those decisions that has a
+migration, an adapter, a dashboard counter and no wired writer.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Beevibe — Agent Memory Atlas">
+    <meta name="twitter:description" content="A shared workspace for
+people and agents whose memory facts climb a three-tier scope ladder
+after every session — with an audit table for those decisions that has a
+migration, an adapter, a dashboard counter and no wired writer.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Beevibe — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Beevibe",
+      "description": "A shared workspace for people and agents whose memory facts climb a three-tier scope ladder after every session \u2014 with an audit table for those decisions that has a migration, an adapter, a dashboard counter and no wired writer.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">It deletes the fields nobody reads, and
+ships a table nobody writes</p>
+          <h1>Beevibe</h1>
+          <p class="document-deck">A shared workspace for people and
+agents whose memory facts climb a three-tier scope ladder after every
+session — with an audit table for those decisions that has a migration,
+an adapter, a dashboard counter and no wired writer.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/beevibe-ai/beevibe">
+              <span>Source</span>
+              <strong>beevibe-ai/beevibe</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/beevibe-ai/beevibe/commit/81530ccae3519738b16a2b5d4aa81a61989a4ce8" title="81530ccae3519738b16a2b5d4aa81a61989a4ce8">
+              <span>Analyzed revision</span>
+              <code>81530cca…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-17</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/beevibe-ai--beevibe" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>beevibe-ai--beevibe</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Beevibe is an Apache-2.0 workspace where a company's people and
+agents work in the same surface — 97,416 lines of TypeScript across six
+packages, 183 commits since April 2026, roughly 2,017 test cases. Agents
+hold lasting roles, accumulate their own memory, negotiate with each
+other under a round cap, and escalate to a person when they cannot
+agree.</p>
+<p>One mark. <code>agent_id</code> is a hard predicate on every read of
+the fact table, in parameterised SQL with no branch that omits it.</p>
+<p>Two things sit either side of that, and reading them together is the
+point of this report.</p>
+<p>The first is a migration that <strong>deletes four columns</strong>.
+<code>confidence</code>, <code>valid_from</code>, <code>tags</code> and
+<code>metadata</code> were in the original schema; a later migration
+removes them with the finding stated plainly — <em>"unused in M3's
+agent-driven memory design. No caller populates them or reads
+them."</em> That is the correct and rare response to a field with no
+producer, and this corpus mostly documents the opposite.</p>
+<p>The second is a table that <strong>nothing writes</strong>.
+<code>memory_promotion_event</code> has its own migration, whose comment
+explains that the promoter's decision <em>"silently updates
+memory_fact.scope (or skips when rejected)"</em> and that the table
+exists so the Promotions page can surface the LLM's reasoning, with a
+row for promoted and rejected alike. There is a Postgres adapter for it.
+There is an API view that runs
+<code>SELECT COUNT(*) FROM memory_promotion_event</code> for an agent's
+dashboard. And the only code that writes a row is guarded by an optional
+dependency:</p>
+<pre class="ts"><code>promotionEventRepo?: MemoryPromotionEventRepository;</code></pre>
+<p>The single composition root constructs the memory agent as
+<code>createMemoryAgent({ agentId, coreMemory, factStore, promoter, embed })</code>.
+The repository is not among those arguments, and no other factory
+supplies it. The audit rows are never written, so the dashboard's
+promotion count is structurally zero.</p>
+<p>Same repository, same quarter: one dead field removed on the evidence
+that nobody reads it, and one dead table shipped with a reader and no
+writer. The difference between them is which end of the wire was
+missing.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An agent owns its memory. That is the whole boundary, and it is
+enforced rather than assumed: every query against
+<code>memory_fact</code> names an agent.</p>
+<p>Over that sits a three-tier <code>scope</code> — <code>ic</code>,
+<code>team</code>, <code>org</code> — and the natural reading is that it
+controls sharing. It does not, at this pin. The column records <em>the
+tier of the agent that saved the fact</em>: an IC agent's facts start at
+<code>ic</code>, a team agent's at <code>team</code>. The briefing path
+then asks for all three scopes on every call, and binds the reading
+agent's own id. So a fact promoted from <code>ic</code> to
+<code>team</code> is still returned only to the agent that owns it.</p>
+<p>What the scope does change is the dedup universe on the write, and
+that part is deliberate and documented:</p>
+<blockquote>
+<p>a team agent saving something near-identical to an existing
+<code>ic</code> fact creates a fresh <code>team</code> row rather than
+merging across scopes — the two facts live in different conceptual
+universes (one is IC-private, the other is team-wide knowledge).</p>
+</blockquote>
+<p>Knowledge does move between agents here — but through the mesh, by
+one agent asking another, not by one agent reading another's rows.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Every read binds the owning agent and asks for all three scopes, so the promotion ladder changes a fact's label and its dedup universe rather than its audience — and the table that would record each promotion decision has no writer wired.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Every read binds the owning agent and asks for all three scopes, so the promotion ladder changes a fact&#39;s label and its dedup universe rather than its audience — and the table that would record each promotion decision has no writer wired.
+flowchart TD
+  SAVE[&quot;save_memory MCP tool&quot;]
+  EMB[&quot;Embed the content&quot;]
+  NEAR{&quot;neighbour above 0.88&lt;br/&gt;same agent, scope and fact type&quot;}
+  MERGE[&quot;LLM-merge, re-embed,&lt;br/&gt;union the session ids&quot;]
+  INS[&quot;Insert a new fact&quot;]
+  DB[(&quot;memory_fact&lt;br/&gt;agent_id, scope, fact_type, embedding&quot;)]
+  SESS[&quot;Session ends&quot;]
+  PROM[&quot;FactPromoter asks an LLM&lt;br/&gt;should this climb a tier&quot;]
+  UP[&quot;Update scope in place&quot;]
+  OPT{&quot;promotionEventRepo supplied&quot;}
+  AUDIT[(&quot;memory_promotion_event&quot;)]
+  NOWRITE[&quot;Composition root passes no repo,&lt;br/&gt;so no row is written&quot;]
+  VIEW[&quot;Dashboard counts the rows&quot;]
+  BRIEF[&quot;Session-start briefing&lt;br/&gt;and search_context&quot;]
+  Q[&quot;WHERE agent_id = $2&lt;br/&gt;AND scope = ANY of ic, team, org&quot;]
+
+  SAVE --&gt; EMB --&gt; NEAR
+  NEAR --&gt;|&quot;yes&quot;| MERGE --&gt; DB
+  NEAR --&gt;|&quot;no&quot;| INS --&gt; DB
+  SESS --&gt; PROM --&gt; UP --&gt; DB
+  PROM --&gt; OPT
+  OPT --&gt;|&quot;never, in this tree&quot;| AUDIT
+  OPT --&gt; NOWRITE
+  AUDIT --&gt; VIEW
+  DB --&gt; BRIEF --&gt; Q</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write.</strong> <code>FactStore.addOrMerge</code> embeds the
+content and searches for one neighbour above
+<code>SIMILARITY_MERGE_THRESHOLD = 0.88</code>, constrained to the same
+agent, the same single scope and the same fact type. A hit is merged by
+an LLM into one sentence, re-embedded, and written back over the
+existing row with the union of session ids; a miss inserts
+(<code>packages/core/src/services/memory/fact-store.ts:50-97</code>).</li>
+<li><strong>Read.</strong> <code>searchByVector</code> —
+<code>WHERE agent_id = $2 AND scope = ANY($3::text[])</code>, an
+optional fact-type filter, a minimum similarity, ordered by cosine
+distance and capped
+(<code>packages/core/src/adapters/postgres/memory-fact-repo.ts:109-128</code>).</li>
+<li><strong>Brief.</strong> One <code>searchFacts</code> closure serves
+both the session-start briefing and the mid-session
+<code>search_context</code> tool, so <em>"the agent should see the same
+retrieval shape whether the query is session-start intent or a
+mid-session search_context call"</em>
+(<code>memory-agent.ts:107-121</code>).</li>
+<li><strong>Promote.</strong> <code>onTaskComplete</code> lists the
+facts touched in the session by <code>source_session_ids</code>, asks
+the promoter about each one sequentially — <em>"because
+<code>promoter.evaluate</code> is an LLM call and we want serialized
+rate-limit behavior"</em> — and batches the audit writes after the loop
+so they do not extend the LLM-bound tail
+(<code>memory-agent.ts:141-175</code>).</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memory_fact</code> today is: <code>id</code>,
+<code>agent_id</code>, <code>scope</code> with a CHECK on the three
+values, <code>fact_type</code> with a CHECK on five,
+<code>content</code>, a <code>VECTOR(1536)</code>,
+<code>source_session_ids</code>, and <code>created_at</code>.</p>
+<p>The five fact types — <code>belief</code>, <code>pattern</code>,
+<code>gotcha</code>, <code>preference</code>, <code>decision</code> —
+are a genre assigned at write time by the saving agent, not a status.
+Nothing reads <code>fact_type</code> to decide whether a fact may be
+believed; it narrows the dedup neighbourhood and can filter a search.
+That is why <code>trust_state</code> is withheld, and in this case the
+withholding is easy to check, because the field that would have carried
+a trust signal is gone: the trim migration dropped
+<code>confidence</code> outright.</p>
+<p>Dropping it was right on the evidence the migration gives — nobody
+wrote it, nobody read it — and it leaves the memory with no way to say a
+fact is doubted. The system's answer to a wrong fact is to save a
+near-identical better one and let the merge overwrite the content, which
+works when the new phrasing lands above 0.88 cosine and does nothing
+when it does not.</p>
+<p><code>bitemporal</code> is withheld for the same reason and more
+simply: <code>valid_from</code> was one of the four dropped columns, so
+the single remaining timestamp is <code>created_at</code>.
+<code>tombstone</code> is withheld because a merge rewrites a row in
+place and nothing is keyed on what the row used to say.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>One query, one shape, two callers. The recall floor and the
+per-briefing cap are applied identically to the session-start bundle and
+to on-demand search, which is a small consistency most systems in this
+corpus do not bother with — an agent that gets a different retrieval
+shape depending on when it asks has to reason about two behaviours.</p>
+<p><code>prepareCoreOnly</code> is the interesting variant. For a
+surface with no intent yet — a human opening an MCP session before
+saying anything — it returns the core memory blocks and <em>no</em>
+archival half, skipping the embedding call and the vector query
+entirely, because <em>"there's no signal to query against, so any
+retrieval would be noise."</em> The test locks that in by asserting the
+embed service and the fact store were never called, with a comment
+saying the wasted work is the point of the method. Declining to
+retrieve, on the ground that a query against a placeholder intent
+returns noise, is a judgement worth naming.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The merge threshold carries its reasoning: 0.88 on
+<code>text-embedding-3-small</code> with normalised cosine is described
+as <em>"empirically a safe 'these are the same fact phrased differently'
+floor"</em>. Above it, an LLM is asked to merge the two observations
+into one sentence preserving every concrete specific from both, at
+temperature 0.2.</p>
+<p>That is a lossy operation performed by a model on the system's own
+memory, and the only guard on it is the threshold plus the prompt. There
+is no record of the pre-merge text — the update overwrites
+<code>content</code> — so a merge that drops a specific is unrecoverable
+and invisible. The union of <code>source_session_ids</code> is kept, so
+provenance survives even when the wording does not.</p>
+<p>Promotion is an in-place <code>UPDATE memory_fact SET scope</code>.
+The decision comes from an LLM per fact, per session, and this is where
+the missing audit bites hardest: the promoter's reasoning exists only in
+the model's response, the row records only the outcome, and the table
+built to hold the reasoning is never written. The migration comment
+describes the status quo it was meant to fix — the decision
+<em>"silently updates memory_fact.scope (or skips when rejected)"</em> —
+and at this pin that is still what happens.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory reaches agents through MCP tools — <code>save_memory</code>,
+<code>update_core_memory</code>, <code>search_context</code> — with
+core-memory blocks rendered into the system prompt and archival hits
+into an <code>&lt;archival_memory&gt;</code> envelope. The envelope is
+always returned even when empty, <em>"so the tool consumer has a
+predictable shape"</em>, which is the right call for a tool result an
+agent has to parse.</p>
+<p>The surrounding system is the more distinctive part. Agents negotiate
+with one another over a bounded number of rounds —
+<code>agent.max_negotiation_rounds</code>, defaulting to five in code —
+and a negotiation that exhausts its rounds becomes an
+<code>escalation</code> row handed to a person, whose resolution is
+written into <code>task.next_dispatch_context</code> for the next
+dispatch to read. A cap that converts a disagreement into a human
+decision rather than another round is a good pattern, and it is about
+work rather than memory: no person reviews a memory fact, which is why
+<code>human_review</code> is withheld.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p>The scope predicate is genuinely unconditional, which is worth
+stating because this atlas has read many systems where the owner filter
+is a nullable parameter that vanishes when nobody passes it. Here both
+query sites take a required <code>agent_id</code> and interpolate it as
+a bound parameter. There is no admin path, no <code>if (agentId)</code>
+guard, and no unfiltered enumeration in the repository interface.</p>
+<p>The weakness is on the other column. Because the briefing always
+requests all three scopes, <code>scope</code> is not a read filter at
+all in the path that feeds an agent; it is a label plus a dedup
+partition. A reader who sees <code>ic | team | org</code> in a schema
+and an <code>idx_memory_fact_agent_scope</code> index will reasonably
+assume a visibility ladder, and the code does not implement one. Nothing
+is leaked by this — the agent boundary holds — but the promotion
+machinery, which costs an LLM call per fact per session, currently buys
+a change of label and a change of which future facts will merge into
+it.</p>
+<p><code>audit_log</code> is withheld on the wiring rather than on an
+absence, and the shape is worth recording precisely because so much of
+it exists:</p>
+<ul>
+<li>the migration, with a comment explaining why the table is
+needed;</li>
+<li><code>packages/core/src/adapters/postgres/promotion-event-repo.ts</code>,
+the writer;</li>
+<li><code>packages/api/src/views/agents.ts:179</code>, which counts its
+rows for the dashboard;</li>
+<li><code>MemoryAgentDeps.promotionEventRepo?</code>, optional;</li>
+<li><code>packages/core/src/composition.ts:84-85</code>, the one
+factory, which does not pass it.</li>
+</ul>
+<p>Four of the five parts are built. The fifth is a missing argument in
+a single constructor call. A grep for the property name across the
+repository returns the declaration and the use, and nothing else.</p>
+<p>Set against the trim migration, this is the same project applying
+opposite diligence to the two halves of a dead path — and the reason the
+trim was easy to spot is that a column with no reader shows up in a
+schema review, while a constructor argument that was never added shows
+up nowhere.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Roughly 2,017 test cases across the packages; nothing was run here.
+The memory tests are close to the code and property-named: the fact
+store has cases for creating below threshold, stamping the caller's
+scope, merging with re-embed and session-id union, deduping a repeated
+session id, trimming the LLM's whitespace, and <code>updateScope</code>
+touching only the scope.</p>
+<p><code>negative_eval</code> is withheld. The must-not assertions here
+are about work not done and writes refused —
+<code>expect(embed.embed).not.toHaveBeenCalled()</code> on the core-only
+path, <code>expect(calls).toHaveLength(0)</code> for an empty content or
+an unknown fact type — and both have positive controls in their own
+cases. Neither asserts that particular material must not be
+<em>retrieved</em>, and there is no test in which one agent queries and
+another agent's fact is asserted absent, which is the case the scope
+predicate most wants pinned.</p>
+<p>No benchmark and no retrieval eval. The one empirical number in the
+memory path is the 0.88 merge threshold, described as empirical without
+the measurement attached.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Delete the column nobody reads, and check the other
+direction too.</strong> The trim migration is exactly right. Run the
+same audit from the reader's end: a table with a query and no insert is
+the same defect wearing the opposite mask, and it is harder to see
+because the schema looks fine.</li>
+<li><strong>An optional dependency is a feature flag you forgot to
+name.</strong> <code>repo?:</code> with <code>if (repo)</code> around
+the write reads as defensive and behaves as off. If the audit is meant
+to be on, make the argument required and let the type checker find the
+call site.</li>
+<li><strong>Name the scope after what it does.</strong>
+<code>ic | team | org</code> beside an index on
+<code>(agent_id, scope)</code> reads as a visibility ladder. If it is a
+tier label and a dedup partition, the name and the docstring are the
+only things standing between a future reader and a wrong assumption
+about who can see what.</li>
+<li><strong>Keep what a merge overwrites, or accept that it is
+gone.</strong> An LLM merge at 0.88 similarity rewrites a stored memory
+with no record of the prior text. The union of source ids preserves
+where it came from; nothing preserves what it said.</li>
+<li><strong>Declining to retrieve is a legitimate answer.</strong>
+Skipping the embed and the vector query when there is no intent to query
+against — and testing that the calls did not happen — is cheaper and
+more honest than retrieving against a placeholder.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the promotion audit meant to be on? Everything but the
+constructor argument is built, and the dashboard already counts the
+rows.</li>
+<li>Should a promoted fact become visible to other agents in its tier,
+or is the mesh the only intended path between agents? The schema
+suggests the first and the code implements the second.</li>
+<li>With <code>confidence</code> dropped, what is the intended
+correction path for a fact that turns out to be wrong but does not
+re-save close enough to merge?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema:
+<code>migrations/1776391747576_initial-schema.sql:144-161</code>
+(<code>memory_fact</code>),
+<code>migrations/1777000000000_trim-memory-fact.sql</code> (the four
+dropped columns),
+<code>migrations/1778200000000_add-memory-promotion-event.sql</code>.</li>
+<li>Repository:
+<code>packages/core/src/ports/memory-fact-repo.ts</code>,
+<code>packages/core/src/adapters/postgres/memory-fact-repo.ts:109-155</code>.</li>
+<li>Services:
+<code>packages/core/src/services/memory/fact-store.ts:16-114</code>,
+<code>memory-agent.ts:53-176</code>, <code>fact-promoter.ts</code>.</li>
+<li>Wiring: <code>packages/core/src/composition.ts:75-87</code>.</li>
+<li>Audit adapter and reader:
+<code>packages/core/src/adapters/postgres/promotion-event-repo.ts</code>,
+<code>packages/api/src/views/agents.ts:160-182</code>.</li>
+<li>Tools: <code>packages/api/src/tools/save-memory.ts</code>,
+<code>update-core-memory.ts</code>.</li>
+<li>Negotiation and escalation:
+<code>migrations/1777900000000_add-negotiation-escalation-tables.sql</code>.</li>
+<li>Tests:
+<code>packages/core/src/services/memory/fact-store.test.ts</code>,
+<code>memory-agent.test.ts:210-229</code>,
+<code>packages/api/src/tools/save-memory.test.ts:70-97</code>.</li>
+</ul>
+<p><strong>Searches recorded for the negative claims</strong></p>
+<pre class="sh"><code>grep -rn &quot;promotionEventRepo&quot; packages --include=&#39;*.ts&#39; | grep -v &#39;\.test\.&#39;   # 2: the optional declaration and its guarded use
+grep -rn &quot;createMemoryAgent&quot; packages --include=&#39;*.ts&#39; | grep -v &#39;\.test\.&#39;    # one factory, no promotionEventRepo argument
+grep -rn &quot;searchByVector&quot; packages --include=&#39;*.ts&#39; | grep -v &#39;\.test\.|ports/|adapters/&#39;   # 2 call sites, both supply agent_id
+grep -rn &quot;confidence&quot; migrations/*.sql                                        # added in the initial schema, dropped by the trim
+grep -rn &quot;not.toContain\|toHaveLength(0)&quot; packages/core/src/services/memory packages/api/src/tools   # work-avoided and write-refused, no retrieval exclusion</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-17</strong> — <a
+href="https://github.com/beevibe-ai/beevibe/commit/81530ccae3519738b16a2b5d4aa81a61989a4ce8"><code class="commit-id" title="81530ccae3519738b16a2b5d4aa81a61989a4ce8">81530cca…</code></a>
+— first reading, at the head of <code>main</code>, 183 commits in.
+Screened with <code>scripts/screen_repo.py</code> first: one auto-run
+surface, no build-time execution path, seven package manifests declaring
+floating ranges with no lockfile beside them, a root
+<code>pnpm-lock.yaml</code> unchanged for 37 days, and
+<code>CLAUDE.md</code> read as data. Nothing was installed, built or run
+— no pnpm, no vitest, no database started, and the committed
+<code>docker-compose.yml</code> files were read as text. One mark.
+<code>trust_state</code> is withheld with the field's removal on record:
+<code>confidence</code> was in the first schema and a later migration
+dropped it as unpopulated and unread, leaving <code>fact_type</code> — a
+write-time genre — as the only categorical column.
+<code>bitemporal</code> is withheld because <code>valid_from</code> was
+dropped in the same migration. <code>tombstone</code> is withheld
+because a merge overwrites a row in place with nothing keyed on the
+prior content. <code>human_review</code> is withheld because the
+escalation path adjudicates stuck work, not memory claims.
+<code>audit_log</code> is withheld on the wiring: the table, its adapter
+and a dashboard counter exist, and the only writer is behind an optional
+dependency the single composition root does not pass.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 568 reports.**
+**This page covers all 569 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4915,3 +4915,14 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 218,595 lines of Python across 622 files, 1,222 commits since March 2026, 228 test files and 3,536 test functions, packaged as a plugin with an MCP server and launchd timers; three capability marks.
 - Study when: you need a governance mechanism that can fail a self-report, or a worked example of a markdown memory whose frontmatter conventions are enforced at write time rather than asserted in a style guide.
 - Do not copy when: you need an as-of read — `as_of` is a real validity axis here with nothing that queries the store at a past date — or a record of what was deleted, since deletion is deliberately reserved for memories that were never true.
+
+### [`beevibe`](../systems/beevibe/)
+- Best idea: **delete the column nobody reads.** A migration drops `confidence`, `valid_from`, `tags` and `metadata` from the fact table with the finding written into the file — "unused in M3's agent-driven memory design. No caller populates them or reads them." Most systems here let such a field sit until a reader starts trusting it.
+- Second idea: **refuse to merge across tiers, and say why.** A team agent saving something near-identical to an existing `ic` fact gets a fresh `team` row rather than a merge, because "the two facts live in different conceptual universes (one is IC-private, the other is team-wide knowledge)" — a dedup boundary chosen on meaning rather than on distance alone.
+- Third idea: **declining to retrieve is a legitimate answer.** The core-only briefing skips the embed and the vector query entirely when there is no intent to query against, "so any retrieval would be noise", and the test asserts neither call happened.
+- Biggest risk: **an audit table with four of its five parts built.** `memory_promotion_event` has a migration explaining the need, a Postgres adapter, and an API view counting its rows for the agent dashboard; its only writer is guarded by `promotionEventRepo?` and the single composition root constructs the memory agent without it. The promotion count is structurally zero. A column with no reader shows up in a schema review; a constructor argument that was never added shows up nowhere.
+- Second risk: **the scope ladder labels rather than shares.** Every briefing binds the owning agent and asks for all three scopes, so promoting a fact from `ic` to `team` — an LLM call per fact per session — changes which future facts merge into it, not who can read it.
+- Most reusable component: the read path — one `searchFacts` closure serving both the session-start briefing and the mid-session search tool, so the agent sees the same retrieval shape whichever way it asks, over SQL whose WHERE clause opens with a required `agent_id`.
+- Maturity impression: Apache-2.0, 97,416 lines of TypeScript across six packages, 183 commits since April 2026, roughly 2,017 test cases, with bounded agent-to-agent negotiation escalating to a person at the round cap; one capability mark.
+- Study when: you are deciding where a dedup boundary belongs, or you want a worked example of per-agent memory whose owner predicate has no optional branch.
+- Do not copy when: a wrong memory needs to be doubted rather than overwritten — `confidence` is gone, a merge rewrites content in place with no record of the prior text, and a correction only lands if it embeds within 0.88 of what it is correcting.

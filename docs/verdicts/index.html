@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 568 reports.</strong></p>
+<p><strong>This page covers all 569 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21640,6 +21640,56 @@ guide.</li>
 real validity axis here with nothing that queries the store at a past
 date — or a record of what was deleted, since deletion is deliberately
 reserved for memories that were never true.</li>
+</ul>
+<h3 id="beevibe"><a
+href="../systems/beevibe/"><code>beevibe</code></a></h3>
+<ul>
+<li>Best idea: <strong>delete the column nobody reads.</strong> A
+migration drops <code>confidence</code>, <code>valid_from</code>,
+<code>tags</code> and <code>metadata</code> from the fact table with the
+finding written into the file — "unused in M3's agent-driven memory
+design. No caller populates them or reads them." Most systems here let
+such a field sit until a reader starts trusting it.</li>
+<li>Second idea: <strong>refuse to merge across tiers, and say
+why.</strong> A team agent saving something near-identical to an
+existing <code>ic</code> fact gets a fresh <code>team</code> row rather
+than a merge, because "the two facts live in different conceptual
+universes (one is IC-private, the other is team-wide knowledge)" — a
+dedup boundary chosen on meaning rather than on distance alone.</li>
+<li>Third idea: <strong>declining to retrieve is a legitimate
+answer.</strong> The core-only briefing skips the embed and the vector
+query entirely when there is no intent to query against, "so any
+retrieval would be noise", and the test asserts neither call
+happened.</li>
+<li>Biggest risk: <strong>an audit table with four of its five parts
+built.</strong> <code>memory_promotion_event</code> has a migration
+explaining the need, a Postgres adapter, and an API view counting its
+rows for the agent dashboard; its only writer is guarded by
+<code>promotionEventRepo?</code> and the single composition root
+constructs the memory agent without it. The promotion count is
+structurally zero. A column with no reader shows up in a schema review;
+a constructor argument that was never added shows up nowhere.</li>
+<li>Second risk: <strong>the scope ladder labels rather than
+shares.</strong> Every briefing binds the owning agent and asks for all
+three scopes, so promoting a fact from <code>ic</code> to
+<code>team</code> — an LLM call per fact per session — changes which
+future facts merge into it, not who can read it.</li>
+<li>Most reusable component: the read path — one
+<code>searchFacts</code> closure serving both the session-start briefing
+and the mid-session search tool, so the agent sees the same retrieval
+shape whichever way it asks, over SQL whose WHERE clause opens with a
+required <code>agent_id</code>.</li>
+<li>Maturity impression: Apache-2.0, 97,416 lines of TypeScript across
+six packages, 183 commits since April 2026, roughly 2,017 test cases,
+with bounded agent-to-agent negotiation escalating to a person at the
+round cap; one capability mark.</li>
+<li>Study when: you are deciding where a dedup boundary belongs, or you
+want a worked example of per-agent memory whose owner predicate has no
+optional branch.</li>
+<li>Do not copy when: a wrong memory needs to be doubted rather than
+overwritten — <code>confidence</code> is gone, a merge rewrites content
+in place with no record of the prior text, and a correction only lands
+if it embeds within 0.88 of what it is correcting.</li>
 </ul>
         </article>
       </div>
