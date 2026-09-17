@@ -9,11 +9,13 @@ source_url: https://github.com/GOODMAN-PRO/helm
 archive_name: "GOODMAN-PRO--helm"
 revision: f453eaa9683ea0a66b45c76275cb6576bcf14f73
 revision_url: https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73
-analyzed_at: 2026-07-30
+analyzed_at: 2026-09-17
 capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the recall path over a superseded value, plus the episode-noise gates | workspace/tests/smoke.mjs:1293, :1953, :1975, :892 | the supersession case writes a value, supersedes it, and asserts that `recall` returns **exactly one** active row and that it is the new value while `history` returns both — a must-not on the corrected value, keyed on its content, through the real CLI. The noise gates assert a `__smoke` supersede emits *zero* episode rows, and that four rapid supersedes of one key collapse to one | the positive control is in the same case (the new value must be the one returned, and `history` must still hold the old), and the ranking case at :892 proves the recall path returns rows at all by inserting two facts with identical text and differing confidence and asserting the order. Both cases clean up their fixtures with a `DELETE` before and after"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A `(kind, key)` fact carrying confidence, evidence_count, access_count and an expiry, plus a free-text episode"
   storage: "One local SQLite file via `node:sqlite`, vectors as JSON text in side tables; a separate Markdown vault the agent edits by prompt"
@@ -1009,5 +1011,15 @@ the smoke tests cannot see is free to rot.
   test numbers.
 
 ## History
+
+**2026-09-17** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the first one. Screened again: no auto-run surface, no build-time execution path, two unpinned manifests, nothing inside the cooldown; nothing was installed or run.
+
+Every claim held, and the mark now carries an evidence record naming the two cases it rests on — the supersession case that asserts `recall` returns exactly one active row and that it is the new value while `history` returns both, and the noise gates that assert a `__smoke` supersede emits zero episodes.
+
+**What this reading adds is the suite's character, counted.** `workspace/tests/smoke.mjs` is 2,317 lines and 88 labelled cases, and the cases are not one kind of thing: the file contains 133 `includes(` checks that assert an identifier still appears in a source file — `if (!src.includes('splitAttachments')) throw` — against 17 that open the database or run the CLI. The source-substring majority is a real guard against a refactor deleting a hook, and it is not a behavioural test: it passes while the behaviour is broken as long as the string survives. The minority that exercise the code are where both marks live, and they are good — the ranking case inserts two facts with identical text and confidences of 0.95 and 0.3, runs the real `memory.mjs recall` as a subprocess, requires both rows to come back, and asserts the order, cleaning up its fixtures on both sides.
+
+**A near-miss in this reading's own method, recorded because it would have been the worst error of the pass.** A first enumeration with `find -iname "*test*"` returned one file — `workspace/builder/roles/testing.mjs` — because `-iname` matches basenames and the suite's files are `smoke.mjs`, `smoke-phase2.mjs` and `smoke-phase3.mjs` inside a directory called `tests`. `package.json` has no `test` script either. The conclusion that nearly went into this entry was "no tests exist", about a report whose mark rests on an 88-case suite. Enumerate directories as well as basenames, and when a report cites a path, open that path.
+
+Marks unchanged at one; `stack_source` moves from `seeded` to `reviewed`.
 
 **2026-07-30** — [`f453eaa9683ea0a66b45c76275cb6576bcf14f73`](https://github.com/GOODMAN-PRO/helm/commit/f453eaa9683ea0a66b45c76275cb6576bcf14f73) — first reading.
