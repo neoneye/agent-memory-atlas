@@ -7,10 +7,12 @@ page_kind: system
 source_name: "TrianglLabs/otis"
 source_url: https://github.com/TrianglLabs/otis
 archive_name: "TrianglLabs--otis"
-revision: 0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee
-revision_url: https://github.com/TrianglLabs/otis/commit/0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee
-analyzed_at: 2026-09-09
-capabilities: ""
+revision: 879397c8ec9fd2488c69b742891f6b6c28c2af23
+revision_url: https://github.com/TrianglLabs/otis/commit/879397c8ec9fd2488c69b742891f6b6c28c2af23
+analyzed_at: 2026-09-17
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the session search — a compaction summary's text held out of the search index | tests/storage/session-search.test.ts (the compaction case), src/app/sessions.ts (`searchSessions`) | a session is given one ordinary turn and one compaction summary containing *\"discussed the zephyr budget\"*, and `searchSessions(…, \"zephyr\")` must resolve to `[]` — the word exists nowhere else in the store, so the assertion is keyed on a value only the summary holds. The control sits beside it: an empty query resolves to exactly one result, so the search is proved to return the session it does have, and a third case asserts a genuinely absent phrase also returns nothing. The test states the property in a comment rather than leaving it to the reader: *\"The word only appears inside the compaction summary, which is not searchable.\"* | the case is the evidence; vitest over a temporary session directory, no service dependency"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "reviewed"
@@ -272,6 +274,18 @@ recorded anywhere a user would see it.
 including a `skills/` suite, run by `bunx vitest` with a coverage script and a CI
 badge on the README. `bun run verify` chains `check`, `typecheck` and `test`.
 
+**The search suite carries the one assertion this atlas counts.**
+`tests/storage/session-search.test.ts` writes a session holding one ordinary turn
+and one compaction summary containing *"discussed the zephyr budget"*, then
+requires `searchSessions` for `"zephyr"` to resolve to `[]`. The word appears
+nowhere else in the store, so the assertion is keyed on a value only the summary
+holds, and the comment above it states the property rather than implying it:
+*"The word only appears inside the compaction summary, which is not searchable."*
+Beside it an empty query resolves to exactly one result, which is what stops the
+assertion passing on a search that returns nothing at all. That is
+`negative_eval`, and it is the strict kind — the query is called and the result
+is what is asserted about.
+
 `tests/skills/manager.test.ts` covers the update path's rollback, including the
 case where the pull succeeds and a later step fails. What no test asserts is a
 pinned revision, because there is none to assert.
@@ -386,6 +400,12 @@ work; the belief-shaped machinery this atlas compares is absent by design.
 | `skills-lock.json` | A `computedHash` that appears once in the tree |
 
 ## History
+
+**2026-09-17** — [`879397c8ec9fd2488c69b742891f6b6c28c2af23`](https://github.com/TrianglLabs/otis/commit/879397c8ec9fd2488c69b742891f6b6c28c2af23) — re-read 27 commits on, 183 files and +18,853/-1,634 across releases up to v0.1.48. **Marks move from none to `negative_eval`.** Most of the growth is desktop surface — a macOS status tray, an on-demand Mermaid canvas, multilingual UI, a resizable side panel — but three storage suites arrived with it, and one holds the assertion this atlas counts.
+
+`tests/storage/session-search.test.ts` writes a session with one ordinary turn and one compaction summary containing *"discussed the zephyr budget"*, then requires `searchSessions` for `"zephyr"` to resolve to `[]`. The word appears nowhere else in the store, so the assertion is keyed on a value only the summary holds, and the comment states the property instead of leaving it implied: *"The word only appears inside the compaction summary, which is not searchable."* An empty query resolving to exactly one result sits beside it, which is what stops the assertion passing on a search that returns nothing at all, and a third case asserts a genuinely absent phrase returns nothing either.
+
+It is the strict form of the mark — the query is called and the result is what is asserted about — and it lands on the property this report already called the system's best: compaction is lossy for the model and lossless for the store. The summary's text stays in the event that replaced the messages and is held out of the search index, and now a committed case says so. The unpinned-skill finding is unchanged; `skills-lock.json`'s `computedHash` still appears exactly once in the tree. Screened again before reading: no auto-run surface, no build-time execution surface, one unpinned surface, one dependency file inside the seven-day cooldown; `AGENTS.md` was treated as data. Nothing was installed and nothing was run.
 
 **2026-09-09** — [`0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee`](https://github.com/TrianglLabs/otis/commit/0f4025cb9ea5fa3a386b31237ec5dd811bc4d7ee) — second reading, at `v0.1.36`. The previous pin is no longer in the branch: `main` is 62 commits ahead of it and carries 24 the pin does not, so the history was rewritten underneath it. GitHub still serves `39e98023104d` by SHA and a fresh clone cannot reach it, which is why the previous reading's line anchors are not re-checkable from a checkout. Screened before reading: no auto-run surface, no build-time execution, one manifest inside the seven-day cooldown with twenty-two floating ranges and no lockfile; nothing was installed and no suite was run.
 
