@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 565 reports.</strong></p>
+<p><strong>This page covers all 566 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -21485,6 +21485,56 @@ boundary rather than a resolved parameter, or your project names could
 collide once spaces, underscores and hyphens are stripped — this
 resolver treats <code>my-project</code>, <code>My Project</code> and
 <code>myproject</code> as one scope.</li>
+</ul>
+<h3 id="mnestic"><a
+href="../systems/mnestic/"><code>mnestic</code></a></h3>
+<ul>
+<li>Best idea: <strong>the belief axis has its own refusal.</strong>
+<code>TxTime</code> is stamped by the engine at commit and a supplied
+value fails with "TxTime is engine-assigned at commit and cannot be
+supplied", helped with "omit the TxTime column from writes". A
+transaction-time column an application can write is one an application
+can forge, which removes the only reason to keep it — and the whole
+value of the question is that nobody can answer "what did we believe on
+Tuesday" retroactively.</li>
+<li>Second idea: <strong>persist the clock's high-water mark inside the
+transaction it belongs to.</strong> The commit clock is
+<code>max(now_µs, last_tt + 1)</code>, monotonic across a backward
+wall-clock step, allocated under a per-database critical section held
+across the commit; the mark goes to a system key in the same batch, so a
+crash cannot leave the persisted value behind a transaction time that
+actually committed. Values burned by aborted transactions cost
+nothing.</li>
+<li>Third idea: <strong>order the axes for the query you actually
+run.</strong> Valid time outer, transaction time inner, so "current
+belief about the current world" is one seek and costs exactly what a
+non-temporal read costs; the spec argues the other ordering and shows it
+would make the common case span every belief epoch.</li>
+<li>Biggest risk: <strong>two doc comments say nothing calls the
+transaction-time commit path in production</strong>, while
+<code>commit_tx_inner</code> routes every qualifying commit through it
+under a comment reading "Every call site inherits this automatically" —
+stale sentences in the two files a sceptical reader opens first. Beside
+that, repudiation-by-copy is a snapshot rather than a reference, so
+correcting the copied predecessor does not propagate; the spec states
+the limit and does not fix it.</li>
+<li>Most reusable component: the <code>:create</code>-time validation of
+the temporal columns — ten distinct errors, each printing the corrected
+declaration — on an axis where upstream enforced nothing at create time
+and let a mis-declared relation become plain data that simply could not
+be time-travelled.</li>
+<li>Maturity impression: MPL-2.0, 125,343 lines of Rust, 282 commits
+past the fork point across 281 files, 962 test functions in the core
+crate, twenty-two written spec contracts one of which is validated
+against the source by a test; three capability marks.</li>
+<li>Study when: you need a worked example of bitemporality in an
+embedded engine rather than assembled over one, or you want to see how a
+fork documents an inherited bug — three of four sites upstream's, one
+its own, named site by site.</li>
+<li>Do not copy when: you need a tombstone keyed on the value or an
+epistemic status field; a retraction here is keyed on the logical key
+and its valid time, so the same content written again is a fresh live
+row.</li>
 </ul>
         </article>
       </div>

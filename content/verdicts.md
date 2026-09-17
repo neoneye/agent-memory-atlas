@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 565 reports.**
+**This page covers all 566 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -4884,3 +4884,13 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, 229,967 lines of Rust across seven crates, 455 commits since December 2025, 2,820 test functions including 22 on checkout identity alone — symlinked markers rejected, oversized metadata rejected, non-git directories failing closed without creating metadata; one capability mark.
 - Study when: an automatic writer in your system attributes content by filesystem path, or you need a worked example of a client that is honest in its rendering about what it does not know.
 - Do not copy when: you need the scope key to be an authenticated boundary rather than a resolved parameter, or your project names could collide once spaces, underscores and hyphens are stripped — this resolver treats `my-project`, `My Project` and `myproject` as one scope.
+
+### [`mnestic`](../systems/mnestic/)
+- Best idea: **the belief axis has its own refusal.** `TxTime` is stamped by the engine at commit and a supplied value fails with "TxTime is engine-assigned at commit and cannot be supplied", helped with "omit the TxTime column from writes". A transaction-time column an application can write is one an application can forge, which removes the only reason to keep it — and the whole value of the question is that nobody can answer "what did we believe on Tuesday" retroactively.
+- Second idea: **persist the clock's high-water mark inside the transaction it belongs to.** The commit clock is `max(now_µs, last_tt + 1)`, monotonic across a backward wall-clock step, allocated under a per-database critical section held across the commit; the mark goes to a system key in the same batch, so a crash cannot leave the persisted value behind a transaction time that actually committed. Values burned by aborted transactions cost nothing.
+- Third idea: **order the axes for the query you actually run.** Valid time outer, transaction time inner, so "current belief about the current world" is one seek and costs exactly what a non-temporal read costs; the spec argues the other ordering and shows it would make the common case span every belief epoch.
+- Biggest risk: **two doc comments say nothing calls the transaction-time commit path in production**, while `commit_tx_inner` routes every qualifying commit through it under a comment reading "Every call site inherits this automatically" — stale sentences in the two files a sceptical reader opens first. Beside that, repudiation-by-copy is a snapshot rather than a reference, so correcting the copied predecessor does not propagate; the spec states the limit and does not fix it.
+- Most reusable component: the `:create`-time validation of the temporal columns — ten distinct errors, each printing the corrected declaration — on an axis where upstream enforced nothing at create time and let a mis-declared relation become plain data that simply could not be time-travelled.
+- Maturity impression: MPL-2.0, 125,343 lines of Rust, 282 commits past the fork point across 281 files, 962 test functions in the core crate, twenty-two written spec contracts one of which is validated against the source by a test; three capability marks.
+- Study when: you need a worked example of bitemporality in an embedded engine rather than assembled over one, or you want to see how a fork documents an inherited bug — three of four sites upstream's, one its own, named site by site.
+- Do not copy when: you need a tombstone keyed on the value or an epistemic status field; a retraction here is keyed on the logical key and its valid time, so the same content written again is a fresh live row.
