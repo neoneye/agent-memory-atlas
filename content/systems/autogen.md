@@ -9,11 +9,11 @@ source_url: https://github.com/microsoft/autogen
 archive_name: "microsoft--autogen"
 revision: 027ecf0a379bcc1d09956d46d12d44a3ad9cee14
 revision_url: https://github.com/microsoft/autogen/commit/027ecf0a379bcc1d09956d46d12d44a3ad9cee14
-analyzed_at: 2026-07-29
+analyzed_at: 2026-09-17
 capabilities: ""
 stack_storage: "chroma, redis, memory, delegated"
 stack_retrieval: ""
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "`MemoryContent` — content, a MIME type and optional metadata. There is no identifier field"
   storage: "Interface only. Ships an in-process list plus ChromaDB, Redis, Mem0 and a text-canvas adapter"
@@ -255,7 +255,12 @@ tracks them internally must flatten them into untyped `metadata`. As with ADK,
 the interface does not merely lack a trust model — it makes a portable one
 inexpressible.
 
-**Deletion is all-or-nothing.** `clear()` is in the protocol; targeted removal is
+**Deletion is all-or-nothing, re-verified at the 2026-09-17 reading by searching
+for a delete rather than for its absence.** `grep -rnE "async def delete|def
+delete_|\.delete\(" ` over `autogen_ext/memory/` returns exactly two hits, and
+both are inside a `clear()`: ChromaDB's fetches every id and passes the whole
+list to `collection.delete(ids=...)`, and Redis's calls
+`message_history.delete()`. `clear()` is in the protocol; targeted removal is
 not, in the ABC or in ChromaDB, Redis, Mem0 or canvas. An application asked to
 delete one user's one memory has two options: wipe the store, or bypass the
 abstraction and talk to the backend directly. This atlas's
@@ -263,11 +268,17 @@ abstraction and talk to the backend directly. This atlas's
 records that none of the reviewed provider contracts carries deletion; AutoGen is
 the instance where the reason is structural rather than an omission.
 
-**Scope failure is silent.** `user_id or str(uuid.uuid4())` turns a forgotten
-argument into a working-but-orphaned store. A required argument, or a raised
-error, would cost one line and convert a silent data-partitioning bug into a
-stack trace — which is exactly what ADK does and the clearest thing AutoGen could
-borrow from it.
+**Scope failure is silent, and how silent depends on whether anyone serialises
+the component.** `user_id or str(uuid.uuid4())` turns a forgotten argument into a
+working-but-orphaned store. `_to_config` then writes `self._user_id` — the
+generated value — into the component config, and `_from_config` reads it back, so
+a caller who dumps the configured component keeps the accidental identity and a
+caller who reconstructs from a config that never had `user_id` gets a new one
+each time. The same omission therefore produces either a stable orphan or a
+fresh store per process, decided by a serialisation step that has nothing to do
+with memory. A required argument, or a raised error, would cost one line and
+convert a silent data-partitioning bug into a stack trace — which is exactly what
+ADK does and the clearest thing AutoGen could borrow from it.
 
 **Multi-tenancy** is therefore the application's problem entirely, and the
 framework provides no seam at which to solve it uniformly.
@@ -277,6 +288,28 @@ framework provides no seam at which to solve it uniformly.
 **56 memory test functions** across `autogen-core` and the ext adapter suites,
 covering the protocol's behaviour, `ListMemory` semantics, and each adapter's
 round-tripping. Proportionate for an interface package.
+
+**`negative_eval` is withheld, and the 2026-09-17 reading surveyed for it rather
+than assuming.** A search across the memory suites for `assert not`, `== []`,
+`len(...) == 0`, `pytest.raises` and `not in` returns thirteen negative-shaped
+assertions, and none of them is a negative *retrieval* assertion:
+
+- `test_list_memory_clear` adds one item, calls `clear()`, then queries and
+  asserts `len(results.results) == 0`. It runs through the real read, but the
+  store is empty by then and `ListMemory.query` returns everything regardless of
+  the query — so it asserts that an emptied list is empty, not that particular
+  material was withheld.
+- `test_list_memory_empty` and `test_redis_memory_query_empty_string_with_mock`
+  assert an empty result from an empty store and from a blank query, the latter
+  with `mock_history.get_relevant.assert_not_called()` — the retriever not being
+  called rather than material being excluded from what it returned.
+- The rest are `pytest.raises(ValidationError)` on config shapes, a
+  `runtime_checkable` protocol check (`assert not isinstance(InvalidMemory(),
+  Memory)`), and a default-flag assertion.
+
+That is the honest shape for an interface package: there is no filtering
+behaviour in the core to exclude anything from, because `ListMemory.query`
+ignores its argument.
 
 The evaluation story lives in `samples/task_centric_memory/`, and it is more
 substantial than most frameworks ship: separate harnesses for teachability,
@@ -384,5 +417,15 @@ framework guarantees.
 - `python/packages/autogen-ext/tests/memory/`
 
 ## History
+
+**2026-09-17** — [`027ecf0a379bcc1d09956d46d12d44a3ad9cee14`](https://github.com/microsoft/autogen/commit/027ecf0a379bcc1d09956d46d12d44a3ad9cee14) — re-read at the same commit, confirmed still the tip by `git ls-remote` before cloning. Nothing upstream could have moved, so this reading audited the first one. Screened again at this pin: three auto-run surfaces and eight build-time execution paths across a 126-file manifest surface, 65 of them unpinned, nothing inside the cooldown. The auto-run entries are a devcontainer, a Copilot instruction file read as data, and `.gitattributes` — whose three `filter=` drivers are all `filter=lfs` on image extensions, the ordinary Git LFS smudge filter rather than a project-defined command. Nothing was installed, built or run; the clone was `--depth 1` because the pin is the tip and there was no history to compare.
+
+The headline holds exactly. `MemoryContent` is `content`, `mime_type`, `metadata` and no identifier; the protocol is `update_context`, `query`, `add`, `clear`, `close`.
+
+**Two claims are now verified rather than asserted.** The no-targeted-delete claim was re-run as a search *for* a delete instead of for its absence: `grep -rnE "async def delete|def delete_|\.delete\("` over `autogen_ext/memory/` returns two hits and both are inside a `clear()` — ChromaDB fetching every id to pass to `collection.delete(ids=...)`, and Redis calling `message_history.delete()`. And the Mem0 scope default is sharper than "a fresh UUID": `_to_config` serialises `self._user_id`, so a caller who dumps the configured component keeps the accidental identity while one who reconstructs from a config lacking `user_id` gets a new one per process. The same omission yields a stable orphan or a fresh store depending on a serialisation step unrelated to memory.
+
+**`negative_eval` stays withheld and the survey behind it is now in section 10.** Thirteen negative-shaped assertions exist across the memory suites and none is a negative retrieval assertion: an emptied-store query after `clear()`, an empty-store and a blank-query case (the latter asserting the retriever was not called), protocol `isinstance` checks and `pytest.raises` on config shapes. For an interface package that is the honest shape — `ListMemory.query` ignores its argument, so there is no filtering behaviour to exclude anything from.
+
+Marks unchanged at none. `stack_source` moves from `seeded` to `reviewed`, with `stack_retrieval` left empty because the core ships no retrieval arm of its own and every arm belongs to an adapter.
 
 **2026-07-29** — [`027ecf0a379bcc1d09956d46d12d44a3ad9cee14`](https://github.com/microsoft/autogen/commit/027ecf0a379bcc1d09956d46d12d44a3ad9cee14) — first reading.
