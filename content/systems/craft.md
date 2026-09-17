@@ -63,31 +63,37 @@ codebase read-only for the file tools is beside a hook that makes the
 shell approve-everything for the same session.
 
 The memory is `.craft/`, and it is files a person can open. The one with a
-lifecycle is `.learnings.yaml`: after each chunk of a story the orchestrator
-is told to record conventions, enforcements, behaviours, automations,
-skills and workflows it noticed, each with an evidence entry — a source
-kind, a verbatim quote, the story and the date — an occurrence count and
-`status: pending` (`commands/references/learnings-schema.md`). Pending
-entries reach no prompt: the session hook counts them into a status line
-(`session-start.sh:150-156`) and nothing injects their text. `/craft:reflect`
-lists them by category with counts, asks *Apply all / Review each / Skip
-for now* (`craft-reflect.md:108-120`), writes the approved ones into
-`.claude/CLAUDE.md`, `.claude/rules/`, `.claude/settings.local.json` and
-`.claude/skills/` where Claude Code loads them (`:123-296`), and marks each
-`status: written` with a date, leaving it in the file (`:298-310`). Beside
-it: `design/locked.md` and `design/tokens.yaml`, written by the
-`lock-decision` skill after a confirm step and read by the implementer, the
-style analyser and the chunk validator; `tokens.yaml` may be changed only
-through `merge-tokens.py`, which the gate enforces by denying a whole-file
-write to an existing file (`check-write-permission.py:233-265`); durable
-notes under `notebook/notes/`, indexed one line each into every session
-(`session-start.sh:257-265`); tweak records whose `taste: loved` is counted
-toward a *taste pass* (`count-loved-tweaks.sh`); per-story observation
-sidecars with a `surfaced` flag; tool failures classified as knowledge gap
-or noise and aggregated into patterns at two stories (`aggregate-failures.py`);
-and, from 2.6.1, a `decisions:` field on every story that the planner and
-the alignment check read as `.craft/decisions/approved/<slug>.md` — a path
-no command, skill, hook or script writes.
+lifecycle is `.learnings.yaml`: after each chunk of a story the
+orchestrator is told to record conventions, enforcements, behaviours,
+automations, skills and workflows it noticed, each with an evidence entry
+— a source kind, a verbatim quote, the story and the date — an occurrence
+count and `status: pending` (`commands/references/learnings-schema.md`).
+
+Pending entries reach no prompt: the session hook counts them into a
+status line (`session-start.sh:150-156`) and nothing injects their text.
+
+`/craft:reflect` lists them by category with counts, asks *Apply all /
+Review each / Skip for now* (`craft-reflect.md:108-120`), writes the
+approved ones into `.claude/CLAUDE.md`, `.claude/rules/`,
+`.claude/settings.local.json` and `.claude/skills/` where Claude Code
+loads them (`:123-296`), and marks each `status: written` with a date,
+leaving it in the file (`:298-310`).
+
+Beside it: `design/locked.md` and `design/tokens.yaml`, written by the
+`lock-decision` skill after a confirm step and read by the implementer,
+the style analyser and the chunk validator; `tokens.yaml` may be changed
+only through `merge-tokens.py`, which the gate enforces by denying a
+whole-file write to an existing file
+(`check-write-permission.py:233-265`); durable notes under
+`notebook/notes/`, indexed one line each into every session
+(`session-start.sh:257-265`); tweak records whose `taste: loved` is
+counted toward a *taste pass* (`count-loved-tweaks.sh`); per-story
+observation sidecars with a `surfaced` flag; tool failures classified as
+knowledge gap or noise and aggregated into patterns at two stories
+(`aggregate-failures.py`); and, from 2.6.1, a `decisions:` field on every
+story that the planner and the alignment check read as
+`.craft/decisions/approved/<slug>.md` — a path no command, skill, hook or
+script writes.
 
 One mark, `human_review`, for the drain and the lock. `trust_state` is the
 near miss: `pending` and `written` are two states and the first withholds,

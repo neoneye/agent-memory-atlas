@@ -217,29 +217,37 @@ flowchart TB
 
 A Node CLI, `teamai`, with a `src/` of about a hundred modules. The team
 repository is the store: `learnings/`, `docs/`, `rules/`, `skills/`,
-`agents/`, `votes/`, `docs/team-codebase/`, a `manifest/` with `roles.yaml`
-and `projects.yaml`, a `teamai.yaml` with roles, tags and sharing settings, and in *self mode* — where the business repository is
-the team repository — a `teamai-reports` orphan branch that holds votes and
-reports through an isolated worktree so the working tree is never touched.
-`pull.ts` (1,720 lines) refreshes the checkout, installs resources into each
-agent's directories under the union of a role's and a project's namespaces,
-deletes what a `<type>/.removed` file names, syncs learnings, rebuilds the
-index, injects the recall block and deploys the built-in subagent;
-`projects.ts` (244 lines) parses the project manifest and resolves the active
-learnings namespaces, and `migrate.ts` (391 lines) moves a legacy `.teamai`
-directory into the per-workspace partition with a git-ignored backup; `push.ts`
-and `team-push.ts` send local resources up through a branch and merge
-request; `hooks.ts` (1,081 lines) installs and reconciles one `hook-dispatch`
+`agents/`, `votes/`, `docs/team-codebase/`, a `manifest/` with
+`roles.yaml` and `projects.yaml`, a `teamai.yaml` with roles, tags and
+sharing settings, and in *self mode* — where the business repository is
+the team repository — a `teamai-reports` orphan branch that holds votes
+and reports through an isolated worktree so the working tree is never
+touched.
+
+`pull.ts` (1,720 lines) refreshes the checkout, installs resources into
+each agent's directories under the union of a role's and a project's
+namespaces, deletes what a `<type>/.removed` file names, syncs learnings,
+rebuilds the index, injects the recall block and deploys the built-in
+subagent; `projects.ts` (244 lines) parses the project manifest and
+resolves the active learnings namespaces, and `migrate.ts` (391 lines)
+moves a legacy `.teamai` directory into the per-workspace partition with a
+git-ignored backup; `push.ts` and `team-push.ts` send local resources up
+through a branch and merge request;
+
+`hooks.ts` (1,081 lines) installs and reconciles one `hook-dispatch`
 command into each agent's settings for SessionStart, UserPromptSubmit,
-PreToolUse, PostToolUse and Stop (`:480-483`), and `hook-handlers.ts:447-490`
-maps events to handlers — pull, dashboard report, merge-request and package
-hints and the local agent on session start; update, votes sync, contribute
-check, report and local agent on stop; usage tracking and a TodoWrite hint on
-tool use; pending hints and slash tracking on prompt submit. An HTTP
-*local-agent* backend delivers resources per session for teams without a
-repository. Model calls go through `src/utils/ai-client.ts:141-199`, which
-spawns a locally installed AI CLI and parses its output, for the codebase
-wiki, the wiki import, quality drafts and promotion.
+PreToolUse, PostToolUse and Stop (`:480-483`), and
+`hook-handlers.ts:447-490` maps events to handlers — pull, dashboard
+report, merge-request and package hints and the local agent on session
+start; update, votes sync, contribute check, report and local agent on
+stop; usage tracking and a TodoWrite hint on tool use; pending hints and
+slash tracking on prompt submit.
+
+An HTTP *local-agent* backend delivers resources per session for teams
+without a repository. Model calls go through
+`src/utils/ai-client.ts:141-199`, which spawns a locally installed AI CLI
+and parses its output, for the codebase wiki, the wiki import, quality
+drafts and promotion.
 
 ### Deployment and ergonomics
 

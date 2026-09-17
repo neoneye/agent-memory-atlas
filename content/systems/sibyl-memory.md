@@ -70,25 +70,30 @@ document-frequency abstention and a negation policy that abstains rather than
 answering. Distinguishing *I have nothing* from *I decline to answer this* is what the
 verdict channel exists for, and it is the reason to read this repository.
 
-Four findings sit against the design. **Tenant isolation is a post-filter, and
-the authors say so.** The lock comment above the search query states that the
-tenant clause is the only thing keeping the query inside the caller's tenant,
-that the column is unindexed so this is a trailing filter rather than
-index-enforced isolation, that index-level enforcement needs a migration that
-would break existing databases, and that the situation is flagged for review and
-guarded meanwhile by the comment and a named regression test. That is a better
-disclosure than most projects manage, and the weakness is real.
-**Four of twelve declared tables have no writer** — entity relations, revenue
-events, error events and flagged actors — and the last is read by a lint check
-using a column name the table does not have, inside a bare except that has kept
-the mismatch invisible. **The review queue has no interface.** No MCP tool, CLI
-subcommand or adapter reaches it, while a changelog entry and the schema comment
-both name a `sibyl learn review` command that does not exist.
-**The README understates the outbound calls.** It says tier verification is the
-only one; a usage heartbeat fires every fifteen operations or ten minutes. The
-project's own LangGraph README discloses both channels correctly, and the
-capacity module's docstring says in as many words that an earlier, narrower
-description of its payload understated it.
+Four findings sit against the design. **Tenant isolation is a post-filter,
+and the authors say so.** The lock comment above the search query states
+that the tenant clause is the only thing keeping the query inside the
+caller's tenant, that the column is unindexed so this is a trailing filter
+rather than index-enforced isolation, that index-level enforcement needs a
+migration that would break existing databases, and that the situation is
+flagged for review and guarded meanwhile by the comment and a named
+regression test. That is a better disclosure than most projects manage,
+and the weakness is real.
+
+**Four of twelve declared tables have no writer** — entity relations,
+revenue events, error events and flagged actors — and the last is read by
+a lint check using a column name the table does not have, inside a bare
+except that has kept the mismatch invisible.
+
+**The review queue has no interface.** No MCP tool, CLI subcommand or
+adapter reaches it, while a changelog entry and the schema comment both
+name a `sibyl learn review` command that does not exist.
+
+**The README understates the outbound calls.** It says tier verification
+is the only one; a usage heartbeat fires every fifteen operations or ten
+minutes. The project's own LangGraph README discloses both channels
+correctly, and the capacity module's docstring says in as many words that
+an earlier, narrower description of its payload understated it.
 
 ## 2. Mental Model
 

@@ -190,25 +190,31 @@ watermark, the harness bridge), `events/` (the event contract, the
 projection from adapter turns to canonical events, and per-adapter
 manifests), and `agents/` (the runtime contract, the routing and adoption
 of an agent turn, the guard setting, and an HTTP shim for hosts without
-IPC). `server.mjs` is the only backend: an Express proxy over the
-Vercel AI SDK for Zhipu, OpenAI-compatible, OpenAI, Anthropic, Google and
-DeepSeek endpoints, with web and scholarly search tools, MCP clients from
+IPC).
+
+`server.mjs` is the only backend: an Express proxy over the Vercel AI SDK
+for Zhipu, OpenAI-compatible, OpenAI, Anthropic, Google and DeepSeek
+endpoints, with web and scholarly search tools, MCP clients from
 `mcp.config.json`, PDF extraction and URL fetch; on the person's machine
 it also mounts the agent runtimes under `/api/agents` and the other
-agents' session files under `/api/roots`. Those come from `runtime/`, a
-directory of plain Node that the desktop shell, the harness plugin host
-and the proxy share: `agents/pi.cjs` over `pi --mode rpc`,
-`agents/codex.cjs` over `codex app-server`, the guard, `ops.cjs` for
-workspaces, materials and the guard file, `fs-diff.cjs` for a snapshot
-of the working directory before and after a turn, `sessions-fs.cjs` and
-`terminal.cjs`. `desktop/main.js` is the Electron shell: fenced session
-roots under the home directory, a native picker for custom roots, backup
-writes, protocol links, and the agent runtimes over IPC. `cli/` is the why
-layer; `dsh/` the harness plugin; `functions/` the Cloudflare twin of the
-proxy with no environment and no storage; `protocol/` the Context Bundle
-v0 proposal with schema and fixtures and the adapter documents for Claude
-Code and Codex; `benchmark/` the cases, gold, suites, tools, compiled
-artifacts, runs and canvases.
+agents' session files under `/api/roots`.
+
+Those come from `runtime/`, a directory of plain Node that the desktop
+shell, the harness plugin host and the proxy share: `agents/pi.cjs` over
+`pi --mode rpc`, `agents/codex.cjs` over `codex app-server`, the guard,
+`ops.cjs` for workspaces, materials and the guard file, `fs-diff.cjs` for
+a snapshot of the working directory before and after a turn,
+`sessions-fs.cjs` and `terminal.cjs`.
+
+`desktop/main.js` is the Electron shell: fenced session roots under the
+home directory, a native picker for custom roots, backup writes, protocol
+links, and the agent runtimes over IPC.
+
+`cli/` is the why layer; `dsh/` the harness plugin; `functions/` the
+Cloudflare twin of the proxy with no environment and no storage;
+`protocol/` the Context Bundle v0 proposal with schema and fixtures and
+the adapter documents for Claude Code and Codex; `benchmark/` the cases,
+gold, suites, tools, compiled artifacts, runs and canvases.
 
 Persistence is object storage into IndexedDB with a one-second debounce
 and a flush on page hide (`lib/persistence.ts`); the project list is a

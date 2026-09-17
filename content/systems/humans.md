@@ -57,28 +57,32 @@ made from a full clone. The README's *"No External Memory. No RAG. No Context
 Window"* is a claim about the shipped conversation surface, and the tree also
 ships the RAG path as *"a control."*
 
-Two decisions make it memory in this atlas's sense. **Canonical records are
-immutable in the database.** `MindStore` (`store.py:39`) creates a `records`
-table and two triggers — `BEFORE UPDATE` and `BEFORE DELETE` raise
-*"canonical records are immutable"* (`:125-133`) — and the architecture
-contract states the rule: *"A correction creates a new record that supersedes
-the old record; it does not overwrite history."* The active-record queries
-exclude any row a newer record's `supersedes_id` names (`:411-421`,
-`:850-865`), so a superseded fact leaves retrieval and stays in the table.
-**Retrieval is an action the mind must select.** The speech motor — a local
-Ollama model behind a `ChatModel` protocol — receives a system message
-carrying the current drive, urgency and stability numbers and one user
-message, the current `HEAR` event; *"No earlier messages or retrieved records
-are available"* is in the system text (`integrated_agent.py:282-321`), and a
-test asserts the first event's text is absent from the second call
-(`tests/test_integrated_agent.py:69-108`). Stored text reaches an answer only
-when `/recall` is selected as an exact one-use `LOOK` affordance
-(`:724-738`); `_recall_memory` (`:582-628`) then scans active records that
-carry `membrane_words`, scores token overlap at 0.58, cosine at 0.24, phrase
-match at 0.18 with a 0.12 boost for an explicit user memory, drops candidates
-under a floor, returns eight, and labels the result
-`automatic_prompt_injection: False`. The rendered text is returned through a
-`SEE` cycle with a receipt and is never placed in the model's prompt.
+Two decisions make it memory in this atlas's sense.
+
+**Canonical records are immutable in the database.** `MindStore`
+(`store.py:39`) creates a `records` table and two triggers — `BEFORE
+UPDATE` and `BEFORE DELETE` raise *"canonical records are immutable"*
+(`:125-133`) — and the architecture contract states the rule: *"A
+correction creates a new record that supersedes the old record; it does
+not overwrite history."* The active-record queries exclude any row a newer
+record's `supersedes_id` names (`:411-421`, `:850-865`), so a superseded
+fact leaves retrieval and stays in the table.
+
+**Retrieval is an action the mind must select.** The speech motor — a
+local Ollama model behind a `ChatModel` protocol — receives a system
+message carrying the current drive, urgency and stability numbers and one
+user message, the current `HEAR` event; *"No earlier messages or retrieved
+records are available"* is in the system text
+(`integrated_agent.py:282-321`), and a test asserts the first event's text
+is absent from the second call (`tests/test_integrated_agent.py:69-108`).
+Stored text reaches an answer only when `/recall` is selected as an exact
+one-use `LOOK` affordance (`:724-738`); `_recall_memory` (`:582-628`) then
+scans active records that carry `membrane_words`, scores token overlap at
+0.58, cosine at 0.24, phrase match at 0.18 with a 0.12 boost for an
+explicit user memory, drops candidates under a floor, returns eight, and
+labels the result `automatic_prompt_injection: False`. The rendered text
+is returned through a `SEE` cycle with a receipt and is never placed in
+the model's prompt.
 
 The third decision is a boundary. Six lanes — `HEAR`, `SEE`, `NOTICE` in,
 `SPEAK`, `LOOK`, `DO` out — share one graph, and *"only an inbound `HEAR`

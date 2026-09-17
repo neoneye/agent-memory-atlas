@@ -190,22 +190,23 @@ data; nothing was installed or run, and the read was made from a full
 clone. The README's <em>"No External Memory. No RAG. No Context
 Window"</em> is a claim about the shipped conversation surface, and the
 tree also ships the RAG path as <em>"a control."</em></p>
-<p>Two decisions make it memory in this atlas's sense. <strong>Canonical
-records are immutable in the database.</strong> <code>MindStore</code>
-(<code>store.py:39</code>) creates a <code>records</code> table and two
-triggers — <code>BEFORE UPDATE</code> and <code>BEFORE DELETE</code>
-raise <em>"canonical records are immutable"</em> (<code>:125-133</code>)
-— and the architecture contract states the rule: <em>"A correction
-creates a new record that supersedes the old record; it does not
-overwrite history."</em> The active-record queries exclude any row a
-newer record's <code>supersedes_id</code> names (<code>:411-421</code>,
-<code>:850-865</code>), so a superseded fact leaves retrieval and stays
-in the table. <strong>Retrieval is an action the mind must
-select.</strong> The speech motor — a local Ollama model behind a
-<code>ChatModel</code> protocol — receives a system message carrying the
-current drive, urgency and stability numbers and one user message, the
-current <code>HEAR</code> event; <em>"No earlier messages or retrieved
-records are available"</em> is in the system text
+<p>Two decisions make it memory in this atlas's sense.</p>
+<p><strong>Canonical records are immutable in the database.</strong>
+<code>MindStore</code> (<code>store.py:39</code>) creates a
+<code>records</code> table and two triggers — <code>BEFORE UPDATE</code>
+and <code>BEFORE DELETE</code> raise <em>"canonical records are
+immutable"</em> (<code>:125-133</code>) — and the architecture contract
+states the rule: <em>"A correction creates a new record that supersedes
+the old record; it does not overwrite history."</em> The active-record
+queries exclude any row a newer record's <code>supersedes_id</code>
+names (<code>:411-421</code>, <code>:850-865</code>), so a superseded
+fact leaves retrieval and stays in the table.</p>
+<p><strong>Retrieval is an action the mind must select.</strong> The
+speech motor — a local Ollama model behind a <code>ChatModel</code>
+protocol — receives a system message carrying the current drive, urgency
+and stability numbers and one user message, the current
+<code>HEAR</code> event; <em>"No earlier messages or retrieved records
+are available"</em> is in the system text
 (<code>integrated_agent.py:282-321</code>), and a test asserts the first
 event's text is absent from the second call
 (<code>tests/test_integrated_agent.py:69-108</code>). Stored text
