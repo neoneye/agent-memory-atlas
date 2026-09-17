@@ -7,10 +7,12 @@ page_kind: system
 source_name: "polmanas1998-star/holomem"
 source_url: https://github.com/polmanas1998-star/holomem
 archive_name: "polmanas1998-star--holomem"
-revision: 4a96a08e35541da558a2f19a2dd27f09f5b74efd
-revision_url: https://github.com/polmanas1998-star/holomem/commit/4a96a08e35541da558a2f19a2dd27f09f5b74efd
-analyzed_at: 2026-09-07
-capabilities: ""
+revision: b09cb1b05a96bd4d271d3a2aad27ec93006cb596
+revision_url: https://github.com/polmanas1998-star/holomem/commit/b09cb1b05a96bd4d271d3a2aad27ec93006cb596
+analyzed_at: 2026-09-17
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the gated read path — the tiny-store invention guard | test_holomem.py (the tiny-store test), holomem.py:408-468 (`query_gated`), :274-279 (`Z_GATE`, `MIN_ABSOLUTE`) | a store holding two facts is asked for a subject nobody stated and `assert invented is None` requires the gate to answer nothing; `assert answer == \"compiler\"` in the same test requires it to still know the fact it holds, so the guard cannot pass by refusing everything, and `assert z == 0.0` pins the under-three-candidates fallback rather than the spread path. The docstring records the measurement rather than the conclusion — six inventions out of six on the ungated path, and *\"worst true 0.6403 against best false 0.1651 over five dimensions and 30 seeds\"* as the separation the absolute floor rests on. It guards invention rather than a corrected value; no case asserts a damped value is absent from an answer | the case is the evidence; pytest, no service dependency"
 stack_storage: "memory"
 stack_retrieval: "vector"
 stack_source: "reviewed"
@@ -46,9 +48,9 @@ The algebra is four lines (`holomem.py:24-28`). A symbol is `d` unit phasors
 with phases from a hash of the folded name (`symbol`, `:167-189`); binding is
 the elementwise product and unbinding the product with the conjugate, an
 exact inverse; the trace is the weighted sum of `bind(S, R, O)` over every
-fact whose decayed weight clears a floor (`_build`, `:327-349`); a query
+fact whose decayed weight clears a floor (`_build`, `:338-360`); a query
 unbinds the trace by `bind(S, R)` and snaps the residue to the nearest known
-object by complex cosine (`query`, `_cleanup`, `:366-386`). The inverse query
+object by complex cosine (`query`, `_cleanup`, `:377-406`). The inverse query
 is the same operation with the other pair, so *"who works on X"* costs no
 second index. What the module measures rather than asserts is where this
 stops working: `bench_capacity.py` stores `N` distinct triples and queries
@@ -61,10 +63,10 @@ The design's memory idea is in the weights. A `Fact` carries a `created_ts`
 and a `last_seen_ts`, and its effective weight is `weight · 0.5^(age/45 days)`
 with age counted from the last confirmation (`:210-218`), so *"a fact you keep
 mentioning stays sharp however old it is."* Relearning adds 0.25 up to 1.5
-(`learn`, `:272-287`); `contradict(s, r, o)` multiplies every other object of
-the relation by 0.35 and does not delete (`:289-304`); `forget_faded` drops
-facts below 0.18 (`:306-316`); the epochal trace binds each term to
-`epoch:YYYY-MM` so `query_at` answers what the relation held then (`:398-407`).
+(`learn`, `:283-298`); `contradict(s, r, o)` multiplies every other object of
+the relation by 0.35 and does not delete (`:300-315`); `forget_faded` drops
+facts below 0.18 (`:317-327`); the epochal trace binds each term to
+`epoch:YYYY-MM` so `query_at` answers what the relation held then (`:479-488`).
 The answer a caller gets is a triple — winner, score, margin — and the README
 argues, with a committed figure, that the margin measured as a z-score over
 the losing candidates is the number to gate on, because an absolute threshold
@@ -122,7 +124,7 @@ capped at 4,096 entries that is cleared whole on overflow (`:163-189`), which
 the README measures as a nine-fold rebuild slowdown past about 1,365 facts
 and leaves in place because every published number was measured against it.
 
-Time is injected: `HolographicMemory(dim, now_fn)` takes a clock (`:263-268`),
+Time is injected: `HolographicMemory(dim, now_fn)` takes a clock (`:274-279`),
 which is what makes the README example and the tests reproducible to the
 third decimal on any day. Three benchmark scripts and a plotter sit beside the
 module: `bench_capacity.py` (the sweep, seeded per cell so a clean checkout
@@ -149,33 +151,39 @@ nothing to load it back.
   seed a uniform phase vector (`:167-189`). No codebook, no insertion order.
 - **Learn.** `learn(s, r, o)` folds the key, scans the list for it, and either
   reinforces — `min(1.5, w + 0.25)`, `last_seen_ts = now` — or appends a
-  `Fact` at the given weight with `created_ts` defaulting to now (`:272-287`);
+  `Fact` at the given weight with `created_ts` defaulting to now (`:283-298`);
   either way `_invalidate` drops both traces.
 - **Contradict.** `contradict(s, r, o)` multiplies the weight of every fact
   with the same folded subject and relation and a different object by 0.35;
-  `o=None` damps every object (`:289-304`).
+  `o=None` damps every object (`:300-315`).
 - **Decay and floor.** `Fact.effective_weight(now, half_life)` is
   `weight · 0.5^(age_days / 45)` from `last_seen_ts` (`:210-218`); `_build`
   skips a fact under 0.18 and adds the rest to both traces, the epochal one
-  bound to `epoch_of(created_ts)` (`:327-349`); `forget_faded` drops the
-  under-floor facts from the list (`:306-316`).
+  bound to `epoch_of(created_ts)` (`:338-360`); `forget_faded` drops the
+  under-floor facts from the list (`:317-327`).
 - **Query.** `query` unbinds `trace` by `bind(S, R)` and calls `_cleanup`
   over the object pool; `query_subject` unbinds by `bind(R, O)` over the
   subject pool; `query_at` unbinds the epochal trace by `bind(epoch, S, R)`
-  (`:383-407`). `_cleanup` sorts the pool by complex cosine and returns the
-  best name, its score and the margin over the second (`:366-381`);
-  `noise_floor` is `1/sqrt(2d)` (`:416-423`).
-- **Gate.** The z-score gate lives in the benchmark, not the module:
-  `bench_capacity.py` computes `(top − mean(others)) / std(others)` and counts
-  an answer as given at `z ≥ 4`, reporting gated precision and coverage per
-  cell.
+  (`:399-488`). `_cleanup` sorts the pool by complex cosine and returns the
+  best name, its score and the margin over the second (`:377-397`);
+  `noise_floor` is `1/sqrt(2d)` (`:497-504`).
+- **Gate.** `query_gated` (`:408-468`) is the gate, in the module, at
+  `Z_GATE = 4.0` — the winner's cosine over the mean of the losers in units of
+  their own spread, returning `(None, z)` below the threshold. `bench_capacity.py`
+  computes the same quantity and reports gated precision and coverage per cell.
+  Under three candidates no spread is measurable, so the gate falls back to
+  `MIN_ABSOLUTE = 0.40`, and the constant's comment says where the number came
+  from — *"Derived, not chosen"* — and that it is *"[n]ever used when a z is
+  computable"*. The ungated `query` is kept and documented as always naming a
+  winner however torn the memory is, with the module pointing a caller at
+  `query_gated` for the operating point the README publishes.
 
 ## 5. Memory Data Model
 
 `Fact` is `s`, `r`, `o`, `weight`, `created_ts`, `last_seen_ts` (`:201-221`);
 its key is the folded triple. The trace is `np.complex128[d]`; the epochal
 trace the same. The candidate pools are rebuilt from the list on every query
-(`_pools`, `:359-364`). There is no id, no source, no state and no record of
+(`_pools`, `:370-375`). There is no id, no source, no state and no record of
 a damping or a drop; the month a fact was learned is recoverable only as the
 symbol it was bound to.
 
@@ -243,12 +251,27 @@ learned in May.
 
 **Human review — withheld.** No surface.
 
-**Negative evaluation — withheld.** The suite asserts that contradiction
-strictly decreases a weight and widens the margin toward the new value, and
-that a faded fact leaves the trace before it leaves the list
-(`test_holomem.py:117-170`); no case asserts that the damped value is absent
-from an answer, and the membench harness, which scores silence after a
-fact's end date, is a separate repository.
+**Negative evaluation — earned, and on the invention rather than the
+correction.** The case is `test_holomem.py`'s tiny-store test: a store holding
+two facts is asked for a subject nobody ever stated, and
+`assert invented is None` requires the gate to answer nothing. Beside it in the
+same test, `assert answer == "compiler"` requires the store to still know the
+fact it does hold, so the assertion cannot pass by refusing everything — and
+`assert z == 0.0, "z is not computable here and must not pretend otherwise"`
+pins the fallback path rather than the happy one.
+
+What makes it worth more than the mark is the docstring, which records the
+measurement instead of the conclusion: six inventions out of six when the
+ungated path was measured on 07/09/2026, and the populations that justify the
+absolute floor — *"worst true 0.6403 against best false 0.1651 over five
+dimensions and 30 seeds"*. A threshold with its separation written down beside it
+is re-checkable by the next reader.
+
+The narrower absence still stands: no case asserts that a *damped* value is
+absent from an answer. `test_contradiction_makes_the_new_belief_decisive`
+asserts the settled answer **is** the new value, which implies the old one is not
+returned under a top-1 read but does not assert it, and the membench harness that
+scores silence after a fact's end date is a separate repository.
 
 **What the tests do guard.** Twenty-one cases, each with its failure mode in
 a comment; the README records a mutation pass of seven mutants in which one
@@ -339,7 +362,7 @@ or more than one relation per subject you cannot enumerate.
 
 | Path | Lines | What it holds |
 | --- | --- | --- |
-| `holomem.py` | 423 | The algebra (`:110-148`), `fold` and `symbol` (`:151-189`), `epoch_of` (`:190`), `Fact` (`:201-221`), `HolographicMemory` — constants (`:224-261`), `learn`, `contradict`, `forget_faded` (`:272-316`), `_build` and `trace` (`:327-357`), `_pools`, `_cleanup`, `query`, `query_subject`, `query_at` (`:359-407`), `noise_floor` (`:416`) |
+| `holomem.py` | 423 | The algebra (`:110-148`), `fold` and `symbol` (`:151-189`), `epoch_of` (`:190`), `Fact` (`:201-221`), `HolographicMemory` — constants (`:224-261`), `learn`, `contradict`, `forget_faded` (`:283-327`), `_build` and `trace` (`:338-368`), `_pools`, `_cleanup`, `query`, `query_subject`, `query_at` (`:370-488`), `noise_floor` (`:416`) |
 | `test_holomem.py` | 272 | Twenty-one cases with their failure modes |
 | `bench_capacity.py`, `bench_compare.py`, `bench_cost.py`, `plot_results.py` | 220, 263, 247, 296 | The sweep, the dict comparison, the cost table, the figures |
 | `results/capacity.json`, `compare.json`, `cost.json` | 40 cells, 10 rows, 5 rows | The committed numbers |
@@ -356,5 +379,13 @@ rg -n -i 'arxiv|doi' README.md                                        # none: no
 ```
 
 ## History
+
+**2026-09-17** — [`b09cb1b05a96bd4d271d3a2aad27ec93006cb596`](https://github.com/polmanas1998-star/holomem/commit/b09cb1b05a96bd4d271d3a2aad27ec93006cb596) — re-read one commit on, +229 lines across the module and its suite, and it answers two findings at once. Its subject line is the shape of the change: *"Expose the gate the README documents, and close the door under three candidates."* **Marks move from none to `negative_eval`.**
+
+The gate was in the benchmark and is in the module: `query_gated` at `Z_GATE = 4.0`, returning `(None, z)` below the threshold, with the ungated `query` kept and documented as always naming a winner however torn the memory is. Under three candidates no spread can be measured, so it falls back to `MIN_ABSOLUTE = 0.40` — a constant whose comment says *"Derived, not chosen"* and *"[n]ever used when a z is computable"*, and whose docstring warns against gating on the absolute margin at all because it shrinks as the trace fills, so a fixed threshold on it stops firing exactly where it is needed.
+
+The mark rests on the tiny-store test. A store holding two facts is asked for a subject nobody ever stated and `assert invented is None` requires silence; `assert answer == "compiler"` in the same test requires it to still know the fact it does hold, so the guard cannot pass by refusing everything; and `assert z == 0.0, "z is not computable here and must not pretend otherwise"` pins the fallback path rather than the happy one. The docstring records the measurement instead of the conclusion — six inventions out of six on the ungated path, and *"worst true 0.6403 against best false 0.1651 over five dimensions and 30 seeds"* as the separation the floor rests on.
+
+One related absence is kept rather than quietly dropped: no case asserts that a *damped* value is absent from an answer. `test_contradiction_makes_the_new_belief_decisive` asserts the settled answer **is** the new value, which implies the old one is not returned under a top-1 read without asserting it. Worth recording from the suite's own margin: a test that had asserted `weight == CONTRADICT_FACTOR` is now pinned to a strict decrease instead, because the original was `x == x` and survived mutating the constant to 1.0 — *"[f]ound by mutation, not by reading."* Fourteen anchors moved with the new constants and the new method and are corrected against this commit. Screened again before reading: no auto-run surface, no build-time execution surface, three unpinned surfaces, nothing inside the cooldown. Nothing was installed and nothing was run.
 
 **2026-09-07** — [`4a96a08e35541da558a2f19a2dd27f09f5b74efd`](https://github.com/polmanas1998-star/holomem/commit/4a96a08e35541da558a2f19a2dd27f09f5b74efd) — first reading, at the head of `main`, the commit that made the module installable. Screened first: no auto-run surface, one unpinned requirement, two manifests inside the seven-day cooldown; nothing installed or run, the read made from a full clone. The README's capacity table was recomputed from `results/capacity.json` and matches. No mark; the fact list's persistence is the adopter's, and the report says so in section 1 rather than excluding a design whose forgetting is the point. The same author's `membench` harness was examined on 6 September 2026 and lives on the benchmarks page.
