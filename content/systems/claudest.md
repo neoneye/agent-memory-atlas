@@ -27,7 +27,7 @@ matrix:
   background: "Batched summary backfill that marks permanent failures instead of retrying them"
   trust: "summary_version as a three-valued marker — needs work, current, permanently failed"
   strengths: "A consolidation protocol that requires removals and verifies each one landed"
-  risks: "476 test functions across the repository and not one drives the consolidation protocol — the one mechanism that edits the user's memory files on every session"
+  risks: "505 test functions across the repository and not one drives the consolidation protocol — the one mechanism that edits the user's memory files on every session"
 ---
 
 ## 1. Executive Summary
@@ -211,8 +211,8 @@ one of the three alone would be insufficient; together they are the most careful
 treatment of agent-initiated memory deletion in this atlas.
 
 **The risk is what the tests do not reach.** The suite is substantial —
-twenty test files carrying 476 test functions over 8,800 lines of plugin
-Python — and `tests/claude-memory/` alone holds seventeen of those files and 414
+twenty test files carrying 505 test functions over 8,800 lines of plugin
+Python — and `tests/claude-memory/` alone holds seventeen of those files and 420
 of those functions, covering parsing, search, summarisation, the sync hook,
 security and the import pipeline. The consolidation protocol is the part none of
 it touches: exactly one test file so much as mentions consolidation, and what it
@@ -226,7 +226,7 @@ behind that, and it returns one path.
 ## 10. Tests, Evals, and Benchmarks
 
 **No paper, no benchmark, no committed results** — but the unit tests are not
-thin: twenty files and 476 test functions, seventeen files and 414 functions of
+thin: twenty files and 505 test functions, seventeen files and 420 functions of
 them under `tests/claude-memory/`.
 
 The verification step inside `SKILL.md` is, in effect, a runtime test the agent
@@ -279,7 +279,7 @@ practice for an agent protocol. It is still a prompt.
   rule, the removal requirement and the verification step are instructions to a
   model, and nothing fails loudly when they are skipped. The `Glob` check is
   scriptable; so is "did this run produce any removals".
-- **Count the tests against the mechanism, not against the repository.** 476 test
+- **Count the tests against the mechanism, not against the repository.** 505 test
   functions is a healthy number and it is the wrong number to be reassured by
   here: the one mechanism that edits the user's memory files on every session is
   the one no test drives. A suite can be large and still leave the dangerous path
@@ -332,6 +332,6 @@ selection algorithms and the fallthrough `:1-16`), `hooks/clear-handoff.py`,
 
 ## History
 
-**2026-09-17** — [`9088bf8d355551cd2d86a3a06d7f2bd46c712a87`](https://github.com/gupsammy/claudest/commit/9088bf8d355551cd2d86a3a06d7f2bd46c712a87) — re-read two commits past the previous pin, both memory-scoping fixes. `SKILL.md`, `memory-auditor.md`, `backfill_summaries.py` and `memory-context.py` are byte-identical by blob sha, so the approval gate, the three deletion guards and the injection paths are unchanged and `human_review` stands. What moved is project identity. The INSERT branch of `import_project` had used `ON CONFLICT(path) DO UPDATE SET key`, so — in the commit's own words — *"a brand-new directory whose lossy fallback path matched an existing project silently stole that project's row"*; it now pre-checks the path and falls back to the encoded directory key before a plain INSERT. Four committed cases arrived with it, and one pairs its negative with a control: `test_new_project_fallback_collision_does_not_rekey_other_project` asserts the existing row's path is unchanged while the new project lands under its own key, and `test_trusted_cwd_renames_existing_project` asserts a rename still happens when the cwd is trusted, so the guard cannot pass by refusing everything. These assert about a write decision rather than a retrieval, so they do not move `negative_eval`. The companion commit cut `BACKUP_RETENTION` from 10 to 3 and added `BACKUP_MIN_INTERVAL_HOURS = 24`. One anchor moved, `import_conversations.py` `:391`→`:410`, and was re-verified at the new pin. One published claim is corrected in two places: this report said “two test files”, and the repository carried twenty test files and 470 test functions at the previous pin, 476 at this one — seventeen files and 414 functions of them under `tests/claude-memory/`. The criticism's substance survives the correction and sharpens: `grep -rli consolidat tests/` returns exactly one path, and what it tests is config writing, so the consolidation protocol remains the part of this system that nothing exercises. Screened again before reading: one auto-run surface, two build-time execution surfaces, one unpinned surface; `CLAUDE.md` is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run.
+**2026-09-17** — [`9088bf8d355551cd2d86a3a06d7f2bd46c712a87`](https://github.com/gupsammy/claudest/commit/9088bf8d355551cd2d86a3a06d7f2bd46c712a87) — re-read two commits past the previous pin, both memory-scoping fixes. `SKILL.md`, `memory-auditor.md`, `backfill_summaries.py` and `memory-context.py` are byte-identical by blob sha, so the approval gate, the three deletion guards and the injection paths are unchanged and `human_review` stands. What moved is project identity. The INSERT branch of `import_project` had used `ON CONFLICT(path) DO UPDATE SET key`, so — in the commit's own words — *"a brand-new directory whose lossy fallback path matched an existing project silently stole that project's row"*; it now pre-checks the path and falls back to the encoded directory key before a plain INSERT. Four committed cases arrived with it, and one pairs its negative with a control: `test_new_project_fallback_collision_does_not_rekey_other_project` asserts the existing row's path is unchanged while the new project lands under its own key, and `test_trusted_cwd_renames_existing_project` asserts a rename still happens when the cwd is trusted, so the guard cannot pass by refusing everything. These assert about a write decision rather than a retrieval, so they do not move `negative_eval`. The companion commit cut `BACKUP_RETENTION` from 10 to 3 and added `BACKUP_MIN_INTERVAL_HOURS = 24`. One anchor moved, `import_conversations.py` `:391`→`:410`, and was re-verified at the new pin. One published claim is corrected in two places: this report said “two test files”, and the repository carried twenty test files and 499 test functions at the previous pin, 505 at this one — seventeen files and 420 functions of them under `tests/claude-memory/`, counted over tracked `.py` at each commit. The criticism's substance survives the correction and sharpens: `grep -rli consolidat tests/` returns exactly one path, and what it tests is config writing, so the consolidation protocol remains the part of this system that nothing exercises. Screened again before reading: one auto-run surface, two build-time execution surfaces, one unpinned surface; `CLAUDE.md` is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run.
 
 **2026-08-09** — [`1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9`](https://github.com/gupsammy/claudest/commit/1c634ac064bc24f1d3ecc3e2cfa5c0f29b3ce4a9) — first reading, covering the `claude-memory` plugin of the eight in the marketplace. Screened before reading; the tree was read, never installed, and no hook was run.
