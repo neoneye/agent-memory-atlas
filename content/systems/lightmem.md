@@ -9,7 +9,7 @@ source_url: https://github.com/zjunlp/LightMem
 archive_name: "zjunlp--LightMem"
 revision: 8449d574df6bae1bdf3314a1564da65e2f37e046
 revision_url: https://github.com/zjunlp/LightMem/commit/8449d574df6bae1bdf3314a1564da65e2f37e046
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "qdrant"
 stack_retrieval: "vector"
@@ -457,5 +457,24 @@ find experiments -name '*.json' -o -name '*result*'                      # none:
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+risk claims confirmed: `speaker_id` and `speaker_name` are written onto the
+payload and no read path filters on either — the only `speaker_id` assignment in
+the tree is in an experiment script (`experiments/locomo/add_locomo.py:133`) —
+and `offline_update_all_entries` hard-deletes on one branch and rewrites in
+place on the other, recording neither (`memory/lightmem.py:611-625`).
+
+One thing to add, because it changes what "rewrites in place" costs. On the
+`update` branch the new payload carries the model's `new_memory` text, and the
+vector is taken from the row being replaced — `vector = entry.get("vector")`,
+then `update(vector_id=eid, vector=vector, payload=new_payload)` (`:618-622`).
+Nothing re-embeds. So after a consolidation the row's text says one thing and
+its embedding still encodes the wording it replaced, and every later similarity
+search ranks that memory by a sentence it no longer contains. The choice between
+the two branches is itself a model's — `action = updated_entry.get("action")`
+comes back from the update LLM call (`:610`) — so a model decides per entry
+whether to destroy a memory or to leave a stale vector behind it, and the store
+records neither decision. No marks; the report carries none.
 
 **2026-09-10** — [`8449d574df6bae1bdf3314a1564da65e2f37e046`](https://github.com/zjunlp/LightMem/commit/8449d574df6bae1bdf3314a1564da65e2f37e046) — first reading, at the head of `main`, the last commit of 5 September 2026. Screened before reading: no auto-run surface, one build-time execution path, four unpinned dependency surfaces including a `requirements.txt` with twenty-six unversioned entries, and nothing inside the seven-day cooldown; nothing was installed or run, and the read was made from a full clone. No marks. The paper ([arXiv:2510.18866](https://arxiv.org/abs/2510.18866), ICLR 2026) was read for its abstract and reported results and its stages were traced against the code; the claim recorded here is that no benchmark result is committed to this repository, not that the evaluation was not performed. The reading covered the `lightmem` package only — `em2mem` and `fluxmem` are separate systems sharing the tree and are named rather than analysed.

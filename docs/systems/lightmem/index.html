@@ -134,7 +134,7 @@ validity interval.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/zjunlp--LightMem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -675,6 +675,29 @@ rg -l &#39;audit|\.jsonl&#39; src/lightmem                                      
 find tests -name &#39;*.py&#39; | xargs wc -l                                    # 49 lines, one file
 find experiments -name &#39;*.json&#39; -o -name &#39;*result*&#39;                      # none: harnesses committed, no scores</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. Both risk claims confirmed: <code>speaker_id</code>
+and <code>speaker_name</code> are written onto the payload and no read
+path filters on either — the only <code>speaker_id</code> assignment in
+the tree is in an experiment script
+(<code>experiments/locomo/add_locomo.py:133</code>) — and
+<code>offline_update_all_entries</code> hard-deletes on one branch and
+rewrites in place on the other, recording neither
+(<code>memory/lightmem.py:611-625</code>).</p>
+<p>One thing to add, because it changes what "rewrites in place" costs.
+On the <code>update</code> branch the new payload carries the model's
+<code>new_memory</code> text, and the vector is taken from the row being
+replaced — <code>vector = entry.get("vector")</code>, then
+<code>update(vector_id=eid, vector=vector, payload=new_payload)</code>
+(<code>:618-622</code>). Nothing re-embeds. So after a consolidation the
+row's text says one thing and its embedding still encodes the wording it
+replaced, and every later similarity search ranks that memory by a
+sentence it no longer contains. The choice between the two branches is
+itself a model's — <code>action = updated_entry.get("action")</code>
+comes back from the update LLM call (<code>:610</code>) — so a model
+decides per entry whether to destroy a memory or to leave a stale vector
+behind it, and the store records neither decision. No marks; the report
+carries none.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/zjunlp/LightMem/commit/8449d574df6bae1bdf3314a1564da65e2f37e046"><code class="commit-id" title="8449d574df6bae1bdf3314a1564da65e2f37e046">8449d574…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 5
