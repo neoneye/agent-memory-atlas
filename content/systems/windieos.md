@@ -9,18 +9,20 @@ source_url: https://github.com/buiilding/WindieOS
 archive_name: "buiilding--WindieOS"
 revision: da2deadc9e5ebd5b45bb61e73b80417156b2b3a9
 revision_url: https://github.com/buiilding/WindieOS/commit/da2deadc9e5ebd5b45bb61e73b80417156b2b3a9
-analyzed_at: 2026-08-14
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the local memory store, on every read the agent can reach | frontend/src/main/python/memory/local_store.py:931, :1255, :1552, :1596, :1644, :1655, local_backend_memory_handlers.py:158 | `user_id` is a required positional argument on `search_by_embedding` and on every list, count, update and delete entry point, and no read returns a row belonging to another `user_id`. The row-addressed paths carry it as a SQL predicate, `WHERE id = ? AND user_id = ?`; the JSON-RPC boundary defaults it to the literal `default_user` when a caller omits it, so an omission lands in a shared bucket rather than spanning users | on the vector path the predicate is not in the query. One FAISS index per memory type holds every `user_id` in the install, `_search_index` takes the top `min(limit * 3, ntotal)` candidates from it, `_fetch_rows_map` selects those rows by id with no user term, and the scope test is the Python comparison `row['user_id'] != user_id` afterwards. Correct, but lossy: a second signed-in account on the same machine spends candidate slots the first account needed, and the shortfall is silent"
 stack_storage: "sqlite, faiss"
 stack_retrieval: "vector"
 stack_source: "reviewed"
 matrix:
   memory_unit: "An episodic interaction row (a completed turn) in episodic.db, and the semantic fact-summary row it is later rolled up into in semantic.db, each with an optional FAISS vector id"
-  storage: "Per-user local files — episodic.db, semantic.db, episodic.faiss.index, semantic.faiss.index and watermark_state.json — under the OS app-data directory; the backend only computes embeddings and summaries"
+  storage: "One local file set — episodic.db, semantic.db, episodic.faiss.index, semantic.faiss.index, watermark_state.json and embedding_space.json — under the OS app-data directory, shared by every user_id on the machine; the backend only computes embeddings and summaries"
   retrieval: "FAISS inner-product search per memory type, filtered by user_id, returning nothing (non-fatally) when embeddings are unavailable"
   write: "The SDK requests an embedding from the backend and hands it to the local store; a write with no embedding still lands in SQLite with a NULL vector id and is backfilled later"
   update_delete: "Hard delete per row; episodic and semantic delete independently with no cross-cascade, and a partial delete drops the row's vector mapping but leaves the FAISS vector in place until the index empties"
-  scoping: "A user_id column indexed on the memories table and applied as WHERE user_id = ? on every read; conversation rows keyed (user_id, conversation_id)"
+  scoping: "A user_id column indexed on the memories table, a SQL predicate on the row-addressed reads and a Python post-filter on the vector read; conversation rows keyed (user_id, conversation_id)"
   integration: "A local-runtime Python memory boundary behind JSON-RPC, with the desktop app as the client; embeddings and summaries fetched from a FastAPI backend over HTTP"
   background: "A summarizer that rolls episodic interactions into semantic summaries on a startup pass and a fixed interval, resuming from a watermark"
   trust: "No status on a row. Low-value material is rejected at summarization time, not marked; there is no verified, rejected or confidence field"
@@ -57,7 +59,8 @@ embedding provider, model, or dimension, every stored vector becomes noise
 against every new query — silently, because cosine similarity still returns a
 number. WindieOS stamps each index with an `EmbeddingSpaceMetadata`
 (`embedding_provider_id`, `embedding_model_id`, `embedding_dimension`,
-`embedding_space_version`), checks it on startup, and when it has changed logs
+`embedding_space_version`), re-checks it on every write and every search rather
+than only at launch, and when it has changed logs
 *"SDK embedding space changed … Clearing local vector indices,"* resets the FAISS
 indices, nulls every `embedding_id` in SQLite, and re-saves the metadata. The
 rows survive; the vectors are rebuilt from them when embeddings are available
@@ -123,7 +126,7 @@ flowchart TB
     Sum -->|"SUMMARY: NONE"| Mark["mark sources processed<br/>no semantic row"]
     Sum -->|"summary + facts"| Sem[("semantic.db + semantic.faiss.index")]
     Sem --> MarkOK["only now mark sources semanticized<br/>dedup by summary_hash, advance watermark"]
-    Start{"startup: persisted embedding space<br/>== current provider/model/dim?"} -->|"yes"| Ready["search ready"]
+    Start{"every write and every search:<br/>persisted embedding space<br/>== the version the SDK just sent?"} -->|"yes"| Ready["search ready"]
     Start -->|"no"| Rebuild["clear FAISS indices,<br/>NULL every embedding_id,<br/>re-save metadata, backfill"]
     Rebuild --> Ready
     Ep -.->|"delete episodic: no cascade"| Sem
@@ -234,12 +237,13 @@ is how a chat buffer gets mistaken for a memory.
 
 Vector-only, per tier, exact. A query is embedded by the backend, searched
 against the episodic and/or semantic `IndexFlatIP` by inner product, resolved to
-memory ids through the in-memory map, and fetched from SQLite under the user
-filter. There is no lexical arm on the memory path (the separate
-`search_conversations` helper does chat-log search, which is a different
-surface), no reranker, and no fusion — this is straightforward semantic recall.
+memory ids through the in-memory map, fetched from SQLite by id, and then
+filtered by user in Python. There is no lexical arm on the memory path (the
+separate `search_conversations` helper does chat-log search, which is a
+different surface), no reranker, and no fusion — this is straightforward
+semantic recall.
 
-Three properties are worth drawing out.
+Four properties are worth drawing out.
 
 **Retrieval fails safe.** When the embedding provider is disabled, unavailable,
 or circuit-broken, memory search "returns no prompt memories" rather than
@@ -252,11 +256,42 @@ historical vectors on an incompatible basis and return confident nonsense. With
 it, the window after a model change is a period where search returns *less* (only
 re-embedded rows) rather than *wrong* — the correct direction for that trade.
 
+What the comparison actually reads is worth being exact about, because it is
+narrower than the four-field record suggests.
+`_ensure_external_embedding_space_alignment` hardcodes
+`embedding_provider_id="sdk"` and `embedding_model_id="sdk"` and compares only
+`embedding_space_version` and `embedding_dimension` (`local_store.py:399-417`).
+Provider and model still reach the decision, but folded into that one string:
+the backend computes it as `f"{provider_id}:{model_id}:{resolved_dimension}"` in
+`resolve_embedding_space_version` (`backend/src/api/routes/memory/embeddings/service.py:27-44`),
+and the SDK relays it on every embedding response. So the guard is as good as
+that string, and its weak edge is the default — the JSON-RPC handler takes
+`embedding_space_version: Optional[str] = None` and the store folds a missing
+value to the literal `"unknown"`, which compares equal to itself. Every shipped
+provider sets `provider_id` and `model_id`, so the `"unknown-provider"` and
+`"unknown-model"` fallbacks in `resolve_embedding_space_version` are not
+reachable from the tree as it stands.
+
 **Exact search caps the scale.** `IndexFlatIP` is O(n) per query. For a personal
 memory that is fine and removes an entire class of ANN-recall bugs; for a store
 that grew to millions of rows it would be the bottleneck, and nothing here shards
 or switches to an approximate index. The design is scoped to one person's memory
 and priced accordingly.
+
+**The user filter is a post-filter, and it is where scope costs recall.** There
+is one index per memory type and one SQLite file per memory type for the whole
+install — `app_user_data_root() / "memory"`, not a directory per user — with
+`user_id` as a column. `_search_index` asks FAISS for `min(limit * 3, ntotal)`
+candidates without any notion of who is asking, `_fetch_rows_map` selects those
+rows by id with no user term in the SQL, and the scope test is
+`if row["user_id"] != user_id: continue` at `local_store.py:931`. Nothing
+belonging to another account can be returned, which is what the mark asserts.
+But the 3× headroom is the entire budget for the loss, so on a machine where a
+second account has signed in, the first account's own matching memories can be
+pushed out of the candidate set by rows that are then discarded — and a short
+result is indistinguishable from having little to recall. A predicate the index
+could see, or a file set per `user_id`, would cost nothing here and remove the
+failure entirely.
 
 ## 7. Write Mechanics
 
@@ -457,11 +492,10 @@ gaps.
   rows unsearchable until the next restart.
 - Is the embedding-space rebuild ever triggered mid-session, or only at startup?
   A provider swap while running would leave stale vectors until the next launch.
-- What advances `embedding_space_version` — is it derived from the model id, or a
-  manually bumped constant? A model changed without a version bump would defeat
-  the guard.
-- Is there a supported path to clear semantic memory when its episodic sources
-  are deleted, or must the user nuke both tiers?
+- Why does the read-path check compare only the version string while the
+  write-path check compares version *and* dimension
+  (`local_store.py:814-830` against `:414-417`)? A same-version response at a
+  different dimension would be caught by a write and not by a search.
 - How large does a personal `IndexFlatIP` get before exact search is felt, and is
   there any intent to shard or switch to an approximate index?
 - The default branch was six weeks stale at reading — is WindieOS superseded by
@@ -504,5 +538,23 @@ gaps.
 - `frontend/tests/sidecar/test_local_store_delete_cleanup.py`, `test_memory_summarizer.py`, `test_local_store_init.py`, `test_conversation_window_runtime.py`.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. The
+embedding-space guard holds and is stronger than the first reading described:
+it is re-evaluated on every write (`local_store.py:669`) and every search
+(`:814-830`), not at startup, so a provider swap is caught on the next query
+rather than the next launch. Three of the first reading's open questions are now
+answered. `embedding_space_version` is derived, not hand-bumped — the backend
+builds it as `f"{provider_id}:{model_id}:{resolved_dimension}"` in
+`resolve_embedding_space_version`, so a model change advances it without anyone
+remembering to. The only supported way to clear semantic memory whose episodic
+sources are gone is `clear_local_memory`, scoped to a `user_id` but all-or-
+nothing across both tiers; there is still no per-conversation cascade.
+Corrections: the store is one file set per machine with `user_id` as a column,
+not a file set per user, and on the vector read path the scope predicate is a
+Python post-filter after an unscoped top-`3 × limit` FAISS search, not a
+`WHERE user_id = ?`. `scope_enforced` stands — no cross-user row can be
+returned — with the evidence record now naming the recall cost that shape
+carries.
 
 **2026-08-14** — [`da2deadc9e5ebd5b45bb61e73b80417156b2b3a9`](https://github.com/buiilding/WindieOS/commit/da2deadc9e5ebd5b45bb61e73b80417156b2b3a9) — first reading, at a default-branch tip dated 1 July 2026 that had not advanced in the six weeks before the reading. This is a distinct repository from the same author's Rust [Windie Sandbox](../windie-sandbox/) (pinned separately at `90f949b8`); the two share no git history and implement different memory designs. Screened before opening: one auto-run surface, one build-time execution point, eight unpinned manifests, lockfiles unchanged for 47–130 days. Nothing was installed or run; the embedding-space rebuild and the delete gaps were established by reading `local_store.py` against the architecture doc and the delete-cleanup tests, not by executing the runtime.

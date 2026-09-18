@@ -122,7 +122,7 @@ than comparing across incompatible spaces.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-14</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/buiilding--WindieOS" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -177,12 +177,13 @@ silently, because cosine similarity still returns a number. WindieOS
 stamps each index with an <code>EmbeddingSpaceMetadata</code>
 (<code>embedding_provider_id</code>, <code>embedding_model_id</code>,
 <code>embedding_dimension</code>, <code>embedding_space_version</code>),
-checks it on startup, and when it has changed logs <em>"SDK embedding
-space changed … Clearing local vector indices,"</em> resets the FAISS
-indices, nulls every <code>embedding_id</code> in SQLite, and re-saves
-the metadata. The rows survive; the vectors are rebuilt from them when
-embeddings are available again. That is the correct answer to a failure
-mode most systems here would ship straight into.</p>
+re-checks it on every write and every search rather than only at launch,
+and when it has changed logs <em>"SDK embedding space changed … Clearing
+local vector indices,"</em> resets the FAISS indices, nulls every
+<code>embedding_id</code> in SQLite, and re-saves the metadata. The rows
+survive; the vectors are rebuilt from them when embeddings are available
+again. That is the correct answer to a failure mode most systems here
+would ship straight into.</p>
 <p>The weaknesses are two delete gaps the project documents honestly.
 Deleting an episodic conversation does <strong>not</strong> cascade to
 the semantic summaries derived from it — <em>"There is no cross-delete
@@ -239,7 +240,7 @@ flowchart TB
     Sum --&gt;|&quot;SUMMARY: NONE&quot;| Mark[&quot;mark sources processed&lt;br/&gt;no semantic row&quot;]
     Sum --&gt;|&quot;summary + facts&quot;| Sem[(&quot;semantic.db + semantic.faiss.index&quot;)]
     Sem --&gt; MarkOK[&quot;only now mark sources semanticized&lt;br/&gt;dedup by summary_hash, advance watermark&quot;]
-    Start{&quot;startup: persisted embedding space&lt;br/&gt;== current provider/model/dim?&quot;} --&gt;|&quot;yes&quot;| Ready[&quot;search ready&quot;]
+    Start{&quot;every write and every search:&lt;br/&gt;persisted embedding space&lt;br/&gt;== the version the SDK just sent?&quot;} --&gt;|&quot;yes&quot;| Ready[&quot;search ready&quot;]
     Start --&gt;|&quot;no&quot;| Rebuild[&quot;clear FAISS indices,&lt;br/&gt;NULL every embedding_id,&lt;br/&gt;re-save metadata, backfill&quot;]
     Rebuild --&gt; Ready
     Ep -.-&gt;|&quot;delete episodic: no cascade&quot;| Sem
@@ -372,12 +373,13 @@ is how a chat buffer gets mistaken for a memory.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Vector-only, per tier, exact. A query is embedded by the backend,
 searched against the episodic and/or semantic <code>IndexFlatIP</code>
-by inner product, resolved to memory ids through the in-memory map, and
-fetched from SQLite under the user filter. There is no lexical arm on
-the memory path (the separate <code>search_conversations</code> helper
-does chat-log search, which is a different surface), no reranker, and no
-fusion — this is straightforward semantic recall.</p>
-<p>Three properties are worth drawing out.</p>
+by inner product, resolved to memory ids through the in-memory map,
+fetched from SQLite by id, and then filtered by user in Python. There is
+no lexical arm on the memory path (the separate
+<code>search_conversations</code> helper does chat-log search, which is
+a different surface), no reranker, and no fusion — this is
+straightforward semantic recall.</p>
+<p>Four properties are worth drawing out.</p>
 <p><strong>Retrieval fails safe.</strong> When the embedding provider is
 disabled, unavailable, or circuit-broken, memory search "returns no
 prompt memories" rather than erroring, and the turn continues. A memory
@@ -389,12 +391,50 @@ every query would score historical vectors on an incompatible basis and
 return confident nonsense. With it, the window after a model change is a
 period where search returns <em>less</em> (only re-embedded rows) rather
 than <em>wrong</em> — the correct direction for that trade.</p>
+<p>What the comparison actually reads is worth being exact about,
+because it is narrower than the four-field record suggests.
+<code>_ensure_external_embedding_space_alignment</code> hardcodes
+<code>embedding_provider_id="sdk"</code> and
+<code>embedding_model_id="sdk"</code> and compares only
+<code>embedding_space_version</code> and
+<code>embedding_dimension</code> (<code>local_store.py:399-417</code>).
+Provider and model still reach the decision, but folded into that one
+string: the backend computes it as
+<code>f"{provider_id}:{model_id}:{resolved_dimension}"</code> in
+<code>resolve_embedding_space_version</code>
+(<code>backend/src/api/routes/memory/embeddings/service.py:27-44</code>),
+and the SDK relays it on every embedding response. So the guard is as
+good as that string, and its weak edge is the default — the JSON-RPC
+handler takes <code>embedding_space_version: Optional[str] = None</code>
+and the store folds a missing value to the literal
+<code>"unknown"</code>, which compares equal to itself. Every shipped
+provider sets <code>provider_id</code> and <code>model_id</code>, so the
+<code>"unknown-provider"</code> and <code>"unknown-model"</code>
+fallbacks in <code>resolve_embedding_space_version</code> are not
+reachable from the tree as it stands.</p>
 <p><strong>Exact search caps the scale.</strong>
 <code>IndexFlatIP</code> is O(n) per query. For a personal memory that
 is fine and removes an entire class of ANN-recall bugs; for a store that
 grew to millions of rows it would be the bottleneck, and nothing here
 shards or switches to an approximate index. The design is scoped to one
 person's memory and priced accordingly.</p>
+<p><strong>The user filter is a post-filter, and it is where scope costs
+recall.</strong> There is one index per memory type and one SQLite file
+per memory type for the whole install —
+<code>app_user_data_root() / "memory"</code>, not a directory per user —
+with <code>user_id</code> as a column. <code>_search_index</code> asks
+FAISS for <code>min(limit * 3, ntotal)</code> candidates without any
+notion of who is asking, <code>_fetch_rows_map</code> selects those rows
+by id with no user term in the SQL, and the scope test is
+<code>if row["user_id"] != user_id: continue</code> at
+<code>local_store.py:931</code>. Nothing belonging to another account
+can be returned, which is what the mark asserts. But the 3× headroom is
+the entire budget for the loss, so on a machine where a second account
+has signed in, the first account's own matching memories can be pushed
+out of the candidate set by rows that are then discarded — and a short
+result is indistinguishable from having little to recall. A predicate
+the index could see, or a file set per <code>user_id</code>, would cost
+nothing here and remove the failure entirely.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>The write path is SDK-driven and degrades in layers. The SDK asks the
 backend for an embedding, then hands the row and its vector to the local
@@ -598,11 +638,11 @@ otherwise keep new rows unsearchable until the next restart.</li>
 <li>Is the embedding-space rebuild ever triggered mid-session, or only
 at startup? A provider swap while running would leave stale vectors
 until the next launch.</li>
-<li>What advances <code>embedding_space_version</code> — is it derived
-from the model id, or a manually bumped constant? A model changed
-without a version bump would defeat the guard.</li>
-<li>Is there a supported path to clear semantic memory when its episodic
-sources are deleted, or must the user nuke both tiers?</li>
+<li>Why does the read-path check compare only the version string while
+the write-path check compares version <em>and</em> dimension
+(<code>local_store.py:814-830</code> against <code>:414-417</code>)? A
+same-version response at a different dimension would be caught by a
+write and not by a search.</li>
 <li>How large does a personal <code>IndexFlatIP</code> get before exact
 search is felt, and is there any intent to shard or switch to an
 approximate index?</li>
@@ -665,6 +705,27 @@ layout, components, and the summarization/deletion FAQ.</li>
 <code>test_conversation_window_runtime.py</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. The embedding-space guard holds and is stronger than
+the first reading described: it is re-evaluated on every write
+(<code>local_store.py:669</code>) and every search
+(<code>:814-830</code>), not at startup, so a provider swap is caught on
+the next query rather than the next launch. Three of the first reading's
+open questions are now answered. <code>embedding_space_version</code> is
+derived, not hand-bumped — the backend builds it as
+<code>f"{provider_id}:{model_id}:{resolved_dimension}"</code> in
+<code>resolve_embedding_space_version</code>, so a model change advances
+it without anyone remembering to. The only supported way to clear
+semantic memory whose episodic sources are gone is
+<code>clear_local_memory</code>, scoped to a <code>user_id</code> but
+all-or- nothing across both tiers; there is still no per-conversation
+cascade. Corrections: the store is one file set per machine with
+<code>user_id</code> as a column, not a file set per user, and on the
+vector read path the scope predicate is a Python post-filter after an
+unscoped top-<code>3 × limit</code> FAISS search, not a
+<code>WHERE user_id = ?</code>. <code>scope_enforced</code> stands — no
+cross-user row can be returned — with the evidence record now naming the
+recall cost that shape carries.</p>
 <p><strong>2026-08-14</strong> — <a
 href="https://github.com/buiilding/WindieOS/commit/da2deadc9e5ebd5b45bb61e73b80417156b2b3a9"><code class="commit-id" title="da2deadc9e5ebd5b45bb61e73b80417156b2b3a9">da2deadc…</code></a>
 — first reading, at a default-branch tip dated 1 July 2026 that had not

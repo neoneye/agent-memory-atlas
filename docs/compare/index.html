@@ -33773,10 +33773,10 @@ selected path contains</td>
 <td>An episodic interaction row (a completed turn) in episodic.db, and
 the semantic fact-summary row it is later rolled up into in semantic.db,
 each with an optional FAISS vector id</td>
-<td>Per-user local files — episodic.db, semantic.db,
-episodic.faiss.index, semantic.faiss.index and watermark_state.json —
-under the OS app-data directory; the backend only computes embeddings
-and summaries</td>
+<td>One local file set — episodic.db, semantic.db, episodic.faiss.index,
+semantic.faiss.index, watermark_state.json and embedding_space.json —
+under the OS app-data directory, shared by every user_id on the machine;
+the backend only computes embeddings and summaries</td>
 <td>FAISS inner-product search per memory type, filtered by user_id,
 returning nothing (non-fatally) when embeddings are unavailable</td>
 <td>The SDK requests an embedding from the backend and hands it to the
@@ -33785,9 +33785,9 @@ vector id and is backfilled later</td>
 <td>Hard delete per row; episodic and semantic delete independently with
 no cross-cascade, and a partial delete drops the row's vector mapping
 but leaves the FAISS vector in place until the index empties</td>
-<td>A user_id column indexed on the memories table and applied as WHERE
-user_id = ? on every read; conversation rows keyed (user_id,
-conversation_id)</td>
+<td>A user_id column indexed on the memories table, a SQL predicate on
+the row-addressed reads and a Python post-filter on the vector read;
+conversation rows keyed (user_id, conversation_id)</td>
 <td>A local-runtime Python memory boundary behind JSON-RPC, with the
 desktop app as the client; embeddings and summaries fetched from a
 FastAPI backend over HTTP</td>

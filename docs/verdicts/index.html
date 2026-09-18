@@ -10741,14 +10741,17 @@ href="../systems/windieos/"><code>windieos</code></a></h3>
 <ul>
 <li>Best idea: stamping every FAISS index with the embedding space that
 built it. <code>EmbeddingSpaceMetadata</code> (provider, model,
-dimension, space version) is saved beside the index and checked on
-startup; when it changes, the store logs <em>"SDK embedding space
-changed … Clearing local vector indices,"</em> resets the indices, nulls
-every <code>embedding_id</code> in SQLite, and re-embeds from the
-surviving rows. That is the correct answer to a failure almost nothing
-in the atlas handles — scoring vectors from a new embedding model
-against vectors from an old one, silently, the first time anyone
-upgrades.</li>
+dimension, space version) is saved beside the index and re-checked on
+every write and every search rather than only at launch, against a
+version string the backend derives as
+<code>provider_id:model_id:dimension</code> so a model change advances
+it without anyone remembering to; when it changes, the store logs
+<em>"SDK embedding space changed … Clearing local vector indices,"</em>
+resets the indices, nulls every <code>embedding_id</code> in SQLite, and
+re-embeds from the surviving rows. That is the correct answer to a
+failure almost nothing in the atlas handles — scoring vectors from a new
+embedding model against vectors from an old one, silently, the first
+time anyone upgrades.</li>
 <li>Biggest risk: two delete gaps the project documents honestly. There
 is no episodic→semantic cascade, so deleting a conversation leaves the
 facts summarized from it behind in semantic memory — the exact opposite
@@ -10766,18 +10769,24 @@ erroring — the memory is an enhancement the chat loop can survive
 without.</li>
 <li>Maturity impression: MIT, an Electron desktop runtime with a Python
 local runtime (~58,500 backend lines) and 676 sidecar tests; memory is
-local-first (SQLite + FAISS per user under OS app-data), the backend a
-stateless calculator for embeddings and summaries. The default branch
-had been stalled six weeks at reading while the author's active work was
-the Rust sibling — read as a mature, paused predecessor.</li>
+local-first — one SQLite and FAISS file set under OS app-data for the
+whole machine, with <code>user_id</code> a column rather than a
+directory — and the backend a stateless calculator for embeddings and
+summaries. The default branch had been stalled six weeks at reading
+while the author's active work was the Rust sibling — read as a mature,
+paused predecessor.</li>
 <li>Study when: you are building a local, single-user desktop assistant
 that should accumulate a picture of its user across sessions without
 shipping that memory to a server, and you want a two-tier
 episodic→semantic split with crash-safe consolidation (mark sources
 semanticized only after the summary write, resume from a watermark,
 dedup by <code>summary_hash</code>).</li>
-<li>Do not copy when: you need multi-tenant isolation beyond one
-machine, ranked or hybrid retrieval (this is exact
+<li>Do not copy when: you need multi-tenant isolation of any kind. Scope
+is enforced — no read returns another <code>user_id</code>'s row — but
+on the vector path it is a Python post-filter after an unscoped FAISS
+search for <code>3 × limit</code> candidates, so a second signed-in
+account on the same machine silently costs the first one recall. Also
+skip it if you need ranked or hybrid retrieval (this is exact
 <code>IndexFlatIP</code> vector search, no lexical arm, no reranker), a
 trust model richer than present/absent, or deletion guaranteed complete
 across derived tiers. At large corpus sizes the exact search and the
