@@ -1,7 +1,7 @@
 ---
 title: "memsem"
 eyebrow: "A tombstone only a human can set"
-description: "A small MCP memory whose durable value-keyed write gate refuses a rejected value outright — and is armed only by a human rejecting a candidate, so the write path an extractor uses cannot refuse a value the system already discarded."
+description: "A small MCP memory whose durable value-keyed write gate refuses a rejected value outright — and is armed only by a candidate rejection, which is one of the MCP tools the agent itself holds, so the only actor who can arm the gate is also the one whose writes it exists to refuse."
 root: ../..
 page_kind: system
 source_name: "WindSeries83/memsem"
@@ -9,15 +9,14 @@ source_url: https://github.com/WindSeries83/memsem
 archive_name: "WindSeries83--memsem"
 revision: 8332a23620d88dd9755dba2b9ac954d34598d67e
 revision_url: https://github.com/WindSeries83/memsem/commit/8332a23620d88dd9755dba2b9ac954d34598d67e
-analyzed_at: 2026-09-07
-capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+analyzed_at: 2026-09-18
+capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   tombstone: "memory_suppressions, consulted first in add | src/db.ts:494-540,:1653-1669 | `blockedBySuppression(subject, predicate, object, project)` is the first check of `add()` and returns a rejected result without a row; a suppression is written only when a person rejects a candidate and lifted only by `unsuppress` | src/test/governance-test.ts:66-97 (a rejected candidate is blocked on re-add, an explicit unsuppress lets it through)"
   trust_state: "trust on the memory: inferred, verbatim, verified | src/db.ts:35-40,:1423,:2058 | `normalizeTrust` admits the three levels, the add tools' schemas refuse `verified`, and only `verify(id, evidence)` writes it with a non-empty evidence and an audit line | src/test/governance-test.ts:37-43,:96-97"
   bitemporal: "recorded_at beside valid_from and valid_until, read on every search | src/db.ts:877-881 (asOf and the validity predicate), src/db.ts:167-185 (the memories table) | `search` filters `valid_from`/`valid_until` against the effective instant and `asOf` reads the store as of a past instant separately from `recorded_at` | src/test/durability-test.ts"
   scope_enforced: "project on every read path | src/db.ts:881, src/index.ts (the tool schemas) | a search is limited to the caller's `project` unless `crossProject: true` is passed | src/test/client-test.ts:251"
   audit_log: "audit_log with reason, pass id and dry run | src/db.ts:235-256,:1710-1894 | every scoring and consolidation mutation, refused or simulated included, writes `{entity, entity_id, field, old_value, new_value, reason, pass_id, dry_run}`; `memory_audit` reads it and purge redacts the values rather than deleting the rows | src/test/governance-test.ts:101-125 (audit readable, purge redacts)"
-  human_review: "memory_candidates pending outside every read path | src/db.ts:1560-1669, src/index.ts (memory_candidate_add, memory_candidate_list, memory_candidate_review) | a candidate is `pending` until a person approves it into a memory or rejects it into a suppression | src/test/governance-test.ts:66-97"
   negative_eval: "the governance suite, written as adverse cases | src/test/governance-test.ts, src/test/regression-test.ts | a rejected value re-added is refused while the approved one is published, a search returns the verified hit with its trust and not the suppressed one, and purge leaves no content | src/test/governance-test.ts:66-125"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -31,9 +30,9 @@ matrix:
   scoping: "`project` filters every read path and holds even when a theme is given, with `crossProject: true` required to cross it; a focus list attenuates rather than excludes"
   integration: "An MCP server with eighteen tools, an opencode plugin, and a CLI with list, edit, forget, purge and doctor"
   background: "Session-end extraction, consolidation into patterns, and a pairwise-comparison scoring pass — all sub-agents driven by prompts in `plugin.ts`"
-  trust: "`inferred` / `verbatim` / `verified` as a field, with `verified` reachable only through `memory_verify`; a separate pending/approved/rejected candidate status; plus importance, confidence, frequency and a pinned flag"
+  trust: "`inferred` / `verbatim` / `verified` as a field, with `verified` reachable only through `memory_verify` — itself an MCP tool, whose `evidence` argument the agent supplies; a separate pending/approved/rejected candidate status; plus importance, confidence, frequency and a pinned flag"
   strengths: "A committed offline benchmark that reproduces exactly, an ablation over its own constants, an audit log carrying a reason and a dry-run flag, and a value-keyed write gate with committed adverse-case tests"
-  risks: "Only a human candidate rejection writes a suppression, so automatic supersession lets a repeated value return and fade its own correction; `import` writes past the gate"
+  risks: "Only a candidate rejection writes a suppression and `memory_candidate_review` is an MCP tool, so the agent can approve or reject its own candidates and mark its own memories verified; automatic supersession writes no suppression, so a repeated value returns and fades its own correction; `import` writes past the gate"
 ---
 
 ## 1. Executive Summary
@@ -735,6 +734,25 @@ corrections matter, which is the thing people are worst at.
   `client-test.ts`, `config-test.ts`, `regression-test.ts`, `governance-test.ts`.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+**`human_review` is withdrawn.** The mark rested on candidates sitting `pending`
+until a person decided them, but the decision verb is one of the server's own
+MCP tools: `server.registerTool("memory_candidate_review", …)` takes
+`decision: z.enum(["approve", "reject"])` and calls
+`db.reviewCandidate(id, decision, reason)` with no further check
+(`src/index.ts:220-236`). `memory_verify` is registered the same way two tools
+later (`:239-255`), so the agent also supplies the `evidence` string described
+as *"Preuve humaine ou externe courte"* and moves a memory to `verified` itself.
+The approve route is reachable from the producer's own tool surface, which is
+the condition for withholding.
+
+The mechanism is unchanged and still worth reading — the point of this system is
+that a rejection writes a durable value-keyed suppression, which is a better
+answer than a status flag — but the report now says who can arm it. Corrected
+with it: the description, the `trust` field and the `risks` field each said
+"human" where the code says "whoever holds the tool". The other six marks are
+untouched. Evidence coverage floor 1250 -> 1249.
 
 **2026-09-07** — [`8332a23620d88dd9755dba2b9ac954d34598d67e`](https://github.com/WindSeries83/memsem/commit/8332a23620d88dd9755dba2b9ac954d34598d67e) — re-pinned one commit on, and the repository moved from `WindSeries69/memsem` to `WindSeries83/memsem` (the old address redirects). The commit is documentation only: `DESIGN.md` gains a section that lists the six gaps this report names and a roadmap that carries each as planned work — a supersession-versus-tombstone decision, `import` behind the suppression gate, an audit line on a refused write, candidate text purged with the memory, consolidation rules moved from prompt to code, and pin as a rank term — and every README gains a known-limits section. No line of `src/` changed; the seven marks stand on the evidence at the previous pin. Screened before reading: no auto-run surface, one build-time execution point, nothing installed or run.
 
