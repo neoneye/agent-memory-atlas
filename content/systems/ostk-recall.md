@@ -9,8 +9,8 @@ source_url: https://github.com/os-tack/ostk-recall
 archive_name: "os-tack--ostk-recall"
 revision: 4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab
 revision_url: https://github.com/os-tack/ostk-recall/commit/4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab
-analyzed_at: 2026-09-11
-capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review"
+analyzed_at: 2026-09-18
+capabilities: "trust_state, bitemporal, scope_enforced, audit_log"
 stack_storage: "sqlite, lancedb"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -19,7 +19,6 @@ capability_evidence:
   bitemporal: "conflict detection | crates/store/src/claims.rs:2838-2848 | valid_from and valid_to sit beside created_at and updated_at, and intervals_overlap gates whether two same-key claims contradict at all | crates/store/src/claims.rs::same_key_different_value_opens_and_retraction_closes_conflict"
   scope_enforced: "hybrid retrieval | crates/query/src/hybrid.rs | project predicate compiled into the LanceDB filter with sql_escape | crates/query/src/hybrid.rs::build_filter_project_and_source"
   audit_log: "claim store | crates/store/src/claims.rs | memory_claim_events and memory_claim_link_events, documented append-only | crates/store/src/claims.rs::claim_link_lifecycle_is_idempotent_audited_and_scoped"
-  human_review: "conflict adjudication | crates/store/src/claims.rs:1568 | resolve_conflict_with_receipt carrying actor, reason and resolution_kind on a conflict the detector opened | crates/mcp/src/tests.rs — the resolve/replay pair at :1341-1374"
 matrix:
   memory_unit: "A claim — kind, `claim_key`, subject, predicate, `value_json`, text, polarity, confidence and a validity interval — beside a separately-ingested corpus chunk"
   storage: "SQLite for claims, the concept ledger, the audit tables and the access chain log; LanceDB (Arrow plus Tantivy) for chunk vectors and BM25"
@@ -257,11 +256,20 @@ silently accepted — and `chain_log` is an indexed access ledger. Every
 state-changing verb takes an actor and a reason.
 
 `resolve_conflict_with_receipt` records a `resolution_kind` and a
-`resolution_reason` alongside the actor, which is what earns `human_review`: a
-person adjudicates a conflict the detector opened, and the adjudication is
-itself a durable record rather than a mutation.
+`resolution_reason` alongside the actor, and the adjudication is itself a
+durable record rather than a mutation. That is a good audit property and it is
+not a review gate, which is why the `human_review` mark does not survive a
+second reading. `resolve` is not a separate surface: it is one of the eleven
+values in the `action` enum of the `remember` tool — `crates/mcp/src/tools.rs:146`
+lists `record`, `supersede`, `retract`, `forget`, `restore`, `resolve`,
+`relate`, `split`, `focus`, `track`, `consolidate` — so the verb that settles a
+conflict sits on the same tool as the verb that created it. And the actor is not
+established, it is supplied: `crates/mcp/src/claims.rs:137-143` passes
+`string_arg(args, "actor")` straight through, an optional string the caller
+fills in. A receipt naming an actor the caller chose records *that a name was
+given*, not that a person gave it.
 
-The weaknesses are the two withheld marks, and they compound. The `forget`
+The weaknesses are the withheld marks, and two of them compound. The `forget`
 warning asserts an anti-resurrection property, the mechanism behind it is a
 status flip on one row, and nothing committed asserts even the read-side half
 holds. A reader who takes the warning at face value will believe a value cannot
@@ -373,6 +381,8 @@ Run from the root of the checkout at the pinned commit.
 | Test and tree size | `grep -rc "#\[test\]\|#\[tokio::test\]" --include="*.rs" crates` summed, and `find . -name "*.rs" \| xargs wc -l` | 1,054 test functions over 93,936 lines |
 
 ## History
+
+**2026-09-18** — [`4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab`](https://github.com/os-tack/ostk-recall/commit/4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab) — re-read at the same commit; `main` has not moved since 12 August 2026, so the correction is this report's. **Human review withdrawn.** The record cited `resolve_conflict_with_receipt` and its actor, reason and resolution kind — a real receipt, and not an approver. `resolve` is one of the eleven values in the `action` enum of the published `remember` tool (`crates/mcp/src/tools.rs:139-146`), beside `record`, `forget` and `supersede`, so the verb that settles a conflict is on the same tool as the verb that opened it; and `crates/mcp/src/claims.rs:137-143` passes `string_arg(args, "actor")` through unverified, so the name on the receipt is whatever the caller wrote. The other four marks hold, and the receipt itself remains good evidence for `audit_log` — what it records is that a resolution happened and under what name, which is a different claim from who made it.
 
 **2026-09-11** — [`4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab`](https://github.com/os-tack/ostk-recall/commit/4c75f9204eec9bf52ccad52b61a1d1c1adf4e1ab) — re-read, 36 files and 4,672 insertions past the previous pin, most of it in `crates/store/src/claims.rs` and `crates/pipeline/src/lib.rs`. **The headline finding is unchanged and re-verified**: `record_claim` still inserts without consulting the suppression, `recompute_conflict` still filters to `state IN ('active','disputed')`, and no committed case asserts a suppressed claim is absent from a recall result. The criticism sharpened on one axis — the read filter is repeated in eight queries rather than the four the first reading counted, six of them behind an override flag, none of them guarded by a test. **One first-reading error, in the report's own favour to correct**: `ClaimState` has seven variants, not six; `Expired` was present at both pins and was missed. The `bitemporal` evidence was thin and is now specific: `intervals_overlap` gates whether two same-key claims contradict at all, so the validity window decides an outcome rather than merely being stored beside record time. **New since the first reading**: `split_claim` and `claim_continuity` — a claim decomposed into ordered children linked `part_of` with a sequence index and chained by `continues`, the parent suppressed rather than superseded because no single child is its successor, and a reader that refuses a branching topology; `lens_candidate_claims` and `claim_lens_generation` behind the memory-lens resource; and `backfill_transcript_projections` in the pipeline. `remember` now carries eleven verbs. Test count 1,028 to 1,054 over 93,936 lines of Rust. Marks unchanged at five. Screened before reading: one build-time exec path (`Makefile`), no auto-run surface, the lockfile unchanged for 29 days; nothing was built or run.
 
