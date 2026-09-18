@@ -9,10 +9,9 @@ source_url: https://github.com/sdsrss/claude-mem-lite
 archive_name: "sdsrss--claude-mem-lite"
 revision: 0e31b3db7684fcbc063bdd89d5d04cdef004dfc8
 revision_url: https://github.com/sdsrss/claude-mem-lite/commit/0e31b3db7684fcbc063bdd89d5d04cdef004dfc8
-analyzed_at: 2026-09-15
-capabilities: "human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  human_review: "the person's CLI and slash commands | mem-cli.mjs:3828-3891 command dispatch (`browse`, `get`, `update`, `delete`, `restore`, `maintain`); lib/delete-core.mjs:13-60; commands/mem.md `/mem cleanup` | `claude-mem-lite browse` renders working, active and archive tiers of a project's observations; `get` shows one with a retraction notice when it was superseded; `update` edits fields and rebuilds the FTS row in one transaction; `delete <ids>` previews and deletes only with `--confirm`, taking a `VACUUM INTO` snapshot first so a wrong delete has a pre-image; `/mem cleanup` scans stale rows, reports them to the user and purges only after confirmation. The same deletes are open to the agent as `mem_delete` with the same preview step | tests/save-observation-supersedes.test.mjs:46"
   negative_eval: "superseded rows stay out of injection | tests/user-prompt-search.test.mjs:65 excludes a superseded (de-dup loser) row, keeps the live one | seeds a live observation and a superseded one matching the same prompt and asserts prompt-time search returns the live row and not the superseded one; `tests/error-recall-core.test.mjs:171-262` plants superseded, compressed and low-signal decoys beside a matching live lesson and asserts none of the decoys reaches the error-recall injection; `tests/live-predicate-adjudication.test.mjs` pins every site that reads rows without the full live predicate | tests/user-prompt-search.test.mjs:65"
 stack_storage: "sqlite"
 stack_retrieval: "lexical"
@@ -77,7 +76,7 @@ rewrites a managed block in the project's committed `CLAUDE.md` on every
 session start, and nothing records who changed an observation beyond
 pre-delete snapshots.
 
-Two marks: `human_review`, `negative_eval`.
+One mark: `negative_eval`.
 
 ## 2. Mental Model
 
@@ -308,7 +307,13 @@ block early.
 **Agent authority over deletion.** `mem_delete` and `mem_maintain` are callable
 by the agent. Their descriptions tell it to preview first and to delete only on
 the user's request; the tools require `confirm=true` to act, which the agent can
-supply.
+supply. That sentence is also why this report does not carry `human_review`: a
+boolean the caller sets guards against a slip, not against a decision, and a
+description asking the model to check with the user first is a request to it
+rather than a constraint on it. The CLI's `browse`, `get`, `update`, `delete`,
+`restore` and `/mem cleanup` are a good correction surface over live rows — the
+`VACUUM INTO` pre-image before a delete is better than most — but nothing here
+waits on anyone before it is injected.
 
 **Injection of recorded content.** Observations come from tool output
 summarised by a model. Scrubbing covers secrets, not instructions.
@@ -398,5 +403,7 @@ observation beyond snapshots.
 - `ls benchmark | grep -i longmem` — runners only, no results
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`0e31b3db7684fcbc063bdd89d5d04cdef004dfc8`](https://github.com/sdsrss/claude-mem-lite/commit/0e31b3db7684fcbc063bdd89d5d04cdef004dfc8); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, and the report already carried the sentence that settles it: the maintenance tools *"require `confirm=true` to act, which the agent can supply."* The record's own closing clause made the same admission — *"the same deletes are open to the agent as `mem_delete` with the same preview step"*. Every verb in that record is browse, get, update, delete or restore over rows already in use, and the mark asks for a state a memory waits in until an actor the producing agent cannot be resolves it. The correction surface keeps every other credit the report gives it, including the pre-delete snapshot. `negative_eval` stands with its anchor re-verified: the superseded de-dup loser is excluded from prompt-time search while the live row is kept, and the test's own comment records the RED-GREEN check that without the `superseded_at IS NULL` filter both rows come back. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`0e31b3db7684fcbc063bdd89d5d04cdef004dfc8`](https://github.com/sdsrss/claude-mem-lite/commit/0e31b3db7684fcbc063bdd89d5d04cdef004dfc8) — first reading, at a commit dated 14 September 2026. Screened before opening: five auto-run surfaces (plugin, hook and MCP manifests), no build-time execution, one unpinned surface, two dependency files inside the cooldown, and `CLAUDE.md` read as data. Nothing was installed, built or run.
