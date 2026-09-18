@@ -7,13 +7,12 @@ page_kind: system
 source_name: "modusensus/dsh-mneme"
 source_url: https://github.com/modusensus/dsh-mneme
 archive_name: "modusensus--dsh-mneme"
-revision: 00c67eaf5daa7b038f0249653ba3a5946a4a9758
-revision_url: https://github.com/modusensus/dsh-mneme/commit/00c67eaf5daa7b038f0249653ba3a5946a4a9758
-analyzed_at: 2026-09-15
-capabilities: "audit_log, human_review, negative_eval"
+revision: 5bd2dab78a5b97da3761cfb82059cffc87e14b5f
+revision_url: https://github.com/modusensus/dsh-mneme/commit/5bd2dab78a5b97da3761cfb82059cffc87e14b5f
+analyzed_at: 2026-09-19
+capabilities: "audit_log, negative_eval"
 capability_evidence:
   audit_log: "the autoDream receipts | dsh-mneme/src/store.js:30-49 dream_runs, :114-131 receipt_chain, :1321 and :1396 inserts | every consolidation run appends a `dream_runs` row with the input snapshot, its hash, the raw LLM decision list, the per-id outcome and a receipt, and every committed merge, conflict or update appends a `receipt_chain` row with the input digest, winner, loser and counts before and after; nothing in `src/` updates or deletes either table. Model tool saves and deletes outside consolidation are not recorded there, and the separate `failure_memories` and `llm_audit_logs` tables are purged by retention | dsh-mneme/test/audit.test.js:60, :120, :289"
-  human_review: "the Markdown mirror and the conflict queue | dsh-mneme/src/service.js:1340-1377 mirror edit-back, dsh-mneme/src/api.js:1047-1100 GET /conflicts and POST /conflicts/resolve | memories are mirrored to Markdown files a person can edit, and an edited file flows back over the machine value on sync, archiving the prior content into `content_history` as `human_override`; with `conflictFreezeEnabled` the consolidation parks contradicting pairs in `conflict_pending`, and the panel's queue lets a person keep A, keep B or only mark the pair, applied through the same guarded conflict path | dsh-mneme/test/conflict-freeze.test.js, dsh-mneme/test/mirror-edit-digest.test.js"
   negative_eval: "the strict-scope suite | dsh-mneme/test/scope-strict.test.js:68 | saves a global row, the caller's own row, an explicitly scoped foreign row, an auto-scoped foreign row and a legacy row all matching one needle, searches under `strictScope`, and asserts the explicit foreign row is absent while the other four are returned; `:96` asserts the same wall on list and count totals | dsh-mneme/test/scope-strict.test.js:68"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
@@ -69,7 +68,18 @@ every agent and workspace, and `epistemic_status` is inert data. Even with stric
 scope on, only rows whose scope was explicitly declared are walled; automatically
 labelled rows stay visible, by design.
 
-Three marks: `audit_log`, `human_review`, `negative_eval`.
+Two marks: `audit_log`, `negative_eval`. `human_review` is withheld, and the
+reason is what freeze mode actually does. Without it, `phaseConflicts` sends a
+contradicting pair to the model and archives the loser. With
+`conflictFreezeEnabled` — `z.boolean().default(false)` in `config.js` — the pair
+is parked in `conflict_pending` and *neither memory is touched*: both stay live
+and both keep reaching recall while the queue waits. So what waits is a decision
+about which one to archive, not a memory waiting to be believed, and the other
+half of the surface — the Markdown mirror a person edits, whose edit wins on the
+next sync — is authoring over a value already in use. One thing in this path is
+better than the mark would have captured: a cross-scope pair is parked
+unconditionally and never reaches the adjudicating model, freeze mode or not,
+under a comment that says so outright (`dream/sleep.js:206-210`).
 
 ## 2. Mental Model
 
@@ -96,7 +106,7 @@ flowchart TB
     SNAP --> LLM["model decisions:<br/>merge, supersede, conflict, update, archive"]
     LLM --> CAS{"targets unchanged<br/>since snapshot?"}
     CAS -->|"no"| SKIP["skipped, reported"]
-    CAS -->|"yes, conflict and freeze on"| PEND["conflict_pending"]
+    CAS -->|"yes, conflict and freeze on"| PEND["conflict_pending<br/>both memories stay live"]
     PEND -->|"panel: keep A, keep B, mark"| APPLY
     CAS -->|"yes"| APPLY["apply in a transaction"]
     APPLY --> MEM
@@ -335,5 +345,7 @@ plugin, not a library for another runtime.
 - `rg -n "valid_until IS NULL|valid_from <=" dsh-mneme/src`
 
 ## History
+
+**2026-09-19** — re-pinned to [`5bd2dab78a5b97da3761cfb82059cffc87e14b5f`](https://github.com/modusensus/dsh-mneme/commit/5bd2dab78a5b97da3761cfb82059cffc87e14b5f), 26 commits on. `human_review` is **withdrawn** on a closer reading of freeze mode rather than on anything upstream: parking a pair in `conflict_pending` defers the archiving, so both memories stay live and keep reaching recall while the queue waits. Nothing is withheld pending a decision, which is what the mark asks for, and the queue's other half — an edited Markdown mirror winning over the machine value on the next sync — is authoring over a value already in use. The flag is also `default(false)`. The MCP surface was checked for a resolve verb and has none: the ten declared tools are `memory`, `memory_archive`, `memory_delete`, `memory_forget`, `memory_get`, `memory_list`, `memory_runtime`, `memory_save`, `memory_search` and `memory_update`, so the panel route really is the only caller — but a queue only a person drains is still not a gate when nothing waits behind it. `audit_log` and `negative_eval` both stand with anchors re-verified at the new pin. Screened again first; a dependency surface was inside the cooldown, so nothing was installed and no suite was run.
 
 **2026-09-15** — [`00c67eaf5daa7b038f0249653ba3a5946a4a9758`](https://github.com/modusensus/dsh-mneme/commit/00c67eaf5daa7b038f0249653ba3a5946a4a9758) — first reading, at a commit dated 15 September 2026. Screened before opening: no auto-running configuration, one build-time execution point, one unpinned surface, three manifests inside the seven-day cooldown. Nothing was installed or run.

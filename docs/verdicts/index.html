@@ -17282,9 +17282,11 @@ model's raw decisions and the per-id outcome, and each committed merge,
 conflict or update gets a content-addressed digest with winner, loser
 and counts before and after; decisions apply under a snapshot
 compare-and-set, replay is tested to be idempotent, and a policy epoch
-retires old verdicts when the rules change. Three marks:
-<code>audit_log</code>, <code>human_review</code>,
-<code>negative_eval</code>.</li>
+retires old verdicts when the rules change. Two marks:
+<code>audit_log</code>, <code>negative_eval</code>. Freeze mode parks a
+contradicting pair instead of archiving the loser, so both memories stay
+live while the queue waits — a deferred decision, not a withheld
+memory.</li>
 <li>Biggest risk: <strong>the protections ship switched off.</strong>
 Conflict freezing, scope labelling, strict scope and epistemic weighting
 are implemented, tested and <code>false</code> by default, so out of the
