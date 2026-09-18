@@ -126,7 +126,7 @@ plus the exact last event.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/joshhhhhan--VISTA" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -548,6 +548,28 @@ hit, the Codex runner disabling web search; no retrieval beyond the
 three tools.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. The compaction guard is enforced more tightly than
+one line can carry, and the shape is worth having.
+<code>compact_hook.py:49-81</code> returns
+<code>{"decision": "block"}</code> on three paths:
+<code>PreCompact</code> with no ready marker touches a request file and
+blocks with <em>"Review and update WORKING.md…"</em>;
+<code>PreCompact</code> with the marker present blocks with <em>"The
+checkpoint is saved; end this response for handoff"</em>; and
+<strong><code>Stop</code> with a request pending and no marker blocks
+with the same review instruction</strong>. That third branch is what
+makes the first non-optional — the model cannot end its turn while a
+checkpoint has been asked for and not produced. The marker is not the
+model's to set: <code>compact_checkpoint_ready</code> is touched by the
+controller (<code>claude/controller.py:519-520</code>,
+<code>:882</code>, and the codex twins at <code>:525</code>,
+<code>:887</code>) after it has read <code>GUIDE.md</code> and
+<code>WORKING.md</code> and logged their character counts, so readiness
+is something the harness observes rather than something the model
+asserts. What it observes is existence and length; the report's risk
+line is right that nothing checks what they say. No marks; the report
+carries none.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/joshhhhhan/VISTA/commit/900aa3380e4f1120436d83b2ce1115a38ac29bf9"><code class="commit-id" title="900aa3380e4f1120436d83b2ce1115a38ac29bf9">900aa338…</code></a>
 — first reading.</p>

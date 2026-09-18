@@ -9,7 +9,7 @@ source_url: https://github.com/joshhhhhan/VISTA
 archive_name: "joshhhhhan--VISTA"
 revision: 900aa3380e4f1120436d83b2ce1115a38ac29bf9
 revision_url: https://github.com/joshhhhhan/VISTA/commit/900aa3380e4f1120436d83b2ce1115a38ac29bf9
-analyzed_at: 2026-09-07
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -407,5 +407,22 @@ assistant and does not claim to be.
   Codex runner disabling web search; no retrieval beyond the three tools.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. The
+compaction guard is enforced more tightly than one line can carry, and the shape
+is worth having. `compact_hook.py:49-81` returns `{"decision": "block"}` on
+three paths: `PreCompact` with no ready marker touches a request file and blocks
+with *"Review and update WORKING.md…"*; `PreCompact` with the marker present
+blocks with *"The checkpoint is saved; end this response for handoff"*; and
+**`Stop` with a request pending and no marker blocks with the same review
+instruction**. That third branch is what makes the first non-optional — the
+model cannot end its turn while a checkpoint has been asked for and not
+produced. The marker is not the model's to set: `compact_checkpoint_ready` is
+touched by the controller (`claude/controller.py:519-520`, `:882`, and the codex
+twins at `:525`, `:887`) after it has read `GUIDE.md` and `WORKING.md` and
+logged their character counts, so readiness is something the harness observes
+rather than something the model asserts. What it observes is existence and
+length; the report's risk line is right that nothing checks what they say. No
+marks; the report carries none.
 
 **2026-09-07** — [`900aa3380e4f1120436d83b2ce1115a38ac29bf9`](https://github.com/joshhhhhan/VISTA/commit/900aa3380e4f1120436d83b2ce1115a38ac29bf9) — first reading.
