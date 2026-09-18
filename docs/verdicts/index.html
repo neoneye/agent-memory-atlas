@@ -11056,12 +11056,18 @@ and gap respectively.</li>
 </ul>
 <h3 id="monet"><a href="../systems/monet/"><code>monet</code></a></h3>
 <ul>
-<li>Best idea: split declare from propose and gate the constraining
-memories on a human — the agent proposes facts, but a person must
-<code>declare</code> principles and blocking rules (SQL-enforced so a
-blocking rule cannot be self-authorized), and a contradiction flips the
-concept to <code>disputed</code>, dropping it from the always-on context
-until a human resolves it.</li>
+<li>Best idea: split declare from propose, and pin the split in the
+schema —
+<code>CHECK (severity != 'blocking' OR origin = 'declaration')</code>
+means a blocking rule cannot exist except by declaration, and a
+contradiction flips the concept to <code>disputed</code>, dropping it
+from the always-on context until someone resolves it. Read the boundary
+for what it is: <code>memory_declare</code> is itself an MCP tool with
+no caller check, marked human-only by the sentence <em>"Never call on
+agent initiative"</em> in its description, so the constraint guarantees
+how a blocking rule was born and not who made it. That is why
+<code>human_review</code> is withheld. Copy the mechanism and add the
+one thing it lacks — an authorisation the agent cannot supply.</li>
 <li>Biggest risk: two headline mechanisms are softer than the prose.
 "Rules read at the moment they bind (commit, release, PR)" is lexical
 token-matching against a tool call on <em>user-authored</em> stages, and
@@ -11078,10 +11084,12 @@ the silences.</li>
 <li>Maturity impression: AGPL-3.0 core, genuinely local-first (~57,000
 lines over one SQLite file, on-device ONNX hybrid retrieval, test tree
 larger than source); earns <code>trust_state</code>,
-<code>scope_enforced</code>, <code>audit_log</code>,
-<code>human_review</code> and <code>negative_eval</code> — one of the
-better-governed local memories here. A ~10,000-line RAG source-ingestion
-subsystem sits provisionally retired behind the trio-shaped README.</li>
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code> — one of the better-governed local memories
+here, and the most carefully drawn governance design in the corpus even
+with <code>human_review</code> withheld. A ~10,000-line RAG
+source-ingestion subsystem sits provisionally retired behind the
+trio-shaped README.</li>
 <li>Study when: you want a private, local, governed memory for a coding
 agent and will work its method — declare the principles, name the
 stages, resolve the contradictions.</li>

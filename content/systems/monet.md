@@ -9,13 +9,12 @@ source_url: https://github.com/team-monet/monet
 archive_name: "team-monet--monet"
 revision: 1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6
 revision_url: https://github.com/team-monet/monet/commit/1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6
-analyzed_at: 2026-09-09
-capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval"
+analyzed_at: 2026-09-18
+capabilities: "trust_state, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   trust_state: "the disputed status on a principle, withheld from what a rule discloses | packages/core/src/gates.ts:1566-1583 | a projected rule carries `parentDisputed` exactly when the principle it derives from has status `disputed`, and the field is omitted otherwise — the comment is explicit that it is never `false`, because absence is the signal. A disputed parent changes what the gate is willing to assert on that rule's behalf rather than reordering it. A superseded rule is deliberately different: it stays `status='active'` and keeps its binding, because it is history | packages/core/src/__tests__/contradiction.test.ts"
   scope_enforced: "the circle, applied to store-wide read paths | packages/core/src/engine.ts:1076-1082, packages/core/src/retrieval.ts:143,245 | a circle bounds what a store-wide query considers, and retrieval normalizes an observation's circle against its owning native concept so the key cannot be asserted independently of the concept it belongs to. The semantics are documented rather than assumed: archiving a circle removes it from store-wide search, the overview and `listCircles` while leaving it fetchable by name — so archiving narrows the default read path without sealing the circle, and the code says so where a caller might assume otherwise | packages/core/src/__tests__/cross-circle.test.ts, circle-lifecycle.test.ts"
   audit_log: "resolution_events and gate_events, durable and joined for provenance | packages/core/src/engine.ts:3600,1053,2254, packages/core/src/gates.ts | `resolution_events` records how a contradiction was settled and is durable enough to be the idempotency source — the comment notes a retry reads its mode back out so it is indistinguishable from the first call — and the same log is joined against subsequent detach or reassign to reconstruct what a human did. `gate_events` is the equivalent for rule firing. These record decisions about memory, not merely session activity | the resolution suite"
-  human_review: "memory_ratify, and blocking severity reachable only by declaration | packages/core/src/mcp-server.ts:1537-1617, packages/core/src/gates.ts:260,277-278 | ratification is an explicit MCP tool, and the server prompt instructs the agent to use it \"never on your own initiative\". The stronger half is in the schema: `CHECK (severity != 'blocking' OR origin = 'declaration')` with the comment \"THE SAFETY BOUNDARY, in the schema. Blocking severity exists only by declaration.\" An agent cannot mint a blocking rule by inference — the database refuses the row | packages/core/src/__tests__/"
   negative_eval: "disputed and cross-circle exclusion, as committed cases | packages/core/src/__tests__/contradiction.test.ts, cross-circle.test.ts, circle-lifecycle.test.ts | the suite asserts that a disputed principle and a concept outside the querying circle are excluded from what a populated store returns, rather than that a result is empty. 98 test files ship in the package | these are the tests"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -82,7 +81,7 @@ holds only in the weak retrieve-the-winner sense.
 What Monet does earn is five marks, and it earns them properly: `trust_state`
 (disputed status consumed on read), `scope_enforced` (circle filtered and refused
 on read), `audit_log` (append-only resolution and gate event tables),
-`human_review` (a real declare/ratify/resolve human loop), and `negative_eval`
+and `negative_eval`
 (committed tests that disputed and out-of-scope material must not surface). It is
 one of the better-governed local memories in the corpus; it just markets two
 mechanisms a notch above what ships.
@@ -259,13 +258,21 @@ match on user-authored stages.
 ## 7. Write Mechanics
 
 Writes divide by who may make them. `memory_store` lets the agent propose a
-concept/observation (default `kind='fact'`). `memory_declare` is **human-only**
-("Never call on agent initiative", `mcp-server.ts:1000`) and is how a principle, a
-preference, or a *blocking* rule enters — blocking severity is SQL-gated to
-`origin='declaration'`, so an agent cannot self-authorize a hard rule. This
-declare/propose split is the spine of the governance story and the reason
-`human_review` is earned: the memories that constrain the agent are the ones a
-person must put there.
+concept/observation (default `kind='fact'`). `memory_declare` is how a principle, a
+preference, or a *blocking* rule enters, and blocking severity is SQL-gated to
+`origin='declaration'` — `CHECK (severity != 'blocking' OR origin =
+'declaration')` at `gates.ts:277`. The constraint is real and it is enforced by
+the database, but it is not a boundary against the agent, because
+`memory_declare` is itself a registered MCP tool
+(`server.tool("memory_declare", …)`, `mcp-server.ts:1246`) with no caller check
+anywhere in its handler. What marks it human-only is a sentence in its
+description — *"Never call on agent initiative"* — and `captureRuleBinding`
+derives the binding's origin from `rule.declaration === true`
+(`engine.ts:12654`), a value that arrives through that tool. So the schema
+guarantees a blocking rule was born of a declaration; it does not guarantee a
+person made it. That is why `human_review` is withheld. The declare/propose
+split is still the spine of the governance story and the most carefully drawn
+one in this corpus — it simply separates two tools the same caller holds.
 
 Correction is the contradiction loop. A correction observation attaches to the
 concept it contradicts, opens a `contradictions` row, and flips the concept to
@@ -316,11 +323,13 @@ harness surfaces stages as a cue and asks the agent to `stage_lookup`, rather th
 intercepting the tool call mechanically. The `monet gate` hook can enforce it; the
 recommended install does not wire it.
 
-`human_review` runs through the whole surface: `memory_declare` is human-only,
-`memory_ratify` records the verdict and how it was reached (declaration vs
-extraction, `engine.ts:1040`), and `memory_resolve` is a human mediating a
-contradiction. This is one of the more complete human-in-the-loop governance
-stories in the corpus.
+The governance surface is drawn all the way through: `memory_declare` mints the
+constraining memories, `memory_ratify` records a verdict and how it was reached
+(declaration vs extraction, `engine.ts:1040`), and `memory_resolve` mediates a
+contradiction. It is one of the more complete human-in-the-loop *designs* in the
+corpus, and every one of those three is an MCP tool the agent can call, which is
+why the mark is withheld — see section 7. What is missing is small and specific:
+an authorisation the agent cannot produce.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -437,6 +446,30 @@ surface to understand is larger than the pitch implies.
 - Tests: `contradiction.test.ts`, `cross-circle.test.ts`, `circle-lifecycle.test.ts` — disputed/scope exclusion.
 
 ## History
+
+**2026-09-18** — re-read at the pinned commit. Upstream has advanced to
+`9fa38c2d`, but not here: `rev-parse <pin>:packages/core` and `HEAD:packages/core`
+give the same tree, `0c65c9d3…` against a changed `packages/cli`, so the memory
+subsystem is byte-identical and no re-pin is warranted.
+
+**`human_review` is withdrawn.** The mark rested on `memory_declare` being
+human-only, and on the SQL boundary `CHECK (severity != 'blocking' OR origin =
+'declaration')` (`gates.ts:277`). The constraint holds exactly as described. What
+does not hold is the premise beneath it: `memory_declare` is registered as an
+MCP tool at `mcp-server.ts:1246` with no caller-identity check in its handler,
+`memory_ratify`'s `entrance` is a `z.enum(["extraction","declaration"])` the
+caller fills in (`:1560-1568`), and `captureRuleBinding` reads
+`rule.declaration === true` off that input (`engine.ts:12654`). The only thing
+between the agent and a blocking rule is the sentence *"Never call on agent
+initiative"* in the tool description. Prompt text is not a producer test, which
+is the same ruling applied to [RunarForge](../runar-forge/),
+[sift-kg](../sift-kg/) and [memsem](../memsem/) this week.
+
+The design is not diminished by the withdrawal and the report says so: a schema
+constraint that pins a severity to an origin is a better mechanism than a status
+flag, and the declare/propose split is worth copying. It needs one thing the
+code does not have — an authorisation the agent cannot supply. The other four
+marks are untouched. Evidence coverage floor 1249 -> 1248.
 
 **2026-09-09** — [`1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6`](https://github.com/team-monet/monet/commit/1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6) — second reading, 45 commits on: 176 files, 31,201 insertions against 50,798 deletions, so the system is roughly 16,000 lines smaller than at the previous pin. Screened before reading: no auto-run surface, one build-time execution point, two unpinned surfaces with lockfiles beside them; nothing was installed and no suite was run.
 

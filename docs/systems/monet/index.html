@@ -121,7 +121,7 @@ marketed as a clean trio, built as a graph with a gate.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/team-monet--monet" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -129,7 +129,7 @@ marketed as a clean trio, built as a graph with a gate.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -199,7 +199,6 @@ sense.</p>
 <code>trust_state</code> (disputed status consumed on read),
 <code>scope_enforced</code> (circle filtered and refused on read),
 <code>audit_log</code> (append-only resolution and gate event tables),
-<code>human_review</code> (a real declare/ratify/resolve human loop),
 and <code>negative_eval</code> (committed tests that disputed and
 out-of-scope material must not surface). It is one of the
 better-governed local memories in the corpus; it just markets two
@@ -408,14 +407,25 @@ user-authored stages.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes divide by who may make them. <code>memory_store</code> lets
 the agent propose a concept/observation (default
-<code>kind='fact'</code>). <code>memory_declare</code> is
-<strong>human-only</strong> ("Never call on agent initiative",
-<code>mcp-server.ts:1000</code>) and is how a principle, a preference,
-or a <em>blocking</em> rule enters — blocking severity is SQL-gated to
-<code>origin='declaration'</code>, so an agent cannot self-authorize a
-hard rule. This declare/propose split is the spine of the governance
-story and the reason <code>human_review</code> is earned: the memories
-that constrain the agent are the ones a person must put there.</p>
+<code>kind='fact'</code>). <code>memory_declare</code> is how a
+principle, a preference, or a <em>blocking</em> rule enters, and
+blocking severity is SQL-gated to <code>origin='declaration'</code> —
+<code>CHECK (severity != 'blocking' OR origin = 'declaration')</code> at
+<code>gates.ts:277</code>. The constraint is real and it is enforced by
+the database, but it is not a boundary against the agent, because
+<code>memory_declare</code> is itself a registered MCP tool
+(<code>server.tool("memory_declare", …)</code>,
+<code>mcp-server.ts:1246</code>) with no caller check anywhere in its
+handler. What marks it human-only is a sentence in its description —
+<em>"Never call on agent initiative"</em> — and
+<code>captureRuleBinding</code> derives the binding's origin from
+<code>rule.declaration === true</code> (<code>engine.ts:12654</code>), a
+value that arrives through that tool. So the schema guarantees a
+blocking rule was born of a declaration; it does not guarantee a person
+made it. That is why <code>human_review</code> is withheld. The
+declare/propose split is still the spine of the governance story and the
+most carefully drawn one in this corpus — it simply separates two tools
+the same caller holds.</p>
 <p>Correction is the contradiction loop. A correction observation
 attaches to the concept it contradicts, opens a
 <code>contradictions</code> row, and flips the concept to
@@ -476,12 +486,15 @@ stages as a cue and asks the agent to <code>stage_lookup</code>, rather
 than intercepting the tool call mechanically. The
 <code>monet gate</code> hook can enforce it; the recommended install
 does not wire it.</p>
-<p><code>human_review</code> runs through the whole surface:
-<code>memory_declare</code> is human-only, <code>memory_ratify</code>
-records the verdict and how it was reached (declaration vs extraction,
-<code>engine.ts:1040</code>), and <code>memory_resolve</code> is a human
-mediating a contradiction. This is one of the more complete
-human-in-the-loop governance stories in the corpus.</p>
+<p>The governance surface is drawn all the way through:
+<code>memory_declare</code> mints the constraining memories,
+<code>memory_ratify</code> records a verdict and how it was reached
+(declaration vs extraction, <code>engine.ts:1040</code>), and
+<code>memory_resolve</code> mediates a contradiction. It is one of the
+more complete human-in-the-loop <em>designs</em> in the corpus, and
+every one of those three is an MCP tool the agent can call, which is why
+the mark is withheld — see section 7. What is missing is small and
+specific: an authorisation the agent cannot produce.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <ul>
@@ -625,6 +638,36 @@ retired RAG ingestion subsystem.</li>
 — disputed/scope exclusion.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the pinned commit. Upstream
+has advanced to <code>9fa38c2d</code>, but not here:
+<code>rev-parse &lt;pin&gt;:packages/core</code> and
+<code>HEAD:packages/core</code> give the same tree,
+<code>0c65c9d3…</code> against a changed <code>packages/cli</code>, so
+the memory subsystem is byte-identical and no re-pin is warranted.</p>
+<p><strong><code>human_review</code> is withdrawn.</strong> The mark
+rested on <code>memory_declare</code> being human-only, and on the SQL
+boundary
+<code>CHECK (severity != 'blocking' OR origin = 'declaration')</code>
+(<code>gates.ts:277</code>). The constraint holds exactly as described.
+What does not hold is the premise beneath it:
+<code>memory_declare</code> is registered as an MCP tool at
+<code>mcp-server.ts:1246</code> with no caller-identity check in its
+handler, <code>memory_ratify</code>'s <code>entrance</code> is a
+<code>z.enum(["extraction","declaration"])</code> the caller fills in
+(<code>:1560-1568</code>), and <code>captureRuleBinding</code> reads
+<code>rule.declaration === true</code> off that input
+(<code>engine.ts:12654</code>). The only thing between the agent and a
+blocking rule is the sentence <em>"Never call on agent initiative"</em>
+in the tool description. Prompt text is not a producer test, which is
+the same ruling applied to <a href="../runar-forge/">RunarForge</a>, <a
+href="../sift-kg/">sift-kg</a> and <a href="../memsem/">memsem</a> this
+week.</p>
+<p>The design is not diminished by the withdrawal and the report says
+so: a schema constraint that pins a severity to an origin is a better
+mechanism than a status flag, and the declare/propose split is worth
+copying. It needs one thing the code does not have — an authorisation
+the agent cannot supply. The other four marks are untouched. Evidence
+coverage floor 1249 -&gt; 1248.</p>
 <p><strong>2026-09-09</strong> — <a
 href="https://github.com/team-monet/monet/commit/1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6"><code class="commit-id" title="1c7d1e5a653eccfd4f76f1db9b32cfd02ac152e6">1c7d1e5a…</code></a>
 — second reading, 45 commits on: 176 files, 31,201 insertions against
