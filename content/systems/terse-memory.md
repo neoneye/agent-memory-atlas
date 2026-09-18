@@ -9,11 +9,11 @@ source_url: https://github.com/terse-lang/terse
 archive_name: "terse-lang--terse"
 revision: 637140a3a749f56a981cdb58d943f4fc1515c53b
 revision_url: https://github.com/terse-lang/terse/commit/637140a3a749f56a981cdb58d943f4fc1515c53b
-analyzed_at: 2026-07-31
-capabilities: "trust_state"
-stack_storage: ""
-stack_retrieval: ""
-stack_source: "seeded"
+analyzed_at: 2026-09-18
+capabilities: ""
+stack_storage: "files"
+stack_retrieval: "lexical"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A typed TERSE object — Preference, Fact, Person, Decision, Pattern or OpenQuestion — with a required `as-of` and, for two kinds, a required `status`"
   storage: "One human-readable `.terse` file, queried and mutated through `terse-py`"
@@ -23,7 +23,7 @@ matrix:
   scoping: "Containers — Profile, Projects, Sessions — plus a `session:` attribute that makes session-scoped forgetting precise"
   integration: "A CLI, an MCP server in the same monorepo, and a skill that carries the operating procedure"
   background: "None implemented. Consolidation is specified and its lint rule is deferred to v0.2"
-  trust: "`accepted | superseded | open | stale` on decisions and open questions; a `src:` attribute separates the user's words from web and tool output"
+  trust: "A `status` attribute required on decisions and open questions, whose values nothing in the code validates or reads; a `src:` attribute separates the user's words from web and tool output"
   strengths: "A user-extendable `## Don't` tier that is always in context, and a rule that auto-capture from untrusted content is a protocol violation"
   risks: "The package is a linter and a scaffolder — capture, recall, forget and consolidate are the model's job, and the two lint rules that would police staleness and duplication are deferred"
 ---
@@ -97,12 +97,35 @@ under `# Schema.Kinds`, and the kinds carry required attributes:
 fact you cannot age, and making it required at the schema level means `MEM-B`
 catches its absence rather than a human noticing later.
 
-The status vocabulary is `accepted | superseded | open | stale`, and it earns
-`trust_state` on `stale` and `superseded` — both withhold a claim from being
-treated as current, and both are discrete fields rather than scores. Two caveats
-belong with the mark. Status is required on only two of the six kinds, so a
-`Fact` has no status at all and ages only through `as-of`. And `stale` is a state
-nothing sets, because `MEM-C stale` is the deferred rule.
+The status vocabulary is documented as `accepted | superseded | open | stale`,
+and the first version of this report awarded `trust_state` for it. **That mark is
+withdrawn here**, on a search that the first reading did not run.
+
+`status` appears in exactly one place in the `terse_memory` package: the generic
+`MEM-B` check, which reads the `required:` list off the store's own
+`# Schema.Kinds` declaration and flags any object missing a named attribute —
+`missing = [r for r in required if r not in attr_handles]`. It is a presence
+test. Nothing validates the *value*, so `status: definitely-true-forever` passes
+the linter; `grep -rn status apps/terse-memory/terse_memory/` returns only that
+rule, and `stats.py`, `report.py` and `cli.py` never mention it. The MCP surface
+is the generic `terse-mcp` server, which is status-agnostic — no occurrence of
+`status` or `superseded` in its 1,530 lines. And `MEM-C stale`, the one rule that
+would act on the passage of time, is declared deferred to v0.2 in the module
+docstring.
+
+So there is a required field, and there is a vocabulary in the spec, and there is
+nothing anywhere that treats `superseded` differently from `accepted`. The
+capability asks for a discrete status including at least one state that withholds
+a memory from being treated as true; here the withholding lives in a sentence of
+`SKILL.md` — *"Supersede decisions with `status: superseded`; don't delete"* —
+addressed to the model. That is consistent with this project's whole design, and
+it is not the mark.
+
+Two observations survive the withdrawal. `status` is required on only two of the
+six kinds, so a `Fact` has no status at all and ages only through `as-of`. And
+`as-of` on nearly everything is still the good decision, precisely because
+`MEM-B` *does* catch its absence — presence checking is exactly the right tool
+for a required date, and exactly the wrong one for a controlled vocabulary.
 
 ```mermaid
 %% caption: the hot-buttons section is always loaded and never retrieved, and the checks that would find stale or duplicate entries are deferred to a later version
@@ -375,5 +398,7 @@ do, which is most of the work.
 | `apps/terse-memory/tests/` | 89 tests, run and passing |
 
 ## History
+
+**2026-09-18** — [`637140a3a749f56a981cdb58d943f4fc1515c53b`](https://github.com/terse-lang/terse/commit/637140a3a749f56a981cdb58d943f4fc1515c53b) — re-read at the same commit. Nothing upstream had moved, so every change here is the atlas's own. **`trust_state` is withdrawn.** The first reading took the status vocabulary from `SPEC.md`; tracing it through the code finds `status` in exactly one place in `terse_memory/` — `MEM-B`'s generic presence check against the store's own `# Schema.Kinds` `required:` list — and nowhere else. No value validation, so any string lints clean; no reader in `stats.py`, `report.py` or `cli.py`; no occurrence in the 1,530-line `terse-mcp` server; and `MEM-C stale`, the rule that would act on age, deferred to v0.2 in the module docstring. Nothing treats `superseded` differently from `accepted`, so no state withholds anything. The report now carries no marks. `stack_storage` and `stack_retrieval` were both empty and are now `files` and `lexical`: the store is one `.terse` file on disk and `CONTAINS` is, in `terse-py`'s own words, *"grep-shaped — raw-text substring filter"* over the parsed tree, which is a lexical arm without an index rather than no retrieval at all. `stack_source` goes from seeded to reviewed.
 
 **2026-07-31** — [`637140a3a749f56a981cdb58d943f4fc1515c53b`](https://github.com/terse-lang/terse/commit/637140a3a749f56a981cdb58d943f4fc1515c53b) — first reading.

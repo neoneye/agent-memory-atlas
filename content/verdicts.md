@@ -1377,7 +1377,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: the schema decisions — `as-of` required on nearly every kind, and a `session:` attribute paid for at write time so "forget this conversation" resolves to a query instead of a guess.
 - Maturity impression: three commits, HEAD 24 July 2026, spec marked pre-release — and 89 tests that I ran and that pass, covering the linter, the scaffolder and the wiring.
 - Study when: you want a typed, diffable single-file store with a structural query syntax, or the always-loaded prohibition tier on its own.
-- Do not copy when: you need the operations implemented. Explicit forget deletes and records nothing, `stale` is a status nothing sets, and the stated rule that auto-capture from untrusted content is "a protocol violation, full stop" has no detector.
+- Do not copy when: you need the operations implemented. Explicit forget deletes and records nothing; `status` is required on two kinds and read by nothing — the only code that mentions it is a presence check, so `superseded` and `accepted` are the same to every program in the repository; and the stated rule that auto-capture from untrusted content is "a protocol violation, full stop" has no detector.
 
 
 ### [`agentic-context-engine`](../systems/agentic-context-engine/)

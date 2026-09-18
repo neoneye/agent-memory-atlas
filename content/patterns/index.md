@@ -176,7 +176,7 @@ Where the atlas has an exact count — the seven mechanisms on
 | Scope enforced in retrieval | 278 of 580 |
 | Append-only mutation audit | 197 of 580 |
 | Human review surface | 173 of 580 |
-| Explicit trust state | 155 of 580 |
+| Explicit trust state | 154 of 580 |
 | Bi-temporal validity | 98 of 580 |
 | Rejected-value tombstone | 51 of 580 |
 <!-- END GENERATED SPREAD -->

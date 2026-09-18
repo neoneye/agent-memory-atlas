@@ -119,7 +119,7 @@ with the two that would police staleness and duplication deferred.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-31</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/terse-lang--terse" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -127,7 +127,7 @@ with the two that would police staleness and duplication deferred.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -256,15 +256,42 @@ required attributes:</p>
 without a date is a fact you cannot age, and making it required at the
 schema level means <code>MEM-B</code> catches its absence rather than a
 human noticing later.</p>
-<p>The status vocabulary is
-<code>accepted | superseded | open | stale</code>, and it earns
-<code>trust_state</code> on <code>stale</code> and
-<code>superseded</code> — both withhold a claim from being treated as
-current, and both are discrete fields rather than scores. Two caveats
-belong with the mark. Status is required on only two of the six kinds,
-so a <code>Fact</code> has no status at all and ages only through
-<code>as-of</code>. And <code>stale</code> is a state nothing sets,
-because <code>MEM-C stale</code> is the deferred rule.</p>
+<p>The status vocabulary is documented as
+<code>accepted | superseded | open | stale</code>, and the first version
+of this report awarded <code>trust_state</code> for it. <strong>That
+mark is withdrawn here</strong>, on a search that the first reading did
+not run.</p>
+<p><code>status</code> appears in exactly one place in the
+<code>terse_memory</code> package: the generic <code>MEM-B</code> check,
+which reads the <code>required:</code> list off the store's own
+<code># Schema.Kinds</code> declaration and flags any object missing a
+named attribute —
+<code>missing = [r for r in required if r not in attr_handles]</code>.
+It is a presence test. Nothing validates the <em>value</em>, so
+<code>status: definitely-true-forever</code> passes the linter;
+<code>grep -rn status apps/terse-memory/terse_memory/</code> returns
+only that rule, and <code>stats.py</code>, <code>report.py</code> and
+<code>cli.py</code> never mention it. The MCP surface is the generic
+<code>terse-mcp</code> server, which is status-agnostic — no occurrence
+of <code>status</code> or <code>superseded</code> in its 1,530 lines.
+And <code>MEM-C stale</code>, the one rule that would act on the passage
+of time, is declared deferred to v0.2 in the module docstring.</p>
+<p>So there is a required field, and there is a vocabulary in the spec,
+and there is nothing anywhere that treats <code>superseded</code>
+differently from <code>accepted</code>. The capability asks for a
+discrete status including at least one state that withholds a memory
+from being treated as true; here the withholding lives in a sentence of
+<code>SKILL.md</code> — <em>"Supersede decisions with
+<code>status: superseded</code>; don't delete"</em> — addressed to the
+model. That is consistent with this project's whole design, and it is
+not the mark.</p>
+<p>Two observations survive the withdrawal. <code>status</code> is
+required on only two of the six kinds, so a <code>Fact</code> has no
+status at all and ages only through <code>as-of</code>. And
+<code>as-of</code> on nearly everything is still the good decision,
+precisely because <code>MEM-B</code> <em>does</em> catch its absence —
+presence checking is exactly the right tool for a required date, and
+exactly the wrong one for a controlled vocabulary.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — the hot-buttons section is always loaded and never retrieved, and the checks that would find stale or duplicate entries are deferred to a later version</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the hot-buttons section is always loaded and never retrieved, and the checks that would find stale or duplicate entries are deferred to a later version
 flowchart TD
     U[&quot;user says something&quot;] --&gt; A[&quot;agent follows SKILL.md&quot;]
@@ -593,6 +620,29 @@ consolidation</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/terse-lang/terse/commit/637140a3a749f56a981cdb58d943f4fc1515c53b"><code class="commit-id" title="637140a3a749f56a981cdb58d943f4fc1515c53b">637140a3…</code></a>
+— re-read at the same commit. Nothing upstream had moved, so every
+change here is the atlas's own. <strong><code>trust_state</code> is
+withdrawn.</strong> The first reading took the status vocabulary from
+<code>SPEC.md</code>; tracing it through the code finds
+<code>status</code> in exactly one place in <code>terse_memory/</code> —
+<code>MEM-B</code>'s generic presence check against the store's own
+<code># Schema.Kinds</code> <code>required:</code> list — and nowhere
+else. No value validation, so any string lints clean; no reader in
+<code>stats.py</code>, <code>report.py</code> or <code>cli.py</code>; no
+occurrence in the 1,530-line <code>terse-mcp</code> server; and
+<code>MEM-C stale</code>, the rule that would act on age, deferred to
+v0.2 in the module docstring. Nothing treats <code>superseded</code>
+differently from <code>accepted</code>, so no state withholds anything.
+The report now carries no marks. <code>stack_storage</code> and
+<code>stack_retrieval</code> were both empty and are now
+<code>files</code> and <code>lexical</code>: the store is one
+<code>.terse</code> file on disk and <code>CONTAINS</code> is, in
+<code>terse-py</code>'s own words, <em>"grep-shaped — raw-text substring
+filter"</em> over the parsed tree, which is a lexical arm without an
+index rather than no retrieval at all. <code>stack_source</code> goes
+from seeded to reviewed.</p>
 <p><strong>2026-07-31</strong> — <a
 href="https://github.com/terse-lang/terse/commit/637140a3a749f56a981cdb58d943f4fc1515c53b"><code class="commit-id" title="637140a3a749f56a981cdb58d943f4fc1515c53b">637140a3…</code></a>
 — first reading.</p>
