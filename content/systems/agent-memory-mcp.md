@@ -9,10 +9,9 @@ source_url: https://github.com/ipiton/agent-memory-mcp
 archive_name: "ipiton--agent-memory-mcp"
 revision: ceef5851c2012ec4e9500eb5e955ae3388b3add8
 revision_url: https://github.com/ipiton/agent-memory-mcp/commit/ceef5851c2012ec4e9500eb5e955ae3388b3add8
-analyzed_at: 2026-09-15
-capabilities: "human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  human_review: "session review and the review queue | cmd/agent-memory-mcp/session_close.go:26-44 `review-session` (dry run) and `accept-session`; cmd/agent-memory-mcp/review_queue.go:16 `resolve-review-item`; internal/steward/inbox.go | `agent-memory-mcp review-session` prints the consolidation plan for a session summary — what would be added, merged, marked outdated or promoted, with a decision trace and risk level — without applying it, and `accept-session` applies it; incident and migration sessions route risky changes to the review inbox rather than applying them; `resolve-review-item` resolves, dismisses or defers a queued item with a note and reviewer; `project-bank` shows the review queue beside decisions, runbooks and incidents | cmd/agent-memory-mcp/review_queue_test.go, cmd/agent-memory-mcp/session_close_test.go"
   negative_eval: "superseded entries stay out of recall | internal/memory/superseded_recall_test.go:88 TestSupersededMemoryExcludedFromRecall | stores an entry and its successor, asserts semantic recall returns the successor and not the superseded entry, and that List and ListLightweight still return the old one; `:131` asserts an entry marked outdated without a successor stays recallable, `:148` that a dangling successor pointer does not bury its predecessor, and `internal/memory/sediment_integration_test.go:496` that surface-layer memories are excluded outside their context | internal/memory/superseded_recall_test.go:88"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -66,7 +65,7 @@ supersession therefore cannot return the entry that was true then, and the
 test for `recall_as_of` passes only because its fixture never sets
 `superseded_by`.
 
-Two marks: `human_review`, `negative_eval`.
+One mark: `negative_eval`.
 
 ## 2. Mental Model
 
@@ -93,8 +92,8 @@ visible only in their originating context.
 %% caption: supersession hides the old entry from recall, and recall_as_of filters recall's output, so the past version is never among its candidates
 flowchart TB
     SESSION["session summary<br/>(hook or CLI)"] --> PLAN["session-close plan<br/>add / merge / outdate / promote<br/>risk level, decision trace"]
-    PLAN -->|"review-session: dry run"| PERSON["person reads the plan"]
-    PERSON -->|"accept-session"| APPLY["apply low-risk actions"]
+    PLAN -->|"review_session_changes: dry run"| PERSON["a reader — a person at the CLI,<br/>or the agent calling the same action"]
+    PERSON -->|"accept_session_changes"| APPLY["apply low-risk actions"]
     PLAN -->|"risky, or incident / migration mode"| INBOX[("review inbox")]
     STEWARD["steward run<br/>duplicates, conflicts, stale, drift"] --> INBOX
     STEWARD -->|"policy allows"| APPLY
@@ -254,8 +253,21 @@ limits.
 
 ## 9. Reliability, Safety, and Trust
 
-**Review is built into the risky paths.** Session modes and steward policy decide
-what applies automatically, and the rest waits in an inbox with its evidence.
+**Review is built into the risky paths, but not into the actor.** Session modes
+and steward policy decide what applies automatically, and the rest waits in an
+inbox with its evidence — a real backlog with a real audit trail, and worth
+having. What it is not is a gate the producing agent stands outside of. The
+`session` meta-tool's action enum (`internal/server/tools_grouped.go:107-120`)
+publishes `accept` → `accept_session_changes`, `review` → `review_session_changes`,
+`resolve_review_item` and `resolve_review_queue` to the model, so the queue is
+drained by the same party that filled it. `resolve_review_item`
+(`internal/server/tools_schemas_workflow.go:6-37`) makes the point twice over:
+its `resolution` enum is `resolved` / `dismissed` / `deferred`, and its `owner`
+parameter is described as *"Optional owner or reviewer that handled this item"* —
+a string the caller supplies and the handler records. That is why this report no
+longer carries `human_review`: the CLI's `review-session` and `accept-session`
+are a second door onto the same actions, and a second door does not close the
+first.
 
 **The HTTP service fails closed on exposure,** refusing an unauthenticated
 non-loopback bind unless the operator opts in.
@@ -332,5 +344,7 @@ was true at a past date, the temporal layer needs fixing first.
 - `sed -n 65,67p internal/memory/temporal.go` — `KnowledgeTimeline` calls `Recall`
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`ceef5851c2012ec4e9500eb5e955ae3388b3add8`](https://github.com/ipiton/agent-memory-mcp/commit/ceef5851c2012ec4e9500eb5e955ae3388b3add8); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**. The record had been written from the CLI — `review-session`, `accept-session`, `resolve-review-item` — without checking the MCP tool surface beside it, and that surface carries the same verbs: the `session` meta-tool's action enum publishes `accept`, `review`, `resolve_review_item` and `resolve_review_queue` to the model, and `resolve_review_item` takes an `owner` string described as the reviewer that handled the item, which nothing verifies. The review inbox is real and the audit trail is real; what is absent is an actor the producing agent cannot be. `negative_eval` stands with every anchor re-verified: `TestSupersededMemoryExcludedFromRecall` at `:88` asserts the superseded entry is out of semantic recall and its successor is in, and `:131` and `:148` pin the two directions it must not over-apply. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`ceef5851c2012ec4e9500eb5e955ae3388b3add8`](https://github.com/ipiton/agent-memory-mcp/commit/ceef5851c2012ec4e9500eb5e955ae3388b3add8) — first reading, at a commit dated 4 September 2026. Screened before opening: one auto-run surface (an MCP server manifest), one build-time execution point, nothing unpinned and nothing inside the cooldown. Nothing was installed, built or run.
