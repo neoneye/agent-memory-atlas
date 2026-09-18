@@ -113,7 +113,7 @@ lexical, vector, and graph retrieval.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-15</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/rohitg00--agentmemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -121,7 +121,7 @@ lexical, vector, and graph retrieval.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -393,7 +393,23 @@ expands to the full record, and a delete button asks for confirmation
 before calling <code>DELETE /agentmemory/governance/memories</code> with
 the reason <em>"Deleted via viewer"</em>; the audit tab lists what
 governance operations removed. Review here means deletion — there is no
-approve, reject or pending state.</p>
+approve, reject or pending state, which is why this report no longer
+carries <code>human_review</code>. The mark asks whether a memory waits
+in a state until an actor the producing agent cannot be resolves it;
+every memory here is live from the moment it is written, and the viewer
+lets a person remove one afterwards. The nearest waiting state in the
+tree is a <code>Checkpoint</code> (<code>src/types.ts:761-773</code>),
+which has a <code>type</code> of <code>approval</code>, a status of
+<code>pending</code>/<code>passed</code>/<code>failed</code>/<code>expired</code>
+and a <code>resolvedBy</code> — but it gates
+<code>linkedActionIds</code> rather than memory content,
+<code>memory_checkpoint</code>
+(<code>src/mcp/tools-registry.ts:536-538</code>) is described as
+creating <em>or resolving</em> one, and <code>resolvedBy</code> is
+assigned straight from the request
+(<code>src/functions/checkpoints.ts:120</code>). Deletion through an
+audited path is a real correction surface and the report credits it as
+one.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>Strengths:</p>
@@ -552,6 +568,27 @@ methodology.</li>
 small synthetic eval.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — audited at the unchanged pin <a
+href="https://github.com/rohitg00/agentmemory/commit/e04ba88819c365c9acf9d6661ea802143e728bd6"><code class="commit-id" title="e04ba88819c365c9acf9d6661ea802143e728bd6">e04ba888…</code></a>;
+nothing upstream moved. <code>human_review</code> is
+<strong>withdrawn</strong>, one reading after it was added, and the
+record itself contained the reason: <em>"the surface adjudicates by
+removal only, with no approve or reject state."</em> Under the question
+the mark now asks — does a memory wait in a state until an actor the
+producing agent cannot be resolves it — a delete button over live rows
+is a correction surface, not a gate. The <code>Checkpoint</code> type
+was tested as the alternative and fails on three counts at once: it
+gates actions rather than memory content, <code>memory_checkpoint</code>
+is declared to the model as creating <em>or resolving</em> one, and
+<code>resolvedBy</code> is copied from the request without verification.
+<code>audit_log</code> and <code>negative_eval</code> both stand with
+their anchors re-verified — the written policy at
+<code>src/functions/audit.ts:5-12</code> that every structural deletion
+calls <code>recordAudit</code> before <code>kv.delete</code>, and the
+isolated-search exclusion at
+<code>test/agent-isolation-search.test.ts:149</code> with its wildcard
+positive control at <code>:165</code>. Screened again first; nothing was
+installed and no suite was run.</p>
 <p><strong>2026-09-15</strong> — <a
 href="https://github.com/rohitg00/agentmemory/commit/e04ba88819c365c9acf9d6661ea802143e728bd6"><code class="commit-id" title="e04ba88819c365c9acf9d6661ea802143e728bd6">e04ba888…</code></a>
 — 8 commits on, 2026-08-23, at 0.9.29. Screened before reading: one

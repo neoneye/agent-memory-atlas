@@ -9,11 +9,10 @@ source_url: https://github.com/rohitg00/agentmemory
 archive_name: "rohitg00--agentmemory"
 revision: e04ba88819c365c9acf9d6661ea802143e728bd6
 revision_url: https://github.com/rohitg00/agentmemory/commit/e04ba88819c365c9acf9d6661ea802143e728bd6
-analyzed_at: 2026-09-15
-capabilities: "audit_log, human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "audit_log, negative_eval"
 capability_evidence:
   audit_log: "the governance and deletion paths | src/functions/audit.ts:8, :34 recordAudit; src/functions/governance.ts:11 mem::governance-delete | a written policy that every structural deletion of a memory, observation, session or semantic row calls recordAudit before the delete, and recordAudit inserts an AuditEntry — id, timestamp, operation, user, function, target ids, details — under a fresh id in its own KV.audit keyspace; governance deletion records the reason | none"
-  human_review: "the viewer's memories table | src/viewer/index.html:2692, :2760 deleteMemory; src/triggers/api.ts:1833 DELETE /agentmemory/governance/memories | a person browses stored memories — title, type, strength, version, updated, with rows expanding to the full record — deletes one behind a confirmation, and the call goes through mem::governance-delete with the reason `Deleted via viewer`, which the audit tab lists; the surface adjudicates by removal only, with no approve or reject state | none"
   negative_eval: "agent isolation on search and project scope on export | src/functions/search.ts:369-430, src/functions/export-import.ts | with isolated scope and AGENT_ID agent_a, a search for a marker both agents' observations contain returns results and none of them is agent_b's; a wildcard call returns both, and isolated scope with no agent id throws; a project-scoped mesh export excludes another project's memories | test/agent-isolation-search.test.ts:149 (positive control :165), test/mesh-export-project-scope.test.ts:75"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -277,7 +276,18 @@ with title, type, strength, version and last update, a row expands to the full
 record, and a delete button asks for confirmation before calling
 `DELETE /agentmemory/governance/memories` with the reason *"Deleted via
 viewer"*; the audit tab lists what governance operations removed. Review here
-means deletion — there is no approve, reject or pending state.
+means deletion — there is no approve, reject or pending state, which is why this
+report no longer carries `human_review`. The mark asks whether a memory waits in
+a state until an actor the producing agent cannot be resolves it; every memory
+here is live from the moment it is written, and the viewer lets a person remove
+one afterwards. The nearest waiting state in the tree is a `Checkpoint`
+(`src/types.ts:761-773`), which has a `type` of `approval`, a status of
+`pending`/`passed`/`failed`/`expired` and a `resolvedBy` — but it gates
+`linkedActionIds` rather than memory content, `memory_checkpoint`
+(`src/mcp/tools-registry.ts:536-538`) is described as creating *or resolving*
+one, and `resolvedBy` is assigned straight from the request
+(`src/functions/checkpoints.ts:120`). Deletion through an audited path is a real
+correction surface and the report credits it as one.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -410,6 +420,8 @@ rather than relying on the shared default.
 - `docs/benchmarks/2026-05-20-coding-agent-life-v1.md`: small synthetic eval.
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`e04ba88819c365c9acf9d6661ea802143e728bd6`](https://github.com/rohitg00/agentmemory/commit/e04ba88819c365c9acf9d6661ea802143e728bd6); nothing upstream moved. `human_review` is **withdrawn**, one reading after it was added, and the record itself contained the reason: *"the surface adjudicates by removal only, with no approve or reject state."* Under the question the mark now asks — does a memory wait in a state until an actor the producing agent cannot be resolves it — a delete button over live rows is a correction surface, not a gate. The `Checkpoint` type was tested as the alternative and fails on three counts at once: it gates actions rather than memory content, `memory_checkpoint` is declared to the model as creating *or resolving* one, and `resolvedBy` is copied from the request without verification. `audit_log` and `negative_eval` both stand with their anchors re-verified — the written policy at `src/functions/audit.ts:5-12` that every structural deletion calls `recordAudit` before `kv.delete`, and the isolated-search exclusion at `test/agent-isolation-search.test.ts:149` with its wildcard positive control at `:165`. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`e04ba88819c365c9acf9d6661ea802143e728bd6`](https://github.com/rohitg00/agentmemory/commit/e04ba88819c365c9acf9d6661ea802143e728bd6) — 8 commits on, 2026-08-23, at 0.9.29. Screened before reading: one auto-run surface, three unpinned surfaces and an `AGENTS.md` addressed to a reading agent, read as data; nothing was installed or run. The commits add Devin and Cursor adapters, content-hashed dedup for hook events that had collapsed onto one key, a single summarize per stop, a viewer that expands memory rows, a WebSocket frame guard, and project-scope parity across capture surfaces with a project-scoped export test. Four mark decisions changed on code that predates the first reading. `scope_enforced` withdrawn: project and cwd filters are optional, agent isolation is opt-in, and a call's explicit or wildcard `agentId` overrides it. `negative_eval` added on the isolated-search exclusion test (7 June 2026) and the project-scoped export test. `human_review` added on the viewer's memories table, where a person deletes through the audited governance path. `bitemporal` withheld with the reason now written in section 6: the as-of edge query and its validity stamps sit in a registered module nothing calls. Three marks.
 
