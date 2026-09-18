@@ -9,11 +9,10 @@ source_url: https://github.com/openyak/openyak
 archive_name: "openyak--openyak"
 revision: bd88bff824c29fc48024eb19b7435cb2c065e432
 revision_url: https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432
-analyzed_at: 2026-09-12
-capabilities: "scope_enforced, human_review"
+analyzed_at: 2026-09-18
+capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "the workspace memory document — every read, including prompt injection | backend/app/memory/workspace_memory_storage.py:20-40,:44-51,:58-65,:76-89, backend/app/memory/injection.py:19-30 | `WorkspaceMemory.workspace_path` is unique per row and every query filters on it: `select(...).where(WorkspaceMemory.workspace_path == key)` in the getter, the row fetch and the update path alike, with `key` produced by `_normalize_path`, which converts backslashes, resolves `.` and `..` and strips trailing slashes so the same physical directory maps to the same key however the caller spelled it. The injection path that builds the `<workspace-memory>` section of the system prompt goes through the same getter, so the boundary holds where it matters — what reaches the model. Verified at this pin, in a subsystem the upstream has since deleted | none — no committed case asserts one workspace's document stays out of another's prompt"
-  human_review: "the workspace memory document — the REST surface over it | backend/app/api/workspace_memory.py:34,:45,:63,:77,:89,:162 | six endpoints over the document a person can reach: `GET /list` and `GET` to inspect, `PUT` to rewrite it whole, `DELETE` to remove it, `POST /refresh` to force a regeneration and `POST /export`. Because the memory is one 200-line Markdown document rather than a set of records, the editing surface is the whole memory, so a person reviewing what the model wrote edits the document and the next rewrite starts from what they left. That is review by authorship rather than by approval — nothing is held pending a decision, and the rewrite is not gated on one. Verified at this pin, in a subsystem the upstream has since deleted | none"
 stack_storage: "sqlite"
 stack_retrieval: ""
 stack_source: "reviewed"
@@ -412,6 +411,12 @@ honest signal of the intended scale.
 **Licence** — `LICENSE` (Apache-2.0).
 
 ## History
+
+**2026-09-18** — checked against `ab052e4cd4a94d2432a20b5fc433e80ce8bdc698` and **not re-pinned**, with the mark reconsidered on its own terms.
+
+**Human review withdrawn.** The record ended by describing what it had found: *"review by authorship rather than by approval"*. That is an accurate description and it is not this mark. The six endpoints over the document are plain CRUD — `GET /list`, `GET`, `PUT`, `DELETE`, `POST /refresh`, `POST /export` — and a grep of the module at the pinned commit for `pending`, `approve` or `draft` returns nothing: no memory waits in a state for anyone, the model rewrites the document and a person may edit what it left. Editing after the fact is a real and useful affordance; it is the opposite of a gate, because the write has already landed. `scope_enforced` holds.
+
+**And the subject has moved off `main`.** OpenYak is now 2.0.0-alpha: 1,458 files changed and 257,003 lines deleted since this pin, the Python backend gone (two `.py` files remain in the tree), and no workspace memory anywhere. The project preserves the v1 line deliberately rather than dropping it — the changelog names the [`legacy/v1`](https://github.com/openyak/openyak/tree/legacy/v1) branch and the `v1-final` tag at v1.5.0, *"the local-first desktop agent with its own runtime, tools, Computer Use, and office workflows"*, with its full changelog. So this report stays pinned in the v1 line, which it describes accurately and which remains readable at a named tag; what it no longer describes is the head of `main`.
 
 **2026-09-12** — re-read against the upstream head, `ab052e4cd4a94d2432a20b5fc433e80ce8bdc698`, 50 commits past this report's pin, and **not re-pinned**. The memory subsystem was removed wholesale in the v2 rewrite (`71c384cbdf23996bf4ba854007bc360524a6790a`): 1,463 files changed, 277,040 deletions, the Python backend replaced by a Rust core and an Electron app, and all nine files this report's appendix names deleted. The replacement persists a transcript and per-agent session routing, not a memory. Re-pinning would point every section of this report at a tree that does not contain the code it describes, so `revision` stays where it is and section 1 now opens with the removal.
 
