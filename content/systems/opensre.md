@@ -7,16 +7,15 @@ page_kind: system
 source_name: "Tracer-Cloud/opensre"
 source_url: https://github.com/Tracer-Cloud/opensre
 archive_name: "Tracer-Cloud--opensre"
-revision: f18c59a6eb5ac0d9eec125692bca5ba28703b932
-revision_url: https://github.com/Tracer-Cloud/opensre/commit/f18c59a6eb5ac0d9eec125692bca5ba28703b932
-analyzed_at: 2026-09-14
-capabilities: "scope_enforced, human_review, negative_eval"
+revision: 730ebc1ad151389393ece55051049d7a0af15864
+revision_url: https://github.com/Tracer-Cloud/opensre/commit/730ebc1ad151389393ece55051049d7a0af15864
+analyzed_at: 2026-09-18
+capabilities: "scope_enforced, negative_eval"
 stack_storage: ""
 stack_retrieval: "lexical"
 stack_source: "seeded"
 capability_evidence:
   scope_enforced: "long-term memory store, read and write | config/constants/paths.py | session_home() resolves <org root>/users/<actor id> from a ContextVar, and memory_dir() is the only path every read goes through | tests/core/agent_harness/session/test_memory_extraction.py::test_scheduled_extraction_thread_inherits_storage_scope"
-  human_review: "the /memory slash commands over the same markdown files the agent reads | surfaces/interactive_shell/command_registry/memory_cmds.py | list, show and forget after the fact, plus the store path printed so the files can be edited directly | tests/interactive_shell/test_memory_cmds.py"
   negative_eval: "the write decision, and the prompt sent to the extraction provider — not a read path | tests/core/agent_harness/session/test_memory_extraction.py | secret-like, assistant-only and sample-scenario items asserted not to be saved; a provider token asserted absent from the extraction prompt | same file"
 matrix:
   memory_unit: "One markdown file with YAML frontmatter — slug, a four-value type, a 200-character description, created and updated timestamps — beside a generated `MEMORY.md` index"
@@ -501,6 +500,10 @@ something, and to make a correction that holds.
 | `tools/system/agent_memory/_evidence.py` | 41 | Maps a `memory_recall` result into the investigation report's citation list |
 
 ## History
+
+**2026-09-18** — [`730ebc1ad151389393ece55051049d7a0af15864`](https://github.com/Tracer-Cloud/opensre/commit/730ebc1ad151389393ece55051049d7a0af15864) — re-pinned from `f18c59a`; 343 files and +18,159 lines, re-screened at the new pin. **Human review withdrawn.** The record said what the surface does and the [narrowed rubric](../../methodology/atlas-rubric/#human-review-surface) no longer counts it: `/memory list`, `show` and `forget` act *"after the fact"*, and printing the store path so the files can be edited directly is authoring. The commands themselves are the good shape — typed by a person into the interactive shell, not tool calls — but there is nothing for them to adjudicate: `save_memory` writes the record and rebuilds the `MEMORY.md` index under a directory lock, with no pending state between the write and the read.
+
+And the forgetting verb is not reserved to that shell either. `tools/system/agent_memory/tool.py` registers both `memory_remember` (*"Save knowledge"*) and `memory_forget` (*"Forget"*) as agent tools, so the model writes and removes memories on its own surface and `/memory forget` is a second door onto the same verb. The only approval machinery elsewhere in the tree gates a commit-and-push in the merge-conflict resolver, which is an action rather than a memory. `scope_enforced` and `negative_eval` hold.
 
 **2026-09-14** — [`f18c59a6eb5ac0d9eec125692bca5ba28703b932`](https://github.com/Tracer-Cloud/opensre/commit/f18c59a6eb5ac0d9eec125692bca5ba28703b932) — second reading, 745 commits on. Screened again; nothing was installed and nothing was run. The repository moved a great deal and the memory subsystem barely did: seven files, 99 insertions and 23 deletions across `core/domain/memory/`, the extraction pass and the agent tools. All three marks were re-tested at the producer and all three hold; line references and file sizes are corrected where the files grew. The one addition is `tools/system/agent_memory/_evidence.py`, which maps a `memory_recall` result into the investigation report's citation list, so an answer that used a memory now says which one — provenance in the answer rather than on the record. **The rejected-value gap is unchanged.** `delete_memory` still unlinks without recording anything, no tombstone, `previously_deleted` or equivalent exists anywhere under `core/domain/memory/`, `memory_extraction.py` or `tools/system/agent_memory/`, and the extraction pass still runs after every recorded turn over a thirty-turn window. The first reading's open question — whether a forgotten memory comes back — is still unanswered by any committed test.
 
