@@ -130,10 +130,45 @@ is the difference between a correction you can review and one you have to trust.
 
 ### Human review surface
 
-**Present when:** there is a place a person inspects, approves, or adjudicates
-memory content, before or after it takes effect.
+**Present when:** a memory waits in a state until an actor the producing agent
+cannot be resolves it.
 
-**Not this:** a memory UI that only displays. Viewing is not reviewing.
+**Not this:** a memory UI that only displays. Viewing is not reviewing. Nor is
+any of the following, each of which has been mistaken for this mark in a
+published report on this site and corrected on 2026-09-18:
+
+- **An approve verb on the agent's own tool surface.** If `approve`, `promote`,
+  `resolve` or `apply` is a registered tool, or one value of an `action` enum on
+  a tool the agent already holds, the producer clears its own queue. A second
+  door for a person — a CLI, a dashboard — does not close the first.
+- **A flag the caller sets.** `confirm=true`, `dry_run=false`,
+  `override_operator=true`, `--actor-role integrator`, an `approver` or `actor`
+  string the handler records without verifying. A boolean or a name supplied in
+  the call is `--force`: it guards against a slip, not against a decision.
+- **A status the producer can write.** If the model's output reaches the state
+  column — through a dict copied rather than rebuilt, a pass-through JSON field,
+  a schema whose `CHECK` accepts the approved value — then the queue is advisory.
+- **Editing after the fact.** A person who opens the stored document and
+  rewrites it is authoring; the write has already landed. That is a real and
+  useful affordance and it is the opposite of a gate.
+- **Permission, authorisation or a per-user mute.** Who may change an ACL, and
+  what one viewer sees, are different questions from whether a memory is
+  admitted.
+- **A queue nothing drains.** An approve route correctly off the tool surface
+  still fails if the queue lives in process memory, or if no read path consults
+  the approved state.
+- **Prose.** A tool description asking the model to show the user first is a
+  request to the model, not a constraint on it.
+
+**The test, in one question:** *can the agent that wrote the memory also clear
+its review?* Answer it by reading the tool registry, the argument list and the
+writer of the state column — not the documentation. What passes looks like
+Intaris, where the approve route stamps `resolved_by="user"` as a literal
+beside an authenticated session id, the SQL refuses to overwrite a human
+decision, and the agent-facing surface registers no verb of its own; or shisad,
+where the adjudicating command is parsed from the user's own message text and
+refused off the trusted channel; or Agent Mesh, whose CLI approval refuses to
+run at all when `sys.stdin.isatty()` is false.
 
 **Why:** fully automatic memory, memory a person can review before it takes
 effect, and memory a person authors are three different products with three
@@ -151,6 +186,15 @@ person agreed. Reading code establishes that the surface exists and who may act
 on it; it cannot establish that the acting is real. That is why this mark is
 worded as a *surface* rather than as oversight, and why the near-miss worth
 writing in a report is a queue nothing in the tree ever drains.
+
+**This wording narrowed on 2026-09-18.** It previously read *"there is a place a
+person inspects, approves, or adjudicates memory content, before or after it
+takes effect"*, which admitted an editor a person reaches after the write and
+said nothing about who else could reach the same verb. Of twenty-three marks
+re-tested against the question above, nineteen failed and one system that had
+been refused the mark earned it. The failures were mostly not close calls: the
+commonest single shape was an approve tool sitting in the same registry as the
+writing tool.
 
 ### Negative retrieval assertion
 

@@ -232,11 +232,53 @@ where it applies.</p>
 unanswerable without it, and it is the difference between a correction
 you can review and one you have to trust.</p>
 <h3 id="human-review-surface">Human review surface</h3>
-<p><strong>Present when:</strong> there is a place a person inspects,
-approves, or adjudicates memory content, before or after it takes
-effect.</p>
+<p><strong>Present when:</strong> a memory waits in a state until an
+actor the producing agent cannot be resolves it.</p>
 <p><strong>Not this:</strong> a memory UI that only displays. Viewing is
-not reviewing.</p>
+not reviewing. Nor is any of the following, each of which has been
+mistaken for this mark in a published report on this site and corrected
+on 2026-09-18:</p>
+<ul>
+<li><strong>An approve verb on the agent's own tool surface.</strong> If
+<code>approve</code>, <code>promote</code>, <code>resolve</code> or
+<code>apply</code> is a registered tool, or one value of an
+<code>action</code> enum on a tool the agent already holds, the producer
+clears its own queue. A second door for a person — a CLI, a dashboard —
+does not close the first.</li>
+<li><strong>A flag the caller sets.</strong> <code>confirm=true</code>,
+<code>dry_run=false</code>, <code>override_operator=true</code>,
+<code>--actor-role integrator</code>, an <code>approver</code> or
+<code>actor</code> string the handler records without verifying. A
+boolean or a name supplied in the call is <code>--force</code>: it
+guards against a slip, not against a decision.</li>
+<li><strong>A status the producer can write.</strong> If the model's
+output reaches the state column — through a dict copied rather than
+rebuilt, a pass-through JSON field, a schema whose <code>CHECK</code>
+accepts the approved value — then the queue is advisory.</li>
+<li><strong>Editing after the fact.</strong> A person who opens the
+stored document and rewrites it is authoring; the write has already
+landed. That is a real and useful affordance and it is the opposite of a
+gate.</li>
+<li><strong>Permission, authorisation or a per-user mute.</strong> Who
+may change an ACL, and what one viewer sees, are different questions
+from whether a memory is admitted.</li>
+<li><strong>A queue nothing drains.</strong> An approve route correctly
+off the tool surface still fails if the queue lives in process memory,
+or if no read path consults the approved state.</li>
+<li><strong>Prose.</strong> A tool description asking the model to show
+the user first is a request to the model, not a constraint on it.</li>
+</ul>
+<p><strong>The test, in one question:</strong> <em>can the agent that
+wrote the memory also clear its review?</em> Answer it by reading the
+tool registry, the argument list and the writer of the state column —
+not the documentation. What passes looks like Intaris, where the approve
+route stamps <code>resolved_by="user"</code> as a literal beside an
+authenticated session id, the SQL refuses to overwrite a human decision,
+and the agent-facing surface registers no verb of its own; or shisad,
+where the adjudicating command is parsed from the user's own message
+text and refused off the trusted channel; or Agent Mesh, whose CLI
+approval refuses to run at all when <code>sys.stdin.isatty()</code> is
+false.</p>
 <p><strong>Why:</strong> fully automatic memory, memory a person can
 review before it takes effect, and memory a person authors are three
 different products with three different failure modes, and the
@@ -255,6 +297,15 @@ it cannot establish that the acting is real. That is why this mark is
 worded as a <em>surface</em> rather than as oversight, and why the
 near-miss worth writing in a report is a queue nothing in the tree ever
 drains.</p>
+<p><strong>This wording narrowed on 2026-09-18.</strong> It previously
+read <em>"there is a place a person inspects, approves, or adjudicates
+memory content, before or after it takes effect"</em>, which admitted an
+editor a person reaches after the write and said nothing about who else
+could reach the same verb. Of twenty-three marks re-tested against the
+question above, nineteen failed and one system that had been refused the
+mark earned it. The failures were mostly not close calls: the commonest
+single shape was an approve tool sitting in the same registry as the
+writing tool.</p>
 <h3 id="negative-retrieval-assertion">Negative retrieval assertion</h3>
 <p><strong>Present when:</strong> committed evaluation cases assert that
 particular material must <strong>not</strong> be retrieved.</p>
