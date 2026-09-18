@@ -9,11 +9,11 @@ source_url: https://github.com/Sompote/TigrimOSR
 archive_name: "Sompote--TigrimOSR"
 revision: e6056e803c81547f04a65178f0c0994fc36e016a
 revision_url: https://github.com/Sompote/TigrimOSR/commit/e6056e803c81547f04a65178f0c0994fc36e016a
-analyzed_at: 2026-09-14
+analyzed_at: 2026-09-19
 capabilities: "scope_enforced, human_review"
 capability_evidence:
-  human_review: "the skill-synthesizer proposal queue — a real before-and-after diff, approved or rejected by a person | src/server/services/skill_synthesizer.rs:997, :1100, :1146, :1196, src/ui/settings.rs:3715, :3857, :3872, src/server/routes/skills.rs:675 | a synthesized skill lands as a proposal rather than a live edit, `get_proposed_diff` returns both files so the reviewer sees what would change rather than a summary of it, and `approve_proposal` and `reject_proposal` are the two dispositions. The UI partitions the queue on the same field — pending proposals in one list, approved or rejected in another with a status icon. The condition worth stating is at `:997`: the proposal is created needing approval only when `require_approval` is set, so the gate is configurable rather than unconditional | tests in the repository"
-  scope_enforced: "recall — a project id selects the memory file and filters the installed-skills block | src/server/ | the project id chooses which `memory.md` is read and narrows the skills block assembled for the session; the CLI scopes by launch directory instead, keeping skills, persona, settings and history in a local `.tigrimos`. The key is applied when the context is assembled rather than being a label on a row | tests in the repository"
+  human_review: "the staged skill update — a second file beside the live one, which only a rename promotes | src/server/services/skill_synthesizer.rs:237-246, :1017, :1056-1060, :1100, :1146, :1196, src/server/services/toolbox.rs:4204-4240, :4968-4978 | `write_proposed_update` writes `SKILL.md.proposed` next to the live `SKILL.md`, which keeps being served until `approve_proposal` renames it, and `get_proposed_diff` returns both files so a reviewer sees the change rather than a summary of it. The producing agent cannot resolve that wait: its declared tool surface carries no approve verb, the two callers of `approve_proposal` are the desktop settings pane and an HTTP route, `fetch_url` rejects loopback and private addresses before it connects, and `write_file` refuses the skills directory outright — its error text steers the caller to `save_skill` instead. Three limits belong with the mark and all three are real. `run_shell` is a general capability, gated by a per-call confirmation rather than by the queue. `save_skill` can overwrite the live `SKILL.md` directly, which sidesteps the proposal rather than resolving it. And the mark covers updates only: on the create path the proposal is written as a live `SKILL.md` and the directory scan in `build_enabled_skills_block` re-admits it despite `enabled: false` | tests in the repository"
+  scope_enforced: "the run context — one project id resolves to one working folder, and the file tools canonicalize back into it | src/server/routes/chat.rs:491-500, :1055-1082, src/server/routes/projects.rs:113, src/server/services/toolbox.rs:3655-3697, :4712, :4885 | `load_project_run_context(pid)` is resolved once per request and does two things at once: it points `sandbox_dir` at that project's working folder and builds the system block from that project's stored memory. The assigned-skill list from the same context narrows the installed-skills block. So the key is applied where the context is assembled, not carried as a label on a row — and on the file side it is backed by `resolve_path`, which canonicalizes, compares against the sandbox root and returns a `.blocked_path_traversal` sentinel rather than repairing anything, including for a `cwd` handed to `run_shell`. What it does not bound is the text of a shell command, which can name an absolute path of its own. The CLI scopes by launch directory instead, keeping skills, persona, settings and history in a local `.tigrimos` | tests in the repository"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -22,11 +22,11 @@ matrix:
   storage: "JSON files on disk (skills.json, projects.json, chat history) and SKILL.md directories, resolved through a project-first overlay in CLI mode"
   retrieval: "No search; the project's assigned skills and its memory.md are assembled into the system prompt"
   write: "A synthesizer reads finished sessions, user feedback and subagent traces, then proposes create or update"
-  update_delete: "Proposals stage as SKILL.md.proposed and become live by rename on approval; rejection deletes the proposal and records nothing"
+  update_delete: "An update to an existing skill stages as SKILL.md.proposed and becomes live by rename on approval; a newly synthesized skill is written live immediately. Rejection deletes the proposal and records nothing"
   scoping: "Project id selects the memory.md and filters the installed-skills block; the CLI scopes instead by launch directory, with skills, persona, settings and history in a local .tigrimos"
   integration: "Native Rust desktop app, embedded web UI, a folder-local `tigrim` CLI, MCP servers, plugins, Telegram and LINE bots"
   background: "A scheduler runs the skill synthesizer in the desktop and headless binaries only; compaction hooks track file reads and invoked skills"
-  trust: "A `review_status` of pending or approved is persisted on an installed skill and rendered as a label; nothing gates use on it, and both install paths create a pending skill with `enabled: true`"
+  trust: "A `review_status` of pending or approved is persisted on an installed skill and rendered as a label. Nothing gates use on it: the registry branch of the skills block honours `enabled`, but the directory scan beside it re-admits any folder holding a SKILL.md, and `load_skill` checks neither field"
   strengths: "A staged proposal a person can diff before it takes effect, carrying its rationale and source sessions"
   risks: "Proposal state is in-memory only, so a rejected skill can be re-proposed after a restart, and the CLI never starts the synthesizer that produces skills in the first place"
 ---
@@ -98,7 +98,7 @@ headless binaries; in the CLI a folder's skills are seeded once and no state in
 this diagram is ever entered.
 
 ```mermaid
-%% caption: approval is required by default and forced for custom sources, staging a proposal beside the live file — and a rejection deletes it, recording nothing that would stop the same proposal returning
+%% caption: approval is required by default and forced for custom sources, staging an update beside the live file — but a newly created skill is written live before the flag is read, a rejection deletes the proposal and records nothing that would stop it returning
 flowchart TB
     SRC["finished sessions<br/>+ user feedback<br/>+ subagent traces"]
     SRC -->|"scheduler runs run_synthesis"| PR["Proposal<br/>kind: create or update<br/>name, content, rationale, based_on"]
@@ -106,6 +106,7 @@ flowchart TB
     GATE -->|"false"| THRU["write straight through<br/>review_status = approved"]
     GATE -->|"true — the default,<br/>and forced when source is custom"| STAGE
     STAGE["create: SKILL.md written,<br/>enabled = false, review_status = pending<br/>update: SKILL.md.proposed beside the live file"]
+    STAGE -->|"create only"| LEAK["live SKILL.md on disk —<br/>the directory scan lists it<br/>under 'always prefer these'"]
     STAGE --> AP["approve"]
     STAGE --> RJ["reject"]
     AP --> LIVE["rename to SKILL.md<br/>enabled = true"]
@@ -113,6 +114,7 @@ flowchart TB
     DEL --> NOTHING["nothing recorded,<br/>nothing remembered"]
 
     style THRU fill:#f4e2bd,stroke:#b8860b
+    style LEAK fill:#f4e2bd,stroke:#b8860b
     style NOTHING fill:#f4e2bd,stroke:#b8860b
 ```
 
@@ -121,14 +123,29 @@ model-authored skill straight to `approved`, and a rejection leaves **no trace a
 all** — so the same proposal can be regenerated from the same sessions on the next
 synthesis run, and nothing knows it was already refused.
 
-`review_status` is a persisted discrete state, and `pending` is coupled to
-`enabled: false`, so a pending skill exists on disk and is withheld from every
-run. That earns the trust-state mark under this atlas's definition — a discrete
-status field, not a score, with a state that withholds the memory from use — and
-two caveats belong with it. It is *approval* status rather than truth: nothing
-here can say a skill is wrong, only that nobody has said yes to it. And `rejected`
-is set on the in-memory proposal and never persists on a skill; the durable
-vocabulary is `pending` and `approved`.
+`review_status` is a persisted discrete state, and on the create path `pending`
+is coupled to `enabled: false`. It does not follow that a pending skill is
+withheld, and this is the sharpest thing in the repository. `write_new_auto_skill`
+(`skill_synthesizer.rs:977`) writes a live `SKILL.md` as its first statement,
+*before* it reads `require_approval` — the flag only decides the two registry
+fields. The reader then splits in two. `build_enabled_skills_block`
+(`toolbox.rs:1191`) filters the registry on `enabled`, which excludes the pending
+row; but the loop beneath it scans the skills root for any directory holding a
+`SKILL.md`, and the only thing it skips is a name already present in the *enabled*
+list (`:1223`). A pending skill is by construction absent from that list, so it is
+not skipped — and it is emitted under the heading "Custom skills (priority —
+always prefer these)", above the registered ones, beneath a lead telling the model
+it MUST load a matching skill first. `exec_load_skill` (`:5328`) resolves the
+directory and reads the file with no check on either field. The writer sets a
+flag; one reader honours it and the other never sees it.
+
+So `pending` is an approval status that nothing enforces on the create path. It
+is also *approval* status rather than truth — nothing here can say a skill is
+wrong, only that nobody has said yes to it — and `rejected` is set on the
+in-memory proposal and never persists on a skill, so the durable vocabulary is
+`pending` and `approved`. The update path is the one that holds: `SKILL.md.proposed`
+is a filename the scan does not match, so the live skill keeps being served until
+someone renames it.
 
 `project.memory` gets none of this. It is a string, written whole by
 `PUT /:id/memory`, mirrored to `memory.md` in the working folder and to
@@ -593,6 +610,8 @@ resolvers `skills_root`, `resolve_data_file`, `resolve_config_file`,
 **UI review surface** — `src/ui/skills_view.rs`, `src/ui/settings.rs`
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`e6056e803c81547f04a65178f0c0994fc36e016a`](https://github.com/Sompote/TigrimOSR/commit/e6056e803c81547f04a65178f0c0994fc36e016a); nothing upstream moved, so the corrections here are ours. The report had said a pending skill "exists on disk and is withheld from every run". It is not withheld. `write_new_auto_skill` writes a live `SKILL.md` before it reads `require_approval`, and the skills block has two readers: the registry branch honours `enabled: false`, while the directory scan beneath it skips only names already in the *enabled* list, so a pending skill is emitted under "Custom skills (priority — always prefer these)". `load_skill` checks neither field. Both marks stand but both records were thin. `human_review` is now scoped to the update path, where `SKILL.md.proposed` genuinely waits for a rename the agent cannot perform — `fetch_url` blocks loopback, `write_file` refuses the skills directory — with `run_shell` and `save_skill` named as the ways around it. `scope_enforced` had `src/server/` as its whole anchor list and now names the run context and `resolve_path`. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-14** — [`e6056e803c81547f04a65178f0c0994fc36e016a`](https://github.com/Sompote/TigrimOSR/commit/e6056e803c81547f04a65178f0c0994fc36e016a) — re-read, two commits past the previous pin; upstream has not moved since 1 August. **`trust_state` is withdrawn, and the claim it rested on is corrected.** The report said `review_status` pending was coupled to `enabled=false`. It is not: both install paths build the row with `enabled: true` beside `review_status: Some("pending")` — a ClawHub install at `src/ui/skills_view.rs:945` and an upload at `:1198`. Every one of the 27 occurrences of the field was then read, and on an installed skill it is set once, rendered once as a coloured label at `:1612`, and gates nothing; the Enabled toggle beside that label is independent. A status that withholds nothing is the display-only case the mark excludes. The confusion is worth naming because two different objects share the field: the synthesizer's *proposals* also carry `review_status`, and there the status does partition a queue. That is where `human_review` lives and it stands — `get_proposed_diff` returns both files so a person sees the real change, with approve and reject as the two dispositions — subject to `require_approval`, which decides whether a proposal needs approval at all. `scope_enforced` is unchanged. Screened again first; nothing was installed and no suite was run.
 

@@ -117,7 +117,7 @@ folder-local CLI in which the synthesizer never runs.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-14</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Sompote--TigrimOSR" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -230,7 +230,7 @@ decisions in a process that forgets them.</p>
 <p>The skill lifecycle is the interesting one. It belongs to the desktop
 and headless binaries; in the CLI a folder's skills are seeded once and
 no state in this diagram is ever entered.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — approval is required by default and forced for custom sources, staging a proposal beside the live file — and a rejection deletes it, recording nothing that would stop the same proposal returning</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: approval is required by default and forced for custom sources, staging a proposal beside the live file — and a rejection deletes it, recording nothing that would stop the same proposal returning
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — approval is required by default and forced for custom sources, staging an update beside the live file — but a newly created skill is written live before the flag is read, a rejection deletes the proposal and records nothing that would stop it returning</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: approval is required by default and forced for custom sources, staging an update beside the live file — but a newly created skill is written live before the flag is read, a rejection deletes the proposal and records nothing that would stop it returning
 flowchart TB
     SRC[&quot;finished sessions&lt;br/&gt;+ user feedback&lt;br/&gt;+ subagent traces&quot;]
     SRC --&gt;|&quot;scheduler runs run_synthesis&quot;| PR[&quot;Proposal&lt;br/&gt;kind: create or update&lt;br/&gt;name, content, rationale, based_on&quot;]
@@ -238,6 +238,7 @@ flowchart TB
     GATE --&gt;|&quot;false&quot;| THRU[&quot;write straight through&lt;br/&gt;review_status = approved&quot;]
     GATE --&gt;|&quot;true — the default,&lt;br/&gt;and forced when source is custom&quot;| STAGE
     STAGE[&quot;create: SKILL.md written,&lt;br/&gt;enabled = false, review_status = pending&lt;br/&gt;update: SKILL.md.proposed beside the live file&quot;]
+    STAGE --&gt;|&quot;create only&quot;| LEAK[&quot;live SKILL.md on disk —&lt;br/&gt;the directory scan lists it&lt;br/&gt;under &#39;always prefer these&#39;&quot;]
     STAGE --&gt; AP[&quot;approve&quot;]
     STAGE --&gt; RJ[&quot;reject&quot;]
     AP --&gt; LIVE[&quot;rename to SKILL.md&lt;br/&gt;enabled = true&quot;]
@@ -245,6 +246,7 @@ flowchart TB
     DEL --&gt; NOTHING[&quot;nothing recorded,&lt;br/&gt;nothing remembered&quot;]
 
     style THRU fill:#f4e2bd,stroke:#b8860b
+    style LEAK fill:#f4e2bd,stroke:#b8860b
     style NOTHING fill:#f4e2bd,stroke:#b8860b</code></pre></details></figure>
 <p>Two highlighted boxes, two different gaps. Turning off
 <code>require_approval</code> writes a model-authored skill straight to
@@ -252,16 +254,36 @@ flowchart TB
 all</strong> — so the same proposal can be regenerated from the same
 sessions on the next synthesis run, and nothing knows it was already
 refused.</p>
-<p><code>review_status</code> is a persisted discrete state, and
-<code>pending</code> is coupled to <code>enabled: false</code>, so a
-pending skill exists on disk and is withheld from every run. That earns
-the trust-state mark under this atlas's definition — a discrete status
-field, not a score, with a state that withholds the memory from use —
-and two caveats belong with it. It is <em>approval</em> status rather
-than truth: nothing here can say a skill is wrong, only that nobody has
-said yes to it. And <code>rejected</code> is set on the in-memory
-proposal and never persists on a skill; the durable vocabulary is
-<code>pending</code> and <code>approved</code>.</p>
+<p><code>review_status</code> is a persisted discrete state, and on the
+create path <code>pending</code> is coupled to
+<code>enabled: false</code>. It does not follow that a pending skill is
+withheld, and this is the sharpest thing in the repository.
+<code>write_new_auto_skill</code>
+(<code>skill_synthesizer.rs:977</code>) writes a live
+<code>SKILL.md</code> as its first statement, <em>before</em> it reads
+<code>require_approval</code> — the flag only decides the two registry
+fields. The reader then splits in two.
+<code>build_enabled_skills_block</code> (<code>toolbox.rs:1191</code>)
+filters the registry on <code>enabled</code>, which excludes the pending
+row; but the loop beneath it scans the skills root for any directory
+holding a <code>SKILL.md</code>, and the only thing it skips is a name
+already present in the <em>enabled</em> list (<code>:1223</code>). A
+pending skill is by construction absent from that list, so it is not
+skipped — and it is emitted under the heading "Custom skills (priority —
+always prefer these)", above the registered ones, beneath a lead telling
+the model it MUST load a matching skill first.
+<code>exec_load_skill</code> (<code>:5328</code>) resolves the directory
+and reads the file with no check on either field. The writer sets a
+flag; one reader honours it and the other never sees it.</p>
+<p>So <code>pending</code> is an approval status that nothing enforces
+on the create path. It is also <em>approval</em> status rather than
+truth — nothing here can say a skill is wrong, only that nobody has said
+yes to it — and <code>rejected</code> is set on the in-memory proposal
+and never persists on a skill, so the durable vocabulary is
+<code>pending</code> and <code>approved</code>. The update path is the
+one that holds: <code>SKILL.md.proposed</code> is a filename the scan
+does not match, so the live skill keeps being served until someone
+renames it.</p>
 <p><code>project.memory</code> gets none of this. It is a string,
 written whole by <code>PUT /:id/memory</code>, mirrored to
 <code>memory.md</code> in the working folder and to
@@ -796,6 +818,26 @@ resolvers <code>skills_root</code>, <code>resolve_data_file</code>,
 <p><strong>UI review surface</strong> —
 <code>src/ui/skills_view.rs</code>, <code>src/ui/settings.rs</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — audited at the unchanged pin <a
+href="https://github.com/Sompote/TigrimOSR/commit/e6056e803c81547f04a65178f0c0994fc36e016a"><code class="commit-id" title="e6056e803c81547f04a65178f0c0994fc36e016a">e6056e80…</code></a>;
+nothing upstream moved, so the corrections here are ours. The report had
+said a pending skill "exists on disk and is withheld from every run". It
+is not withheld. <code>write_new_auto_skill</code> writes a live
+<code>SKILL.md</code> before it reads <code>require_approval</code>, and
+the skills block has two readers: the registry branch honours
+<code>enabled: false</code>, while the directory scan beneath it skips
+only names already in the <em>enabled</em> list, so a pending skill is
+emitted under "Custom skills (priority — always prefer these)".
+<code>load_skill</code> checks neither field. Both marks stand but both
+records were thin. <code>human_review</code> is now scoped to the update
+path, where <code>SKILL.md.proposed</code> genuinely waits for a rename
+the agent cannot perform — <code>fetch_url</code> blocks loopback,
+<code>write_file</code> refuses the skills directory — with
+<code>run_shell</code> and <code>save_skill</code> named as the ways
+around it. <code>scope_enforced</code> had <code>src/server/</code> as
+its whole anchor list and now names the run context and
+<code>resolve_path</code>. Screened again first; nothing was installed
+and no suite was run.</p>
 <p><strong>2026-09-14</strong> — <a
 href="https://github.com/Sompote/TigrimOSR/commit/e6056e803c81547f04a65178f0c0994fc36e016a"><code class="commit-id" title="e6056e803c81547f04a65178f0c0994fc36e016a">e6056e80…</code></a>
 — re-read, two commits past the previous pin; upstream has not moved

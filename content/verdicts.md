@@ -1211,7 +1211,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`tigrimosr`](../systems/tigrimosr/)
 - Best idea: the skill synthesizer stages a proposed skill as `SKILL.md.proposed` beside the live file, keeps the rationale and the sessions it came from, waits for a person, and promotes by rename — forcing review when the target was authored by a human rather than by the automation.
-- Biggest risk: approval is durable and rejection is ephemeral, with review state held in process memory — so a user who says "no, don't remember that" is answered and then forgotten.
+- Biggest risk: a newly synthesized skill is written to disk as a live `SKILL.md` before the approval flag is even read, and the skills block has two readers — the registry branch honours `enabled: false`, the directory scan beneath it does not, so the pending skill is advertised to the model under "Custom skills (priority — always prefer these)". Staging only holds for updates to an existing skill, which land as `SKILL.md.proposed`. Separately, approval is durable and rejection is ephemeral, with review state held in process memory — so a user who says "no, don't remember that" is answered and then forgotten.
 - Most reusable component: propose-stage-approve by rename, which is worth copying into systems whose memory model is far richer than this one's.
 - Maturity impression: 62 inline Rust tests concentrated on the agent loop and tool config rather than memory, with nothing exercising the propose/approve/reject cycle, and nothing at all on the new CLI or its path resolvers.
 - Study when: you want a self-contained agent platform that asks before changing what it has learned, or you want the promotion mechanism on its own.

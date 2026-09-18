@@ -3925,9 +3925,16 @@ href="../systems/tigrimosr/"><code>tigrimosr</code></a></h3>
 and the sessions it came from, waits for a person, and promotes by
 rename — forcing review when the target was authored by a human rather
 than by the automation.</li>
-<li>Biggest risk: approval is durable and rejection is ephemeral, with
-review state held in process memory — so a user who says "no, don't
-remember that" is answered and then forgotten.</li>
+<li>Biggest risk: a newly synthesized skill is written to disk as a live
+<code>SKILL.md</code> before the approval flag is even read, and the
+skills block has two readers — the registry branch honours
+<code>enabled: false</code>, the directory scan beneath it does not, so
+the pending skill is advertised to the model under "Custom skills
+(priority — always prefer these)". Staging only holds for updates to an
+existing skill, which land as <code>SKILL.md.proposed</code>.
+Separately, approval is durable and rejection is ephemeral, with review
+state held in process memory — so a user who says "no, don't remember
+that" is answered and then forgotten.</li>
 <li>Most reusable component: propose-stage-approve by rename, which is
 worth copying into systems whose memory model is far richer than this
 one's.</li>
