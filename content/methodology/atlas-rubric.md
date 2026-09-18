@@ -179,6 +179,13 @@ registers no verb on its agent-facing surface.
 user's own message text and refuses it off the trusted channel.
 [Agent Mesh](../../systems/agent-mesh/) refuses to run its CLI approval at all
 when `sys.stdin.isatty()` is false.
+[Scope Recall](../../systems/scope-recall-hermes/) removes the verb instead of
+guarding it: a claim's state is recomputed by a deterministic ladder from the
+sources it quotes, and `active` is refused unless a cited root carries an origin
+in `('human_direct','tool_observation','external_document')` — which the agent's
+own write tool cannot stamp, because the handler sets `assistant_visible` itself
+rather than taking an origin argument. There is nothing to lock down on the tool
+surface because nothing on it grants anything.
 [WeKnora](../../systems/weknora/) shows the shape without any actor check at
 all, because the producing side simply has no reach: an inferred memory is
 `pending`, both prompt-injection queries filter `status = active`, confirmation
