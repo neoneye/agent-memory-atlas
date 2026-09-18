@@ -9,7 +9,7 @@ source_url: https://github.com/12ziyad/universal-memory-engine
 archive_name: "12ziyad--universal-memory-engine"
 revision: b17c5486553634b66b3aa70777a007928dab54d7
 revision_url: https://github.com/12ziyad/universal-memory-engine/commit/b17c5486553634b66b3aa70777a007928dab54d7
-analyzed_at: 2026-09-09
+analyzed_at: 2026-09-18
 capabilities: "tombstone, trust_state, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "memory_suppressions, keyed on the canonicalized value and consulted inside the write gate | src/lib/db.js:134,146, src/pipeline/gates.js:33,756-761 | `getActiveSuppressions(env, userId, writeScope)` is loaded at the top of the gate and folded into a set keyed `kind:canonical_key`, and `isSuppressed(kind, label)` is checked with `canonicalKey(label)` before a node is created. The key is the value, not the row that carried it, so the same fact proposed again from a different source is refused rather than re-created — which is the distinction between this and an archived record | test/adversarial_idor.spec.js:263-266 asserts a denied suppression writes no row"
@@ -402,6 +402,23 @@ under them. Those shapes are the part worth having.
 **Licence** — `LICENSE` (Apache-2.0).
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`human_review` stands, and it is enforced in code rather than by an omission —
+the strongest form of this mark this atlas has found outside
+[Graphnosis](../graphnosis/)'s consent phrase. The three resolutions
+(`promoteCandidate`, `mergeCandidate`, `rejectCandidate`) are reachable only
+through the route at `src/index.js:6873-6878`, and that route's guard is
+`requireControlUser`, which is `requireMemoryUser(..., { allowTokenAuth: false })`
+(`:791-795`). `requireMemoryUser` turns that flag into a refusal:
+`if (auth.type === "token") { if (options.allowTokenAuth === false) return
+json({ error: "forbidden", code: "token_not_allowed" }, 403) }` (`:650-654`). So
+an API token — what an agent carries — is rejected with a named code before the
+handler runs, while the ordinary memory routes go through `requireMemoryUser`
+directly and accept one. Eleven routes take the control-user guard against
+thirty on the token-accepting path, so the split is deliberate and narrow.
+That is a producer test a reader can re-run, and the record now names it. No
+marks change.
 
 **2026-09-09** — [`b17c5486553634b66b3aa70777a007928dab54d7`](https://github.com/12ziyad/universal-memory-engine/commit/b17c5486553634b66b3aa70777a007928dab54d7) — second reading, 479 commits on: 1,003 files and 302,889 insertions, with migrations running from 0011 to 0063 and the appendix paths alone gaining 30,642 lines. Screened before reading: four auto-run surfaces, three build-time execution points, fifteen unpinned surfaces, no manifest inside the seven-day cooldown; nothing was installed and no suite was run.
 

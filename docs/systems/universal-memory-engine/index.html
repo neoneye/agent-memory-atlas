@@ -121,7 +121,7 @@ in this atlas, beside a golden retrieval set with forbidden ids.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/12ziyad--universal-memory-engine" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -501,6 +501,25 @@ not located.</li>
 <code>test/eval_extraction.spec.js</code>.</p>
 <p><strong>Licence</strong> — <code>LICENSE</code> (Apache-2.0).</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>human_review</code> stands, and it is enforced
+in code rather than by an omission — the strongest form of this mark
+this atlas has found outside <a href="../graphnosis/">Graphnosis</a>'s
+consent phrase. The three resolutions (<code>promoteCandidate</code>,
+<code>mergeCandidate</code>, <code>rejectCandidate</code>) are reachable
+only through the route at <code>src/index.js:6873-6878</code>, and that
+route's guard is <code>requireControlUser</code>, which is
+<code>requireMemoryUser(..., { allowTokenAuth: false })</code>
+(<code>:791-795</code>). <code>requireMemoryUser</code> turns that flag
+into a refusal:
+<code>if (auth.type === "token") { if (options.allowTokenAuth === false) return json({ error: "forbidden", code: "token_not_allowed" }, 403) }</code>
+(<code>:650-654</code>). So an API token — what an agent carries — is
+rejected with a named code before the handler runs, while the ordinary
+memory routes go through <code>requireMemoryUser</code> directly and
+accept one. Eleven routes take the control-user guard against thirty on
+the token-accepting path, so the split is deliberate and narrow. That is
+a producer test a reader can re-run, and the record now names it. No
+marks change.</p>
 <p><strong>2026-09-09</strong> — <a
 href="https://github.com/12ziyad/universal-memory-engine/commit/b17c5486553634b66b3aa70777a007928dab54d7"><code class="commit-id" title="b17c5486553634b66b3aa70777a007928dab54d7">b17c5486…</code></a>
 — second reading, 479 commits on: 1,003 files and 302,889 insertions,
