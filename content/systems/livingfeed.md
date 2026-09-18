@@ -9,7 +9,7 @@ source_url: https://github.com/showjihyun/livingfeed
 archive_name: "showjihyun--livingfeed"
 revision: 732d8bed74abb17b3079f2841911227c91468002
 revision_url: https://github.com/showjihyun/livingfeed/commit/732d8bed74abb17b3079f2841911227c91468002
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "the actor key is one of three mandatory clauses on the vector search, under a collection that is already partitioned per world | engine/actor/src/lf_actor/semantic.py:151-177 | `recall` posts to `lf_semantic_{world_id}` — a collection per world — with a `filter.must` of three clauses: `actor_id` matches, `importance` is at or above the floor, and `decay_at` is greater than now. So the scope is enforced twice over, by collection and by predicate, and expiry rides in the same `must` rather than waiting for a sweeper, which is why a forgotten memory needs no job to disappear. The docstring states the rule the filter implements: *only an actor's own memories, only the unexpired, nearest first*. The limit belongs with the mark: the whole call is wrapped in a bare `except Exception` that logs and returns an empty list, so an unreachable index produces an actor with no memories rather than an error | engine/actor/tests/test_semantic.py"
@@ -312,6 +312,24 @@ the code is legible, the *reasons* are in the comments.
 | `engine/**/tests` | 429 tests | Memory, semantic, phases, integration |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`scope_enforced` stands and is two-level: the collection is
+`lf_semantic_{world_id}`, one per world, and inside it the search carries a
+`filter.must` of three clauses — `actor_id` matches, `importance` is at or above
+the floor, `decay_at` is greater than now (`semantic.py:167-174`). The method's
+own docstring states the rule: *"자기 기억만, 만료 전 것만, 유사한 것부터"* — only
+one's own memories, only the unexpired, nearest first.
+
+The risk claim is exact and worth one more turn. The `except` is a bare
+`except Exception` wrapping the whole body, `self._ensure(world_id)` included,
+and its handler is `logger.warning("회상 실패(빈 회상으로 우회): %s", e);
+return []` (`:186-188`) — *"recall failed (bypassing with an empty recall)"*, the
+project naming its own degradation in the log string. What that costs is
+discrimination: an unreachable index, a collection that could not be created, and
+an actor whose memories have all decayed past `decay_at` are three different
+conditions, and the caller receives `[]` from all three. Nothing upstream can
+tell amnesia from having nothing to remember. No marks change.
 
 **2026-09-10** — [`732d8bed74abb17b3079f2841911227c91468002`](https://github.com/showjihyun/livingfeed/commit/732d8bed74abb17b3079f2841911227c91468002) — read again, 19 commits and 151 files past the previous pin. `scope_enforced` holds and carries an evidence record: `recall` still posts a three-clause `filter.must` — actor, importance floor, unexpired — under a per-world collection. Every absence claim was re-run and holds, including the swallowed recall failure, which is the same bare `except Exception` logging *회상 실패(빈 회상으로 우회)* and returning an empty list. The substantial addition is replay verification: a 509-line `replay_l1.py` beside `replay_ai.py`, `replay_rules.py` and `replay_world.py`, and a `DigestVerdict` in `context.py` whose three values keep *the fingerprint differs* apart from *I could not restore the inputs to check*, with the reasoning written into the docstrings — a comparison across assembler versions is refused outright, because reporting it would make the whole past look divergent every time the assembler is fixed. Four new replay suites totalling about 760 lines came with it, against 945 test functions across the tree. Screened before reading: no auto-run surface, no manifest inside the seven-day cooldown, ten build-time execution paths and nineteen unpinned dependency surfaces across a monorepo carrying both `pnpm-lock.yaml` and `uv.lock`; nothing was installed, built or run.
 

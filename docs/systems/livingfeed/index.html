@@ -121,7 +121,7 @@ layer.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/showjihyun--livingfeed" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -486,6 +486,27 @@ was traced into the memory path.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>scope_enforced</code> stands and is two-level:
+the collection is <code>lf_semantic_{world_id}</code>, one per world,
+and inside it the search carries a <code>filter.must</code> of three
+clauses — <code>actor_id</code> matches, <code>importance</code> is at
+or above the floor, <code>decay_at</code> is greater than now
+(<code>semantic.py:167-174</code>). The method's own docstring states
+the rule: <em>"자기 기억만, 만료 전 것만, 유사한 것부터"</em> — only
+one's own memories, only the unexpired, nearest first.</p>
+<p>The risk claim is exact and worth one more turn. The
+<code>except</code> is a bare <code>except Exception</code> wrapping the
+whole body, <code>self._ensure(world_id)</code> included, and its
+handler is
+<code>logger.warning("회상 실패(빈 회상으로 우회): %s", e); return []</code>
+(<code>:186-188</code>) — <em>"recall failed (bypassing with an empty
+recall)"</em>, the project naming its own degradation in the log string.
+What that costs is discrimination: an unreachable index, a collection
+that could not be created, and an actor whose memories have all decayed
+past <code>decay_at</code> are three different conditions, and the
+caller receives <code>[]</code> from all three. Nothing upstream can
+tell amnesia from having nothing to remember. No marks change.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/showjihyun/livingfeed/commit/732d8bed74abb17b3079f2841911227c91468002"><code class="commit-id" title="732d8bed74abb17b3079f2841911227c91468002">732d8bed…</code></a>
 — read again, 19 commits and 151 files past the previous pin.
