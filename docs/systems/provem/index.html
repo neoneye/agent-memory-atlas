@@ -113,7 +113,7 @@ asserts every published number and passes on a clean clone.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/BernhardJackiewicz--provem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -575,6 +575,30 @@ fallback distort recency?</li>
 <code>LICENSING.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>human_review</code> stands, and the gate is
+tested in both directions, which is more than most holders manage:
+<code>test_rejected_items_do_not_mutate_memory</code> rejects every item
+and asserts <code>controller.store.list_reflections() == []</code> with
+all items <code>REJECTED</code>
+(<code>tests/test_review_queue.py:90-100</code>), and
+<code>test_approved_simulation_only_affects_evaluation_copy</code>
+supplies the control — approve, then assert the original store still has
+no reflections while the evaluation copy does (<code>:102-113</code>).
+So the queue can withhold, and the pipeline can write when it does
+not.</p>
+<p>One thing the record should say, because the name invites a wrong
+reading: <code>simulate_review</code> is not the review. It is a policy
+simulator with <code>reviewer_id: str = "simulated_reviewer"</code>
+(<code>review.py:66-71</code>), and its only callers anywhere are in
+<code>tests/test_review_queue.py</code>. Nothing under <code>src/</code>
+outside <code>review.py</code> sets <code>ReviewStatus.APPROVED</code>,
+and there is no MCP server, no CLI verb and no HTTP route that approves
+an item. The approval surface is left to the embedding application. That
+is a normal shape for a library and it satisfies the mark's test —
+nothing an agent holds can approve here, because nothing in the tree can
+— but a reader should not mistake the simulator for a person. No marks
+change.</p>
 <p><strong>2026-09-09</strong> — <a
 href="https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f"><code class="commit-id" title="f6ce1b69c27a8c7eee78a0d15d6cb018d836922f">f6ce1b69…</code></a>
 — third reading, 54 commits on: 73 files, 10,764 insertions. Screened

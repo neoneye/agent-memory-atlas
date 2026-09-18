@@ -9,7 +9,7 @@ source_url: https://github.com/BernhardJackiewicz/provem
 archive_name: "BernhardJackiewicz--provem"
 revision: f6ce1b69c27a8c7eee78a0d15d6cb018d836922f
 revision_url: https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f
-analyzed_at: 2026-09-09
+analyzed_at: 2026-09-18
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "the erased-term registry, consulted on the recall path | src/cognitive_memory/reliability.py:443,674-690,1057, src/cognitive_memory/scope.py:137-188 | `forget(term, scope, requester=…)` tokenizes the term and adds it to a per-tenant `erased_terms` registry keyed on the value, and recall consults it through `_exclusion_reason` before returning a record, so an erased value cannot be re-asserted into an answer. The registry is the durable record: it survives restart and rehydrates from SQLite. The limit the report states stands — exclusion happens at recall rather than refusal at write, so the store still retains a re-ingested erased value | tests/test_tombstone_persistence.py (five cases including survive-restart and duplicate-recorded-once), tests/test_semantic_erasure.py"
@@ -453,6 +453,27 @@ rather than no longer serves it.
 - Licensing: `LICENSE` (Apache 2.0), declared in `pyproject.toml` as `license = "Apache-2.0"` with `license-files`, and the open/closed boundary in `LICENSING.md`.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`human_review` stands, and the gate is tested in both directions, which is more
+than most holders manage: `test_rejected_items_do_not_mutate_memory` rejects
+every item and asserts `controller.store.list_reflections() == []` with all
+items `REJECTED` (`tests/test_review_queue.py:90-100`), and
+`test_approved_simulation_only_affects_evaluation_copy` supplies the control —
+approve, then assert the original store still has no reflections while the
+evaluation copy does (`:102-113`). So the queue can withhold, and the pipeline
+can write when it does not.
+
+One thing the record should say, because the name invites a wrong reading:
+`simulate_review` is not the review. It is a policy simulator with
+`reviewer_id: str = "simulated_reviewer"` (`review.py:66-71`), and its only
+callers anywhere are in `tests/test_review_queue.py`. Nothing under `src/`
+outside `review.py` sets `ReviewStatus.APPROVED`, and there is no MCP server, no
+CLI verb and no HTTP route that approves an item. The approval surface is left
+to the embedding application. That is a normal shape for a library and it
+satisfies the mark's test — nothing an agent holds can approve here, because
+nothing in the tree can — but a reader should not mistake the simulator for a
+person. No marks change.
 
 **2026-09-09** — [`f6ce1b69c27a8c7eee78a0d15d6cb018d836922f`](https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f) — third reading, 54 commits on: 73 files, 10,764 insertions. Screened before reading. **The suite was not run this time** — the dependency surface sat inside the seven-day cooldown — so unlike the previous reading this report does not carry a fresh `VERIFY OK`, and section 10 says so rather than letting the earlier run stand in for one.
 
