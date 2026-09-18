@@ -6903,6 +6903,11 @@ sample warning — and its example calls <code>verify_decomposition</code>
 with <code>interactive_mode</code> and <code>retrieval_context</code>,
 neither of which is in the signature, and names the option parameter
 wrongly. The example as written raises.</li>
+<li>Second idea: activation is a weighted arm of the fusion, not a
+post-filter. <code>HybridConfig</code> is BM25 0.3, ACT-R activation
+0.3, embedding similarity 0.4, so how often a chunk has been used
+competes directly with how well it matches — and setting the BM25 weight
+to zero is how you turn the lexical arm off.</li>
 <li>Most reusable component: the four-column <code>activations</code>
 table — <code>chunk_id</code>, <code>base_level</code>,
 <code>last_access</code>, <code>access_count</code> — kept separate from
@@ -6912,7 +6917,10 @@ forgotten.</li>
 <li>Maturity impression: 145,000 lines across twelve packages with
 strict tooling, 153 test files, SQLite in WAL mode with schema-version
 detection tested against a deliberately legacy table, and a committed
-performance baseline file.</li>
+performance baseline file — plus a store-contract suite parametrized
+over both implementations, one of whose cases skips the in-memory store
+with the reason in its docstring: <code>access_history</code> is never
+initialised there, so its ACT-R base level is flat.</li>
 <li>Study when: your agent plans multi-step work and you dispatch before
 checking the plan.</li>
 <li>Do not copy when: you expected a memory system in this atlas's usual

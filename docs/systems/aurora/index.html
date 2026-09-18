@@ -118,7 +118,7 @@ does not take.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/hamr0--aurora" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -126,7 +126,7 @@ does not take.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -284,8 +284,32 @@ user's own code, and AURORA does not pretend otherwise.</p>
 rather than answering directly. The "high-quality chunks" the README's
 gate counts are those with activation ≥ 0.3, which ties the quality
 signal directly to the ACT-R model.</p>
-<p>There is no scope key — the store is one codebase — and no reranker
-in the inspected path.</p>
+<p>There is no scope key — the store is one codebase.</p>
+<p><strong>And there is a hybrid retriever the first version of this
+report did not reach.</strong>
+<code>packages/context-code/src/aurora_context_code/semantic/</code>
+holds <code>bm25_scorer.py</code>, <code>embedding_provider.py</code>
+and a 1,253-line <code>hybrid_retriever.py</code>, and
+<code>HybridConfig</code> fuses three signals rather than two:</p>
+<pre class="python"><code>bm25_weight: float = 0.3
+activation_weight: float = 0.3
+semantic_weight: float = 0.4</code></pre>
+<p>with <code>__post_init__</code> rejecting any weight outside
+<code>[0, 1]</code> and warning when the three do not sum to one. The
+docstring names a second intended configuration —
+<code>bm25_weight=0.0</code> for what it calls dual-hybrid, activation
+0.6 and semantic 0.4 — so the lexical arm is switchable off by weight
+rather than by branch.</p>
+<p>That is the part worth noticing about this design: ACT-R activation
+is not a post-filter applied to a ranked list, it is one of three
+weighted terms in the fusion, so how often a chunk has been used
+competes directly with how well it matches. Most hybrid retrievers in
+this atlas fuse lexical and vector and then multiply by recency; here
+recency-of-use is a first-class arm with a third of the weight. FTS5
+backs the lexical side — it appears in <code>memory_manager.py</code>,
+<code>commands/memory.py</code> and the retriever itself.
+<code>stack_retrieval</code> was recorded as empty and is now
+<code>lexical, vector</code>.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Indexing is a batch operation; the <code>Record</code> phase updates
 activation on use. There is no correction mechanism because there is
@@ -329,6 +353,46 @@ where performance stood at a named phase.</p>
 thresholds in the README (0.7, three chunks) have no evaluation behind
 them in the tree — they are stated as targets, not derived from a
 measurement.</p>
+<p><strong><code>negative_eval</code> is earned, on a contract test run
+against both store implementations.</strong>
+<code>packages/core/tests/integration/test_memory_store_contract.py</code>
+saves two chunks, sets their activations to 0.1 and 0.9, and queries
+with a threshold between them:</p>
+<pre class="python"><code>result = store.retrieve_by_activation(min_activation=0.5, limit=10)
+chunk_ids = [chunk.id for chunk in result]
+
+assert &quot;code:high.py:func&quot; in chunk_ids
+assert &quot;code:low.py:func&quot; not in chunk_ids</code></pre>
+<p>One store, one query, one chunk in and one out, on adjacent lines —
+so the refusal cannot be an empty result. The file's fixture is
+<code>@pytest.fixture(params=["memory", "sqlite"])</code>, so the
+assertion is made twice, once against each implementation, which is a
+stronger guarantee than a single in-memory case.
+<code>packages/context-code/tests/e2e/test_context_retrieval.py:131</code>
+carries the weaker form of the same idea — after a query about a subject
+the corpus does not contain, either no results or no result whose name
+mentions it.</p>
+<p><strong>And one contract test documents a defect rather than failing
+on it.</strong>
+<code>test_record_access_accepts_optional_parameters</code> opens
+with</p>
+<pre class="python"><code># Skip MemoryStore due to known bug (access_history not initialized)
+if isinstance(store, MemoryStore):
+    pytest.skip(&quot;MemoryStore has known bug: access_history not initialized&quot;)</code></pre>
+<p>The consequence is visible in the activation model:
+<code>base_level.py:139</code> returns
+<code>self.config.default_activation</code> when
+<code>access_history</code> is empty, so on a store that never
+initialises it every chunk carries the same base-level activation and
+the ACT-R term of the fusion is flat. The scope is narrow and worth
+stating exactly — <code>MemoryStore</code> is the in-memory
+implementation, reached from <code>aurora_testing/fixtures.py</code> and
+a docstring example, while <code>SQLiteStore</code> is what the CLI
+opens. So this is a fixture that does not model the store it stands in
+for, which makes every in-memory activation test weaker than it looks.
+Writing the bug into a skip is more honest than most repositories
+manage; the test that would close it is one <code>setdefault</code>
+away.</p>
 <p><strong>I ran nothing.</strong></p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
@@ -426,6 +490,40 @@ phases, the quality levels and the example that does not match)</p>
 <p><strong>Baseline</strong> —
 <code>phase2b_baseline_perf.txt</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/hamr0/aurora/commit/750a39da51ed947aab851e9fd5c06a2587402e2b"><code class="commit-id" title="750a39da51ed947aab851e9fd5c06a2587402e2b">750a39da…</code></a>
+— re-read at the same commit. Nothing upstream had moved, so every
+change is the atlas's own, and the first reading had covered a
+145,000-line repository in 305 lines without reaching its retriever.</p>
+<p><code>stack_retrieval</code> was empty.
+<code>packages/context-code/src/aurora_context_code/semantic/</code>
+holds a 1,253-line <code>hybrid_retriever.py</code> beside
+<code>bm25_scorer.py</code> and <code>embedding_provider.py</code>, and
+<code>HybridConfig</code> fuses BM25 at 0.3, ACT-R activation at 0.3 and
+embedding similarity at 0.4, validating each weight and warning when the
+three do not sum to one. Activation is a weighted arm of the fusion
+rather than a post-filter, which is the distinctive thing about this
+design and is now in section 6. The field is now
+<code>lexical, vector</code>.</p>
+<p><strong><code>negative_eval</code> is awarded.</strong>
+<code>test_memory_store_contract.py:224-226</code> saves two chunks,
+sets activations of 0.1 and 0.9, queries at a threshold of 0.5 and
+asserts the high one is present and the low one is not, on adjacent
+lines — and the enclosing fixture is parametrized over the in-memory and
+SQLite stores, so the property is asserted against both.</p>
+<p>One more finding from the same file.
+<code>test_record_access_accepts_optional_parameters</code> skips
+<code>MemoryStore</code> with the reason in its own docstring:
+<em>"known bug: access_history not initialized"</em>.
+<code>base_level.py:139</code> returns <code>default_activation</code>
+when the history is empty, so on that store every chunk shares one
+base-level activation and the ACT-R term goes flat.
+<code>MemoryStore</code> is the in-memory implementation used by
+<code>aurora_testing/fixtures.py</code> and a docstring example rather
+than by the CLI, so the cost is that the fixture does not model the
+store it stands in for — which makes every in-memory activation test
+weaker than it looks. <code>stack_source</code> goes from seeded to
+reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/hamr0/aurora/commit/750a39da51ed947aab851e9fd5c06a2587402e2b"><code class="commit-id" title="750a39da51ed947aab851e9fd5c06a2587402e2b">750a39da…</code></a>
 — first reading. Screened before reading; the tree was read, never

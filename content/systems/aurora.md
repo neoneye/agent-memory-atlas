@@ -9,15 +9,17 @@ source_url: https://github.com/hamr0/aurora
 archive_name: "hamr0--aurora"
 revision: 750a39da51ed947aab851e9fd5c06a2587402e2b
 revision_url: https://github.com/hamr0/aurora/commit/750a39da51ed947aab851e9fd5c06a2587402e2b
-analyzed_at: 2026-08-09
-capabilities: ""
+analyzed_at: 2026-09-18
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the activation threshold on the store contract, asserted against both implementations | packages/core/tests/integration/test_memory_store_contract.py:224-226 | two chunks are saved into one store and given activations of 0.1 and 0.9, then `retrieve_by_activation(min_activation=0.5, limit=10)` is asserted to contain `code:high.py:func` and not to contain `code:low.py:func` — the must-not and its positive control on adjacent lines over a store that provably holds both, so the refusal cannot be an empty index. The enclosing fixture is `@pytest.fixture(params=['memory', 'sqlite'])`, so the property is asserted once per store implementation | it asserts a numeric threshold rather than a content or scope boundary, and the only other negative case, packages/context-code/tests/e2e/test_context_retrieval.py:131, is the weak disjunctive form — `len(results) == 0 or all(...)` — which passes on an empty result. Nothing asserts that a superseded or stale chunk stays out, because neither state exists"
 stack_storage: "sqlite"
-stack_retrieval: ""
-stack_source: "seeded"
+stack_retrieval: "lexical, vector"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A chunk of code or documentation with an ACT-R activation record and typed relationships"
   storage: "SQLite in WAL mode with chunks, activations, relationships, a file index and a document hierarchy"
-  retrieval: "Activation-weighted retrieval inside a nine-phase pipeline that verifies the plan before executing it"
+  retrieval: "A three-signal hybrid — BM25 0.3, ACT-R activation 0.3, embedding similarity 0.4 — inside a nine-phase pipeline that verifies the plan before executing it"
   write: "Indexing of a codebase into chunks with a base-level activation seeded per chunk"
   update_delete: "Activation decay and reindexing; no supersession, no rejected-value record"
   scoping: "None on the read path — the store is one codebase"
@@ -168,8 +170,32 @@ Activation-weighted retrieval over chunks, with the `Retrieve` phase feeding a
 README's gate counts are those with activation ≥ 0.3, which ties the quality
 signal directly to the ACT-R model.
 
-There is no scope key — the store is one codebase — and no reranker in the
-inspected path.
+There is no scope key — the store is one codebase.
+
+**And there is a hybrid retriever the first version of this report did not
+reach.** `packages/context-code/src/aurora_context_code/semantic/` holds
+`bm25_scorer.py`, `embedding_provider.py` and a 1,253-line
+`hybrid_retriever.py`, and `HybridConfig` fuses three signals rather than two:
+
+```python
+bm25_weight: float = 0.3
+activation_weight: float = 0.3
+semantic_weight: float = 0.4
+```
+
+with `__post_init__` rejecting any weight outside `[0, 1]` and warning when the
+three do not sum to one. The docstring names a second intended configuration —
+`bm25_weight=0.0` for what it calls dual-hybrid, activation 0.6 and semantic 0.4
+— so the lexical arm is switchable off by weight rather than by branch.
+
+That is the part worth noticing about this design: ACT-R activation is not a
+post-filter applied to a ranked list, it is one of three weighted terms in the
+fusion, so how often a chunk has been used competes directly with how well it
+matches. Most hybrid retrievers in this atlas fuse lexical and vector and then
+multiply by recency; here recency-of-use is a first-class arm with a third of
+the weight. FTS5 backs the lexical side — it appears in `memory_manager.py`,
+`commands/memory.py` and the retriever itself. `stack_retrieval` was recorded as
+empty and is now `lexical, vector`.
 
 ## 7. Write Mechanics
 
@@ -215,6 +241,47 @@ stood at a named phase.
 No retrieval-quality benchmark is committed, and the groundedness thresholds in
 the README (0.7, three chunks) have no evaluation behind them in the tree — they
 are stated as targets, not derived from a measurement.
+
+**`negative_eval` is earned, on a contract test run against both store
+implementations.** `packages/core/tests/integration/test_memory_store_contract.py`
+saves two chunks, sets their activations to 0.1 and 0.9, and queries with a
+threshold between them:
+
+```python
+result = store.retrieve_by_activation(min_activation=0.5, limit=10)
+chunk_ids = [chunk.id for chunk in result]
+
+assert "code:high.py:func" in chunk_ids
+assert "code:low.py:func" not in chunk_ids
+```
+
+One store, one query, one chunk in and one out, on adjacent lines — so the
+refusal cannot be an empty result. The file's fixture is
+`@pytest.fixture(params=["memory", "sqlite"])`, so the assertion is made twice,
+once against each implementation, which is a stronger guarantee than a single
+in-memory case. `packages/context-code/tests/e2e/test_context_retrieval.py:131`
+carries the weaker form of the same idea — after a query about a subject the
+corpus does not contain, either no results or no result whose name mentions it.
+
+**And one contract test documents a defect rather than failing on it.**
+`test_record_access_accepts_optional_parameters` opens with
+
+```python
+# Skip MemoryStore due to known bug (access_history not initialized)
+if isinstance(store, MemoryStore):
+    pytest.skip("MemoryStore has known bug: access_history not initialized")
+```
+
+The consequence is visible in the activation model: `base_level.py:139` returns
+`self.config.default_activation` when `access_history` is empty, so on a store
+that never initialises it every chunk carries the same base-level activation and
+the ACT-R term of the fusion is flat. The scope is narrow and worth stating
+exactly — `MemoryStore` is the in-memory implementation, reached from
+`aurora_testing/fixtures.py` and a docstring example, while `SQLiteStore` is what
+the CLI opens. So this is a fixture that does not model the store it stands in
+for, which makes every in-memory activation test weaker than it looks. Writing
+the bug into a skip is more honest than most repositories manage; the test that
+would close it is one `setdefault` away.
 
 **I ran nothing.**
 
@@ -301,5 +368,13 @@ that does not match)
 **Baseline** — `phase2b_baseline_perf.txt`
 
 ## History
+
+**2026-09-18** — [`750a39da51ed947aab851e9fd5c06a2587402e2b`](https://github.com/hamr0/aurora/commit/750a39da51ed947aab851e9fd5c06a2587402e2b) — re-read at the same commit. Nothing upstream had moved, so every change is the atlas's own, and the first reading had covered a 145,000-line repository in 305 lines without reaching its retriever.
+
+`stack_retrieval` was empty. `packages/context-code/src/aurora_context_code/semantic/` holds a 1,253-line `hybrid_retriever.py` beside `bm25_scorer.py` and `embedding_provider.py`, and `HybridConfig` fuses BM25 at 0.3, ACT-R activation at 0.3 and embedding similarity at 0.4, validating each weight and warning when the three do not sum to one. Activation is a weighted arm of the fusion rather than a post-filter, which is the distinctive thing about this design and is now in section 6. The field is now `lexical, vector`.
+
+**`negative_eval` is awarded.** `test_memory_store_contract.py:224-226` saves two chunks, sets activations of 0.1 and 0.9, queries at a threshold of 0.5 and asserts the high one is present and the low one is not, on adjacent lines — and the enclosing fixture is parametrized over the in-memory and SQLite stores, so the property is asserted against both.
+
+One more finding from the same file. `test_record_access_accepts_optional_parameters` skips `MemoryStore` with the reason in its own docstring: *"known bug: access_history not initialized"*. `base_level.py:139` returns `default_activation` when the history is empty, so on that store every chunk shares one base-level activation and the ACT-R term goes flat. `MemoryStore` is the in-memory implementation used by `aurora_testing/fixtures.py` and a docstring example rather than by the CLI, so the cost is that the fixture does not model the store it stands in for — which makes every in-memory activation test weaker than it looks. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`750a39da51ed947aab851e9fd5c06a2587402e2b`](https://github.com/hamr0/aurora/commit/750a39da51ed947aab851e9fd5c06a2587402e2b) — first reading. Screened before reading; the tree was read, never installed, and no test was run.
