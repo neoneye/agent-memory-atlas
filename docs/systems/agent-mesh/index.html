@@ -131,7 +131,7 @@ receives still never reads the decision store at all.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/cbalgeman--agent-mesh" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -724,15 +724,33 @@ procedure. Future event names (do not invent today):
 invent one. Naming the reserved vocabulary in advance is a cheap defence
 against a schema being polluted by plausible guesses, and nothing else
 in this atlas does it.</p>
-<p>Against that, the contract also carries the system's weakest
-guarantee: <em>"Run <code>agent-mesh decision accept</code> only after
+<p>The contract's own wording invites a weaker reading than the code
+supports: <em>"Run <code>agent-mesh decision accept</code> only after
 explicit human approval and name the approving human with
-<code>--by</code>."</em> <code>cmd_decision_accept</code> takes
-<code>--by</code> as a free string and appends the event. The Workbench
-is stricter — <code>_decision_actor</code> rejects an actor outside
-<code>config.participants</code> — but participants routinely include
-the agents. Human acceptance is a mechanism in the UI and an honour
-system at the command line, and the same event kind serves both.</p>
+<code>--by</code>."</em> That sounds like an honour system, and
+<code>cmd_decision_accept</code> (<code>cli/mail.py:2549-2615</code>) is
+not one. It calls <code>_ensure_participant</code> with the role string
+<code>approving human</code>, then refuses any <code>--by</code> outside
+<code>config.decision_approval_identities</code> with
+<code>DECISION_APPROVER_UNAUTHORIZED</code>, requires a non-empty
+approval note, and then does the thing that actually separates a person
+from a process:</p>
+<pre><code>if not sys.stdin.isatty():
+    raise ConfigError(
+        &quot;decision acceptance requires direct human action in an interactive terminal; &quot;
+        &quot;use the Workbench Approve and accept control instead&quot;
+    )</code></pre>
+<p>A dispatched agent runs without a terminal, so the command is closed
+to it before any identity question arises. What follows is stricter
+still: the approver must be in <code>required_reviewers</code> if that
+list is non-empty, the whole decision is printed — body and revision
+hashes, tier, owner, scope, globs, required checks, verification
+commands, assumptions, evidence, reviewers and quorum — and the person
+has to type <code>ACCEPT &lt;id&gt;</code> exactly. After the typed
+confirmation the snapshot is re-read and the append is refused if the
+<code>dec_ulid</code> or <code>revision_sha</code> moved while it was on
+screen. The CLI path is the more demanding of the two surfaces, not the
+looser one.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>Integrity.</strong> The hash chain is the strongest property
@@ -794,13 +812,30 @@ does not carry. <code>decision_review_progress</code> reports
 <code>approval_binding</code> that flags
 <code>legacy_pre_authoring_digest</code> where an approval predates the
 binding.</p>
-<p>Two caveats survive. <code>_decision_actor</code> refuses an actor
-outside <code>config.participants</code>, and that list routinely
-includes agents, so "a reviewer" is not necessarily a person; and the
-CLI accept path does not apply the participant check the Workbench does.
-The mark is for a durable, per-revision, multi-party adjudication
-surface, which this is — not for a guarantee that a human was on the
-other end of it.</p>
+<p>One caveat survives, and it is a configuration default rather than a
+missing check. Both surfaces resolve the approver against
+<code>decision_approval_identities</code> —
+<code>_human_decision_actor</code> in the Workbench, an explicit
+<code>DECISION_APPROVER_UNAUTHORIZED</code> in the CLI — and that list
+is <code>decision_approval.human_approvers</code> when a project has
+written a <code>[decision_approval]</code> table, and
+<code>tuple(self.participants)</code> when it has not. Participants are
+the agents as well as the person; the documentation's own example is
+<code>["human", "builder", "reviewer", "observer"]</code>. So until the
+table is added, "a reviewer" need not be a person as far as the identity
+check is concerned — though the CLI's terminal requirement still stands
+in the way of a dispatched one, and the Workbench control is a browser
+surface rather than an agent-callable API.</p>
+<p>The project does not hide this. The unconfigured state is named
+<code>unmigrated_participant_compatibility</code>, the Workbench reports
+the diagnosis, the configuration guide says the table <em>"does not
+grant agents or dispatched reviewers human approval authority"</em> and
+tells the operator to add it deliberately, and every acceptance event
+binds the <code>approval_authority_mode</code> and revision that were in
+force when it was made — a stale binding raising
+<code>REVIEW_ASSURANCE_HUMAN_AUTHORITY_STALE</code> — so a later reader
+can tell which regime an approval was made under instead of assuming
+today's.</p>
 <p><strong>The reference scanner checks the inverse of what the schema
 suggests.</strong> <code>agent-mesh decision refs</code> walks the tree
 for <code>D001</code>-shaped tokens and reports the ones that resolve to
@@ -1089,6 +1124,35 @@ definition, one import, and <code>workbench.py:4594</code>.</li>
 <code>docs/migration.md</code>, <code>docs/privacy.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/cbalgeman/agent-mesh/commit/a8187089dab47539c21c4d2b2d761779428a59b9"><code class="commit-id" title="a8187089dab47539c21c4d2b2d761779428a59b9">a8187089…</code></a>
+— re-read at the same commit; nothing upstream moved, so the corrections
+are this report's. The <code>human_review</code> account was wrong in
+the direction that matters. It said <code>cmd_decision_accept</code>
+<em>"takes <code>--by</code> as a free string and appends the
+event"</em> and called CLI acceptance an honour system; at this same pin
+the command calls <code>_ensure_participant</code> with the role
+<code>approving human</code>, refuses any approver outside
+<code>decision_approval_identities</code> with
+<code>DECISION_APPROVER_UNAUTHORIZED</code>, refuses an empty note, and
+then refuses to run at all unless <code>sys.stdin.isatty()</code> —
+<em>"decision acceptance requires direct human action in an interactive
+terminal"</em> — which closes the path to a dispatched agent before any
+identity question arises. It then prints the whole decision, requires a
+typed <code>ACCEPT &lt;id&gt;</code>, and re-reads the snapshot to
+refuse the append if the revision moved while it was on screen. The CLI
+is the stricter of the two surfaces. The report also named the Workbench
+guard <code>_decision_actor</code> and credited it with one check; the
+function is <code>_human_decision_actor</code> and it refuses twice, the
+second time against the configured direct-human approval authority. The
+caveat that survives is narrower and is a default rather than an
+omission: <code>decision_approval.human_approvers</code> is
+<code>None</code> until a project writes a
+<code>[decision_approval]</code> table, and the property then falls back
+to the participant list, which includes the agents — a state the project
+names <code>unmigrated_participant_compatibility</code>, reports as a
+diagnosis, and binds into every acceptance event as the authority mode
+in force.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/cbalgeman/agent-mesh/commit/a8187089dab47539c21c4d2b2d761779428a59b9"><code class="commit-id" title="a8187089dab47539c21c4d2b2d761779428a59b9">a8187089…</code></a>
 — re-read at v0.4.2, eighty-one files and 40,943 insertions past the

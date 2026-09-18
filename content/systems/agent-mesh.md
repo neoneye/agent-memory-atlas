@@ -9,12 +9,12 @@ source_url: https://github.com/cbalgeman/agent-mesh
 archive_name: "cbalgeman--agent-mesh"
 revision: a8187089dab47539c21c4d2b2d761779428a59b9
 revision_url: https://github.com/cbalgeman/agent-mesh/commit/a8187089dab47539c21c4d2b2d761779428a59b9
-analyzed_at: 2026-09-11
+analyzed_at: 2026-09-18
 capabilities: "trust_state, audit_log, human_review"
 capability_evidence:
   trust_state: "the decision store, one status column over the projected `decisions` table | src/agent_mesh/store/rebuild.py:3728, :4380 | `_project_decision_event` promotes to `accepted` or `in_force` only through `decision_accepted` and only when `_decision_quorum_reached` passes, returning without promotion otherwise; `_ensure_supersede_target_valid` refuses a supersession target that is not accepted or in force, and `_project_decision_metadata_updated` clears `accepted_utc` when a revision folds `status` back to `proposed` | tests/public/test_public_contract.py::test_invalid_decision_transition_never_reaches_the_log — the accepted_utc clear itself is untested"
   audit_log: "the event log, which is the store rather than a sidecar | src/agent_mesh/core/events.py | `append_event` assigns `event_seq` and `prev_event_hash` from the tail and writes one canonical SHA-256-chained line per mutation; `_append_decision_log` keeps the per-decision trail `agent-q decisions log` prints | tests/public/test_public_contract.py::test_hash_chain_detects_tampering"
-  human_review: "the Workbench Decisions tab and the reviewer quorum, over the same decision store | src/agent_mesh/workbench.py, src/agent_mesh/core/decision_schema.py:286-327, src/agent_mesh/store/rebuild.py:3728 | `review_policy` carries `required_reviewers` and an `approval_quorum` validated to lie between 1 and the reviewer count, written by both propose paths and in `DECISION_REVISION_AUTHORITY_FIELDS`; approvals are counted only from `decision_accepted` events whose `approved_revision_sha` matches the current revision, and the projector refuses to promote until quorum; the edit path raises `WorkbenchError` without a `revision_reason` and `_decision_actor` refuses an actor outside `config.participants` | tests/public/test_public_contract.py::test_durable_dispatch_and_review_assurance_public_contract_is_published"
+  human_review: "the Workbench Decisions tab and the reviewer quorum, over the same decision store | src/agent_mesh/workbench.py:2846-2854, :2599, :2746, src/agent_mesh/core/decision_schema.py:286-327, src/agent_mesh/store/rebuild.py:3728, :4380, src/agent_mesh/config.py:107-111, :258-271, src/agent_mesh/core/events.py:929-941 | `review_policy` carries `required_reviewers` and an `approval_quorum` validated to lie between 1 and the reviewer count, written by both propose paths and in `DECISION_REVISION_AUTHORITY_FIELDS`; approvals are counted only from `decision_accepted` events whose `approved_revision_sha` matches the current revision, and the projector refuses to promote until quorum; the edit path raises `WorkbenchError` without a `revision_reason`, and the approve and reject paths both resolve their actor through `_human_decision_actor`, which refuses twice — once for an actor outside `config.participants`, then again for one outside `config.decision_approval_identities`, *\"the configured direct-human approval authority\"*. The qualification that belongs with the mark is what that second list defaults to: `decision_approval.human_approvers` is `None` until a project writes a `[decision_approval]` table, and the property falls back to `tuple(self.participants)` — which in this system is the agents as well as the person, the documented example being `[\"human\", \"builder\", \"reviewer\", \"observer\"]`. So the gate is a real human gate once configured and an any-participant gate before that. The project is explicit rather than quiet about it: the fallback state is named `unmigrated_participant_compatibility`, the Workbench reports the diagnosis, the documentation says the table *\"does not grant agents or dispatched reviewers human approval authority\"* and tells the operator to add it deliberately, and each acceptance event binds the `approval_authority_mode` and revision in force when it was made, with a stale binding raising `REVIEW_ASSURANCE_HUMAN_AUTHORITY_STALE` — so a later reader can tell which regime an approval was made under. The CLI accept path is the stricter of the two surfaces rather than the honour system its own contract line suggests: `cmd_decision_accept` refuses a non-participant, refuses an approver outside the authority list with `DECISION_APPROVER_UNAUTHORIZED`, refuses an empty note, refuses to run at all when `sys.stdin.isatty()` is false — *\"decision acceptance requires direct human action in an interactive terminal\"*, which closes it to a dispatched agent before identity is even reached — prints the full decision, requires a typed `ACCEPT <id>`, and re-reads the snapshot afterwards to refuse the append if the revision moved while it was on screen | tests/public/test_public_contract.py::test_durable_dispatch_and_review_assurance_public_contract_is_published"
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -510,13 +510,32 @@ A model asked to record something for which no verb exists will invent one. Nami
 the reserved vocabulary in advance is a cheap defence against a schema being
 polluted by plausible guesses, and nothing else in this atlas does it.
 
-Against that, the contract also carries the system's weakest guarantee: *"Run
-`agent-mesh decision accept` only after explicit human approval and name the
-approving human with `--by`."* `cmd_decision_accept` takes `--by` as a free
-string and appends the event. The Workbench is stricter — `_decision_actor`
-rejects an actor outside `config.participants` — but participants routinely
-include the agents. Human acceptance is a mechanism in the UI and an honour
-system at the command line, and the same event kind serves both.
+The contract's own wording invites a weaker reading than the code supports:
+*"Run `agent-mesh decision accept` only after explicit human approval and name
+the approving human with `--by`."* That sounds like an honour system, and
+`cmd_decision_accept` (`cli/mail.py:2549-2615`) is not one. It calls
+`_ensure_participant` with the role string `approving human`, then refuses any
+`--by` outside `config.decision_approval_identities` with
+`DECISION_APPROVER_UNAUTHORIZED`, requires a non-empty approval note, and then
+does the thing that actually separates a person from a process:
+
+```
+if not sys.stdin.isatty():
+    raise ConfigError(
+        "decision acceptance requires direct human action in an interactive terminal; "
+        "use the Workbench Approve and accept control instead"
+    )
+```
+
+A dispatched agent runs without a terminal, so the command is closed to it
+before any identity question arises. What follows is stricter still: the
+approver must be in `required_reviewers` if that list is non-empty, the whole
+decision is printed — body and revision hashes, tier, owner, scope, globs,
+required checks, verification commands, assumptions, evidence, reviewers and
+quorum — and the person has to type `ACCEPT <id>` exactly. After the typed
+confirmation the snapshot is re-read and the append is refused if the `dec_ulid`
+or `revision_sha` moved while it was on screen. The CLI path is the more
+demanding of the two surfaces, not the looser one.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -571,12 +590,27 @@ reviewers have accepted **this revision** — approvals are matched on
 and an `approval_binding` that flags `legacy_pre_authoring_digest` where an
 approval predates the binding.
 
-Two caveats survive. `_decision_actor` refuses an actor outside
-`config.participants`, and that list routinely includes agents, so "a reviewer"
-is not necessarily a person; and the CLI accept path does not apply the
-participant check the Workbench does. The mark is for a durable, per-revision,
-multi-party adjudication surface, which this is — not for a guarantee that a
-human was on the other end of it.
+One caveat survives, and it is a configuration default rather than a missing
+check. Both surfaces resolve the approver against `decision_approval_identities`
+— `_human_decision_actor` in the Workbench, an explicit
+`DECISION_APPROVER_UNAUTHORIZED` in the CLI — and that list is
+`decision_approval.human_approvers` when a project has written a
+`[decision_approval]` table, and `tuple(self.participants)` when it has not.
+Participants are the agents as well as the person; the documentation's own
+example is `["human", "builder", "reviewer", "observer"]`. So until the table is
+added, "a reviewer" need not be a person as far as the identity check is
+concerned — though the CLI's terminal requirement still stands in the way of a
+dispatched one, and the Workbench control is a browser surface rather than an
+agent-callable API.
+
+The project does not hide this. The unconfigured state is named
+`unmigrated_participant_compatibility`, the Workbench reports the diagnosis, the
+configuration guide says the table *"does not grant agents or dispatched
+reviewers human approval authority"* and tells the operator to add it
+deliberately, and every acceptance event binds the `approval_authority_mode` and
+revision that were in force when it was made — a stale binding raising
+`REVIEW_ASSURANCE_HUMAN_AUTHORITY_STALE` — so a later reader can tell which
+regime an approval was made under instead of assuming today's.
 
 **The reference scanner checks the inverse of what the schema suggests.**
 `agent-mesh decision refs` walks the tree for `D001`-shaped tokens and reports
@@ -817,6 +851,8 @@ against the code rather than the docstring.
   `docs/migration.md`, `docs/privacy.md`.
 
 ## History
+
+**2026-09-18** — [`a8187089dab47539c21c4d2b2d761779428a59b9`](https://github.com/cbalgeman/agent-mesh/commit/a8187089dab47539c21c4d2b2d761779428a59b9) — re-read at the same commit; nothing upstream moved, so the corrections are this report's. The `human_review` account was wrong in the direction that matters. It said `cmd_decision_accept` *"takes `--by` as a free string and appends the event"* and called CLI acceptance an honour system; at this same pin the command calls `_ensure_participant` with the role `approving human`, refuses any approver outside `decision_approval_identities` with `DECISION_APPROVER_UNAUTHORIZED`, refuses an empty note, and then refuses to run at all unless `sys.stdin.isatty()` — *"decision acceptance requires direct human action in an interactive terminal"* — which closes the path to a dispatched agent before any identity question arises. It then prints the whole decision, requires a typed `ACCEPT <id>`, and re-reads the snapshot to refuse the append if the revision moved while it was on screen. The CLI is the stricter of the two surfaces. The report also named the Workbench guard `_decision_actor` and credited it with one check; the function is `_human_decision_actor` and it refuses twice, the second time against the configured direct-human approval authority. The caveat that survives is narrower and is a default rather than an omission: `decision_approval.human_approvers` is `None` until a project writes a `[decision_approval]` table, and the property then falls back to the participant list, which includes the agents — a state the project names `unmigrated_participant_compatibility`, reports as a diagnosis, and binds into every acceptance event as the authority mode in force.
 
 **2026-09-11** — [`a8187089dab47539c21c4d2b2d761779428a59b9`](https://github.com/cbalgeman/agent-mesh/commit/a8187089dab47539c21c4d2b2d761779428a59b9) — re-read at v0.4.2, eighty-one files and 40,943 insertions past the previous pin. Screened before reading: no auto-run surface, `pyproject.toml` two days old inside the cooldown and declaring dependencies with no lockfile beside it. The tree was read, never installed, and nothing was run. Marks unchanged at `trust_state`, `audit_log` and `human_review`, and the evidence records for `trust_state` and `human_review` were rewritten, because this report's central criticism is closed. `review_policy` is authored at both write paths through a normalizer that rejects a quorum without reviewers and a quorum outside `1..len(reviewers)`; it sits in `DECISION_REVISION_AUTHORITY_FIELDS`; approvals count only when their `approved_revision_sha` matches the revision being approved; and `_decision_quorum_reached` gates the projector, which returns before the promotion `UPDATE` when the quorum is not met — so a `decision_accepted` event below quorum is logged and the record stays `proposed`. Of the seven fields the previous reading found hardcoded empty, five are now authored and two remain: `rejected_alternatives` and `consequences`, still `[]` at `workbench.py:2245-2246` and `cli/mail.py:2275-2276`, still rendered as headings by two views. `enforcement_mode` gained its first consumer in `core/decision_applicability.py`, which downgrades `required` to `advisory` unconditionally and ships `evaluation_status` and `would_block` as constants — pinned by a contract test that also asserts the check leaves the event log and database byte-identical. Two new store modules: `read_model.py` for mutation-free reads over a verified snapshot, entered at thirty-two call sites in `cli/`, and `decision_recovery.py`, an operator-authorized legacy migration deliberately outside normal append and replay. The grounding claim was re-run and holds: `dispatch/grounding.py` still derives `prior-decisions` from a verdict regex over thread messages, and `message_packet.py` mentions no decision at all. Counts corrected to 59,028 lines of Python and fourteen contract tests.
 
