@@ -138,7 +138,7 @@ controls in the same result prove the query was not simply empty.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/aquifer-labs--artesian" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -887,6 +887,30 @@ fd -g &#39;SPEC.md&#39; -g &#39;receipts.schema.json&#39; .                     
 rg -n &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs ARTESIAN.md  # citations to others; no paper of its own
 rg -n &#39;FilesBackend::new&#39; crates/artesian-cli/src/main.rs                # the eviction handler constructs one unconditionally</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>trust_state</code> stands:
+<code>MemoryState</code> is <code>Active | Archived | Retracted</code>
+on the record (<code>types.rs:27-35</code>), the default read admits
+only <code>Active</code> — the query struct sets
+<code>include_archived: false</code> (<code>:356</code>) — and all three
+states have live writers, <code>Retracted</code> at
+<code>vector_memory.rs:1543</code> and <code>files.rs:301</code>,
+<code>Archived</code> at <code>eviction.rs:300</code> and
+<code>artesian-cli/src/main.rs:4024</code>.</p>
+<p>One thing found while tracing it is worth having, because the flag is
+wider than its name. The filter is written
+<code>include_archived || record.state == MemoryState::Active</code>, in
+both the vector path (<code>vector_memory.rs:2013</code>) and the file
+path (<code>files.rs:160</code>) — so <code>--include-archived</code>
+does not add the <code>Archived</code> state, it removes the state check
+entirely and returns <code>Retracted</code> records too. The type's own
+doc separates the two — <em>"Soft-archived: excluded from default
+<code>find</code>"</em> against <em>"Explicitly retracted: excluded from
+default <code>find</code>, stored for audit/drill-down"</em> — so a
+caller asking for archived material gets the withdrawn material with it.
+The shape that would match the doc is
+<code>state == Active || (include_archived &amp;&amp; state == Archived)</code>.
+No marks change.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/aquifer-labs/artesian/commit/14e4f2d9494d396695f79350b9e42bacd82d953d"><code class="commit-id" title="14e4f2d9494d396695f79350b9e42bacd82d953d">14e4f2d9…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 21

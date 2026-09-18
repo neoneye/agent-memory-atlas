@@ -9,7 +9,7 @@ source_url: https://github.com/aquifer-labs/artesian
 archive_name: "aquifer-labs--artesian"
 revision: 14e4f2d9494d396695f79350b9e42bacd82d953d
 revision_url: https://github.com/aquifer-labs/artesian/commit/14e4f2d9494d396695f79350b9e42bacd82d953d
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, trust_state, audit_log, negative_eval"
 capability_evidence:
   scope_enforced: "one stored scope key applied as a read-path filter by both backend families | crates/aquifer/src/types.rs:100-119, :321-341, crates/aquifer/src/files.rs:795-812, crates/aquifer/src/vector_memory.rs:1973-2003, crates/artesian-mcp/src/lib.rs:1398-1410, :2502-2506, :4135 | a `MemoryRecord` carries `scope` (`Shared`/`Agent`/`Session`/`Task`) beside `agent_id`, `session_id`, `task_id`, `user_id` and `project`, and `MemoryQuery` carries the same six. The files backend's `matches_tenancy` requires each populated query key to equal the record's; the vector backend's `filter_from_query` pushes one `must_eq` condition per populated key into the store's own filter, so the exclusion happens in the index rather than after it. The producers are real: `session_scoped_hits` sets scope, user, session and task from a `SessionKey`, the `memory.find` handler takes `agent_id` and `user_id` from the request, and the server stamps `query.project` from its config | crates/gauge/src/retrieval_regression.rs:355-431 (the CI leak gate), crates/aquifer/tests/memory_backend_contract.rs (the shared backend contract, run against both families)"
@@ -597,5 +597,23 @@ rg -n 'FilesBackend::new' crates/artesian-cli/src/main.rs                # the e
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`trust_state` stands: `MemoryState` is `Active | Archived | Retracted` on the
+record (`types.rs:27-35`), the default read admits only `Active` — the query
+struct sets `include_archived: false` (`:356`) — and all three states have live
+writers, `Retracted` at `vector_memory.rs:1543` and `files.rs:301`, `Archived`
+at `eviction.rs:300` and `artesian-cli/src/main.rs:4024`.
+
+One thing found while tracing it is worth having, because the flag is wider than
+its name. The filter is written `include_archived || record.state ==
+MemoryState::Active`, in both the vector path (`vector_memory.rs:2013`) and the
+file path (`files.rs:160`) — so `--include-archived` does not add the `Archived`
+state, it removes the state check entirely and returns `Retracted` records too.
+The type's own doc separates the two — *"Soft-archived: excluded from default
+`find`"* against *"Explicitly retracted: excluded from default `find`, stored
+for audit/drill-down"* — so a caller asking for archived material gets the
+withdrawn material with it. The shape that would match the doc is
+`state == Active || (include_archived && state == Archived)`. No marks change.
 
 **2026-09-10** — [`14e4f2d9494d396695f79350b9e42bacd82d953d`](https://github.com/aquifer-labs/artesian/commit/14e4f2d9494d396695f79350b9e42bacd82d953d) — first reading, at the head of `main`, the last commit of 21 August 2026. Screened before reading: no auto-run surface, no build-time execution path, nothing inside the seven-day cooldown, one unpinned dependency surface in the Python bindings, and `AGENTS.md` and `CLAUDE.md` treated as data; nothing was installed, built or run, and the read was made from a full clone. Four marks. The reading covered the durable store — records, identity, backends, retrieval filters, decay, retraction and eviction — and treated the context governor, the orchestration tools and the team runtime as context rather than subject, which is the boundary the marks are checked against: every one of them is earned by a mechanism in `aquifer` or by a gate over it, not by the committed-context machinery in `headgate`.
