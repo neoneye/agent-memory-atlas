@@ -7,14 +7,13 @@ page_kind: system
 source_name: "samvallad33/vestige"
 source_url: https://github.com/samvallad33/vestige
 archive_name: "samvallad33--vestige"
-revision: 548ccae20961db1a176a09242931459363ee5d83
-revision_url: https://github.com/samvallad33/vestige/commit/548ccae20961db1a176a09242931459363ee5d83
-analyzed_at: 2026-09-11
-capabilities: "bitemporal, audit_log, human_review"
+revision: 3c5b198712d97b1f5350a04a4f2df5ed6cb2245b
+revision_url: https://github.com/samvallad33/vestige/commit/3c5b198712d97b1f5350a04a4f2df5ed6cb2245b
+analyzed_at: 2026-09-18
+capabilities: "bitemporal, audit_log"
 capability_evidence:
   bitemporal: "knowledge nodes | crates/vestige-core/src/storage | an optional validity interval beside the record timestamps, boosted on the read path | tests/phase_1"
   audit_log: "merge and purge | crates/vestige-core/src/storage | the reversal payload stored with every applied operation, and a content-free tombstone row kept for sync and audit | tests"
-  human_review: "merge and supersede | crates/vestige-core/src/storage | a preview plan the caller inspects, with `confirm=true` required before an uncertain merge applies | tests"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "seeded"
@@ -48,8 +47,18 @@ with two thresholds, classifying every candidate pair as `match`, `possible` or
 `non_match`. The header says why: a single cosine threshold "over-merges and
 destroys the audit trail". The consequence reaches the tool surface — the
 `dedup` tool's `apply` action accepts a `match` plan directly, and
-`'possible'/'non_match' need confirm=true`. Uncertainty is routed to a person
-rather than resolved by rounding.
+`'possible'/'non_match' need confirm=true`. Uncertainty is routed back to the
+caller rather than resolved by rounding — and *the caller* is the precise word,
+which is why the human-review mark does not hold on a second reading.
+`confirm` is a field in the tool call:
+`crates/vestige-mcp/src/trace_recorder.rs:460-466` reads
+`args.get("confirm").and_then(|v| v.as_bool()).unwrap_or(false)`, and the tool
+description at `server.rs:472` documents it as part of the call shape —
+*"'purge' (for good; confirm=true)"*. A boolean the model sets in its own
+arguments guards against a slip, the way `--force` does; it does not put a
+person in the loop. The separation of `scan`, `plan_*` and `apply` is still the
+right shape, and it is what makes the plan inspectable by whoever is watching —
+but nothing requires that anyone is.
 
 **Every applied operation carries the payload that reverses it.**
 `merge_operations` is described in the migration as "the 'git reflog for your
@@ -241,8 +250,8 @@ Correction is a three-step pipeline and the steps are separated on purpose.
 one, and refuses without `confirm=true` when the classification is anything
 weaker than `match`.
 
-**Purge is the one irreversible operation and it is gated behind
-`confirm=true`** as well. It removes content and embeddings, scrubs
+**Purge is the one irreversible operation and it is gated behind the same
+caller-set `confirm=true`.** It removes content and embeddings, scrubs
 `insights.source_memories`, detaches temporal-summary children, prunes graph
 edges, and writes the content-free tombstone.
 
@@ -514,6 +523,8 @@ Run from the root of the checkout at the pinned commit.
 | No scope key reaches a read | the `scoping` matrix row, re-checked | Tags and connector cursors only |
 
 ## History
+
+**2026-09-18** — [`3c5b198712d97b1f5350a04a4f2df5ed6cb2245b`](https://github.com/samvallad33/vestige/commit/3c5b198712d97b1f5350a04a4f2df5ed6cb2245b) — re-pinned from `548ccae`; 37 files and +5,879 lines, re-screened at the new pin. **Human review withdrawn.** The record read *"a preview plan the caller inspects, with `confirm=true` required before an uncertain merge applies"*, and the word doing the work is *caller*: `confirm` is a field in the tool call, read at `crates/vestige-mcp/src/trace_recorder.rs:460-466` as `args.get("confirm").and_then(|v| v.as_bool()).unwrap_or(false)` and documented in the tool description itself as *"'purge' (for good; confirm=true)"*. The model sets it. That is a guard against a slip, like `--force`, not a person in the loop — the same ruling this atlas applied to a declared approve tool elsewhere. The `scan` / `plan` / `apply` separation remains the right shape and keeps the plan inspectable; nothing requires that anyone inspects it. `bitemporal` and `audit_log` hold, and the reversal payload stored with every applied operation is untouched by this.
 
 **2026-09-11** — [`548ccae20961db1a176a09242931459363ee5d83`](https://github.com/samvallad33/vestige/commit/548ccae20961db1a176a09242931459363ee5d83) — re-read, 1,135 files and 195,125 insertions past the previous pin in a single commit. **All three marks re-verified and unchanged**, with `capability_evidence` records added where the report had none. **The report's stated risk is not merely closed — the benchmark it was about was retracted by its own author.** The previous edition said the headline benchmark lived on another branch and none of its numbers were checkable. At this commit five harnesses sit in `benchmarks/`, and `docs/BENCHMARKS.md` opens by formally withdrawing CauseBench — *"Its harness no longer exists, its repro command 404'd, and its published numbers are retracted. CauseBench must never be cited… not even as 'an earlier result'"* — together with a separately invalidated LongMemEval run, and states the principle behind the rewrite: *"After a retraction, a number that cannot be reproduced by a stranger is worse than no number at all."* What replaced it is documented carefully: an external benchmark with a pinned upstream revision; a correction to the field's reading of that paper (the six-number list everyone quotes is Answer Accuracy, not Conflict Recognition Score — *"calling them CRS overstates the field by roughly a factor of two"*, with the best CRS at 0.2501); four mandatory arms including a no-memory floor and a BM25 bar, justified by MemDelta's finding that a single embedding-model change moved accuracy 6.2pp at p=0.004; a structural contradiction metric that *"cannot be satisfied by the server merely emitting the word 'contradiction'"*; a nine-item limits section longer than the results, which disqualifies the project's own best framing — *"CRS-struct is not a head-to-head win… and must never be presented as such"*; and a refusal to estimate the two white-box metrics the public data cannot support. The recorded-agent package discloses that the competing arm was cut off at its time limit **even though its final application also passes 21/21**. Section 10 is rewritten around this and five bullets were added to *Steal*; the *Avoid* bullet about putting a headline benchmark on another branch is removed as answered. Screened before reading: twenty-five findings; nothing was built or run.
 
