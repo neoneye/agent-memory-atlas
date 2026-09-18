@@ -118,7 +118,7 @@ confidence, status or correction anywhere.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/nhevers--moltbrain" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -204,6 +204,69 @@ memory-capture-and-browse product, and the memory model underneath it is
 a typed log. 40 test files, plus
 <code>benchmarks/compression.bench.ts</code> and
 <code>search.bench.ts</code>.</p>
+<p><strong>And the component that decides what gets stored is in the
+tree as a build artifact, not as source.</strong> The hooks and the MCP
+server between them call seven API paths:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Called from</th>
+<th>Path</th>
+<th>Registered in <code>src/</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>interface/handlers/user-message.ts</code></td>
+<td><code>/api/context/inject</code></td>
+<td>yes — <code>core/engine-service.ts:228</code></td>
+</tr>
+<tr>
+<td><code>interface/handlers/session-init.ts</code></td>
+<td><code>/api/sessions/init</code>,
+<code>/sessions/:id/init</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>interface/handlers/session-init.ts</code></td>
+<td><code>/api/sessions/observations</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>interface/handlers/summarize.ts</code></td>
+<td><code>/api/sessions/summarize</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>servers/mcp-server.ts</code></td>
+<td><code>/api/search</code>, <code>/api/timeline</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>servers/mcp-server.ts</code></td>
+<td><code>/api/observations/batch</code></td>
+<td>no</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>core/api/Server.ts</code> registers <code>health</code>,
+<code>readiness</code>, <code>version</code>, <code>instructions</code>,
+<code>admin/restart</code> and <code>admin/shutdown</code>; its
+<code>RouteHandler.setupRoutes</code> interface has no implementor and
+<code>registerRoutes</code> has no caller. Every other path above
+resolves inside <code>plugin/scripts/worker-service.cjs</code> — 1.86 MB
+of committed, minified JavaScript — and its sibling
+<code>extension/runtime/engine-runtime.cjs</code>, a further 1.85 MB.
+<code>scripts/build-worker-binary.js</code> compiles
+<code>./src/core/worker-service.ts</code>, which this repository does
+not contain.</p>
+<p>So the read path is readable and the write path is not: the
+TypeScript here is the hook layer, the storage layer, the search engine
+and the viewer, while the worker that receives a prompt, decides what is
+observation-worthy and writes it ships pre-built. That is worth knowing
+before reading any absence claim in this report, and it is why several
+functions below have no caller in <code>src/</code> — their callers are
+inside the bundle.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
 <p><strong>Parse</strong> — <code>src/parser/parser.ts</code>
@@ -281,6 +344,42 @@ no memory.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>One mark: scope enforced</strong>, per section 6.</p>
+<p><strong>There is one privacy control, and the first version of this
+report missed it.</strong> On every context load the hook writes to
+stderr: <em>"💡 Tip: Wrap any message with
+<code>&lt;private&gt; ... &lt;/private&gt;</code> to prevent storing
+sensitive information."</em>
+(<code>interface/handlers/user-message.ts:39</code>). The mechanism is
+<code>utils/tag-stripping.ts</code>, which removes
+<code>&lt;private&gt;…&lt;/private&gt;</code> and
+<code>&lt;claude-recall-context&gt;…&lt;/claude-recall-context&gt;</code>
+blocks from a prompt before it is stored, and it is unusually well
+tested — two files and roughly fourteen cases covering multiple blocks,
+interleaved tags, an entirely-private prompt reducing to the empty
+string, and the JSON variant.</p>
+<p>A user-level tag that keeps a message out of the store at all,
+advertised where the user will see it, is a better privacy control than
+most of this atlas carries. Two things belong beside it.
+<code>stripMemoryTagsFromPrompt</code> and
+<code>PrivacyCheckValidator</code> have no caller anywhere in
+<code>src/</code> — their callers live in the pre-built worker of
+section 3, where the minified
+<code>.replace(/&lt;private&gt;[\s\S]*?&lt;\/private&gt;/g,"")</code> is
+present, so the control does ship and cannot be verified against the
+source in this tree. And the tag is prompt-scoped: it protects what the
+<em>user</em> types, not what the model writes about it, so a private
+prompt that produces a public assistant turn is only as private as the
+observation the worker extracts from that turn.</p>
+<p><strong>Three FTS5 indexes are maintained on every write and read by
+nothing.</strong> Migration 006 creates virtual tables for observations
+and session summaries, migration 10 adds one for user prompts, and each
+comes with insert, update and delete triggers keeping it in sync. No
+<code>MATCH</code> query appears anywhere in <code>src/</code>.
+<code>SearchManager</code> says why, and the reason is a good one rather
+than an oversight:</p>
+<pre class="ts"><code>// Chroma returned 0 results - this is the correct answer, don&#39;t fall back to FTS5</code></pre>
+<p>The lexical arm was switched off deliberately, and the write cost of
+keeping its three indexes current was not.</p>
 <p><strong>Everything else is absent, and the absences
 compound.</strong> There is no trust state, no supersession, no
 tombstone, no audit log, no review surface and no negative eval.
@@ -326,28 +425,42 @@ block.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
-<li><strong>Give the session summary a schema.</strong>
+<li><p><strong>Say "I have nothing" instead of widening the
+search.</strong> When Chroma returns zero matches, MoltBrain stops:
+<em>"this is the correct answer, don't fall back to FTS5."</em> And when
+Chroma is not initialised at all it sets <code>chromaFailed</code> and
+returns an error rather than an empty list, so "no results" and "search
+is unavailable" are different answers. Several systems in this atlas
+quietly substitute a worse result for an honest empty one; two lines and
+a flag are the whole difference.</p></li>
+<li><p><strong>Give the user a tag that keeps a message out of the
+store.</strong> <code>&lt;private&gt; … &lt;/private&gt;</code>,
+advertised in the same stderr block that shows the injected context, is
+a privacy control the user can reach without reading documentation — and
+the strip happens before storage rather than at render.</p></li>
+<li><p><strong>Give the session summary a schema.</strong>
 <code>request</code>, <code>investigated</code>, <code>learned</code>,
 <code>completed</code>, <code>next_steps</code>,
 <code>files_read</code>, <code>files_edited</code>, <code>notes</code> —
 parsed into columns, not stored as prose. You can then query what was
 <em>learned</em> across every session, and the model has a form to fill
-rather than a paragraph to pad.</li>
-<li><strong>Constrain the observation type with a
+rather than a paragraph to pad.</p></li>
+<li><p><strong>Constrain the observation type with a
 <code>CHECK</code>.</strong> Six values enforced by the database means a
 typo in the writer becomes an error rather than a category nobody
-queries.</li>
-<li><strong>Fail fast when the vector mirror is unavailable.</strong> A
-sync that falls back silently leaves semantic search returning a stale
+queries.</p></li>
+<li><p><strong>Fail fast when the vector mirror is unavailable.</strong>
+A sync that falls back silently leaves semantic search returning a stale
 subset with no signal. The docstring here states the choice, which is
-the part to copy.</li>
-<li><strong>Migrate SQLite by explicit column list.</strong>
+the part to copy.</p></li>
+<li><p><strong>Migrate SQLite by explicit column list.</strong>
 <code>observations_new</code>, an <code>INSERT … SELECT</code> naming
 every column, then the swap. <code>SELECT *</code> across a schema
-change is how columns end up in the wrong places.</li>
-<li><strong>Index what you filter on.</strong> <code>project</code>,
+change is how columns end up in the wrong places.</p></li>
+<li><p><strong>Index what you filter on.</strong> <code>project</code>,
 <code>type</code>, <code>created_at_epoch DESC</code> and the session
-foreign key, all indexed, at a size where it does not yet matter.</li>
+foreign key, all indexed, at a size where it does not yet
+matter.</p></li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
@@ -415,6 +528,39 @@ the explicit column copy <code>:339-365</code>,
 <code>benchmarks/compression.bench.ts</code>,
 <code>benchmarks/search.bench.ts</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/nhevers/moltbrain/commit/1cb9a70391c7f7fd9da30d2c4c214a393fb6a639"><code class="commit-id" title="1cb9a70391c7f7fd9da30d2c4c214a393fb6a639">1cb9a703…</code></a>
+— re-read at the same commit. Nothing upstream had moved, so every
+addition is the atlas's own, and the first reading had described
+<code>src/</code> as though it were the whole system.</p>
+<p>It is the readable half. The hooks and the MCP server call seven API
+paths; <code>core/api/Server.ts</code> registers six unrelated ones plus
+<code>/api/context/inject</code> in <code>engine-service.ts</code>, its
+<code>RouteHandler</code> interface has no implementor, and every other
+path resolves inside <code>plugin/scripts/worker-service.cjs</code>,
+1.86 MB of committed minified JavaScript, with
+<code>extension/runtime/engine-runtime.cjs</code> another 1.85 MB beside
+it. <code>scripts/build-worker-binary.js</code> compiles
+<code>./src/core/worker-service.ts</code>, a file this repository does
+not contain. So the component that receives a prompt and decides what to
+store ships pre-built, and section 3 now says so before any absence
+claim is made.</p>
+<p>Two mechanisms were added to section 9.
+<code>&lt;private&gt; … &lt;/private&gt;</code> is a user-level tag that
+keeps a message out of the store, advertised in the stderr block the
+user sees on every context load, implemented in
+<code>utils/tag-stripping.ts</code> and covered by about fourteen
+committed cases — a better privacy control than most of this corpus
+carries, with the caveat that its caller is inside the bundle and it
+protects the user's own text rather than what the model writes about it.
+And three FTS5 virtual tables with their six triggers are maintained on
+every write while no <code>MATCH</code> query exists anywhere in
+<code>src/</code>, because <code>SearchManager</code> deliberately
+refuses to fall back to them: <em>"Chroma returned 0 results - this is
+the correct answer."</em> That refusal, and the separate
+<code>chromaFailed</code> path that distinguishes "no matches" from
+"search unavailable", are now in section 11. <code>stack_source</code>
+goes from seeded to reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/nhevers/moltbrain/commit/1cb9a70391c7f7fd9da30d2c4c214a393fb6a639"><code class="commit-id" title="1cb9a70391c7f7fd9da30d2c4c214a393fb6a639">1cb9a703…</code></a>
 — first reading. Screened before reading; the tree was read, never

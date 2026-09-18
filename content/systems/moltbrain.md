@@ -9,11 +9,13 @@ source_url: https://github.com/nhevers/moltbrain
 archive_name: "nhevers--moltbrain"
 revision: 1cb9a70391c7f7fd9da30d2c4c214a393fb6a639
 revision_url: https://github.com/nhevers/moltbrain/commit/1cb9a70391c7f7fd9da30d2c4c214a393fb6a639
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the project column on the SQLite read paths and on the Chroma query | src/core/storage/DataStore.ts:680, :705, :725, :881, :944, :1596, :1627, src/core/vector/VectorSync.ts:591 | `project` is an indexed column on `observations` and `session_summaries`, and it is applied as `WHERE project = ?` on the observation, summary and timeline reads, as an `additionalConditions` clause on the filtered listing, and as `AND project = ?` on the by-id hydration that the semantic path uses to turn Chroma hits into rows. The vector side carries it too: the Chroma query passes `where: { project: this.project }`, so the key reaches both arms rather than only the relational one | the scope is one project string with no user, agent or tenant dimension, and on the by-id hydration path the filter is appended only when a project is supplied, so a caller that omits it reads every project. No committed test asserts that another project stays out of a result"
 stack_storage: "sqlite, chroma"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An observation typed decision, bugfix, feature, refactor, discovery or change"
   storage: "SQLite for observations, summaries, sessions and prompts; ChromaDB for vectors"
@@ -99,6 +101,34 @@ The proportion is worth stating plainly: this is a memory-capture-and-browse
 product, and the memory model underneath it is a typed log. 40 test files, plus
 `benchmarks/compression.bench.ts` and `search.bench.ts`.
 
+**And the component that decides what gets stored is in the tree as a build
+artifact, not as source.** The hooks and the MCP server between them call seven
+API paths:
+
+| Called from | Path | Registered in `src/` |
+| --- | --- | --- |
+| `interface/handlers/user-message.ts` | `/api/context/inject` | yes — `core/engine-service.ts:228` |
+| `interface/handlers/session-init.ts` | `/api/sessions/init`, `/sessions/:id/init` | no |
+| `interface/handlers/session-init.ts` | `/api/sessions/observations` | no |
+| `interface/handlers/summarize.ts` | `/api/sessions/summarize` | no |
+| `servers/mcp-server.ts` | `/api/search`, `/api/timeline` | no |
+| `servers/mcp-server.ts` | `/api/observations/batch` | no |
+
+`core/api/Server.ts` registers `health`, `readiness`, `version`, `instructions`,
+`admin/restart` and `admin/shutdown`; its `RouteHandler.setupRoutes` interface has
+no implementor and `registerRoutes` has no caller. Every other path above
+resolves inside `plugin/scripts/worker-service.cjs` — 1.86 MB of committed,
+minified JavaScript — and its sibling `extension/runtime/engine-runtime.cjs`, a
+further 1.85 MB. `scripts/build-worker-binary.js` compiles
+`./src/core/worker-service.ts`, which this repository does not contain.
+
+So the read path is readable and the write path is not: the TypeScript here is
+the hook layer, the storage layer, the search engine and the viewer, while the
+worker that receives a prompt, decides what is observation-worthy and writes it
+ships pre-built. That is worth knowing before reading any absence claim in this
+report, and it is why several functions below have no caller in `src/` — their
+callers are inside the bundle.
+
 ## 4. Essential Implementation Paths
 
 **Parse** — `src/parser/parser.ts` (`ParsedObservation` `:9-18`, `ParsedSummary`
@@ -180,6 +210,41 @@ forgets to emit an observation block leaves no memory.
 
 **One mark: scope enforced**, per section 6.
 
+**There is one privacy control, and the first version of this report missed it.**
+On every context load the hook writes to stderr:
+*"💡 Tip: Wrap any message with `<private> ... </private>` to prevent storing
+sensitive information."* (`interface/handlers/user-message.ts:39`). The mechanism
+is `utils/tag-stripping.ts`, which removes `<private>…</private>` and
+`<claude-recall-context>…</claude-recall-context>` blocks from a prompt before it
+is stored, and it is unusually well tested — two files and roughly fourteen cases
+covering multiple blocks, interleaved tags, an entirely-private prompt reducing
+to the empty string, and the JSON variant.
+
+A user-level tag that keeps a message out of the store at all, advertised where
+the user will see it, is a better privacy control than most of this atlas
+carries. Two things belong beside it. `stripMemoryTagsFromPrompt` and
+`PrivacyCheckValidator` have no caller anywhere in `src/` — their callers live in
+the pre-built worker of section 3, where the minified
+`.replace(/<private>[\s\S]*?<\/private>/g,"")` is present, so the control does
+ship and cannot be verified against the source in this tree. And the tag is
+prompt-scoped: it protects what the *user* types, not what the model writes about
+it, so a private prompt that produces a public assistant turn is only as private
+as the observation the worker extracts from that turn.
+
+**Three FTS5 indexes are maintained on every write and read by nothing.**
+Migration 006 creates virtual tables for observations and session summaries,
+migration 10 adds one for user prompts, and each comes with insert, update and
+delete triggers keeping it in sync. No `MATCH` query appears anywhere in `src/`.
+`SearchManager` says why, and the reason is a good one rather than an oversight:
+
+```ts
+// Chroma returned 0 results - this is the correct answer, don't fall back to FTS5
+```
+
+The lexical arm was switched off deliberately, and the write cost of keeping its
+three indexes current was not.
+
+
 **Everything else is absent, and the absences compound.** There is no trust
 state, no supersession, no tombstone, no audit log, no review surface and no
 negative eval. Combined, they mean:
@@ -222,6 +287,18 @@ accurate, or how often the model emits a usable XML block.
 ## 11. For Your Own Build
 
 ### Steal
+
+- **Say "I have nothing" instead of widening the search.** When Chroma returns
+  zero matches, MoltBrain stops: *"this is the correct answer, don't fall back to
+  FTS5."* And when Chroma is not initialised at all it sets `chromaFailed` and
+  returns an error rather than an empty list, so "no results" and "search is
+  unavailable" are different answers. Several systems in this atlas quietly
+  substitute a worse result for an honest empty one; two lines and a flag are the
+  whole difference.
+- **Give the user a tag that keeps a message out of the store.**
+  `<private> … </private>`, advertised in the same stderr block that shows the
+  injected context, is a privacy control the user can reach without reading
+  documentation — and the strip happens before storage rather than at render.
 
 - **Give the session summary a schema.** `request`, `investigated`, `learned`,
   `completed`, `next_steps`, `files_read`, `files_edited`, `notes` — parsed into
@@ -296,5 +373,11 @@ observations` `:44`)
 **Benchmarks** — `benchmarks/compression.bench.ts`, `benchmarks/search.bench.ts`
 
 ## History
+
+**2026-09-18** — [`1cb9a70391c7f7fd9da30d2c4c214a393fb6a639`](https://github.com/nhevers/moltbrain/commit/1cb9a70391c7f7fd9da30d2c4c214a393fb6a639) — re-read at the same commit. Nothing upstream had moved, so every addition is the atlas's own, and the first reading had described `src/` as though it were the whole system.
+
+It is the readable half. The hooks and the MCP server call seven API paths; `core/api/Server.ts` registers six unrelated ones plus `/api/context/inject` in `engine-service.ts`, its `RouteHandler` interface has no implementor, and every other path resolves inside `plugin/scripts/worker-service.cjs`, 1.86 MB of committed minified JavaScript, with `extension/runtime/engine-runtime.cjs` another 1.85 MB beside it. `scripts/build-worker-binary.js` compiles `./src/core/worker-service.ts`, a file this repository does not contain. So the component that receives a prompt and decides what to store ships pre-built, and section 3 now says so before any absence claim is made.
+
+Two mechanisms were added to section 9. `<private> … </private>` is a user-level tag that keeps a message out of the store, advertised in the stderr block the user sees on every context load, implemented in `utils/tag-stripping.ts` and covered by about fourteen committed cases — a better privacy control than most of this corpus carries, with the caveat that its caller is inside the bundle and it protects the user's own text rather than what the model writes about it. And three FTS5 virtual tables with their six triggers are maintained on every write while no `MATCH` query exists anywhere in `src/`, because `SearchManager` deliberately refuses to fall back to them: *"Chroma returned 0 results - this is the correct answer."* That refusal, and the separate `chromaFailed` path that distinguishes "no matches" from "search unavailable", are now in section 11. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`1cb9a70391c7f7fd9da30d2c4c214a393fb6a639`](https://github.com/nhevers/moltbrain/commit/1cb9a70391c7f7fd9da30d2c4c214a393fb6a639) — first reading. Screened before reading; the tree was read, never installed, and no test was run. The companion Virtuals Protocol plugin lives in a separate repository and was not read.
