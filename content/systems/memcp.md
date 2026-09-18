@@ -9,11 +9,11 @@ source_url: https://github.com/maydali28/memcp
 archive_name: "maydali28--memcp"
 revision: 81c7177d4374cd7aecca8f6a8da43e229cadefee
 revision_url: https://github.com/maydali28/memcp/commit/81c7177d4374cd7aecca8f6a8da43e229cadefee
-analyzed_at: 2026-08-09
-capabilities: "human_review"
+analyzed_at: 2026-09-18
+capabilities: ""
 stack_storage: "sqlite, files"
 stack_retrieval: "graph"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An insight node in a four-edge graph, with a feedback score and an importance"
   storage: "SQLite for the graph, the filesystem for contexts and chunks under ~/.memcp"
@@ -151,12 +151,39 @@ half-life run over the same edges, so the graph's shape tracks use.
 `consolidation_preview` then `consolidate` for merging near-duplicates; `forget`
 for removal.
 
-**The preview-then-apply split is what earns the `human_review` mark.**
-`memcp_consolidation_preview` and `memcp_consolidate` are separate tools, so a
-merge is proposed and inspected before it happens — the same shape as
-[Claudest](../claudest/)'s approval gate, at a lower level of ceremony. For a
-destructive operation on accumulated memory, two tools beats one tool with a
-`dry_run` flag, because the flag defaults somewhere.
+**The preview-then-apply split was read as earning `human_review`. The mark is
+withdrawn.** `memcp_consolidation_preview` and `memcp_consolidate` are separate
+tools, and the first reading took that separation for a gate on the grounds that
+two tools beat one tool with a `dry_run` flag, "because the flag defaults
+somewhere". Reading the signatures inverts the argument:
+
+```python
+@mcp.tool()
+async def memcp_consolidation_preview(threshold: float = 0.0, limit: int = 20, project: str = "") -> str:
+    # "Dry-run — no changes made. Use memcp_consolidate to merge."
+
+@mcp.tool()
+async def memcp_consolidate(group_ids: str, keep_id: str = "", merged_content: str = "") -> str:
+    # "Merge a group of similar insights into one ... redirects edges, and deletes duplicates."
+```
+
+`memcp_consolidate` takes a comma-separated list of insight ids and nothing
+else. No token, handle or preview reference links the two calls, so the merge
+does not require that a preview ever happened. Both carry `@mcp.tool()`, which
+means both are in the schema the model is handed, and the model can call the
+destructive one first. The sentence *"Use memcp_consolidate to merge"* is an
+instruction to the agent, not a constraint on it.
+
+A `dry_run` flag at least has a default a reviewer can argue about. Two unlinked
+tools have nothing to default and nothing to check: the approver the capability
+asks for would have to be the same actor that proposes the merge. This is the
+shape recorded against [Wax](../wax/) — a proposal whose approval rides with the
+proposer — and it fails the same test.
+
+What remains, and is worth keeping in view: the preview exists, it is honest
+about being a dry run, and a *person* driving MemCP from a terminal has a natural
+two-step. The mark asks whether the shipped path puts someone between the
+proposal and the deletion, and nothing here does.
 
 ## 8. Agent Integration
 
@@ -205,6 +232,27 @@ computes `savings_pct` and a `ratio` from those constants — `-1900.0` and
 `"0.1x"` for the first row — so a report that reads as an experiment is one
 measured column, one asserted column, and two columns of arithmetic on the
 assertion.
+
+**And the measured column is not measuring retrieval.** The Native side of the
+first row runs a `ContextWindowSimulator` and grades it on whether the questions
+can still be answered — `total_found / total_expected` over twenty queries. The
+RLM side of the same row is:
+
+```python
+rlm_retention = min(100.0, round(status["total_insights"] / len(insights) * 100, 1))
+```
+
+— a count of rows in SQLite, with the comment above it saying so outright:
+*"Even if query matching isn't perfect, status confirms all insights exist."* So
+the two halves of one comparison use different numerators. The baseline is asked
+whether its knowledge is still reachable; the product is asked whether its rows
+are still present, which is a question `remember()` answered at insert time and
+nothing since has threatened.
+
+One more detail sits in the same file. The native test's own assertion is
+`assert result["retention_pct"] < 50  # typically ~5%` — so the simulator may
+retain 49% and the test still passes, while the published column says 5.0. Even
+the half of the comparison that runs does not pin the number the report prints.
 
 **Two things should be said fairly.** These files live under `tests/benchmark/`,
 and as *regression tests for the RLM side* — does the store still return what it
@@ -306,5 +354,11 @@ computed `savings_pct` and `ratio` `:259-279`), `tests/benchmark/report.py`,
 4-graph, the progressive-dependency framing), `SECURITY.md`, `docs/`
 
 ## History
+
+**2026-09-18** — [`81c7177d4374cd7aecca8f6a8da43e229cadefee`](https://github.com/maydali28/memcp/commit/81c7177d4374cd7aecca8f6a8da43e229cadefee) — re-read at the same commit. Nothing upstream had moved, so every change is the atlas's own.
+
+**`human_review` is withdrawn.** The first reading treated `memcp_consolidation_preview` and `memcp_consolidate` as separate tools and therefore a gate, reasoning that two tools beat a `dry_run` flag because a flag defaults somewhere. The signatures invert that: `memcp_consolidate(group_ids, keep_id, merged_content)` takes a comma-separated list of ids and nothing that links it to a preview, both functions carry `@mcp.tool()` so both are in the model's schema, and the model can call the destructive one first. Two unlinked tools have nothing to default and nothing to check. Same shape as the Wax withdrawal: the approval rides with the proposer. The report now carries no marks.
+
+The benchmark finding also got sharper. The Native column being a typed constant was already recorded; what the first reading did not note is that the RLM column is not a retrieval measurement either — `status["total_insights"] / len(insights)` counts rows, under a comment reading *"Even if query matching isn't perfect, status confirms all insights exist"*, while the Native simulator is graded on query answerability. The two halves of one comparison use different numerators, and the product's half cannot fail once the inserts succeed. And the native test's own assertion is `< 50` against a comment claiming ~5%, so the measured half does not pin the published 5.0 either. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`81c7177d4374cd7aecca8f6a8da43e229cadefee`](https://github.com/maydali28/memcp/commit/81c7177d4374cd7aecca8f6a8da43e229cadefee) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run. The hardcoded baseline values in section 10 are read from the test source.

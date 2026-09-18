@@ -118,7 +118,7 @@ test, against a measured RLM column.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/maydali28--memcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -126,7 +126,7 @@ test, against a measured RLM column.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -255,15 +255,38 @@ is one directory per user.</p>
 <p><code>remember</code> with secret blocking and optional embedding
 dedup; <code>consolidation_preview</code> then <code>consolidate</code>
 for merging near-duplicates; <code>forget</code> for removal.</p>
-<p><strong>The preview-then-apply split is what earns the
-<code>human_review</code> mark.</strong>
+<p><strong>The preview-then-apply split was read as earning
+<code>human_review</code>. The mark is withdrawn.</strong>
 <code>memcp_consolidation_preview</code> and
-<code>memcp_consolidate</code> are separate tools, so a merge is
-proposed and inspected before it happens — the same shape as <a
-href="../claudest/">Claudest</a>'s approval gate, at a lower level of
-ceremony. For a destructive operation on accumulated memory, two tools
-beats one tool with a <code>dry_run</code> flag, because the flag
-defaults somewhere.</p>
+<code>memcp_consolidate</code> are separate tools, and the first reading
+took that separation for a gate on the grounds that two tools beat one
+tool with a <code>dry_run</code> flag, "because the flag defaults
+somewhere". Reading the signatures inverts the argument:</p>
+<pre class="python"><code>@mcp.tool()
+async def memcp_consolidation_preview(threshold: float = 0.0, limit: int = 20, project: str = &quot;&quot;) -&gt; str:
+    # &quot;Dry-run — no changes made. Use memcp_consolidate to merge.&quot;
+
+@mcp.tool()
+async def memcp_consolidate(group_ids: str, keep_id: str = &quot;&quot;, merged_content: str = &quot;&quot;) -&gt; str:
+    # &quot;Merge a group of similar insights into one ... redirects edges, and deletes duplicates.&quot;</code></pre>
+<p><code>memcp_consolidate</code> takes a comma-separated list of
+insight ids and nothing else. No token, handle or preview reference
+links the two calls, so the merge does not require that a preview ever
+happened. Both carry <code>@mcp.tool()</code>, which means both are in
+the schema the model is handed, and the model can call the destructive
+one first. The sentence <em>"Use memcp_consolidate to merge"</em> is an
+instruction to the agent, not a constraint on it.</p>
+<p>A <code>dry_run</code> flag at least has a default a reviewer can
+argue about. Two unlinked tools have nothing to default and nothing to
+check: the approver the capability asks for would have to be the same
+actor that proposes the merge. This is the shape recorded against <a
+href="../wax/">Wax</a> — a proposal whose approval rides with the
+proposer — and it fails the same test.</p>
+<p>What remains, and is worth keeping in view: the preview exists, it is
+honest about being a dry run, and a <em>person</em> driving MemCP from a
+terminal has a natural two-step. The mark asks whether the shipped path
+puts someone between the proposal and the deletion, and nothing here
+does.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>24 MCP tools — "remember, recall, forget, search, chunk, filter,
 traverse, reinforce, consolidate, and more" — plus hooks, templates and
@@ -336,6 +359,26 @@ from those constants — <code>-1900.0</code> and <code>"0.1x"</code> for
 the first row — so a report that reads as an experiment is one measured
 column, one asserted column, and two columns of arithmetic on the
 assertion.</p>
+<p><strong>And the measured column is not measuring retrieval.</strong>
+The Native side of the first row runs a
+<code>ContextWindowSimulator</code> and grades it on whether the
+questions can still be answered —
+<code>total_found / total_expected</code> over twenty queries. The RLM
+side of the same row is:</p>
+<pre class="python"><code>rlm_retention = min(100.0, round(status[&quot;total_insights&quot;] / len(insights) * 100, 1))</code></pre>
+<p>— a count of rows in SQLite, with the comment above it saying so
+outright: <em>"Even if query matching isn't perfect, status confirms all
+insights exist."</em> So the two halves of one comparison use different
+numerators. The baseline is asked whether its knowledge is still
+reachable; the product is asked whether its rows are still present,
+which is a question <code>remember()</code> answered at insert time and
+nothing since has threatened.</p>
+<p>One more detail sits in the same file. The native test's own
+assertion is
+<code>assert result["retention_pct"] &lt; 50  # typically ~5%</code> —
+so the simulator may retain 49% and the test still passes, while the
+published column says 5.0. Even the half of the comparison that runs
+does not pin the number the report prints.</p>
 <p><strong>Two things should be said fairly.</strong> These files live
 under <code>tests/benchmark/</code>, and as <em>regression tests for the
 RLM side</em> — does the store still return what it stored after these
@@ -457,6 +500,33 @@ the computed <code>savings_pct</code> and <code>ratio</code>
 citation, the 24 tools, the MAGMA 4-graph, the progressive-dependency
 framing), <code>SECURITY.md</code>, <code>docs/</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/maydali28/memcp/commit/81c7177d4374cd7aecca8f6a8da43e229cadefee"><code class="commit-id" title="81c7177d4374cd7aecca8f6a8da43e229cadefee">81c7177d…</code></a>
+— re-read at the same commit. Nothing upstream had moved, so every
+change is the atlas's own.</p>
+<p><strong><code>human_review</code> is withdrawn.</strong> The first
+reading treated <code>memcp_consolidation_preview</code> and
+<code>memcp_consolidate</code> as separate tools and therefore a gate,
+reasoning that two tools beat a <code>dry_run</code> flag because a flag
+defaults somewhere. The signatures invert that:
+<code>memcp_consolidate(group_ids, keep_id, merged_content)</code> takes
+a comma-separated list of ids and nothing that links it to a preview,
+both functions carry <code>@mcp.tool()</code> so both are in the model's
+schema, and the model can call the destructive one first. Two unlinked
+tools have nothing to default and nothing to check. Same shape as the
+Wax withdrawal: the approval rides with the proposer. The report now
+carries no marks.</p>
+<p>The benchmark finding also got sharper. The Native column being a
+typed constant was already recorded; what the first reading did not note
+is that the RLM column is not a retrieval measurement either —
+<code>status["total_insights"] / len(insights)</code> counts rows, under
+a comment reading <em>"Even if query matching isn't perfect, status
+confirms all insights exist"</em>, while the Native simulator is graded
+on query answerability. The two halves of one comparison use different
+numerators, and the product's half cannot fail once the inserts succeed.
+And the native test's own assertion is <code>&lt; 50</code> against a
+comment claiming ~5%, so the measured half does not pin the published
+5.0 either. <code>stack_source</code> goes from seeded to reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/maydali28/memcp/commit/81c7177d4374cd7aecca8f6a8da43e229cadefee"><code class="commit-id" title="81c7177d4374cd7aecca8f6a8da43e229cadefee">81c7177d…</code></a>
 — first reading. Screened before reading; the tree was read, never
