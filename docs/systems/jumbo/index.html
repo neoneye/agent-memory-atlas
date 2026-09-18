@@ -123,7 +123,7 @@ nothing.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jumbocontext--cli" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -722,6 +722,26 @@ and
 <code>tests/integration/relation-add-after-removal.integration.test.ts</code>
 (the rebuild comparison <code>:57-69</code>)</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/jumbocontext/cli/commit/30e7947a8a0afac627c82755be0a6c8ff71106a2"><code class="commit-id" title="30e7947a8a0afac627c82755be0a6c8ff71106a2">30e7947a…</code></a>
+— re-read at the same commit; <code>main</code> has not moved since 10
+September 2026, so the finding is this report's. Both marks hold and the
+append-only claim was re-tested tree-wide: the only
+<code>fs.remove</code> calls under <code>src/</code> belong to the
+project scaffolder, and nothing rewrites a stored event. The
+<code>audit_log</code> record gains the limit it was missing.
+<code>append</code> takes its sequence number from a directory listing —
+<code>const nextSeq = files.length + 1</code> — with no lock, mutex or
+compare-and-swap in the persistence layer, and writes with
+<code>fs.move(tmpPath, filepath, { overwrite: true })</code>. Two
+appends to one aggregate interleaving between the <code>readdir</code>
+and the <code>move</code> land on the same <code>nextSeq</code>, and the
+second replaces the first. The comment above that write anticipates
+<em>"concurrent processes"</em> and the temp-then-rename does stop a
+torn file; the lost event it does not stop, and
+<code>overwrite: true</code> is what makes the loss silent instead of an
+error. One awaited call chain in one process is safe, which is the CLI's
+usual shape.</p>
 <p><strong>2026-09-13</strong> — the repository was renamed from
 <code>jumbocontext/jumbo.cli</code> to <code>jumbocontext/cli</code>,
 upstream of the pinned commit and after the reading below. No
