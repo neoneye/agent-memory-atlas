@@ -132,7 +132,7 @@ paths are placeholders, in a repository with no licence file.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/grapeot--context-infrastructure" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -626,6 +626,29 @@ rg -n &#39;path/to/your/workspace|&lt;your-model-id&gt;&#39; periodic_jobs      
 find . -name &#39;test_*.py&#39; -o -name &#39;*_test.py&#39;                            # one file, on a PDF skill
 rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs  # none: no paper</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the pinned commit. Upstream
+has advanced to <code>6337d84f</code>, but the memory machinery has not:
+<code>rev-parse &lt;pin&gt;:tools</code>, <code>:periodic_jobs</code>
+and <code>:contexts</code> all match HEAD's, and only
+<code>rules/</code> differs — which is the corpus this system curates
+rather than the code that curates it. No re-pin warranted.</p>
+<p>The consolidation finding is confirmed at the source and is worth
+stating one level more precisely than "the reflector deletes its own
+evidence". The reflector is 57 lines, and 20 of them are a prompt:
+<code>PROMPT_TEMPLATE</code> at
+<code>periodic_jobs/ai_heartbeat/src/v0/reflector.py:12-30</code>, whose
+third step reads <em>"GC：重写 OBSERVATIONS.md，删除已晋升及过期 🟢
+记录"</em> — GC: rewrite <code>OBSERVATIONS.md</code>, deleting promoted
+and expired 🟢 entries (<code>:25</code>). <code>main()</code> formats
+that string and hands it to <code>OpenCodeClient</code>
+(<code>:49</code>). So no code reads the log, decides what was promoted,
+or removes it; a model is asked to rewrite the file and the file is
+whatever comes back. Nothing constrains the rewrite to the entries
+actually promoted, and nothing compares before and after. The deletion
+is not implemented, it is requested — which is the same shape as <a
+href="../polyphony-arc/">Polyphony ARC-3</a>'s word limit, applied here
+to the only operation that destroys evidence. No marks; the report
+carries none.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/grapeot/context-infrastructure/commit/421df58bcb2f53ead50f85de2adbd31fdfc9ea3f"><code class="commit-id" title="421df58bcb2f53ead50f85de2adbd31fdfc9ea3f">421df58b…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 6

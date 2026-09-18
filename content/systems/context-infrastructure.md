@@ -9,7 +9,7 @@ source_url: https://github.com/grapeot/context-infrastructure
 archive_name: "grapeot--context-infrastructure"
 revision: 421df58bcb2f53ead50f85de2adbd31fdfc9ea3f
 revision_url: https://github.com/grapeot/context-infrastructure/commit/421df58bcb2f53ead50f85de2adbd31fdfc9ea3f
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
@@ -436,5 +436,25 @@ rg -n -i 'arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi' README.md docs 
 ```
 
 ## History
+
+**2026-09-18** — re-read at the pinned commit. Upstream has advanced to
+`6337d84f`, but the memory machinery has not: `rev-parse <pin>:tools`,
+`:periodic_jobs` and `:contexts` all match HEAD's, and only `rules/` differs —
+which is the corpus this system curates rather than the code that curates it. No
+re-pin warranted.
+
+The consolidation finding is confirmed at the source and is worth stating one
+level more precisely than "the reflector deletes its own evidence". The reflector
+is 57 lines, and 20 of them are a prompt: `PROMPT_TEMPLATE` at
+`periodic_jobs/ai_heartbeat/src/v0/reflector.py:12-30`, whose third step reads
+*"GC：重写 OBSERVATIONS.md，删除已晋升及过期 🟢 记录"* — GC: rewrite
+`OBSERVATIONS.md`, deleting promoted and expired 🟢 entries (`:25`). `main()`
+formats that string and hands it to `OpenCodeClient` (`:49`). So no code reads
+the log, decides what was promoted, or removes it; a model is asked to rewrite
+the file and the file is whatever comes back. Nothing constrains the rewrite to
+the entries actually promoted, and nothing compares before and after. The
+deletion is not implemented, it is requested — which is the same shape as
+[Polyphony ARC-3](../polyphony-arc/)'s word limit, applied here to the only
+operation that destroys evidence. No marks; the report carries none.
 
 **2026-09-10** — [`421df58bcb2f53ead50f85de2adbd31fdfc9ea3f`](https://github.com/grapeot/context-infrastructure/commit/421df58bcb2f53ead50f85de2adbd31fdfc9ea3f) — first reading, at the head of `main`, the last commit of 6 September 2026. Screened before reading: no auto-run surface, no build-time execution path, nothing inside the seven-day cooldown, one unpinned dependency surface, and an `AGENTS.md` treated as data; nothing was installed or run, and the read was made from a full clone. No marks. The repository has no licence file, which is recorded in section 1 because its stated purpose is to be copied. The reading covered the observation store, the two heartbeat triggers and their prompts, the rule and axiom layout, and the semantic-search tool; the metrics, posting and reporting utilities under `tools/` were read as the author's working surface rather than as memory. The documentation is in Chinese and an English sibling repository is linked from the README; quotations here are from the tree read.
