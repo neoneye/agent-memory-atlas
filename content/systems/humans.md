@@ -9,7 +9,7 @@ source_url: https://github.com/munch2u-a11y/HUMANs
 archive_name: "munch2u-a11y--HUMANs"
 revision: a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9
 revision_url: https://github.com/munch2u-a11y/HUMANs/commit/a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9
-analyzed_at: 2026-09-08
+analyzed_at: 2026-09-18
 capabilities: "audit_log, negative_eval"
 capability_evidence:
   audit_log: "the immutable record store | src/habitus_ai/store.py:112-133, :411-421, :850-865, src/habitus_ai/pipeline.py:278-297, :361-372, :821-835 | every event — a heard message, a spoken reply, a tool return, a notification, a fact — is a row in `records` with its type, source, timestamp, text, embedding, provenance and metadata, and two SQLite triggers abort any UPDATE or DELETE on the table; a correction is a new record whose `supersedes_id` names the old one, and the old row stays; every pulse saves a traversal trace and an outcome packet, every ability run a receipt with a SHA-256, and a verified external outcome refuses to record without a receipt id; graph concepts, edges and experience preferences are updated in place beside it, with the per-pulse trace as their only history | tests/test_store_and_topology.py:29-45 (UPDATE and DELETE on a record raise), :47-64 (a superseding record keeps the old row and removes it from the active set), tests/test_gestation_and_agent.py:62 (receipts survive a restart)"
@@ -450,6 +450,24 @@ rg -n -i 'arxiv|doi' README.md WHITEPAPER.md CITATION.cff             # none: no
 ```
 
 ## History
+
+**2026-09-18** — re-read with the subject still gone, and the archive
+re-verified because both marks rest on it. `munch2u-a11y/HUMANs` still returns
+*"Repository not found"*, and the account itself is not the cause: two sibling
+repositories from the same owner —
+[Cognitive Spatial Memory](../cognitive-spatial-memory/) and
+[Habitus AI](../habitus-ai/) — both answer normally at their pinned commits, so
+this is one repository withdrawn rather than an account going private.
+`scripts/state/archive-sync.jsonl` records the fork as `no-parent` on
+2026-09-17, which is what that status means here. The pinned commit is intact:
+fetched by sha from `agent-memory-atlas-archive/munch2u-a11y--HUMANs`,
+`a1c86c29` resolves and carries tree
+`4f46e9cddeb108acfc9903b4eed716f24249abf7`. Spot-checked against that fetch,
+`tests/test_membrane_modality.py` is 124 lines and
+`test_non_hear_words_never_enter_crown_vault_or_language_recall` is at `:73` —
+the anchor the `negative_eval` record cites. Every line this report quotes can
+still be checked, by that fork, at the commit the marks were tested against. No
+marks change.
 
 **2026-09-16** — [`a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9`](https://github.com/munch2u-a11y/HUMANs/commit/a1c86c292ac0c8d7f11800d0c2b1462756f9dbe9) — re-read attempted; the repository returns 404 with no redirect, so it was deleted or made private rather than renamed. The pin is unchanged because there is nothing newer to move to, and the commit is preserved in the atlas's archive fork, which is where a reader can now check the quotations. No mark was re-tested against a newer commit and none is withdrawn: the code each rests on still exists at this sha.
 
