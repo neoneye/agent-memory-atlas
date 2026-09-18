@@ -118,7 +118,7 @@ compression saves nothing on real sessions.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/NORTHTEKDevs--lossless-context-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -487,6 +487,29 @@ and <em>"only tool RESULTS may mark a file as seen"</em></td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/NORTHTEKDevs/lossless-context-mcp/commit/1ef5bf9e1168b3717a4e08e2e0424721f652da51"><code class="commit-id" title="1ef5bf9e1168b3717a4e08e2e0424721f652da51">1ef5bf9e…</code></a>
+— re-read at the same commit; <code>main</code> has not moved since the
+2.0.2 notes of 4 September 2026. Both marks hold and the exclusion test
+was re-verified in code rather than from its test name:
+<code>isExcluded</code> matches the literal path against the deny
+patterns, then resolves with <code>realpathSync.native</code> and
+matches again, so an innocuously named symlink pointing at a secret is
+denied by its target — and the <code>catch {}</code> around the
+resolution carries its own justification, that a path which cannot be
+resolved cannot be read either. The <code>audit_log</code> record gains
+the two horizons it was missing. <code>enforceBudget</code>, run from
+<code>index.ts:71</code> on every server start, evicts blobs
+oldest-first until the store fits <code>LOSSLESS_ARCHIVE_BYTES</code>
+(512 MB default) and unlinks any writer log older than
+<code>LOSSLESS_EVENTS_DAYS</code> (30 default) except the live one. So
+an event can outlive the blob it names, a whole writer's log can vanish
+wholesale, and because one horizon is a size and the other an age,
+neither reliably outlasts the other. Worth reading beside <a
+href="../jumbo/">Jumbo</a>, whose event store takes its sequence from a
+directory listing and writes with <code>overwrite: true</code>: one
+writer file per process is how that race is avoided rather than
+locked.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/NORTHTEKDevs/lossless-context-mcp/commit/1ef5bf9e1168b3717a4e08e2e0424721f652da51"><code class="commit-id" title="1ef5bf9e1168b3717a4e08e2e0424721f652da51">1ef5bf9e…</code></a>
 — re-read, 7 files and 323 insertions past the previous pin in a single
