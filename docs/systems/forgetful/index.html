@@ -153,7 +153,7 @@ similarity threshold.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/scottrbk--forgetful" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -993,6 +993,27 @@ unread);
 <code>rg -l -i 'locomo|longmemeval|recall@|ndcg' --glob '!*.json' .</code>
 (nothing).</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>audit_log</code> stands, and the re-read
+settles a comparison the atlas has to be consistent about, because <a
+href="../runar-forge/">RunarForge</a> is refused this mark on a flag
+that looks like this one. <code>ACTIVITY_ENABLED: bool = False</code>
+(<code>app/config/settings.py:183</code>), so nothing is recorded until
+an operator turns it on — the same first prong. The other two prongs
+differ, and they are the ones the RunarForge ruling actually turned on.
+What lands here is what the store did: created, updated, deleted, link
+and unlink events for memories, not the <code>SearchScoring</code> and
+<code>DecayCompute</code> instrumentation RunarForge's
+<code>debug_log</code> holds. And it survives —
+<code>ACTIVITY_RETENTION_DAYS: int | None = None</code> with the comment
+<em>"None = keep forever"</em> (<code>:184</code>), so the cleanup at
+<code>activity_service.py:215-226</code> does nothing unless configured,
+where RunarForge ships <code>prune_debug_log</code> as the ordinary
+path. There is also a read API, <code>app/routes/api/activity.py</code>,
+which Habitus AI's outcome table lacks. So: a record of memory
+mutations, readable, kept indefinitely, behind a switch that starts off
+— the mark holds and the record now says the switch starts off. No marks
+change.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/scottrbk/forgetful/commit/35764a88514f2c70b53d91a85d1cd5760e001d0f"><code class="commit-id" title="35764a88514f2c70b53d91a85d1cd5760e001d0f">35764a88…</code></a>
 — first reading, at the head of <code>main</code>, 236 commits in, the

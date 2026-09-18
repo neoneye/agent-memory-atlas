@@ -9,11 +9,11 @@ source_url: https://github.com/scottrbk/forgetful
 archive_name: "scottrbk--forgetful"
 revision: 35764a88514f2c70b53d91a85d1cd5760e001d0f
 revision_url: https://github.com/scottrbk/forgetful/commit/35764a88514f2c70b53d91a85d1cd5760e001d0f
-analyzed_at: 2026-09-07
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, audit_log, negative_eval"
 capability_evidence:
   scope_enforced: "user_id and project membership as WHERE clauses on every read | app/repositories/sqlite/memory_repository.py:150-181,507-515,585-599,793-806, app/repositories/postgres/memory_repository.py:137-173,434-470, app/services/memory_service.py:80-104 | every repository query on both backends carries `m.user_id = :user_id AND m.is_obsolete = 0`; a `project_ids` filter becomes an `EXISTS` over `memory_project_association` on the dense search and on `get_recent_memories`, and reaches the one-hop walk only when the caller passes `strict_project_filter`; the user comes from the bearer token's `sub` claim or the single default user, never from a tool argument | tests/e2e_sqlite/test_memory_tools_sqlite.py:840-888 (an in-scope memory is returned and a same-tag memory in no project is not), tests/e2e_sqlite/test_re_embedding_sqlite.py:243-275 (a user cannot rebuild another user's memories), tests/e2e/test_memory_tools_e2e.py:675-700 (project filter, Postgres)"
-  audit_log: "activity_log, written by the event bus when ACTIVITY_ENABLED is on | app/repositories/sqlite/sqlite_tables.py:1182-1233, alembic/versions/20260106_add_activity_log_table.py, app/services/activity_service.py:47-76,206-228, app/events/event_bus.py:112-150, app/bootstrap.py:242-257, app/services/memory_service.py:219-226,275-288,328-339 | one row per created, updated, deleted, link and unlink event with a full JSON snapshot and, for updates, a `{field: {old, new}}` diff; the service subscribes to `*.*` and only `save_event` and a retention `DELETE` older than `ACTIVITY_RETENTION_DAYS` touch the table; the bus exists only when `ACTIVITY_ENABLED=true`, which defaults to false, and dispatch is `asyncio.create_task` fire-and-forget, so a failed audit write is logged and never fails the mutation | tests/e2e_sqlite/test_api_activity_sqlite.py:38-60 (a create is listed), :187-230 (an update carries the diff), :231-269 (an obsolete is a `deleted` row), tests/integration/test_service_activity_events.py"
+  audit_log: "activity_log, written by the event bus when ACTIVITY_ENABLED is on — and it is off out of the box | app/repositories/sqlite/sqlite_tables.py:1182-1233, alembic/versions/20260106_add_activity_log_table.py, app/services/activity_service.py:47-76,206-228, app/events/event_bus.py:112-150, app/bootstrap.py:242-257, app/services/memory_service.py:219-226,275-288,328-339 | one row per created, updated, deleted, link and unlink event with a full JSON snapshot and, for updates, a `{field: {old, new}}` diff; the service subscribes to `*.*` and only `save_event` and a retention `DELETE` older than `ACTIVITY_RETENTION_DAYS` touch the table; the bus exists only when `ACTIVITY_ENABLED=true`, which defaults to false, and dispatch is `asyncio.create_task` fire-and-forget, so a failed audit write is logged and never fails the mutation | tests/e2e_sqlite/test_api_activity_sqlite.py:38-60 (a create is listed), :187-230 (an update carries the diff), :231-269 (an obsolete is a `deleted` row), tests/integration/test_service_activity_events.py"
   negative_eval: "an obsoleted memory stays out of a populated query result | tests/e2e_sqlite/test_memory_tools_sqlite.py:355-393, tests/e2e/test_memory_tools_e2e.py:356-394 | three Kubernetes memories are created against the real FastEmbed embedder and cross-encoder, one is marked obsolete, and the case asserts that at least one active memory is in `primary_memories` before asserting the obsolete one is not — the positive control that keeps the negative from passing on an empty result; the same shape covers a superseded memory (:425-458) and a same-tag memory outside the requested project (:840-888) | tests/e2e_sqlite/test_memory_tools_sqlite.py:392 (the positive control can fail), :37-60 (auto-link asserts `similar_memories` is non-empty)"
 stack_storage: "sqlite, postgres"
 stack_retrieval: "vector, graph"
@@ -739,5 +739,23 @@ HNSW 403–405), `app/repositories/sqlite/sqlite_adapter.py` (session 108–124,
 `rg -l -i 'locomo|longmemeval|recall@|ndcg' --glob '!*.json' .` (nothing).
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`audit_log` stands, and the re-read settles a comparison the atlas has to be
+consistent about, because [RunarForge](../runar-forge/) is refused this mark on
+a flag that looks like this one. `ACTIVITY_ENABLED: bool = False`
+(`app/config/settings.py:183`), so nothing is recorded until an operator turns
+it on — the same first prong. The other two prongs differ, and they are the ones
+the RunarForge ruling actually turned on. What lands here is what the store did:
+created, updated, deleted, link and unlink events for memories, not the
+`SearchScoring` and `DecayCompute` instrumentation RunarForge's `debug_log`
+holds. And it survives — `ACTIVITY_RETENTION_DAYS: int | None = None` with the
+comment *"None = keep forever"* (`:184`), so the cleanup at
+`activity_service.py:215-226` does nothing unless configured, where RunarForge
+ships `prune_debug_log` as the ordinary path. There is also a read API,
+`app/routes/api/activity.py`, which Habitus AI's outcome table lacks. So: a
+record of memory mutations, readable, kept indefinitely, behind a switch that
+starts off — the mark holds and the record now says the switch starts off. No
+marks change.
 
 **2026-09-07** — [`35764a88514f2c70b53d91a85d1cd5760e001d0f`](https://github.com/scottrbk/forgetful/commit/35764a88514f2c70b53d91a85d1cd5760e001d0f) — first reading, at the head of `main`, 236 commits in, the pin dated 1 September 2026. Screened before reading: no auto-run surface; three `conftest.py` files execute on collection; `pyproject.toml` and `uv.lock` were inside the seven-day cooldown; `AGENTS.md`, `CLAUDE.md` and `GEMINI.md` read as data. Nothing was installed or run. Three marks: `scope_enforced` for the `user_id` and project clauses on every read, `audit_log` for `activity_log` behind `ACTIVITY_ENABLED`, `negative_eval` for the obsolete-filter case with its positive control against the real embedder. Withheld: `tombstone` (obsolete is supersession, keyed on the row, and a re-created twin is not refused), `trust_state` (one boolean and a float nothing reads), `bitemporal` (record time only), `human_review` (a REST API for a UI not in the tree; the confirmations the skills require happen in the agent's conversation and leave no record).
