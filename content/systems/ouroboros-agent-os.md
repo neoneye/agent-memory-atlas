@@ -7,16 +7,15 @@ page_kind: system
 source_name: "Q00/ouroboros"
 source_url: https://github.com/Q00/ouroboros
 archive_name: "Q00--ouroboros"
-revision: 97098488bd003851e629584fcd52038bbbc7211e
-revision_url: https://github.com/Q00/ouroboros/commit/97098488bd003851e629584fcd52038bbbc7211e
-analyzed_at: 2026-09-14
-capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval"
+revision: 79a423e80f93d4acc2aa0ee5b98340e86a766476
+revision_url: https://github.com/Q00/ouroboros/commit/79a423e80f93d4acc2aa0ee5b98340e86a766476
+analyzed_at: 2026-09-19
+capabilities: "trust_state, scope_enforced, audit_log, negative_eval"
 capability_evidence:
-  trust_state: "the requirement candidate — a resolution state whose confirmed value cannot exist without an authority | src/ouroboros/core/requirement_candidate.py:37-38, :121, :150-162, src/ouroboros/auto/ledger.py:33 | `CandidateResolution` is `confirmed` or `needs_confirmation`, defaulting to the latter, and the ledger adds `weak` for a belief demoted by a higher-priority source. What makes it a state rather than a label is a validator that enforces the pairing in both directions: a confirmed candidate with `ConfirmationAuthority.NONE` raises, and an unconfirmed candidate that declares an authority raises too. A confirmation cannot be asserted without saying who confirmed it, and an authority cannot be attached to something unconfirmed | src/ouroboros/core tests"
+  trust_state: "the requirement candidate — a resolution state whose confirmed value cannot exist without an authority | src/ouroboros/core/requirement_candidate.py:37-38, :121, :152-162, src/ouroboros/auto/ledger.py:33 | `CandidateResolution` is `confirmed` or `needs_confirmation`, defaulting to the latter, and the ledger adds `weak` for a belief demoted by a higher-priority source. What makes it a state rather than a label is a validator that enforces the pairing in both directions: a confirmed candidate with `ConfirmationAuthority.NONE` raises, and an unconfirmed candidate that declares an authority raises too. A confirmation cannot be asserted without saying who confirmed it, and an authority cannot be attached to something unconfirmed | src/ouroboros/core tests"
   scope_enforced: "session events — a project identity derived from the project root, revalidated, and refused rather than repaired when it does not match | src/ouroboros/orchestrator/session.py:133, :170, :193, :862, src/ouroboros/project_map.py:280 | a `project_id` is derived from the project root and written onto session events, and `_validate_project_identity_publication` compares the evidence identity against the project identity before publication, revalidating and raising when the two differ. The failure direction is the informative part: a partial or mismatched identity is rejected rather than reconstructed, so a session cannot publish under an identity it cannot prove | tests/unit/test_project_map.py:425"
   audit_log: "the event stream — immutable events under a past-tense naming contract | src/ouroboros/events/base.py:1-5, src/ouroboros/events/interview.py, src/ouroboros/events/hitl.py | the system is event-sourced and the base class says what that buys: every event inherits from `BaseEvent`, events are immutable frozen models, and the naming convention is `dot.notation.past_tense` so a record describes something that happened rather than an intention. Mutations to the ledger and the interview arrive as appended events rather than in-place edits. The limit worth stating is what the events carry — `events/interview.py` writes previews rather than content, so the stream records that a turn happened and not everything said in it | src/ouroboros/events tests"
   negative_eval: "the human-input contract — a secret-shaped payload must not reach persistence, with a false-positive control beside it | src/ouroboros/core/hitl_contract.py:20-40, tests/unit/core/test_hitl_contract.py:183, :198 | the contract holds a frozen set of secret key names and suffixes, and `test_request_rejects_secret_like_persisted_payload` asserts that a `HumanInputRequest` carrying one raises with a `secret-like` message rather than persisting. The case cannot pass by being over-eager, because `test_request_allows_secret_marker_words_in_plain_values` requires the word to be accepted when it appears as ordinary text — the two together pin the boundary rather than one direction of it | tests/unit/core/test_hitl_contract.py"
-  human_review: "the interview and the blocked entry — a person answer carries higher authority than an inference and retires a blocker | src/ouroboros/auto/ledger.py:14-69, :293-320, src/ouroboros/cli/main.py:104 | `ooo seed` generates a Seed from an interview, and the ledger separates two things most stores merge: `LedgerSource` classifies what kind of content-authority a decision rests on — `USER_GOAL` and `USER_PREFERENCE` sit above inference in `SOURCE_PRIORITY` — while `DecisionProvenance.USER_CONFIRMED` records that a person confirmed it. `resolve_conflict` is deterministic and takes no model judgment: same value, then BLOCKED handling, then source priority, then confidence, then an exact tie becomes `CONFLICTING`. The human surface is the blocked entry, which the function documents as remaining a human-decision surface, retired by a later non-blocked same-key answer. The caveat belongs with the mark: an auto pipeline can answer in the person place, and the driver records which source answered rather than presenting the two as equivalent | src/ouroboros/auto tests"
 stack_storage: "sqlite, files"
 stack_retrieval: ""
 stack_source: "reviewed"
@@ -27,7 +26,7 @@ matrix:
   write: "Synchronous. An answer is classified at the moment it is recorded, conflicts resolve against a fixed source-priority ladder with no model in the loop, and the entry is durable before the turn continues"
   update_delete: "Append-with-demotion — a superseded entry becomes WEAK and keeps its value and a written rationale. Artifacts expire by TTL and per-contract retention, and a replay after pruning raises rather than return empty"
   scoping: "A `project_id` derived from the project root and validated against it on construction, written onto session events and applied as a read-path filter; a partial identity is rejected, not repaired"
-  integration: "An MCP server plus a CLI, driven from fourteen named agent hosts; the harness talks to the ledger through tools, and the human answers the interview"
+  integration: "An MCP server plus a CLI, driven from fourteen named agent hosts; the harness talks to the ledger through tools, and the interview is answered through a surface a person and the auto driver both reach"
   background: "None over memory. Evaluation and execution run as jobs; nothing re-reads or rewrites the store on a schedule"
   trust: "Two orthogonal axes — what authority a value rests on, and how the decision was reached — with the two model-derived provenances gated behind an ambiguity threshold before a spec may execute"
   strengths: "An adopted fact is structurally barred from becoming a requirement, and four separate render surfaces are pinned by one parametrized test asserting the fact never appears"
@@ -106,9 +105,9 @@ A candidate is confirmed by the user or by repository evidence, or it waits, or
 it conflicts. Confirmed candidates promote into a Seed — and the Seed is frozen,
 never mutated. A belief stops being one in exactly three ways: it is **demoted**
 to `WEAK` by a higher-priority source, with the old value and a rationale
-retained; it is **blocked**, which is a human-decision surface rather than a
-terminal state, and an earlier transient blocker can be retired by a later
-same-key answer; or its acceptance criterion is **revised** in the next
+retained; it is **blocked**, which the resolver documents as a human-decision surface
+rather than a terminal state, and an earlier transient blocker can be retired by
+a later same-key answer — including one the calling agent supplies itself; or its acceptance criterion is **revised** in the next
 generation through an `ACPatch` of `keep` / `revise` / `add`. Deletion is absent
 by construction — `remove` was deliberately left out of the v1 patch vocabulary
 because dropping an AC would shift the positional identity that regression
@@ -446,6 +445,29 @@ have different lifetimes. And **the global database is unbounded**: `events`
 accumulates across every project on the machine forever, with no retention path,
 which is a defensible choice for an audit log and an undocumented one for disk.
 
+A fourth gap is narrower and worth naming precisely: **`USER_CONFIRMED` does
+not mean a person confirmed it.** A terminal entrance does exist — `ooo init`
+reads each answer with `multiline_prompt_async("Your response")`
+(`cli/commands/init.py:405`) and stamps `actor="local-user"` on the HITL event at
+`:237`. But it is one entrance of several. `ouroboros_pm_interview` declares
+`answer` and `answers` as ordinary tool parameters
+(`mcp/tools/pm_handler.py:447`, `:458`), and
+`classify_answer_provenance` labels any string carrying no `[from-*]` prefix as
+provenance `"user"`. The module states the limit itself: the split the field
+encodes is decision versus "adopted fact, not human vs. machine"
+(`bigbang/answer_provenance.py:77`), which is why the auto driver's own
+`[from-auto]` answers (`auto/answerer.py:113`) classify as `"user"` too.
+Downstream, `_EXPLICIT_GOAL_SECTION_PATTERNS` (`auto/ledger.py:766-790`) assigns
+`LedgerSource.USER_GOAL` by regex on section labels in the transcript text, and
+`ledger.py:145` derives `DecisionProvenance.USER_CONFIRMED` from that source. So
+the label is a property of where text sat in a document, not of who wrote it.
+The second classifier the design was built to retire makes the same point from
+the other end: the default return of `_classify_interview_answer_source`
+(`mcp/tools/authoring_handlers.py:766-775`), for any answer with no recognised
+prefix, is `"human"`. None of this weakens the two-axis design, which does what
+it was built for — separating a timeout default from a confirmation. It means
+the axis distinguishes *how a decision was reached*, not *who reached it*.
+
 Backup and replication are absent by design; the store is a file the user owns.
 
 ## 10. Tests, Evals, and Benchmarks
@@ -641,6 +663,8 @@ most dedicated memory stores in this atlas manage across their whole schema.
 `tests/canonical/evidence/issue-1450-20260715-162447-736593/REPORT.md`.
 
 ## History
+
+**2026-09-19** — [`79a423e80f93d4acc2aa0ee5b98340e86a766476`](https://github.com/Q00/ouroboros/commit/79a423e80f93d4acc2aa0ee5b98340e86a766476) — re-read. `human_review` **withdrawn**; the other four marks stand at verified anchors. The withdrawal is a stricter reading of the same code, not an upstream change. The previous entry kept the mark and recorded the caveat beside it — "an auto pipeline can answer in the person place". Under the question the rubric now asks — does a memory wait in a state until an actor the producing agent cannot be resolves it — that caveat is the answer. A person can answer at a terminal through `ooo init`, but nothing downstream requires that entrance: the same interview is answerable through the `answer` / `answers` parameters of `ouroboros_pm_interview`, `classify_answer_provenance` labels an unprefixed string `"user"` by default, and the module says in its own words that the split is "not human vs. machine". `LedgerSource.USER_GOAL` is then assigned by a regex over section labels in the transcript, and `USER_CONFIRMED` derived from it. Section 9 now carries the full trace as a fourth gap. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-14** — [`97098488bd003851e629584fcd52038bbbc7211e`](https://github.com/Q00/ouroboros/commit/97098488bd003851e629584fcd52038bbbc7211e) — re-read, 172 commits past the previous pin. All five marks stand. `human_review` was re-tested against the approver rather than carried forward, because the same mark was withdrawn from another system in this corpus the same day for resting on a display-only surface. It survives here on a different footing: `resolve_conflict` is deterministic and takes no model judgment, and the place a person enters is the blocked entry, which the function documents as a human-decision surface retired by a later non-blocked same-key answer. Behind it the ledger separates `LedgerSource`, the kind of content-authority a decision rests on, from `DecisionProvenance.USER_CONFIRMED`, and puts `USER_GOAL` and `USER_PREFERENCE` above inference in the priority order — so a person answer outranks a guess rather than merely being labelled. The caveat is recorded with the mark: an auto pipeline can answer in the person place, and the driver records which source answered instead of treating the two as the same. Screened again first; nothing was installed and no suite was run.
 
