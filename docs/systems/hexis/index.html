@@ -117,7 +117,7 @@ suppressing.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/quixiai--hexis" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -125,7 +125,7 @@ suppressing.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -326,10 +326,37 @@ meaning different things: <code>status = 'rejected'</code> is the
 system's position, <code>review_status = 'rejected'</code> is a
 person's. Keeping them apart is exactly the separation the mark exists
 to reward.</p>
-<p><strong>Human review — awarded.</strong>
-<code>user_model_review_events</code> is a mutation surface, not a
-display: a decision from a four-value vocabulary, an actor, a note, and
-the prior states. <code>reviewed_by</code> on the claim names who.</p>
+<p><strong>Human review — withheld, and the review surface is not the
+reason.</strong> <code>user_model_review_events</code> is a genuine
+mutation surface rather than a display: a decision from a four-value
+vocabulary, an actor, a note, and the prior states, with
+<code>reviewed_by</code> on the claim naming who, reached through
+<code>POST /api/user-model/claims/{id}/review</code>. That part is real.
+The mark fails on the producer test, because approving a claim is not
+the only way one becomes <code>approved</code>.</p>
+<p>Follow the synthesis path. <code>record_user_model_synthesis</code>
+walks the claims it was handed and passes
+<code>COALESCE(NULLIF(claim_item-&gt;&gt;'review_status', ''), 'pending_review')</code>
+into <code>upsert_user_model_claim</code>, whose
+<code>review_value</code> is then written to the column with no check
+beyond the four-value <code>CHECK</code> — which accepts
+<code>approved</code>. The claims it was handed are the model's own
+synthesis output: <code>connector_cognition</code> takes
+<code>llm_by_item[source_item_id]</code> and serialises it straight into
+the call. Between the two sits <code>_dedupe_claims</code>, which opens
+<code>normalized = dict(claim)</code> and then normalises the fields it
+knows about. It is a copy, not a whitelist, so a key the model emitted
+and the code never anticipated — <code>review_status</code> among them —
+travels through untouched.</p>
+<p>The default is <code>pending_review</code> and nothing points a model
+at the field, so this is a latent path rather than an observed
+behaviour. But the state it sets is the one
+<code>get_approved_user_model_context</code> filters on, so a
+synthesised claim that carries <code>"review_status": "approved"</code>
+enters the agent's context without a person, and the review queue never
+sees it. A four-value column that the producer can fill is a schema
+boundary, not a review gate. Normalising into a fresh dict with the six
+known keys, rather than copying the model's, would close it.</p>
 <p><strong>Audit log — awarded.</strong> The review events table is
 append-only per claim with <code>prior_*</code> columns, and
 <code>tool_executions</code>/<code>workflow_executions</code> cover the
@@ -579,6 +606,30 @@ hidden prompt, or subjective rubric"</em></td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/quixiai/hexis/commit/7423622a276382f617196b5d8925bdcd7c8311ff"><code class="commit-id" title="7423622a276382f617196b5d8925bdcd7c8311ff">7423622a…</code></a>
+— re-read at the same commit; <code>main</code> has not moved since 1
+September 2026, so the correction is this report's. <strong>Human review
+withdrawn.</strong> The review surface is real —
+<code>review_user_model_claim</code>, an events table with prior states,
+an HTTP endpoint — but it is not the only way a claim reaches
+<code>approved</code>. <code>record_user_model_synthesis</code> reads
+<code>claim_item-&gt;&gt;'review_status'</code> out of the claims it is
+given and passes it to <code>upsert_user_model_claim</code>, which
+writes it subject only to a four-value <code>CHECK</code> that accepts
+<code>approved</code>; those claims are the LLM's synthesis output, and
+<code>_dedupe_claims</code> copies each one with
+<code>normalized = dict(claim)</code> before normalising the fields it
+knows, so an unanticipated key survives.
+<code>get_approved_user_model_context</code> filters on exactly that
+column, so a synthesised claim carrying
+<code>"review_status": "approved"</code> would enter the agent's context
+with no person in the loop. The default is <code>pending_review</code>
+and nothing points a model at the field, so it is a latent path rather
+than an observed behaviour — but a status the producer can set is a
+schema boundary, not a review gate. <strong>Trust state is
+strengthened</strong> in the same reading and now cites the read path
+that makes it a withholding rather than a ranking. Three marks.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/quixiai/hexis/commit/7423622a276382f617196b5d8925bdcd7c8311ff"><code class="commit-id" title="7423622a276382f617196b5d8925bdcd7c8311ff">7423622a…</code></a>
 — re-read, 673 files and 129,866 insertions past the previous pin in a

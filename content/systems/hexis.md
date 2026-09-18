@@ -9,12 +9,11 @@ source_url: https://github.com/quixiai/hexis
 archive_name: "quixiai--hexis"
 revision: 7423622a276382f617196b5d8925bdcd7c8311ff
 revision_url: https://github.com/quixiai/hexis/commit/7423622a276382f617196b5d8925bdcd7c8311ff
-analyzed_at: 2026-09-11
-capabilities: "trust_state, bitemporal, human_review, audit_log"
+analyzed_at: 2026-09-18
+capabilities: "trust_state, bitemporal, audit_log"
 capability_evidence:
   bitemporal: "the memory table and its history functions | db/migrations/0234_temporal_memory_history.sql and db/46c_functions_memory_supersessions.sql:66,:158 | `memory_epistemic_state_as_of(p_as_of)` reconstructs which memories were valid and which supersessions were in force at an instant, over `valid_from`/`valid_until` that a caller may set through `p_superseded_at` rather than the clock | tests/db/test_temporal_memory_history.py"
-  trust_state: "the memory table | db/00_tables.sql | two CHECK-constrained axes, `status` and `review_status`, filtered on the read path | tests/db/test_memory_triage.py"
-  human_review: "triage | `review_status` of pending_review, approved, rejected or superseded | a person adjudicates a proposed memory before it becomes current | tests/db/test_memory_triage.py"
+  trust_state: "the memory table and the user-model claims table | db/00_tables.sql, db/85_functions_connector_cognition.sql:90-91, :590-615 | two CHECK-constrained axes, `status` and `review_status`, filtered on the read path — `get_approved_user_model_context` selects `WHERE status = 'active' AND review_status = 'approved'`, so a claim in `pending_review` or `rejected` is absent from the agent's context rather than ranked below it, and `review_user_model_claim` is a live writer moving claims between the four states | tests/db/test_memory_triage.py, tests/db/test_cognition_v2.py"
   audit_log: "supersessions | db/46c_functions_memory_supersessions.sql | an append-only supersession record carrying who, when and the reverting resolution | tests/db/test_memory_supersessions.py"
 stack_storage: "postgres"
 stack_retrieval: "graph"
@@ -219,9 +218,34 @@ appearing in each and meaning different things: `status = 'rejected'` is the
 system's position, `review_status = 'rejected'` is a person's. Keeping them
 apart is exactly the separation the mark exists to reward.
 
-**Human review — awarded.** `user_model_review_events` is a mutation surface,
-not a display: a decision from a four-value vocabulary, an actor, a note, and
-the prior states. `reviewed_by` on the claim names who.
+**Human review — withheld, and the review surface is not the reason.**
+`user_model_review_events` is a genuine mutation surface rather than a display:
+a decision from a four-value vocabulary, an actor, a note, and the prior states,
+with `reviewed_by` on the claim naming who, reached through
+`POST /api/user-model/claims/{id}/review`. That part is real. The mark fails on
+the producer test, because approving a claim is not the only way one becomes
+`approved`.
+
+Follow the synthesis path. `record_user_model_synthesis` walks the claims it was
+handed and passes
+`COALESCE(NULLIF(claim_item->>'review_status', ''), 'pending_review')` into
+`upsert_user_model_claim`, whose `review_value` is then written to the column
+with no check beyond the four-value `CHECK` — which accepts `approved`. The
+claims it was handed are the model's own synthesis output: `connector_cognition`
+takes `llm_by_item[source_item_id]` and serialises it straight into the call.
+Between the two sits `_dedupe_claims`, which opens `normalized = dict(claim)`
+and then normalises the fields it knows about. It is a copy, not a whitelist, so
+a key the model emitted and the code never anticipated — `review_status` among
+them — travels through untouched.
+
+The default is `pending_review` and nothing points a model at the field, so this
+is a latent path rather than an observed behaviour. But the state it sets is the
+one `get_approved_user_model_context` filters on, so a synthesised claim that
+carries `"review_status": "approved"` enters the agent's context without a
+person, and the review queue never sees it. A four-value column that the
+producer can fill is a schema boundary, not a review gate. Normalising into a
+fresh dict with the six known keys, rather than copying the model's, would close
+it.
 
 **Audit log — awarded.** The review events table is append-only per claim with
 `prior_*` columns, and `tool_executions`/`workflow_executions` cover the action
@@ -395,6 +419,8 @@ Run from the root of the checkout at the pinned commit.
 | The corpus is hash-pinned | `grep -n "EXPECTED_DATASET_SHA256" evals/memory_benchmark/model.py` | Declared and checked against `dataset_sha256()` |
 
 ## History
+
+**2026-09-18** — [`7423622a276382f617196b5d8925bdcd7c8311ff`](https://github.com/quixiai/hexis/commit/7423622a276382f617196b5d8925bdcd7c8311ff) — re-read at the same commit; `main` has not moved since 1 September 2026, so the correction is this report's. **Human review withdrawn.** The review surface is real — `review_user_model_claim`, an events table with prior states, an HTTP endpoint — but it is not the only way a claim reaches `approved`. `record_user_model_synthesis` reads `claim_item->>'review_status'` out of the claims it is given and passes it to `upsert_user_model_claim`, which writes it subject only to a four-value `CHECK` that accepts `approved`; those claims are the LLM's synthesis output, and `_dedupe_claims` copies each one with `normalized = dict(claim)` before normalising the fields it knows, so an unanticipated key survives. `get_approved_user_model_context` filters on exactly that column, so a synthesised claim carrying `"review_status": "approved"` would enter the agent's context with no person in the loop. The default is `pending_review` and nothing points a model at the field, so it is a latent path rather than an observed behaviour — but a status the producer can set is a schema boundary, not a review gate. **Trust state is strengthened** in the same reading and now cites the read path that makes it a withholding rather than a ranking. Three marks.
 
 **2026-09-11** — [`7423622a276382f617196b5d8925bdcd7c8311ff`](https://github.com/quixiai/hexis/commit/7423622a276382f617196b5d8925bdcd7c8311ff) — re-read, 673 files and 129,866 insertions past the previous pin in a single commit. **`bitemporal` is added.** Two new migrations build it: `0213_memory_supersessions.sql` gives `memories` a `valid_from`/`valid_until` pair under a `CHECK (valid_until IS NULL OR valid_until >= valid_from)`, and `0234_temporal_memory_history.sql` adds `memory_epistemic_state_as_of(p_as_of)`, which reconstructs at an instant both which memories were valid and which supersessions were in force — including the clause for a supersession later reverted, `(s.status = 'reverted' AND s.resolved_at > p_as_of)`. The validity clock is genuinely separate from the record clock: `effective_at := COALESCE(p_superseded_at, CURRENT_TIMESTAMP)` lets a caller say when a belief *stopped being true* rather than when the row was written, and a guard raises if that instant precedes `valid_from`. The query-side `COALESCE(valid_from, created_at)` is a fallback in the read, not a collapse at the write, which is the correct shape. **The evaluation gap this report led on is largely closed.** The previous edition said *"no committed evaluation result was found … reconsolidation is a correction mechanism whose correctness is unmeasured."* `evals/memory_benchmark/` now ships 25 cases across five dimensions with no model judge, two baselines labelled `reference_baseline_not_a_product`, a hash-pinned corpus and a dated result: 96.33 overall against 82.33 for an append-only transcript and 32.0 for a 30-day window, with contradiction detection at 85 against 55 and stale-belief resistance at 100 against 60. What remains unmeasured is the individual verdict rather than the behaviour it produces, and five cases per dimension is a wide error bar the project states rather than hides. Screened before reading: nine findings; nothing was installed or run.
 
