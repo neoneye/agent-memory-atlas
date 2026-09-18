@@ -1401,11 +1401,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`ean-agentos`](../systems/ean-agentos/)
 - Best idea: deterministic capture. Commits via a git post-commit hook, bash commands with exit codes and durations, tool calls and file versions all arrive because a hook fired rather than because a model judged the moment important — and `errors_solutions` models the attempt, with `solution_worked` and an `attempts` counter, not just the conclusion.
-- Biggest risk: both recall paths are `ORDER BY solution_worked DESC` rather than a `WHERE`, so a fix that did not work is returned one row lower in the same shape as one that did. For a project whose pitch is stopping repeated bug fixes, the guard against repeating a known-bad fix is the model reading a boolean in the result row.
+- Biggest risk: `project_path` is written on every error row and applied by one of the five paths that read the table. `mem search`, the HTTP search and the session-start context each return solved errors from every project on the machine, and the one query that does scope matches on a path prefix, so `/home/u/app` also matches `/home/u/app-private`.
+- Second risk: the two searches a person invokes are `ORDER BY solution_worked DESC` rather than a `WHERE`, so a fix that did not work comes back one row lower in the same shape as one that did — though the daemon's automatic injections do filter it out, which is the opposite of what this report first said.
 - Most reusable component: the `errors_solutions` schema, and the hook installer's mark-and-restore discipline — it backs up another program's settings, marks its own entries, and removes exactly those on uninstall.
-- Maturity impression: 51 commits between 16 and 19 March 2026 and nothing since; 59 tests named by build phase rather than by behaviour, and none named for the error-recall path the product is built around.
+- Maturity impression: 51 commits between 16 and 19 March 2026 and nothing since; 458 cases across 22 executable test scripts that start their own database and API, named by build phase rather than by behaviour — and not one asserting that another project's errors stay out of a result.
 - Study when: you want capture that does not depend on an extraction pass noticing, or a schema that records what was tried and failed rather than only what worked.
-- Do not copy when: you need the failure withheld rather than demoted, or you are storing shell output — `bash_history` keeps `command`, `output` and `error_output` verbatim with no secret scanning found.
+- Do not copy when: you run more than one project against one store, or you are storing shell output — `bash_history` keeps `command`, `output` and `error_output` verbatim with no secret scanning found.
 
 
 ### [`m-flow`](../systems/m-flow/)

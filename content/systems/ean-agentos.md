@@ -9,18 +9,20 @@ source_url: https://github.com/eanai-ro/ean-agentos
 archive_name: "eanai-ro--ean-agentos"
 revision: 0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6
 revision_url: https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6
-analyzed_at: 2026-08-02
-capabilities: "scope_enforced"
+analyzed_at: 2026-09-18
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the branch and project filters on the event stream, asserted against a store seeded in the same run | tests/test_phase_10b.py:268-284, tests/test_phase_12a.py:352-368 | test_phase_10b creates its own database and API, then asserts in one file that `/api/branches/replay?branch=feature-ui` returns a non-empty event list and that `/api/branches/replay?branch=empty-branch` returns `len(events) == 0` — the same endpoint over the same populated store, so the empty result is a scope refusal and not an empty index. test_phase_12a adds two more against a store it seeds itself: `/api/events?project=/nonexistent/project` and `/api/events?branch=nonexistent-xyz-999` each assert `count == 0` while the real project path returns events earlier in the same script | the cases are executable scripts driving a Flask app they start themselves, not pytest functions, so `pytest tests/` collects almost none of them; and they assert on the event stream rather than on `errors_solutions`, where no committed case asserts that another project's errors stay out — which is the absence that costs this system `scope_enforced`"
 stack_storage: "sqlite"
 stack_retrieval: ""
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Depends on the table — the distinctive one is an `errors_solutions` row: an error, its stack trace, a fix, and whether the fix worked"
   storage: "One SQLite database with roughly fourteen base tables and fifteen migrations, plus an embeddings table"
   retrieval: "`LIKE` matching over error message, type, stack trace and tags, ordered by `solution_worked` then recency"
   write: "Deterministic capture from agent hooks, a git post-commit hook, and explicit CLI calls; no LLM on the capture path for errors"
   update_delete: "None for errors. `attempts` increments and `solution_worked` is set; nothing is retired"
-  scoping: "`project_path` and `session_id` on nearly every table, and a project filter on the dashboard and search paths"
+  scoping: "`project_path` and `session_id` on nearly every table, and applied on one of the five paths that read the errors table — the dashboard, and only when the caller asks"
   integration: "Hooks installed into Claude Code, Gemini CLI, Codex and Kimi settings, plus an MCP server and a local HTTP API"
   background: "A memory daemon, an auto-summarizer, and a transcript reconciler"
   trust: "`solution_worked` and a `quality_score` on reusable patterns; neither withholds anything from retrieval"
@@ -60,9 +62,31 @@ ORDER BY solution_worked DESC, resolved_at DESC LIMIT ?     -- scripts/error_db.
 ORDER BY resolved DESC, solution_worked DESC LIMIT ?        -- scripts/universal_api.py:843
 ```
 
-The only `WHERE solution_worked = ?` in the tree is in `scripts/web_server.py:498`,
-a filter on the human dashboard. So a failed fix is demoted one position and
-handed to the agent with the rest.
+**But those are the paths a person invokes, and they are not the paths that feed
+the model.** Both of the daemon's automatic injections filter the flag rather
+than sorting on it:
+
+```sql
+WHERE solution IS NOT NULL AND solution_worked = 1                  -- memory_daemon.py:1159, session-start context
+WHERE error_message LIKE ? AND solution IS NOT NULL AND solution_worked = 1
+                                                                    -- memory_daemon.py:1822, first-prompt pre-fetch
+```
+
+`get_memory_context` is called once per session at `memory_daemon.py:1292` and
+its output is `print`ed as the hook's response, which is how memory reaches the
+agent at all. So the accurate statement is narrower than the one this report
+made: a failed fix is excluded from everything the agent is handed
+automatically, and demoted one position in the two searches a person or a tool
+runs on purpose — `mem search` and the HTTP endpoint. `WHERE solution_worked`
+also appears in `dashboard_api.py:1281`, `error_db.py:162` and
+`auto_summarizer.py:322`; the earlier claim that `web_server.py:498` held the
+only one was wrong.
+
+The pre-fetch is worth one more sentence, because it does nothing. It runs the
+query, builds a `hints` list of the three matches — and then logs the count.
+`hints` is assigned at `memory_daemon.py:1828`, appended to at `:1830`, and read
+nowhere; the block's own comment calls it a *"PROACTIVE CONTEXT PRE-FETCH"* and
+the context is discarded before it reaches the prompt.
 
 That is defensible — *"we tried this and it did not work"* is genuinely useful,
 and often more useful than silence — and it is worth stating as a design choice
@@ -187,10 +211,34 @@ high precision where an embedding would blur two different failures with similar
 wording. The cost is the usual one — a rephrased or localised error message
 misses entirely.
 
-**`scope_enforced` is granted.** `project_path` and `session_id` appear on nearly
-every table, and the search and dashboard paths filter by project. It is a
-single-user local store, so the mark certifies what it says it certifies: the key
-reaches the query.
+**`scope_enforced` is withdrawn.** The first reading granted it on the strength
+of the columns; tracing the key through the reads finds it on almost none of
+them. `project_path` is written on the `errors_solutions` row at capture, and
+five paths read that table:
+
+| Read path | project filter |
+| --- | --- |
+| `scripts/dashboard_api.py:1276` — `GET /api/errors` | yes, `AND project_path = ?`, and only when the caller passes `?project=` |
+| `scripts/universal_api.py:842` — the HTTP search | no |
+| `scripts/error_db.py:44` — `search_error`, behind `mem search` | no |
+| `scripts/memory_daemon.py:1159` — the session-start context | no |
+| `scripts/memory_daemon.py:1822` — the first-prompt pre-fetch | no |
+
+One of five, optional, on the dashboard. The three paths that feed a model —
+`mem search`, the HTTP search and the session context — return solved errors from
+every project on the machine.
+
+The one leg that does scope widens as it goes. `get_memory_context`'s message
+query is `WHERE project_path = ? OR project_path LIKE ?` with the second
+parameter built as `f"{project_path}%"`, so a session in `/home/u/app` also
+matches `/home/u/app-private`. A prefix on a filesystem path is not a
+partition. Its sibling statistics line — sessions, messages and solved-error
+counts — is computed with no filter at all, so every session opens by announcing
+the size of every project's memory.
+
+The mark certifies that a stored scope key is applied as a filter on the read
+path rather than merely carried as a tag. On the table this system is built
+around, it is carried as a tag.
 
 ## 7. Write Mechanics
 
@@ -243,17 +291,35 @@ four-day development window would not have surfaced.
 
 ## 10. Tests, Evals, and Benchmarks
 
-59 test functions across files named by phase — `test_phase_10a`, `test_phase_11b`,
-`test_phase_12a` — plus `test_knowledge_extractor.py` and a `test_full.sh`. The
-README badge claims 48 passing. I did not run them; the suite expects a database
-and, in places, a running API.
+**The suite is roughly eight times the size the first reading reported.** There
+are 59 `def test_` functions, which is what that reading counted — and 458
+`run("name", fn)` invocations, which is where the substance is. Each file is an
+executable script: it creates its own SQLite database, starts a Flask app on its
+own port where the endpoints need one, runs its numbered cases through a `run`
+wrapper that tallies pass and fail, and 21 of the 22 files end with
+`if failed: sys.exit(1)`. So they do fail properly — but `pytest tests/` collects
+almost none of them, because the cases are named `t26_empty_project`, not
+`test_...`. The README badge's number and the suite's real extent are measuring
+different things.
 
-Phase-numbered test files are worth reading as a signal: they track a build
-sequence rather than a behaviour, so a reader cannot tell from the names which
-properties are guarded. There is no test named for the error/solution recall path
-that the product is built around.
+That also corrects the claim that no test is named for the recall path: the
+`run` names include `mem search`, `create_resolution`, `compare resolutions
+differences` and `GET /api/events?type=agent_error filters correctly`.
 
-No benchmark, no eval, no committed retrieval result. `negative_eval` is withheld.
+**`negative_eval` is earned.** `tests/test_phase_10b.py` asserts at T13 that
+`/api/branches/replay?branch=feature-ui` returns a non-empty event list, and at
+T15 that the same endpoint with `branch=empty-branch` returns
+`len(events) == 0` — one store, one endpoint, two keys, so the empty result is a
+refusal rather than an empty index. `tests/test_phase_12a.py` adds T26 and T28,
+which assert `count == 0` for a nonexistent project path and a nonexistent
+branch against a database the script seeds itself.
+
+What no case asserts is the one this system most needs: that another project's
+errors stay out of a result set. That absence is the same one that costs it
+`scope_enforced` in section 6, and the two are the same defect seen from the two
+ends — no filter, and nothing that would have noticed.
+
+No benchmark, no eval, no committed retrieval result.
 
 ## 11. For Your Own Build
 
@@ -349,5 +415,13 @@ work" heading would keep their value and remove the ambiguity.
 | `mcp-server/kimi_memory_server.py` | MCP surface |
 
 ## History
+
+**2026-09-18** — [`0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6`](https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6) — re-read at the same commit, and it moved a mark in each direction.
+
+**`scope_enforced` withdrawn.** The first reading granted it on the columns. `project_path` is written on every `errors_solutions` row and applied by one of the five paths that read the table — the dashboard, and only when the caller passes `?project=`. The three paths that feed a model return every project's errors. The one message query that does scope uses `project_path LIKE '<path>%'`, so a session in `/home/u/app` also matches `/home/u/app-private`, and the statistics line beside it counts every project's sessions and messages with no filter at all.
+
+**`negative_eval` awarded.** `test_phase_10b.py` asserts that the branch replay endpoint returns events for `feature-ui` and an empty list for `empty-branch` over the same seeded store, and `test_phase_12a.py` asserts a count of zero for a nonexistent project path and a nonexistent branch. The suite is also much larger than reported: 458 `run()` cases beside the 59 `def test_` functions the first reading counted, in executable scripts that start their own database and API and exit non-zero on failure.
+
+The report's thesis was corrected rather than dropped. Both of the daemon's automatic injections — the session-start context at `memory_daemon.py:1159` and the first-prompt pre-fetch at `:1822` — filter `solution_worked = 1`, so a failed fix never reaches the agent automatically; the demotion-not-removal behaviour belongs to `mem search` and the HTTP search, which a person or a tool invokes on purpose. The claim that `web_server.py:498` held the only `WHERE solution_worked` was wrong; there are four more. And the pre-fetch builds its `hints` list and logs only the count, so the proactive context is assembled and discarded before it reaches a prompt. `stack_source` goes from seeded to reviewed.
 
 **2026-08-02** — [`0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6`](https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6) — first reading.

@@ -117,7 +117,7 @@ worked — and returns the failed fixes anyway, one position lower.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-02</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/eanai-ro--ean-agentos" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -125,7 +125,7 @@ worked — and returns the failed fixes anyway, one position lower.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -162,10 +162,30 @@ this atlas model the <em>attempt</em> rather than the conclusion.</p>
 recall paths sort on the flag rather than filtering it:</p>
 <pre class="sql"><code>ORDER BY solution_worked DESC, resolved_at DESC LIMIT ?     -- scripts/error_db.py:52
 ORDER BY resolved DESC, solution_worked DESC LIMIT ?        -- scripts/universal_api.py:843</code></pre>
-<p>The only <code>WHERE solution_worked = ?</code> in the tree is in
-<code>scripts/web_server.py:498</code>, a filter on the human dashboard.
-So a failed fix is demoted one position and handed to the agent with the
-rest.</p>
+<p><strong>But those are the paths a person invokes, and they are not
+the paths that feed the model.</strong> Both of the daemon's automatic
+injections filter the flag rather than sorting on it:</p>
+<pre class="sql"><code>WHERE solution IS NOT NULL AND solution_worked = 1                  -- memory_daemon.py:1159, session-start context
+WHERE error_message LIKE ? AND solution IS NOT NULL AND solution_worked = 1
+                                                                    -- memory_daemon.py:1822, first-prompt pre-fetch</code></pre>
+<p><code>get_memory_context</code> is called once per session at
+<code>memory_daemon.py:1292</code> and its output is
+<code>print</code>ed as the hook's response, which is how memory reaches
+the agent at all. So the accurate statement is narrower than the one
+this report made: a failed fix is excluded from everything the agent is
+handed automatically, and demoted one position in the two searches a
+person or a tool runs on purpose — <code>mem search</code> and the HTTP
+endpoint. <code>WHERE solution_worked</code> also appears in
+<code>dashboard_api.py:1281</code>, <code>error_db.py:162</code> and
+<code>auto_summarizer.py:322</code>; the earlier claim that
+<code>web_server.py:498</code> held the only one was wrong.</p>
+<p>The pre-fetch is worth one more sentence, because it does nothing. It
+runs the query, builds a <code>hints</code> list of the three matches —
+and then logs the count. <code>hints</code> is assigned at
+<code>memory_daemon.py:1828</code>, appended to at <code>:1830</code>,
+and read nowhere; the block's own comment calls it a <em>"PROACTIVE
+CONTEXT PRE-FETCH"</em> and the context is discarded before it reaches
+the prompt.</p>
 <p>That is defensible — <em>"we tried this and it did not work"</em> is
 genuinely useful, and often more useful than silence — and it is worth
 stating as a design choice rather than a defect. The risk is in the
@@ -348,11 +368,62 @@ this use case: error messages are near-verbatim across recurrences, so
 exact-ish matching has high precision where an embedding would blur two
 different failures with similar wording. The cost is the usual one — a
 rephrased or localised error message misses entirely.</p>
-<p><strong><code>scope_enforced</code> is granted.</strong>
-<code>project_path</code> and <code>session_id</code> appear on nearly
-every table, and the search and dashboard paths filter by project. It is
-a single-user local store, so the mark certifies what it says it
-certifies: the key reaches the query.</p>
+<p><strong><code>scope_enforced</code> is withdrawn.</strong> The first
+reading granted it on the strength of the columns; tracing the key
+through the reads finds it on almost none of them.
+<code>project_path</code> is written on the
+<code>errors_solutions</code> row at capture, and five paths read that
+table:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Read path</th>
+<th>project filter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scripts/dashboard_api.py:1276</code> —
+<code>GET /api/errors</code></td>
+<td>yes, <code>AND project_path = ?</code>, and only when the caller
+passes <code>?project=</code></td>
+</tr>
+<tr>
+<td><code>scripts/universal_api.py:842</code> — the HTTP search</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>scripts/error_db.py:44</code> — <code>search_error</code>,
+behind <code>mem search</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>scripts/memory_daemon.py:1159</code> — the session-start
+context</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>scripts/memory_daemon.py:1822</code> — the first-prompt
+pre-fetch</td>
+<td>no</td>
+</tr>
+</tbody>
+</table></div>
+<p>One of five, optional, on the dashboard. The three paths that feed a
+model — <code>mem search</code>, the HTTP search and the session context
+— return solved errors from every project on the machine.</p>
+<p>The one leg that does scope widens as it goes.
+<code>get_memory_context</code>'s message query is
+<code>WHERE project_path = ? OR project_path LIKE ?</code> with the
+second parameter built as <code>f"{project_path}%"</code>, so a session
+in <code>/home/u/app</code> also matches
+<code>/home/u/app-private</code>. A prefix on a filesystem path is not a
+partition. Its sibling statistics line — sessions, messages and
+solved-error counts — is computed with no filter at all, so every
+session opens by announcing the size of every project's memory.</p>
+<p>The mark certifies that a stored scope key is applied as a filter on
+the read path rather than merely carried as a tag. On the table this
+system is built around, it is carried as a tag.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes are hook-driven and synchronous. Agent tool calls, bash
 commands and file edits are captured by the installed hooks; commits are
@@ -403,19 +474,39 @@ does not answer, and one the four-day development window would not have
 surfaced.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>59 test functions across files named by phase —
-<code>test_phase_10a</code>, <code>test_phase_11b</code>,
-<code>test_phase_12a</code> — plus
-<code>test_knowledge_extractor.py</code> and a
-<code>test_full.sh</code>. The README badge claims 48 passing. I did not
-run them; the suite expects a database and, in places, a running
-API.</p>
-<p>Phase-numbered test files are worth reading as a signal: they track a
-build sequence rather than a behaviour, so a reader cannot tell from the
-names which properties are guarded. There is no test named for the
-error/solution recall path that the product is built around.</p>
-<p>No benchmark, no eval, no committed retrieval result.
-<code>negative_eval</code> is withheld.</p>
+<p><strong>The suite is roughly eight times the size the first reading
+reported.</strong> There are 59 <code>def test_</code> functions, which
+is what that reading counted — and 458 <code>run("name", fn)</code>
+invocations, which is where the substance is. Each file is an executable
+script: it creates its own SQLite database, starts a Flask app on its
+own port where the endpoints need one, runs its numbered cases through a
+<code>run</code> wrapper that tallies pass and fail, and 21 of the 22
+files end with <code>if failed: sys.exit(1)</code>. So they do fail
+properly — but <code>pytest tests/</code> collects almost none of them,
+because the cases are named <code>t26_empty_project</code>, not
+<code>test_...</code>. The README badge's number and the suite's real
+extent are measuring different things.</p>
+<p>That also corrects the claim that no test is named for the recall
+path: the <code>run</code> names include <code>mem search</code>,
+<code>create_resolution</code>,
+<code>compare resolutions differences</code> and
+<code>GET /api/events?type=agent_error filters correctly</code>.</p>
+<p><strong><code>negative_eval</code> is earned.</strong>
+<code>tests/test_phase_10b.py</code> asserts at T13 that
+<code>/api/branches/replay?branch=feature-ui</code> returns a non-empty
+event list, and at T15 that the same endpoint with
+<code>branch=empty-branch</code> returns <code>len(events) == 0</code> —
+one store, one endpoint, two keys, so the empty result is a refusal
+rather than an empty index. <code>tests/test_phase_12a.py</code> adds
+T26 and T28, which assert <code>count == 0</code> for a nonexistent
+project path and a nonexistent branch against a database the script
+seeds itself.</p>
+<p>What no case asserts is the one this system most needs: that another
+project's errors stay out of a result set. That absence is the same one
+that costs it <code>scope_enforced</code> in section 6, and the two are
+the same defect seen from the two ends — no filter, and nothing that
+would have noticed.</p>
+<p>No benchmark, no eval, no committed retrieval result.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <p><strong>Capture from hooks, not from judgement.</strong> Commits,
@@ -547,6 +638,42 @@ learning</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6"><code class="commit-id" title="0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6">0c5e0ecf…</code></a>
+— re-read at the same commit, and it moved a mark in each direction.</p>
+<p><strong><code>scope_enforced</code> withdrawn.</strong> The first
+reading granted it on the columns. <code>project_path</code> is written
+on every <code>errors_solutions</code> row and applied by one of the
+five paths that read the table — the dashboard, and only when the caller
+passes <code>?project=</code>. The three paths that feed a model return
+every project's errors. The one message query that does scope uses
+<code>project_path LIKE '&lt;path&gt;%'</code>, so a session in
+<code>/home/u/app</code> also matches <code>/home/u/app-private</code>,
+and the statistics line beside it counts every project's sessions and
+messages with no filter at all.</p>
+<p><strong><code>negative_eval</code> awarded.</strong>
+<code>test_phase_10b.py</code> asserts that the branch replay endpoint
+returns events for <code>feature-ui</code> and an empty list for
+<code>empty-branch</code> over the same seeded store, and
+<code>test_phase_12a.py</code> asserts a count of zero for a nonexistent
+project path and a nonexistent branch. The suite is also much larger
+than reported: 458 <code>run()</code> cases beside the 59
+<code>def test_</code> functions the first reading counted, in
+executable scripts that start their own database and API and exit
+non-zero on failure.</p>
+<p>The report's thesis was corrected rather than dropped. Both of the
+daemon's automatic injections — the session-start context at
+<code>memory_daemon.py:1159</code> and the first-prompt pre-fetch at
+<code>:1822</code> — filter <code>solution_worked = 1</code>, so a
+failed fix never reaches the agent automatically; the
+demotion-not-removal behaviour belongs to <code>mem search</code> and
+the HTTP search, which a person or a tool invokes on purpose. The claim
+that <code>web_server.py:498</code> held the only
+<code>WHERE solution_worked</code> was wrong; there are four more. And
+the pre-fetch builds its <code>hints</code> list and logs only the
+count, so the proactive context is assembled and discarded before it
+reaches a prompt. <code>stack_source</code> goes from seeded to
+reviewed.</p>
 <p><strong>2026-08-02</strong> — <a
 href="https://github.com/eanai-ro/ean-agentos/commit/0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6"><code class="commit-id" title="0c5e0ecfdb971f8b38c9ffc0848ef9e33fec6da6">0c5e0ecf…</code></a>
 — first reading.</p>

@@ -4545,24 +4545,32 @@ versions all arrive because a hook fired rather than because a model
 judged the moment important — and <code>errors_solutions</code> models
 the attempt, with <code>solution_worked</code> and an
 <code>attempts</code> counter, not just the conclusion.</li>
-<li>Biggest risk: both recall paths are
+<li>Biggest risk: <code>project_path</code> is written on every error
+row and applied by one of the five paths that read the table.
+<code>mem search</code>, the HTTP search and the session-start context
+each return solved errors from every project on the machine, and the one
+query that does scope matches on a path prefix, so
+<code>/home/u/app</code> also matches
+<code>/home/u/app-private</code>.</li>
+<li>Second risk: the two searches a person invokes are
 <code>ORDER BY solution_worked DESC</code> rather than a
-<code>WHERE</code>, so a fix that did not work is returned one row lower
-in the same shape as one that did. For a project whose pitch is stopping
-repeated bug fixes, the guard against repeating a known-bad fix is the
-model reading a boolean in the result row.</li>
+<code>WHERE</code>, so a fix that did not work comes back one row lower
+in the same shape as one that did — though the daemon's automatic
+injections do filter it out, which is the opposite of what this report
+first said.</li>
 <li>Most reusable component: the <code>errors_solutions</code> schema,
 and the hook installer's mark-and-restore discipline — it backs up
 another program's settings, marks its own entries, and removes exactly
 those on uninstall.</li>
 <li>Maturity impression: 51 commits between 16 and 19 March 2026 and
-nothing since; 59 tests named by build phase rather than by behaviour,
-and none named for the error-recall path the product is built
-around.</li>
+nothing since; 458 cases across 22 executable test scripts that start
+their own database and API, named by build phase rather than by
+behaviour — and not one asserting that another project's errors stay out
+of a result.</li>
 <li>Study when: you want capture that does not depend on an extraction
 pass noticing, or a schema that records what was tried and failed rather
 than only what worked.</li>
-<li>Do not copy when: you need the failure withheld rather than demoted,
+<li>Do not copy when: you run more than one project against one store,
 or you are storing shell output — <code>bash_history</code> keeps
 <code>command</code>, <code>output</code> and <code>error_output</code>
 verbatim with no secret scanning found.</li>
