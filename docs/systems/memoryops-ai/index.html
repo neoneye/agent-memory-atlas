@@ -119,7 +119,7 @@ already computed, stored, and scoped to live rows only.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-13</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/patibandlavenkatamanideep--memoryops-ai" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -748,6 +748,30 @@ behavioural cross-tenant probe and its fail-closed modes),
 <li>Licence: <code>LICENSE</code> (MIT).</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/b357e90be763824494ca4eaa279803d26561b6af"><code class="commit-id" title="b357e90be763824494ca4eaa279803d26561b6af">b357e90b…</code></a>
+— re-read at the same commit; <code>main</code> has not moved. The
+<code>human_review</code> mark was re-tested against the <a
+href="../../methodology/atlas-rubric/#human-review-surface">narrowed
+rubric</a>, which nineteen of twenty-four marks failed elsewhere in the
+corpus, and <strong>it holds</strong> — the approving authority is
+established by an issuer rather than asserted by the caller.
+<code>parse_roles</code> maps a <em>token claim</em>,
+<code>permissions_for</code> maps roles to permissions, and the JWT
+provider verifies the signature against a JWKS url or a key with
+audience and issuer checked when configured; unknown role names are
+dropped silently so a typo cannot escalate. An agent whose token carries
+no <code>memory:approve:*</code> cannot mint one.</p>
+<p>Two things are added to the record. The separation of duties is
+sharper than it was described: <code>derive_patch_actions</code>
+decomposes a single PATCH into every action its body requests and
+authorizes each one separately, each recording its own witness — which
+is what stops <code>{"content": …, "status": "active"}</code> from
+editing under the approve permission. And the caveat that belongs beside
+the mark is the second auth provider: <code>TrustedHeaderProvider</code>
+reads the identity from a request header, which is an identity only as
+far as the proxy in front of it is trusted to set that header and to
+strip a client-supplied one.</p>
 <p><strong>2026-09-13</strong> — <a
 href="https://github.com/patibandlavenkatamanideep/memoryops-ai/commit/b357e90be763824494ca4eaa279803d26561b6af"><code class="commit-id" title="b357e90be763824494ca4eaa279803d26561b6af">b357e90b…</code></a>
 — re-read, four commits past the previous pin, and the memory engine is
