@@ -135,7 +135,7 @@ is not in scope</a> and the sections after it.</p>
 <p>Five findings, with the counts they rest on:</p>
 <ol type="1">
 <li><strong>Correction is the phase that goes unbuilt.</strong>
-52 systems of 580
+53 systems of 580
 carry a rejected-value tombstone — a record keyed on the <em>value</em>,
 so a later extraction cannot silently re-assert something already judged
 wrong. Almost everything else corrects by hiding a row, which stops a
@@ -328,7 +328,7 @@ has no delete. That is genuinely less than reviewing the service, and
 the difference should be read as a gap in the atlas rather than a
 finding about the products.</p>
 <p>Two consequences worth stating plainly. The atlas's headline counts —
-52 tombstones,
+53 tombstones,
 305 negative-eval suites — are
 counts <em>over inspectable code</em>, and a closed system could hold
 any of these mechanisms without this method ever knowing. And a
@@ -340,7 +340,7 @@ systems.</strong> If you read nothing else:</p>
 <ol type="1">
 <li><strong>Whether correction is possible at all.</strong> Almost
 everything can overwrite or supersede.
-52 of 580 systems
+53 of 580 systems
 carry a rejected-value tombstone — a record that extraction cannot bring
 back what was refused. This is the widest gap this atlas has found, and
 it is invisible on every benchmark. <em>Widest gap found</em>, not
@@ -30156,61 +30156,55 @@ contradicts</td>
 </tr>
 <tr>
 <td><code>scope-recall-hermes</code></td>
-<td>A <code>memories</code> row — content, summary, source, target
-(<code>user</code>, <code>memory</code>, <code>project</code>,
-<code>ops</code> or <code>general</code>), scope columns,
-<code>dedup_key</code>, and JSON metadata carrying lifecycle, memory
-type, confidence, importance, sensitivity, admission and review stamps —
-beside raw <code>journal_entries</code> kept as provenance, optional
-bitemporal <code>fact_claims</code>, and procedural playbooks</td>
-<td>One SQLite truth file with FTS5, a trigram and bigram lexical
-generation, entity, relation, feedback, journal, audit, purge and outbox
-tables; a vector companion in LanceDB by default, a brute-force SQLite
-table as fallback, or pgvector, rebuilt from truth through a durable
-outbox</td>
-<td>Current-turn hybrid: FTS5 BM25, trigram and bigram lanes for CJK,
-bounded LIKE, exact id, vector per accessible scope, and live-read
-Hermes curated files, blended 0.45/0.55 with BM25 and RRF terms, a
-vector-only admission floor, entity and freshness adjustments; top
-three, 600 characters, fenced as untrusted</td>
-<td>The agent's <code>scope_recall_store</code> writes a promoted row at
-once; every eligible turn is appended to a journal that a background LLM
-digest turns into <code>candidate</code> rows every two hours; optional
-structured fact actions write the claim ledger</td>
-<td><code>update</code> overwrites content in place; <code>forget</code>
-soft-archives, reversibly and audited; <code>merge</code> hard-deletes
-sources; hard delete needs maintenance mode; a two-phase privacy purge
-denies, then erases journal sources and redacts audit rows; archived
-values are not consulted by later writes</td>
-<td><code>scope_id</code> from platform, workspace, agent identity and
-user, plus session or chat and thread for <code>general</code> scratch;
-<code>scope_id IN (local, shared)</code> on every lexical lane and
-per-scope vector search re-checked against SQLite; memory disabled on a
-non-CLI runtime with no user id; an opt-in canonical identity map shares
-durable rows across platforms</td>
-<td>A Hermes <code>MemoryProvider</code> plugin with five hooks, a
-six-tool core profile and gated maintenance, developer and extension
-profiles, a CLI for install, managed upgrade, candidate review and a
-read-only browser</td>
-<td>A journal digest thread after staged turns, candidate
-auto-adjudication on a 24-hour claim, an advisory LLM review of held
-candidates, relation maintenance, vector outbox replay and bounded
-startup reconciliation</td>
-<td>A lifecycle field filtered on every recall lane, candidate by
-default for digest output, promoted only by a per-id review with a
-revision token; deterministic auto-archive of low-value types; an LLM
-second opinion that writes receipts and never a lifecycle</td>
-<td>Scope and lifecycle expressed as one SQL predicate each and applied
-on every lane, a vector companion that is re-checked against truth
-rather than trusted, transactional audit and outbox for every lifecycle
-move, and negative gates with positive controls re-run in the release
-check</td>
-<td>The model can promote its own candidates through the default tool
-profile, so the review gate is a convention; an archived or forgotten
-value is not remembered as rejected and returns as a new candidate;
-<code>update</code> overwrites without history or audit; the published
-LoCoMo run stores dialogue directly and never exercises the
-journal-to-candidate path</td>
+<td>A claim — subject, predicate, value and conditions — held as a chain
+of <code>claim_versions</code>, each with a state, a basis, a validity
+interval, a record interval and the exact source spans it quotes; beside
+it the <code>source_events</code> the claim was read out of, and
+episodes, artifacts and references built the same way</td>
+<td>One SQLite file as the only authority — <code>source_events</code>,
+<code>claims</code>, <code>claim_versions</code>,
+<code>evidence_links</code>, <code>deletion_operations</code> and the
+work queue, schema 1108 — with a vector companion in LanceDB holding
+metadata and a vector against an empty payload, deletable and
+rebuildable without losing a memory</td>
+<td>Five channels fused by reciprocal rank — exact reference, lexical
+projection, claim, recent and vector — then assembled into a packet with
+an explicit answerability verdict that can say the corpus cannot answer
+the question</td>
+<td>A turn is captured as a source event; a leased background work item
+consolidates it into claim proposals; each proposal is stored only if
+the span it quotes is literally present in the source, and a
+deterministic ladder decides whether it lands proposed or active</td>
+<td>A change appends a claim version and closes the previous one's
+record interval; nothing overwrites content or state. Deletion is one
+operation record applied in dependency order across sources, claims,
+evidence links, episode membership and the vector rows, with the derived
+layer fenced so a rebuild cannot resurrect it</td>
+<td>A <code>scope_id</code> bound from host identity and carried as
+<code>scope_id IN (allowed)</code> on every read; a vector hit is
+re-read from SQLite under the same predicate before it can enter the
+packet</td>
+<td>Host adapters rather than assumptions — a Hermes provider with seven
+tools and a Codex MCP server with nine, both read-mostly: the only write
+verbs are propose, revise and forget, and revise and forget must quote
+the session's own most recent human turn</td>
+<td>Durable work items with leases, attempt limits and at-most-once
+publication, for consolidation, embedding, projection rebuilds, purges
+and candidate evaluation; a crashed pass loses nothing and a provider
+outage parks work rather than failing it</td>
+<td><code>state IN ('proposed','active','disputed','superseded','retracted')</code>
+as a SQL CHECK on every claim version, decided by a rule ladder the
+model is explicitly forbidden to influence — the candidate evaluator's
+own prompt says
+<code>Do not choose a fact state: Core qualification owns that decision</code></td>
+<td>A stored claim can always name the sentence that caused it, and the
+check that the sentence is really there runs at the storage boundary
+rather than in a prompt</td>
+<td>The release gate does not pass and the project says so:
+<code>scripts/check.py --tier release</code> exits 2 with
+<code>missing_gates: ["model"]</code>, because the acceptance corpus it
+wants is not in the tree — the two rows that are there are flagged
+<code>"simulation": true</code></td>
 </tr>
 <tr>
 <td><code>second-brain-cloudflare</code></td>
@@ -34473,7 +34467,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>52 of 580:</em> <a
+<p><em>53 of 580:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -34516,7 +34510,8 @@ href="../systems/re-call/"><code>re-call</code></a>, <a
 href="../systems/remem-mcp/"><code>remem-mcp</code></a>, <a
 href="../systems/repowise/"><code>repowise</code></a>, <a
 href="../systems/sage-memory/"><code>sage-memory</code></a>, <a
-href="../systems/skillcorpus/"><code>skillcorpus</code></a>, <a
+href="../systems/scope-recall-hermes/"><code>scope-recall-hermes</code></a>,
+<a href="../systems/skillcorpus/"><code>skillcorpus</code></a>, <a
 href="../systems/sonder-runtime/"><code>sonder-runtime</code></a>, <a
 href="../systems/titen/"><code>titen</code></a>, <a
 href="../systems/universal-memory-engine/"><code>universal-memory-engine</code></a>,
@@ -42964,7 +42959,7 @@ or run</li>
 <li><a
 href="https://github.com/410979729/scope-recall-hermes">410979729/scope-recall-hermes</a>
 at <a
-href="https://github.com/410979729/scope-recall-hermes/commit/578b955802df753f2e2208e26eab6f71971285a0"><code class="commit-id" title="578b955802df753f2e2208e26eab6f71971285a0">578b9558…</code></a>
+href="https://github.com/410979729/scope-recall-hermes/commit/abe54277867ca516b09b230093b9e2e6a9dbaaa6"><code class="commit-id" title="abe54277867ca516b09b230093b9e2e6a9dbaaa6">abe54277…</code></a>
 — read only; no auto-run surface, one <code>conftest.py</code>, and
 <code>pyproject.toml</code> inside the seven-day cooldown with no
 lockfile beside it; nothing installed or run</li>

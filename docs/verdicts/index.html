@@ -16037,38 +16037,47 @@ the user.</li>
 <h3 id="scope-recall-hermes"><a
 href="../systems/scope-recall-hermes/"><code>scope-recall-hermes</code></a></h3>
 <ul>
-<li>Best idea: <strong>one visibility predicate and one scope predicate,
-applied on every lane and re-applied to vector hits.</strong>
-<code>ordinary_recall_lifecycle_visible_sql</code> keeps candidates,
-other scopes' scratch and terminal states out of the FTS, trigram,
-bigram, LIKE and exact-id lanes; each vector hit is re-read from SQLite
-under both predicates before it counts, and a companion row that
-disagrees marks the index for repair. Six marks.</li>
-<li>Biggest risk: <strong>the review gate is on the model's tool
-surface.</strong> Digest output waits as <code>candidate</code> and the
-adjudicator will not promote it, but <code>scope_recall_memory</code>
-with <code>action: promote, dry_run: false</code> promotes it with no
-maintenance flag, and only an actor string tells that apart from a
-person's CLI review. A rejection is <code>archived</code>, which the
-digest's match and the store's dedupe skip by design, so a refused fact
-returns as a new candidate.</li>
-<li>Most reusable component:
-<code>scripts/benchmark.negative_retrieval.py</code> and its
-release-gate validator — ten nonsense queries over populated neighbours
-scored up to 0.99 must leave thirty surfaces empty while six positives
-hit, re-run and compared byte for byte with a frozen fixture.</li>
-<li>Maturity impression: 277 commits by four contributors between 14 May
-and 5 September 2026, 114,032 lines of package Python beside 140,124 of
-tests, CI on three operating systems with Hermes pinned by commit, a
-writer lease, a vector outbox with generations and a managed upgrade
-with rollback. <code>update</code> overwrites content with no audit
-event, and the published LoCoMo run bypasses the journal and candidate
-path.</li>
-<li>Study when: you are building a provider for a multi-user gateway and
-want scope, lifecycle and vector-index consistency expressed as
-predicates rather than conventions.</li>
-<li>Do not copy when: promotion must be a person's decision, or a
-rejected value must stay rejected.</li>
+<li>Best idea: <strong>a claim has to quote its source, and the quote is
+checked where it is stored.</strong>
+<code>claim_storage.py:340-341</code> refuses a derivation whose
+<code>span["quote"]</code> is not literally present in the stored source
+text, and two earlier passes check the same thing before it gets there.
+Asking a model to cite is a prompt; refusing the write is a constraint.
+Seven marks — every one this atlas tracks.</li>
+<li>Biggest risk: <strong>the release gate does not pass, and the
+project is the one saying so.</strong>
+<code>scripts/check.py --tier release</code> runs 900 tests with none
+failing and still exits 2 with <code>missing_gates: ["model"]</code>,
+because the acceptance corpus it demands is not in the tree — the two
+rows in <code>tests/eval/public_fixture.jsonl</code> are both flagged
+<code>"simulation": true</code>. Read the green count as a green count.
+Separately, <code>_inherits_suppression</code> is the strongest thing in
+the deletion path and the test beside it exercises the other branch of
+the same <code>or</code>, so the uncited restatement it exists for is
+untested.</li>
+<li>Most reusable component: <code>qualify</code> in
+<code>core/claims.py</code>. Nine deterministic refusals over the cited
+roots decide whether a claim is <code>proposed</code> or
+<code>active</code>, and <code>_authority</code> requires a root whose
+origin is <code>human_direct</code>, <code>tool_observation</code> or
+<code>external_document</code> — so authority is a property of the
+evidence rather than of the caller, and nothing on the tool surface has
+to be locked down because nothing on it grants anything.</li>
+<li>Maturity impression: MIT, 269 stars, five contributors, created 15
+May 2026 and pushed 18 September 2026, 48,289 lines of package Python
+beside 35,453 of tests and 1,479 test functions, four bounded runtime
+dependencies, every table <code>STRICT</code> with real CHECK
+vocabularies, and a <code>contracts/</code> directory of JSON Schemas
+that are the boundary rather than a description of it. Release candidate
+<code>3.1.0rc42</code>, and the 3.1 changelog opens by saying most of
+the project was rebuilt rather than patched.</li>
+<li>Study when: you want a belief store where "why does it think that"
+resolves to a sentence, or you want the pattern of deriving write
+authority from a source event's origin instead of from a tool
+permission.</li>
+<li>Do not copy when: you want memory that simply accumulates what the
+model asserts. The model's own writes stay <code>proposed</code> by
+design, and nothing it can call changes that.</li>
 </ul>
 <h3 id="uteke"><a href="../systems/uteke/"><code>uteke</code></a></h3>
 <ul>
