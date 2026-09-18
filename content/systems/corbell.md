@@ -9,7 +9,7 @@ source_url: https://github.com/Corbell-AI/Corbell
 archive_name: "Corbell-AI--Corbell"
 revision: 75c7b20ac95292185b5fef6a4680e3e10de9da66
 revision_url: https://github.com/Corbell-AI/Corbell/commit/75c7b20ac95292185b5fef6a4680e3e10de9da66
-analyzed_at: 2026-08-20
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "sqlite, files"
 stack_retrieval: "vector, graph"
@@ -17,7 +17,7 @@ stack_source: "reviewed"
 matrix:
   memory_unit: "Service, data store, queue and method nodes with typed edges; a `Decision` extracted from a design document; an embedded code chunk"
   storage: "SQLite for the graph and for float32 embedding blobs; JSON for learned doc patterns and candidates"
-  retrieval: "Graph traversal by service id, cosine similarity over chunk embeddings filtered by `service_id`, and a context assembler for spec generation"
+  retrieval: "Graph traversal by service id, cosine similarity over chunk embeddings with an optional `service_id` filter the caller supplies and no default, and a context assembler for spec generation"
   write: "`graph:build` re-derives the graph from the repositories; `docs:learn` extracts patterns and decisions from confirmed documents"
   update_delete: "Whole-file rewrite of the pattern and candidate JSON; no delete, supersede or tombstone for a decision"
   scoping: "A workspace directory and a `service_id` subject filter; no principal scope on any read"
@@ -146,9 +146,32 @@ scheduled work.
 raw float32 `BLOB`, with `idx_chunks_service`.
 
 **Search.** Cosine similarity computed in process over the decoded blobs, with
-`service_id` as a pre-filter; graph traversal by node id and edge kind. No
-lexical index over chunk content, so the retrieval stack is vector plus graph
-with no exact-match channel.
+`service_id` as an *optional* pre-filter; graph traversal by node id and edge
+kind. No lexical index over chunk content, so the retrieval stack is vector plus
+graph with no exact-match channel.
+
+Optional is the operative word. `SQLiteEmbeddingStore.query` documents
+`service_ids` as *"Restrict search to these service IDs (None = all)"*
+(`embeddings/sqlite_store.py:130`), the MCP tool declares `service_id: str = ""`
+(`mcp/server.py:78`), and `handle_code_search` turns an empty string back into
+`None` — `service_ids = [service_id] if service_id else None`
+(`mcp/tools.py:153`). So a model that calls `code_search` without naming a
+service searches every repository in the workspace, which is the default shape
+of the call.
+
+**And the query is not embedded by the model that built the index.**
+`storage.model` is a documented knob defaulting to `all-MiniLM-L6-v2`
+(`workspace.py:39`). Exactly two call sites read it, both in the build command:
+`SentenceTransformerModel(cfg.storage.model)` at
+`cli/commands/embeddings.py:51` and `:105`. Every read path constructs the model
+bare and therefore always gets the hardcoded default —
+`mcp/tools.py:119` and `:151`, `spec/generator.py:750` and `:838`,
+`cli/commands/spec.py:371`, `prd_processor.py:106`. Set `storage.model` to
+anything else and the index is built in one embedding space while every query is
+embedded in another. Nothing catches it: `embedding_chunks` has no model,
+dimension or version column (`sqlite_store.py:21-33`), so there is no stamp to
+compare and the cosine simply returns numbers. One writer honours the setting;
+six readers ignore it.
 
 **External dependencies.** An LLM provider for `docs:learn` and
 `spec:generate`, an embedding provider behind `embeddings/factory.py`, and
@@ -421,5 +444,21 @@ you can actually perform.
 - **Tests:** `tests/test_graph_sqlite_store.py`, `tests/test_embeddings.py`, `tests/test_spec.py`, `tests/test_mcp.py`, `tests/test_workspace.py`
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. The
+first reading's central finding stands verbatim and was re-derived:
+`CandidateDoc.confirmed` has exactly one writer, `docs.py:71-72`, which sets it
+for every candidate when `existing_docs.auto_scan` is on; `auto_scan` defaults
+to `True` at `workspace.py:47` and is written as `true` into the generated
+config at `:399`; and the `docs` command group is `scan`, `learn`, `patterns`
+with no `confirm`. **New findings, both on the read path.** The `service_id`
+filter is optional and defaults to unset — the MCP tool declares
+`service_id: str = ""` and `handle_code_search` maps an empty string to `None`,
+which the store documents as *all services* — so the matrix's "filtered by
+`service_id`" overstated it. And the configured embedding model reaches only the
+writer: `SentenceTransformerModel(cfg.storage.model)` appears twice, both in
+`cli/commands/embeddings.py`, while all six query-side constructions take the
+bare default, and `embedding_chunks` carries no model or dimension column to
+catch the mismatch. No marks; the report carries none.
 
 **2026-08-20** — [`75c7b20ac95292185b5fef6a4680e3e10de9da66`](https://github.com/Corbell-AI/Corbell/commit/75c7b20ac95292185b5fef6a4680e3e10de9da66) — first reading. Screened before anything was read: no auto-executing surface, a `tests/conftest.py` that executes on pytest collection, and an unpinned `pyproject.toml` with no lockfile beside it; nothing was installed and no command was run. The `auto_scan` finding was established by reading the default in `workspace.py` against the only assignment to `CandidateDoc.confirmed`, and the scan overwrite by reading `docs_scan` against `save_candidates`. No commit on the repository since 2026-05-23.

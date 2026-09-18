@@ -9,10 +9,8 @@ source_url: https://github.com/juanceresa/sift-kg
 archive_name: "juanceresa--sift-kg"
 revision: d786991c024f5401f113fc0cb70aee96dd1bd3bf
 revision_url: https://github.com/juanceresa/sift-kg/commit/d786991c024f5401f113fc0cb70aee96dd1bd3bf
-analyzed_at: 2026-08-20
-capabilities: "human_review"
-capability_evidence:
-  human_review: "the adjudication step between proposal and apply | src/sift_kg/resolve/reviewer.py, src/sift_kg/cli.py `review` | `sift resolve` writes LLM-proposed entity merges and flagged variant relations as `DRAFT`, `sift review` is an interactive pass in which a person sets each to `CONFIRMED` or `REJECTED`, and `sift apply-merges` acts only on `merge_file.confirmed` — nothing reaches the graph on a model's proposal alone | tests/test_review.py, tests/test_resolve.py"
+analyzed_at: 2026-09-18
+capabilities: ""
 stack_storage: "files"
 stack_retrieval: "graph, lexical"
 stack_source: "reviewed"
@@ -43,7 +41,9 @@ that the graph is *"your persistent, structured memory of the user's world"*,
 that it should orient from `sift topology` at session start, and that it should
 query the graph before answering anything about the user's projects. An
 extracted relation can be false, carries an id, and there is a surface for a
-person to adjudicate it — which is the whole bar.
+person to adjudicate it — which is the whole bar. What that surface does *by
+default* is section 9's subject, and it is why the `human_review` mark is
+withheld.
 
 **Strongest:** the raw layer is kept. Extraction output is written per document
 to `extractions/`, every entity node carries `source_documents`, every relation
@@ -190,7 +190,12 @@ variant relations. Then, in the same function:
   relation_type)`, and extends only with triples not already present.
 
 **Review (adjudicate).** `resolve/reviewer.py` and `cli.py:491`, an interactive
-pass setting each proposal and flagged relation to `CONFIRMED` or `REJECTED`.
+pass setting each proposal and flagged relation to `CONFIRMED` or `REJECTED` —
+for the proposals it shows. `review` takes `--auto-approve` defaulting to
+`0.85` and `--auto-reject` defaulting to `0.5` (`cli.py:493-502`), and
+`review_merges` confirms, before the loop begins, every proposal whose weakest
+member meets the threshold (`reviewer.py:62-68`). The person adjudicates the
+band between the two numbers.
 
 **Apply.** `cli.py:426` `apply_merges_cmd` → `resolve/engine.py`. Merges act on
 `merge_file.confirmed` only. `engine.py:152-179` removes rejected relations from
@@ -333,10 +338,45 @@ extractions kept per document. If a claim in the graph is wrong you can find
 what produced it — the property most extraction-first systems in this corpus
 lose.
 
-**Trust representation is not.** `confidence` is written and never read.
-Nothing marks an entity doubtful, and nothing distinguishes a fact asserted in
-one document from one corroborated across ten, though the data to compute that
-is present in `source_documents`.
+**Trust representation is not.** Nothing marks an entity doubtful, and nothing
+distinguishes a fact asserted in one document from one corroborated across ten,
+though the data to compute that is present in `source_documents`. `confidence`
+is read in exactly one place, and it is the wrong one: it decides whether a
+person ever sees the proposal.
+
+**`human_review` is withheld, and the reason is what confidence gates.** The
+adjudication step is genuine — there is no MCP server, no tool schema, no agent
+surface of any kind in `src/`, so the only thing that can press `a` is a person
+at a terminal, and `apply-merges` acts on `merge_file.confirmed` alone. But
+`review_merges` confirms, before the interactive loop starts, every proposal
+whose weakest member meets `--auto-approve`, which defaults to `0.85`
+(`reviewer.py:62-68`, `cli.py:493-497`). So what reaches a human is decided by a
+number the proposer wrote, and both producers write it themselves:
+
+- The deterministic branch groups entities by normalized lowercase name that
+  appear under **two or more entity types**, sorts by degree, and stamps every
+  member `confidence=0.95` — a literal, not a measurement
+  (`resolver.py:200-229`). 0.95 clears 0.85, so *every* same-name-different-type
+  merge is confirmed unseen. That is the class most in need of a person: the
+  PROJECT and the PERSON both called Apollo are grouped precisely because they
+  share a name and differ in type.
+- The LLM branch takes `confidence` straight out of the model's JSON,
+  `float(group.get("confidence", 0.5))` (`resolver.py:441`). A model that writes
+  0.9 confirms itself; one that omits the field falls back to 0.5 and reaches
+  the human.
+
+The committed tests do not pin any of this. Nothing in `tests/` mentions
+`auto_approve` or `auto_reject`, and the interactive cases reach the manual path
+only because `_make_merge_file` leaves `MergeMember.confidence` at its model
+default of `0.5` (`models.py:25`); build the same fixture with the 0.95 the
+deterministic branch stamps and `test_approve_all` fails, because `approved`
+would be `0` and `auto_approved` `3`. The suite pins the loop and not the gate
+that decides whether the loop is reached.
+
+The mark asks whether the approver is someone the producer cannot be. Here, on
+the default path, it is the producer's own number — so the mark comes off. The
+mechanism is still worth copying with one change: make `--auto-approve` opt-in
+rather than a default, and the claim becomes true.
 
 **Injection.** Extracted text from arbitrary documents — including scanned PDFs
 through OCR — reaches an agent's context through `query` output with no fencing
@@ -439,5 +479,23 @@ built, since nothing in the store records who approved what, or when.
 - **Tests:** `tests/test_resolve.py`, `tests/test_review.py`, `tests/test_graph.py`, `tests/test_export.py`
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+**`human_review` is withdrawn.** The evidence record claimed *"nothing reaches
+the graph on a model's proposal alone"*; that is false at this pin. `sift review`
+takes `--auto-approve` defaulting to `0.85` and confirms every proposal whose
+weakest member clears it before the interactive loop runs
+(`reviewer.py:62-68`, `cli.py:493-497`), and both producers assign that
+confidence themselves — the deterministic same-name-different-type branch stamps
+a literal `0.95` on every member (`resolver.py:200-229`) and the LLM branch reads
+`float(group.get("confidence", 0.5))` out of the model's own JSON (`:441`). So
+the class of merge most in need of a person is the one confirmed unseen. Nothing
+in `tests/` mentions `auto_approve` or `auto_reject`; the interactive cases reach
+the manual path only because the fixture leaves `MergeMember.confidence` at its
+`0.5` default. Second correction: the report said `confidence` is *"written and
+never read"* — it is read, in exactly the place that decides whether a human
+sees the proposal. Everything else re-verified; the provenance chain and the
+`apply-merges`-on-confirmed-only behaviour are as first described. Evidence
+coverage floor 1251 -> 1250.
 
 **2026-08-20** — [`d786991c024f5401f113fc0cb70aee96dd1bd3bf`](https://github.com/juanceresa/sift-kg/commit/d786991c024f5401f113fc0cb70aee96dd1bd3bf) — first reading. Screened before anything was read: 0 auto-executing surfaces, a `tests/conftest.py` that executes on pytest collection, and no lockfile beside `pyproject.toml`; nothing was installed and nothing was run. No commit on the repository since 2026-05-11.

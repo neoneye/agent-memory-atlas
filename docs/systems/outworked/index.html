@@ -117,7 +117,7 @@ session already knows who is asking.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-20</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/outworked--outworked" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -344,6 +344,21 @@ through the API and the MCP path passes no override, so a
 <code>recall</code> on a large scope returns up to 200 rows and the
 model pays for all of them — the only budget is the 500-character
 truncation per value.</p>
+<p>The companion <code>offset</code> is dead, which is what turns the
+cap into a ceiling. <code>memorySearch</code> and
+<code>memoryList</code> both take
+<code>{ limit = 200, offset = 0 }</code>, and every caller in the tree
+passes two arguments and stops:
+<code>db.memorySearch(args.scope, args.query)</code> in the MCP server
+(<code>electron/mcp/mcp-server.js:524</code>) and in the renderer's tool
+layer (<code>src/lib/tools.ts:574</code>), and
+<code>preload.js:163-165</code> exposes signatures with no options
+parameter at all. So the 200 is not a page — nothing can ask for the
+next one. Past two hundred entries in a scope, the oldest-updated rows
+are not merely expensive to reach, they are unreachable, and because the
+sort key is <code>updated_at</code> a row drops out of sight by being
+left alone. The store has no compaction and no eviction, so those rows
+stay on disk being counted and never read.</p>
 <p>Retrieval is <strong>tool-mediated and never automatic</strong>.
 Nothing injects memory into a system prompt at session start; if the
 model does not call <code>recall</code>, the store might as well be
@@ -557,6 +572,23 @@ memory)</li>
 <code>electron/mcp/test-mcp-injection.js</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>scope_enforced</code> stands, and the check is
+now exhaustive rather than representative: every statement touching
+<code>memory_entries</code> outside the schema carries
+<code>WHERE scope = ?</code> — <code>memoryGet</code>
+(<code>:335</code>), the two <code>memorySearch</code> forms
+(<code>:346</code>, <code>:352</code>), <code>memoryList</code>
+(<code>:361</code>) and <code>memoryDelete</code> (<code>:369</code>) —
+so there is no unscoped read anywhere in the tree. The evidence record
+now cites <code>memoryList</code> too, which the first reading left out.
+<strong>New finding:</strong> the <code>offset</code> parameter that
+sits beside the 200-row <code>limit</code> is never passed by any caller
+— the MCP server, the renderer tool layer and the preload bridge all
+call <code>memorySearch(scope, query)</code> and stop — so the cap is a
+ceiling rather than a page, and past two hundred rows in a scope the
+least recently updated entries cannot be reached at all. No marks
+change.</p>
 <p><strong>2026-08-20</strong> — <a
 href="https://github.com/outworked/outworked/commit/89ed7b99c91e20da4b5ece4bd0a61e255fbf0b7f"><code class="commit-id" title="89ed7b99c91e20da4b5ece4bd0a61e255fbf0b7f">89ed7b99…</code></a>
 — first reading, at v0.4.3. Screened before anything was read: no

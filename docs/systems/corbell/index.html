@@ -117,7 +117,7 @@ scan.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-20</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Corbell-AI--Corbell" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -256,10 +256,39 @@ endpoints. <code>embedding_chunks</code> holds <code>service_id</code>,
 <code>chunk_type</code>, <code>symbol</code> and the vector as a raw
 float32 <code>BLOB</code>, with <code>idx_chunks_service</code>.</p>
 <p><strong>Search.</strong> Cosine similarity computed in process over
-the decoded blobs, with <code>service_id</code> as a pre-filter; graph
-traversal by node id and edge kind. No lexical index over chunk content,
-so the retrieval stack is vector plus graph with no exact-match
-channel.</p>
+the decoded blobs, with <code>service_id</code> as an <em>optional</em>
+pre-filter; graph traversal by node id and edge kind. No lexical index
+over chunk content, so the retrieval stack is vector plus graph with no
+exact-match channel.</p>
+<p>Optional is the operative word.
+<code>SQLiteEmbeddingStore.query</code> documents
+<code>service_ids</code> as <em>"Restrict search to these service IDs
+(None = all)"</em> (<code>embeddings/sqlite_store.py:130</code>), the
+MCP tool declares <code>service_id: str = ""</code>
+(<code>mcp/server.py:78</code>), and <code>handle_code_search</code>
+turns an empty string back into <code>None</code> —
+<code>service_ids = [service_id] if service_id else None</code>
+(<code>mcp/tools.py:153</code>). So a model that calls
+<code>code_search</code> without naming a service searches every
+repository in the workspace, which is the default shape of the call.</p>
+<p><strong>And the query is not embedded by the model that built the
+index.</strong> <code>storage.model</code> is a documented knob
+defaulting to <code>all-MiniLM-L6-v2</code>
+(<code>workspace.py:39</code>). Exactly two call sites read it, both in
+the build command:
+<code>SentenceTransformerModel(cfg.storage.model)</code> at
+<code>cli/commands/embeddings.py:51</code> and <code>:105</code>. Every
+read path constructs the model bare and therefore always gets the
+hardcoded default — <code>mcp/tools.py:119</code> and <code>:151</code>,
+<code>spec/generator.py:750</code> and <code>:838</code>,
+<code>cli/commands/spec.py:371</code>,
+<code>prd_processor.py:106</code>. Set <code>storage.model</code> to
+anything else and the index is built in one embedding space while every
+query is embedded in another. Nothing catches it:
+<code>embedding_chunks</code> has no model, dimension or version column
+(<code>sqlite_store.py:21-33</code>), so there is no stamp to compare
+and the cosine simply returns numbers. One writer honours the setting;
+six readers ignore it.</p>
 <p><strong>External dependencies.</strong> An LLM provider for
 <code>docs:learn</code> and <code>spec:generate</code>, an embedding
 provider behind <code>embeddings/factory.py</code>, and network access
@@ -597,6 +626,28 @@ is not visible from the tree.</li>
 <code>tests/test_workspace.py</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. The first reading's central finding stands verbatim
+and was re-derived: <code>CandidateDoc.confirmed</code> has exactly one
+writer, <code>docs.py:71-72</code>, which sets it for every candidate
+when <code>existing_docs.auto_scan</code> is on; <code>auto_scan</code>
+defaults to <code>True</code> at <code>workspace.py:47</code> and is
+written as <code>true</code> into the generated config at
+<code>:399</code>; and the <code>docs</code> command group is
+<code>scan</code>, <code>learn</code>, <code>patterns</code> with no
+<code>confirm</code>. <strong>New findings, both on the read
+path.</strong> The <code>service_id</code> filter is optional and
+defaults to unset — the MCP tool declares
+<code>service_id: str = ""</code> and <code>handle_code_search</code>
+maps an empty string to <code>None</code>, which the store documents as
+<em>all services</em> — so the matrix's "filtered by
+<code>service_id</code>" overstated it. And the configured embedding
+model reaches only the writer:
+<code>SentenceTransformerModel(cfg.storage.model)</code> appears twice,
+both in <code>cli/commands/embeddings.py</code>, while all six
+query-side constructions take the bare default, and
+<code>embedding_chunks</code> carries no model or dimension column to
+catch the mismatch. No marks; the report carries none.</p>
 <p><strong>2026-08-20</strong> — <a
 href="https://github.com/Corbell-AI/Corbell/commit/75c7b20ac95292185b5fef6a4680e3e10de9da66"><code class="commit-id" title="75c7b20ac95292185b5fef6a4680e3e10de9da66">75c7b20a…</code></a>
 — first reading. Screened before anything was read: no auto-executing

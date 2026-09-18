@@ -117,7 +117,7 @@ build regenerates.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-20</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/juanceresa--sift-kg" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -125,7 +125,7 @@ build regenerates.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -154,7 +154,9 @@ world"</em>, that it should orient from <code>sift topology</code> at
 session start, and that it should query the graph before answering
 anything about the user's projects. An extracted relation can be false,
 carries an id, and there is a surface for a person to adjudicate it —
-which is the whole bar.</p>
+which is the whole bar. What that surface does <em>by default</em> is
+section 9's subject, and it is why the <code>human_review</code> mark is
+withheld.</p>
 <p><strong>Strongest:</strong> the raw layer is kept. Extraction output
 is written per document to <code>extractions/</code>, every entity node
 carries <code>source_documents</code>, every relation carries an
@@ -309,7 +311,14 @@ with triples not already present.</li>
 <p><strong>Review (adjudicate).</strong>
 <code>resolve/reviewer.py</code> and <code>cli.py:491</code>, an
 interactive pass setting each proposal and flagged relation to
-<code>CONFIRMED</code> or <code>REJECTED</code>.</p>
+<code>CONFIRMED</code> or <code>REJECTED</code> — for the proposals it
+shows. <code>review</code> takes <code>--auto-approve</code> defaulting
+to <code>0.85</code> and <code>--auto-reject</code> defaulting to
+<code>0.5</code> (<code>cli.py:493-502</code>), and
+<code>review_merges</code> confirms, before the loop begins, every
+proposal whose weakest member meets the threshold
+(<code>reviewer.py:62-68</code>). The person adjudicates the band
+between the two numbers.</p>
 <p><strong>Apply.</strong> <code>cli.py:426</code>
 <code>apply_merges_cmd</code> → <code>resolve/engine.py</code>. Merges
 act on <code>merge_file.confirmed</code> only.
@@ -474,11 +483,53 @@ every entity, an <code>evidence</code> quote on every relation, a
 extractions kept per document. If a claim in the graph is wrong you can
 find what produced it — the property most extraction-first systems in
 this corpus lose.</p>
-<p><strong>Trust representation is not.</strong> <code>confidence</code>
-is written and never read. Nothing marks an entity doubtful, and nothing
-distinguishes a fact asserted in one document from one corroborated
-across ten, though the data to compute that is present in
-<code>source_documents</code>.</p>
+<p><strong>Trust representation is not.</strong> Nothing marks an entity
+doubtful, and nothing distinguishes a fact asserted in one document from
+one corroborated across ten, though the data to compute that is present
+in <code>source_documents</code>. <code>confidence</code> is read in
+exactly one place, and it is the wrong one: it decides whether a person
+ever sees the proposal.</p>
+<p><strong><code>human_review</code> is withheld, and the reason is what
+confidence gates.</strong> The adjudication step is genuine — there is
+no MCP server, no tool schema, no agent surface of any kind in
+<code>src/</code>, so the only thing that can press <code>a</code> is a
+person at a terminal, and <code>apply-merges</code> acts on
+<code>merge_file.confirmed</code> alone. But <code>review_merges</code>
+confirms, before the interactive loop starts, every proposal whose
+weakest member meets <code>--auto-approve</code>, which defaults to
+<code>0.85</code> (<code>reviewer.py:62-68</code>,
+<code>cli.py:493-497</code>). So what reaches a human is decided by a
+number the proposer wrote, and both producers write it themselves:</p>
+<ul>
+<li>The deterministic branch groups entities by normalized lowercase
+name that appear under <strong>two or more entity types</strong>, sorts
+by degree, and stamps every member <code>confidence=0.95</code> — a
+literal, not a measurement (<code>resolver.py:200-229</code>). 0.95
+clears 0.85, so <em>every</em> same-name-different-type merge is
+confirmed unseen. That is the class most in need of a person: the
+PROJECT and the PERSON both called Apollo are grouped precisely because
+they share a name and differ in type.</li>
+<li>The LLM branch takes <code>confidence</code> straight out of the
+model's JSON, <code>float(group.get("confidence", 0.5))</code>
+(<code>resolver.py:441</code>). A model that writes 0.9 confirms itself;
+one that omits the field falls back to 0.5 and reaches the human.</li>
+</ul>
+<p>The committed tests do not pin any of this. Nothing in
+<code>tests/</code> mentions <code>auto_approve</code> or
+<code>auto_reject</code>, and the interactive cases reach the manual
+path only because <code>_make_merge_file</code> leaves
+<code>MergeMember.confidence</code> at its model default of
+<code>0.5</code> (<code>models.py:25</code>); build the same fixture
+with the 0.95 the deterministic branch stamps and
+<code>test_approve_all</code> fails, because <code>approved</code> would
+be <code>0</code> and <code>auto_approved</code> <code>3</code>. The
+suite pins the loop and not the gate that decides whether the loop is
+reached.</p>
+<p>The mark asks whether the approver is someone the producer cannot be.
+Here, on the default path, it is the producer's own number — so the mark
+comes off. The mechanism is still worth copying with one change: make
+<code>--auto-approve</code> opt-in rather than a default, and the claim
+becomes true.</p>
 <p><strong>Injection.</strong> Extracted text from arbitrary documents —
 including scanned PDFs through OCR — reaches an agent's context through
 <code>query</code> output with no fencing and no data envelope. The
@@ -601,6 +652,29 @@ or abandonment is not visible from the tree.</li>
 <code>tests/test_export.py</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <strong><code>human_review</code> is
+withdrawn.</strong> The evidence record claimed <em>"nothing reaches the
+graph on a model's proposal alone"</em>; that is false at this pin.
+<code>sift review</code> takes <code>--auto-approve</code> defaulting to
+<code>0.85</code> and confirms every proposal whose weakest member
+clears it before the interactive loop runs
+(<code>reviewer.py:62-68</code>, <code>cli.py:493-497</code>), and both
+producers assign that confidence themselves — the deterministic
+same-name-different-type branch stamps a literal <code>0.95</code> on
+every member (<code>resolver.py:200-229</code>) and the LLM branch reads
+<code>float(group.get("confidence", 0.5))</code> out of the model's own
+JSON (<code>:441</code>). So the class of merge most in need of a person
+is the one confirmed unseen. Nothing in <code>tests/</code> mentions
+<code>auto_approve</code> or <code>auto_reject</code>; the interactive
+cases reach the manual path only because the fixture leaves
+<code>MergeMember.confidence</code> at its <code>0.5</code> default.
+Second correction: the report said <code>confidence</code> is
+<em>"written and never read"</em> — it is read, in exactly the place
+that decides whether a human sees the proposal. Everything else
+re-verified; the provenance chain and the
+<code>apply-merges</code>-on-confirmed-only behaviour are as first
+described. Evidence coverage floor 1251 -&gt; 1250.</p>
 <p><strong>2026-08-20</strong> — <a
 href="https://github.com/juanceresa/sift-kg/commit/d786991c024f5401f113fc0cb70aee96dd1bd3bf"><code class="commit-id" title="d786991c024f5401f113fc0cb70aee96dd1bd3bf">d786991c…</code></a>
 — first reading. Screened before anything was read: 0 auto-executing

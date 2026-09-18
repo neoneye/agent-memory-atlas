@@ -9,10 +9,10 @@ source_url: https://github.com/outworked/outworked
 archive_name: "outworked--outworked"
 revision: 89ed7b99c91e20da4b5ece4bd0a61e255fbf0b7f
 revision_url: https://github.com/outworked/outworked/commit/89ed7b99c91e20da4b5ece4bd0a61e255fbf0b7f
-analyzed_at: 2026-08-20
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced"
 capability_evidence:
-  scope_enforced: "the read path, in SQL, on a key the caller supplies | electron/db/database.js:339 `memorySearch`, :331 `memoryGet`, :366 `memoryDelete` | every read is `WHERE scope = ?` against a `UNIQUE(scope, key)` table with `idx_memory_scope` behind it, so a query under one scope cannot return another's rows — and the scope is the model's own tool argument rather than an identity the server derives, which is the difference between the key reaching the query and a boundary | no committed test covers the memory tools"
+  scope_enforced: "the read path, in SQL, on a key the caller supplies | electron/db/database.js:332 `memoryGet`, :339 `memorySearch`, :356 `memoryList`, :366 `memoryDelete` | every read is `WHERE scope = ?` against a `UNIQUE(scope, key)` table with `idx_memory_scope` behind it, so a query under one scope cannot return another's rows — and the scope is the model's own tool argument rather than an identity the server derives, which is the difference between the key reaching the query and a boundary | no committed test covers the memory tools"
 stack_storage: "sqlite"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -228,6 +228,19 @@ passes no override, so a `recall` on a large scope returns up to 200 rows and th
 model pays for all of them — the only budget is the 500-character truncation per
 value.
 
+The companion `offset` is dead, which is what turns the cap into a ceiling.
+`memorySearch` and `memoryList` both take `{ limit = 200, offset = 0 }`, and
+every caller in the tree passes two arguments and stops:
+`db.memorySearch(args.scope, args.query)` in the MCP server
+(`electron/mcp/mcp-server.js:524`) and in the renderer's tool layer
+(`src/lib/tools.ts:574`), and `preload.js:163-165` exposes signatures with no
+options parameter at all. So the 200 is not a page — nothing can ask for the
+next one. Past two hundred entries in a scope, the oldest-updated rows are not
+merely expensive to reach, they are unreachable, and because the sort key is
+`updated_at` a row drops out of sight by being left alone. The store has no
+compaction and no eviction, so those rows stay on disk being counted and never
+read.
+
 Retrieval is **tool-mediated and never automatic**. Nothing injects memory into a
 system prompt at session start; if the model does not call `recall`, the store
 might as well be empty. For a product whose premise is a persistent team of
@@ -416,5 +429,18 @@ model chooses to, and no one is checking that it did.
 - **Tests:** `electron/db/test-migrations.js`, `electron/mcp/test-mcp.js`, `electron/mcp/test-mcp-injection.js`
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`scope_enforced` stands, and the check is now exhaustive rather than
+representative: every statement touching `memory_entries` outside the schema
+carries `WHERE scope = ?` — `memoryGet` (`:335`), the two `memorySearch` forms
+(`:346`, `:352`), `memoryList` (`:361`) and `memoryDelete` (`:369`) — so there
+is no unscoped read anywhere in the tree. The evidence record now cites
+`memoryList` too, which the first reading left out. **New finding:** the
+`offset` parameter that sits beside the 200-row `limit` is never passed by any
+caller — the MCP server, the renderer tool layer and the preload bridge all call
+`memorySearch(scope, query)` and stop — so the cap is a ceiling rather than a
+page, and past two hundred rows in a scope the least recently updated entries
+cannot be reached at all. No marks change.
 
 **2026-08-20** — [`89ed7b99c91e20da4b5ece4bd0a61e255fbf0b7f`](https://github.com/outworked/outworked/commit/89ed7b99c91e20da4b5ece4bd0a61e255fbf0b7f) — first reading, at v0.4.3. Screened before anything was read: no auto-executing surface, one build-time lifecycle script, one unpinned range behind a lockfile; nothing was installed and the app was never launched. The scope finding was established by reading the tool definitions against `handleMcpRequest` and its `agentId` injection, not by running two agents against one store. No commit on the repository since 2026-03-31.

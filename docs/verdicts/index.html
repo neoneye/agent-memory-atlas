@@ -11842,9 +11842,15 @@ permanent.</li>
 deduped on the value.</strong> <code>sift resolve</code> proposes merges
 as <code>DRAFT</code>, <code>sift review</code> is a person setting
 <code>CONFIRMED</code> or <code>REJECTED</code>, and
-<code>apply-merges</code> acts only on <code>merge_file.confirmed</code>
-— nothing reaches the graph on a model's proposal alone. The relation
-branch keys its queue on
+<code>apply-merges</code> acts only on
+<code>merge_file.confirmed</code>. Read the default before trusting the
+shape: <code>--auto-approve</code> is <code>0.85</code>, and
+<code>review_merges</code> confirms everything above it before the loop
+begins — so the deterministic branch, which stamps a literal
+<code>0.95</code> on every member of a same-name-different-type group,
+never reaches a person at all. That is why the <code>human_review</code>
+mark is withheld; make the threshold opt-in and it would be earned. The
+relation branch keys its queue on
 <code>(source_id, target_id, relation_type)</code>, so nobody is asked
 twice about the same claim.</li>
 <li>Biggest risk: <strong>the corrections are applied to the artifact
@@ -11862,16 +11868,19 @@ surviving guard cuts the wrong way: a rejected relation restored by a
 rebuild is not re-flagged, because the triple is already in the
 queue.</li>
 <li>Maturity impression: MIT, 56 Python files, 13,547 lines, sixteen
-test files, no commit since 2026-05-11. One capability mark —
-<code>human_review</code>, earned on the review step. No
-<code>trust_state</code>:
+test files, no commit since 2026-05-11. No capability mark:
+<code>human_review</code> is withheld because
+<code>--auto-approve</code> defaults to <code>0.85</code> and both
+producers assign their own confidence, so the proposals a person sees
+are chosen by the proposer. No <code>trust_state</code> either:
 <code>DRAFT</code>/<code>CONFIRMED</code>/<code>REJECTED</code> is a
 discrete state on a <em>proposal about</em> a memory rather than on the
 memory, and withholds no entity from a query; the per-entity
-<code>confidence</code> float is written, merged by maximum, and read by
-nothing. No test runs <code>resolve</code> twice over a file holding
-decisions, and none runs <code>build</code> after
-<code>apply-merges</code> — either would have caught this.</li>
+<code>confidence</code> float is written and merged by maximum, and the
+only thing that reads a confidence is that auto-approve gate. No test
+runs <code>resolve</code> twice over a file holding decisions, and none
+runs <code>build</code> after <code>apply-merges</code> — either would
+have caught this.</li>
 <li>Study when: you are building a document-to-graph memory and want the
 retained-extraction shape, the proposal/decision split, and an unusually
 well-made agent skill — its <em>link knowledge islands</em> pattern uses
@@ -11924,7 +11933,12 @@ the user's duplicate so the memory cannot be half-configured away.</li>
 anything must be <em>remembered reliably</em> rather than merely
 rememberable. Nothing injects memory into a prompt, so if the model does
 not call <code>recall</code>, the store might as well be empty and no
-one is checking that it did.</li>
+one is checking that it did. Nor does it scale past a couple of hundred
+entries in a scope: <code>memorySearch</code> takes an
+<code>offset</code> beside its 200-row <code>limit</code> and no caller
+in the tree ever passes it, so the cap is a ceiling rather than a page
+and the least recently updated rows become unreachable by being left
+alone.</li>
 </ul>
 <h3 id="corbell"><a
 href="../systems/corbell/"><code>corbell</code></a></h3>
@@ -11964,8 +11978,17 @@ pattern of keeping a document's own section headings, frontmatter fields
 and terminology so a generated spec matches a team's form instead of
 imposing a template.</li>
 <li>Do not copy when: the decision store has to be the system of record.
-Turn <code>auto_scan</code> off, read what it extracted, and do not let
-a generated spec cite a rationale nobody checked.</li>
+Note what turning <code>auto_scan</code> off actually does: it is the
+only writer of <code>confirmed</code>, and there is no
+<code>docs:confirm</code>, so switching it off does not give you a
+review step — it makes <code>docs:learn</code> exit with "No confirmed
+docs" forever. Approving selectively means hand-editing
+<code>doc_candidates.json</code> and losing those edits on the next
+scan. Check the embedding config too: <code>storage.model</code> is
+honoured by the two build-side constructions and by none of the six
+query-side ones, which all take the hardcoded
+<code>all-MiniLM-L6-v2</code>, and <code>embedding_chunks</code> stores
+no model column to catch the mismatch.</li>
 </ul>
 <h3 id="portable-handoff"><a
 href="../systems/portable-handoff/"><code>portable-handoff</code></a></h3>
