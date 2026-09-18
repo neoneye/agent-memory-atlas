@@ -9,18 +9,20 @@ source_url: https://github.com/unibaseio/membase
 archive_name: "unibaseio--membase"
 revision: 9e03b75a453118f4faf4ed3539279435e03bd603
 revision_url: https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed3539279435e03bd603
-analyzed_at: 2026-07-31
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the account namespace on both storage tiers, and the conversation key on the SQLite reads | src/membase/memory/sqlite_memory.py:129-139, src/membase/memory/lt_memory.py:214, :275-297 | `SqliteMemory.get` takes `conversation_id` as a required positional argument and applies it in the SQL — `SELECT content FROM memories WHERE conversation_id = ? AND memory_type = ?` — as do the range and delete paths; above it, every hub read passes `self._membase_account` as the owner and the local database lives at `~/.membase/<account>/`, so the account key reaches both tiers. The account boundary is a possession of a key rather than a claim in a field: the client refuses to send an owner other than its own signer address | the conversation key reaches the SQLite arm only. `LTMemory.retrieve` forwards an optional `metadata_filter` that defaults to None, so the Chroma collection — which is per account, not per conversation — returns matches from every conversation the account holds unless the caller supplies the filter itself. The conversation is written into Chroma metadata and applying it is the caller's responsibility, which is the definition's 'merely available as a tag'. No committed test asserts either boundary"
 stack_storage: "sqlite, chroma, memory"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A `Message` with a role, content, a `type` of `stm`, `ltm` or `profile`, and a per-conversation `memory_index`"
   storage: "Two parallel stacks: an in-process list, and SQLite plus a Chroma collection under `~/.membase/<account>/`; both mirror to a remote hub"
   retrieval: "Recency and index-range reads from SQLite; Chroma vector search only through `LTMemory.retrieve`"
   write: "Synchronous insert on the calling thread, followed by a blocking hub upload when auto-upload is on"
   update_delete: "Delete by `memory_index` from SQLite only; the Chroma document and the uploaded hub blob both survive"
-  scoping: "A wallet address is the account namespace and a `conversation_id` the partition; both are applied as read-path filters"
+  scoping: "A wallet address is the account namespace, applied on both tiers; `conversation_id` partitions the SQLite reads but not the vector one, where it is metadata the caller must choose to filter on"
   integration: "A library. No agent loop, tool surface, prompt assembly or MCP server ships in this repository"
   background: "One daemon thread per `LTMemory`, waking every 60 seconds to summarise each full block of 16 messages"
   trust: "Ownership is proved by secp256k1 signature on every hub call; nothing grades or gates a memory's content"
@@ -396,7 +398,18 @@ an intent the code does not implement.
 rotation: it clears a conversation and asserts `size(conv_id) == 0`, which
 passes precisely because the lookup still uses the stale key.
 
-No negative retrieval assertions exist anywhere, so `negative_eval` is withheld.
+`negative_eval` is withheld, and the precise version of the claim is worth
+stating because a grep turns up assertions that look like candidates.
+`tests/test_chroma.py:310` retrieves with `metadata_filter={"source": "test1"}`
+over a four-document fixture and asserts one result with that source, and the
+next block asserts every result of a `content_filter="lazy"` query contains
+"lazy" — both are assertions that non-matching documents stay out. But what they
+exercise is Chroma's own `where` and `where_document` parameters passed straight
+through a thin wrapper, not a retrieval decision this system makes; and the file's
+own threshold case, `assert len(results) <= 3`, passes over the inverted
+predicate, which is the clearest available evidence that these counts are not
+pinning retrieval semantics. No case asserts that a deleted, superseded or
+out-of-conversation memory is absent from a result set that contains others.
 
 ## 11. For Your Own Build
 
@@ -531,5 +544,9 @@ sitting untouched for a year.
 | `tests/test_multi_memory.py` | Buffer dictionary tests |
 
 ## History
+
+**2026-09-18** — [`9e03b75a453118f4faf4ed3539279435e03bd603`](https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed3539279435e03bd603) — re-read at the same commit, and this one confirms rather than corrects. Both headline defects are still exactly as described: `ChromaKnowledgeBase.retrieve` compares `results["distances"][0][i]` against `similarity_threshold` and skips anything *below* it, so a threshold keeps the least similar documents; and the same branch sets `where_document = {"$contains": query}` whenever a threshold is given, so asking for more semantic precision silently switches the search to whole-query substring matching. `find_optimal_threshold` still sweeps 0.3 to 0.9 through that same call. The LICENSE file the README grants MIT under is still absent from the tree.
+
+Two things were added. `scope_enforced` now carries an evidence record that names which read path holds the predicate: `conversation_id` is a required positional argument of `SqliteMemory.get` and reaches the SQL, while `LTMemory.retrieve` forwards an optional `metadata_filter` defaulting to None over a per-account Chroma collection — so the vector arm is scoped by account and not by conversation, and the matrix row now says so. And the negative-retrieval claim was made exact: `tests/test_chroma.py:310` does assert that non-matching documents stay out of a filtered query, but what it exercises is Chroma's own `where` parameters through a thin wrapper, and the same file's threshold case passes over the inverted predicate. `stack_source` goes from seeded to reviewed.
 
 **2026-07-31** — [`9e03b75a453118f4faf4ed3539279435e03bd603`](https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed3539279435e03bd603) — first reading.

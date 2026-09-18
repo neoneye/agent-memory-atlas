@@ -117,7 +117,7 @@ retrieval filter that reads a distance as a similarity.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-31</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/unibaseio--membase" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -550,8 +550,21 @@ intent the code does not implement.</p>
 conversation-id rotation: it clears a conversation and asserts
 <code>size(conv_id) == 0</code>, which passes precisely because the
 lookup still uses the stale key.</p>
-<p>No negative retrieval assertions exist anywhere, so
-<code>negative_eval</code> is withheld.</p>
+<p><code>negative_eval</code> is withheld, and the precise version of
+the claim is worth stating because a grep turns up assertions that look
+like candidates. <code>tests/test_chroma.py:310</code> retrieves with
+<code>metadata_filter={"source": "test1"}</code> over a four-document
+fixture and asserts one result with that source, and the next block
+asserts every result of a <code>content_filter="lazy"</code> query
+contains "lazy" — both are assertions that non-matching documents stay
+out. But what they exercise is Chroma's own <code>where</code> and
+<code>where_document</code> parameters passed straight through a thin
+wrapper, not a retrieval decision this system makes; and the file's own
+threshold case, <code>assert len(results) &lt;= 3</code>, passes over
+the inverted predicate, which is the clearest available evidence that
+these counts are not pinning retrieval semantics. No case asserts that a
+deleted, superseded or out-of-conversation memory is absent from a
+result set that contains others.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <p><strong>Force the owner to the signer, and warn when you had
@@ -743,6 +756,33 @@ defect</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed3539279435e03bd603"><code class="commit-id" title="9e03b75a453118f4faf4ed3539279435e03bd603">9e03b75a…</code></a>
+— re-read at the same commit, and this one confirms rather than
+corrects. Both headline defects are still exactly as described:
+<code>ChromaKnowledgeBase.retrieve</code> compares
+<code>results["distances"][0][i]</code> against
+<code>similarity_threshold</code> and skips anything <em>below</em> it,
+so a threshold keeps the least similar documents; and the same branch
+sets <code>where_document = {"$contains": query}</code> whenever a
+threshold is given, so asking for more semantic precision silently
+switches the search to whole-query substring matching.
+<code>find_optimal_threshold</code> still sweeps 0.3 to 0.9 through that
+same call. The LICENSE file the README grants MIT under is still absent
+from the tree.</p>
+<p>Two things were added. <code>scope_enforced</code> now carries an
+evidence record that names which read path holds the predicate:
+<code>conversation_id</code> is a required positional argument of
+<code>SqliteMemory.get</code> and reaches the SQL, while
+<code>LTMemory.retrieve</code> forwards an optional
+<code>metadata_filter</code> defaulting to None over a per-account
+Chroma collection — so the vector arm is scoped by account and not by
+conversation, and the matrix row now says so. And the negative-retrieval
+claim was made exact: <code>tests/test_chroma.py:310</code> does assert
+that non-matching documents stay out of a filtered query, but what it
+exercises is Chroma's own <code>where</code> parameters through a thin
+wrapper, and the same file's threshold case passes over the inverted
+predicate. <code>stack_source</code> goes from seeded to reviewed.</p>
 <p><strong>2026-07-31</strong> — <a
 href="https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed3539279435e03bd603"><code class="commit-id" title="9e03b75a453118f4faf4ed3539279435e03bd603">9e03b75a…</code></a>
 — first reading.</p>
