@@ -9,7 +9,7 @@ source_url: https://github.com/rohitg00/pro-workflow
 archive_name: "rohitg00--pro-workflow"
 revision: 7f7209d7215bced7d651209ef050c77953c298d6
 revision_url: https://github.com/rohitg00/pro-workflow/commit/7f7209d7215bced7d651209ef050c77953c298d6
-analyzed_at: 2026-09-08
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "the project column on every learning read | src/search/fts.ts:15-50, :57-76, :120-133, src/db/store.ts:123-127, :283, scripts/session-start.js:48-50, scripts/learn-capture.js | a learning is stored with `project` set to the basename of `CLAUDE_PROJECT_DIR` or null; `searchLearnings`, `searchByCategory` and `getRecentLearnings` take a project and add `project = ? OR project IS NULL` to the SQL, so another project's learnings are excluded in the query and a null-project learning is global; the session-start hook passes the project name | none — the only test file covers the skill optimizer"
@@ -346,5 +346,20 @@ ls LICENSE                                                                # abse
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`scope_enforced` stands — `project = ? OR project IS NULL` is composed into the
+SQL on all three learning reads, so no other project's *named* rows can come
+back. Two properties of the key itself are worth having beside that, because
+both are decided on the write path and neither is announced. The `NULL` tier is
+produced by a missing environment variable:
+`const projectDir = process.env.CLAUDE_PROJECT_DIR || ''` and then
+`project: projectDir ? path.basename(projectDir) : null`
+(`scripts/learn-capture.js:42-45`), the only place a learning's project is set.
+So a capture that runs without that variable is stored global-to-everything,
+silently, and every later project reads it. And the key is a *basename*, so two
+checkouts called `api` under different parents are one scope. Neither is a leak
+in the sense the mark excludes; both decide what "this project" means before the
+predicate ever runs. No marks change.
 
 **2026-09-08** — [`7f7209d7215bced7d651209ef050c77953c298d6`](https://github.com/rohitg00/pro-workflow/commit/7f7209d7215bced7d651209ef050c77953c298d6) — first reading, at the head of `main`, the last commit of 18 July 2026. Screened first: three auto-run surfaces (the plugin manifest, 24 hook registrations, a plugin settings allowlist), one unpinned manifest behind a 96-day-old lockfile; every registered script read; nothing installed or run, the read made from a full clone. One mark. The stderr finding rests on the harness's documented hook contract and on the script's lack of any stdout write, both stated in section 9.

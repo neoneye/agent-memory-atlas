@@ -136,7 +136,7 @@ greps two Markdown files nothing in the plugin writes.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-08</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/rohitg00--pro-workflow" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -543,6 +543,23 @@ rg -n -i &#39;status|supersed|archiv&#39; src/db/schema.sql | rg -i learning    
 find . -path ./node_modules -prune -o -name &#39;*.test.*&#39; -print             # one file
 ls LICENSE                                                                # absent</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>scope_enforced</code> stands —
+<code>project = ? OR project IS NULL</code> is composed into the SQL on
+all three learning reads, so no other project's <em>named</em> rows can
+come back. Two properties of the key itself are worth having beside
+that, because both are decided on the write path and neither is
+announced. The <code>NULL</code> tier is produced by a missing
+environment variable:
+<code>const projectDir = process.env.CLAUDE_PROJECT_DIR || ''</code> and
+then <code>project: projectDir ? path.basename(projectDir) : null</code>
+(<code>scripts/learn-capture.js:42-45</code>), the only place a
+learning's project is set. So a capture that runs without that variable
+is stored global-to-everything, silently, and every later project reads
+it. And the key is a <em>basename</em>, so two checkouts called
+<code>api</code> under different parents are one scope. Neither is a
+leak in the sense the mark excludes; both decide what "this project"
+means before the predicate ever runs. No marks change.</p>
 <p><strong>2026-09-08</strong> — <a
 href="https://github.com/rohitg00/pro-workflow/commit/7f7209d7215bced7d651209ef050c77953c298d6"><code class="commit-id" title="7f7209d7215bced7d651209ef050c77953c298d6">7f7209d7…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 18
