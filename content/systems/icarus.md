@@ -9,11 +9,15 @@ source_url: https://github.com/esaradev/icarus-memory-infra
 archive_name: "esaradev--icarus-memory-infra"
 revision: 6e348708dcddb7cf1ad47726cb287cd4c9183c40
 revision_url: https://github.com/esaradev/icarus-memory-infra/commit/6e348708dcddb7cf1ad47726cb287cd4c9183c40
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: "trust_state, audit_log, negative_eval"
+capability_evidence:
+  trust_state: "the four-value verified status, gated by a legal-transition table and applied as the default read filter | src/icarus_memory/validation.py:22, src/icarus_memory/retrieval.py:18-25, :46, :61 | `_LEGAL_TRANSITIONS` is an explicit `dict[VerifiedStatus, set[VerifiedStatus]]`, so `rolled_back` is terminal by having no outgoing set and an illegal move raises rather than landing. The status is a stored field distinct from the two-value freshness lifecycle and from any score, and it reaches the read path twice over: `_RANK` orders `contradicted` at 2 and `rolled_back` at 3 below the live states, and the default predicate is `entry.verified not in {'contradicted', 'rolled_back'}` — so the two states that mean *not believed* are excluded unless a caller asks for them | the `verifier` is a free-text string defaulting to `manual`, so the record cannot distinguish a person from the agent that wrote the entry; and the transition table governs status only, not the freshness axis beside it"
+  audit_log: "the per-entry verification log, appended on every status change | src/icarus_memory/schema.py:47-52, src/icarus_memory/__init__.py:349, :371, src/icarus_memory/rollback.py:112, src/icarus_memory/store.py:146, :177 | every verify, contradict and rollback appends a `VerificationRecord` — `verifier`, `timestamp`, `status`, with `extra='forbid'` — to the entry's `verification_log`, which the store round-trips through the frontmatter and never rewrites: nothing in the source removes or edits a record, and supersession links forward rather than overwriting, so the body of a superseded entry survives for the audit read. `audit_search` is a separate function documented as the *raw* path that includes contradicted, rolled-back and superseded entries, and it is exposed to the agent as `memory_audit_search` | the log lives on the entry rather than in one global journal, so a deleted file takes its own history with it, and the store is Markdown on disk whose tamper-evidence is whatever git provides. The `verifier` field cannot identify who acted"
+  negative_eval: "two recall cases asserting a specific entry must not come back, each with its positive control alongside | tests/test_retrieval.py:20-26, :36-49 | the first seeds three decisions and asserts a keyword recall for `users` contains the postgres and mysql entries and **not** the redis one. The second is the stronger case: it seeds, verifies, writes a revision, contradicts it, rolls it back with `dry_run=False`, asserts the plan applied, then asserts `new_pg.id not in matched` and `ids['pg'] in matched` — the rolled-back entry excluded and its predecessor still returned, from the same store on adjacent lines, so the refusal cannot be an empty result | both are library-level cases over a temporary root rather than an eval harness, and neither asserts that a *descendant* of a rolled-back entry is excluded — the taint propagation is tested for its effect on status, not for its effect on a result set"
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An entry — a typed claim in a Markdown file with evidence pointers, a verified status and a lifecycle"
   storage: "Markdown files with YAML frontmatter under a root directory, written atomically, version-controlled by git"
@@ -373,5 +377,9 @@ and no tenancy — a multi-tenant deployment would need the scope work done firs
 argument guard at `:24`), `src/icarus_memory/cli.py`
 
 ## History
+
+**2026-09-18** — [`6e348708dcddb7cf1ad47726cb287cd4c9183c40`](https://github.com/esaradev/icarus-memory-infra/commit/6e348708dcddb7cf1ad47726cb287cd4c9183c40) — re-read at the same commit. Nothing upstream had moved and nothing in the report needed correcting; all three marks were re-derived from the source and now carry evidence records.
+
+The details worth having in them: `_LEGAL_TRANSITIONS` in `validation.py:22` makes `rolled_back` terminal by giving it no outgoing set, `retrieval.py:18-25` ranks `contradicted` and `rolled_back` below the live states *and* excludes them by default via `entry.verified not in {"contradicted", "rolled_back"}`, and every status change appends a `VerificationRecord` — verifier, timestamp, status, `extra="forbid"` — that the store round-trips through the frontmatter and nothing in the source removes or edits. The negative-eval case is the sharpest of the three: it seeds, verifies, revises, contradicts, rolls back, and then asserts the rolled-back entry is absent and its predecessor present, two lines apart, from one store. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`6e348708dcddb7cf1ad47726cb287cd4c9183c40`](https://github.com/esaradev/icarus-memory-infra/commit/6e348708dcddb7cf1ad47726cb287cd4c9183c40) — first reading. Screened before reading: no auto-run surface, build-time execution in `tests/conftest.py`, one unpinned dependency surface in `pyproject.toml`. The tree was read, never installed, and no test was run.

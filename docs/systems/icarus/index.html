@@ -117,7 +117,7 @@ comes back.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/esaradev--icarus-memory-infra" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -550,6 +550,25 @@ behaviour was not traced.</li>
 argument guard at <code>:24</code>),
 <code>src/icarus_memory/cli.py</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/esaradev/icarus-memory-infra/commit/6e348708dcddb7cf1ad47726cb287cd4c9183c40"><code class="commit-id" title="6e348708dcddb7cf1ad47726cb287cd4c9183c40">6e348708…</code></a>
+— re-read at the same commit. Nothing upstream had moved and nothing in
+the report needed correcting; all three marks were re-derived from the
+source and now carry evidence records.</p>
+<p>The details worth having in them: <code>_LEGAL_TRANSITIONS</code> in
+<code>validation.py:22</code> makes <code>rolled_back</code> terminal by
+giving it no outgoing set, <code>retrieval.py:18-25</code> ranks
+<code>contradicted</code> and <code>rolled_back</code> below the live
+states <em>and</em> excludes them by default via
+<code>entry.verified not in {"contradicted", "rolled_back"}</code>, and
+every status change appends a <code>VerificationRecord</code> —
+verifier, timestamp, status, <code>extra="forbid"</code> — that the
+store round-trips through the frontmatter and nothing in the source
+removes or edits. The negative-eval case is the sharpest of the three:
+it seeds, verifies, revises, contradicts, rolls back, and then asserts
+the rolled-back entry is absent and its predecessor present, two lines
+apart, from one store. <code>stack_source</code> goes from seeded to
+reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/esaradev/icarus-memory-infra/commit/6e348708dcddb7cf1ad47726cb287cd4c9183c40"><code class="commit-id" title="6e348708dcddb7cf1ad47726cb287cd4c9183c40">6e348708…</code></a>
 — first reading. Screened before reading: no auto-run surface,
