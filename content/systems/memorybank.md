@@ -9,7 +9,7 @@ source_url: https://github.com/zhongwanjun/MemoryBank-SiliconFriend
 archive_name: "zhongwanjun--MemoryBank-SiliconFriend"
 revision: cf61c4196e4cfdb0f2b7a0316249fa40312dc3a9
 revision_url: https://github.com/zhongwanjun/MemoryBank-SiliconFriend/commit/cf61c4196e4cfdb0f2b7a0316249fa40312dc3a9
-analyzed_at: 2026-08-13
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files, faiss"
 stack_retrieval: "vector"
@@ -166,9 +166,27 @@ Chinese text splitter is a 25-line regex.
 
 The two index paths disagree with each other in a way worth noting.
 `build_memory_index()` filters by user name (`if user_name != name: continue`,
-`build_memory_index.py`) — the LlamaIndex path is correctly scoped. The FAISS
-path's equivalent filter is the commented-out one. Same repository, same
+`build_memory_index.py:61-62`) — the LlamaIndex path is correctly scoped. The
+FAISS path's equivalent filter is the commented-out one. Same repository, same
 concept, opposite behaviour.
+
+The correctly scoped index is also the one nothing reads.
+`build_memory_index()` saves to a hardcoded
+`../memories/memory_index/llamaindex/{user_name}_index.json`
+(`build_memory_index.py:66-67`, ignoring `data_args.memory_basic_dir`), while
+its only caller, `enter_name_llamaindex()`, looks for the file at
+`os.path.join(data_args.memory_basic_dir, f'memory_index/{name}_index.json')`
+(`utils/memory_utils.py:47`) — the same tree without the `llamaindex/` segment.
+`SiliconFriend-ChatGPT/launch.sh` passes `--memory_basic_dir ../memories`, so
+both paths resolve against the same working directory and differ only by that
+one segment. The `if os.path.exists(memory_index_path)` guard two lines later
+is therefore never satisfied, `user_memory_index` stays `None`, and
+`build_prompt_with_search_memory_llamaindex()` takes its `else: related_memos =
+''` branch (`utils/prompt_utils.py:227-228`). **The ChatGPT variant builds a
+full embedding index on every login and then retrieves nothing from it**,
+silently, for every user and every turn. What that variant still injects is the
+`overall_history` digest and the personality portrait, which are read straight
+off the user record and never went through the index.
 
 ### Deployment and ergonomics
 
@@ -290,6 +308,26 @@ as `filepath`, so a fifteen-user file yields a fifteen-user index, and user
 Emily's top-6 can be Frank's turns. The retrieved text is then injected into a
 prompt that tells the model it is recalling *your* past conversation.
 
+The strengthening step inherits the same confusion from the other side.
+`update_memory_when_searched()` takes the date from the retrieved document's own
+id (`recalled_id.split('_')[1]`) but the user from `self.user`, the name typed
+into the box (`forget_memory.py:353`). Retrieve one of Frank's turns while
+logged in as Emily and the loop walks `memory_bank['Emily']['history'][that
+date]`: if Emily has no turns on that date it raises `KeyError` out of
+`search_memory` before `save_updated_memory()` runs, and if she does, no
+`memory_id` matches and the increment is silently dropped. Frank's turn is
+never strengthened either way — so the one mechanism that is supposed to
+register that a memory mattered is the one that cross-user recall disables.
+
+Summaries sit outside the curve in both directions. The retention draw is the
+single `random.random()` in the file (`forget_memory.py:119`), inside the loop
+over a date's turns; the summary block below it assigns `memory_strength` and
+`last_recall_date` metadata but never draws against them. And because a summary
+id ends in `_summary`, no history entry matches it in
+`update_memory_when_searched`, so its strength never moves either. The only way
+a summary dies is the collateral `pop` when its date empties. The derived
+record is the durable one; the turns it was derived from are what decays.
+
 ## 7. Write Mechanics
 
 Writes are synchronous, unconditional and whole-file. Every turn calls
@@ -355,6 +393,17 @@ whose record has `history` but no `summary` key raises `KeyError` on the first
 date that empties, mid-sweep, after the file has already been partially mutated
 in memory but before `write_memories` runs.
 
+That record shape is the default one, not an edge case. `enter_name` creates a
+new user as `memory[name] = {}` then `update({"name": name})`
+(`utils/memory_utils.py:38-39`); `save_local_memory` adds `history` on demand
+and nothing else (`:79-83`); `summary` is written only by `summarize_memory`,
+which is wired to a button. Any user who chats without pressing it has history
+and no summary. Because the sweep iterates every user in the file, it is not
+that user's own login that trips the crash — it is everybody's, on the first
+date of theirs that empties. The partial mutation is discarded when it does,
+since `write_memories` is reached only after the loop over all users completes,
+so the crash is the only thing in this design that ever prevents a deletion.
+
 Provenance is `memory_id`, which is a position that moves. Trust is absent: no
 confidence, no verification, no corroboration, no status field. Nothing
 distinguishes a fact the user asserted from one the assistant invented, and
@@ -403,8 +452,10 @@ that is the ablation whose absence turns out to matter most.
 
 Before trusting this, a reader would want: a unit test asserting
 `forgetting_curve(t, 10) > forgetting_curve(t, 1)`, a test that the sweep touches
-only the logged-in user, a test that a retrieved document's score is its own, and
-a test that a turn written in one session is retrievable in the next.
+only the logged-in user, a test that a retrieved document's score is its own, a
+test that a turn written in one session is retrievable in the next, and — given
+section 3 — a test that the index the loader opens is the index the builder
+wrote.
 
 ## 11. For Your Own Build
 
@@ -454,6 +505,14 @@ correctly scoped version of its own loop, twenty lines away in a different file.
 A commented-out `continue` is the entire difference between per-user memory and
 a shared one.
 
+**Never let the writer and the reader agree on a path by convention.** The
+builder here hardcodes one directory and the loader composes another from
+config; they differ by one segment, and the loader's `os.path.exists` check
+turns that into an empty result instead of an error. Derive both from one
+function, or assert after writing that the loader can find what you just wrote —
+a retrieval layer that returns nothing looks exactly like a retrieval layer with
+nothing to return.
+
 ### Fit
 
 Nobody should deploy this. It is a 2023 research demo pinned to APIs that no
@@ -474,15 +533,12 @@ widely and the file is short enough to copy whole.
 - Was `-t / 5*S` intended as `-t / (5*S)`, giving a five-day base time constant
   scaled by strength? That is the reading the docstring's worked example
   (`t=1, S=7`) supports, but the example's expected output is not written down.
-- Does the LlamaIndex path (`build_memory_index.py` plus
-  `enter_name_llamaindex`) apply forgetting at all? It filters by user correctly
-  and never calls `MemoryForgetterLoader`, which suggests the ChatGPT variant has
-  scoped memory and no decay — the opposite trade from the ChatGLM one.
-- What does `meta_information` hold? It appears in the evaluation data's user
-  records and is read nowhere in the code.
-- Is the `KeyError` at `forget_memory.py:131` reachable in practice, or does
-  every record that has `history` also have `summary` because
-  `summarize_memory` is always run first?
+- Why does the retry loop in `build_prompt_with_search_memory_llamaindex` never
+  increment `count`? `retried_times, count = 10, 0` and then `while not
+  related_memos and count < retried_times` with no increment anywhere in the
+  file (`utils/prompt_utils.py:216-224`) — a falsy first query would spin
+  forever. Unreachable in practice only because `user_memory_index` is always
+  `None` on that path, so the block never runs.
 
 ## Appendix: File Index
 
@@ -520,5 +576,20 @@ widely and the file is short enough to copy whole.
 - `eval_data/{en,cn}/probing_questions_*.jsonl` — roughly a hundred bilingual recall questions, with no runner in the tree.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved since
+24 May 2023. The forgetting-curve finding stands as written, re-derived from
+`forget_memory.py:36` and the single retention draw at `:119`. Three of the
+first reading's open questions are now answered from the tree. The LlamaIndex
+path does not apply forgetting and is correctly scoped, but its index is written
+to `../memories/memory_index/llamaindex/` and read from
+`{memory_basic_dir}/memory_index/`, so the ChatGPT variant retrieves nothing at
+all. `meta_information` is the persona seed the simulated users were generated
+from — name, personality, hobbies, speaking style — read nowhere in the code.
+The `KeyError` at `:131` is reachable by default, because `enter_name` and
+`save_local_memory` between them create a record with `history` and no
+`summary`. Added: cross-user recall also disables strengthening, and summaries
+are exempt from the retention draw in both directions. No marks change; the
+report carries none.
 
 **2026-08-13** — [`cf61c4196e4cfdb0f2b7a0316249fa40312dc3a9`](https://github.com/zhongwanjun/MemoryBank-SiliconFriend/commit/cf61c4196e4cfdb0f2b7a0316249fa40312dc3a9) — first reading, at a commit dated 24 May 2023. `screen_repo.py` returned NOTHING SCANNED; the tree was read by hand and nothing was installed or run. The forgetting curve's behaviour was confirmed by evaluating the expression as written, not by running the repository.
