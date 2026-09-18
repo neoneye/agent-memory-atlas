@@ -162,13 +162,23 @@ published report on this site and corrected on 2026-09-18:
 
 **The test, in one question:** *can the agent that wrote the memory also clear
 its review?* Answer it by reading the tool registry, the argument list and the
-writer of the state column — not the documentation. What passes looks like
-Intaris, where the approve route stamps `resolved_by="user"` as a literal
-beside an authenticated session id, the SQL refuses to overwrite a human
-decision, and the agent-facing surface registers no verb of its own; or shisad,
-where the adjudicating command is parsed from the user's own message text and
-refused off the trusted channel; or Agent Mesh, whose CLI approval refuses to
-run at all when `sys.stdin.isatty()` is false.
+writer of the state column — not the documentation.
+
+What passing looks like, clearest first. [Daimon](../../systems/daimon/) maps
+five write channels to three authorities and derives the channel from the
+invocation: the one flag available, `--by agent`, declares the **narrower**
+authority, so a caller may lower what it can do and never raise it; the human
+path is the absence of that flag plus `sys.stdin.isatty()`; and the two
+strongest channels are in-process-only because, as its own docstring puts it,
+*"a channel an agent can reach by shelling out is the deleted `--by human`
+renamed"* — the flag existed and was removed as the defect it was.
+[Intaris](../../systems/intaris/) stamps `resolved_by="user"` as a literal
+beside an authenticated session id, makes a human decision final in SQL, and
+registers no verb on its agent-facing surface.
+[shisad](../../systems/shisad/) parses the adjudicating command out of the
+user's own message text and refuses it off the trusted channel.
+[Agent Mesh](../../systems/agent-mesh/) refuses to run its CLI approval at all
+when `sys.stdin.isatty()` is false.
 
 **Why:** fully automatic memory, memory a person can review before it takes
 effect, and memory a person authors are three different products with three
