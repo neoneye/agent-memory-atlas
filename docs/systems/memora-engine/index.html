@@ -126,7 +126,7 @@ memories, so a superseded value can return as a new one.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Nikeshchaudhary52494--memora" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -177,15 +177,30 @@ no superseded or archived memory reaches any query's top five. The
 result sets are populated by construction, and the case can fail: with
 the status filter removed, the stale memory ranks second for the query
 that asks what the user currently prefers.</p>
-<p>The gap sits one step upstream of all that care. Extraction's
-deduplication compares a candidate only against <em>active</em> memories
-of the same type. A superseded value is not active, so if the
+<p>The gap sits one step upstream of all that care.
+<code>hasExistingDuplicate</code> lists memories with
+<code>status: 'active'</code> and compares a candidate only against
+those, of the same type. A superseded value is not active, so if the
 conversation repeats it, it is stored again as a fresh memory — and
 because it is now the newer of the two, the guard that stops an older
 memory superseding a newer one lets it supersede the correction. The
 supersession record exists, keyed on the memory rather than the value,
 and nothing on the write path consults it. That is the tombstone this
 design is one lookup away from, and why the mark is withheld.</p>
+<p>Two further limits sit in the same eleven lines, and the project
+names the first itself. The comparison is
+<code>normalizeContent(memory.content) === normalized</code>, where
+<code>normalizeContent</code> is a trim, a lowercase and a whitespace
+collapse — so this is exact string equality in a service that has an
+embedding for every memory and a pgvector index to search it with. The
+comment above the constant says what it is: <em>"dedup scans up to this
+many recent memories of the same type per candidate; swap for a real
+similarity/index lookup once retrieval (Phase 3/4) exists."</em> And
+<code>DEDUP_SCAN_LIMIT</code> is <code>200</code> against an
+<code>orderBy: { createdAt: 'desc' }</code>, so the window is the two
+hundred newest active memories of that type: an active duplicate older
+than that is not seen either. The superseded-value case is the sharp end
+of a check that is narrow in three directions at once.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is born <code>ACTIVE</code> with an origin of
 <code>USER_STATED</code>, extracted from a conversation. It can leave
@@ -557,6 +572,24 @@ rg -n &quot;setInterval|node-cron|cron\(|schedule\(&quot; src/modules src/server
 rg -n -i &quot;preHandler|onRequest|authenticate|@fastify/auth|jwt|bearer&quot; src/app.ts src/server.ts src/modules --glob &#39;!**/openai*&#39;   # 0: no request authentication
 ls .github                                                                           # absent: no CI</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/Nikeshchaudhary52494/memora/commit/4c3d1aa984c980ff1401d6ee42c6802d4c301065"><code class="commit-id" title="4c3d1aa984c980ff1401d6ee42c6802d4c301065">4c3d1aa9…</code></a>
+— re-read at the same commit; <code>main</code> has not moved since 7
+September 2026. The mark holds, the no-licence finding was re-checked
+against both the tree and <code>package.json</code>'s missing
+<code>license</code> field, and the headline risk was re-tested in code:
+<code>hasExistingDuplicate</code> still lists
+<code>status: 'active'</code> and compares normalised content. Two
+limits are added beside it, both in the same eleven lines. The
+comparison is exact string equality after a trim, a lowercase and a
+whitespace collapse — in a service that holds an embedding for every
+memory — and the project's own comment calls it temporary: <em>"swap for
+a real similarity/index lookup once retrieval (Phase 3/4) exists."</em>
+And <code>DEDUP_SCAN_LIMIT</code> is 200 against
+<code>orderBy: { createdAt: 'desc' }</code>, so an active duplicate
+older than the two hundred newest of its type is missed as well. The
+superseded-value case is the sharp end of a check that is narrow in
+three directions at once.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/Nikeshchaudhary52494/memora/commit/4c3d1aa984c980ff1401d6ee42c6802d4c301065"><code class="commit-id" title="4c3d1aa984c980ff1401d6ee42c6802d4c301065">4c3d1aa9…</code></a>
 — first reading. Screened with <code>scripts/screen_repo.py</code>: no

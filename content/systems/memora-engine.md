@@ -9,7 +9,7 @@ source_url: https://github.com/Nikeshchaudhary52494/memora
 archive_name: "Nikeshchaudhary52494--memora"
 revision: 4c3d1aa984c980ff1401d6ee42c6802d4c301065
 revision_url: https://github.com/Nikeshchaudhary52494/memora/commit/4c3d1aa984c980ff1401d6ee42c6802d4c301065
-analyzed_at: 2026-09-11
+analyzed_at: 2026-09-18
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the hybrid retrieval evaluation over a seeded twenty-five-memory corpus | tests/evaluation/evaluation.service.test.ts:42-49, src/evaluation/datasets/memory-evaluation.ts (queries q4, q5, q20), src/evaluation/evaluation.service.ts:72-93 | the test seeds the corpus — `mongo-old` already SUPERSEDED, `archived-old-project` ARCHIVED — runs every query through the production `MemorySearchService.search` with `limit: 10` and no score or similarity floor, and asserts `leakedExcludedKeys` is empty across all of them. The result is populated by construction: the semantic arm orders by cosine distance with `LIMIT` and no threshold, so every query returns ranked active memories, and the case discriminates: reproducing the evaluation's hashing-trick embedder and the ranker offline, with the `ACTIVE` predicate removed the superseded `mongo-old` ranks second for q4 and fourth for q5, inside the top five both times | the same file"
@@ -38,7 +38,19 @@ Its design turns on one idea done carefully: **a memory that stops being true is
 
 The part worth the atlas's `negative_eval` mark is the test that proves it. The committed evaluation seeds twenty-five memories for one fictional user — one already superseded, one archived — runs twenty-six queries through the production search path, and asserts that no superseded or archived memory reaches any query's top five. The result sets are populated by construction, and the case can fail: with the status filter removed, the stale memory ranks second for the query that asks what the user currently prefers.
 
-The gap sits one step upstream of all that care. Extraction's deduplication compares a candidate only against *active* memories of the same type. A superseded value is not active, so if the conversation repeats it, it is stored again as a fresh memory — and because it is now the newer of the two, the guard that stops an older memory superseding a newer one lets it supersede the correction. The supersession record exists, keyed on the memory rather than the value, and nothing on the write path consults it. That is the tombstone this design is one lookup away from, and why the mark is withheld.
+The gap sits one step upstream of all that care. `hasExistingDuplicate` lists memories with `status: 'active'` and compares a candidate only against those, of the same type. A superseded value is not active, so if the conversation repeats it, it is stored again as a fresh memory — and because it is now the newer of the two, the guard that stops an older memory superseding a newer one lets it supersede the correction. The supersession record exists, keyed on the memory rather than the value, and nothing on the write path consults it. That is the tombstone this design is one lookup away from, and why the mark is withheld.
+
+Two further limits sit in the same eleven lines, and the project names the first
+itself. The comparison is `normalizeContent(memory.content) === normalized`,
+where `normalizeContent` is a trim, a lowercase and a whitespace collapse — so
+this is exact string equality in a service that has an embedding for every
+memory and a pgvector index to search it with. The comment above the constant
+says what it is: *"dedup scans up to this many recent memories of the same type
+per candidate; swap for a real similarity/index lookup once retrieval (Phase
+3/4) exists."* And `DEDUP_SCAN_LIMIT` is `200` against an `orderBy: { createdAt:
+'desc' }`, so the window is the two hundred newest active memories of that type:
+an active duplicate older than that is not seen either. The superseded-value
+case is the sharp end of a check that is narrow in three directions at once.
 
 ## 2. Mental Model
 
@@ -189,5 +201,7 @@ ls .github                                                                      
 ```
 
 ## History
+
+**2026-09-18** — [`4c3d1aa984c980ff1401d6ee42c6802d4c301065`](https://github.com/Nikeshchaudhary52494/memora/commit/4c3d1aa984c980ff1401d6ee42c6802d4c301065) — re-read at the same commit; `main` has not moved since 7 September 2026. The mark holds, the no-licence finding was re-checked against both the tree and `package.json`'s missing `license` field, and the headline risk was re-tested in code: `hasExistingDuplicate` still lists `status: 'active'` and compares normalised content. Two limits are added beside it, both in the same eleven lines. The comparison is exact string equality after a trim, a lowercase and a whitespace collapse — in a service that holds an embedding for every memory — and the project's own comment calls it temporary: *"swap for a real similarity/index lookup once retrieval (Phase 3/4) exists."* And `DEDUP_SCAN_LIMIT` is 200 against `orderBy: { createdAt: 'desc' }`, so an active duplicate older than the two hundred newest of its type is missed as well. The superseded-value case is the sharp end of a check that is narrow in three directions at once.
 
 **2026-09-11** — [`4c3d1aa984c980ff1401d6ee42c6802d4c301065`](https://github.com/Nikeshchaudhary52494/memora/commit/4c3d1aa984c980ff1401d6ee42c6802d4c301065) — first reading. Screened with `scripts/screen_repo.py`: no auto-running configuration and no build-time execution path; four dependency manifests inside the seven-day cooldown and two unpinned surfaces, in the service and the showcase. Nothing was installed, built or run.
