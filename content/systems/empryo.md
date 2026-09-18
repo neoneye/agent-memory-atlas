@@ -7,13 +7,12 @@ page_kind: system
 source_name: "proxysoul/Empryo"
 source_url: https://github.com/proxysoul/Empryo
 archive_name: "proxysoul--Empryo"
-revision: f771fc238e6426706a28773a9aaa01b967c70342
-revision_url: https://github.com/proxysoul/Empryo/commit/f771fc238e6426706a28773a9aaa01b967c70342
-analyzed_at: 2026-09-13
-capabilities: "scope_enforced, human_review"
+revision: 64ea2ec8d1cbf393c6fc419f968a0a7d097881c9
+revision_url: https://github.com/proxysoul/Empryo/commit/64ea2ec8d1cbf393c6fc419f968a0a7d097881c9
+analyzed_at: 2026-09-18
+capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "the memory tools — separate read and write scope resolvers over `global` and `project`, applied before the store is touched | src/core/tools/memory.ts:222, :296-304, :383, :402, :425, :459 | `resolveWriteScope(args.scope)` runs at every write entry point and `resolveReadScope(args.scope)` at the read, which also handles a `disabled` resolution by refusing rather than falling through to a wider scope. Ids are resolved within the resolved scope — `manager.resolveId(readScope, args.id)` — so a scope is a lookup boundary and not only a filter applied afterwards. Writes default to `project` rather than `global`, which is the safer side of a default a caller may omit | src/core/tools tests"
-  human_review: "the MemoryBrowser — a person acting on stored memories, including bulk review of similarity clusters | src/core/commands/context.ts:10, src/core/memory/manager.ts:398, src/core/memory/db.ts:622, :637, :995 | one popup owns *\"browse / cleanup / settings via tabs\"*. The browse tab offers per-row pin and unpin and a soft delete with a `restore` beside it, so a removal by a person is reversible and recorded rather than destructive. The cleanup tab is the less common half: `db.ts:995` builds cluster groups as connected components of the similar-edge graph and `manager.ts:398` drives a deep cleanup over them, presenting candidates in similarity clusters for bulk delete, pin or skip. This is a review queue over an existing store rather than approval before a write | src/core/memory tests"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -432,6 +431,8 @@ upsert at `:298`, supersede at `:660`, read filters at `:807`).
 **Licence** — `LICENSE` (Business Source License 1.1).
 
 ## History
+
+**2026-09-18** — [`64ea2ec8d1cbf393c6fc419f968a0a7d097881c9`](https://github.com/proxysoul/Empryo/commit/64ea2ec8d1cbf393c6fc419f968a0a7d097881c9) — re-pinned from `f771fc2`; 7 files and +2,292 lines, re-screened at the new pin. **Human review withdrawn**, against the [rubric's narrowed wording](../../methodology/atlas-rubric/#human-review-surface). The MemoryBrowser is real and useful — per-row pin and unpin, a soft delete with a `restore` beside it so a person's removal is reversible, and a cleanup tab that groups similarity clusters as connected components of the similar-edge graph. All of it acts on memories that are already stored. The schema is the short answer: `memories` carries `pinned`, `hidden`, `superseded_by`, a `source` constrained to `user` or `agent`, and no pending or proposed state at all, so a written memory is live immediately and `hidden=0` — which appears in every index and twenty-six times across the read paths — is a soft delete applied afterwards rather than an admission gate. Curation is not review; nothing waits for anyone. The only approval prompt in the tree is `onWebSearchApproval`, which gates a tool call rather than a memory. `scope_enforced` holds.
 
 **2026-09-13** — [`f771fc238e6426706a28773a9aaa01b967c70342`](https://github.com/proxysoul/Empryo/commit/f771fc238e6426706a28773a9aaa01b967c70342) — re-read, 27 commits past the previous pin, and the memory subsystem is unchanged. The 42,033 added lines are localization catalogues for Arabic, French, Korean and Russian, five published morph cells, CI workflows and a locale validator; excluding locales, morphs, assets and documentation, the range touches only workflow files, Mintlify pages and `scripts/validate-locales.ts`. Both marks stand and both mechanisms were re-checked in the tree rather than carried forward — `resolveWriteScope` and `resolveReadScope` still gate every memory tool entry point, and the MemoryBrowser still owns browse, cleanup and settings with cluster-based bulk review over the similar-edge graph. Evidence records were written for both, which the report previously carried none of, and the stack row was promoted from seeded to reviewed after reading `src/core/memory/db.ts`. Screened again first; nothing was installed and no suite was run.
 
