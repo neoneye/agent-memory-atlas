@@ -9,7 +9,7 @@ source_url: https://github.com/RBKunnela/ALMA-memory
 archive_name: "RBKunnela--ALMA-memory"
 revision: 91a352f25fa1060c25c414770ecdfc57fb49f52d
 revision_url: https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d
-analyzed_at: 2026-09-04
+analyzed_at: 2026-09-18
 capabilities: "trust_state, scope_enforced, audit_log"
 capability_evidence:
   trust_state: "the verification block on every memory row | alma/retrieval/verification.py:28-60,:317,:502, alma/storage/verification_store.py, alma/storage/sqlite_local.py:1764, alma/storage/postgresql.py:2103 | `VerificationStatus` is `verified | uncertain | contradicted | unverifiable`, and `VerificationMethod` names whether the verdict came from ground truth, cross-verification against other memories or a confidence fallback. `VerifiedRetriever` calls `persist_verification` by default, which writes status, method, confidence, reason, contradicting source and `verified_at` through `update_memory_verification` on both shipped SQL backends. The status is written on the read path, so a row nobody retrieves carries none | tests/unit/test_atlas_gaps_561.py `test_persist_verification_on_outcome`, `test_verified_retriever_persists`"
@@ -587,6 +587,22 @@ rather than yours to configure.
   LongMemEval citation; no `CITATION.cff`.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`scope_enforced` stands and the six cited lines are exact: each `get_*` composes
+`WHERE project_id = ?` into the SQL before execution
+(`sqlite_local.py:957`, `:1008`, `:1086`, `:1139`, `:1194`, `:1243`). Worth
+adding, because it is the part a reader would want and the record does not say:
+the vector arm is not partitioned. `_load_embeddings` builds one FAISS index per
+`memory_type` from `SELECT memory_id, embedding FROM embeddings WHERE
+memory_type = ?` with no project term (`:490-495`), and `_search_index` takes
+`top_k * 2` candidates from it (`:948`, `:999`, `:1077`, `:1130`, `:1184`).
+Nothing leaks — the candidate ids are intersected inside the scoped query as
+`AND id IN (…)` alongside `WHERE project_id = ?` (`:964-967`), so another
+project's row cannot be returned. What the shared index costs is recall: in a
+store holding several projects, a project's own best matches can be crowded out
+of the 2× candidate set before the SQL ever sees them, and a short result looks
+the same as having little to recall. No marks change.
 
 **2026-09-04** — [`91a352f25fa1060c25c414770ecdfc57fb49f52d`](https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d) — re-pinned at the head of a rewritten `main`, 193 commits. The two commits this report was previously pinned to, `e2178ad48a2aefdafa743872cf2ac0bd13f4bfe9` and `164d2e3e3c67f3ce1c33d2b9ccd9acaa65f9ad7a`, are no longer served by GitHub — a fetch by SHA answers *"not our ref"* — because the project rewrote its history on 4 September 2026 to remove a company integration adapter and a presentation deck; the tag `v0.11.0` points at a rewritten commit and no reachable commit contains `integrations/`. Screened again first: six build-time execution paths, three unpinned surfaces, nothing inside the seven-day cooldown, no auto-run surface; nothing was installed or run. The memory mechanism is unchanged and every absence search re-run at this commit returns what it returned before: the write guard has one call site, `needs_review()` has no consumer, three of eight delete sites are audited, nothing compares the two dialects. No mark moves. One published claim was wrong at both earlier pins and is corrected: *"No validity interval exists"* — the knowledge graph's `Relationship` has carried `valid_from` and `valid_to` beside `created_at`, with an as-of reader, since v0.9.0; the mark stays withheld because nothing in the package assigns the fields, the database-backed graph stores ignore them, and no surface imports the graph package. Two mechanisms present at both earlier pins and unreported are added: `DecayManager`'s computed strength with the reinforce and list-weak-memories tools, and the exported, uncalled `HybridSearchEngine`. The Maia adapter paragraph is removed with its file. The stack row is promoted from seeded to reviewed with the shipped store backends named where the vocabulary allows.
 

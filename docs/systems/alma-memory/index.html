@@ -117,7 +117,7 @@ automatic extraction does not use.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-04</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RBKunnela--ALMA-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -813,6 +813,28 @@ nothing beyond the LongMemEval citation; no
 <code>CITATION.cff</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>scope_enforced</code> stands and the six cited
+lines are exact: each <code>get_*</code> composes
+<code>WHERE project_id = ?</code> into the SQL before execution
+(<code>sqlite_local.py:957</code>, <code>:1008</code>,
+<code>:1086</code>, <code>:1139</code>, <code>:1194</code>,
+<code>:1243</code>). Worth adding, because it is the part a reader would
+want and the record does not say: the vector arm is not partitioned.
+<code>_load_embeddings</code> builds one FAISS index per
+<code>memory_type</code> from
+<code>SELECT memory_id, embedding FROM embeddings WHERE memory_type = ?</code>
+with no project term (<code>:490-495</code>), and
+<code>_search_index</code> takes <code>top_k * 2</code> candidates from
+it (<code>:948</code>, <code>:999</code>, <code>:1077</code>,
+<code>:1130</code>, <code>:1184</code>). Nothing leaks — the candidate
+ids are intersected inside the scoped query as
+<code>AND id IN (…)</code> alongside <code>WHERE project_id = ?</code>
+(<code>:964-967</code>), so another project's row cannot be returned.
+What the shared index costs is recall: in a store holding several
+projects, a project's own best matches can be crowded out of the 2×
+candidate set before the SQL ever sees them, and a short result looks
+the same as having little to recall. No marks change.</p>
 <p><strong>2026-09-04</strong> — <a
 href="https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d"><code class="commit-id" title="91a352f25fa1060c25c414770ecdfc57fb49f52d">91a352f2…</code></a>
 — re-pinned at the head of a rewritten <code>main</code>, 193 commits.
