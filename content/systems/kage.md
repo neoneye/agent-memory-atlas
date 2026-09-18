@@ -9,7 +9,7 @@ source_url: https://github.com/kage-core/kage
 archive_name: "kage-core--kage"
 revision: e7cc087666fd3d01a5727f8a67e7b9e745fca904
 revision_url: https://github.com/kage-core/kage/commit/e7cc087666fd3d01a5727f8a67e7b9e745fca904
-analyzed_at: 2026-09-09
+analyzed_at: 2026-09-18
 capabilities: "trust_state, human_review, negative_eval"
 capability_evidence:
   trust_state: "MemoryStatus on the packet, withholding at recall | mcp/kernel.ts:95,3104,3799,4615 | the status is one of `pending, approved, deprecated, superseded`, validated on write at :4615, and the read paths select `packet.status === \"approved\"` — access entries at :3104 and supersession candidates at :3799 — so a pending or deprecated packet is withheld rather than ranked down. Capture routes to pending on either an explicit request or an ungrounded utterance, and the comment at :17115 records that an ungrounded capture is withheld regardless of status | mcp/kernel.test.ts"
@@ -423,6 +423,20 @@ baseline, `memoryarena-kage-answer.mjs`, `swebench-kage-context.mjs`,
 format; one packet is currently `"stale": true` against `mcp/kernel.ts`)
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`human_review` stands, and the producer test is worth recording because this
+system makes it the hard way. The MCP surface carries **119** distinct `kage_*`
+tools, and `approvePending` is on none of them: its only call site anywhere in
+the tree is `mcp/cli.ts:453`, inside the interactive loop that prompts
+`(a) approve (r) reject (s) skip (q) quit` per packet, and the function itself is
+exported from `mcp/kernel.ts:20441`. The three review-shaped tools that do exist
+— `kage_review_artifact`, `kage_review_run`, `kage_reviewers` — are about code
+artifacts and runs, and none of them reaches the pending-packet queue. Keeping
+one verb off a surface that large is a deliberate act rather than an oversight,
+which is the distinction that separates this from
+[Monet](../monet/) and [memsem](../memsem/), where the approve verb is simply
+one more registered tool. No marks change.
 
 **2026-09-09** — [`e7cc087666fd3d01a5727f8a67e7b9e745fca904`](https://github.com/kage-core/kage/commit/e7cc087666fd3d01a5727f8a67e7b9e745fca904) — second reading, on `master`. The previous pin is not on `master` and never will be: `d22cad56` is the head of a branch the project named **`archive/remote-final`**, and the two lineages diverged after `edadf4f3` (v3.1.0, 29 June 2026), leaving `master` 398 commits ahead and 370 behind it. The atlas was pinned to an archive. Screened before reading; nothing was installed and no suite was run.
 
