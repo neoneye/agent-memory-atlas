@@ -9,7 +9,7 @@ source_url: https://github.com/parcadei/Continuous-Claude-v3
 archive_name: "parcadei--Continuous-Claude-v3"
 revision: d07ff4b06b62f43771bc0c927d0211b734d6149e
 revision_url: https://github.com/parcadei/Continuous-Claude-v3/commit/d07ff4b06b62f43771bc0c927d0211b734d6149e
-analyzed_at: 2026-08-15
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "postgres, sqlite"
 stack_retrieval: "lexical, vector"
@@ -22,10 +22,10 @@ matrix:
   update_delete: "None wired — no supersede, no correction, no forget; the only mutation is an uncalled hard DELETE, and re-extraction is bounded per session rather than per rejected value"
   scoping: "Learnings carry only a session_id and no project key, and recall applies no scope filter, so recall is global across every project; dedup, inconsistently, is scoped to the same session"
   integration: "A Claude Code .claude/ config — 30 hooks, 32 agents, 109 skills — installed by a wizard that needs Docker and PostgreSQL; recall is a UserPromptSubmit hook, capture a detached daemon"
-  background: "The memory daemon (double-fork, 60s poll) extracts learnings on a stale heartbeat via a headless `claude -p --model sonnet --dangerously-skip-permissions` subprocess; a failed extraction is marked done and never retried"
+  background: "The memory daemon (double-fork, 60s poll) extracts learnings on a stale heartbeat via a headless `claude -p --model sonnet --dangerously-skip-permissions` subprocess; when the session id does not match a transcript filename it mines the most recently modified transcript from any project, and a failed extraction is marked done and never retried"
   trust: "A confidence label (high/medium/low) is stored in metadata but read on no path; there is no discrete status, and nothing withholds a learning from recall"
   strengths: "Extraction targets the thinking blocks — the reasoning, not the actions — via a background model, and recall is hybrid RRF injected automatically; the handoff half survives compaction as git-tracked YAML"
-  risks: "The design overshoots the code: the default learnings backend cannot write, embeddings from different models share one unstamped 1024-d column, dedup is per-session while recall is global and unscoped, confidence and human-confirm are inert, and the artifact-index hook writes to a path that does not exist"
+  risks: "The design overshoots the code: the default learnings backend cannot write, the daemon falls back to the most recent transcript from any project and stamps it with the stale session's id, embeddings from different models share one unstamped 1024-d column, dedup is per-session while recall is global and unscoped, confidence and human-confirm are inert, and the artifact-index hook shells out to a path two segments off"
 ---
 
 ## 1. Executive Summary
@@ -135,9 +135,15 @@ flowchart TB
 
 Two trees ship, and only one runs. **`opc/`** is the installable package and the
 authoritative source of the memory code; **`.claude/scripts/core/*.py`** is a
-near-identical copy whose imports (`from scripts.core.db …`) resolve against a
+stale copy whose imports (`from scripts.core.db …`) resolve against a
 `.claude/` directory that has no `db/` layer, so the copy would `ImportError` if
-invoked directly. The TypeScript hooks always run the Python from `opc/` with
+invoked directly. "Near-identical" is too generous: `store_learning.py` and
+`recall_learnings.py` differ by a handful of lines, but `memory_daemon.py`
+differs by twenty-seven, and the divergence is behavioural — the dead copy reads
+`~/.opc-dev` before `~/.claude` and matches a transcript by id only, while the
+live `opc/` copy honours `CLAUDE_CONFIG_DIR` and adds the most-recent-transcript
+fallback that section 7 describes. When two copies of a daemon disagree, it is
+worth knowing which one the hooks reach. The TypeScript hooks always run the Python from `opc/` with
 `PYTHONPATH=opc` (`memory-awareness.ts:127-135`). Everything below is `opc/`.
 
 - **`opc/scripts/core/`** — `store_learning.py` (346), `recall_learnings.py`
@@ -196,7 +202,8 @@ against the committed `docker/init-schema.sql`.
   `last_heartbeat < NOW()-300s AND memory_extracted_at IS NULL`;
   `extract_memories` (`:218-289`) resolves the session JSONL and spawns the
   headless extractor; `mark_extracted` (`:123-132`) sets `memory_extracted_at`
-  immediately after queueing, **success or not**.
+  immediately after queueing, **success or not**. How it resolves that JSONL is
+  the part to read closely — see section 7.
 - **Thinking-block filter** — `opc/scripts/core/extract_thinking_blocks.py:22-48`
   is a regex pre-filter for "perception signal" phrases; the headless
   `memory-extractor` agent (`.claude/agents/memory-extractor.md`) runs it, then
@@ -309,6 +316,24 @@ does with a near-duplicate.
   only writes the session row — it does not start the daemon. So capture depends
   on a `memory_daemon.py start` an operator runs by hand; without it, nothing is
   ever extracted.
+- **The transcript it mines may not be the session's.** `extract_memories`
+  takes `(session_id, project_dir)`, and `project_dir` appears exactly twice in
+  the file: in the signature and in a log line. It is never used to constrain the
+  search. The glob is `CLAUDE_CONFIG_DIR/projects/*/*.jsonl` — every project on
+  the machine — and the match is the substring test
+  `if session_id in f.name or f.stem == session_id` (`:232-236`). When that
+  fails, which the code's own comment says is *"common with truncated IDs"*, it
+  falls back to **the most recently modified transcript in the last ten minutes,
+  from anywhere** (`:238-247`). The headless extractor is then launched with
+  `f"Extract learnings from session {session_id}. JSONL path: {jsonl_path}"`
+  (`:280`) — session A's identity, session B's transcript — so the learnings are
+  stored against a session whose reasoning they did not come from, and the one
+  scope key a learning carries is wrong. It is also cross-project in the capture
+  direction, which compounds the unscoped recall described in section 6: a
+  stale session in one repository can be credited with the thinking of a live
+  session in another. `stdout` and `stderr` are `DEVNULL` (`:282-283`), so
+  nothing about the substitution surfaces except the daemon's own
+  `"no ID match"` log line.
 - **A failed extraction is marked done.** `mark_extracted` sets
   `memory_extracted_at = NOW()` right after queueing, regardless of whether the
   headless run succeeded (`:123-132`, `:350-351`). A session whose extraction
@@ -359,8 +384,11 @@ available is the coarse outcome label — the handoff's *content* is never revis
 superseded. It survives compaction, which is its job; it does not carry a belief
 that can be found wrong and fixed. Two of its wiring details are also broken in the
 shipped layer: the `PostToolUse` hook that would populate the SQLite index shells
-out to a `scripts/artifact_index.py` path that does not exist in this layout, so
-the index is not auto-filled; and the per-instance "session affinity" table
+out to `path.join(projectDir, 'scripts', 'artifact_index.py')`
+(`handoff-index.ts:216`, and the compiled `dist/handoff-index.mjs:140`), which is
+wrong by two segments — the file ships at `opc/scripts/core/artifact_index.py`
+and at `.claude/scripts/core/artifact_index.py`, never at `scripts/`. So the
+index is not auto-filled; and the per-instance "session affinity" table
 (terminal-PID → session) is written but never read, so the promised isolation
 between concurrent Claude instances in one repo does not take effect — selection
 falls back to newest-by-mtime globally.
@@ -523,5 +551,22 @@ pgvector table read back by a good query.
 - `.claude/agents/memory-extractor.md` — the headless extractor's system prompt.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Every
+negative claim in the first reading was re-run and holds: `memory_service.py`
+exists nowhere in the tree, so the default `sqlite` backend raises `ImportError`
+from `memory_factory.py` — under a message that blames a missing `aiosqlite`
+rather than a missing module; `delete_archival` has no caller in any language in
+the tree; and all five recall queries carry `metadata->>'type' =
+'session_learning'` and nothing else, so there is no scope, type or confidence
+filter on the read path. The artifact-index path is wrong by two segments, now
+named. **New finding:** `extract_memories` never uses the `project_dir` it is
+passed, matches a transcript to a session by substring, and on failure — which
+its own comment calls common — mines the most recently modified transcript from
+any project on the machine, then tells the extractor to file the result under the
+original session id. Capture is cross-project in the same way recall already was.
+Also corrected: the two shipped script trees are not near-identical;
+`memory_daemon.py` differs by twenty-seven lines, and that fallback is one of
+them. No marks; the report carries none.
 
 **2026-08-15** — [`d07ff4b06b62f43771bc0c927d0211b734d6149e`](https://github.com/parcadei/Continuous-Claude-v3/commit/d07ff4b06b62f43771bc0c927d0211b734d6149e) — first reading, at the `.claude` + `opc/` layout. Screened before opening: two `.claude/` auto-run surfaces (`hooks/`, `settings.json`), five floating npm ranges behind a committed lockfile, one floating `opc/pyproject.toml`; nothing was installed or run. `opc/` was established as the authoritative memory tree (the `.claude/scripts/core/*.py` copy has no `db/` layer and would `ImportError`), and the capture, dedup, recall, embedding and correction paths were read from `opc/scripts/core/` and `db/` against the committed `docker/init-schema.sql` and the compiled hooks. The daemon extraction (headless `claude -p --dangerously-skip-permissions`), the broken default SQLite backend, the per-session dedup against global recall, the inert `confidence`, the unstamped 1024-d embedding column, and the unwired "user-confirm-learning" hook were all confirmed in code. No capability mark is earned; no paper or citation file exists in the tree.
