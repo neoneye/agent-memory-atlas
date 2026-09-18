@@ -7,13 +7,13 @@ page_kind: system
 source_name: "fpytloun/intaris"
 source_url: https://github.com/fpytloun/intaris
 archive_name: "fpytloun--intaris"
-revision: 59b148d1d56286f4511473cf13021581746ace36
-revision_url: https://github.com/fpytloun/intaris/commit/59b148d1d56286f4511473cf13021581746ace36
-analyzed_at: 2026-09-11
+revision: ba0fb257282598cd84e6a825e96512d308bd5b48
+revision_url: https://github.com/fpytloun/intaris/commit/ba0fb257282598cd84e6a825e96512d308bd5b48
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, human_review"
 capability_evidence:
   scope_enforced: "every store query | `user_id` as a tenant identifier in each query, `agent_id` beside it in the profile key | a stored key applied as a predicate, not a partition | unknown"
-  human_review: "escalation resolution | intaris/audit.py:542 | a person resolves an escalated or denied call and the row records `user_decision`, `user_note`, `resolved_at` and `resolved_by`, with the WHERE clause refusing to overwrite a decision a human already made | tests/test_resolve.py"
+  human_review: "escalation resolution, where the actor is stamped by the server and a human decision is final in SQL | intaris/audit.py:489-570, intaris/api/audit.py:103-140, intaris/judge.py:1074-1134, intaris/mcp/proxy.py:390-400 | `resolve_escalation` records `user_decision`, `user_note`, `resolved_at` and `resolved_by`, and the invariant is in the `WHERE`: `AND decision IN ('escalate', 'deny') AND (user_decision IS NULL OR resolved_by = 'judge')`, so a human may override the judge and the judge may never overwrite a human — the comment above it says so and names the TOCTOU race the conditions close. The producer test turns on who may claim to be the human, and the answer is nobody: `POST /api/v1/decision` takes only `call_id`, `decision` and `note`, and the handler passes `resolved_by=\"user\"` as a literal alongside `user_id=ctx.user_id` from the authenticated session context. Intaris's own agent-facing surface is the MCP proxy, which namespaces and forwards the upstream servers' tools and registers no verb of its own, so the guarded agent has no resolve tool to call | tests/test_resolve.py, tests/test_intention.py"
 stack_storage: "sqlite, postgres"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -350,6 +350,8 @@ Run from the root of the checkout at the pinned commit.
 | Tree size | `find . -name "*.py" -not -path "./.git/*" \| xargs wc -l \| tail -1` | 82,701 lines |
 
 ## History
+
+**2026-09-18** — [`ba0fb257282598cd84e6a825e96512d308bd5b48`](https://github.com/fpytloun/intaris/commit/ba0fb257282598cd84e6a825e96512d308bd5b48) — re-pinned; 13 files and +280 lines, mostly `server.py` and the API tests, re-screened at the new pin. Both marks hold. The `human_review` record cited one line and is rewritten around the producer test, which this system passes on the part that usually fails. The SQL invariant is real — `AND (user_decision IS NULL OR resolved_by = 'judge')`, so a human may override the judge and the judge may never overwrite a human, with the comment naming the TOCTOU race the conditions close — but the question is who may claim to be the human. `POST /api/v1/decision` accepts only `call_id`, `decision` and `note`; `resolved_by="user"` is a literal in the handler, passed beside `user_id=ctx.user_id` from the authenticated session. And Intaris's own agent-facing surface is the MCP proxy, which namespaces and forwards the upstream servers' tools and registers none of its own, so the guarded agent has no resolve verb at all. The BSL 1.1 licence is unchanged, with the 2030-03-15 change date to Apache 2.0 and no rider touching analysis.
 
 **2026-09-11** — [`59b148d1d56286f4511473cf13021581746ace36`](https://github.com/fpytloun/intaris/commit/59b148d1d56286f4511473cf13021581746ace36) — re-read, 63 files and 7,163 insertions past the previous pin in a single commit. **Both marks re-verified and unchanged**, with `capability_evidence` records added where the report had none. **`audit_log` stays withheld, and the reason is now more specific rather than less.** The in-place update is unchanged — `UPDATE audit_log` at `audit.py:542` and `:617` — but reading its `WHERE` clause is worth the trip: `AND (user_decision IS NULL OR resolved_by = 'judge')` means a human may overwrite a judge and nothing may overwrite a human, with `COALESCE` preserving the judge's reasoning through the override. The mutability is bounded and deliberate. Beside it the commit adds a genuinely append-only stream: `audit_event_index`, keyed `(user_id, session_id, seq)`, written by one `INSERT ... ON CONFLICT DO NOTHING` with no update or delete anywhere, plus a projection watermark and an idempotency ledger for appends. It records `tool_call` and `tool_result` events — what the agent did — and carries no decision, resolution or note. The system therefore keeps an immutable record of the events and a mutable record of the judgements about them, which is the inverse of the split the mark asks for. Screened before reading: eight findings; nothing was installed or run.
 
