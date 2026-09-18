@@ -115,14 +115,14 @@ consolidation reports four phases done while running one.</p>
               <strong>Maple-Aikon/janus-graph</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Maple-Aikon/janus-graph/commit/987c34c0c488f8e16b350aea16b1e281d6248d3e" title="987c34c0c488f8e16b350aea16b1e281d6248d3e">
+            <a class="meta-pill revision-pill" href="https://github.com/Maple-Aikon/janus-graph/commit/5a66516fd795ca178870b90253bedb0a6a0e5aac" title="5a66516fd795ca178870b90253bedb0a6a0e5aac">
               <span>Analyzed revision</span>
-              <code>987c34c0…</code>
+              <code>5a66516f…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Maple-Aikon--janus-graph" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -158,9 +158,15 @@ fact edges with a model; <code>search_memory</code> runs Graphiti's
 BM25-plus-cosine edge search with MMR reranking, restricted to facts
 whose <code>invalid_at</code> is null. Apache-2.0, 25 commits between 28
 August and 7 September 2026, 24 of them by one author; 6,416 lines of
-Python and 2,705 lines of tests. <code>uv.lock</code> pins graphiti-core
-0.29.3, whose package is 36,684 lines — the memory model lives in the
-dependency, and this report reads it at that tag.</p>
+Python and 2,705 lines of tests. <code>uv.lock</code> now resolves
+graphiti-core 0.30.1 against a declared
+<code>graphiti-core[falkordb]&gt;=0.20</code>, and 0.30.1 is a PyPI
+release with <strong>no git tag</strong> — the repository's tags step
+from <code>v0.30.0</code> to <code>v0.30.2</code> — so the exact code
+this project runs cannot be read from the engine's own history. The
+memory model lives in that dependency, and the anchors below were
+re-verified against <code>v0.30.0</code>, the nearest readable tag,
+where they hold.</p>
 <p>What the repository itself adds is plumbing around an LLM-heavy
 ingest: a queue with a stuck-row reaper, a per-episode timeout and a
 dead-letter table; a wrapper around the LLM client that repairs
@@ -196,12 +202,14 @@ prompt names an existing fact as contradicted, and both facts carry a
 <code>valid_at</code> with the existing one earlier, the older edge's
 <code>invalid_at</code> is set to the newer fact's <code>valid_at</code>
 and its <code>expired_at</code> to now
-(<code>edge_operations.py:546-571</code> in graphiti-core 0.29.3;
-<code>:822-838</code> handles a new fact that arrives already
-superseded); the edge stays in the graph and
-<code>search_memory</code>'s <code>invalid_at IS NULL</code> filter
-hides it. Nothing else ends a belief. There is no delete or forget tool,
-and the dream phases that claim to deduplicate and prune do nothing.</p>
+(<code>edge_operations.py:546-571</code> at graphiti-core
+<code>v0.30.0</code>; <code>:822-838</code> handles a new fact that
+arrives already superseded, setting <code>expired_at</code> when
+<code>invalid_at</code> is present and no <code>expired_at</code> is);
+the edge stays in the graph and <code>search_memory</code>'s
+<code>invalid_at IS NULL</code> filter hides it. Nothing else ends a
+belief. There is no delete or forget tool, and the dream phases that
+claim to deduplicate and prune do nothing.</p>
 <p>Two paths keep a statement from ever reaching recall, and the agent
 is told about neither: the repair wrapper's empty-list fallback, below,
 which means the fact is never written, and the filter itself, which
@@ -213,7 +221,7 @@ predicate is <code>IS NULL</code> rather than a comparison with now.</p>
 flowchart TD
   A[&quot;add_episode: content, name, source&quot;] --&gt; Q[&quot;SQLite episodes row, status queued&quot;]
   Q --&gt; S[&quot;sweep claims a batch; created_at is not loaded&quot;]
-  S --&gt; W[&quot;Graphiti.add_episode, reference_time = the sweep&#39;s clock&quot;]
+  S --&gt; W[&quot;Graphiti.add_episode, reference_time =&lt;br/&gt;the queue row&#39;s created_at, else the sweep clock&quot;]
   W --&gt; X[&quot;model extracts entities and fact edges&quot;]
   X --&gt; V{&quot;response validates against the Pydantic model?&quot;}
   V --&gt;|yes| E[&quot;fact edge: valid_at and invalid_at from the text, created_at now&quot;]
@@ -660,6 +668,33 @@ rg -n -i &#39;arxiv|bibtex|@article|@misc|citation|doi\.org&#39; -g &#39;!uv.loc
 # in graphiti-core v0.29.3:
 rg -n &#39;clone\(database&#39; graphiti_core/graphiti.py                   # add_episode and add_episode_bulk switch graph by group id; search does not</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/Maple-Aikon/janus-graph/commit/5a66516fd795ca178870b90253bedb0a6a0e5aac"><code class="commit-id" title="5a66516fd795ca178870b90253bedb0a6a0e5aac">5a66516f…</code></a>
+— re-pinned from <code>987c34c</code>; 32 files and +4,936 lines,
+re-screened at the new pin. <strong>One claim corrected and it was wrong
+when written.</strong> The bitemporal record said <em>"the reference
+time forwarded is the sweep's clock rather than the enqueue time"</em>;
+<code>worker.py:66-71</code> initialises <code>ref_time</code> to
+<code>now()</code> and then overwrites it from
+<code>datetime.fromisoformat(record.created_at)</code>, so the enqueue
+time is preferred and the sweep clock is the fallback for a missing or
+unparseable field — and the block is byte-identical at the previous pin.
+<strong>The engine pin moved and is no longer readable at its
+version.</strong> The declared constraint is
+<code>graphiti-core[falkordb]&gt;=0.20</code> and <code>uv.lock</code>
+resolves 0.30.1, which has no git tag: the repository's tags step from
+<code>v0.30.0</code> to <code>v0.30.2</code>. The anchors were
+re-verified against <code>v0.30.0</code> and hold —
+<code>invalid_at</code> parsing at <code>:255-308</code>, the
+contradiction close at <code>:548</code>, the already-superseded case at
+<code>:822-838</code>. New at this pin: a Phase 3.1 BFS search endpoint
+(<code>daemon/search_engine.py</code>,
+<code>engine/search_memory.py</code>, a 395-line HTTP handler and a
+705-line test file) that carries <code>invalid_at IS NULL</code> into
+the Cypher traversal and filters again after the cosine rerank, kept
+deliberately separate from <code>search_memory</code> — its module
+docstring records the reason as an anti-pattern: <em>"semantic MMR
+rerank != structural traversal; mixing degrades both"</em>.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/Maple-Aikon/janus-graph/commit/987c34c0c488f8e16b350aea16b1e281d6248d3e"><code class="commit-id" title="987c34c0c488f8e16b350aea16b1e281d6248d3e">987c34c0…</code></a>
 — first reading. Screened with <code>scripts/screen_repo.py</code>: no
