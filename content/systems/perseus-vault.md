@@ -9,7 +9,7 @@ source_url: https://github.com/Perseus-Computing-LLC/perseus-vault
 archive_name: "Perseus-Computing-LLC--perseus-vault"
 revision: 9c829207a4b44a8e679ba912b4c1c5608c8f1e36
 revision_url: https://github.com/Perseus-Computing-LLC/perseus-vault/commit/9c829207a4b44a8e679ba912b4c1c5608c8f1e36
-analyzed_at: 2026-08-27
+analyzed_at: 2026-09-18
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -21,7 +21,7 @@ capability_evidence:
   scope_enforced: "entity store — recall and journal listing | src/db.rs | workspace_hash predicate on recall; get_recent_journal(workspace_hash, limit) since #877 | src/db.rs::rejected_value_tombstone_scopes_isolate_workspaces"
   audit_log: "entity store — hash-chained journal | src/db.rs | journal() chaining prev_hash from genesis | src/db.rs::purge_erases_history_and_redacts_journal_for_purged_entities"
   human_review: "admission — an operator decision recorded on the entity it admits | src/tools.rs | `admission_decide` refuses any decision that is not `approve` or `reject` (:1854) and routes an approval through `.approve(reason)` (:1977), with `reviewable_write_result` (:29) marking a write reviewable rather than settled | none — no committed test names the approval path"
-  negative_eval: "entity store — purge and journal redaction | src/db.rs | purge_erases_history_and_redacts_journal_for_purged_entities, paired with purge_does_not_redact_other_workspace_live_journal_rows | both are the tests"
+  negative_eval: "entity store — purge and journal redaction | src/db.rs:52985, :53755 (line numbers at the archived pin) | purge_erases_history_and_redacts_journal_for_purged_entities, paired with purge_does_not_redact_other_workspace_live_journal_rows | both are the tests"
 matrix:
   memory_unit: "An entity — category, key, JSON body — carrying status, type, layer, certainty, verified flag, decay score, and bi-temporal bounds"
   storage: "One SQLite file with FTS5, AES-256-GCM bodies encrypted by default on a fresh install, an entity history table, a hash-chained journal, sign-bit embedding signatures, and a rejected-value tombstone table holding digests"
@@ -789,6 +789,21 @@ background consolidation passes are the leg no committed test walks.
   `integrations/autogen/`.
 
 ## History
+
+**2026-09-18** — re-read with the subject still gone. `git ls-remote` on
+`Perseus-Computing-LLC/perseus-vault` answers *"Repository not found"*, as it did
+at the last reading, and the fork network is still being reparented onto the
+unrelated `johan--/mneme` — `scripts/state/archive-sync.jsonl` records
+`upstream-reparented` again on 2026-09-16 and 2026-09-17, so this is a recurring
+condition rather than a settled one. What matters for the seven marks is that
+the code they rest on is still reachable, and it is: the pinned revision
+`9c829207a4b44a8e679ba912b4c1c5608c8f1e36` fetches by sha from
+`agent-memory-atlas-archive/Perseus-Computing-LLC--perseus-vault` and carries
+tree `653183dd91d688f35eed29e487f5ddb01ee35f29`. Spot-checked against that
+fetch: `src/db.rs` is 61,402 lines and both cited `negative_eval` cases are
+present, at `:52985` and `:53755` — line numbers the record now carries, because
+in a file that size a test name alone is not a locator. Marks kept, on the
+[Letta rule](../letta/): an archive branch holds the code.
 
 **2026-09-13** — the upstream repository is gone. `Perseus-Computing-LLC/perseus-vault` and the pinned commit `9c829207a4b44a8e679ba912b4c1c5608c8f1e36` both return 404. The pin is deliberately not moved: the reading below was of that commit, and it is still readable in the atlas's fork, taken 2026-09-09 with every branch rather than the default one. All seven marks were re-verified there at the pin — `rejected_value_tombstones` and `normalize_rejected_value`, `epistemic_state`, `valid_from_unix_ms` beside `recorded_at_unix_ms`, the `workspace_hash` recall predicate, the `prev_hash` journal chain and `admission_decide` are all present and unchanged. The fork also holds 24 commits and ~92,600 added lines past the pin, which exist nowhere else; section 10 records what arrived in them, the hostile memory gauntlet chief among it. `analyzed_at` is unchanged because the body was re-verified rather than re-derived.
 

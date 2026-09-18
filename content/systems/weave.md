@@ -9,7 +9,7 @@ source_url: https://github.com/Sidharth-Singh10/weave
 archive_name: "Sidharth-Singh10--weave"
 revision: ff8a6afa107947dd00f15c67db6a0aa7f90ca456
 revision_url: https://github.com/Sidharth-Singh10/weave/commit/ff8a6afa107947dd00f15c67db6a0aa7f90ca456
-analyzed_at: 2026-08-24
+analyzed_at: 2026-09-18
 capabilities: "trust_state, audit_log"
 capability_evidence:
   trust_state: "the claims table, filtered by the recall query | mcp/migrations/007_claims.sql, mcp/src/store.rs:752-771, mcp/src/ingest.rs:257,:323-324,:481-482, mcp/src/claims.rs:200 | `status` is CHECK-constrained over `active`, `contradicted`, `superseded`, `rejected`, `quarantined`, held separately from a `confidence` REAL — the split the rubric asks for. All five have writers: ingest sets `active` or `quarantined` from whether the claim's evidence was supported, a verification verdict maps to `reject` or `quarantine`, `supersede_claim` sets `superseded`, and a detected contradiction sets **both** claims of the pair to `contradicted`. `vector_search_claims` is default-deny — `AND c.status = 'active'`, widening to `IN ('active','contradicted')` only when a caller passes `include_contradicted`, in which case the context block renders the claim with a `[CONTRADICTED]` marker. So rejected, quarantined and superseded claims are withheld from recall while remaining on the row for audit. A `modality` column carries `asserted` / `negated` / `suggested` / `conditional` beside it, so a negation is a stored value rather than an absence | mcp/tests/memory_test.rs exercises the quarantine path, though it asserts nothing about it — see section 10"
@@ -404,5 +404,20 @@ And note the missing licence before building on it.
 - **Tests:** `mcp/tests/memory_test.rs`, `mcp/tests/http_test.rs`
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+marks stand, re-derived. `trust_state`: the recall query composes its own filter
+— `AND c.status = 'active'`, widened to `IN ('active', 'contradicted')` only
+when the caller asks (`store.rs:752-757`) — so the state reaches the read path
+as SQL rather than as a filter on results. `audit_log`: sixteen recorder calls
+in `ingest.rs` and six in `server.rs`, all writing the one table. Worth adding
+because the shape is unusually deliberate: of the five states, `contradicted` is
+the only one a caller can opt back into seeing, the flag is a field on the MCP
+args struct defaulting to `false` (`server.rs:131`, `:461`), and the result is
+marked when it comes back. `superseded`, `rejected` and `quarantined` have no
+such door — no code path returns them to a recall. A widening that covers one
+named state and leaves three closed is the version of this control worth
+copying. Also re-confirmed: still no `LICENSE` file and no `license` field in
+any `Cargo.toml`, as the report already says. No marks change.
 
 **2026-08-24** — [`ff8a6afa107947dd00f15c67db6a0aa7f90ca456`](https://github.com/Sidharth-Singh10/weave/commit/ff8a6afa107947dd00f15c67db6a0aa7f90ca456) — first reading, 13,800 lines of Rust across 53 files, 47 commits since 11 August 2026. Screened before anything was read: no auto-run surface, no build-time execution, one unpinned surface and three files inside the seven-day cooldown; nothing was installed, no container was started and no test was run, so every claim here is from reading the tree and its migrations. Two marks. `tombstone` is withheld on one missing query — `rejected` is a real status with a real writer, and `find_opposing` is the only part of ingest that reads existing claims and excludes rejected rows by design, so a refusal does not survive a re-assertion. `scope_enforced` is absent: a grep of all nine migrations finds no user, agent, workspace or tenant column, while the web application beside it has OAuth, roles and per-route authorisation. `bitemporal` is absent — `created_at` and `updated_at` are both record-axis. `negative_eval` is withheld because no committed case asserts particular material is absent from a result set, and the test named for the quarantine path states the behaviour in a comment and asserts nothing about it. There is no `LICENSE` file in the tree.

@@ -117,7 +117,7 @@ it rejects as well as the ones it keeps.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-24</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Sidharth-Singh10--weave" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -527,6 +527,26 @@ and the <code>[CONTRADICTED]</code> marker),
 <code>mcp/tests/http_test.rs</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. Both marks stand, re-derived.
+<code>trust_state</code>: the recall query composes its own filter —
+<code>AND c.status = 'active'</code>, widened to
+<code>IN ('active', 'contradicted')</code> only when the caller asks
+(<code>store.rs:752-757</code>) — so the state reaches the read path as
+SQL rather than as a filter on results. <code>audit_log</code>: sixteen
+recorder calls in <code>ingest.rs</code> and six in
+<code>server.rs</code>, all writing the one table. Worth adding because
+the shape is unusually deliberate: of the five states,
+<code>contradicted</code> is the only one a caller can opt back into
+seeing, the flag is a field on the MCP args struct defaulting to
+<code>false</code> (<code>server.rs:131</code>, <code>:461</code>), and
+the result is marked when it comes back. <code>superseded</code>,
+<code>rejected</code> and <code>quarantined</code> have no such door —
+no code path returns them to a recall. A widening that covers one named
+state and leaves three closed is the version of this control worth
+copying. Also re-confirmed: still no <code>LICENSE</code> file and no
+<code>license</code> field in any <code>Cargo.toml</code>, as the report
+already says. No marks change.</p>
 <p><strong>2026-08-24</strong> — <a
 href="https://github.com/Sidharth-Singh10/weave/commit/ff8a6afa107947dd00f15c67db6a0aa7f90ca456"><code class="commit-id" title="ff8a6afa107947dd00f15c67db6a0aa7f90ca456">ff8a6afa…</code></a>
 — first reading, 13,800 lines of Rust across 53 files, 47 commits since

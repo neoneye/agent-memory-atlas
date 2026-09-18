@@ -9,16 +9,16 @@ source_url: https://github.com/Mininglamp-AI/polyphony-arc-3
 archive_name: "Mininglamp-AI--polyphony-arc-3"
 revision: 9bb384c25d1bc95501cb08a124af7871c9ea24eb
 revision_url: https://github.com/Mininglamp-AI/polyphony-arc-3/commit/9bb384c25d1bc95501cb08a124af7871c9ea24eb
-analyzed_at: 2026-08-27
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
 matrix:
-  memory_unit: "A handoff summary — under 2,500 words of prose the model writes about its own session — plus whatever files it left on disk"
+  memory_unit: "A handoff summary — prose the model writes about its own session, asked for under 2,500 words and measured against nothing — plus whatever files it left on disk"
   storage: "The workspace directory and the summary text carried into the next context. Nothing is indexed and nothing is queried"
   retrieval: "The successor is handed the summary in its prompt, together with a rendered listing of on-disk files marked authoritative and to be re-read"
-  write: "The model produces the summary when the context budget is hit; the harness prompts for it and bounds its length"
+  write: "The model produces the summary when the context budget is hit; the harness prompts for it and stores whatever comes back — the word limit is a sentence in the prompt, not a check in the code"
   update_delete: "The summary is regenerated per compaction. Files are the model's own to overwrite"
   scoping: "One workspace per run. No scope key"
   integration: "A compaction loop around a long-horizon ARC-AGI-3 session, deliberately without per-turn trimming so the prefix cache and the working memory survive"
@@ -209,6 +209,18 @@ mechanism inside it would not have been seen.
 | vendored tree | 79,035 lines, not read |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. One
+matrix correction, in the direction the report's own risk line already points.
+*"Under 2500 words"* lives inside the prompt string at `hs_compaction.py:114`
+and nothing measures the result: there is no truncation, no length check and no
+validation of the handoff anywhere in `arc_hs/`. The body already called the cap
+*"a prompt-engineering choice rather than a mechanism"*; the `write` field said
+the harness *"bounds its length"*, which it does not. Re-verified alongside it:
+there is still no test directory — the single `test_*.py` in the tree,
+`arc_hs/workspace/test_timeout.py`, is a hand-run `main()` checking a timeout
+helper inside the agent's own tool directory, not a test of the memory path. No
+marks; the report carries none.
 
 **2026-08-28** — [`9bb384c25d1bc95501cb08a124af7871c9ea24eb`](https://github.com/Mininglamp-AI/polyphony-arc-3/commit/9bb384c25d1bc95501cb08a124af7871c9ea24eb) — same commit, second reading, covering the published scorecard: 19.80% on ARC-AGI-3 Public Demo at $115, 2 of 21 environments won, 59/157 levels, 6,838 actions, recomputing from its own per-environment table. The run covers 21 environments where the two harnesses this report compares against cover 25, so the three means are not over the same set. Sections 1 and 10 now carry the result, which the first reading described only as "a benchmark claim". Marks unchanged at none.
 
