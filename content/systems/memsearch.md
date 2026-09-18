@@ -7,12 +7,11 @@ page_kind: system
 source_name: "zilliztech/memsearch"
 source_url: https://github.com/zilliztech/memsearch
 archive_name: "zilliztech--memsearch"
-revision: 15ad962364c0dc5a552af78a7ef6bf1575487ec9
-revision_url: https://github.com/zilliztech/memsearch/commit/15ad962364c0dc5a552af78a7ef6bf1575487ec9
-analyzed_at: 2026-09-14
-capabilities: "human_review"
+revision: fc0ef776f9a9500c10a60b7139260d9fd97d0062
+revision_url: https://github.com/zilliztech/memsearch/commit/fc0ef776f9a9500c10a60b7139260d9fd97d0062
+analyzed_at: 2026-09-18
+capabilities: ""
 capability_evidence:
-  human_review: "the candidate-to-installed gate — a person lists, reviews and installs, with no path that promotes on its own | src/memsearch/skills.py:298, :316, :339, :532, src/memsearch/cli.py:1422, :1440-1456 | distillation writes a candidate rather than a live skill, and the review surface is a set of commands rather than a display: `list_candidates` and `candidate_review_summary` back a CLI that reports whether candidates need review, and the hint it prints names the next action — run the skill to review and install. Promotion is `memsearch skills install <name> --path <dir>`, a Click command that refuses with exit 2 when no `--path` is given rather than choosing a destination, so a person states both what to install and where. The candidate store is versioned separately, so the review has a diff to work from, and the background pass that produces candidates is gated by its own `memory_to_skill.enabled` flag | tests/test_skills_sync.py"
 stack_storage: "milvus, files"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -329,6 +328,12 @@ metrics and the primary-metric justification `:47-56`, the results table `:58-`)
 its off-by-default note), `MEMORY.md`, `AGENT.md`, `CLAUDE.md`
 
 ## History
+
+**2026-09-18** — [`fc0ef776f9a9500c10a60b7139260d9fd97d0062`](https://github.com/zilliztech/memsearch/commit/fc0ef776f9a9500c10a60b7139260d9fd97d0062) — re-pinned from `15ad962`; six files and +676 lines, re-screened at the new pin. **Human review withdrawn**, leaving no capability mark. The candidate state is real — distillation writes a candidate rather than a live skill, and nothing promotes on a timer — but the promoting verb is one the agent is handed and its only refusal is a missing argument.
+
+`plugins/claude-code/skills/memory-to-skill/SKILL.md` is the skill an agent loads, and it prints the command for the agent to run: `memsearch skills install <name> --path <configured-or-user-approved-path>`, with the summary line *"the commands above (`skills add`, `skills install`) always work"*. The instruction to pause is in the same file and is prose: *"Treat installation as an interactive checkpoint. Show the candidate… confirm the install destination with the user… do not silently fall back to a default path."* That is the right instinct in the one place that cannot enforce it. `cli.py:1441-1456` shows what enforcement there is: `skills_install` exits 2 when no `--path` is given and otherwise installs. No confirmation, no terminal check, nothing the model cannot supply.
+
+A candidate queue whose promotion is a documented request to the model is the shape the [narrowed rubric](../../methodology/atlas-rubric/#human-review-surface) rejects under two of its headings at once — prose, and a verb on the producer's own surface. The queue itself remains a good thing to have; what it does not have is an approver.
 
 **2026-09-14** — [`15ad962364c0dc5a552af78a7ef6bf1575487ec9`](https://github.com/zilliztech/memsearch/commit/15ad962364c0dc5a552af78a7ef6bf1575487ec9) — re-read, 37 commits past the previous pin across 178 files. The mark stands and was re-tested against the approver rather than carried forward, because the same mark was withdrawn from another system in this corpus the same day for resting on a surface that only displayed. It holds here on the opposite finding: promotion is `memsearch skills install <name> --path <dir>`, a command a person runs, and it exits 2 when no destination is given rather than picking one — so both the what and the where are stated by a person, and nothing installs a candidate on its own. The review side is `list_candidates` and `candidate_review_summary` behind a CLI that reports whether candidates need review, with the candidate store versioned separately so there is a diff to read. An evidence record is written for the first time. Screened again first; nothing was installed and no suite was run.
 
