@@ -863,7 +863,8 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`agent-memory-supabase`](../systems/agent-memory-supabase/)
 - Best idea: validity time and record time in the same row, with an `updated_at` trigger that refuses to fire on access-stat touches so a read cannot masquerade as an edit.
-- Biggest risk: the per-user RLS policies are commented out, so the only enforced posture is server-sees-everything — and there are no tests at all to notice.
+- Second idea, and the caveat on the first: nothing in the repository writes `valid_from`, so the validity axis holds its insert-time default on every row the shipped client creates. The schema is bi-temporal; the code that ships with it is not.
+- Biggest risk: a dedup hit overwrites the matched row in place, with no supersession and no copy of what it replaced — so the untested 0.95 threshold deletes memories rather than misranking them; and the per-user RLS policies ship commented out, with no tests at all to notice either.
 - Most reusable component: the similarity floor on the text lane, with the RRF failure it prevents written into the comment beside it.
 - Maturity impression: 898 lines, better reasoned per line than most frameworks here and readable in an hour — with no test directory, no fixtures and no harness, despite `use_blended` and `track_access` existing to make evaluation clean.
 - Study when: you are on Supabase, want to own the SQL, and your memory is one project or one user.

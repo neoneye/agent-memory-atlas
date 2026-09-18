@@ -9,11 +9,14 @@ source_url: https://github.com/reescalder/agent-memory-supabase
 archive_name: "reescalder--agent-memory-supabase"
 revision: b711e6d76009d0713c5d5c211c2ab5c83d01ca53
 revision_url: https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53
-analyzed_at: 2026-07-30
+analyzed_at: 2026-09-18
 capabilities: "bitemporal, scope_enforced"
+capability_evidence:
+  bitemporal: "the validity window beside the record clocks on the single memories table | sql/schema.sql:38-41, :69, :451-478 | `created_at`/`updated_at` are record time and `valid_from`/`valid_until` are validity time, in separate columns with their own partial index `idx_memories_temporal ON memories (valid_from, valid_until) WHERE active = true`. `memory_history()` returns both pairs alongside `superseded_by`, so the evolution of a fact is queryable on either axis, and a supersession writes `valid_until = now()` while leaving `created_at` untouched | nothing writes `valid_from`: it is absent from the client insert payload at src/client.js:169-181 and from every UPDATE in the repository, so it always holds `DEFAULT now()` and equals `created_at` on every row the shipped client creates. A fact true before it was written can only be recorded by writing the SQL yourself. No test exercises either axis — the repository has no tests at all"
+  scope_enforced: "the project key on every read function | sql/schema.sql:176, :197, :231, :359, :397, :436, :478, :547, src/client.js:136, :218, :237, :251 | every retrieval function takes `filter_project text DEFAULT NULL` and applies `AND (filter_project IS NULL OR m.project = filter_project)` inside the query — search, both dedup probes, timeline and history alike — and all four client read methods pass their `project` argument through to the RPC. The key reaches the query on every path, with no path that lacks the parameter and no unscoped retry after an empty scoped result | the default is NULL, which means all projects, so a caller that omits the argument reads the whole table; and sql/rls.sql ships its per-user policies commented out, so nothing prevents a caller from passing a project name that is not theirs. The mark certifies that the key reaches the query, not that the boundary is authenticated"
 stack_storage: "postgres"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "One `memories` row — content, a nine-value `memory_type`, project, tags, importance 1–10, extracted entities as JSONB, a validity window, an expiry and a supersedes pointer"
   storage: "A single Postgres table on Supabase with pgvector HNSW, a generated `tsvector`, pg_trgm and six further indexes"
@@ -184,6 +187,25 @@ That second probe is the transferable idea. A memory that says "the queue has
 space and will both persist forever; trigram similarity sees them as the same
 sentence and collapses them.
 
+**And when a probe hits, the row is overwritten in place.** The dedup branch is
+`.update({content, importance, metadata, tags}).eq("id", dupe.id)` — no new row,
+no `valid_until` on the old content, no `superseded_by`, no copy of what was
+replaced. The whole bi-temporal apparatus described above is bypassed on the
+path the system takes most often, and the replaced wording is gone. That is the
+exact cost of the untested 0.95 threshold: a false positive is not a ranking
+error, it is a silent destructive edit, and the row that would have recorded it
+is the one the update overwrote.
+
+**The supersession sequence is three statements and no transaction.** The client
+first sets `active = false, valid_until = now()` on the superseded row, then
+inserts the replacement, then sets `superseded_by` on the old row. Each is a
+separate PostgREST call. If the insert fails — a bad embedding width, a check
+constraint, a dropped connection — the old memory is already deactivated and no
+replacement exists: the fact is gone from every read path, and the
+`superseded_by` pointer that would let anyone find it was never written. The
+schema has everything needed to do this in one statement; the client is where it
+comes apart.
+
 Nothing runs in the background. Decay is computed at query time from
 `created_at`, expiry is a `WHERE` clause, and there is no sweeper — an expired
 row stays on disk and is simply never returned.
@@ -197,9 +219,47 @@ the extraction quality and the decision of when to remember are all the caller's
 
 ## 9. Reliability, Safety, and Trust
 
-**Bi-temporality is real and the mark is earned.** `valid_from`/`valid_until`
-against `created_at`/`updated_at`, with a partial index on the validity window
-and `memory_history()` returning the pair alongside the supersession pointer.
+**Bi-temporality is real and the mark is earned, with one limit that a second
+reading found and the first did not.** `valid_from`/`valid_until` against
+`created_at`/`updated_at`, a partial index on the validity window, and
+`memory_history()` returning the pair alongside the supersession pointer — the
+two axes are separate columns, separately indexed and separately queried.
+
+But **nothing writes `valid_from`.** It is absent from the client's insert
+payload and from every `UPDATE` in the repository, so it always holds its
+`DEFAULT now()` — the insert time, which is also `created_at`. The one end of
+the validity window the code does write is `valid_until`, set to `now()` when a
+supersession closes it. So at this commit a fact that was true before it was
+written cannot be recorded through the shipped client: you would have to write
+the SQL yourself, which the README does tell you to do, but the distance between
+"the schema supports it" and "the code that ships with it uses it" is worth
+stating. Event time and record time are the same number on every row this client
+creates.
+
+**The `updated_at` trigger reaches its stated goal, but not by the route its
+comment describes.** The intent — *"Only bump when a real field changed"* — is
+delivered by the first branch, which bumps unconditionally whenever the access
+counters did *not* change; the careful nine-field list in the second branch runs
+only when they did. And the only writer that changes them is
+`search_memories`'s `track_access` update, which sets those two columns and
+nothing else. So the second branch is reached exactly when none of its nine
+fields can have changed, and never fires. The read-touch protection is real; the
+field list is decorative, and a genuine no-op `UPDATE` still bumps `updated_at`.
+
+**`scope_enforced` is upheld, and the reason it survives its own default is
+worth being precise about.** `filter_project` appears in every read function —
+`search_memories`, `find_similar_memory`, `find_snapshot_duplicate`,
+`memory_timeline`, `memory_history` — always as
+`AND (filter_project IS NULL OR m.project = filter_project)`, and the client
+passes it through on all four of its read methods. The key reaches the query on
+every path, which is what the mark certifies. It defaults to `NULL`, meaning all
+projects, and a caller who omits it gets the whole table — but that is a caller
+widening its own scope by passing an argument, which the capability's definition
+explicitly does not rule on. What would lose the mark is a read path with no
+project parameter at all, or one that silently retries unscoped after an empty
+scoped result. Neither happens here. The boundary that is *not* enforced is the
+other one: with RLS commented out, nothing stops one caller from passing another
+caller's project name.
 
 **No tombstone.** `superseded_by` is a foreign key to the replacing row, so the
 chain is keyed on the record. A later write of the same rejected content — from
@@ -228,7 +288,14 @@ evaluation is present and the evaluation is not.
 
 The absence is most costly at the two dedup thresholds. 0.95 cosine and 0.65
 trigram are the numbers that decide whether a real distinction gets collapsed
-into an existing row, and nothing measures either.
+into an existing row, and nothing measures either — and, as section 7 sets out,
+a collapse overwrites the row in place, so a wrong threshold does not degrade a
+result set, it deletes a memory.
+
+The negative claim was re-checked at this revision: `git ls-files` returns nine
+files, none of them a test, and `package.json` declares no test script and no
+test dependency. The 898 lines are `sql/schema.sql` (551), `src/client.js`
+(257), `examples/quickstart.js` (54) and `sql/rls.sql` (36).
 
 ## 11. For Your Own Build
 
@@ -299,5 +366,7 @@ is no record that a value was ever rejected.
 | `sql/rls.sql` | 36 | Posture A enabled, Posture B commented out |
 
 ## History
+
+**2026-09-18** — [`b711e6d76009d0713c5d5c211c2ab5c83d01ca53`](https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53) — re-read at the same commit. Nothing upstream had moved, so every finding here is the atlas's own, and the previous reading's code claims all held; what it had not done was trace each field to its writer. Doing that produced three findings. `valid_from` has no writer anywhere in the repository, so the validity axis the report praises collapses onto the record axis for every row the shipped client creates — the mark stands on the schema and the `memory_history()` reader, with that limit now in its evidence record. The dedup branch overwrites the matched row in place, with no supersession and no copy of the replaced content, so the untested 0.95 threshold is a data-loss knob rather than a ranking one. And the supersession sequence deactivates the old row before inserting its replacement across three untransacted calls, so a failed insert loses the memory with no pointer left to find it by. The `updated_at` trigger reaches its stated goal by its first branch; its nine-field list is only reached on access-counter updates, where none of those fields can have changed. Both marks now carry evidence records, and `scope_enforced` is upheld with its reasoning written down: the key reaches every read query, and the NULL default is a caller widening its own scope, which the capability does not rule on. `stack_source` goes from seeded to reviewed.
 
 **2026-07-30** — [`b711e6d76009d0713c5d5c211c2ab5c83d01ca53`](https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53) — first reading.

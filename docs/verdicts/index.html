@@ -2740,9 +2740,15 @@ href="../systems/agent-memory-supabase/"><code>agent-memory-supabase</code></a><
 <li>Best idea: validity time and record time in the same row, with an
 <code>updated_at</code> trigger that refuses to fire on access-stat
 touches so a read cannot masquerade as an edit.</li>
-<li>Biggest risk: the per-user RLS policies are commented out, so the
-only enforced posture is server-sees-everything — and there are no tests
-at all to notice.</li>
+<li>Second idea, and the caveat on the first: nothing in the repository
+writes <code>valid_from</code>, so the validity axis holds its
+insert-time default on every row the shipped client creates. The schema
+is bi-temporal; the code that ships with it is not.</li>
+<li>Biggest risk: a dedup hit overwrites the matched row in place, with
+no supersession and no copy of what it replaced — so the untested 0.95
+threshold deletes memories rather than misranking them; and the per-user
+RLS policies ship commented out, with no tests at all to notice
+either.</li>
 <li>Most reusable component: the similarity floor on the text lane, with
 the RRF failure it prevents written into the comment beside it.</li>
 <li>Maturity impression: 898 lines, better reasoned per line than most
