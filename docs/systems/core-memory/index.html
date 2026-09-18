@@ -119,7 +119,7 @@ used a lot.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/JohnnyFiv3r--Core-Memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -127,7 +127,7 @@ used a lot.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -350,9 +350,35 @@ audit.</li>
 </ul>
 <p>That distinction, between "was true and no longer is" and "should
 never have been recorded", is one this atlas has wanted repeatedly and
-found almost nowhere. Approving a <code>speculative</code> bead lifts
-its grounding to <code>inferred</code>, so class A stays consistent with
-the speculative ceiling rather than punching through it.</p>
+found almost nowhere.</p>
+<p><strong>The mirroring is also why the human-review mark does not hold
+here</strong>, and the earlier reading recorded the fact without drawing
+the conclusion. <code>approve</code> and <code>reject</code> being
+<em>mirrored into the MCP tool list</em> means the writing agent holds
+them: <code>protocol_server.py:558-587</code> registers
+<code>approve_memory(bead_id, approver, note)</code> and
+<code>reject_memory(bead_id, approver, reason)</code>, and the
+typed-write handler calls <code>approve_bead</code> →
+<code>MemoryStore.approve(bead_id, approver=…)</code> with no check on
+the caller at all. <code>approver</code> is a string that is recorded,
+not verified, and approval <em>grants confidence class A</em> — so a
+model can promote its own bead to the top class and sign the promotion
+with any name. The dreamer path the mark was written against fails the
+same way: <code>apply_reviewed_proposal</code> is an MCP tool whose
+<code>decision</code>, <code>reviewer</code> and <code>apply</code> are
+all caller-supplied, and it calls <code>decide_dreamer_candidate</code>
+directly.</p>
+<p>The <code>ACTION_POLICIES</code> table in
+<code>core_memory/management/__init__.py</code> does define an authority
+requirement for each of these — <code>approve_memory</code> needs one of
+<code>approve_memory</code>, <code>user_confirmed</code> or
+<code>admin_repair</code> — and <code>_authority_ok</code> enforces it.
+But that table governs the management action dispatcher the CLI goes
+through; the MCP typed-write path reaches <code>approve_bead</code>
+without constructing an authority dict at all. Two doors, one bolted.
+Approving a <code>speculative</code> bead lifts its grounding to
+<code>inferred</code>, so class A stays consistent with the speculative
+ceiling rather than punching through it.</p>
 <h3 id="every-governance-action-requires-a-reason">Every governance
 action requires a reason</h3>
 <p>The action validator in <code>management/</code> rejects
@@ -498,8 +524,9 @@ action.</li>
 and a grounding hash.</li>
 <li><strong>A documented truth hierarchy</strong> naming the
 authoritative surface per concern.</li>
-<li><strong>Human-decided background proposals</strong> rather than
-autonomous rewriting.</li>
+<li><strong>Background proposals are queued rather than applied</strong>
+— by the dreamer's own design, though the deciding is not restricted to
+a person; see below.</li>
 <li><strong>Committed benchmark harnesses</strong> for LoCoMo,
 LongMemEval, and causal continuity, plus KPI targets and a dreamer
 eval.</li>
@@ -758,6 +785,32 @@ but it never authors associations or semantic meaning."</em></td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/JohnnyFiv3r/Core-Memory/commit/b3857ff5c771d8c2b17ed2d19326de1fac19dbfd"><code class="commit-id" title="b3857ff5c771d8c2b17ed2d19326de1fac19dbfd">b3857ff5…</code></a>
+— re-read at the same commit; <code>main</code> has not moved since 6
+August 2026, so the correction is this report's. <strong>Human review
+withdrawn.</strong> The mark cited the dreamer's candidate queue, and
+both routes into it are on the writing agent's own tool surface:
+<code>apply_reviewed_proposal</code> is a registered MCP tool whose
+<code>decision</code>, <code>reviewer</code> and <code>apply</code> are
+caller-supplied and which calls <code>decide_dreamer_candidate</code>
+directly, and beside it <code>approve_memory</code> and
+<code>reject_memory</code> take an <code>approver</code> string and
+reach <code>MemoryStore.approve</code> through <code>approve_bead</code>
+with no caller check — while approval grants confidence class A. The
+earlier reading noted that the four approval operations are
+<em>"mirrored across the Python API, HTTP, MCP tools, and PydanticAI
+tools"</em> and treated the mirroring as coverage rather than as the
+producer test failing. <code>ACTION_POLICIES</code> does require one of
+<code>approve_memory</code>, <code>user_confirmed</code> or
+<code>admin_repair</code> for the action, and <code>_authority_ok</code>
+enforces it, but that table sits on the management dispatcher the CLI
+uses; the MCP typed-write path never builds an authority dict. The
+design observations the mark was hung on are untouched and still good: a
+pending bead stays retrievable because hard-gating every auto-written
+bead <em>"would make memory useless until the queue is drained"</em>,
+and a rejected bead is excluded unconditionally while a superseded one
+is not, because the two states mean different things. Five marks.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/JohnnyFiv3r/Core-Memory/commit/b3857ff5c771d8c2b17ed2d19326de1fac19dbfd"><code class="commit-id" title="b3857ff5c771d8c2b17ed2d19326de1fac19dbfd">b3857ff5…</code></a>
 — re-read, 12 files and 888 insertions past the previous pin in a single

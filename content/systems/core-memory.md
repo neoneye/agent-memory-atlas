@@ -9,14 +9,13 @@ source_url: https://github.com/JohnnyFiv3r/Core-Memory
 archive_name: "JohnnyFiv3r--Core-Memory"
 revision: b3857ff5c771d8c2b17ed2d19326de1fac19dbfd
 revision_url: https://github.com/JohnnyFiv3r/Core-Memory/commit/b3857ff5c771d8c2b17ed2d19326de1fac19dbfd
-analyzed_at: 2026-09-11
-capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+analyzed_at: 2026-09-18
+capabilities: "trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   trust_state: "the confidence ladder | core_memory/schema/models.py:470-476 | `resolve_confidence_class` is monotonic and grounding caps it — speculative cannot rise past B however often it is recalled | tests"
   bitemporal: "claim visibility | core_memory/temporal/resolution.py:46-57 and core_memory/retrieval/agent.py:800-812 | `claim_visible_as_of` filters `effective_from`/`effective_to` against an as-of, with `effective_to` exclusive, while `_filter_evidence_by_as_of` filters creation time against the same instant | tests"
   scope_enforced: "every bead read | a `scope` field on the bead, applied across the retrieval surfaces | 291 scope references across the package outside tests | tests"
   audit_log: "governance | core_memory/management | every governance action requires a reason and is recorded | tests"
-  human_review: "the dreamer | core_memory/runtime/dreamer | candidates are proposed for a human decision with a rejecter and a reason rather than applied | tests"
   negative_eval: "the grounding cap | tests | committed cases asserting a speculative bead does not reach class A, including across an index rebuild | tests"
 stack_storage: "sqlite, graph, qdrant, files"
 stack_retrieval: "lexical, vector, graph"
@@ -225,7 +224,27 @@ The reasoning attached to it is better than the mechanism:
 
 That distinction, between "was true and no longer is" and "should never have
 been recorded", is one this atlas has wanted repeatedly and found almost
-nowhere. Approving a `speculative` bead lifts its grounding to `inferred`, so
+nowhere.
+
+**The mirroring is also why the human-review mark does not hold here**, and the
+earlier reading recorded the fact without drawing the conclusion. `approve` and
+`reject` being *mirrored into the MCP tool list* means the writing agent holds
+them: `protocol_server.py:558-587` registers `approve_memory(bead_id, approver,
+note)` and `reject_memory(bead_id, approver, reason)`, and the typed-write
+handler calls `approve_bead` → `MemoryStore.approve(bead_id, approver=…)`
+with no check on the caller at all. `approver` is a string that is recorded, not
+verified, and approval *grants confidence class A* — so a model can promote its
+own bead to the top class and sign the promotion with any name. The dreamer path
+the mark was written against fails the same way: `apply_reviewed_proposal` is an
+MCP tool whose `decision`, `reviewer` and `apply` are all caller-supplied, and
+it calls `decide_dreamer_candidate` directly.
+
+The `ACTION_POLICIES` table in `core_memory/management/__init__.py` does define
+an authority requirement for each of these — `approve_memory` needs one of
+`approve_memory`, `user_confirmed` or `admin_repair` — and `_authority_ok`
+enforces it. But that table governs the management action dispatcher the CLI
+goes through; the MCP typed-write path reaches `approve_bead` without
+constructing an authority dict at all. Two doors, one bolted. Approving a `speculative` bead lifts its grounding to `inferred`, so
 class A stays consistent with the speculative ceiling rather than punching
 through it.
 
@@ -372,7 +391,8 @@ Strengths:
 - **Bulk deletion needs a different verb.**
 - **Bi-temporal claims** with retained update decisions and a grounding hash.
 - **A documented truth hierarchy** naming the authoritative surface per concern.
-- **Human-decided background proposals** rather than autonomous rewriting.
+- **Background proposals are queued rather than applied** — by the dreamer's
+  own design, though the deciding is not restricted to a person; see below.
 - **Committed benchmark harnesses** for LoCoMo, LongMemEval, and causal
   continuity, plus KPI targets and a dreamer eval.
 - **Secret redaction and encryption** modules with dedicated tests.
@@ -550,6 +570,8 @@ Run from the root of the checkout at the pinned commit.
 | Tree and suite size | `find core_memory -name "*.py" \| xargs wc -l \| tail -1`; `ls tests/*.py \| wc -l` | 83,295 lines; 412 test files |
 
 ## History
+
+**2026-09-18** — [`b3857ff5c771d8c2b17ed2d19326de1fac19dbfd`](https://github.com/JohnnyFiv3r/Core-Memory/commit/b3857ff5c771d8c2b17ed2d19326de1fac19dbfd) — re-read at the same commit; `main` has not moved since 6 August 2026, so the correction is this report's. **Human review withdrawn.** The mark cited the dreamer's candidate queue, and both routes into it are on the writing agent's own tool surface: `apply_reviewed_proposal` is a registered MCP tool whose `decision`, `reviewer` and `apply` are caller-supplied and which calls `decide_dreamer_candidate` directly, and beside it `approve_memory` and `reject_memory` take an `approver` string and reach `MemoryStore.approve` through `approve_bead` with no caller check — while approval grants confidence class A. The earlier reading noted that the four approval operations are *"mirrored across the Python API, HTTP, MCP tools, and PydanticAI tools"* and treated the mirroring as coverage rather than as the producer test failing. `ACTION_POLICIES` does require one of `approve_memory`, `user_confirmed` or `admin_repair` for the action, and `_authority_ok` enforces it, but that table sits on the management dispatcher the CLI uses; the MCP typed-write path never builds an authority dict. The design observations the mark was hung on are untouched and still good: a pending bead stays retrievable because hard-gating every auto-written bead *"would make memory useless until the queue is drained"*, and a rejected bead is excluded unconditionally while a superseded one is not, because the two states mean different things. Five marks.
 
 **2026-09-11** — [`b3857ff5c771d8c2b17ed2d19326de1fac19dbfd`](https://github.com/JohnnyFiv3r/Core-Memory/commit/b3857ff5c771d8c2b17ed2d19326de1fac19dbfd) — re-read, 12 files and 888 insertions past the previous pin in a single commit, roughly half of it documentation. **All six marks re-verified and unchanged**, with `capability_evidence` records added where the report had none: the grounding cap is still stated in `schema/models.py:470-476` and still monotonic, and the two temporal filters are still separate — `claim_visible_as_of` over `effective_from`/`effective_to` with an exclusive end, `_filter_evidence_by_as_of` over creation time. **The stated risk holds**: supersession remains record-keyed, and no write path consults a prior rejection by value, so re-derivation is not blocked. **The addition is a junction roadmap**, `graph/roadmap.py`, which is worth noting for its discipline rather than its function — the module docstring fixes what a derived projection may do and what it may not: *"It may sample, search, deduplicate, and cache structural facts, but it never authors associations or semantic meaning."* A layer that states in its first sentence that it is not allowed to invent meaning is the right shape for something built on top of a grounding ladder, and `junction_roadmap_attribution` keeps the derivation traceable. Screened before reading: four findings; nothing was installed or run.
 
