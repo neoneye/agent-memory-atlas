@@ -9,7 +9,7 @@ source_url: https://github.com/Haustorium12/continuity-v2
 archive_name: "Haustorium12--continuity-v2"
 revision: 4e98d464555603a6166df7acc177bd990096dedb
 revision_url: https://github.com/Haustorium12/continuity-v2/commit/4e98d464555603a6166df7acc177bd990096dedb
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -500,5 +500,24 @@ grep -rn -i 'arxiv\|bibtex\|CITATION' README.md; ls CITATION*        # nothing: 
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Three
+claims re-run and all exact. The trust-word search still returns a single hit
+across the tree and it is still `self.send_response(resp.status)` at
+`hooks/sse_proxy.py:120`. There is no `def test_` and no bare `assert` anywhere
+in the Python. Nothing in the tree matches `redact`, `scrub`, `sanitiz` or
+`secret`.
+
+The thirty-character floor is real — `MIN_TEXT_LEN = 30` with
+`is_embeddable` refusing anything shorter and anything beginning `[tool:` or
+`[result]` (`embed.py:26`, `:48-54`) — and the status line's denominator is the
+same rule restated in SQL (`mcp_server.py:269-272`). Restated, not shared, and
+the two diverge on one case: `is_embeddable` checks the prefixes against
+`text.strip()` while the SQL matches `LIKE '[tool:%'` against the raw column. A
+tool line with leading whitespace is therefore excluded by the writer and
+counted as embeddable by the reporter, so it sits in the denominator forever and
+never in the numerator, and the printed coverage percentage settles below 100%
+with nothing wrong. One predicate, written twice, is the reason. No marks; the
+report carries none.
 
 **2026-09-10** — [`4e98d464555603a6166df7acc177bd990096dedb`](https://github.com/Haustorium12/continuity-v2/commit/4e98d464555603a6166df7acc177bd990096dedb) — first reading, at the head of `main`, the last commit of 14 June 2026. Screened before reading: one auto-run surface, the four hook scripts a plugin manifest could register; no manifest, no build-time execution and no unpinned dependency surface, and nothing was installed, built or run. No marks, each checked with a recorded search. Every Python file in the tree was read.

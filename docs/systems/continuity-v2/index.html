@@ -128,7 +128,7 @@ source, no tests, no redaction and no epistemic layer of any kind.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Haustorium12--continuity-v2" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -733,6 +733,28 @@ grep -rn &#39;indexed_at&#39; --include=&#39;*.py&#39; .                        
 grep -rn &#39;DELETE FROM turn_vecs&#39; --include=&#39;*.py&#39; .                  # nothing: orphaned vectors are never cleaned
 grep -rn -i &#39;arxiv\|bibtex\|CITATION&#39; README.md; ls CITATION*        # nothing: no paper</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. Three claims re-run and all exact. The trust-word
+search still returns a single hit across the tree and it is still
+<code>self.send_response(resp.status)</code> at
+<code>hooks/sse_proxy.py:120</code>. There is no <code>def test_</code>
+and no bare <code>assert</code> anywhere in the Python. Nothing in the
+tree matches <code>redact</code>, <code>scrub</code>,
+<code>sanitiz</code> or <code>secret</code>.</p>
+<p>The thirty-character floor is real — <code>MIN_TEXT_LEN = 30</code>
+with <code>is_embeddable</code> refusing anything shorter and anything
+beginning <code>[tool:</code> or <code>[result]</code>
+(<code>embed.py:26</code>, <code>:48-54</code>) — and the status line's
+denominator is the same rule restated in SQL
+(<code>mcp_server.py:269-272</code>). Restated, not shared, and the two
+diverge on one case: <code>is_embeddable</code> checks the prefixes
+against <code>text.strip()</code> while the SQL matches
+<code>LIKE '[tool:%'</code> against the raw column. A tool line with
+leading whitespace is therefore excluded by the writer and counted as
+embeddable by the reporter, so it sits in the denominator forever and
+never in the numerator, and the printed coverage percentage settles
+below 100% with nothing wrong. One predicate, written twice, is the
+reason. No marks; the report carries none.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/Haustorium12/continuity-v2/commit/4e98d464555603a6166df7acc177bd990096dedb"><code class="commit-id" title="4e98d464555603a6166df7acc177bd990096dedb">4e98d464…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 14
