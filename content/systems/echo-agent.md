@@ -9,11 +9,11 @@ source_url: https://github.com/fuyuxiang/echo-agent
 archive_name: "fuyuxiang--echo-agent"
 revision: f612b74f5721a80237a709a3f625303722388a4b
 revision_url: https://github.com/fuyuxiang/echo-agent/commit/f612b74f5721a80237a709a3f625303722388a4b
-analyzed_at: 2026-09-11
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, audit_log, negative_eval"
 capability_evidence:
   scope_enforced: "the memory read path, under the session policy the shipped config selects | echo_agent/memory/store.py:646-664 (`_visible_in_session`), echo_agent/config/schema.py:2154-2161, agent/loop.py:280 | the config field is `Literal[\"legacy\", \"session\"]` with `default=\"session\"` and the loop passes it into the store, so the strict branch is what ships; under it a USER entry with no `source_session` is invisible rather than global — fail-closed, with `migrate run --adopt-empty` named in the code as the way to adopt historical rows | tests/test_gateway_admin_scope_csrf.py and the store suites"
-  audit_log: "the memory mutation trail | echo_agent/memory/store.py (`_append_audit`) | append-only JSONL with rotation, written on the mutation paths rather than reconstructed from state | the store suites"
+  audit_log: "the memory mutation trail, including the writes that were refused | echo_agent/memory/service.py:432-464 (`_append_audit`), :404, :429 (`_reject`), echo_agent/agent/loop.py:301 | append-only JSONL carrying the actor, the operation, the entry id, the scope, the provenance word, a reason, an `ok` flag and a UTC timestamp, written on the mutation path rather than reconstructed from state, and rotated to a timestamped sibling once the file passes its size cap. The detail that lifts it above a mutation log is `_reject`, whose comment reads *\"被拒路径：只审计拒绝事实，绝不失效/写库/写 contradiction\"* — a refused write appends its own entry with `ok: false` and the reason, and touches nothing else, so the log records what the provenance guard turned away as well as what it let through. Production always wires it: `agent/loop.py:301` passes `logs_dir/memory_audit.jsonl` unconditionally, and the `None` path is for direct library construction. Two limits: the whole append sits in a `try` whose `except` logs at debug, so a failed audit is silent and the mutation proceeds; and the rotation means the trail is a series of files rather than one | the store suites"
   negative_eval: "the rendered memory block and the forgetting-curve selection | echo_agent/memory/render.py:15, echo_agent/memory/eligibility.py:134-138 | `test_render_excludes_superseded_and_archival` renders three entries and asserts the output contains the active one and neither the superseded nor the archival one; the forgetting-curve suite asserts a user-stated entry is in neither `to_archive` nor `to_forget` while others are; working-memory eviction asserts the evicted content is absent and the newest present | tests/test_memory_render.py:20-27, tests/test_memory_advanced.py:210-245, :376-386"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -265,12 +265,16 @@ where a person inspects or approves. The provenance guard is what stands in for
 human authority, and it does so structurally — a reviewer write is
 `model_inferred` and therefore cannot touch anything the user stated.
 
-**Correction is record-keyed.** `superseded_by` hides the loser. No rejected-
-value record exists, so the guard's protection is asymmetric: it stops a
-low-ranked path from *overwriting* a high-ranked memory, and does nothing to
-stop a high-ranked path from re-writing a value that was already adjudicated
-wrong. A user who restates a claim they previously corrected gets it stored at
-priority 3.
+**Correction is record-keyed.** `superseded_by` hides the loser. No
+*value-keyed* rejection record exists — the audit does record each refusal, with
+the operation, the entry id, the provenance word, the reason and `ok: false`,
+and `_reject` is careful to write that and nothing else — but nothing is keyed
+on the rejected content, and no write path consults the log. So the guard's
+protection is asymmetric: it stops a low-ranked path from *overwriting* a
+high-ranked memory, and does nothing to stop a high-ranked path from re-writing
+a value that was already adjudicated wrong. A user who restates a claim they
+previously corrected gets it stored at priority 3, and the earlier refusal sits
+in `memory_audit.jsonl` where no one asks.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -379,6 +383,8 @@ supersession channel) are among them.
 - `tests/` — 360 files
 
 ## History
+
+**2026-09-18** — [`f612b74f5721a80237a709a3f625303722388a4b`](https://github.com/fuyuxiang/echo-agent/commit/f612b74f5721a80237a709a3f625303722388a4b) — re-read at the same commit; `main` has not moved since 1 September 2026. The scope and negative-evaluation anchors were re-verified and hold, including `_visible_in_session`'s fail-closed branch for a USER entry with no `source_session`. The `audit_log` record pointed at the wrong file: `_append_audit` is in `echo_agent/memory/service.py:432-464`, not `store.py`, and the record now carries what it writes, that `agent/loop.py:301` wires it unconditionally in production, and the two limits — rotation splits the trail across files, and the append sits in a `try` whose `except` logs at debug, so a failed audit is silent while the mutation proceeds. One claim is narrowed rather than reversed: the report said no rejected-value record exists, and none is keyed on the value, but `_reject` does append an entry with the operation, the entry id, the provenance word, the reason and `ok: false` — the refusals are written down, just nowhere a later write consults. The withheld marks were re-tested and stay withheld for the reasons the report already gives: provenance ranks *write* authority rather than filtering the read path, and the reviewer is an `LLMProvider`.
 
 **2026-09-11** — [`f612b74f5721a80237a709a3f625303722388a4b`](https://github.com/fuyuxiang/echo-agent/commit/f612b74f5721a80237a709a3f625303722388a4b) — re-read. Screened before reading: no auto-run surface, five build-time execution hooks, two floating dependency declarations. The tree was read, never installed, and nothing was run. 723 files and 77,619 insertions past the previous pin; the memory package and its tests account for 43 files and 2,912. **`negative_eval` awarded** and a stated risk withdrawn, both corrections rather than drift. `render_memory_md` keeps an entry only `if not e.is_superseded and e.tier != MemoryTier.ARCHIVAL`, and `test_render_excludes_superseded_and_archival` — present at the previous pin — renders three entries and asserts the output holds the active one and neither the superseded nor the archival one, with two more exclusion assertions on the forgetting curve and working-memory eviction. And the scope default: the report cited `MemoryStore.__init__`'s `scope_policy: str = "legacy"`, but `config/schema.py` declared `default="session"` at that pin too and `agent/loop.py` passes it, so the strict branch is what ships — and that branch is fail-closed, hiding a `USER` entry with no `source_session` rather than showing it globally, with `migrate run --adopt-empty` named in the code as the deliberate way to adopt historical rows. New since the pin: `is_transient_task_state` in `eligibility.py`, a conservative classifier that suppresses model-inferred task-status facts from the snapshot, retrieval and tool audiences and from sleep consolidation, and refuses to fire on a user-stated entry "even if its key happens to contain `status`". Counts corrected to 94,427 lines of Python and 409 test files.
 

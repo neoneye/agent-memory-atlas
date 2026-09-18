@@ -118,7 +118,7 @@ flags.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/fuyuxiang--echo-agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -395,12 +395,18 @@ authority, and it does so structurally — a reviewer write is
 <code>model_inferred</code> and therefore cannot touch anything the user
 stated.</p>
 <p><strong>Correction is record-keyed.</strong>
-<code>superseded_by</code> hides the loser. No rejected- value record
-exists, so the guard's protection is asymmetric: it stops a low-ranked
-path from <em>overwriting</em> a high-ranked memory, and does nothing to
-stop a high-ranked path from re-writing a value that was already
-adjudicated wrong. A user who restates a claim they previously corrected
-gets it stored at priority 3.</p>
+<code>superseded_by</code> hides the loser. No <em>value-keyed</em>
+rejection record exists — the audit does record each refusal, with the
+operation, the entry id, the provenance word, the reason and
+<code>ok: false</code>, and <code>_reject</code> is careful to write
+that and nothing else — but nothing is keyed on the rejected content,
+and no write path consults the log. So the guard's protection is
+asymmetric: it stops a low-ranked path from <em>overwriting</em> a
+high-ranked memory, and does nothing to stop a high-ranked path from
+re-writing a value that was already adjudicated wrong. A user who
+restates a claim they previously corrected gets it stored at priority 3,
+and the earlier refusal sits in <code>memory_audit.jsonl</code> where no
+one asks.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p>360 test files against 76,594 lines of package source, and the memory
@@ -534,6 +540,29 @@ its rejection mapping</li>
 <li><code>tests/</code> — 360 files</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/fuyuxiang/echo-agent/commit/f612b74f5721a80237a709a3f625303722388a4b"><code class="commit-id" title="f612b74f5721a80237a709a3f625303722388a4b">f612b74f…</code></a>
+— re-read at the same commit; <code>main</code> has not moved since 1
+September 2026. The scope and negative-evaluation anchors were
+re-verified and hold, including <code>_visible_in_session</code>'s
+fail-closed branch for a USER entry with no <code>source_session</code>.
+The <code>audit_log</code> record pointed at the wrong file:
+<code>_append_audit</code> is in
+<code>echo_agent/memory/service.py:432-464</code>, not
+<code>store.py</code>, and the record now carries what it writes, that
+<code>agent/loop.py:301</code> wires it unconditionally in production,
+and the two limits — rotation splits the trail across files, and the
+append sits in a <code>try</code> whose <code>except</code> logs at
+debug, so a failed audit is silent while the mutation proceeds. One
+claim is narrowed rather than reversed: the report said no
+rejected-value record exists, and none is keyed on the value, but
+<code>_reject</code> does append an entry with the operation, the entry
+id, the provenance word, the reason and <code>ok: false</code> — the
+refusals are written down, just nowhere a later write consults. The
+withheld marks were re-tested and stay withheld for the reasons the
+report already gives: provenance ranks <em>write</em> authority rather
+than filtering the read path, and the reviewer is an
+<code>LLMProvider</code>.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/fuyuxiang/echo-agent/commit/f612b74f5721a80237a709a3f625303722388a4b"><code class="commit-id" title="f612b74f5721a80237a709a3f625303722388a4b">f612b74f…</code></a>
 — re-read. Screened before reading: no auto-run surface, five build-time
