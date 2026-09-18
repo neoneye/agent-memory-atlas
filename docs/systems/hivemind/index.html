@@ -122,7 +122,7 @@ text.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/causewayai--hivemind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -351,6 +351,24 @@ rg -n &quot;Embedding&quot; internal/mcpserver/query.go                      # t
 rg -n &quot;Provider interface|NewHashProvider&quot; --type go .              # one Provider implementation, constructed unconditionally in main.go
 rg -n &quot;func .*Delete|func .*Update&quot; internal/store internal/mcpserver   # 0: no update or delete</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec"><code class="commit-id" title="1c93254066af4df39a7f12c2787f1de401137cec">1c932540…</code></a>
+— re-read at the same commit; <code>main</code> has not moved since 6
+September 2026 and nothing needed correcting. Both marks re-verified:
+<code>memory_query</code> still runs the session predicate and then the
+user scope, <code>TestMemoryQuery_SessionIsolation</code> still seeds
+three identically-embedded entries and asserts session B's absent with
+A's and the shared one present, and the repository still carries no
+licence file, none in <code>go.mod</code> and none in the README. The
+retrieval finding re-tested too — <code>HashProvider</code> is still the
+only implementation of <code>embedding.Provider</code> in the tree and
+<code>cmd/hivemindd/main.go:61</code> still wires it unconditionally.
+One detail added: the unwritable <code>user</code> scope is a decision
+rather than an oversight. <code>write.go:38</code> sets
+<code>Scope: "session"</code> under the comment <em>"there is no Scope
+field to override that"</em>, and <code>list_scopes</code> still returns
+<code>["session", "user"]</code>, so the shared tier is advertised to
+the model, read on every query, and closed to every write.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec"><code class="commit-id" title="1c93254066af4df39a7f12c2787f1de401137cec">1c932540…</code></a>
 — first reading. Screened with <code>scripts/screen_repo.py</code>: no

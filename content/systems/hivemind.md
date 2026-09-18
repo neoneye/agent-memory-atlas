@@ -9,10 +9,10 @@ source_url: https://github.com/causewayai/hivemind
 archive_name: "causewayai--hivemind"
 revision: 1c93254066af4df39a7f12c2787f1de401137cec
 revision_url: https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec
-analyzed_at: 2026-09-11
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
-  scope_enforced: "the memory_query read path | internal/mcpserver/query.go:37-46, internal/store/memory.go:250-257 | every entry stores a `scope` of `session` or `user` — a `CHECK` constrains it — and a `session_id`; `memory_query` queries the caller's own session with `scope = ? AND session_id = ?` and then the `user` scope, and the structured listing applies the same predicates. The session id is supplied by the caller and nothing authenticates it, and nothing in the tree writes a `user`-scope entry | internal/mcpserver/query_test.go:11-69"
+  scope_enforced: "the memory_query read path | internal/mcpserver/query.go:37-46, internal/store/memory.go:250-257 | every entry stores a `scope` of `session` or `user` — a `CHECK` constrains it — and a `session_id`; `memory_query` queries the caller's own session with `scope = ? AND session_id = ?` and then the `user` scope, and the structured listing applies the same predicates. The session id is supplied by the caller and nothing authenticates it, and nothing in the tree writes a `user`-scope entry — deliberately: `internal/mcpserver/write.go:38` sets `Scope: \"session\"` beneath the comment *\"there is no Scope field to override that\"*, while `list_scopes` returns both names, so the second scope is advertised, queried and unreachable | internal/mcpserver/query_test.go:11-69"
   negative_eval: "session isolation over a populated result | internal/mcpserver/query_test.go:11-69 (`TestMemoryQuery_SessionIsolation`) | three entries with identical embeddings — session A's, session B's, and a user-scope entry — then a query as session A that must return A's entry and the shared entry and must not return B's; the controls are in the same test, and B's entry would be returned without the session predicate | the same file"
 stack_storage: "sqlite"
 stack_retrieval: "vector"
@@ -23,7 +23,7 @@ matrix:
   retrieval: "L2 nearest neighbours over five times the requested count, a fixed distance cutoff of 1.0, then scope, session, source and tag filters; own-session results first, then user scope"
   write: "A `memory_write` MCP tool that always writes session scope, embedding the content unless the caller supplies a vector"
   update_delete: "None exposed; the store has no update or delete tool"
-  scoping: "Session scope enforced on read by a caller-supplied session id; a user scope that is read on every query and written by nothing"
+  scoping: "Session scope enforced on read by a caller-supplied session id; a user scope that `list_scopes` advertises and every query reads, and that no write path can reach — `memory_write` hardcodes `Scope: \"session\"` under a comment saying there is no field to override it, so the shared tier is readable and unwritable by construction rather than by omission"
   integration: "A local daemon speaking MCP over HTTP, installed by Homebrew or Scoop"
   background: "None"
   trust: "None; `source` and `source_type` record where an entry came from"
@@ -143,5 +143,7 @@ rg -n "func .*Delete|func .*Update" internal/store internal/mcpserver   # 0: no 
 ```
 
 ## History
+
+**2026-09-18** — [`1c93254066af4df39a7f12c2787f1de401137cec`](https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec) — re-read at the same commit; `main` has not moved since 6 September 2026 and nothing needed correcting. Both marks re-verified: `memory_query` still runs the session predicate and then the user scope, `TestMemoryQuery_SessionIsolation` still seeds three identically-embedded entries and asserts session B's absent with A's and the shared one present, and the repository still carries no licence file, none in `go.mod` and none in the README. The retrieval finding re-tested too — `HashProvider` is still the only implementation of `embedding.Provider` in the tree and `cmd/hivemindd/main.go:61` still wires it unconditionally. One detail added: the unwritable `user` scope is a decision rather than an oversight. `write.go:38` sets `Scope: "session"` under the comment *"there is no Scope field to override that"*, and `list_scopes` still returns `["session", "user"]`, so the shared tier is advertised to the model, read on every query, and closed to every write.
 
 **2026-09-11** — [`1c93254066af4df39a7f12c2787f1de401137cec`](https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec) — first reading. Screened with `scripts/screen_repo.py`: no auto-running configuration, a `Makefile`, two manifests inside the seven-day cooldown and no unpinned surface. Nothing was built or run. The embedding distances quoted were computed offline by reimplementing `HashProvider.Embed`, not by running the daemon.
