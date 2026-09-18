@@ -117,7 +117,7 @@ the app role cannot create one.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RyjoxTechnologies--Octopoda-OS" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -508,6 +508,26 @@ rationale), <code>async_writer.py:138-188</code>,
 <code>test_audit_bugfixes_3_1_12.py</code>,
 <code>test_knowledge_graph.py</code>)</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/RyjoxTechnologies/Octopoda-OS/commit/583ddf190df809d7380afd6d07ee4095086773c2"><code class="commit-id" title="583ddf190df809d7380afd6d07ee4095086773c2">583ddf19…</code></a>
+— re-read at the same commit. Nothing upstream had moved and nothing
+needed correcting; both marks were re-derived from the source and now
+carry evidence records.</p>
+<p>The details worth keeping: the five RLS policies are each
+<code>FOR ALL TO octopoda_app USING (tenant_id = current_setting('app.tenant_id', TRUE)) WITH CHECK (...)</code>,
+so the predicate is enforced on write as well as read, and the setting
+is established per transaction with <code>SET LOCAL app.tenant_id</code>
+or <code>set_config(..., FALSE)</code> at each entry point.
+<code>current_setting(..., TRUE)</code> returns NULL rather than raising
+when unset, which means a path that forgets to establish the tenant
+reads nothing — safe, and silent. The audit module states its own design
+decision in its header (<em>"We deliberately piggyback on the existing
+<code>nodes</code> table"</em>) and chains
+<code>sha256(prev_hash + canonical event)</code> per tenant, with
+<code>prev_hash</code> excluded from the canonical payload it hashes;
+the consequence now recorded in the evidence limits is that an audit row
+is a memory row, so <code>gc_audit_days</code> — default 90 — applies to
+it. <code>stack_source</code> goes from seeded to reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/RyjoxTechnologies/Octopoda-OS/commit/583ddf190df809d7380afd6d07ee4095086773c2"><code class="commit-id" title="583ddf190df809d7380afd6d07ee4095086773c2">583ddf19…</code></a>
 — first reading. Screened before reading: no auto-run surface,

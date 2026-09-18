@@ -9,11 +9,14 @@ source_url: https://github.com/RyjoxTechnologies/Octopoda-OS
 archive_name: "RyjoxTechnologies--Octopoda-OS"
 revision: 583ddf190df809d7380afd6d07ee4095086773c2
 revision_url: https://github.com/RyjoxTechnologies/Octopoda-OS/commit/583ddf190df809d7380afd6d07ee4095086773c2
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, audit_log"
+capability_evidence:
+  scope_enforced: "Postgres row-level security on five tables against a per-transaction setting | init.sql:195-215, synrix_runtime/audit_v2/storage.py:106, synrix_runtime/loop_intel_v2/adapter.py:50, circuit_breaker.py:133 | `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` covers `nodes`, `fact_embeddings`, `entities`, `relationships` and `tenant_settings`, and each policy is `FOR ALL TO octopoda_app USING (tenant_id = current_setting('app.tenant_id', TRUE)) WITH CHECK (...)` — so the predicate is applied by the database on both read and write, not by the application remembering a clause, and a query that forgets the tenant returns nothing rather than everything. The setting is established per transaction by `SET LOCAL app.tenant_id = %s` or `set_config('app.tenant_id', %s, FALSE)` at each entry point | `current_setting(..., TRUE)` returns NULL when the setting is unset rather than raising, so a code path that opens a connection without establishing it reads no rows — safe, but silent. The policies bind the `octopoda_app` role, so anything connecting as the owner bypasses them, and the SQLite fallback has no equivalent. No committed test plants a cross-tenant canary"
+  audit_log: "a per-tenant hash-chained event log, stored inside the nodes table because the app role cannot create its own | synrix_runtime/audit_v2/storage.py:1-18, :141-153, :106 | the module documents the decision in its own header — *\"We deliberately piggyback on the existing `nodes` table (instead of a dedicated audit table)\"* — and every write computes `sha256(prev_hash + canonical event)` to form a tamper-evident chain per tenant, with the canonical form deliberately excluding `prev_hash` from the hashed payload. Events are memory mutations rather than retrievals, the rows inherit the same RLS tenant policy as the memories they describe, and a `trace_id` threads through every event in a call for multi-agent tracing | the chain is a cache-plus-append in the application, not a database constraint, so a writer that skips the module writes no link; living in `nodes` means an audit row is a memory row and subject to the same garbage collection, with `gc_audit_days` defaulting to 90; and the hash is a chain rather than a signature"
 stack_storage: "sqlite, postgres"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A named node holding JSONB data and a 384-dimension vector, versioned by a validity interval"
   storage: "Postgres with pgvector and HNSW indexes, a SQLite fallback, or a proprietary native engine not in this tree"
@@ -378,5 +381,9 @@ there is no trust state, no review surface, and no rejected-value record.
 `test_full_audit.py`, `test_audit_bugfixes_3_1_12.py`, `test_knowledge_graph.py`)
 
 ## History
+
+**2026-09-18** — [`583ddf190df809d7380afd6d07ee4095086773c2`](https://github.com/RyjoxTechnologies/Octopoda-OS/commit/583ddf190df809d7380afd6d07ee4095086773c2) — re-read at the same commit. Nothing upstream had moved and nothing needed correcting; both marks were re-derived from the source and now carry evidence records.
+
+The details worth keeping: the five RLS policies are each `FOR ALL TO octopoda_app USING (tenant_id = current_setting('app.tenant_id', TRUE)) WITH CHECK (...)`, so the predicate is enforced on write as well as read, and the setting is established per transaction with `SET LOCAL app.tenant_id` or `set_config(..., FALSE)` at each entry point. `current_setting(..., TRUE)` returns NULL rather than raising when unset, which means a path that forgets to establish the tenant reads nothing — safe, and silent. The audit module states its own design decision in its header (*"We deliberately piggyback on the existing `nodes` table"*) and chains `sha256(prev_hash + canonical event)` per tenant, with `prev_hash` excluded from the canonical payload it hashes; the consequence now recorded in the evidence limits is that an audit row is a memory row, so `gc_audit_days` — default 90 — applies to it. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`583ddf190df809d7380afd6d07ee4095086773c2`](https://github.com/RyjoxTechnologies/Octopoda-OS/commit/583ddf190df809d7380afd6d07ee4095086773c2) — first reading. Screened before reading: no auto-run surface, build-time execution in `tests/conftest.py`, one unpinned dependency surface. The tree was read, never installed, and no test was run. The proprietary native engine is not present in the tree and was not obtained.
