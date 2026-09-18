@@ -117,7 +117,7 @@ floor.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/vornicx--Midas" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -571,6 +571,35 @@ predicate) and <code>:1083</code> (neighbour expansion),
 <code>summarization_ab.py</code>),
 <code>docs/agent-memory-benches.md</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/vornicx/Midas/commit/ee9953c15a977343eb783de0b9f217aaf46e5b4e"><code class="commit-id" title="ee9953c15a977343eb783de0b9f217aaf46e5b4e">ee9953c1…</code></a>
+— re-read at the same commit. Nothing needed correcting; all four marks
+were re-derived from the source and now carry evidence records, and two
+of them are among the better instances in this corpus.</p>
+<p><code>scope_enforced</code> is the one worth singling out.
+<code>metadata_filter</code> is an all-keys equality predicate inside
+recall, and neighbour expansion re-applies it with the reason written
+above the call: <em>"Neighbour expansion must respect the recall scope,
+or a same-thread record from another namespace would leak past the
+filter."</em> That is precisely the drift this atlas has recorded in
+five other systems, anticipated and closed in the source with the
+failure named.</p>
+<p><code>audit_log</code> rests on
+<code>tests/test_audit_chain.py</code>, which asserts the properties
+rather than the shape: that entries link by <code>prev_hash</code>, that
+supersession and clear are audited, that <strong>tampering breaks the
+chain</strong>, that <strong>deleting an entry breaks the
+chain</strong>, that the chain survives reopen and cross-instance use,
+and that a receipt never leaks memory content. Most audit logs in this
+corpus are asserted to exist; this one is asserted to detect.</p>
+<p>The <code>bitemporal</code> limit is now stated: the two clocks are
+the record clock and the query clock. <code>as_of</code> genuinely
+resolves supersession chains to the version valid at that time —
+<code>_resolve_head</code> is swapped for
+<code>_resolve_at(r, as_of)</code> — but there is no caller-supplied
+event date, so the axis is when memory believed something rather than
+when it was so. <code>stack_source</code> goes from seeded to
+reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/vornicx/Midas/commit/ee9953c15a977343eb783de0b9f217aaf46e5b4e"><code class="commit-id" title="ee9953c15a977343eb783de0b9f217aaf46e5b4e">ee9953c1…</code></a>
 — first reading. Screened before reading: one auto-run surface
