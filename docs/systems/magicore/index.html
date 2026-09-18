@@ -130,7 +130,7 @@ rollback is the one mutation the history omits.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-06</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jihadkhawaja--magicore" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -855,6 +855,22 @@ git ls-files src | rg -i &#39;mcp&#39;                                          
 rg -n &#39;GetHistoryAsync|GetAllAtAsync&#39; tests/MagiCore.Tests/Unit/VectorDataMemoryStoreTests.cs   # none across instances
 rg -n &#39;SourceMessageHash|SessionId|ProvenanceTraceId&#39; src/MagiCore/Application/   # declared, never set</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>bitemporal</code> stands and one detail
+deserves promoting into the record, because it is what separates a real
+second axis from an annotation: the event time participates in
+<strong>identity</strong>. <code>ComputeDeduplicationKey</code> returns
+<code>contentHash + ":" + referenceTime</code> when a reference time is
+present and the bare hash when it is not
+(<code>MemoryService.Ingestion.cs:282-285</code>), so the same sentence
+recorded about two different moments is two memories rather than a
+deduplicated one. On the read side <code>IsInTimeRange</code> parses
+<code>TemporalMemoryMetadata.ReferenceTimeKey</code> off the row and
+compares it against the resolved range, with an explicit
+<code>includeUndated</code> policy for rows that carry no event time
+(<code>MemoryService.Retrieval.cs:208-217</code>) — a post-filter over
+retrieved memories rather than a store predicate, which is worth knowing
+when sizing a temporal query. No marks change.</p>
 <p><strong>2026-09-06</strong> — <a
 href="https://github.com/jihadkhawaja/magicore/commit/ae8ba6bb1a8213066e7655581c5326fce93424c3"><code class="commit-id" title="ae8ba6bb1a8213066e7655581c5326fce93424c3">ae8ba6bb…</code></a>
 — same pin, read again after the maintainer wrote that the repository

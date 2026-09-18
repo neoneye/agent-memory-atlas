@@ -9,7 +9,7 @@ source_url: https://github.com/jihadkhawaja/magicore
 archive_name: "jihadkhawaja--magicore"
 revision: ae8ba6bb1a8213066e7655581c5326fce93424c3
 revision_url: https://github.com/jihadkhawaja/magicore/commit/ae8ba6bb1a8213066e7655581c5326fce93424c3
-analyzed_at: 2026-09-06
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, audit_log, negative_eval, bitemporal"
 capability_evidence:
   scope_enforced: "every store read, composed from the filter's user, agent, run and scope keys | src/MagiCore/Application/Search/MemoryFilterEvaluator.cs:8-19, src/MagiCore/Infrastructure/VectorData/VectorDataMemoryStore.cs:240-262, src/MagiCore/Infrastructure/Qdrant/QdrantMemoryStore.cs:92-108 | `UserId` is `required` on the record; `MemoryFilter` is compiled into the backend query — an expression over the indexed `UserId`, `AgentId`, `RunId`, `Scope`, `Behavior` and `MemoryType` columns on the VectorData store, a `must` clause on Qdrant — and every returned row is re-checked by `MemoryFilterEvaluator.Matches` in the loop that pages until `topK` matches; the same filter drives `GetAllAsync`, `DeleteAllAsync`, point-in-time reads and rollback. A search with no filter is unscoped and crosses users | tests/MagiCore.Tests/Unit/MemoryServiceTests.cs `FiltersDoNotLeakBetweenUsers`, tests/MagiCore.Tests/Unit/RoboticsMemoryTests.cs `Recall_IsolatesTenantsAgentsMapsFramesAndFutureEvidence`, tests/MagiCore.Tests/Unit/SpatialMemoryTests.cs `Recall_IsolatesMapsUsersAgentsAndIgnoresExpiredRecords`"
@@ -582,6 +582,20 @@ rg -n 'SourceMessageHash|SessionId|ProvenanceTraceId' src/MagiCore/Application/ 
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`bitemporal` stands and one detail deserves promoting into the record, because
+it is what separates a real second axis from an annotation: the event time
+participates in **identity**. `ComputeDeduplicationKey` returns
+`contentHash + ":" + referenceTime` when a reference time is present and the
+bare hash when it is not (`MemoryService.Ingestion.cs:282-285`), so the same
+sentence recorded about two different moments is two memories rather than a
+deduplicated one. On the read side `IsInTimeRange` parses
+`TemporalMemoryMetadata.ReferenceTimeKey` off the row and compares it against
+the resolved range, with an explicit `includeUndated` policy for rows that carry
+no event time (`MemoryService.Retrieval.cs:208-217`) — a post-filter over
+retrieved memories rather than a store predicate, which is worth knowing when
+sizing a temporal query. No marks change.
 
 **2026-09-06** — [`ae8ba6bb1a8213066e7655581c5326fce93424c3`](https://github.com/jihadkhawaja/magicore/commit/ae8ba6bb1a8213066e7655581c5326fce93424c3) — same pin, read again after the maintainer wrote that the repository had been renamed from `mem0sharp`. A fresh clone's head is the pinned commit, so nothing moved; the rename was recorded at the previous entry, the report lives at `magicore` with the old slug redirecting, and GitHub answers `301` from `jihadkhawaja/mem0sharp` to `jihadkhawaja/magicore`. Screened again: the same LFS filter on the result files, nothing inside the cooldown, nothing installed or run. No claim re-checked went stale, because no line of the tree changed.
 
