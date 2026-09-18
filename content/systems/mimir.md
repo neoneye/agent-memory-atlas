@@ -9,7 +9,7 @@ source_url: https://github.com/MakerViking/mimir
 archive_name: "MakerViking--mimir"
 revision: ff5b3688da694be0edb38232a1d90843d00a5fa7
 revision_url: https://github.com/MakerViking/mimir/commit/ff5b3688da694be0edb38232a1d90843d00a5fa7
-analyzed_at: 2026-09-07
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, negative_eval, tombstone, audit_log, human_review, bitemporal"
 capability_evidence:
   tombstone: "the deliberate tombstone, consulted before every remember | crates/mimir-core/src/memory.rs:20-120,185-235 | `remember` checks a live exact duplicate, then `find_forgotten` — a node soft-deleted on purpose (`deleted_at` set and not decay-archived), matched by content hash and then by the `is_reword` pass over the newest 500 deliberate tombstones — and refuses with `RememberOutcome::Forgotten` while enqueueing a `Resurfacing` finding; `--force` creates the row and writes a `Restore` mutation naming the override | crates/mimir-core/src/memory.rs:559-660 (`forgotten_memory_is_not_silently_re_added`, `a_fact_that_keeps_coming_back_becomes_a_finding`), crates/mimir-core/src/eval/forget.rs:505-580 (`forgotten_facts_survive_every_attack_shape`, the soft and hard delete durability scorecards)"
@@ -342,6 +342,18 @@ survives a delete.
 | `contrib/` | systemd service, watchdog and timer |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`human_review` stands, and the producer test here is cleaner than in most
+holders of the mark because the separation is a crate boundary rather than an
+omission from a tool list. `review::decide` has exactly one production caller,
+`mimir-cli/src/review_cmd.rs:79`, reached by `mimir review <id> --keep |
+--supersede | --dismiss`; every other reference in the tree is inside
+`review.rs`'s own tests (`:323`, `:365`, `:384`, `:408`, `:424-425`). The
+agent-facing crate does not merely lack a tool for it — `mimir-proxy` contains
+no reference to `review` at all, so there is no symbol an agent-side path could
+call. The file says the same thing in its own header: *"the findings the store
+will not decide for you … The decision is the point"*. No marks change.
 
 **2026-09-07** — [`ff5b3688da694be0edb38232a1d90843d00a5fa7`](https://github.com/MakerViking/mimir/commit/ff5b3688da694be0edb38232a1d90843d00a5fa7) — re-pinned nineteen commits on, version 0.16.0, 7,588 lines added. Four mechanisms this report withheld at the previous pin exist and are tested: a deliberate tombstone that refuses a forgotten fact and its rewordings on every `remember` (`memory.rs`), a hash-only `mutation` ledger of who changed a memory, when and why (`audit.rs`), a `review` queue a person decides with a reason (`review.rs`, `review_cmd.rs`), and two time axes — `--valid-from/--valid-to` on the node and `--as-of` transaction-time recall judged from the ledger (`search/mod.rs`). Beside them: `node_revision` keeps the wording an edit replaced and is purged by `forget`, an author confidence is stored apart from usage, a falsifiable grounding link and a refusal ledger, a secrets scrubber, receiver-typed call edges in the code graph, and `eval/forget.rs` scores deletion durability against every re-entry shape. `tombstone`, `audit_log`, `human_review` and `bitemporal` are awarded; six of seven marks. Screened before reading: no auto-run surface, no manifest inside the cooldown, nothing installed or run.
 
