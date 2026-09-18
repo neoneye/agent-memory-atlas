@@ -130,7 +130,7 @@ no record at all.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-05</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/wikieden--tempomem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -797,6 +797,27 @@ rg -n &#39;_clean_label|isprintable&#39; src/tempomem/serialize.py src/tempomem/
 rg -n -i &#39;arxiv|bibtex|@article|@misc|citation|doi&#39; README.md docs/en/ spec/           # no paper
 rg -n &#39;mindloop|worldsense&#39; src/ docs/en/        # named, not present</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>negative_eval</code> stands, and the assertion
+form is worth naming because it is stronger than the usual one: the
+committed cases assert an <em>exact</em> result list rather than an
+absence. <code>test_spatial_near</code> stores an object at 0.1 m and
+another at 5 m and asserts the radius-1 m result is
+<code>== ["near"]</code>
+(<code>tests/unit/test_store_query.py:40-44</code>), and
+<code>test_define_region_adopts_inside_objects</code> asserts
+<code>== ["kettle", "mug", "sink"]</code> with <code>n_nodes == 5</code>
+on the next line, so the excluded doormat is provably still in the store
+rather than never written
+(<code>tests/unit/test_hierarchy.py:19-27</code>). Equality pins the
+count and the order too, which an <code>assert x not in result</code>
+does not. Re-verified alongside it: the <code>session</code> string on
+an episode row is still read by no query — the only
+<code>WHERE session=?</code> in the tree is
+<code>ensure_episode</code>'s find-or-create on the write path
+(<code>store.py:55</code>) — though it does survive the whole-store
+export in <code>serialize.py:16</code>, so it is recoverable from a dump
+while remaining unqueryable. No marks change.</p>
 <p><strong>2026-09-05</strong> — <a
 href="https://github.com/wikieden/tempomem/commit/92181fbbae7f5e66714aa5e91f61ba9558b1f1aa"><code class="commit-id" title="92181fbbae7f5e66714aa5e91f61ba9558b1f1aa">92181fbb…</code></a>
 — first reading, at the head of <code>main</code>. Screened first: no

@@ -9,7 +9,7 @@ source_url: https://github.com/wikieden/tempomem
 archive_name: "wikieden--tempomem"
 revision: 92181fbbae7f5e66714aa5e91f61ba9558b1f1aa
 revision_url: https://github.com/wikieden/tempomem/commit/92181fbbae7f5e66714aa5e91f61ba9558b1f1aa
-analyzed_at: 2026-09-05
+analyzed_at: 2026-09-18
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the query surface — radius search, region membership, geometric relations and the prompt subgraph | tests/unit/test_store_query.py:40-44, tests/unit/test_hierarchy.py:19-33, tests/unit/test_relations.py, tests/unit/test_serialize_budget.py:40-46 | `test_spatial_near` ingests `near` at 0.1 m and `far` at 5 m and asserts the radius-1 m result is exactly `[\"near\"]`; `test_define_region_adopts_inside_objects` seeds three kitchen objects and a doormat at x=9 and asserts the region's contents are exactly the three, then that the node count is five so the doormat still exists; `test_relate_far_objects_not_near` asserts no `near` edge between distant nodes beside `test_relate_near_symmetric`, which asserts one; `test_node_ids_restricts_to_subgraph` asserts `obj0` and `obj5` are absent from the focused prompt while the requested node and its neighbour are present. Each exclusion is an exact-list equality or a `not in` over a populated result, with the excluded material ingested in the same test | the four files are the mechanism"
@@ -516,5 +516,22 @@ rg -n 'mindloop|worldsense' src/ docs/en/        # named, not present
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`negative_eval` stands, and the assertion form is worth naming because it is
+stronger than the usual one: the committed cases assert an *exact* result list
+rather than an absence. `test_spatial_near` stores an object at 0.1 m and
+another at 5 m and asserts the radius-1 m result is `== ["near"]`
+(`tests/unit/test_store_query.py:40-44`), and
+`test_define_region_adopts_inside_objects` asserts
+`== ["kettle", "mug", "sink"]` with `n_nodes == 5` on the next line, so the
+excluded doormat is provably still in the store rather than never written
+(`tests/unit/test_hierarchy.py:19-27`). Equality pins the count and the order
+too, which an `assert x not in result` does not. Re-verified alongside it: the
+`session` string on an episode row is still read by no query — the only `WHERE
+session=?` in the tree is `ensure_episode`'s find-or-create on the write path
+(`store.py:55`) — though it does survive the whole-store export in
+`serialize.py:16`, so it is recoverable from a dump while remaining
+unqueryable. No marks change.
 
 **2026-09-05** — [`92181fbbae7f5e66714aa5e91f61ba9558b1f1aa`](https://github.com/wikieden/tempomem/commit/92181fbbae7f5e66714aa5e91f61ba9558b1f1aa) — first reading, at the head of `main`. Screened first: no auto-run surface, one build-time execution path (a pytest `conftest.py`), one unpinned surface (`pyproject.toml` ranges with no lockfile), nothing inside the seven-day cooldown. Nothing was installed or run; the tests were read, not executed. One mark, `negative_eval`, on exact-result exclusion tests with the excluded material ingested in the same case. `tombstone` withheld on the orphan-row near-miss, `scope_enforced` on a session string no query reads, `audit_log` on mutators that write nothing, `trust_state` on a confidence float. Found in the same pass and recorded above: `update(label=)` erasing the label distribution, and `answer()` bypassing the budget and the sanitiser the package ships.
