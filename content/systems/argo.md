@@ -9,11 +9,11 @@ source_url: https://github.com/derekhu0002/Argo
 archive_name: "derekhu0002--Argo"
 revision: 607a1c1dd0cd310fdfcb1ae8f060f01675142a7b
 revision_url: https://github.com/derekhu0002/Argo/commit/607a1c1dd0cd310fdfcb1ae8f060f01675142a7b
-analyzed_at: 2026-09-09
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "the channel key inside the vector query, on the shipped semantic read path | .argo/scripts/graph-rag/defaultSemanticRetrieval.js:60-66 | `VECTOR_QUERY_CYPHER` composes `WHERE node.channel = $channel` into the same Cypher statement as `CALL db.index.vector.queryNodes($indexName, $topK, $vector)`, so the channel bounds the ranked set the index returns rather than filtering it afterwards — which is the difference that decides whether `$topK` means the same thing for every caller. Fully parameterised, and the three production indexes for elements, relationships and views are queried independently | tests/mcp/systemarchitecture-mcp.test.js"
-  negative_eval: "the fail-closed readiness gates, as committed acceptance cases | design/KG/SystemArchitecture.json, design/persistant-memory/intention-design.md | `embeddingQualificationGate` and `liveEmbeddingIndexGate` sit in front of retrieval, and the committed cases assert the unhappy path: the canonical model records that every query re-reads readiness and \"rejects disabled, pending, partial, stale, failed, unknown, version-mismatched, or channel-incomplete state\" with `fullSnapshotFallback:false` before any provider or vector work, so a store that cannot vouch for its index refuses rather than answering from stale or lexical results. `SP-04-FailClosedReadiness` and `BP-AUTOALIGN-QUERY-FAILS-CLOSED` are the named cases | the acceptance cases themselves; no separate suite asserts a specific record is absent from a populated result"
+  negative_eval: "the fail-closed readiness gates, as executable acceptance cases | tests/explicit/entries/runEmbeddingQualificationGate.js:14,:23,:33,:44,:55,:64, tests/harness/productionGraphRagHarness.js:482-500, design/KG/SystemArchitecture.json, design/persistant-memory/intention-design.md | `embeddingQualificationGate` and `liveEmbeddingIndexGate` sit in front of retrieval, and the committed cases assert the unhappy path: the canonical model records that every query re-reads readiness and \"rejects disabled, pending, partial, stale, failed, unknown, version-mismatched, or channel-incomplete state\" with `fullSnapshotFallback:false` before any provider or vector work, so a store that cannot vouch for its index refuses rather than answering from stale or lexical results. `SP-04-FailClosedReadiness` and `BP-AUTOALIGN-QUERY-FAILS-CLOSED` are the named cases | the acceptance cases themselves; no separate suite asserts a specific record is absent from a populated result"
 stack_storage: "graph, files"
 stack_retrieval: "vector"
 stack_source: "reviewed"
@@ -451,6 +451,25 @@ adopting a modelling practice first and a retrieval stack second.
 - Decisions: `.argo/history/decision-tree/`, `.argo/rules/`.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`negative_eval` stands, and the record is corrected to cite the code rather than
+the design. It named `design/KG/SystemArchitecture.json` and
+`design/persistant-memory/intention-design.md` — prose — when the mark is carried
+by an executable file: `tests/explicit/entries/runEmbeddingQualificationGate.js`
+asserts a valid qualification is `approved` at `:14`, with the failure message
+`EMBEDDING_VALID_QUALIFICATION_REJECTED` naming the over-restriction case, and
+then blocks five variants — unapproved, incomplete, blank identity, invalid
+shape and implicit default — each against a named category (`:23`, `:33`, `:44`,
+`:55`, `:64`) through `assertBlocked`/`assertBlockedField` in
+`tests/harness/productionGraphRagHarness.js:482-500`. Positive control first,
+five must-nots after.
+
+Worth knowing while reading this tree: not everything under `tests/` asserts
+behaviour. `tests/architecture/production-graph-rag/architecture-boundary.guard.js`
+asserts that particular strings appear in `OVERALL_ARCHITECTURE.md` and the
+local `ARCHITECTURE.md` — a documentation-consistency guard, which is a
+reasonable thing to have and is not a test of the gate. No marks change.
 
 **2026-09-09** — [`607a1c1dd0cd310fdfcb1ae8f060f01675142a7b`](https://github.com/derekhu0002/Argo/commit/607a1c1dd0cd310fdfcb1ae8f060f01675142a7b) — second reading, 51 commits on: 130 files, 13,276 insertions. Screened before reading; nothing was installed and no suite was run.
 
