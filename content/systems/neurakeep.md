@@ -9,13 +9,12 @@ source_url: https://github.com/dominiclachance/neurakeep
 archive_name: "dominiclachance--neurakeep"
 revision: 57f1afa22ef0f3bca363b06cfcb21285bff60129
 revision_url: https://github.com/dominiclachance/neurakeep/commit/57f1afa22ef0f3bca363b06cfcb21285bff60129
-analyzed_at: 2026-09-11
-capabilities: "bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+analyzed_at: 2026-09-18
+capabilities: "bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   bitemporal: "the fact tier | src/memory/governor-audit.ts:51,:80 and src/mcp/http.ts:1498 | `valid_from`/`valid_until` beside `created_at`, with a supersession setting `valid_until` and `review_after` on the losing row | tests/phases3to7.test.ts"
   scope_enforced: "section search | src/search/fts.ts:134 and :198 | `AND (? IS NULL OR sections.space = ?)` on the optional path and `WHERE space = ?` on the mandatory one | tests"
   audit_log: "the governor audit | src/memory/governor-audit.ts | a JSONL record of every governed mutation, supporting a real undo, beside the append-only `hosted_audit_events` table | tests"
-  human_review: "the proposal queue | src/memory/proposals.ts:192 | a proposal the governor blocks raises rather than applying, and the review queue is the only path to durability | tests/milestone2.test.ts"
   negative_eval: "the governor | src/memory/governor.ts | committed cases asserting an uncited or do-not-remember item does not reach durable memory | tests/phases3to7.test.ts"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
@@ -24,7 +23,7 @@ matrix:
   memory_unit: "Four durable kinds — event, fact, failure and section — each carrying source and section citations and the same five governance columns"
   storage: "One local SQLite vault with FTS5 over sections, raw files on disk, and a JSONL governor audit"
   retrieval: "BM25 over an FTS5 index, re-ranked by eight named components whose breakdown is returned with every hit"
-  write: "An extractor proposes; a governor blocks uncited or do-not-remember items; nothing durable is applied without review"
+  write: "An extractor proposes; a governor blocks uncited or do-not-remember items; nothing durable is applied without a proposal being applied — but `memory_apply_update` is one of the MCP tools, so the applying caller can be the agent that proposed"
   update_delete: "Facts carry `supersedes_json`, `valid_from`/`valid_until` and a `review_after` date; the audit supports a real undo"
   scoping: "A `space` column on every table, applied on the read path as `(? IS NULL OR space = ?)` — mandatory for failures, optional for sections — beneath a new hosted tenant layer whose isolation is a separate vault per tenant"
   integration: "An MCP server over stdio and HTTP, a CLI, and a local web review app"
@@ -51,6 +50,22 @@ A blocked item makes the whole report `ok: false`. **A memory that cannot say wh
 Three more things are worth the reading.
 
 **Nothing durable is applied automatically.** `self-policy.ts` declares `durableAutoApply: ["None. Events, facts, failures, decisions, and do-not-repeat guidance stay proposal-reviewed…"]`, and the code agrees: extraction produces a row in `proposals` with a `diff_json`, and a person applies it. The agent's own daily notes go through the same queue — `queueSelfMemorySummary` writes a summary into the inbox and calls `proposeSourceExtraction`, so a system that reads its own memory cannot promote it.
+
+**The proposal queue is real, and the agent holds its key.** `applyProposal`
+refuses anything whose status is not `pending` and is the only route from a
+proposal into durable memory, which is the shape a review gate has. What it does
+not have is an approver distinct from the producer: `src/mcp/manifest.ts:57-64`
+publishes `memory_apply_update`, *"Apply a pending proposal into durable memory
+and compile the wiki"*, taking a single `proposal_id`, and
+`src/mcp/server.ts:127-130` dispatches it straight into `applyProposal`. The
+same MCP surface carries the proposing tool. So the queue is a staging step the
+writer can clear itself, and the human-review mark does not hold — the local
+review app at `src/app/frontend.ts` is a second door onto the same verb, not a
+gate in front of it.
+
+The governor is the part that does hold, and it is doing different work: it
+blocks an uncited or do-not-remember item outright rather than parking it for a
+person, which is why the negative-evaluation mark stands on the same machinery.
 
 **There is a real undo.** `recordGovernorAudit` appends a JSONL entry per mutation carrying `before`, `after`, `targetIds` and an `undoable` flag derived from whether a `before` existed; `undoGovernorAudit` restores it and records the undo as its own entry. Rollback is one of two axes [the rubric records as uncovered](../../methodology/atlas-rubric/#known-limits), and this is a working instance of it.
 
@@ -316,6 +331,8 @@ Run from the root of the checkout at the pinned commit.
 | Tenant isolation is a separate vault | `grep -rn "tenantIsolation" --include="*.ts" src` | Two sites, both reporting a status string in an info payload; the vault root is resolved per caller in `src/core/paths.ts:23` |
 
 ## History
+
+**2026-09-18** — [`57f1afa22ef0f3bca363b06cfcb21285bff60129`](https://github.com/dominiclachance/neurakeep/commit/57f1afa22ef0f3bca363b06cfcb21285bff60129) — re-read at the same commit; `main` has not moved since 23 August 2026, so the correction is this report's. **Human review withdrawn.** The record read *"the review queue is the only path to durability"*, which is true and not sufficient: `memory_apply_update` is a published MCP tool — `manifest.ts:57-64`, dispatched at `server.ts:127-130` into `applyProposal` — taking a `proposal_id` and nothing else, on the same surface that carries the proposing tool. The queue is a staging step the writer can clear itself, and the local review app is a second door onto that verb rather than a gate in front of it. The other four marks hold, and the governor keeps the negative-evaluation mark on its own terms: it refuses an uncited or do-not-remember item outright instead of parking it for a person, which is a different mechanism from review and a working one.
 
 **2026-09-11** — [`57f1afa22ef0f3bca363b06cfcb21285bff60129`](https://github.com/dominiclachance/neurakeep/commit/57f1afa22ef0f3bca363b06cfcb21285bff60129) — re-read, 51 files and 3,646 insertions past the previous pin in a single commit. **All five marks re-verified and unchanged, and the stated risk holds verbatim**: `src/search/fts.ts:134` still reads `AND (? IS NULL OR sections.space = ?)`, and `src/mcp/server.ts:98` still passes `optionalString(args.space)`, so an omitted space matches every space. The commit's substance is a hosted multi-tenant layer — `hosted_tenants`, `hosted_spaces`, `hosted_memberships`, `hosted_subscriptions`, `hosted_organizations` and a `hosted_audit_events` table with no update or delete path in the tree. Worth being precise about what that changes for scope: the tenant boundary is a **separate vault per tenant**, reported as `dedicated_vault` or `organization_space_vault` in an info payload, which is a partition rather than a predicate. The predicate that earns `scope_enforced` is still the `space` column inside a vault, with the same optional behaviour, so the new layer sits above the gap rather than closing it. Screened before reading: five findings; nothing was installed or run.
 
