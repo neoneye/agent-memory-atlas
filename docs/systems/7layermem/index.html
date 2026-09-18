@@ -121,7 +121,7 @@ returned.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-04</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Prateek816--7layermem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -233,8 +233,26 @@ summary, 0.7 workflow, 0.6 conversation
 never by anything the similarity search reported.
 <code>similarity_search</code> returns documents without scores, so the
 ranking that reaches the agent is a fixed preference order over stores
-plus each store's internal order. A perfect match in workflow loses to a
-weak match in knowledge, always.</p>
+plus each store's internal order. The synthetic score is not a decision
+to ignore a real one: <code>memory_manager.py:197</code> calls
+<code>store.similarity_search(query, **kwargs)</code>, the LangChain
+method that returns <code>Document</code> objects and no distances, so
+the number was gone before the ranker saw it.</p>
+<p>The preference order is fixed only while <code>k</code> is small, and
+the arithmetic is worth writing down because it is the whole ranking.
+<code>_docs_to_results</code> scores position <code>i</code> as
+<code>base_score * (1.0 - i * 0.05)</code> and the conversational arm
+uses <code>0.6 * (1.0 - i * 0.1)</code>. So knowledge outranks entity's
+best hit for its first two results and loses from the third (0.81
+against 0.85); it outranks workflow's best for its first five and loses
+from the sixth (0.675 against 0.70). A perfect match in workflow loses
+to a weak match in knowledge for as long as knowledge has fewer than six
+hits to spend, which at the default <code>k</code> it always does.</p>
+<p>One consequence lands on the scope question. The conversational read
+is the only arm in the fan-out that applies <code>thread_id</code>, and
+it is also the arm with the lowest base score in the table — 0.6,
+beneath knowledge, entity, summary and workflow, none of which consult a
+thread at all. The scoped source is ranked last by construction.</p>
 <p><strong>Correction has a delete surface and no vocabulary above
 it.</strong> Searching the source for <code>tombstone</code>,
 <code>supersede</code>, <code>retract</code> or <code>forget</code>
@@ -823,6 +841,27 @@ prompt, Cypher writes and reads, <code>DETACH DELETE</code></li>
 <code>testing.py</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e"><code class="commit-id" title="d3500bfd74b380585e8220f6c6f235c825bc803e">d3500bfd…</code></a>
+— third reading at the same pin, and a verification pass rather than a
+correction. The <code>negative_eval</code> evidence was re-derived from
+the source: <code>test_read_conversations_filters_by_thread</code>
+writes to two threads and asserts each read returns exactly its own row,
+and <code>test_delete_thread_conversations</code> asserts
+<code>t2</code> survives the deletion of <code>t1</code> — both
+non-vacuous, both with the positive control in the same case.
+<code>scope_enforced</code> stays withheld on the ground recorded in
+August, and this reading adds the reason it matters: of the five arms
+<code>AgentMemory.recall</code> fans out to, the conversational read is
+the only one that applies <code>thread_id</code>, and its base score of
+0.6 puts it beneath every arm that does not. The ranking claim was made
+exact — <code>_docs_to_results</code> scores position <code>i</code> as
+<code>base_score * (1.0 - i * 0.05)</code>, so knowledge outranks
+entity's best hit for two positions and workflow's for five, and the
+"always" in the previous text holds only while <code>k</code> is small.
+<code>entity_0</code> was confirmed as a batch-position fallback,
+<code>metadata.get("name", f"entity_{i}")</code>, which the simple write
+path reaches with <code>i</code> always zero.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e"><code class="commit-id" title="d3500bfd74b380585e8220f6c6f235c825bc803e">d3500bfd…</code></a>
 — same pin, re-read against the source. The architectural spine

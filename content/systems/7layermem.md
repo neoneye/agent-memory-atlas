@@ -9,7 +9,7 @@ source_url: https://github.com/Prateek816/7layermem
 archive_name: "Prateek816--7layermem"
 revision: d3500bfd74b380585e8220f6c6f235c825bc803e
 revision_url: https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e
-analyzed_at: 2026-08-04
+analyzed_at: 2026-09-18
 capabilities: "negative_eval"
 stack_storage: "sqlite, chroma, graph"
 stack_retrieval: "lexical, vector, graph"
@@ -79,8 +79,26 @@ from a constant chosen by which store it came from — 0.9 knowledge, 0.85 entit
 `:404`, `:411`, `:425`) — decayed by result position, never by anything the
 similarity search reported. `similarity_search` returns documents without
 scores, so the ranking that reaches the agent is a fixed preference order over
-stores plus each store's internal order. A perfect match in workflow loses to a
-weak match in knowledge, always.
+stores plus each store's internal order. The synthetic score is not a decision to
+ignore a real one: `memory_manager.py:197` calls
+`store.similarity_search(query, **kwargs)`, the LangChain method that returns
+`Document` objects and no distances, so the number was gone before the ranker
+saw it.
+
+The preference order is fixed only while `k` is small, and the arithmetic is
+worth writing down because it is the whole ranking. `_docs_to_results` scores
+position `i` as `base_score * (1.0 - i * 0.05)` and the conversational arm uses
+`0.6 * (1.0 - i * 0.1)`. So knowledge outranks entity's best hit for its first
+two results and loses from the third (0.81 against 0.85); it outranks workflow's
+best for its first five and loses from the sixth (0.675 against 0.70). A perfect
+match in workflow loses to a weak match in knowledge for as long as knowledge has
+fewer than six hits to spend, which at the default `k` it always does.
+
+One consequence lands on the scope question. The conversational read is the only
+arm in the fan-out that applies `thread_id`, and it is also the arm with the
+lowest base score in the table — 0.6, beneath knowledge, entity, summary and
+workflow, none of which consult a thread at all. The scoped source is ranked last
+by construction.
 
 **Correction has a delete surface and no vocabulary above it.** Searching the
 source for `tombstone`, `supersede`, `retract` or `forget` returns nothing; the
@@ -568,6 +586,8 @@ that degrades the type it upgrades.
   `test_langchain_chat_history.py`, `testing.py`
 
 ## History
+
+**2026-09-18** — [`d3500bfd74b380585e8220f6c6f235c825bc803e`](https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e) — third reading at the same pin, and a verification pass rather than a correction. The `negative_eval` evidence was re-derived from the source: `test_read_conversations_filters_by_thread` writes to two threads and asserts each read returns exactly its own row, and `test_delete_thread_conversations` asserts `t2` survives the deletion of `t1` — both non-vacuous, both with the positive control in the same case. `scope_enforced` stays withheld on the ground recorded in August, and this reading adds the reason it matters: of the five arms `AgentMemory.recall` fans out to, the conversational read is the only one that applies `thread_id`, and its base score of 0.6 puts it beneath every arm that does not. The ranking claim was made exact — `_docs_to_results` scores position `i` as `base_score * (1.0 - i * 0.05)`, so knowledge outranks entity's best hit for two positions and workflow's for five, and the "always" in the previous text holds only while `k` is small. `entity_0` was confirmed as a batch-position fallback, `metadata.get("name", f"entity_{i}")`, which the simple write path reaches with `i` always zero.
 
 **2026-08-31** — [`d3500bfd74b380585e8220f6c6f235c825bc803e`](https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f235c825bc803e) — same pin, re-read against the source. The architectural spine published for this commit was wrong in one direction: it described seven SQLite tables read by direct SQL with a delete path on one of them. `store_manager` creates two SQLite tables; the other five constants name Chroma collections embedded with `all-MiniLM-L6-v2` and read by `similarity_search`, the optional Neo4j entity graph in `src/graphDB/` went undescribed, and deletion reaches every store. `negative_eval` is earned on the two thread-boundary cases in `tests/test_memory_manager.py`; the other six marks stay withheld, `scope_enforced` on the sharper ground that entity documents carry a `thread_id` no read path consults. Also corrected: the README asserts MIT with no licence file under it, `update_conversation_summary_id` and `delete_entities_by_thread` have no caller outside tests, and `TOOLBOX_MEMORY` has no route from any entry point.
 
