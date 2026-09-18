@@ -9,7 +9,7 @@ source_url: https://github.com/jarmstrong158/context-keeper
 archive_name: "jarmstrong158--context-keeper"
 revision: d08355a46548d5a20d9170d3271e2054c51a4db9
 revision_url: https://github.com/jarmstrong158/context-keeper/commit/d08355a46548d5a20d9170d3271e2054c51a4db9
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, trust_state, negative_eval"
 capability_evidence:
   scope_enforced: "a stored scope key with one shared implementation of what it covers, applied as an exact filter on the deterministic read path and as a coverage test in the pre-edit hook | scope_rules.py:1-120, server.py:2295-2302, hooks/scope_guard.py, work_focus.py | every entry carries `scope`; `query_entries` rejects any entry whose `scope` is not exactly the requested one, alongside exact predicates on status, origin, hardness, tags and supersession. `scope_rules.py` is the single implementation of scope semantics — a file scope matches the tail of a path exactly so `server.py` covers `pkg/server.py` and never `test_server.py`, a directory scope must match whole consecutive components, and `global`/`all`/`*` cover nothing by path rather than everything. Its module docstring records why it exists: four surfaces each had their own matcher and disagreed on two of ten cases | tests/test_server.py::TestScopeCovers, tests/test_drift_and_usage.py:114-137 (a directory scope covers files beneath it, and does not swallow the sibling prefix `src/api_v2`, asserted as a pair)"
@@ -495,5 +495,24 @@ rg -n -i 'arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi' README.md docs 
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. All
+three marks stand, and the eval is the part worth drawing out further than the
+record does.
+
+`test_golden_set_shape` (`tests/test_retrieval_eval.py:74-81`) asserts a floor on
+the evaluation's own composition — at least 40 cases, at least 8 of them
+`negative`, at least 5 `history`, drawn from at least 4 distinct stores. The
+committed set stands at 59 cases: 44 positive, 9 negative, 6 history, across 9
+stores. A floor on negative coverage is rare; it is what stops an eval drifting
+into only the cases the system passes.
+
+Beside it sits something this atlas has not seen elsewhere.
+`test_no_private_store_leaks_in` (`:83-91`) asserts every case's `store` is in an
+allow-list of ten public-repo names, under a comment explaining why — *"this repo
+is public and a case quotes the entry it targets, so a case may only be drawn
+from a public-repo store."* An eval that quotes real memory content is a
+disclosure surface, and this is the only committed test in the corpus that
+treats it as one. No marks change.
 
 **2026-09-10** — [`d08355a46548d5a20d9170d3271e2054c51a4db9`](https://github.com/jarmstrong158/context-keeper/commit/d08355a46548d5a20d9170d3271e2054c51a4db9) — first reading, at the head of `main`, the last commit of 6 August 2026. Screened before reading: two auto-run surfaces — seven hook scripts a plugin manifest registers, and a `server.json` declaring a start command — one build-time execution path in `tests/conftest.py`, one unpinned dependency surface, and a `CLAUDE.md` treated as data; nothing was installed or run, and the read was made from a full clone. Three marks. The reading covered capture validation, the two read paths, the status and origin lifecycle, scope semantics and the eval harness; the mirror, the packaging and the compaction reporting were read as context rather than as subject.
