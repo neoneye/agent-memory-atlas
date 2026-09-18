@@ -122,7 +122,7 @@ acknowledgment.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/gitmem-dev--gitmem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -130,7 +130,7 @@ acknowledgment.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -376,12 +376,22 @@ cross-project cache. A parameter that reaches a signature and stops
 there is the read-path form of a declared-and-unwired mechanism, and the
 project states the design in the source rather than leaving it to be
 inferred.</p>
-<p><strong>Human review — awarded</strong> on the suggestion pipeline:
-implicit thread detection proposes a thread from session-embedding
-similarity, the suggestion is <code>status: "pending"</code>, and it
-becomes an open thread only when a person promotes it or disappears when
-a person dismisses it. A proposal that does not take effect until
-someone acts on it is the mark's substance.</p>
+<p><strong>Human review — withheld</strong>, and the pipeline is the
+reason it looked earned. Implicit thread detection proposes a thread
+from session-embedding similarity, the suggestion is
+<code>status: "pending"</code>, and it becomes an open thread only when
+something promotes it. That something is the agent:
+<code>promote_suggestion</code> and <code>dismiss_suggestion</code> are
+registered tools (<code>src/tools/definitions.ts:732</code>,
+<code>:752</code>) dispatched from <code>src/server.ts:267</code>, and
+<code>confirm_scars</code> — the verb that answers a surfaced scar
+before a consequential command may run — is registered at
+<code>definitions.ts:53</code> and dispatched at
+<code>server.ts:172</code>. The pending state is real and the gate is
+real; what it gates against is the <em>pipeline</em>, not the producer.
+An agent that proposes a thread can promote it, and an agent that is
+shown a scar can confirm it and proceed. The mark asks for an approver
+the producer cannot be, and here they are the same caller.</p>
 <p><strong>Audit log — withheld, deliberately.</strong>
 <code>gitmem_scar_usage</code> is the richest retrieval-feedback table
 in this corpus, and retrieval feedback is explicitly the half the mark
@@ -589,6 +599,30 @@ cover check <code>:80-88</code>, the pending-only match loop
 <code>:236</code>, the report <code>:357-361</code>,
 <code>:808</code>)</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <strong><code>human_review</code> is
+withdrawn</strong>, leaving the report with no marks. The suggestion
+pipeline is exactly as described — proposals land <code>pending</code>
+and take effect only when promoted — but the promoting actor is the
+agent: <code>promote_suggestion</code> and
+<code>dismiss_suggestion</code> are entries in
+<code>src/tools/definitions.ts</code> (<code>:732</code>,
+<code>:752</code>) dispatched at <code>src/server.ts:267</code>, and
+<code>confirm_scars</code> is at <code>definitions.ts:53</code> and
+<code>server.ts:172</code>. Nothing in the tree restricts any of the
+three to a human caller. That is the fifth report this week where a
+pending-until-approved design turned out to hand the approve verb to the
+producer, after <a href="../runar-forge/">RunarForge</a>, <a
+href="../sift-kg/">sift-kg</a>, <a href="../memsem/">memsem</a> and <a
+href="../monet/">Monet</a>.</p>
+<p>Worth keeping separate from the mark: the <em>protocol</em> is still
+the most careful one in this corpus. A scar must be answered
+<code>APPLYING</code>, <code>N_A</code> or <code>REFUTED</code> with
+minimum evidence lengths before a consequential command proceeds, and
+<code>gitmem_scar_usage</code> records <code>surfaced_at</code> against
+<code>acknowledged_at</code>. An agent answering to itself in that much
+detail is a better record than most systems keep; it is not a second
+party. Evidence coverage floor 1248 -&gt; 1247.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/gitmem-dev/gitmem/commit/d47a625f5c08fbd6b1c96f4d2bf4f1b3a15e98f6"><code class="commit-id" title="d47a625f5c08fbd6b1c96f4d2bf4f1b3a15e98f6">d47a625f…</code></a>
 — read again, 19 commits past the previous pin, and

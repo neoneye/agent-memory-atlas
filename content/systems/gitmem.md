@@ -9,10 +9,9 @@ source_url: https://github.com/gitmem-dev/gitmem
 archive_name: "gitmem-dev--gitmem"
 revision: d47a625f5c08fbd6b1c96f4d2bf4f1b3a15e98f6
 revision_url: https://github.com/gitmem-dev/gitmem/commit/d47a625f5c08fbd6b1c96f4d2bf4f1b3a15e98f6
-analyzed_at: 2026-09-10
-capabilities: "human_review"
+analyzed_at: 2026-09-18
+capabilities: ""
 capability_evidence:
-  human_review: "a suggested thread does not become one until a person acts, and a surfaced scar must be individually answered before a consequential command runs | src/services/thread-suggestions.ts:112-131, :154-170, src/tools/confirm-scars.ts, hooks/scripts/recall-check.sh | Implicit thread detection proposes a thread from session-embedding similarity and writes it `status: \"pending\"`; it becomes an open thread only when a person promotes it, and dismissing it sets `status: \"dismissed\"`. A proposal that takes effect only when someone acts is the mark's substance. Beside it the refute-or-obey protocol: `confirm_scars` requires each recalled scar to be answered `APPLYING`, `N_A` or `REFUTED`, each with its own evidence requirement, and `recall-check.sh` is a `PreToolUse` hook on `Bash` that emits `{\"decision\": \"block\"}` while recall-source scars are unconfirmed — enforced rather than requested. The limit belongs with the mark: `getPendingSuggestions` filters on `dismissed_count < 3` and a dismissal also sets the status, so the suppression threshold is unreachable | tests/unit/tools/confirm-scars-retrieval-failure.test.ts, tests/unit/tools/recall-surfacing.test.ts"
 stack_storage: "postgres"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -255,11 +254,18 @@ it in favour of one cross-project cache. A parameter that reaches a signature an
 stops there is the read-path form of a declared-and-unwired mechanism, and the
 project states the design in the source rather than leaving it to be inferred.
 
-**Human review — awarded** on the suggestion pipeline: implicit thread
-detection proposes a thread from session-embedding similarity, the suggestion is
-`status: "pending"`, and it becomes an open thread only when a person promotes
-it or disappears when a person dismisses it. A proposal that does not take
-effect until someone acts on it is the mark's substance.
+**Human review — withheld**, and the pipeline is the reason it looked earned.
+Implicit thread detection proposes a thread from session-embedding similarity,
+the suggestion is `status: "pending"`, and it becomes an open thread only when
+something promotes it. That something is the agent: `promote_suggestion` and
+`dismiss_suggestion` are registered tools (`src/tools/definitions.ts:732`,
+`:752`) dispatched from `src/server.ts:267`, and `confirm_scars` — the verb that
+answers a surfaced scar before a consequential command may run — is registered at
+`definitions.ts:53` and dispatched at `server.ts:172`. The pending state is real
+and the gate is real; what it gates against is the *pipeline*, not the producer.
+An agent that proposes a thread can promote it, and an agent that is shown a scar
+can confirm it and proceed. The mark asks for an approver the producer cannot be,
+and here they are the same caller.
 
 **Audit log — withheld, deliberately.** `gitmem_scar_usage` is the richest
 retrieval-feedback table in this corpus, and retrieval feedback is explicitly the
@@ -446,6 +452,25 @@ pending-only match loop `:91-107`, the new suggestion `:120-127`,
 the select `:236`, the report `:357-361`, `:808`)
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+**`human_review` is withdrawn**, leaving the report with no marks. The
+suggestion pipeline is exactly as described — proposals land `pending` and take
+effect only when promoted — but the promoting actor is the agent:
+`promote_suggestion` and `dismiss_suggestion` are entries in
+`src/tools/definitions.ts` (`:732`, `:752`) dispatched at `src/server.ts:267`,
+and `confirm_scars` is at `definitions.ts:53` and `server.ts:172`. Nothing in
+the tree restricts any of the three to a human caller. That is the fifth report
+this week where a pending-until-approved design turned out to hand the approve
+verb to the producer, after [RunarForge](../runar-forge/),
+[sift-kg](../sift-kg/), [memsem](../memsem/) and [Monet](../monet/).
+
+Worth keeping separate from the mark: the *protocol* is still the most careful
+one in this corpus. A scar must be answered `APPLYING`, `N_A` or `REFUTED` with
+minimum evidence lengths before a consequential command proceeds, and
+`gitmem_scar_usage` records `surfaced_at` against `acknowledged_at`. An agent
+answering to itself in that much detail is a better record than most systems
+keep; it is not a second party. Evidence coverage floor 1248 -> 1247.
 
 **2026-09-10** — [`d47a625f5c08fbd6b1c96f4d2bf4f1b3a15e98f6`](https://github.com/gitmem-dev/gitmem/commit/d47a625f5c08fbd6b1c96f4d2bf4f1b3a15e98f6) — read again, 19 commits past the previous pin, and **`scope_enforced` is withdrawn as a first-reading error**. The mark was awarded on `project` being resolved per call and passed into `localScarSearch(query, fetchCount, project)`; that third parameter is `_project` and the body calls `instance.search(query, k)`, so the key stops at the signature. The singleton it fetches is one cross-project cache — *"all scars loaded into single instance regardless of project… Project params kept in signatures for backward compat but ignored for cache lookup"* — filled by two `startup.ts` calls that pass `undefined` over a load labelled *"Load ALL scars from Supabase (cross-project unified cache)"*, and the remote fallback omits `project_filter` deliberately so it matches the path it stands in for. None of this moved between the pins: `src/services/local-vector-search.ts` is unchanged since the previous reading and its last commits date to February 2026, one of them titled *"fix: session refresh project context, cross-project recall, and thread cascade"*. The claim was wrong when written, in the direction of crediting a mechanism the code documents itself as not having. `human_review` holds and carries an evidence record. Two defects in the mechanism paths were fixed upstream and are recorded here as the project's own history: the scar-search fallback had built its RPC name from the table prefix with a verb appended and *"returned PGRST202 on every call, on every deployment, since it was written"*, and `confirm_scars` could green-light a failed retrieval. The published `dismissed_count` defect was re-run and stands — dismissal sets the status as well as the counter, so the `< 3` guard is still unreachable. Test files went from 82 to 92. Screened before reading: two auto-run surfaces, no manifest inside the seven-day cooldown, one build-time execution path and two unpinned dependency surfaces; nothing was installed, built or run.
 
