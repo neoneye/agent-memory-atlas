@@ -9,14 +9,14 @@ source_url: https://github.com/SmythOS/sre
 archive_name: "SmythOS--sre"
 revision: 5c382a1ec07accc75947c3e4fa24841532ae7c88
 revision_url: https://github.com/SmythOS/sre/commit/5c382a1ec07accc75947c3e4fa24841532ae7c88
-analyzed_at: 2026-08-10
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, negative_eval"
 stack_storage: "memory, files"
 stack_retrieval: ""
 stack_source: "reviewed"
 capability_evidence:
   scope_enforced: "every durable store, read path | packages/core/src/subsystems/Security/SecureConnector.class.ts | the @SecureConnector.AccessControl decorator resolves the stored ACL through getResourceACL and throws ACLAccessDeniedError before the method body runs | packages/core/tests/integration/005-Storage/SmythFS.test.ts, 'Does not allow Read to a different agent'"
-  negative_eval: "SmythFS, the storage layer that holds persisted chat transcripts | packages/sdk/tests/unit/004-Storage/02-agent-scope.test.ts | 'isolates resources per agent by default' writes as one agent and asserts the other agent's read is null, on default connectors and no credentials | same file, plus the ACL-denial case in packages/core/tests/integration/005-Storage/SmythFS.test.ts"
+  negative_eval: "SmythFS, the storage layer that holds persisted chat transcripts | packages/sdk/tests/unit/004-Storage/02-agent-scope.test.ts:16-33, packages/core/tests/integration/005-Storage/SmythFS.test.ts:94 | 'isolates resources per agent by default' builds two agents on the same team, writes a file as Neo, and asserts in one block that Neo's read returns the content and Trinity's read is `null` — a must-not with its positive control three lines above, on default connectors and no credentials. The integration sibling, 'Does not allow Read to a different agent', asserts the ACL denial at the connector | the isolation proved is agent-scoped, and the adjacent case in the same file, 'shares resources when scope is TEAM', documents the sharing side — which is where the conversation transcript is written, so the thing the mark protects is not the thing most worth protecting here"
 matrix:
   memory_unit: "A cache entry — an opaque string under a composed key, with a TTL and an ACL. The two that carry conversation are `messages` (the whole transcript array) and `systemPrompt`"
   storage: "In-process `Map` by default (`RAMCache`), with Redis, S3 and a local-file cache as drop-in connectors; persisted chats go to files on disk through SmythFS"
@@ -677,6 +677,10 @@ here needs a nightly job, a GPU, a queue or a database.
 - `packages/core/tests/unit/006-Cache/`, `packages/core/tests/integration/006-Cache/` — four connectors, single candidate throughout
 
 ## History
+
+**2026-09-18** — [`5c382a1ec07accc75947c3e4fa24841532ae7c88`](https://github.com/SmythOS/sre/commit/5c382a1ec07accc75947c3e4fa24841532ae7c88) — re-read at the same commit, and everything checked out verbatim. `AgentRuntime.class.ts:93` is still `this.agent.conversationId = agent.agentRequest.header('X-CONVERSATION-ID')`, and both cited tests exist and say what the evidence records claim: `02-agent-scope.test.ts:16` builds two agents on one team, writes as Neo, and asserts Neo's read returns the content while Trinity's is `null`.
+
+The one thing added is the contrast the same file provides. The case immediately after the isolation test is `shares resources when scope is TEAM` — so one suite proves both that agent scope isolates and that team scope shares, and the conversation transcript is written on the sharing side. The `negative_eval` record now states that: the isolation the mark rests on is agent-scoped, and the most sensitive thing in the store is not what it covers.
 
 **2026-08-10** — [`5c382a1ec07accc75947c3e4fa24841532ae7c88`](https://github.com/SmythOS/sre/commit/5c382a1ec07accc75947c3e4fa24841532ae7c88)
 — first reading. Screened before reading: 2 auto-run surfaces
