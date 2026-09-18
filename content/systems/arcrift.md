@@ -1,7 +1,7 @@
 ---
 title: "ArcRift"
-eyebrow: "A canary secret in each of ten tenants"
-description: "An isolation test that plants a named secret in every project, spawns a live server, and asks each tenant for another's key under concurrent load — with the report committed."
+eyebrow: "A named secret in each of ten tenants"
+description: "An isolation audit that plants a named secret in each of ten projects, spawns a live MCP server, and passes only if the neighbour's key is absent from the answer — with the result committed as a dated report."
 root: ../..
 page_kind: system
 source_name: "eshaan-nair/arcrift"
@@ -9,18 +9,21 @@ source_url: https://github.com/eshaan-nair/arcrift
 archive_name: "eshaan-nair--arcrift"
 revision: 5424ea14dd9a848dcbcfb49586f348324999af88
 revision_url: https://github.com/eshaan-nair/arcrift/commit/5424ea14dd9a848dcbcfb49586f348324999af88
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: "negative_eval, scope_enforced"
+capability_evidence:
+  negative_eval: "two isolation suites, one against a spawned MCP process and one against the vector store | backend/scripts/mcp-stress-test.ts:11-24, :55-120, backend/tests/integration/isolation.integration.test.ts:39-120 | the stress script writes a distinct named key into each of ten projects, asserts each project recalls its own (ten positive controls), then asks PROJ_ALPHA for the beta key and passes only if `SECRET_BETA_88` is absent from the response text — driven over stdin to a live `ts-node` server, with the outcome written to the committed `reports/mcp_stress_test.md`. The vitest suite plants a secret in two projects and asserts, in order, that Project A returns its own and that neither project returns the other's, so the refusals sit behind a positive control | the cross-tenant probe in the stress script is a single pair in one direction rather than a matrix, and its steps are sequential — `runNextStep()` fires on each stdout response — so the report's 'concurrent' framing overstates it. The vitest suite's final case asserts that global search is *not* scoped, so the guarantee covers the project-scoped path only"
+  scope_enforced: "the project key on the SQLite and vector read paths, audited rather than asserted | backend/tests/integration/isolation.integration.test.ts:90-120, backend/scripts/mcp-stress-test.ts:60 | project is the tenant unit and reaches the query on the scoped read path: the vector store retrieval is called per project and returns only that project's chunks, which two committed suites check by planting named secrets and asking the wrong tenant for them. Unusually for this corpus the boundary is not only applied but measured, with the result committed as a dated report | the same suite asserts that a global search deliberately returns results across projects, so there is a shipped read path with no project predicate; and the tenant is a project rather than a user or an organisation, so two people sharing an install share every project"
 stack_storage: "sqlite, graph, delegated"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A fact extracted from a captured conversation, plus graph triples and chunks"
   storage: "Local SQLite with FTS5 and vectors; a Neo4j adapter alongside"
   retrieval: "Hybrid FTS5 plus vector plus HyDE, with sentence-level trimming before injection"
   write: "Browser extension capture from seven web AI products, plus MCP from four coding tools"
   update_delete: "Not a focus; the store accumulates captured conversations"
-  scoping: "Project is the tenant boundary, audited by a live concurrent leak test"
+  scoping: "Project is the tenant boundary, audited by a live leak test against a spawned server — and a global search path that deliberately crosses it"
   integration: "A browser extension, an MCP server, a dashboard, and a one-command setup"
   background: "A weekly CI job checking platform DOM selectors and filing its own issues"
   trust: "Nothing on a memory; the graph carries structure rather than status"
@@ -53,9 +56,40 @@ results.push({ step: "Cross-Leak Check", project: step.project, success: !leaked
 ```
 
 A named secret that must not appear, asked for from the wrong tenant, against a
-real server under concurrency. Most isolation tests in this atlas run in-process
-against a mock and assert a count; this one asks for the neighbour's secret by
-name and passes only if the string is absent.
+real server. Most isolation tests in this atlas run in-process against a mock and
+assert a count; this one asks for the neighbour's secret by name and passes only
+if the string is absent.
+
+**Two details in that description need correcting, and the test survives both.**
+The requests are not concurrent: `server.stdout.on("data", …)` calls
+`runNextStep()` when each response arrives, so the twenty-one steps are a
+sequential pipeline over one spawned process rather than parallel load. And the
+cross-tenant probe is singular — ten `store` steps, ten `verify_own` steps, and
+**one** `cross_leak` step, PROJ_ALPHA asked for the beta key. The ten positive
+controls are what make that one probe meaningful, which is the right ratio for a
+leak test, but "asks each tenant for another's key" describes a ninety-probe
+matrix the script does not run. The property is asserted once, in one direction,
+on one pair.
+
+**There is a second isolation test, at the store level.**
+`backend/tests/integration/isolation.integration.test.ts` plants
+`ISOLATION_SECRET_ALPHA_9271` and `ISOLATION_SECRET_BETA_4830` in two projects
+and makes three assertions in order: that querying within Project A returns A's
+secret, that querying from B does **not** contain A's, and that querying from A
+does not contain B's. The positive control comes first, so the two refusals
+cannot pass on an empty result — the shape the mark asks for, without needing a
+spawned process.
+
+Its last case is the one worth carrying into section 9:
+
+```typescript
+it("should confirm global search is not scoped (returns results across projects)", …)
+```
+
+Global search crossing projects is asserted as intended behaviour, not found as a
+defect. So the tenant boundary is a property of the project-scoped read path
+specifically, and the system ships a read path that deliberately spans tenants
+with a test pinning it that way.
 
 **And the fragile dependency is monitored on a schedule.** Browser capture
 depends on other companies' DOM, and `PLATFORM_SELECTORS.md` says so first:
@@ -310,5 +344,11 @@ MRR, compression, per-engine contribution), `reports/benchmark_mcp.md`,
 `ROADMAP.md`
 
 ## History
+
+**2026-09-18** — [`5424ea14dd9a848dcbcfb49586f348324999af88`](https://github.com/eshaan-nair/arcrift/commit/5424ea14dd9a848dcbcfb49586f348324999af88) — re-read at the same commit. The headline holds: `mcp-stress-test.ts` really does write a distinct named key into each of ten projects, spawn a live server and check that the neighbour's key is absent, with the outcome committed as `reports/mcp_stress_test.md`. Both marks now carry evidence records.
+
+Two details in the previous description were wrong in the same direction, and the test survives both. The JSON-RPC steps are sequential, not concurrent — `runNextStep()` is called as each stdout response arrives — and the cross-tenant probe is a single pair in one direction: ten stores, ten `verify_own` controls, one `cross_leak` step asking PROJ_ALPHA for the beta key. Ten positive controls behind one probe is the right ratio for a leak test; "asks each tenant for another's key" describes a ninety-probe matrix the script does not run.
+
+A second isolation suite was found at the store level. `backend/tests/integration/isolation.integration.test.ts` plants a secret in two projects and asserts, in order, that A returns its own and that neither returns the other's — the positive control first, so the refusals cannot pass on an empty result. Its final case is the one that changes a reading: `should confirm global search is not scoped (returns results across projects)` pins an unscoped read path as intended behaviour, so the tenant guarantee covers the project-scoped path specifically. That is now stated beside `scope_enforced`. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`5424ea14dd9a848dcbcfb49586f348324999af88`](https://github.com/eshaan-nair/arcrift/commit/5424ea14dd9a848dcbcfb49586f348324999af88) — first reading. Screened before reading; the tree was read, nothing was installed, no audit was run, and the browser extension's permissions and network behaviour were not examined.

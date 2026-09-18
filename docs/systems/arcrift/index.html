@@ -4,25 +4,25 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
-    <meta name="description" content="An isolation test that plants a
-named secret in every project, spawns a live server, and asks each
-tenant for another's key under concurrent load — with the report
-committed.">
+    <meta name="description" content="An isolation audit that plants a
+named secret in each of ten projects, spawns a live MCP server, and
+passes only if the neighbour's key is absent from the answer — with the
+result committed as a dated report.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="ArcRift — Agent Memory Atlas">
-    <meta property="og:description" content="An isolation test that
-plants a named secret in every project, spawns a live server, and asks
-each tenant for another's key under concurrent load — with the report
-committed.">
+    <meta property="og:description" content="An isolation audit that
+plants a named secret in each of ten projects, spawns a live MCP server,
+and passes only if the neighbour's key is absent from the answer — with
+the result committed as a dated report.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="ArcRift — Agent Memory Atlas">
-    <meta name="twitter:description" content="An isolation test that
-plants a named secret in every project, spawns a live server, and asks
-each tenant for another's key under concurrent load — with the report
-committed.">
+    <meta name="twitter:description" content="An isolation audit that
+plants a named secret in each of ten projects, spawns a live MCP server,
+and passes only if the neighbour's key is absent from the answer — with
+the result committed as a dated report.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>ArcRift — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -44,7 +44,7 @@ committed.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "ArcRift",
-      "description": "An isolation test that plants a named secret in every project, spawns a live server, and asks each tenant for another's key under concurrent load \u2014 with the report committed.",
+      "description": "An isolation audit that plants a named secret in each of ten projects, spawns a live MCP server, and passes only if the neighbour's key is absent from the answer \u2014 with the result committed as a dated report.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -98,11 +98,12 @@ committed.">
     <main>
       <section class="document-hero">
         <div class="document-hero-inner">
-          <p class="eyebrow">A canary secret in each of ten tenants</p>
+          <p class="eyebrow">A named secret in each of ten tenants</p>
           <h1>ArcRift</h1>
-          <p class="document-deck">An isolation test that plants a named
-secret in every project, spawns a live server, and asks each tenant for
-another's key under concurrent load — with the report committed.</p>
+          <p class="document-deck">An isolation audit that plants a
+named secret in each of ten projects, spawns a live MCP server, and
+passes only if the neighbour's key is absent from the answer — with the
+result committed as a dated report.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/eshaan-nair/arcrift">
               <span>Source</span>
@@ -116,7 +117,7 @@ another's key under concurrent load — with the report committed.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/eshaan-nair--arcrift" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -160,10 +161,38 @@ requests</strong>. In the source:</p>
 const leaked = text.includes(step.forbiddenKey);
 results.push({ step: &quot;Cross-Leak Check&quot;, project: step.project, success: !leaked });</code></pre>
 <p>A named secret that must not appear, asked for from the wrong tenant,
-against a real server under concurrency. Most isolation tests in this
-atlas run in-process against a mock and assert a count; this one asks
-for the neighbour's secret by name and passes only if the string is
-absent.</p>
+against a real server. Most isolation tests in this atlas run in-process
+against a mock and assert a count; this one asks for the neighbour's
+secret by name and passes only if the string is absent.</p>
+<p><strong>Two details in that description need correcting, and the test
+survives both.</strong> The requests are not concurrent:
+<code>server.stdout.on("data", …)</code> calls
+<code>runNextStep()</code> when each response arrives, so the twenty-one
+steps are a sequential pipeline over one spawned process rather than
+parallel load. And the cross-tenant probe is singular — ten
+<code>store</code> steps, ten <code>verify_own</code> steps, and
+<strong>one</strong> <code>cross_leak</code> step, PROJ_ALPHA asked for
+the beta key. The ten positive controls are what make that one probe
+meaningful, which is the right ratio for a leak test, but "asks each
+tenant for another's key" describes a ninety-probe matrix the script
+does not run. The property is asserted once, in one direction, on one
+pair.</p>
+<p><strong>There is a second isolation test, at the store
+level.</strong>
+<code>backend/tests/integration/isolation.integration.test.ts</code>
+plants <code>ISOLATION_SECRET_ALPHA_9271</code> and
+<code>ISOLATION_SECRET_BETA_4830</code> in two projects and makes three
+assertions in order: that querying within Project A returns A's secret,
+that querying from B does <strong>not</strong> contain A's, and that
+querying from A does not contain B's. The positive control comes first,
+so the two refusals cannot pass on an empty result — the shape the mark
+asks for, without needing a spawned process.</p>
+<p>Its last case is the one worth carrying into section 9:</p>
+<pre class="typescript"><code>it(&quot;should confirm global search is not scoped (returns results across projects)&quot;, …)</code></pre>
+<p>Global search crossing projects is asserted as intended behaviour,
+not found as a defect. So the tenant boundary is a property of the
+project-scoped read path specifically, and the system ships a read path
+that deliberately spans tenants with a test pinning it that way.</p>
 <p><strong>And the fragile dependency is monitored on a
 schedule.</strong> Browser capture depends on other companies' DOM, and
 <code>PLATFORM_SELECTORS.md</code> says so first:</p>
@@ -429,6 +458,34 @@ per-engine contribution), <code>reports/benchmark_mcp.md</code>,
 <code>TROUBLESHOOTING.md</code>, <code>SECURITY.md</code>,
 <code>ROADMAP.md</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/eshaan-nair/arcrift/commit/5424ea14dd9a848dcbcfb49586f348324999af88"><code class="commit-id" title="5424ea14dd9a848dcbcfb49586f348324999af88">5424ea14…</code></a>
+— re-read at the same commit. The headline holds:
+<code>mcp-stress-test.ts</code> really does write a distinct named key
+into each of ten projects, spawn a live server and check that the
+neighbour's key is absent, with the outcome committed as
+<code>reports/mcp_stress_test.md</code>. Both marks now carry evidence
+records.</p>
+<p>Two details in the previous description were wrong in the same
+direction, and the test survives both. The JSON-RPC steps are
+sequential, not concurrent — <code>runNextStep()</code> is called as
+each stdout response arrives — and the cross-tenant probe is a single
+pair in one direction: ten stores, ten <code>verify_own</code> controls,
+one <code>cross_leak</code> step asking PROJ_ALPHA for the beta key. Ten
+positive controls behind one probe is the right ratio for a leak test;
+"asks each tenant for another's key" describes a ninety-probe matrix the
+script does not run.</p>
+<p>A second isolation suite was found at the store level.
+<code>backend/tests/integration/isolation.integration.test.ts</code>
+plants a secret in two projects and asserts, in order, that A returns
+its own and that neither returns the other's — the positive control
+first, so the refusals cannot pass on an empty result. Its final case is
+the one that changes a reading:
+<code>should confirm global search is not scoped (returns results across projects)</code>
+pins an unscoped read path as intended behaviour, so the tenant
+guarantee covers the project-scoped path specifically. That is now
+stated beside <code>scope_enforced</code>. <code>stack_source</code>
+goes from seeded to reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/eshaan-nair/arcrift/commit/5424ea14dd9a848dcbcfb49586f348324999af88"><code class="commit-id" title="5424ea14dd9a848dcbcfb49586f348324999af88">5424ea14…</code></a>
 — first reading. Screened before reading; the tree was read, nothing was
