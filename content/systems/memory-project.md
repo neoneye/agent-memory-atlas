@@ -9,12 +9,12 @@ source_url: https://github.com/acdesigntech/memory-project
 archive_name: "acdesigntech--memory-project"
 revision: 83b2ac97c19b6dc650e9d48e20c47e68df50f998
 revision_url: https://github.com/acdesigntech/memory-project/commit/83b2ac97c19b6dc650e9d48e20c47e68df50f998
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: "tombstone, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "a rejected claim keeps its embedding on purpose, and every later write is checked against the nearest one before it is stored | memory_store.py:96, :341-344, :373-398, :400-460, :856-857 | `purge(doc_id, tombstone=True)` calls `reject_claim(text, reason, topic_hint, source_doc_id)` with the purged text before it is gone, writing a row at `capture_tier: \"tombstone\"` that carries the claim's embedding. `jot()` computes its embedding once, calls `_nearest_tombstone(embedding)` before touching the collection, and returns `None` when the nearest tombstone clears `TOMBSTONE_MATCH_THRESHOLD = 0.82`, logging `blocked` with the similarity. The key is the embedding, so a restatement inside that radius is caught rather than only an identical sentence. Tombstones are excluded from `recall`, `recall_associative` and `recall_cold` — the docstring calls one *metadata about what NOT to write, never itself a retrievable memory* — and carry no decay curve. The design keeps this opt-in on purpose: a tombstone preserves the rejected embedding, which is the opposite of what plain `purge()` guarantees for the accidentally-jotted-secret case | regression_test.py:296-335 pins the refusal, an unrelated write still succeeding, the absence from recall, and that a plain purge does not block a retry"
   audit_log: "an append-only plain-text activity log of every mutation, with a query tool over it | memory_store.py `_log_activity`, query_activity.py | Each store operation appends a line naming the operation, the document id, the topic and the title — including `blocked` when a tombstone refuses a write, which means the log records the writes that did not happen as well as the ones that did. `query_activity.py` reads it back rather than leaving it to `grep`. It is a mutation record in the system's own store, which is what separates it from a retrieval log | regression_test.py"
-  human_review: "consolidation drafts a rule and a person approves it before it takes effect | memory_store.py, the feedback-consolidation path | Repeated feedback is consolidated into a proposed rule that a human confirms rather than one the system installs, and `purge` — the only true deletion — is documented as a deliberate operator act rather than routine cleanup, with `prune()` carrying the routine, reversible half | regression_test.py"
+  human_review: "a drafted rule lands in a flat queue file and there is no code anywhere that applies one — approval is a person editing the governing instruction file by hand | memory_store.py:950, :962-1016, :1018-1038, :1040-1083, :96-100 | `review_feedback_patterns()` clusters `category=\"feedback\"` fragments on their stored embeddings, drafts one candidate rule per cluster through a `claude -p` subprocess, appends each under a dated `## Candidate` heading to `pending_rules.md`, and returns the count it wrote. The producer test is unusually clean because the approve verb does not exist: nothing in the tree reads `pending_rules.md` back, and nothing writes `CLAUDE.md`. Approval is a person copying a rule across and deleting the entry, and the file the process creates says so in its own header — *\"Nothing here is applied automatically\"* — beside the function docstring's *\"CLAUDE.md is never written to directly by this process.\"* The contrast with the other path is deliberate and written down: `jot()` has no review gate at all, including when `auto_capture.py` re-extracts it, which is the stated reason `TOMBSTONE_MATCH_THRESHOLD` is 0.82 against `COLD_REVIVAL_THRESHOLD`'s 0.6 — *\"a false positive here silently drops a real fact with no\"* human in the loop to catch it. The system knows which of its two write paths has a person on it and tunes a threshold on the difference | regression_test.py; the review queue itself is gitignored local state, so the committed evidence is the functions and their contract rather than a queue fixture"
   negative_eval: "a committed case asserting an archived memory is absent from both ordinary retrievers and present in the cold one, on the same document | regression_test.py:240-262, :296-335 | The prune cycle ages a document past the deletion floor, asserts `prune()` archived it, then asserts `archived doc invisible to recall()` and `archived doc invisible to recall_associative() (both tiers)` — and immediately asserts `archived doc findable via recall_cold()` on the same id. The positive control is the same document in a different retriever, so neither half can pass on a retriever that returns nothing. The tombstone case adds a second: a tombstoned claim's re-write is refused, unrelated content still writes, and no `tombstone/` id surfaces in a `recall()` that returns the unrelated fact | 95 checks in regression_test.py"
 stack_storage: "chroma"
 stack_retrieval: "vector"
@@ -166,15 +166,19 @@ nothing ever acts on, and the archive tier stays empty until a human invokes it.
 
 ## 4. Essential Implementation Paths
 
-- **Write:** `jot()` (`memory_store.py:274`) and `ingest()` (`:210`).
-- **Retrieve:** `recall()` (`:430`), `recall_associative()` (`:468`), scoring in
-  `_score_hits()` (`:337`).
-- **Decay and reinforcement:** `_raw_strength()` (`:118`), `_grow_stability()`
-  (`:122`), `_reinforce()` (`:407`).
-- **Lifecycle:** `_maybe_consolidate()` (`:127`), `prune()` (`:544`), `purge()`
-  (`:579`), `recall_cold()` (`:597`), `revive_from_cold()` (`:645`).
-- **Feedback loop:** `find_feedback_patterns()` (`:696`),
-  `draft_rule_from_cluster()` (`:752`), `review_feedback_patterns()` (`:774`).
+- **Write:** `jot()` (`memory_store.py:293`) and `ingest()` (`:229`).
+- **Retrieve:** `recall()` (`:581`), `recall_associative()` (`:619`), scoring in
+  `_score_hits()` (`:470`), `confirm_activation()` (`:659`).
+- **Decay and reinforcement:** `_raw_strength()` (`:137`), `_grow_stability()`
+  (`:141`), `_reinforce()` (`:558`).
+- **Lifecycle:** `_maybe_consolidate()` (`:146`), `prune()` (`:708`), `purge()`
+  (`:786`), `_gc_orphaned_segments()` (`:744`, what actually removes the data
+  from disk), `recall_cold()` (`:863`), `revive_from_cold()` (`:911`).
+- **Tombstones:** `_nearest_tombstone()` (`:373`), `reject_claim()` (`:401`),
+  the threshold and its reasoning at `:96-100`.
+- **Feedback loop:** `find_feedback_patterns()` (`:962`),
+  `draft_rule_from_cluster()` (`:1018`), `review_feedback_patterns()` (`:1040`),
+  `PENDING_RULES_PATH` (`:950`).
 - **Capture:** `auto_capture.py` chunks a transcript and runs extraction in a
   subprocess; `capture_state.py` tracks per-session progress.
 
@@ -421,6 +425,8 @@ feature.
 - `classify.py` — leave-one-out evaluation of topic classification
 
 ## History
+
+**2026-09-18** — [`83b2ac97c19b6dc650e9d48e20c47e68df50f998`](https://github.com/acdesigntech/memory-project/commit/83b2ac97c19b6dc650e9d48e20c47e68df50f998) — re-read at the same commit; nothing upstream moved, so the corrections are this report's. Every line number in the file index was stale — `memory_store.py` has grown by roughly a third since they were written, and all sixteen pointed into the wrong function — and `_gc_orphaned_segments()`, which the body names as what actually removes purged data from disk, was not in the index at all. The `human_review` record cited no line at all and described the mechanism loosely; it is replaced with the producer test, which this system passes about as cleanly as the corpus allows: `review_feedback_patterns()` appends drafted rules to `pending_rules.md`, and there is no code anywhere that reads that file back or writes `CLAUDE.md`, so the approve verb is not a function anyone could call. The contrast the project draws itself is now in the record: `jot()` has no review gate, which is the stated reason the tombstone threshold sits at 0.82 rather than the revival path's 0.6 — a false block there would drop a real fact with nobody in the loop. Screened again at the same pin: one auto-run surface in `hooks/`, nothing else.
 
 **2026-09-10** — [`83b2ac97c19b6dc650e9d48e20c47e68df50f998`](https://github.com/acdesigntech/memory-project/commit/83b2ac97c19b6dc650e9d48e20c47e68df50f998) — read again, 18 commits past the previous pin. Two marks are added and they arrive for opposite reasons. **`tombstone` is genuinely new**: `reject_claim()` and the `TOMBSTONE_MATCH_THRESHOLD` check inside `jot()` were committed on 4 August under the message *"Add correction-encoding tombstones so purged facts can't silently recur"*, which names the failure it closes — an autonomous re-extraction pulling a corrected claim back out of a retained transcript. **`negative_eval` is a first-reading error**: the report said `regression_test.py` carried sixteen assertions and that no committed case asserted anything must not be retrieved, and at the previous pin the file already held seventy-five `check()` calls including *archived doc invisible to `recall()`*, *invisible to `recall_associative()` (both tiers)* and *findable via `recall_cold()`* on the same document — the exact paired shape the report described as the one that would prove the headline claim. The count and the claim were both wrong when written. The central `purge()` finding was fixed upstream and the fix went past it: the rebuild the project added is documented as necessary but not sufficient, because `delete_collection()` leaves the old segment's directory on disk *"still fully intact, still fully readable outside the Chroma API"* — measured at about 137 orphaned copies across a real corpus of 140 purges — and `_gc_orphaned_segments()` is named as what actually makes the data gone. Two commit messages in this range name the atlas review as their source. `audit_log` and `human_review` hold, the first strengthened by a `query_activity.py` that makes the log queryable and by `blocked` entries recording the writes a tombstone refused. Checks went from 75 to 95. Screened before reading: one auto-run surface in `hooks/`, no manifest inside the seven-day cooldown, no build-time execution path and no unpinned dependency surface; nothing was installed or run.
 

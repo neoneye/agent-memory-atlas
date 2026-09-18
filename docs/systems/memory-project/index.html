@@ -114,7 +114,7 @@ to cold storage and only an explicit purge deletes.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/acdesigntech--memory-project" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -286,25 +286,32 @@ the archive tier stays empty until a human invokes it.</p>
 Paths</h2>
 <ul>
 <li><strong>Write:</strong> <code>jot()</code>
-(<code>memory_store.py:274</code>) and <code>ingest()</code>
-(<code>:210</code>).</li>
+(<code>memory_store.py:293</code>) and <code>ingest()</code>
+(<code>:229</code>).</li>
 <li><strong>Retrieve:</strong> <code>recall()</code>
-(<code>:430</code>), <code>recall_associative()</code>
-(<code>:468</code>), scoring in <code>_score_hits()</code>
-(<code>:337</code>).</li>
+(<code>:581</code>), <code>recall_associative()</code>
+(<code>:619</code>), scoring in <code>_score_hits()</code>
+(<code>:470</code>), <code>confirm_activation()</code>
+(<code>:659</code>).</li>
 <li><strong>Decay and reinforcement:</strong>
-<code>_raw_strength()</code> (<code>:118</code>),
-<code>_grow_stability()</code> (<code>:122</code>),
-<code>_reinforce()</code> (<code>:407</code>).</li>
+<code>_raw_strength()</code> (<code>:137</code>),
+<code>_grow_stability()</code> (<code>:141</code>),
+<code>_reinforce()</code> (<code>:558</code>).</li>
 <li><strong>Lifecycle:</strong> <code>_maybe_consolidate()</code>
-(<code>:127</code>), <code>prune()</code> (<code>:544</code>),
-<code>purge()</code> (<code>:579</code>), <code>recall_cold()</code>
-(<code>:597</code>), <code>revive_from_cold()</code>
-(<code>:645</code>).</li>
+(<code>:146</code>), <code>prune()</code> (<code>:708</code>),
+<code>purge()</code> (<code>:786</code>),
+<code>_gc_orphaned_segments()</code> (<code>:744</code>, what actually
+removes the data from disk), <code>recall_cold()</code>
+(<code>:863</code>), <code>revive_from_cold()</code>
+(<code>:911</code>).</li>
+<li><strong>Tombstones:</strong> <code>_nearest_tombstone()</code>
+(<code>:373</code>), <code>reject_claim()</code> (<code>:401</code>),
+the threshold and its reasoning at <code>:96-100</code>.</li>
 <li><strong>Feedback loop:</strong>
-<code>find_feedback_patterns()</code> (<code>:696</code>),
-<code>draft_rule_from_cluster()</code> (<code>:752</code>),
-<code>review_feedback_patterns()</code> (<code>:774</code>).</li>
+<code>find_feedback_patterns()</code> (<code>:962</code>),
+<code>draft_rule_from_cluster()</code> (<code>:1018</code>),
+<code>review_feedback_patterns()</code> (<code>:1040</code>),
+<code>PENDING_RULES_PATH</code> (<code>:950</code>).</li>
 <li><strong>Capture:</strong> <code>auto_capture.py</code> chunks a
 transcript and runs extraction in a subprocess;
 <code>capture_state.py</code> tracks per-session progress.</li>
@@ -579,6 +586,26 @@ archive maths</li>
 classification</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/acdesigntech/memory-project/commit/83b2ac97c19b6dc650e9d48e20c47e68df50f998"><code class="commit-id" title="83b2ac97c19b6dc650e9d48e20c47e68df50f998">83b2ac97…</code></a>
+— re-read at the same commit; nothing upstream moved, so the corrections
+are this report's. Every line number in the file index was stale —
+<code>memory_store.py</code> has grown by roughly a third since they
+were written, and all sixteen pointed into the wrong function — and
+<code>_gc_orphaned_segments()</code>, which the body names as what
+actually removes purged data from disk, was not in the index at all. The
+<code>human_review</code> record cited no line at all and described the
+mechanism loosely; it is replaced with the producer test, which this
+system passes about as cleanly as the corpus allows:
+<code>review_feedback_patterns()</code> appends drafted rules to
+<code>pending_rules.md</code>, and there is no code anywhere that reads
+that file back or writes <code>CLAUDE.md</code>, so the approve verb is
+not a function anyone could call. The contrast the project draws itself
+is now in the record: <code>jot()</code> has no review gate, which is
+the stated reason the tombstone threshold sits at 0.82 rather than the
+revival path's 0.6 — a false block there would drop a real fact with
+nobody in the loop. Screened again at the same pin: one auto-run surface
+in <code>hooks/</code>, nothing else.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/acdesigntech/memory-project/commit/83b2ac97c19b6dc650e9d48e20c47e68df50f998"><code class="commit-id" title="83b2ac97c19b6dc650e9d48e20c47e68df50f998">83b2ac97…</code></a>
 — read again, 18 commits past the previous pin. Two marks are added and
