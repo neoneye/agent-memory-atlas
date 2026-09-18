@@ -118,7 +118,7 @@ an unverified outcome.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-29</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/munch2u-a11y--Habitus-AI" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -469,6 +469,22 @@ protocol</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>audit_log</code> stands:
+<code>save_outcome</code> is a bare <code>INSERT INTO outcomes</code>
+(<code>store.py:806-822</code>) and no <code>UPDATE</code> or
+<code>DELETE</code> touches <code>outcomes</code> or <code>traces</code>
+anywhere in <code>src/</code>. Corrected in the record, which overstated
+the coverage. <code>save_outcome</code> has exactly one caller,
+<code>pipeline.py:517</code>, and the only edge mutator,
+<code>update_edge_state</code> (<code>store.py:488</code>), has four —
+<code>graph.py:403</code>, <code>:452</code> and <code>:484</code>, and
+<code>gestation.py:232</code>, which applies a bias directly to
+<code>log_strength</code> outside the pulse pipeline and writes no
+outcome. So the log records the strengths a pulse credited, with the
+evidence, and not the ones gestation moved. The caveat the first reading
+already put in the record still holds: nothing reads either table back.
+No marks change.</p>
 <p><strong>2026-08-29</strong> — <a
 href="https://github.com/munch2u-a11y/Habitus-AI/commit/f93b770e4b3c1875151dc13eb90421598c3efa5f"><code class="commit-id" title="f93b770e4b3c1875151dc13eb90421598c3efa5f">f93b770e…</code></a>
 — first reading, Apache-2.0, 5,551 lines under <code>src/</code> and 893

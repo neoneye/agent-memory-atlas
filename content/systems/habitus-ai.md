@@ -9,10 +9,10 @@ source_url: https://github.com/munch2u-a11y/Habitus-AI
 archive_name: "munch2u-a11y--Habitus-AI"
 revision: f93b770e4b3c1875151dc13eb90421598c3efa5f
 revision_url: https://github.com/munch2u-a11y/Habitus-AI/commit/f93b770e4b3c1875151dc13eb90421598c3efa5f
-analyzed_at: 2026-08-29
+analyzed_at: 2026-09-18
 capabilities: "audit_log"
 capability_evidence:
-  audit_log: "the learning path — an insert-only record of which memory weights a pulse changed and on what evidence | src/habitus_ai/store.py:145-151,:806-822, pipeline.py:492-522 | `save_outcome` is a bare `INSERT INTO outcomes`, and the payload it persists names `credited_edge_ids`, `verified`, `stability_delta`, `proposal_id` and `receipt_id` — so every mutation of an edge strength, which is what routes retrieval here, is recorded with the evidence that authorised it. `save_trace` does the same for the traversal. Neither table has an `UPDATE` or `DELETE` anywhere in the tree, and the `records` table is separately immutable by trigger. The caveat belongs in the mark: **nothing reads either table back** — there is no `SELECT` against `outcomes` or `traces`, no CLI verb and no API that surfaces them | none — no committed test asserts an outcome row was written"
+  audit_log: "the learning path — an insert-only record of which memory weights a pulse changed and on what evidence | src/habitus_ai/store.py:145-151,:806-822, pipeline.py:492-522 | `save_outcome` is a bare `INSERT INTO outcomes`, and the payload it persists names `credited_edge_ids`, `verified`, `stability_delta`, `proposal_id` and `receipt_id` — so a pulse's credited edges are recorded with the evidence that authorised them. Not every strength change is: `save_outcome` has one caller, `pipeline.py:517`, while `update_edge_state` — the only edge mutator — has four call sites, and `gestation.py:232` adds a bias straight onto `log_strength` outside the pipeline and writes no outcome row. The log covers what a pulse credited, not every edge strength that moved. `save_trace` does the same for the traversal. Neither table has an `UPDATE` or `DELETE` anywhere in the tree, and the `records` table is separately immutable by trigger. The caveat belongs in the mark: **nothing reads either table back** — there is no `SELECT` against `outcomes` or `traces`, no CLI verb and no API that surfaces them | none — no committed test asserts an outcome row was written"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -327,5 +327,17 @@ to the design and no test or artifact compares it against the direct rail alone.
 | `tests/test_retrieval_pipeline.py` | The direct-rail eviction test, invariants after reload |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`audit_log` stands: `save_outcome` is a bare `INSERT INTO outcomes`
+(`store.py:806-822`) and no `UPDATE` or `DELETE` touches `outcomes` or `traces`
+anywhere in `src/`. Corrected in the record, which overstated the coverage.
+`save_outcome` has exactly one caller, `pipeline.py:517`, and the only edge
+mutator, `update_edge_state` (`store.py:488`), has four — `graph.py:403`, `:452`
+and `:484`, and `gestation.py:232`, which applies a bias directly to
+`log_strength` outside the pulse pipeline and writes no outcome. So the log
+records the strengths a pulse credited, with the evidence, and not the ones
+gestation moved. The caveat the first reading already put in the record still
+holds: nothing reads either table back. No marks change.
 
 **2026-08-29** — [`f93b770e4b3c1875151dc13eb90421598c3efa5f`](https://github.com/munch2u-a11y/Habitus-AI/commit/f93b770e4b3c1875151dc13eb90421598c3efa5f) — first reading, Apache-2.0, 5,551 lines under `src/` and 893 of tests across ten files, two commits both dated 28 August 2026. Screened before reading: no auto-run surface, no build-time execution surface, one unpinned surface and a `pyproject.toml` modified the same day. Nothing was installed and nothing was run. One mark. `audit_log` rests on `outcomes` and `traces` being insert-only records of which edge strengths a pulse changed and under which receipt, with the caveat recorded in the evidence field that nothing in the tree reads either table back. `tombstone` is withheld because `supersedes_id` is supersession; `trust_state` because `RecordType` names a kind and the only confidence is a float on a projection; `bitemporal` because a record has one timestamp and no validity axis; `scope_enforced` because `source_id` is stamped on every record and no query filters on it; `human_review` because no approval, review or quarantine surface exists. `negative_eval` is withheld with the near-miss named: the retrieval suite asserts that the direct rail's records cannot be *evicted*, which is the mirror of the mark, and no committed case asserts that particular material must not be returned. The fourth system from this author in the atlas, after [AIMAOS](../aimaos/), [Cognitive Spatial Memory](../cognitive-spatial-memory/) and [Helix AGI](../helix-agi/). The reading covers the store, the graph, the pipeline, retrieval, tools and the tests; the app, the audio path and the vector adapters were not traced.
