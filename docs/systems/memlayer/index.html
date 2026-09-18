@@ -114,7 +114,7 @@ one of the prototypes for what to remember is an API key.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/divagr18--memlayer" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -224,7 +224,9 @@ Paths</h2>
 (<code>SalienceMode</code> with its startup/cost comments
 <code>:6-10</code>, <code>SALIENT_PROTOTYPES</code> <code>:15-60</code>,
 <code>NON_SALIENT_PROTOTYPES</code> <code>:63-</code>,
-<code>NON_SALIENT_PATTERNS</code> <code>:136-141</code>).</p>
+<code>SALIENT_PATTERNS</code> <code>:122-133</code>,
+<code>NON_SALIENT_PATTERNS</code> <code>:136-141</code>,
+<code>SALIENT_KEYWORDS</code> <code>:149-178</code>).</p>
 <p><strong>Adopt</strong> —
 <code>memlayer/wrappers/{claude,gemini,…}.py</code>,
 <code>memlayer/client.py</code>.</p>
@@ -278,6 +280,36 @@ containing an API key, a credential-shaped string or an internal IP is
 scored <strong>toward</strong> storage by similarity to a prototype that
 is literally an API key — and no secret filtering was found anywhere in
 the tree.</p>
+<p><strong>And the prototype is the mildest of the three lists that say
+so.</strong> A re-read of the same file finds the same instruction
+written twice more, in mechanisms that do not need an embedding to
+fire:</p>
+<pre class="python"><code>SALIENT_PATTERNS = [
+    r&#39;\b(?:my|our|the)\s+(?:name|email|phone|address|username|password)\s+(?:is|:)&#39;,   # :123
+    …
+    r&#39;\b(?:version|ip address|port|server|database|api key|token)\b&#39;,                   # :128
+]
+
+SALIENT_KEYWORDS = [
+    &#39;name&#39;, &#39;email&#39;, &#39;phone&#39;, &#39;address&#39;, &#39;username&#39;, &#39;password&#39;,                          # :151
+    &#39;born&#39;, &#39;birthday&#39;, &#39;age&#39;, &#39;ssn&#39;, &#39;id&#39;,                                               # :152
+    …
+    &#39;project&#39;, &#39;team&#39;, &#39;client&#39;, &#39;api&#39;, &#39;key&#39;, &#39;token&#39;,                                   # :162
+]</code></pre>
+<p>The first pattern's whole purpose is to catch <em>"my password is
+…"</em> and <em>"my username is …"</em>; the second matches the bare
+phrase "api key" or "token" anywhere in a message. The keyword list adds
+<code>ssn</code> beside <code>password</code> and <code>key</code>. So
+this is not one unlucky example sentence in an otherwise neutral list: a
+credential is written into the salience rules three times, in a regex, a
+keyword set and a prototype, and <code>password</code> and
+<code>ssn</code> are worse than the API key the first reading named.</p>
+<p>It also matters which mode a user is in. <code>LIGHTWEIGHT</code> —
+documented as <em>"No embeddings: keyword salience + graph-only storage
+(instant startup)"</em> and the mode a first-time user is most likely to
+reach for — decides salience from the keyword list alone, so in that
+mode the word <code>password</code> in a sentence is by itself a reason
+to store it, with no similarity score in the path at all.</p>
 <p>Four systems read in this same batch do the opposite on the write
 path: <a href="../mnemos/">mnemos</a> screens content before it is
 written and holds the match on an unexported field so it cannot leak
@@ -384,6 +416,27 @@ API-key, email and IP examples <code>:15-60</code>,
 modes, the three tiers, the latency budgets), <code>docs/</code>,
 <code>examples/</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/divagr18/memlayer/commit/5e95f44061a867a5ac0caf53434240713d58b86a"><code class="commit-id" title="5e95f44061a867a5ac0caf53434240713d58b86a">5e95f440…</code></a>
+— re-read at the same commit. Nothing upstream had moved, so every
+change is the atlas's own, and the headline finding got larger rather
+than smaller. The first reading named one salient prototype, <em>"The
+user's API key is sk-12345."</em> The same file says it twice more
+without needing an embedding: <code>SALIENT_PATTERNS:123</code> is a
+regex whose whole purpose is to catch <em>"my password is …"</em> or
+<em>"my username is …"</em>, <code>:128</code> matches the bare phrase
+"api key" or "token" anywhere in a message, and
+<code>SALIENT_KEYWORDS:151-162</code> lists <code>password</code>,
+<code>ssn</code>, <code>api</code>, <code>key</code> and
+<code>token</code> among the words that make a message worth keeping. In
+<code>LIGHTWEIGHT</code> mode — <em>"No embeddings: keyword salience +
+graph-only storage (instant startup)"</em> — that keyword list is the
+entire gate, so the word <code>password</code> is by itself a reason to
+store a sentence. A search for <code>redact</code>, <code>scrub</code>,
+<code>mask</code>, <code>sanitiz</code>, <code>secret</code> and
+<code>pii</code> across the package still returns nothing but
+<code>mean_pooling</code>'s attention masks. <code>stack_source</code>
+goes from seeded to reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/divagr18/memlayer/commit/5e95f44061a867a5ac0caf53434240713d58b86a"><code class="commit-id" title="5e95f44061a867a5ac0caf53434240713d58b86a">5e95f440…</code></a>
 — first reading. Screened before reading; the tree was read, never

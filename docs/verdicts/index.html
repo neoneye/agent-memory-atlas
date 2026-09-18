@@ -8132,12 +8132,16 @@ keeping, what counts as noise — with incoming text scored by similarity,
 and a regex fast path so bare greetings never reach the embedder. The
 decision boundary is readable, diffable, editable data rather than
 something inside a model.</li>
-<li>Biggest risk: <code>SALIENT_PROTOTYPES</code> includes
-<code>"The user's API key is sk-12345."</code> as an example of <em>what
-to remember</em>, alongside an email address and an internal IP — so
-credential-shaped text scores toward storage, in a tree with no secret
-screen anywhere. Four systems read in the same batch block or redact
-secrets on the write path; this one treats one as exemplary.</li>
+<li>Biggest risk: credentials are written into the salience rules three
+times over — the prototype
+<code>"The user's API key is sk-12345."</code>, a regex built to catch
+<em>"my password is …"</em>, and <code>password</code>,
+<code>ssn</code>, <code>api</code>, <code>key</code> and
+<code>token</code> in the keyword list — with no secret screen anywhere
+in the tree. In <code>LIGHTWEIGHT</code> mode the keyword list is the
+whole gate, so the word <code>password</code> is by itself a reason to
+store a sentence. Four systems read in the same batch block or redact
+secrets on the write path; this one treats them as exemplary.</li>
 <li>Most reusable component: the mode enum whose comments are the
 trade-off — <code>LOCAL # default, slow startup</code>,
 <code>ONLINE # fast startup, API cost</code>,

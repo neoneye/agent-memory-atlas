@@ -9,11 +9,11 @@ source_url: https://github.com/divagr18/memlayer
 archive_name: "divagr18--memlayer"
 revision: 5e95f44061a867a5ac0caf53434240713d58b86a
 revision_url: https://github.com/divagr18/memlayer/commit/5e95f44061a867a5ac0caf53434240713d58b86a
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "chroma"
 stack_retrieval: "vector, graph"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An extracted fact or entity, in a vector store and a NetworkX graph"
   storage: "ChromaDB for vectors and NetworkX for the graph, or graph-only in lightweight mode"
@@ -25,7 +25,7 @@ matrix:
   background: "Proactive reminders scheduled against stored tasks"
   trust: "Nothing on a memory; salience decides entry, not standing"
   strengths: "A storage decision made by readable, editable example sentences rather than a prompt"
-  risks: "No secret filtering, and the salient prototype set includes an API key"
+  risks: "No secret filtering anywhere, and credentials are written into the salience rules three times — a prototype sentence, a regex for \"my password is\", and `password`, `ssn`, `key` and `token` in the keyword list"
 ---
 
 ## 1. Executive Summary
@@ -125,7 +125,8 @@ used and what it cost.
 
 **Gate** — `memlayer/ml_gate.py` (`SalienceMode` with its startup/cost comments
 `:6-10`, `SALIENT_PROTOTYPES` `:15-60`, `NON_SALIENT_PROTOTYPES` `:63-`,
-`NON_SALIENT_PATTERNS` `:136-141`).
+`SALIENT_PATTERNS` `:122-133`, `NON_SALIENT_PATTERNS` `:136-141`,
+`SALIENT_KEYWORDS` `:149-178`).
 
 **Adopt** — `memlayer/wrappers/{claude,gemini,…}.py`, `memlayer/client.py`.
 
@@ -188,6 +189,39 @@ These are examples of *what to remember*. So a message containing an API key,
 a credential-shaped string or an internal IP is scored **toward** storage by
 similarity to a prototype that is literally an API key — and no secret filtering
 was found anywhere in the tree.
+
+**And the prototype is the mildest of the three lists that say so.** A re-read of
+the same file finds the same instruction written twice more, in mechanisms that
+do not need an embedding to fire:
+
+```python
+SALIENT_PATTERNS = [
+    r'\b(?:my|our|the)\s+(?:name|email|phone|address|username|password)\s+(?:is|:)',   # :123
+    …
+    r'\b(?:version|ip address|port|server|database|api key|token)\b',                   # :128
+]
+
+SALIENT_KEYWORDS = [
+    'name', 'email', 'phone', 'address', 'username', 'password',                          # :151
+    'born', 'birthday', 'age', 'ssn', 'id',                                               # :152
+    …
+    'project', 'team', 'client', 'api', 'key', 'token',                                   # :162
+]
+```
+
+The first pattern's whole purpose is to catch *"my password is …"* and
+*"my username is …"*; the second matches the bare phrase "api key" or "token"
+anywhere in a message. The keyword list adds `ssn` beside `password` and `key`.
+So this is not one unlucky example sentence in an otherwise neutral list: a
+credential is written into the salience rules three times, in a regex, a keyword
+set and a prototype, and `password` and `ssn` are worse than the API key the
+first reading named.
+
+It also matters which mode a user is in. `LIGHTWEIGHT` — documented as
+*"No embeddings: keyword salience + graph-only storage (instant startup)"* and
+the mode a first-time user is most likely to reach for — decides salience from
+the keyword list alone, so in that mode the word `password` in a sentence is by
+itself a reason to store it, with no similarity score in the path at all.
 
 Four systems read in this same batch do the opposite on the write path:
 [mnemos](../mnemos/) screens content before it is written and holds the match on
@@ -293,5 +327,7 @@ examples `:15-60`, `NON_SALIENT_PROTOTYPES` `:63-`, `NON_SALIENT_PATTERNS`
 budgets), `docs/`, `examples/`
 
 ## History
+
+**2026-09-18** — [`5e95f44061a867a5ac0caf53434240713d58b86a`](https://github.com/divagr18/memlayer/commit/5e95f44061a867a5ac0caf53434240713d58b86a) — re-read at the same commit. Nothing upstream had moved, so every change is the atlas's own, and the headline finding got larger rather than smaller. The first reading named one salient prototype, *"The user's API key is sk-12345."* The same file says it twice more without needing an embedding: `SALIENT_PATTERNS:123` is a regex whose whole purpose is to catch *"my password is …"* or *"my username is …"*, `:128` matches the bare phrase "api key" or "token" anywhere in a message, and `SALIENT_KEYWORDS:151-162` lists `password`, `ssn`, `api`, `key` and `token` among the words that make a message worth keeping. In `LIGHTWEIGHT` mode — *"No embeddings: keyword salience + graph-only storage (instant startup)"* — that keyword list is the entire gate, so the word `password` is by itself a reason to store a sentence. A search for `redact`, `scrub`, `mask`, `sanitiz`, `secret` and `pii` across the package still returns nothing but `mean_pooling`'s attention masks. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`5e95f44061a867a5ac0caf53434240713d58b86a`](https://github.com/divagr18/memlayer/commit/5e95f44061a867a5ac0caf53434240713d58b86a) — first reading. Screened before reading; the tree was read, never installed, and no test was run.
