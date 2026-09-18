@@ -9,11 +9,14 @@ source_url: https://github.com/9thLevelSoftware/Daem0n-MCP
 archive_name: "9thLevelSoftware--Daem0n-MCP"
 revision: 00809c67c03938014ac3ea470ef3600f7ccebabc
 revision_url: https://github.com/9thLevelSoftware/Daem0n-MCP/commit/00809c67c03938014ac3ea470ef3600f7ccebabc
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: "bitemporal, audit_log"
+capability_evidence:
+  bitemporal: "valid_from and valid_to on the version row, with a caller-supplied happened_at reaching the MCP tool | daem0nmcp/models.py:223, :278, :281, daem0nmcp/memory.py:427, :511-528, daem0nmcp/tools/memory.py:52, :68, daem0nmcp/graph/temporal.py:188, daem0nmcp/graph/contradiction.py:232 | the model docstring names both axes outright — *\"valid_time: When the fact was actually true in reality (tracked via valid_from/valid_to)\"* — and both ends have live writers rather than defaults. The start is caller-supplied: `happened_at` is a parameter of the MCP `memory` tool documented as *\"When this fact was true in reality (ISO 8601 string)\"*, normalised to UTC and assigned to `valid_from` under a comment that states the mapping. The end is written by the temporal graph at an `invalidation_time` and by the contradiction detector, so a belief can be closed at the moment it stopped being true rather than the moment it was noticed | `valid_from` and `valid_to` are nullable and default to unset, so a write that omits `happened_at` records no validity start and the axis collapses to the record clock for that row; and the report's own note stands that `is_verified` on facts is read by nothing"
+  audit_log: "the memory_versions append on every change, and the invalidation link | daem0nmcp/models.py:278-281, :383-388, daem0nmcp/graph/temporal.py:188, daem0nmcp/graph/contradiction.py:232 | every change to a memory appends a `memory_versions` row rather than overwriting, so the store carries the sequence of what was believed and when, and an invalidation stamps `valid_to` plus a link to what replaced it — a record of mutations in the system's own store, not of retrievals | the second audit surface is declared and unwritten: `models.py:383` defines `enforcement_bypass_log` as *\"Audit log for when enforcement is bypassed via --no-verify\"*, and `hooks.py:25-26` marks the detection site *\"(placeholder for future bypass logging)\"* — so the one event a reader would most want logged, a write that skipped the covenant, has a table and no writer"
 stack_storage: "sqlite, qdrant"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A memory row with content, rationale, tags and an outcome, versioned on every change"
   storage: "SQLite per project under .daem0nmcp, with FTS5, BM25, Qdrant vectors and a graph layer"
@@ -382,6 +385,12 @@ Dreaming), `Summon_Daem0n.md`, `Banish_Daem0n.md`, `REVIEW.md`,
 `LSP_INTEGRATION_SPEC.md`
 
 ## History
+
+**2026-09-18** — [`00809c67c03938014ac3ea470ef3600f7ccebabc`](https://github.com/9thLevelSoftware/Daem0n-MCP/commit/00809c67c03938014ac3ea470ef3600f7ccebabc) — re-read at the same commit. Both risks were verified verbatim and both marks now carry evidence records.
+
+The covenant secret is `os.getenv("DAEM0NMCP_TOKEN_SECRET", "daem0nmcp-covenant-default-secret")` at `covenant.py:30-32`, with the comment *"falls back to a default for testing"* — so an install that never sets the variable signs its preflight tokens with a string published in this repository, and anything able to construct a token can satisfy the middleware. And the bypass log is declared and unwritten: `models.py:383` defines `enforcement_bypass_log` as *"Audit log for when enforcement is bypassed via --no-verify"* while `hooks.py:25-26` marks the detection site *"(placeholder for future bypass logging)"*.
+
+The bitemporal mark came out stronger than the first reading recorded. Both ends have live writers rather than schema defaults: `valid_from` is assigned from a caller-supplied `happened_at`, which is a parameter of the MCP `memory` tool documented as *"When this fact was true in reality (ISO 8601 string)"*, and `valid_to` is written at an `invalidation_time` by the temporal graph and the contradiction detector. So a belief can be recorded as having been true before it was written and closed at the moment it stopped being true — the property that several bitemporal-shaped schemas in this corpus have without a writer. The limit is that both columns are nullable and unset by default. `stack_source` goes from seeded to reviewed.
 
 **2026-09-13** — the repository was renamed from `dasblueyeddevil/daem0n-mcp` to `9thLevelSoftware/Daem0n-MCP`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/9thLevelSoftware--Daem0n-MCP` to match.
 
