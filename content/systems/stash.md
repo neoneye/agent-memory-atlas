@@ -1,7 +1,7 @@
 ---
 title: "Stash"
 eyebrow: "A hypothesis is not a fact, and gets its own table"
-description: "Proposed, testing, confirmed or rejected — with a verification plan, the fact that confirmed it, and the reason it was rejected, all in a table facts cannot be read from."
+description: "Proposed, testing, confirmed or rejected — with a verification plan, the fact that confirmed it, and the reason it was rejected, in a table with its own MCP tools that ordinary recall never reaches."
 root: ../..
 page_kind: system
 source_name: "alash3al/stash"
@@ -9,15 +9,18 @@ source_url: https://github.com/alash3al/stash
 archive_name: "alash3al--stash"
 revision: d34ed430c4348ef741ef95146b488aea8616f4fb
 revision_url: https://github.com/alash3al/stash/commit/d34ed430c4348ef741ef95146b488aea8616f4fb
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: "trust_state, scope_enforced"
+capability_evidence:
+  trust_state: "the hypothesis status with a validated transition table and per-state writers | internal/brain/hypothesis.go:19-23, :108, :221-250, :307, cmd/cli/mcp.go (list_hypotheses, confirm_hypothesis, reject_hypothesis) | `validTransitions` is an explicit map — `proposed` to testing or rejected, `testing` to confirmed, rejected or proposed, and `confirmed` and `rejected` as terminal empty sets — checked by `isValidTransition` before any status write, so an illegal move returns `ErrInvalidHypothesisTransition` rather than landing. The status is a stored column, not a score (`confidence` is separate), and it filters the read path: `SELECT ... FROM hypotheses WHERE namespace_id = ANY($1) AND status = $2 AND deleted_at IS NULL`. Both terminal states record why — `confirmed_fact_id` names the fact that settled it, `rejection_reason` the text of the refusal — and all three transitions have their own MCP tools | the status lives on hypotheses rather than on facts, and `recall`, the semantic read an agent reaches for, returns facts only, so a `proposed` claim is withheld from ordinary retrieval by being in a different table rather than by the status predicate. No committed test covers the transition table"
+  scope_enforced: "the namespace key on every query in the brain package | internal/brain/hypothesis.go:108, internal/brain/consolidate_goal.go:14, internal/brain (facts, relationships, causal links) | `namespace_id` is a stored column and appears as a `WHERE namespace_id = $1` clause (or `= ANY($1)` for a multi-namespace read) on the fact recall, the hypothesis listing, the goal and failure consolidation and the relationship queries alike — the key reaches the query on every read path in the package rather than being carried as a tag, and `create_namespace` / `list_namespaces` make it a first-class unit on the MCP surface | the namespace is supplied by the caller through `set_context` or per-call arguments, so a caller can widen its own scope by naming another namespace; nothing authenticates the boundary, and the repository has one test file in total, none covering it"
 stack_storage: "postgres"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A fact with an entity, a property and a value — plus hypotheses, goals and failures"
   storage: "Postgres with pgvector, migrations and a background consolidation worker"
-  retrieval: "Vector recall over facts within a namespace; hypotheses are a separate table"
+  retrieval: "Vector recall over facts within a namespace; hypotheses, contradictions, goals and failures each have their own MCP listers that recall does not consult"
   write: "Facts inserted, then checked for contradiction against the same entity and property"
   update_delete: "valid_until closes a fact; confidence decays; contradictions auto-resolve"
   scoping: "namespace_id is a WHERE clause on every query in the brain package"
@@ -179,9 +182,36 @@ itself.
 
 ## 8. Agent Integration
 
-An MCP server, `docker compose up` as the whole install, a getting-started guide
-that walks `init` / `remember` / `recall` and says to verify, and a documented
-fully-local path on Ollama. A hosted version exists at a linked service.
+An MCP server with **28 tools**, `docker compose up` as the whole install, a
+getting-started guide that walks `init` / `remember` / `recall` and says to
+verify, and a documented fully-local path on Ollama. A hosted version exists at
+a linked service.
+
+The tool list is worth printing, because the first version of this report
+described the hypothesis table as one "facts cannot be read from" and left the
+impression that the lifecycle is internal machinery:
+
+```text
+init  remember  recall  forget  consolidate
+set_context  get_context  clear_context
+list_namespaces  create_namespace
+query_facts  query_relationships
+list_contradictions  resolve_contradiction
+list_causal_links  create_causal_link  trace_causal_chain
+list_hypotheses  create_hypothesis  confirm_hypothesis  reject_hypothesis
+list_goals  create_goal  complete_goal  abandon_goal
+list_failures  create_failure  delete_failure
+```
+
+Every state transition in section 5 has a tool, `list_hypotheses` takes a status
+filter, and contradictions have both a lister and a resolver. So the accurate
+statement is narrower and more interesting than the one this report made: the
+hypothesis lifecycle is fully exposed to the agent, and what does *not* reach it
+is **`recall`** — the semantic read that ordinary use goes through returns facts
+only. A hypothesis is reachable by asking for hypotheses, never by asking a
+question. An agent has to know the second surface exists, which is a
+documentation problem rather than a missing mechanism, and a much smaller one
+than a table nothing can read.
 
 The README also carries a sponsor section for an inference platform, with
 configuration for pointing Stash at it — disclosed inline rather than buried,
@@ -322,5 +352,9 @@ self-link skip `:26-28`)
 `docs/LOCAL_OLLAMA.md`
 
 ## History
+
+**2026-09-18** — [`d34ed430c4348ef741ef95146b488aea8616f4fb`](https://github.com/alash3al/stash/commit/d34ed430c4348ef741ef95146b488aea8616f4fb) — re-read at the same commit. Nothing upstream had moved. Both marks now carry evidence records, and the hypothesis mechanism was verified rather than inferred: `validTransitions` is an explicit map with `confirmed` and `rejected` as terminal empty sets, `isValidTransition` gates every status write, and the listing query filters `status = $2` alongside the namespace key.
+
+The description was wrong in one direction and is corrected. It said the lifecycle lives "in a table facts cannot be read from", which reads as internal machinery; the MCP surface has 28 tools including `list_hypotheses` with a status filter, `create_hypothesis`, `confirm_hypothesis`, `reject_hypothesis`, `list_contradictions`, `resolve_contradiction` and `trace_causal_chain`. Every transition in section 5 has a tool. What does not reach the lifecycle is `recall` — the semantic read ordinary use goes through returns facts only — so a hypothesis is reachable by asking for hypotheses and never by asking a question. That is a documentation problem rather than a missing mechanism, and section 8 now says so with the tool list printed. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`d34ed430c4348ef741ef95146b488aea8616f4fb`](https://github.com/alash3al/stash/commit/d34ed430c4348ef741ef95146b488aea8616f4fb) — first reading. Screened before reading; the tree was read, never built or run, and the hosted service was not used.

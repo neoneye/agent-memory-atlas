@@ -6,22 +6,23 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="Proposed, testing, confirmed or
 rejected — with a verification plan, the fact that confirmed it, and the
-reason it was rejected, all in a table facts cannot be read from.">
+reason it was rejected, in a table with its own MCP tools that ordinary
+recall never reaches.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="Stash — Agent Memory Atlas">
     <meta property="og:description" content="Proposed, testing,
 confirmed or rejected — with a verification plan, the fact that
-confirmed it, and the reason it was rejected, all in a table facts
-cannot be read from.">
+confirmed it, and the reason it was rejected, in a table with its own
+MCP tools that ordinary recall never reaches.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Stash — Agent Memory Atlas">
     <meta name="twitter:description" content="Proposed, testing,
 confirmed or rejected — with a verification plan, the fact that
-confirmed it, and the reason it was rejected, all in a table facts
-cannot be read from.">
+confirmed it, and the reason it was rejected, in a table with its own
+MCP tools that ordinary recall never reaches.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>Stash — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -43,7 +44,7 @@ cannot be read from.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Stash",
-      "description": "Proposed, testing, confirmed or rejected \u2014 with a verification plan, the fact that confirmed it, and the reason it was rejected, all in a table facts cannot be read from.",
+      "description": "Proposed, testing, confirmed or rejected \u2014 with a verification plan, the fact that confirmed it, and the reason it was rejected, in a table with its own MCP tools that ordinary recall never reaches.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -102,7 +103,8 @@ own table</p>
           <h1>Stash</h1>
           <p class="document-deck">Proposed, testing, confirmed or
 rejected — with a verification plan, the fact that confirmed it, and the
-reason it was rejected, all in a table facts cannot be read from.</p>
+reason it was rejected, in a table with its own MCP tools that ordinary
+recall never reaches.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/alash3al/stash">
               <span>Source</span>
@@ -116,7 +118,7 @@ reason it was rejected, all in a table facts cannot be read from.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/alash3al--stash" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -285,11 +287,34 @@ generate a contradiction against its own replacement.</p>
 asked for cause-and-effect pairs will occasionally return a fact causing
 itself.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
-<p>An MCP server, <code>docker compose up</code> as the whole install, a
-getting-started guide that walks <code>init</code> /
-<code>remember</code> / <code>recall</code> and says to verify, and a
-documented fully-local path on Ollama. A hosted version exists at a
-linked service.</p>
+<p>An MCP server with <strong>28 tools</strong>,
+<code>docker compose up</code> as the whole install, a getting-started
+guide that walks <code>init</code> / <code>remember</code> /
+<code>recall</code> and says to verify, and a documented fully-local
+path on Ollama. A hosted version exists at a linked service.</p>
+<p>The tool list is worth printing, because the first version of this
+report described the hypothesis table as one "facts cannot be read from"
+and left the impression that the lifecycle is internal machinery:</p>
+<pre class="text"><code>init  remember  recall  forget  consolidate
+set_context  get_context  clear_context
+list_namespaces  create_namespace
+query_facts  query_relationships
+list_contradictions  resolve_contradiction
+list_causal_links  create_causal_link  trace_causal_chain
+list_hypotheses  create_hypothesis  confirm_hypothesis  reject_hypothesis
+list_goals  create_goal  complete_goal  abandon_goal
+list_failures  create_failure  delete_failure</code></pre>
+<p>Every state transition in section 5 has a tool,
+<code>list_hypotheses</code> takes a status filter, and contradictions
+have both a lister and a resolver. So the accurate statement is narrower
+and more interesting than the one this report made: the hypothesis
+lifecycle is fully exposed to the agent, and what does <em>not</em>
+reach it is <strong><code>recall</code></strong> — the semantic read
+that ordinary use goes through returns facts only. A hypothesis is
+reachable by asking for hypotheses, never by asking a question. An agent
+has to know the second surface exists, which is a documentation problem
+rather than a missing mechanism, and a much smaller one than a table
+nothing can read.</p>
 <p>The README also carries a sponsor section for an inference platform,
 with configuration for pointing Stash at it — disclosed inline rather
 than buried, which is the right handling.</p>
@@ -442,6 +467,28 @@ on the entity/property scope <code>:15-17</code>, the missing-key guard
 <code>docs/GETTING_STARTED.md</code>,
 <code>docs/LOCAL_OLLAMA.md</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/alash3al/stash/commit/d34ed430c4348ef741ef95146b488aea8616f4fb"><code class="commit-id" title="d34ed430c4348ef741ef95146b488aea8616f4fb">d34ed430…</code></a>
+— re-read at the same commit. Nothing upstream had moved. Both marks now
+carry evidence records, and the hypothesis mechanism was verified rather
+than inferred: <code>validTransitions</code> is an explicit map with
+<code>confirmed</code> and <code>rejected</code> as terminal empty sets,
+<code>isValidTransition</code> gates every status write, and the listing
+query filters <code>status = $2</code> alongside the namespace key.</p>
+<p>The description was wrong in one direction and is corrected. It said
+the lifecycle lives "in a table facts cannot be read from", which reads
+as internal machinery; the MCP surface has 28 tools including
+<code>list_hypotheses</code> with a status filter,
+<code>create_hypothesis</code>, <code>confirm_hypothesis</code>,
+<code>reject_hypothesis</code>, <code>list_contradictions</code>,
+<code>resolve_contradiction</code> and <code>trace_causal_chain</code>.
+Every transition in section 5 has a tool. What does not reach the
+lifecycle is <code>recall</code> — the semantic read ordinary use goes
+through returns facts only — so a hypothesis is reachable by asking for
+hypotheses and never by asking a question. That is a documentation
+problem rather than a missing mechanism, and section 8 now says so with
+the tool list printed. <code>stack_source</code> goes from seeded to
+reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/alash3al/stash/commit/d34ed430c4348ef741ef95146b488aea8616f4fb"><code class="commit-id" title="d34ed430c4348ef741ef95146b488aea8616f4fb">d34ed430…</code></a>
 — first reading. Screened before reading; the tree was read, never built
