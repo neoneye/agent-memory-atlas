@@ -9,7 +9,7 @@ source_url: https://github.com/BJHYZJ/DovSG
 archive_name: "BJHYZJ--DovSG"
 revision: b355987a1ca586f7756f025820fddc24166d75af
 revision_url: https://github.com/BJHYZJ/DovSG/commit/b355987a1ca586f7756f025820fddc24166d75af
-analyzed_at: 2026-09-05
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "vector"
@@ -474,5 +474,25 @@ rg -n 'user_id|tenant|scope' dovsg                                       # none
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. The
+headline claim is now a closed call graph. `instance_scene_graph` is written by
+`update_scene_graph` (`dovsg/controller.py:1349`), pickled and reloaded around
+`:920-938`, and passed to exactly one function at its three remaining call sites
+— `show_instances` from `demo.py:59` and from `controller.py:1170`, and
+`show_instances` itself forwarding it to `vis_instances` as
+`instance_scene_graph=` (`:1191`). Nothing else reads it. In particular the
+planner does not: `get_task_plan` takes a description string and a change level
+(`demo.py:63`) and never sees the graph. So the structure the paper is about
+reaches the viewer and stops there.
+
+One precision on the licence. The report says there is no licence file, which is
+right about a grant and misleading about the tree: there is a `license/`
+directory, and what it holds is a signed activation key — `ZhijieYan.lic`,
+`ZhijieYan.public_key`, `ZhijieYan.signature` and a `licenseCfg.json` naming a
+`feature_id` and a `PERMANENT` "Basic" toolbox. It is a vendor entitlement for a
+third-party component, no Python in the tree reads it, and it grants nothing to
+a reader of this repository. There is still no open-source licence anywhere. No
+marks; the report carries none.
 
 **2026-09-05** — [`b355987a1ca586f7756f025820fddc24166d75af`](https://github.com/BJHYZJ/DovSG/commit/b355987a1ca586f7756f025820fddc24166d75af) — first reading, at the head of `main`. Screened first: one auto-run surface (`.gitmodules`, six submodules, left uninitialised), two build-time execution paths (`setup.py` and the vendored `ace/dsacstar/setup.py`), three unpinned requirement files, nothing inside the seven-day cooldown, and two committed shared objects. Nothing was installed or run. No mark: `tombstone`, `trust_state`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval` were each looked for and each is absent, and `bitemporal` has no record axis to be separate from. The paper's abstract and experiments were read from arXiv; its tables were not re-derived and could not be from this tree.
