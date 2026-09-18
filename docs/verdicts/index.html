@@ -2348,7 +2348,14 @@ href="../systems/promptx/"><code>promptx</code></a></h3>
 <ul>
 <li>Best idea: one SQLite database per role, opened from the role's own
 directory, so isolation cannot be forgotten — crossing it would mean
-opening a different file rather than omitting a predicate.</li>
+opening a different file rather than omitting a predicate. The file is
+chosen by an unvalidated argument the model supplies, so nothing asks
+whether this caller may open that role.</li>
+<li>Second idea: a query that matches nothing returns the network's hub
+nodes and <em>relabels the operation</em> — <code>prime</code> rather
+than <code>recall</code>, with <code>fallbackToDMN</code> in the
+metadata. Returning an overview and saying so beats both returning the
+least-bad match and returning nothing.</li>
 <li>Biggest risk: <code>strength</code> is the only epistemic field, so
 a wrong engram and an unused one decay identically and nothing records
 that anything was ever judged.</li>
@@ -2356,11 +2363,13 @@ that anything was ever judged.</li>
 addressed by the words that lead to them rather than by embedding
 proximity, with <code>ON DELETE CASCADE</code> keeping the index from
 outliving its target.</li>
-<li>Maturity impression: MIT, 63,237 lines, twenty-one cognition modules
-with a Cucumber suite over them — and
-<code>CREATE TABLE IF NOT EXISTS</code> with no version column across a
-store that is per-role, so the first schema change is a manual migration
-everywhere.</li>
+<li>Maturity impression: MIT, 63,237 lines, twenty-one cognition
+modules, and a fully implemented Cucumber scenario asserting one role
+cannot recall another's memory — with no cucumber dependency, runner
+config or script anywhere in the monorepo, so nothing can execute it.
+Plus <code>CREATE TABLE IF NOT EXISTS</code> with no version column
+across a per-role store, so the first schema change is a manual
+migration everywhere.</li>
 <li>Study when: you want associative recall by cue rather than
 similarity, or the cleanest example here of a boundary enforced by the
 file handle rather than by a predicate — which is a real property, and

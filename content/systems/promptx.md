@@ -9,11 +9,11 @@ source_url: https://github.com/deepractice/promptx
 archive_name: "deepractice--promptx"
 revision: 93c1e53556cd5c91215e6eab18bc802dbce5e8a5
 revision_url: https://github.com/deepractice/promptx/commit/93c1e53556cd5c91215e6eab18bc802dbce5e8a5
-analyzed_at: 2026-08-04
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "sqlite, files"
-stack_retrieval: ""
-stack_source: "seeded"
+stack_retrieval: "graph"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An engram — content, a schema, a type, a timestamp and a strength — reachable through the cue words indexed against it"
   storage: "One `better-sqlite3` database per role under the role's own directory, plus a `network.json` and an anchor `state.json`"
@@ -162,6 +162,27 @@ policy is a strategy object rather than a hard-coded rank.
 There is no vector similarity in this path. `FrequencyCue` indicates
 frequency-weighted cueing, and the weights decide the result.
 
+**A query that matches nothing returns the network's hubs, and says so.** When
+`query` is null — or, for compatibility, the string `"null"` —
+`TwoPhaseRecallStrategy.performCoarseRecall` enters DMN mode and seeds
+activation from the most connected nodes instead of from the query's cues.
+`RecallCommand` then uses that as a fallback:
+
+```js
+mind = await this.cognitionManager.recall(role, query, { mode })
+if (query && (!mind || mind.activatedCues.size === 0)) {
+  mind = await this.cognitionManager.recall(role, null, { mode })
+  fallbackToDMN = true
+}
+```
+
+So a miss never returns empty. What saves this from being the silent
+substitution it looks like is that the flag travels: `operationType` becomes
+`prime` rather than `recall`, and `cognitionLayer.metadata.fallbackToDMN` is set,
+so the caller is told it received an overview rather than an answer. Most of this
+atlas either returns the least-bad match as though it matched, or returns
+nothing; relabelling the operation is the third option and the better one.
+
 ## 7. Write Mechanics
 
 `remember` writes an engram and its cue rows. `prime` and `recall` are the read
@@ -199,6 +220,17 @@ in the cognition package expresses a person. And nothing can express a query tha
 spans roles, or one that admits a subset of them — the partition is total in both
 directions.
 
+**And the file handle is chosen by an argument the model supplies.**
+`CognitionManager.getRolePath(roleId)` is `path.join(this.basePath, roleId)` with
+no validation, `ensureRoleDirectory` creates whatever that resolves to, and
+`RecallCommand.parseArgs` returns the MCP tool's argument object verbatim —
+`const { role, query, mode } = this.parseArgs(args)`, with `if (!role)` as the
+only check. Two consequences worth separating. A caller that names another role
+reads that role: the partition keeps roles from leaking into each other by
+accident, and nothing asks whether this caller may open that file. And a `roleId`
+containing `..` is joined and created without complaint, so the directory a
+"role" resolves to need not be inside the roles directory at all.
+
 **`tombstone`, `trust_state`, `bitemporal`, `audit_log`, `human_review`,
 `negative_eval` — none found.** The cognition package has no correction
 vocabulary at all, no status column, no validity interval, no mutation log and no
@@ -212,10 +244,50 @@ store, even though nothing records that it happened.
 
 ## 10. Tests, Evals, and Benchmarks
 
-`features/support/step-definitions/cognition/cognition.steps.js` indicates a
-Cucumber-style behavioural suite covering the cognition layer, alongside an
-`mcp-client.js` support harness. Neither was traced in detail and I ran nothing,
-so this report makes no claim about coverage in either direction.
+The first reading noted a Cucumber-style suite and made no claim about it. Traced
+now, it is the most interesting test artifact in this repository and the reason
+`negative_eval` is nevertheless withheld.
+
+`features/e2e/cognition/memory-lifecycle.feature` is written in Chinese Gherkin
+and its fourth scenario is **多角色记忆隔离** — multi-role memory isolation:
+
+```gherkin
+假设 角色"alice"存储了"Alice的专属记忆"
+并且 角色"bob"存储了"Bob的专属记忆"
+当 角色"alice"执行recall"专属记忆"
+那么 只能检索到"Alice的专属记忆"
+并且 不能检索到"Bob的专属记忆"
+```
+
+Two roles write, one reads, and the last line asserts the other role's memory is
+absent. That is exactly the shape the `negative_eval` flag is for, and the steps
+are not stubs: `cognition.steps.js:141-193` implements all five, calling
+`cognitionManager.remember(roleId, [engram])` and
+`cognitionManager.recall(roleId, query)` and asserting over
+`activatedMind.activatedCues`.
+
+Two things stop it from earning the mark, and the second is decisive.
+
+The negative step is vacuous on its own. `不能检索到` opens with
+
+```js
+if (!activatedMind || activatedMind.activatedCues.size === 0) {
+  return;   // 如果没有激活任何概念，那么肯定不包含unexpected
+}
+```
+
+so a recall that returns nothing passes it. The scenario survives that only
+because `只能检索到` runs first and throws when `activatedMind` is null — the
+positive control is load-bearing, and it is load-bearing by step order rather
+than by design.
+
+**And nothing can run it.** There is no `@cucumber/cucumber` dependency in any
+`package.json` in the monorepo, no `cucumber.js` or `.cucumberrc`, and no script
+that points at `features/`; the root `test` script is `turbo test`, which runs
+the fourteen `*.test.*` files in the packages. The feature file and its step
+definitions are complete, committed, and unexecutable as the repository stands.
+A case that cannot be run is not an evaluation, so the mark is withheld — with
+the note that restoring it costs one dev dependency and one line in `scripts`.
 
 No benchmark and no committed retrieval numbers were found — which for a design
 whose retrieval primitive is unusual, cue-driven activation rather than
@@ -289,5 +361,9 @@ a 63,000-line platform with no separate package boundary.
 - `features/support/step-definitions/cognition/cognition.steps.js`
 
 ## History
+
+**2026-09-18** — [`93c1e53556cd5c91215e6eab18bc802dbce5e8a5`](https://github.com/deepractice/promptx/commit/93c1e53556cd5c91215e6eab18bc802dbce5e8a5) — re-read at the same commit. Nothing upstream had moved, so every change is the atlas's own. The first reading had noted a Cucumber suite and declined to characterise it; reading it produced the sharpest finding here. `features/e2e/cognition/memory-lifecycle.feature` contains a multi-role isolation scenario that asserts Alice's recall returns her memory and **not** Bob's, and `cognition.steps.js:141-193` implements every step against the real `CognitionManager`. It is the clearest negative-retrieval assertion this kind of system could have, and the mark is still withheld: there is no `@cucumber/cucumber` dependency in any `package.json` in the monorepo, no runner configuration and no script pointing at `features/`, so the scenario is complete, committed and unexecutable as the repository stands. Separately, its negative step returns early when nothing was activated, so it is non-vacuous only because the positive step runs first.
+
+`stack_retrieval` was empty and is now `graph` — cue lookup into a spreading-activation traversal is a graph arm, and recording it as nothing implied there was no retrieval. Two mechanisms were added to the body. A query that matches nothing falls back to DMN mode, which seeds activation from the network's hub nodes rather than returning empty — and the substitution is labelled, with `operationType` switching to `prime` and `fallbackToDMN` set in the layer metadata, which is the better of the three available choices and worth section 11. And the role that selects the database is an unvalidated argument: `getRolePath` is `path.join(basePath, roleId)`, `RecallCommand.parseArgs` returns the MCP argument object verbatim with `if (!role)` as the only check, so naming another role opens it and a `roleId` containing `..` resolves outside the roles directory. `stack_source` goes from seeded to reviewed.
 
 **2026-08-04** — [`93c1e53556cd5c91215e6eab18bc802dbce5e8a5`](https://github.com/deepractice/promptx/commit/93c1e53556cd5c91215e6eab18bc802dbce5e8a5) — first reading.

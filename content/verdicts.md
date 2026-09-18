@@ -756,10 +756,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Do not copy when: you need the write guard to hold against a background pass today — the paths that re-derive memory automatically are the ones it does not cover.
 
 ### [`promptx`](../systems/promptx/)
-- Best idea: one SQLite database per role, opened from the role's own directory, so isolation cannot be forgotten — crossing it would mean opening a different file rather than omitting a predicate.
+- Best idea: one SQLite database per role, opened from the role's own directory, so isolation cannot be forgotten — crossing it would mean opening a different file rather than omitting a predicate. The file is chosen by an unvalidated argument the model supplies, so nothing asks whether this caller may open that role.
+- Second idea: a query that matches nothing returns the network's hub nodes and *relabels the operation* — `prime` rather than `recall`, with `fallbackToDMN` in the metadata. Returning an overview and saying so beats both returning the least-bad match and returning nothing.
 - Biggest risk: `strength` is the only epistemic field, so a wrong engram and an unused one decay identically and nothing records that anything was ever judged.
 - Most reusable component: the `cue_index` — memories addressed by the words that lead to them rather than by embedding proximity, with `ON DELETE CASCADE` keeping the index from outliving its target.
-- Maturity impression: MIT, 63,237 lines, twenty-one cognition modules with a Cucumber suite over them — and `CREATE TABLE IF NOT EXISTS` with no version column across a store that is per-role, so the first schema change is a manual migration everywhere.
+- Maturity impression: MIT, 63,237 lines, twenty-one cognition modules, and a fully implemented Cucumber scenario asserting one role cannot recall another's memory — with no cucumber dependency, runner config or script anywhere in the monorepo, so nothing can execute it. Plus `CREATE TABLE IF NOT EXISTS` with no version column across a per-role store, so the first schema change is a manual migration everywhere.
 - Study when: you want associative recall by cue rather than similarity, or the cleanest example here of a boundary enforced by the file handle rather than by a predicate — which is a real property, and not what this atlas marks as scope enforcement.
 - Do not copy when: you need correction of any kind, or your scope is a person rather than a role.
 
