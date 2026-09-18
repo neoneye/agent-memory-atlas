@@ -9,7 +9,7 @@ source_url: https://github.com/GoogleCloudPlatform/open-knowledge-format
 archive_name: "GoogleCloudPlatform--open-knowledge-format"
 revision: ad30107c31c06aec8a7d5636e0d1058118604e6f
 revision_url: https://github.com/GoogleCloudPlatform/open-knowledge-format/commit/ad30107c31c06aec8a7d5636e0d1058118604e6f
-analyzed_at: 2026-09-05
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -611,5 +611,18 @@ is not allowed to do — and the design's value depends entirely on doing it.
 - `rg -n -i 'arxiv|bibtex|doi\.org' README.md SPEC.md` — no paper.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. The
+claim the withheld `trust_state` mark turns on is now a call graph rather than
+an assertion. `trust_tier` and `is_stale` are defined once each
+(`bundle/document.py:113`, `:130`) and called from exactly two places in the
+shipped code — `viewer/generator.py:137` and `:138`, which put `trust_tier` and
+`stale` into the HTML viewer's per-document payload — plus four cases in
+`tests/test_document.py:89-108`. Nothing else in `src/` or `connectors/` calls
+either. So both are computed, both are rendered, and neither filters, ranks or
+gates anything on any read path: the tier is a badge and the staleness flag is a
+badge. That is the shape the rubric excludes, and the mark stays withheld for a
+reason that can now be re-checked with one grep. No marks; the report carries
+none.
 
 **2026-09-05** — [`ad30107c31c06aec8a7d5636e0d1058118604e6f`](https://github.com/GoogleCloudPlatform/open-knowledge-format/commit/ad30107c31c06aec8a7d5636e0d1058118604e6f) — first reading, six commits in, at the merge of the ISO-datetime pull request. Screened first: no auto-run surface, no build-time execution, one unpinned dependency surface (`pyproject.toml` with no lockfile), nothing inside the seven-day cooldown. Nothing was installed or run; the tests were read, not executed, and the committed `viz.html` payloads were parsed from the checked-in files. No capability mark: every trust, lifecycle and freshness state the spec defines is derived and displayed by the one consumer in the tree and enforced by nothing. The recorded findings are the regeneration path that keeps a human-reviewed tier, the attester that checks an agent-assembled receipt, and three places the sample and the tools contradict the spec they demonstrate.
