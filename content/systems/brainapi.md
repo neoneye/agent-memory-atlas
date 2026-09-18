@@ -9,7 +9,7 @@ source_url: https://github.com/Lumen-Labs/brainapi2
 archive_name: "Lumen-Labs--brainapi2"
 revision: b434f92a10d5b95aceab3f845d54472212672a10
 revision_url: https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10
-analyzed_at: 2026-08-30
+analyzed_at: 2026-09-18
 capabilities: "audit_log, negative_eval"
 stack_storage: "graph, postgres, mongo, milvus, qdrant, redis"
 stack_retrieval: "vector, lexical, graph"
@@ -579,6 +579,21 @@ refused should expect to build all three.
 - `tests/test_event_hub_invalidation.py` — the three supersession cases.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+marks stand. `negative_eval` is stronger than the record spells out, and the
+reason is which function the assertion calls: after
+`_invalidate_superseded_relationships` runs,
+`tests/test_event_hub_invalidation.py:180-181` asserts
+`_is_currently_valid(rel-1)` is false and `_is_currently_valid(rel-2)` is true —
+and `_is_currently_valid` is the retrieval controller's own predicate
+(`src/services/api/controllers/retrieve.py:1289`), used at `:388`, `:1315` and
+`:1865` on the live read path. So the case is a must-not about what retrieval
+returns rather than about what the write stored, which is the distinction the
+rubric turns on. Two sibling controls in the same file keep it non-vacuous: the
+preceding case asserts `graph.updates == []` with both edges still valid, and
+`test_inbound_edge_on_the_subject_is_not_superseded` covers the direction the
+rule must not fire in. No marks change.
 
 **2026-08-31** — [`b434f92a10d5b95aceab3f845d54472212672a10`](https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10) — count audit at the same pin. Two figures were wrong. `_clean_labels` (`src/lib/neo4j/client.py:156-176`) chains thirteen `replace()` calls, not twelve — one for the space and twelve for punctuation; the injection finding it supports is verbatim-correct and unchanged. Section 10 said all fourteen skips are `skipUnless` on an unavailable service; only four are decorators (three `skipUnless`, one `skipIf`) and ten are inline `self.skipTest` calls for absent benchmark artifacts, frozen datasets and uninstalled optional plugins. Every skip is still environment-gated and no behaviour is excused, but the default-run suite is correspondingly smaller than 585. No finding or mark changed.
 

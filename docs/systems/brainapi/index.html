@@ -113,7 +113,7 @@ own notes say the number should not be published yet.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-30</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Lumen-Labs--brainapi2" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -736,6 +736,24 @@ brain resolution, validation and the per-brain PAT.</li>
 supersession cases.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. Both marks stand. <code>negative_eval</code> is
+stronger than the record spells out, and the reason is which function
+the assertion calls: after
+<code>_invalidate_superseded_relationships</code> runs,
+<code>tests/test_event_hub_invalidation.py:180-181</code> asserts
+<code>_is_currently_valid(rel-1)</code> is false and
+<code>_is_currently_valid(rel-2)</code> is true — and
+<code>_is_currently_valid</code> is the retrieval controller's own
+predicate (<code>src/services/api/controllers/retrieve.py:1289</code>),
+used at <code>:388</code>, <code>:1315</code> and <code>:1865</code> on
+the live read path. So the case is a must-not about what retrieval
+returns rather than about what the write stored, which is the
+distinction the rubric turns on. Two sibling controls in the same file
+keep it non-vacuous: the preceding case asserts
+<code>graph.updates == []</code> with both edges still valid, and
+<code>test_inbound_edge_on_the_subject_is_not_superseded</code> covers
+the direction the rule must not fire in. No marks change.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/Lumen-Labs/brainapi2/commit/b434f92a10d5b95aceab3f845d54472212672a10"><code class="commit-id" title="b434f92a10d5b95aceab3f845d54472212672a10">b434f92a…</code></a>
 — count audit at the same pin. Two figures were wrong.

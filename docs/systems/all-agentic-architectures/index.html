@@ -115,7 +115,7 @@ flagship memory architecture cannot read.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-30</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/FareedKhan-dev--all-agentic-architectures" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -789,6 +789,28 @@ LLM and the <code>RUN_INTEGRATION</code> gate.</li>
 the persistence bullet that contradicts it.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. The three risk claims re-run and all hold, with one
+worth stating more precisely. <code>collection_name</code> is threaded
+through <code>VectorMemory</code> and <code>EpisodicMemory</code>
+(<code>memory/vector.py:23</code>, <code>episodic.py:39-41</code>) and
+reaches Chroma and Qdrant (<code>vector.py:54</code>, <code>:78</code>)
+— but the FAISS branch calls
+<code>FAISS.from_documents(documents, embeddings, **kwargs)</code> and
+never passes it (<code>:35-47</code>), so on the default backend the
+scope argument is accepted and discarded. Nothing under
+<code>tests/</code> imports <code>agentic_architectures.memory</code> at
+all; the two memory-bearing cases in
+<code>tests/integration/test_integration_all.py</code>
+(<code>:145</code>, <code>:395</code>) instantiate
+<code>GraphMemoryAgent</code> and <code>AgentWorkflowMemory</code> and
+call a live model through <code>_llm()</code>, so they exercise the
+architectures end to end and need a key to run. And the one
+<code>delete</code> call in the whole package removes the sentinel
+document FAISS needs to instantiate an empty store
+(<code>vector.py:46</code>), not a memory — the API still offers no way
+to remove an episode, a triple or a document. No marks; the report
+carries none.</p>
 <p><strong>2026-08-30</strong> — <a
 href="https://github.com/FareedKhan-dev/all-agentic-architectures/commit/cf9d620a8cc55d59589399c30f305e6dfaa428ec"><code class="commit-id" title="cf9d620a8cc55d59589399c30f305e6dfaa428ec">cf9d620a…</code></a>
 — first reading, at the 33rd commit. Screened before reading: a

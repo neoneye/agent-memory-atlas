@@ -9,7 +9,7 @@ source_url: https://github.com/FareedKhan-dev/all-agentic-architectures
 archive_name: "FareedKhan-dev--all-agentic-architectures"
 revision: cf9d620a8cc55d59589399c30f305e6dfaa428ec
 revision_url: https://github.com/FareedKhan-dev/all-agentic-architectures/commit/cf9d620a8cc55d59589399c30f305e6dfaa428ec
-analyzed_at: 2026-08-30
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files, graph"
 stack_retrieval: "vector, graph"
@@ -619,5 +619,21 @@ diagrams from here and the implementation from somewhere with a delete.
   bullet that contradicts it.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. The
+three risk claims re-run and all hold, with one worth stating more precisely.
+`collection_name` is threaded through `VectorMemory` and `EpisodicMemory`
+(`memory/vector.py:23`, `episodic.py:39-41`) and reaches Chroma and Qdrant
+(`vector.py:54`, `:78`) — but the FAISS branch calls
+`FAISS.from_documents(documents, embeddings, **kwargs)` and never passes it
+(`:35-47`), so on the default backend the scope argument is accepted and
+discarded. Nothing under `tests/` imports `agentic_architectures.memory` at all;
+the two memory-bearing cases in `tests/integration/test_integration_all.py`
+(`:145`, `:395`) instantiate `GraphMemoryAgent` and `AgentWorkflowMemory` and
+call a live model through `_llm()`, so they exercise the architectures end to
+end and need a key to run. And the one `delete` call in the whole package
+removes the sentinel document FAISS needs to instantiate an empty store
+(`vector.py:46`), not a memory — the API still offers no way to remove an
+episode, a triple or a document. No marks; the report carries none.
 
 **2026-08-30** — [`cf9d620a8cc55d59589399c30f305e6dfaa428ec`](https://github.com/FareedKhan-dev/all-agentic-architectures/commit/cf9d620a8cc55d59589399c30f305e6dfaa428ec) — first reading, at the 33rd commit. Screened before reading: a `.devcontainer` `postCreateCommand` installing eight extras plus Playwright, a committed `.vscode/settings.json`, a `tests/conftest.py` that executes on collection, and one unpinned dependency surface with no lockfile; nothing was installed and nothing was run, and the depth-parsing behaviour in section 6 was reproduced by re-implementing the parse in isolation rather than by importing the tree. No marks. The report is built around the memory package rather than the 38 architectures, because that is the part in scope, and around the gap between what the two backends promise and what the default one does.
