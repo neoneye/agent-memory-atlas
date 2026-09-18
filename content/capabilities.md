@@ -237,12 +237,12 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 
 | Stored in | Systems | Read off code | | Retrieval arm | Systems | Read off code |
 | --- | ---: | ---: | --- | --- | ---: | ---: |
-| SQLite | 279 | 207 | | Lexical | 397 | 317 |
-| Files on disk | 277 | 214 | | Vector | 364 | 273 |
+| SQLite | 279 | 208 | | Lexical | 397 | 317 |
+| Files on disk | 277 | 214 | | Vector | 365 | 274 |
 | Postgres | 106 | 73 | | Graph | 164 | 129 |
-| Delegated to the adopter | 47 | 29 | | No arm named in the review | 81 | 45 |
+| Delegated to the adopter | 47 | 30 | | No arm named in the review | 80 | 45 |
 | Graph database | 35 | 26 | |  |  |  |
-| In-process only | 27 | 17 | |  |  |  |
+| In-process only | 27 | 18 | |  |  |  |
 | Chroma | 26 | 21 | |  |  |  |
 | Qdrant | 20 | 11 | |  |  |  |
 | LanceDB | 16 | 11 | |  |  |  |
@@ -257,6 +257,6 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 | Weaviate | 1 | 1 | |  |  |  |
 | TepinDB | 1 | 1 | |  |  |  |
 
-Counted across 580 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 426 of 580 reports have been read that way, and the other 154 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
+Counted across 580 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 427 of 580 reports have been read that way, and the other 153 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
 
 <!-- END GENERATED STACK -->

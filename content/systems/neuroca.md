@@ -9,15 +9,15 @@ source_url: https://github.com/Modern-Prometheus-AI/Neuroca
 archive_name: "Modern-Prometheus-AI--Neuroca"
 revision: b4d4198e0d102be9074aa3c74b660c6d4091cdf4
 revision_url: https://github.com/Modern-Prometheus-AI/Neuroca/commit/b4d4198e0d102be9074aa3c74b660c6d4091cdf4
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "sqlite, memory, delegated"
-stack_retrieval: ""
-stack_source: "seeded"
+stack_retrieval: "vector"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A MemoryItem with structured or raw content, a status, importance, strength and tier metadata"
   storage: "Pluggable backends behind a factory — in-memory, SQLite, vector — under three tiers"
-  retrieval: "Per-tier search through a MemoryManager, with relevance attached at query time"
+  retrieval: "Per-tier search through a MemoryManager; the vector arm is a complete cosine implementation guarded by `if embedding:`, and nothing in the tree produces an embedding"
   write: "Added through the manager, which routes to a tier and triggers maintenance"
   update_delete: "A five-value status including forgotten, meaning marked for deletion but not yet removed"
   scoping: "None on the read path; tiers and backends partition storage rather than access"
@@ -175,6 +175,31 @@ and it is the reason this report claims no retrieval property.
 There is no scope key. Tiers and backends partition *storage*; nothing partitions
 *access*.
 
+**The vector tier is complete and has no embedder.** A re-read reaches
+`memory/backends/vector/`, which is a real implementation — a 238-line
+`components/search.py` doing cosine similarity with filtering, beside `index.py`,
+`models.py` and `crud.py`, and a manager default of
+`{"dimension": 768, "similarity_threshold": 0.65}`. What it does not have is
+anything that turns text into a vector.
+
+The chain is short enough to state in full. `MemoryManager.search_memories`
+(`manager/core.py:337`) takes `embedding: Optional[List[float]] = None`. When one
+is passed it is kept as `self.context_embeddings` (`:395`) and forwarded;
+otherwise that attribute keeps the `[]` it was initialised with at `:179`.
+Downstream, `manager/storage.py:241` guards the whole vector arm with
+`if embedding:` — under a comment reading *"Search vector storage if embedding is
+provided (or if we can generate one)"*, where the parenthesis describes something
+the code does not do. And `store_embedding` on the backend interface
+(`interfaces/storage_backend.py:282`) is declared once and has no implementation
+and no caller anywhere in the tree.
+
+So the vector arm runs only for an adopter who brings their own vectors on both
+the write and the read side, and the default path through the manager skips it
+silently. `stack_retrieval` was recorded as empty, which read as *no retrieval at
+all*; it is now `vector`, which is accurate about the arm that exists with the
+limit stated here. The "mid-refactor" reading in section 1 extends further than
+the tests: the tier the architecture is named for has no producer either.
+
 ## 7. Write Mechanics
 
 Writes go through the manager. STM entries carry `expires_at`; MTM entries carry
@@ -303,5 +328,9 @@ four strategies `:4-14`), `abstractor.py`, `scheduler.py`;
 `justinlietz93/Neuroca-Benchmarks`
 
 ## History
+
+**2026-09-18** — [`b4d4198e0d102be9074aa3c74b660c6d4091cdf4`](https://github.com/Modern-Prometheus-AI/Neuroca/commit/b4d4198e0d102be9074aa3c74b660c6d4091cdf4) — re-read at the same commit. The headline holds exactly: `tests/integration/memory/` still carries three modules skipped at module level, two of them with the quoted reason *"These tests use the old memory architecture and need to be refactored"*.
+
+The new finding extends that thesis past the tests. `stack_retrieval` was empty, which reads as no retrieval at all; `memory/backends/vector/` is a complete implementation — a 238-line cosine search with filtering, an index, models and CRUD, and a manager default of dimension 768 with a 0.65 similarity threshold. What is missing is the producer. `MemoryManager.search_memories` takes `embedding` as an optional argument defaulting to None, stores it as `self.context_embeddings` only when supplied, and `manager/storage.py:241` guards the whole vector arm with `if embedding:` under a comment that says *"or if we can generate one"* — which the code does not. `store_embedding` on the backend interface is declared once with no implementation and no caller. So the vector tier runs only for an adopter who brings vectors on both sides, and the default path skips it without saying so. The field is now `vector`, with the limit in section 6. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`b4d4198e0d102be9074aa3c74b660c6d4091cdf4`](https://github.com/Modern-Prometheus-AI/Neuroca/commit/b4d4198e0d102be9074aa3c74b660c6d4091cdf4) — first reading. Screened before reading; the tree was read, never installed, and no test was run.
