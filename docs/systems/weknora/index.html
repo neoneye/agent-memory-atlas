@@ -112,14 +112,14 @@ deletions leave a fingerprint the extractor checks before writing.</p>
               <strong>Tencent/WeKnora</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Tencent/WeKnora/commit/1ef38fdb8b19347b82d3a99f6f17d75ac09ad606" title="1ef38fdb8b19347b82d3a99f6f17d75ac09ad606">
+            <a class="meta-pill revision-pill" href="https://github.com/Tencent/WeKnora/commit/b82fd6c0f9939e8497fa7474999dd1bde5d0d88d" title="b82fd6c0f9939e8497fa7474999dd1bde5d0d88d">
               <span>Analyzed revision</span>
-              <code>1ef38fdb…</code>
+              <code>b82fd6c0…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-14</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Tencent--WeKnora" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -555,6 +555,31 @@ grep -rniE &#39;audit&#39; --include=&#39;*.go&#39; internal/application/service
 # the pending status is excluded from both injection queries
 grep -rn &#39;MemoryStatusPending\|MemoryStatusActive&#39; --include=&#39;*.go&#39; internal/</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — re-pinned to <a
+href="https://github.com/Tencent/WeKnora/commit/b82fd6c0f9939e8497fa7474999dd1bde5d0d88d"><code class="commit-id" title="b82fd6c0f9939e8497fa7474999dd1bde5d0d88d">b82fd6c0…</code></a>,
+67 commits on. The compare API truncated its file list at 300, so the
+memory subsystem was compared by tree and blob instead:
+<code>internal/application/repository/memory.go</code>,
+<code>internal/types/memory.go</code>,
+<code>internal/handler/memory.go</code>,
+<code>internal/router/routes_memory.go</code> and
+<code>internal/agent/tools/search_memory.go</code> are byte-identical to
+the previous pin, and inside
+<code>internal/application/service/memory/</code> the only object that
+changed is <code>persistence_consistency_test.go</code>. Every anchor in
+the five evidence records was re-verified at the new pin and every one
+is exact. Two records gained what a first reading had missed. The
+tombstone ledger has three writers, not one — an item delete, a clear,
+and <code>tombstoneTopic</code>, which records a fingerprint for a
+deleted topic <em>and each of its aliases</em>. And
+<code>human_review</code> now carries its producer test: the agent's
+single memory tool is a read, the shipped MCP server's twenty-nine tools
+include no memory verb at all, <code>web_fetch</code> cannot POST, and
+<code>shell_exec</code> runs in a session MicroVM that never touches the
+host — so nothing on the producing side can reach
+<code>POST /memory/items/:id/confirm</code>. Screened again first; a
+dependency surface was inside the cooldown, so nothing was installed and
+no suite was run.</p>
 <p><strong>2026-09-14</strong> — <a
 href="https://github.com/Tencent/WeKnora/commit/1ef38fdb8b19347b82d3a99f6f17d75ac09ad606"><code class="commit-id" title="1ef38fdb8b19347b82d3a99f6f17d75ac09ad606">1ef38fdb…</code></a>
 — first reading, on the <code>main</code> default branch, 3,017 commits
