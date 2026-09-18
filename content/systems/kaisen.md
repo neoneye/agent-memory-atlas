@@ -7,9 +7,9 @@ page_kind: system
 source_name: "RAZZULLIX/KAISEN"
 source_url: https://github.com/RAZZULLIX/KAISEN
 archive_name: "RAZZULLIX--KAISEN"
-revision: d961bc5ddb0a8cbe2d66c0f7146084c737ea1246
-revision_url: https://github.com/RAZZULLIX/KAISEN/commit/d961bc5ddb0a8cbe2d66c0f7146084c737ea1246
-analyzed_at: 2026-09-11
+revision: b709ecc78acf09c09955267590be28f7e6dd6582
+revision_url: https://github.com/RAZZULLIX/KAISEN/commit/b709ecc78acf09c09955267590be28f7e6dd6582
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: ""
@@ -244,10 +244,29 @@ what the counter must not count.
 
 ## 10. Tests, Evals, and Benchmarks
 
-489 test functions across 28 files — autofix, budget, campaigns, capability
+550 test functions across 32 files — autofix, budget, campaigns, capability
 checks, deep work, the KAI protocol, LLM resilience, resource controls, routing,
 the server API, Windows compatibility, worker resizing, and two release-specific
-suites. The autofix tests are the most detailed, asserting both directions of
+suites.
+
+**A KernelBench bridge arrived with this pin, and its scoring rule is the part
+worth copying.** `tools/kb_templates/` generates a per-project harness:
+`kb_common.py` pins one physical GPU by UUID *before torch is imported*, points
+torch's extension cache at the project, and takes a per-GPU file lock so
+*"two workers never benchmark at the same time and timings stay comparable"*.
+`verify.py` is a correctness gate run with performance measurement **off**, over
+N randomized input draws, exiting 0 only when every trial matches. Only then
+does `score.py` measure, in one evaluator call that times both the candidate and
+the reference on the pinned GPU with the same seed, *"so the metric is
+self-consistent"*.
+
+And then the rule that inverts the usual incentive: a measured speedup above
+`EXCESSIVE_SPEEDUP` — default `10.0`, overridable per problem — **fails the
+generation**, with the message *"suspected reward hack; inspect runs/ artifacts
+before trusting it"* and the docstring naming what it is watching for, *"cached
+results, skipped work, stream tricks"*. A harness that treats its own best
+number as evidence of cheating is measuring the agent rather than flattering it,
+and this atlas has found very few that do. The autofix tests are the most detailed, asserting both directions of
 mechanical repairs, including that an include is not added twice.
 
 **The dedup path is tested, and the tests are written against the failure mode
@@ -349,6 +368,8 @@ Run from the root of the checkout at the pinned commit.
 | Test tree size | `grep -rc "def test_" tests/*.py` summed, and `ls tests/*.py \| wc -l` | 489 functions across 28 files |
 
 ## History
+
+**2026-09-18** — [`b709ecc78acf09c09955267590be28f7e6dd6582`](https://github.com/RAZZULLIX/KAISEN/commit/b709ecc78acf09c09955267590be28f7e6dd6582) — re-pinned from `d961bc5`; 52 files and +7,165 lines, re-screened at the new pin, MIT unchanged. No capability mark is earned and none was before: the memory here is still a dedup index and a campaign store rather than a belief store, and nothing in this range changes that. What is new is a KernelBench bridge under `tools/kb_templates/`, described above because its measurement discipline is worth reading even though it earns no mark — one GPU pinned by UUID before torch loads, a machine-wide per-GPU file lock so timings stay comparable, correctness verified with performance measurement off before anything is scored, and a speedup above a default `10.0×` treated as a *failure* on suspicion of reward hacking. The test tree grew from 489 functions across 28 files to 550 across 32.
 
 **2026-09-11** — [`d961bc5ddb0a8cbe2d66c0f7146084c737ea1246`](https://github.com/RAZZULLIX/KAISEN/commit/d961bc5ddb0a8cbe2d66c0f7146084c737ea1246) — re-read, 86 files and 18,697 insertions past the previous pin, 1,516 of them in the memory paths, **arriving in a single commit** whose message describes a worker-telemetry fix — the log is no guide to what moved here, and the diff has to be read directly. The package went from 15,315 lines across 41 files to 23,230 across 58. **Three of the four defects the first reading named are closed upstream, and the fixes name the failures they close.** `normalize_code` takes a `language` argument and branches — hash-comment languages get a whitespace-and-comment pass, C-family keeps the brace-aware normalizer — and `semantic_hash`'s docstring states the collision it prevents: *"floor division would be stripped before hashing and distinct candidates could collide."* `_dedup_check` passes `self._code_lang`, the argument the report noted was already in scope, under a comment at the call site saying the same thing. `keywords.txt` has a caller: `keyword_counts` reads it as an explicit allowlist and falls back to a hardcoded stopword set, so the frequency line is no longer prose word count. Four committed tests cover the three fixes, including one asserting that the C path still folds `// comment` while the Python path does not. **The asymmetry the eyebrow names is unchanged and is now explicit**: `snapshots.py` gained a note that `seen_hashes.json` is deliberately excluded from a snapshot so a revert cannot make the engine re-score — a defensible rule for the block, extended to nothing that explains it, while `MAX_HISTORY` stays at 500. Marks remain none, and `negative_eval` is named as the near-miss: `test_keyword_counts_filters_stopwords` has the right shape over the wrong object, excluding a token from a frequency line rather than a record from a result. Test tree 206 functions across ten files to 489 across 28. Screened before reading: one dependency manifest inside the cooldown, five unpinned ranges, a `tests/conftest.py` executing on collection; nothing was installed or run.
 

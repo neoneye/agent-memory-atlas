@@ -113,14 +113,14 @@ outlives the 500-entry ring that explains why anything was skipped.</p>
               <strong>RAZZULLIX/KAISEN</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/RAZZULLIX/KAISEN/commit/d961bc5ddb0a8cbe2d66c0f7146084c737ea1246" title="d961bc5ddb0a8cbe2d66c0f7146084c737ea1246">
+            <a class="meta-pill revision-pill" href="https://github.com/RAZZULLIX/KAISEN/commit/b709ecc78acf09c09955267590be28f7e6dd6582" title="b709ecc78acf09c09955267590be28f7e6dd6582">
               <span>Analyzed revision</span>
-              <code>d961bc5d…</code>
+              <code>b709ecc7…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RAZZULLIX--KAISEN" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -360,10 +360,31 @@ mark tracks what the memory must not hand back, and this tracks what the
 counter must not count.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>489 test functions across 28 files — autofix, budget, campaigns,
+<p>550 test functions across 32 files — autofix, budget, campaigns,
 capability checks, deep work, the KAI protocol, LLM resilience, resource
 controls, routing, the server API, Windows compatibility, worker
-resizing, and two release-specific suites. The autofix tests are the
+resizing, and two release-specific suites.</p>
+<p><strong>A KernelBench bridge arrived with this pin, and its scoring
+rule is the part worth copying.</strong>
+<code>tools/kb_templates/</code> generates a per-project harness:
+<code>kb_common.py</code> pins one physical GPU by UUID <em>before torch
+is imported</em>, points torch's extension cache at the project, and
+takes a per-GPU file lock so <em>"two workers never benchmark at the
+same time and timings stay comparable"</em>. <code>verify.py</code> is a
+correctness gate run with performance measurement <strong>off</strong>,
+over N randomized input draws, exiting 0 only when every trial matches.
+Only then does <code>score.py</code> measure, in one evaluator call that
+times both the candidate and the reference on the pinned GPU with the
+same seed, <em>"so the metric is self-consistent"</em>.</p>
+<p>And then the rule that inverts the usual incentive: a measured
+speedup above <code>EXCESSIVE_SPEEDUP</code> — default
+<code>10.0</code>, overridable per problem — <strong>fails the
+generation</strong>, with the message <em>"suspected reward hack;
+inspect runs/ artifacts before trusting it"</em> and the docstring
+naming what it is watching for, <em>"cached results, skipped work,
+stream tricks"</em>. A harness that treats its own best number as
+evidence of cheating is measuring the agent rather than flattering it,
+and this atlas has found very few that do. The autofix tests are the
 most detailed, asserting both directions of mechanical repairs,
 including that an include is not added twice.</p>
 <p><strong>The dedup path is tested, and the tests are written against
@@ -544,6 +565,21 @@ with <code>_STOPWORDS</code> as the fallback</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/RAZZULLIX/KAISEN/commit/b709ecc78acf09c09955267590be28f7e6dd6582"><code class="commit-id" title="b709ecc78acf09c09955267590be28f7e6dd6582">b709ecc7…</code></a>
+— re-pinned from <code>d961bc5</code>; 52 files and +7,165 lines,
+re-screened at the new pin, MIT unchanged. No capability mark is earned
+and none was before: the memory here is still a dedup index and a
+campaign store rather than a belief store, and nothing in this range
+changes that. What is new is a KernelBench bridge under
+<code>tools/kb_templates/</code>, described above because its
+measurement discipline is worth reading even though it earns no mark —
+one GPU pinned by UUID before torch loads, a machine-wide per-GPU file
+lock so timings stay comparable, correctness verified with performance
+measurement off before anything is scored, and a speedup above a default
+<code>10.0×</code> treated as a <em>failure</em> on suspicion of reward
+hacking. The test tree grew from 489 functions across 28 files to 550
+across 32.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/RAZZULLIX/KAISEN/commit/d961bc5ddb0a8cbe2d66c0f7146084c737ea1246"><code class="commit-id" title="d961bc5ddb0a8cbe2d66c0f7146084c737ea1246">d961bc5d…</code></a>
 — re-read, 86 files and 18,697 insertions past the previous pin, 1,516
