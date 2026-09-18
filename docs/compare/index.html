@@ -23633,9 +23633,12 @@ point at external stores through a <code>.memspec.yaml</code></td>
 <td>FTS5 with BM25 weighted title ten, tags five, body one, over a
 porter-stemmed index, with a four-step fallback — exact-AND, prefix-AND,
 exact-OR, prefix-OR — so a multi-term natural-language query does not
-return nothing because one term is absent. Optional dense reranking
-against an OpenAI-compatible endpoint or Ollama. Optional graph
-expansion follows the typed edges one or more hops, tagging each
+return nothing because one term is absent. There is no second retrieval
+mode: v0.11 deleted <code>src/lib/embeddings.ts</code> and its config
+surface outright, and at the previous pin nothing under
+<code>src/</code> imported that module either, so the hybrid engine was
+a scaffolding prompt and a config key rather than a code path. Optional
+graph expansion follows the typed edges one or more hops, tagging each
 neighbour with the <code>expanded_via</code> that surfaced it. Filters:
 type, active scope, and an as-of validity instant</td>
 <td><code>remember</code> for a claim, <code>observe</code> for a
@@ -23651,8 +23654,10 @@ into weekly digests without the transcripts leaving the machine</td>
 writes a new record, links the pair in both directions, and preserves
 the reason on both. Passing <code>check_by</code> sets a
 <code>stale</code> flag at read time and never deletes.
-<code>sweep</code> is the only removal path and prompts a person per
-item. Retired and superseded records move to <code>archive/</code> and
+<code>sweep</code> is the only removal path, runs at a terminal only,
+and either prompts a person per item or reads an answers file of
+<code>&lt;id&gt; &lt;y|n&gt;</code> lines in which an unlisted id means
+keep. Retired and superseded records move to <code>archive/</code> and
 out of the search index, reachable through the lineage chain or
 <code>--include-superseded</code></td>
 <td>Two mechanisms with different jobs. <code>claims:</code> routes
@@ -23663,18 +23668,22 @@ local so nothing crosses a sync boundary by default.
 <code>universal</code>, or a name — applied inside the FTS SQL and as a
 hard wall on graph expansion. An unknown scope name is an error, not an
 empty result</td>
-<td>An eleven-tool MCP server for Claude Code, Cursor and Codex; a CLI
-with eighteen commands; three Claude Code hooks — a session-start
-context injector that no-ops gracefully when no store is found, a claims
-check, and a consolidation pass. Generated agent addon text rather than
-a rewritten instruction file</td>
+<td>A fourteen-tool MCP server for Claude Code, Cursor and Codex,
+carrying no removal verb; a CLI with twenty-three commands; three Claude
+Code hooks — a session-start context injector that no-ops gracefully
+when no store is found, a claims check, and a consolidation pass.
+Generated agent addon text rather than a rewritten instruction file</td>
 <td>No daemon. A <code>dream</code> pass reads the last N days of writes
 and git log and asks a model for stale memories, supersede candidates,
 verify candidates, missing relations and rules worth promoting — output
 is review material, never applied. <code>reconcile</code> scans anchored
 claims for drift including uncommitted edits. A local
 <code>usage.jsonl</code> records retrieval hits and feeds a boot-context
-recency boost</td>
+recency boost; v0.11 adds <code>outcomes.jsonl</code> beside it —
+append-only, gitignored, <code>useful | dead_end | corrected</code>
+recorded after a memory was used — which never mutates the record and is
+read only to compute the cold and promotion-candidate sections of
+<code>status</code></td>
 <td>A discrete lifecycle — <code>active</code>, <code>superseded</code>,
 <code>retired</code> — that decides what search can see, plus a
 <code>verified_with</code> witness ladder of <code>anchor</code>,
@@ -23684,8 +23693,10 @@ recency boost</td>
 number was removed in v0.3 and replaced by the witness; the type
 definition says so. A source tier of <code>operator</code>,
 <code>agent</code> or <code>import</code> protects operator records from
-being superseded or edited without an explicit override that MCP cannot
-use</td>
+being superseded or edited without an explicit override. The override is
+clamped off for <code>unrelate</code> on the MCP channel in code; for
+<code>supersede</code> it is a tool parameter the caller sets, so that
+half of the protection is a convention rather than a boundary</td>
 <td>Anchoring a claim to the git blob SHAs of the files it is about, so
 drift is detected against the code rather than against the calendar; a
 scope predicate inside the query rather than over the page, with the
@@ -23693,17 +23704,26 @@ starvation case as a test whose comment records the mutation check;
 refusing to traverse through an out-of-scope record because a
 traversable-but-unreturnable one leaks the foreign graph's shape; an
 unknown scope name that throws rather than under-retrieving silently;
-removal reserved to an interactive prompt; a benchmark page that pins
-its datasets by sha256, reports a saturated result as <em>"continuity,
-not bragging rights"</em>, and notes that an upstream file's hash
-changed since the earlier runs</td>
-<td>The generated config still advertises a ranking knob that no longer
-exists — <code>min_confidence: 0.7</code> and
-<code>ranking: {relevance, confidence, recency}</code> are written by
-<code>init</code>, threaded through two call sites and the store into
-the FTS options and never compared to anything, a leftover from the
-confidence field v0.3 removed. Duplicate refusal keys on an exact title
-match within a type, so the same claim in different words is accepted.
+removal reserved to the terminal and absent from the tool surface; a
+write refused outright when <code>scopes_require</code> is set and no
+scope resolves, rather than landing visible from everywhere; a ranking
+normalization added in v0.11 with a comment saying which weight it still
+ignores and why; a benchmark page that pins its datasets by sha256,
+reports a saturated result as <em>"continuity, not bragging
+rights"</em>, and notes that an upstream file's hash changed since the
+earlier runs</td>
+<td>The generated config still advertises
+<code>min_confidence: 0.7</code>, threaded through
+<code>search.ts</code> and the store into the FTS options where
+<code>fts.ts</code> declares the field and never reads it — a leftover
+from the confidence field v0.3 removed. The <code>ranking</code> block
+beside it is half-fixed: v0.11 normalizes relevance per result set so
+the relevance and recency ratios now actually move the order, and the
+<code>confidence</code> weight is ignored with a comment saying so.
+<code>memspec_supersede</code> hands the agent the
+<code>override_operator</code> flag that <code>memspec_unrelate</code>
+refuses it. Duplicate refusal keys on an exact title match within a
+type, so the same claim in different words is accepted.
 <code>verified_with</code> orders five witnesses by strength and no read
 path uses the order. The benchmark samples twenty questions per dataset.
 Three release tarballs are committed in the tree. And the whole design
@@ -41624,10 +41644,11 @@ no build-time execution path and no unpinned dependency surface, and
 nothing was installed or run</li>
 <li><a href="https://github.com/siimvene/memspec">siimvene/memspec</a>
 at <a
-href="https://github.com/siimvene/memspec/commit/c8f68a9a415b26cff5f555406437720dcfe81299"><code class="commit-id" title="c8f68a9a415b26cff5f555406437720dcfe81299">c8f68a9a…</code></a>
+href="https://github.com/siimvene/memspec/commit/7c0a47f36d75585db0701b9828592433a0fa1c7b"><code class="commit-id" title="7c0a47f36d75585db0701b9828592433a0fa1c7b">7c0a47f3…</code></a>
 — read only; one auto-run surface in the three Claude Code hooks, one
-build-time execution path, one unpinned dependency surface with a
-lockfile 21 days old, and nothing was installed, built or run</li>
+build-time execution path, one unpinned dependency surface, three
+manifests dated inside the cooldown by the shallow clone's tip date, and
+nothing was installed, built or run</li>
 <li><a
 href="https://github.com/AlexisOlson/somnigraph">AlexisOlson/somnigraph</a>
 at <a

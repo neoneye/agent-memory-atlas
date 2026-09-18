@@ -15582,12 +15582,13 @@ needs an operator.</strong> Nothing retires a claim it decided was
 wrong: drift flags, <code>check_by</code> warns, the dream pass produces
 candidates, and <code>sweep</code> prompts. That is the right default
 and it means a store whose <code>reconcile</code> is never run keeps
-drifted facts flagged and retrievable. Beside it, a live edge:
-<code>memspec init</code> still writes <code>min_confidence: 0.7</code>
-and a <code>ranking</code> weight over <code>confidence</code> — a field
-v0.3 removed — and the value is carried three layers down without ever
-being compared to anything, so tuning it does nothing and says
-nothing.</li>
+drifted facts flagged and retrievable. Beside it, one gate that is not
+the gate it looks like: <code>memspec_unrelate</code> clamps the
+operator override off for the MCP channel in code, while
+<code>memspec_supersede</code> declares <code>override_operator</code>
+as a tool parameter and forwards it unchecked, so an agent can supersede
+operator knowledge by authorizing itself and the persisted reason
+records that it did.</li>
 <li>Most reusable component: the scope pair in
 <code>src/lib/scope.ts</code> and <code>src/lib/fts.ts</code> — a
 predicate inside the same <code>WHERE</code> as <code>MATCH</code> so a
@@ -15596,14 +15597,14 @@ pool that <em>removes</em> out-of-scope records rather than filtering
 them from results because traversable-but-unreturnable leaks the foreign
 graph's shape, and an unknown scope name that throws because silent
 under-retrieval reads as "the knowledge isn't there".</li>
-<li>Maturity impression: MIT, 146 commits between 4 April and 20 August
-2026 from two contributors, 9,710 lines of TypeScript against 8,640
-lines of test carrying 321 cases across 39 files, markdown under git as
-canonical with a rebuildable SQLite FTS5 cache, an eleven-tool MCP
-server, eighteen CLI verbs and three Claude Code hooks; benchmarks
-against LoCoMo and LongMemEval-S pinned by sha256 at n=20, with the
-saturated slice reported as continuity rather than a result; six of
-seven capability marks.</li>
+<li>Maturity impression: MIT, 156 commits between 4 April and 16
+September 2026 from two contributors, at version 0.11.0: 12,667 lines of
+TypeScript against 12,148 lines of test carrying 471 cases across 49
+files, markdown under git as canonical with a rebuildable SQLite FTS5
+cache, a fourteen-tool MCP server, twenty-three CLI verbs and three
+Claude Code hooks; benchmarks against LoCoMo and LongMemEval-S pinned by
+sha256 at n=20, with the saturated slice reported as continuity rather
+than a result; six of seven capability marks.</li>
 <li>Study when: project knowledge has outgrown a paragraph in
 <code>AGENTS.md</code>, you want it reviewable in diffs, and you can
 commit to running the maintenance loop — and read the scoping tests
@@ -15612,7 +15613,10 @@ author ran.</li>
 <li>Do not copy when: nobody will answer a prompt, or you need the same
 claim in different words to be caught — the duplicate refusal keys on an
 exact title within a type and records nothing about the write it turned
-away.</li>
+away. Read the retrieval row before planning around it: the
+hybrid/embeddings engine that the config and the <code>init</code>
+prompts advertised was never imported by anything under
+<code>src/</code>, and v0.11 deleted it outright.</li>
 </ul>
 <h3 id="somnigraph"><a
 href="../systems/somnigraph/"><code>somnigraph</code></a></h3>
