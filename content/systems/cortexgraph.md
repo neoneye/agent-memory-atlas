@@ -9,18 +9,20 @@ source_url: https://github.com/prefrontal-systems/cortexgraph
 archive_name: "prefrontal-systems--cortexgraph"
 revision: 81a2daa3436f0923650eda9d84579cab54710408
 revision_url: https://github.com/prefrontal-systems/cortexgraph/commit/81a2daa3436f0923650eda9d84579cab54710408
-analyzed_at: 2026-08-09
-capabilities: "scope_enforced"
+analyzed_at: 2026-09-18
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the status filter on the embedding set, and the recency window on search | tests/test_storage.py:882-899, :450-469 | three memories are saved — one active with an embedding, one active without, one `MemoryStatus.PROMOTED` with one — and `get_all_embeddings()` is asserted to contain `m1`, not to contain `m2` (no embedding) and not to contain `m3`, with the reason inline: `# Not active`. The must-not is about a status the system's own vocabulary defines, over a store that provably holds all three, with the positive control two lines above. The sibling case saves memories last used ten, two and zero days ago, searches a seven-day window, and asserts `new` and `recent` are present and `old` is not | both assert on the storage layer rather than on the spreading path an agent reaches through MCP, and neither covers the decay threshold that does the actual forgetting. The repository has no committed case asserting that a pruned memory cannot be re-retrieved"
 stack_storage: "sqlite, files"
-stack_retrieval: ""
-stack_source: "seeded"
+stack_retrieval: "graph"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A memory with a decaying strength, a use count, entities and a review schedule, plus typed relations"
   storage: "An append-only JSONL log or SQLite, with promoted memories written as Markdown into a vault"
   retrieval: "Activation spreading over relations, filtered to active status, weighted by current strength"
   write: "Append to the log; strength starts at 1.0 and decays from last_used unless reinforced"
   update_delete: "Decay to a pruning threshold; promotion moves a memory to a Markdown file and sets promoted_to"
-  scoping: "Path validation and permission checks in a dedicated security package before any vault write"
+  scoping: "None — no user, project, agent or session key anywhere in the source. The `security/` package guards filesystem paths, which is containment rather than scoping"
   integration: "An MCP server, a CLI, a web surface and an Obsidian-style Markdown vault"
   background: "Ebbinghaus pruning, hippocampal consolidation, relationship discovery and review scheduling"
   trust: "None epistemic — status is active, promoted or archived, and strength is a decay curve"
@@ -166,14 +168,25 @@ reachability.
 Retrieval filters `status == ACTIVE`, so promoted and archived memories are out
 of the spreading path; the promoted tier is read as files.
 
-There is no tenant or namespace scope. What the `security/` package enforces is
-different and worth crediting on its own terms: `paths.py` and `validators.py`
-guard the vault write path, and `permissions.py` checks before a file operation.
-For a system whose durable tier is "write Markdown into a directory the user
-also edits", path validation *is* the boundary that matters, and having it in a
-dedicated module rather than inline is why `scope_enforced` is awarded here —
-the stored path is validated against an allowed root on the write and read path,
-not trusted.
+There is no tenant or namespace scope, and **`scope_enforced` is withdrawn** on
+that basis. The first reading awarded it for the `security/` package, reasoning
+that for a system whose durable tier is "write Markdown into a directory the
+user also edits", path validation *is* the boundary that matters. That is a fair
+thing to say about the design and the wrong thing to hang this mark on. The
+capability asks for a stored scope key — user, project, agent or tenant —
+applied as a filter on the read path, and a search of the source finds none:
+`user_id`, `project_id`, `namespace`, `tenant`, `agent_id`, `session_id` and
+`scope_` return zero hits across `src/`, with the only matches anywhere being a
+validator's `field_name` argument in a test and a UUID5 namespace used to make
+test ids deterministic.
+
+What `security/` actually enforces is worth crediting on its own terms, and it is
+a different property: `paths.py` and `validators.py` guard the vault path against
+traversal, `permissions.py` checks before a file operation, and `secrets.py` and
+`logging.py` sit beside them. Filesystem containment is not memory scoping — one
+stops a path escaping a root, the other stops one caller's memories reaching
+another — and this system has the first and not the second. That is consistent
+with what it is: a single-user local store whose sync story is a git vault.
 
 ## 7. Write Mechanics
 
@@ -323,6 +336,14 @@ tables and their indexes), `jsonl_storage.py`, `models.py:10` (`MemoryStatus`)
 `PERFORMANCE_OPTIMIZATIONS.md`
 
 ## History
+
+**2026-09-18** — [`81a2daa3436f0923650eda9d84579cab54710408`](https://github.com/prefrontal-systems/cortexgraph/commit/81a2daa3436f0923650eda9d84579cab54710408) — re-read at the same commit, and a mark moved in each direction.
+
+**`scope_enforced` withdrawn.** The first reading awarded it for the `security/` package on the argument that, for a store whose durable tier is Markdown in a user-edited directory, path validation is the boundary that matters. That is true about the design and wrong for this mark, which asks for a stored scope key applied as a filter on the read path. There is none: `user_id`, `project_id`, `namespace`, `tenant`, `agent_id`, `session_id` and `scope_` all return zero hits across `src/`, the only matches anywhere being a validator's `field_name` argument in a test and a UUID5 namespace used for deterministic test ids. Filesystem containment and memory scoping are different properties and this system has the first.
+
+**`negative_eval` awarded.** `tests/test_storage.py:882-899` saves three memories — one active with an embedding, one active without, one `PROMOTED` with one — and asserts `get_all_embeddings()` contains `m1`, not `m2`, and not `m3`, with `# Not active` written inline as the reason. The must-not turns on a status the system's own vocabulary defines, the store provably holds all three, and the positive control is two lines above. A sibling case at `:450-469` does the same for a recency window: `new` and `recent` present, `old` absent.
+
+`stack_retrieval` was empty and is now `graph` — activation spreading over typed relations, filtered to active status, is a graph arm, and empty read as no retrieval at all. `trust_state` stays withheld: `active`, `promoted` and `archived` are lifecycle positions, not judgements about content, which the new test pins rather than changes. `stack_source` goes from seeded to reviewed.
 
 **2026-08-31** — [`81a2daa3436f0923650eda9d84579cab54710408`](https://github.com/prefrontal-systems/cortexgraph/commit/81a2daa3436f0923650eda9d84579cab54710408) — count audit at the same pin. Section 1's size figure was overstated: `wc -l` over every `*.py` in the tree gives 44,889 lines across 158 files, not roughly 53,000. Nothing else in the report depends on it, and no finding or mark changed.
 

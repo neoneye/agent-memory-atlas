@@ -1931,6 +1931,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 - Best idea: forgetting as the default — strength starts at 1.0, decays from `last_used` on an Ebbinghaus curve, and only use reinforces it, so an unused memory costs nothing to keep because it will not be kept.
 - Biggest risk: `LICENSE` is AGPL-3.0 and `CITATION.cff` says MIT. Those cannot both be right, and the citation file is what automated tooling reads.
+- Second risk: there is no scope key of any kind — `user_id`, `project_id`, `namespace`, `tenant`, `agent_id` and `session_id` return zero hits across `src/`. The `security/` package guards filesystem paths against traversal, which is containment, not scoping, and the first version of this report mistook one for the other.
 - Most reusable component: `cross_domain_count` — one integer counting how many distinct domains a memory has been useful in, which separates a narrow fact from a general principle better than an importance score does.
 - Maturity impression: roughly 45,000 lines with 70 test files including a named storage-parity suite, an SBOM workflow and a security-scanning workflow — and a committed design spec arguing against its own append-only log because "the data structure is fighting the biological model", still marked Proposed.
 - Study when: you want the log-versus-directory argument made concretely, by a project that hit the sync failure that motivates it.

@@ -117,7 +117,7 @@ fighting the biological model'.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/prefrontal-systems--cortexgraph" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -125,7 +125,7 @@ fighting the biological model'.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -276,16 +276,30 @@ decides survival and it decides reachability.</p>
 <p>Retrieval filters <code>status == ACTIVE</code>, so promoted and
 archived memories are out of the spreading path; the promoted tier is
 read as files.</p>
-<p>There is no tenant or namespace scope. What the
-<code>security/</code> package enforces is different and worth crediting
-on its own terms: <code>paths.py</code> and <code>validators.py</code>
-guard the vault write path, and <code>permissions.py</code> checks
-before a file operation. For a system whose durable tier is "write
-Markdown into a directory the user also edits", path validation
-<em>is</em> the boundary that matters, and having it in a dedicated
-module rather than inline is why <code>scope_enforced</code> is awarded
-here — the stored path is validated against an allowed root on the write
-and read path, not trusted.</p>
+<p>There is no tenant or namespace scope, and
+<strong><code>scope_enforced</code> is withdrawn</strong> on that basis.
+The first reading awarded it for the <code>security/</code> package,
+reasoning that for a system whose durable tier is "write Markdown into a
+directory the user also edits", path validation <em>is</em> the boundary
+that matters. That is a fair thing to say about the design and the wrong
+thing to hang this mark on. The capability asks for a stored scope key —
+user, project, agent or tenant — applied as a filter on the read path,
+and a search of the source finds none: <code>user_id</code>,
+<code>project_id</code>, <code>namespace</code>, <code>tenant</code>,
+<code>agent_id</code>, <code>session_id</code> and <code>scope_</code>
+return zero hits across <code>src/</code>, with the only matches
+anywhere being a validator's <code>field_name</code> argument in a test
+and a UUID5 namespace used to make test ids deterministic.</p>
+<p>What <code>security/</code> actually enforces is worth crediting on
+its own terms, and it is a different property: <code>paths.py</code> and
+<code>validators.py</code> guard the vault path against traversal,
+<code>permissions.py</code> checks before a file operation, and
+<code>secrets.py</code> and <code>logging.py</code> sit beside them.
+Filesystem containment is not memory scoping — one stops a path escaping
+a root, the other stops one caller's memories reaching another — and
+this system has the first and not the second. That is consistent with
+what it is: a single-user local store whose sync story is a git
+vault.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Appends to the log, synchronously. The single-writer limitation is
 the spec's motivating failure and it is real today: two machines syncing
@@ -446,6 +460,40 @@ tables and their indexes), <code>jsonl_storage.py</code>,
 <code>constitution.json</code>, <code>SCALING_AND_HARDENING.md</code>,
 <code>PERFORMANCE_OPTIMIZATIONS.md</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/prefrontal-systems/cortexgraph/commit/81a2daa3436f0923650eda9d84579cab54710408"><code class="commit-id" title="81a2daa3436f0923650eda9d84579cab54710408">81a2daa3…</code></a>
+— re-read at the same commit, and a mark moved in each direction.</p>
+<p><strong><code>scope_enforced</code> withdrawn.</strong> The first
+reading awarded it for the <code>security/</code> package on the
+argument that, for a store whose durable tier is Markdown in a
+user-edited directory, path validation is the boundary that matters.
+That is true about the design and wrong for this mark, which asks for a
+stored scope key applied as a filter on the read path. There is none:
+<code>user_id</code>, <code>project_id</code>, <code>namespace</code>,
+<code>tenant</code>, <code>agent_id</code>, <code>session_id</code> and
+<code>scope_</code> all return zero hits across <code>src/</code>, the
+only matches anywhere being a validator's <code>field_name</code>
+argument in a test and a UUID5 namespace used for deterministic test
+ids. Filesystem containment and memory scoping are different properties
+and this system has the first.</p>
+<p><strong><code>negative_eval</code> awarded.</strong>
+<code>tests/test_storage.py:882-899</code> saves three memories — one
+active with an embedding, one active without, one <code>PROMOTED</code>
+with one — and asserts <code>get_all_embeddings()</code> contains
+<code>m1</code>, not <code>m2</code>, and not <code>m3</code>, with
+<code># Not active</code> written inline as the reason. The must-not
+turns on a status the system's own vocabulary defines, the store
+provably holds all three, and the positive control is two lines above. A
+sibling case at <code>:450-469</code> does the same for a recency
+window: <code>new</code> and <code>recent</code> present,
+<code>old</code> absent.</p>
+<p><code>stack_retrieval</code> was empty and is now <code>graph</code>
+— activation spreading over typed relations, filtered to active status,
+is a graph arm, and empty read as no retrieval at all.
+<code>trust_state</code> stays withheld: <code>active</code>,
+<code>promoted</code> and <code>archived</code> are lifecycle positions,
+not judgements about content, which the new test pins rather than
+changes. <code>stack_source</code> goes from seeded to reviewed.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/prefrontal-systems/cortexgraph/commit/81a2daa3436f0923650eda9d84579cab54710408"><code class="commit-id" title="81a2daa3436f0923650eda9d84579cab54710408">81a2daa3…</code></a>
 — count audit at the same pin. Section 1's size figure was overstated:
