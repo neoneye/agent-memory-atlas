@@ -9,11 +9,11 @@ source_url: https://github.com/JubaKitiashvili/context-mem
 archive_name: "JubaKitiashvili--context-mem"
 revision: 2a55af0a4bf3467df89f1315a74bb2e15ad903f7
 revision_url: https://github.com/JubaKitiashvili/context-mem/commit/2a55af0a4bf3467df89f1315a74bb2e15ad903f7
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An observation from a tool call, plus knowledge rows and a derived markdown vault page"
   storage: "SQLite as the authoritative store, with a continuously synced markdown vault"
@@ -245,6 +245,30 @@ over 500 questions, with a per-type breakdown down to
 with `knowledge-update` at 0.282, `single-session-preference` at 0.267,
 `single-session-assistant` at 0.339 and `single-session-user` at 0.814.
 
+**There is a second full end-to-end run, and the file named `FINAL` is not the
+last one.** `benchmarks/results/` holds two 500-question QA results a day apart:
+
+| file | date | questions | top_k | accuracy |
+| --- | --- | --- | --- | --- |
+| `e2e-qa-real-500q-FINAL.json` | 2026-04-18 | 500 | 2 | 0.58 |
+| `e2e-qa-real-500q-T5full.json` | 2026-04-19 | 500 | 2 | **0.466** |
+
+So the 46.6% this report quotes is the later and lower of the two, and the run
+labelled `FINAL` scored 11.4 points higher the day before. Both are committed.
+Which of those is "the" number is a question the repository does not answer, and
+the one it kept last is the unflattering one — which belongs with the fairness
+point below rather than against it.
+
+**And the QA runs are not measured at the badge's `k`.** Every full end-to-end
+run above uses `top_k = 2`; the badge's figure is R@5, with R@10 in the same
+artifact. The only committed QA result at `top_k = 5` is
+`v4-release-e2e-qa-smoke-2026-04-18.json` — five questions, one question type,
+accuracy 0.8. So the 46.6% and the 100% differ in the metric *and* in the
+retrieval width, and the difference in width runs in the project's favour: the
+QA number was produced with two candidates in context where the retrieval claim
+is about five. That does not rescue the badge, and it does mean the gap between
+the two numbers is not the whole distance between recall and answering.
+
 **The README badge is a gold `LongMemEval — 100% (500/500)`.**
 
 Being precise about what that number is: the README's own table labels it
@@ -371,5 +395,9 @@ nDCG@10 0.937), `lme-real-nosynth-2026-04-18.json` (recall@5 0.978),
 table rows `:151`, `:160`, the do-not-compare note `:257`)
 
 ## History
+
+**2026-09-18** — [`2a55af0a4bf3467df89f1315a74bb2e15ad903f7`](https://github.com/JubaKitiashvili/context-mem/commit/2a55af0a4bf3467df89f1315a74bb2e15ad903f7) — re-read at the same commit. The badge and the numbers were re-verified: `README.md:15` is the gold `LongMemEval-100%25%20(500%2F500)` badge, `:127` is the only place the metric appears (*"Optional LLM judge (Haiku, 50/50 blend, 100% R@5)"*, inside an architecture diagram), and the pure-local run of the same 500 questions gives `recall_5 = 0.976`.
+
+Two additions to section 10, and the second is in the project's favour. `benchmarks/results/` holds *two* 500-question end-to-end runs a day apart — `e2e-qa-real-500q-FINAL.json` at 0.58 on 2026-04-18 and `e2e-qa-real-500q-T5full.json` at 0.466 on 2026-04-19 — so the figure this report quotes is the later and lower of the pair, and the file named `FINAL` is not the last. And every full QA run uses `top_k = 2` while the badge's number is R@5: the only committed QA result at top_k 5 is a five-question smoke at 0.8. So the two headline numbers differ in retrieval width as well as in metric, and the gap between them is not the whole distance between recall and answering. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`2a55af0a4bf3467df89f1315a74bb2e15ad903f7`](https://github.com/JubaKitiashvili/context-mem/commit/2a55af0a4bf3467df89f1315a74bb2e15ad903f7) — first reading. Screened before reading; the tree was read, never installed, and no benchmark was run. The figures in section 10 are read from the repository's own committed result files.

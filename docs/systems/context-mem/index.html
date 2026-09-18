@@ -116,7 +116,7 @@ of 46.6% in the same repository.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/JubaKitiashvili--context-mem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -354,6 +354,54 @@ questions, top_k 2) is:</p>
 <code>single-session-preference</code> at 0.267,
 <code>single-session-assistant</code> at 0.339 and
 <code>single-session-user</code> at 0.814.</p>
+<p><strong>There is a second full end-to-end run, and the file named
+<code>FINAL</code> is not the last one.</strong>
+<code>benchmarks/results/</code> holds two 500-question QA results a day
+apart:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>file</th>
+<th>date</th>
+<th>questions</th>
+<th>top_k</th>
+<th>accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>e2e-qa-real-500q-FINAL.json</code></td>
+<td>2026-04-18</td>
+<td>500</td>
+<td>2</td>
+<td>0.58</td>
+</tr>
+<tr>
+<td><code>e2e-qa-real-500q-T5full.json</code></td>
+<td>2026-04-19</td>
+<td>500</td>
+<td>2</td>
+<td><strong>0.466</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>So the 46.6% this report quotes is the later and lower of the two,
+and the run labelled <code>FINAL</code> scored 11.4 points higher the
+day before. Both are committed. Which of those is "the" number is a
+question the repository does not answer, and the one it kept last is the
+unflattering one — which belongs with the fairness point below rather
+than against it.</p>
+<p><strong>And the QA runs are not measured at the badge's
+<code>k</code>.</strong> Every full end-to-end run above uses
+<code>top_k = 2</code>; the badge's figure is R@5, with R@10 in the same
+artifact. The only committed QA result at <code>top_k = 5</code> is
+<code>v4-release-e2e-qa-smoke-2026-04-18.json</code> — five questions,
+one question type, accuracy 0.8. So the 46.6% and the 100% differ in the
+metric <em>and</em> in the retrieval width, and the difference in width
+runs in the project's favour: the QA number was produced with two
+candidates in context where the retrieval claim is about five. That does
+not rescue the badge, and it does mean the gap between the two numbers
+is not the whole distance between recall and answering.</p>
 <p><strong>The README badge is a gold
 <code>LongMemEval — 100% (500/500)</code>.</strong></p>
 <p>Being precise about what that number is: the README's own table
@@ -498,6 +546,27 @@ query <code>:148</code>, <code>:179-180</code>)</p>
 <code>:151</code>, <code>:160</code>, the do-not-compare note
 <code>:257</code>)</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/JubaKitiashvili/context-mem/commit/2a55af0a4bf3467df89f1315a74bb2e15ad903f7"><code class="commit-id" title="2a55af0a4bf3467df89f1315a74bb2e15ad903f7">2a55af0a…</code></a>
+— re-read at the same commit. The badge and the numbers were
+re-verified: <code>README.md:15</code> is the gold
+<code>LongMemEval-100%25%20(500%2F500)</code> badge, <code>:127</code>
+is the only place the metric appears (<em>"Optional LLM judge (Haiku,
+50/50 blend, 100% R@5)"</em>, inside an architecture diagram), and the
+pure-local run of the same 500 questions gives
+<code>recall_5 = 0.976</code>.</p>
+<p>Two additions to section 10, and the second is in the project's
+favour. <code>benchmarks/results/</code> holds <em>two</em> 500-question
+end-to-end runs a day apart — <code>e2e-qa-real-500q-FINAL.json</code>
+at 0.58 on 2026-04-18 and <code>e2e-qa-real-500q-T5full.json</code> at
+0.466 on 2026-04-19 — so the figure this report quotes is the later and
+lower of the pair, and the file named <code>FINAL</code> is not the
+last. And every full QA run uses <code>top_k = 2</code> while the
+badge's number is R@5: the only committed QA result at top_k 5 is a
+five-question smoke at 0.8. So the two headline numbers differ in
+retrieval width as well as in metric, and the gap between them is not
+the whole distance between recall and answering.
+<code>stack_source</code> goes from seeded to reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/JubaKitiashvili/context-mem/commit/2a55af0a4bf3467df89f1315a74bb2e15ad903f7"><code class="commit-id" title="2a55af0a4bf3467df89f1315a74bb2e15ad903f7">2a55af0a…</code></a>
 — first reading. Screened before reading; the tree was read, never
