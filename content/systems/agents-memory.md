@@ -9,7 +9,7 @@ source_url: https://github.com/Lolaplex/agents-memory
 archive_name: "Lolaplex--agents-memory"
 revision: a60babbb713f1c3818a3fdc85144a8bd1d5884d3
 revision_url: https://github.com/Lolaplex/agents-memory/commit/a60babbb713f1c3818a3fdc85144a8bd1d5884d3
-analyzed_at: 2026-09-09
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "the one local retrieval path, filtering the project layer | src/agents_memory/store.py:2022-2049,2088-2092 | `search_memory(query, project=…)` calls `iter_memory_files(project)`, which passes the slug to `iter_project_memory_files` where `if slug and p.slug != slug: continue` drops every other project's store — the key reaches the query. It narrows rather than isolates, deliberately: `iter_memory_files` extends the project chunks with `iter_user_memory_files()` unconditionally, under the docstring *\"project store(s) first (higher priority), then user store\"*. The mark measures this read path only; the sync bundle at src/agents_memory/remote/server.py:32-33 collects every stored project mirror in one call and is not scoped by it | tests/test_cli_comprehensive.py exercises search; no committed case asserts cross-project exclusion"
@@ -430,6 +430,32 @@ name — the search is a substring scan and the taxonomy is doing all the work.
 - **Tests:** `tests/test_extract_filters.py`, `test_ingest_pipeline.py`, `test_cli_comprehensive.py`, `test_distill_benchmark.py`
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+marks stand, each with a qualification the record did not carry.
+
+`scope_enforced`: the key does reach the query, and earlier than most — the slug
+selects the *file set* before any content is read, at
+`iter_project_memory_files`'s `if slug and p.slug != slug: continue`
+(`store.py:2022-2026`). The clause to read is `if slug and`. `search_memory`
+declares `project: str = ""` (`:2086`), so an omitted project disables the
+filter rather than narrowing to a default, and neither caller supplies one by
+itself: the CLI calls `search_memory(query)` with no project
+(`__main__.py:352`), and the dispatch path forwards
+`str(arguments.get("project") or "")` from the tool call
+(`remote/tool_dispatch.py:314-316`), so the agent decides per call whether the
+search is scoped at all.
+
+`negative_eval`: the assertions are sound and non-vacuous —
+`tests/test_extract_filters.py` runs three fixtures, each pairing `assertIn` on
+material that must survive with `assertNotIn` on the user's question, the
+assistant's acknowledgement noise and an example hostname (`:36-38`, `:46-48`,
+`:55-58`). What they assert about is the *extractor's output*, not a query
+result: this is a must-not at the boundary where text becomes memory, the same
+shape as [Tycho](../tycho/)'s snapshot case rather than
+[ELAI](../elai/)'s retrieval case. Both shapes earn the mark in this atlas;
+naming which one a report holds is what keeps the corpus comparable. No marks
+change.
 
 **2026-09-09** — [`a60babbb713f1c3818a3fdc85144a8bd1d5884d3`](https://github.com/Lolaplex/agents-memory/commit/a60babbb713f1c3818a3fdc85144a8bd1d5884d3) — second reading, at `v1.1.0`. The previous pin is not an ancestor of `main` and the compare API reports no common ancestor between them, because `a2c7812a` is a root commit in a history the project replaced. The content survived the replacement: `a2c7812a^{tree}` is `2ad78f1d`, byte-identical to the tree of `98d77b38` on `main`, so what the previous reading described is still readable and the drift that matters is the 76 commits from there to here — 122 files, 9,950 insertions. Screened before reading: no auto-run surface, no build-time execution, one manifest inside the seven-day cooldown, and two files addressed to a reading agent, read as data; nothing was installed and no suite was run.
 

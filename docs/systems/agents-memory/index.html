@@ -117,7 +117,7 @@ enforced by a sentence returned to the model.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Lolaplex--agents-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -590,6 +590,35 @@ the tree.</li>
 <code>test_distill_benchmark.py</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. Both marks stand, each with a qualification the
+record did not carry.</p>
+<p><code>scope_enforced</code>: the key does reach the query, and
+earlier than most — the slug selects the <em>file set</em> before any
+content is read, at <code>iter_project_memory_files</code>'s
+<code>if slug and p.slug != slug: continue</code>
+(<code>store.py:2022-2026</code>). The clause to read is
+<code>if slug and</code>. <code>search_memory</code> declares
+<code>project: str = ""</code> (<code>:2086</code>), so an omitted
+project disables the filter rather than narrowing to a default, and
+neither caller supplies one by itself: the CLI calls
+<code>search_memory(query)</code> with no project
+(<code>__main__.py:352</code>), and the dispatch path forwards
+<code>str(arguments.get("project") or "")</code> from the tool call
+(<code>remote/tool_dispatch.py:314-316</code>), so the agent decides per
+call whether the search is scoped at all.</p>
+<p><code>negative_eval</code>: the assertions are sound and non-vacuous
+— <code>tests/test_extract_filters.py</code> runs three fixtures, each
+pairing <code>assertIn</code> on material that must survive with
+<code>assertNotIn</code> on the user's question, the assistant's
+acknowledgement noise and an example hostname (<code>:36-38</code>,
+<code>:46-48</code>, <code>:55-58</code>). What they assert about is the
+<em>extractor's output</em>, not a query result: this is a must-not at
+the boundary where text becomes memory, the same shape as <a
+href="../tycho/">Tycho</a>'s snapshot case rather than <a
+href="../elai/">ELAI</a>'s retrieval case. Both shapes earn the mark in
+this atlas; naming which one a report holds is what keeps the corpus
+comparable. No marks change.</p>
 <p><strong>2026-09-09</strong> — <a
 href="https://github.com/Lolaplex/agents-memory/commit/a60babbb713f1c3818a3fdc85144a8bd1d5884d3"><code class="commit-id" title="a60babbb713f1c3818a3fdc85144a8bd1d5884d3">a60babbb…</code></a>
 — second reading, at <code>v1.1.0</code>. The previous pin is not an
