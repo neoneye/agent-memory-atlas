@@ -106,14 +106,14 @@ happened — and a review flag that is set and never cleared.</p>
               <strong>omega-memory/omega-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/omega-memory/omega-memory/commit/7d24f3f7b6af84597a86b86eb957ffb62e496412" title="7d24f3f7b6af84597a86b86eb957ffb62e496412">
+            <a class="meta-pill revision-pill" href="https://github.com/omega-memory/omega-memory/commit/4a3cfc699bc44f481f8725cec6da6ae4dea7a71d" title="4a3cfc699bc44f481f8725cec6da6ae4dea7a71d">
               <span>Analyzed revision</span>
-              <code>7d24f3f7…</code>
+              <code>4a3cfc69…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/omega-memory--omega-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -547,6 +547,33 @@ against the caller's <code>valid_at</code></td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/omega-memory/omega-memory/commit/4a3cfc699bc44f481f8725cec6da6ae4dea7a71d"><code class="commit-id" title="4a3cfc699bc44f481f8725cec6da6ae4dea7a71d">4a3cfc69…</code></a>
+— re-pinned from <code>7d24f3f</code>; 58 files changed and the tree a
+net 3,000 lines smaller, re-screened at the new pin. All three marks
+hold and all three records were one line each with a test field reading
+<em>tests</em>; each now carries what the code actually does.</p>
+<p>The finding that runs across two of them is a fail-open posture in
+the constraint pass. <code>_valid_at_ok</code> wraps its lookup in
+<code>except Exception</code>, logs at debug and returns
+<code>True</code> — a validity check that cannot run admits the node.
+<code>_resolve_column</code> documents the same behaviour for the
+scoping columns, and there the consequence is sharper than fail-open
+usually is: the source flags an asymmetry and marks it not to tidy —
+<em>"entity_id admits unscoped records (None); agent_type does not"</em>
+— so one failed lookup admits on the entity axis and rejects on the
+agent axis. Same error, opposite answers.</p>
+<p>Two smaller corrections. The <code>forgetting_log</code> is not only
+a deletion trail: <code>_log_forgetting</code> has thirteen call sites
+and one of them fires when a memory crosses
+<code>feedback_score &lt;= -3</code>, writing a
+<code>feedback_flagged</code> row, so the table records withholding as
+well as removal. And <code>trust_state</code> stays withheld for a
+reason now grounded rather than assumed: <code>flagged_for_review</code>
+does filter the read path, but it is derived from an accumulated
+feedback score rather than asserted about the content, which is the
+distinction this atlas draws between a belief state and a computed
+one.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/omega-memory/omega-memory/commit/7d24f3f7b6af84597a86b86eb957ffb62e496412"><code class="commit-id" title="7d24f3f7b6af84597a86b86eb957ffb62e496412">7d24f3f7…</code></a>
 — re-read, 71 files and 8,548 insertions past the previous pin in a

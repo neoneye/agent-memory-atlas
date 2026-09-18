@@ -7,14 +7,14 @@ page_kind: system
 source_name: "omega-memory/omega-memory"
 source_url: https://github.com/omega-memory/omega-memory
 archive_name: "omega-memory--omega-memory"
-revision: 7d24f3f7b6af84597a86b86eb957ffb62e496412
-revision_url: https://github.com/omega-memory/omega-memory/commit/7d24f3f7b6af84597a86b86eb957ffb62e496412
-analyzed_at: 2026-09-11
+revision: 4a3cfc699bc44f481f8725cec6da6ae4dea7a71d
+revision_url: https://github.com/omega-memory/omega-memory/commit/4a3cfc699bc44f481f8725cec6da6ae4dea7a71d
+analyzed_at: 2026-09-18
 capabilities: "bitemporal, scope_enforced, audit_log"
 capability_evidence:
-  bitemporal: "the retrieval constraint pass | src/omega/sqlite_store/_query.py:396-410 | `_valid_at_ok` excludes a node whose `valid_from` is after or `valid_until` at-or-before a caller-supplied `valid_at`, separately from `created_at` | tests"
-  scope_enforced: "the retrieval filter | src/omega/sqlite_store/_query.py:356-357 and :1208-1211 | `metadata.get(\"project\")` compared against the request path, with null and empty admitted everywhere | tests"
-  audit_log: "deletion | src/omega/schema.py:108 (`forgetting_log`) and src/omega/bridge.py:4415 | an append-only row per forgotten memory carrying the reason | tests"
+  bitemporal: "the retrieval constraint pass, admitting on its own failure | src/omega/sqlite_store/_query.py:396-410 | `_valid_at_ok` runs one statement selecting the rows that are *outside* the window — `valid_from IS NOT NULL AND valid_from > ?` or `valid_until IS NOT NULL AND valid_until <= ?` — and admits the node when that returns nothing, so the axis is separate from `created_at` and the bounds are after-open and at-or-before-closed. The `except Exception` around it logs at debug and `return True`: a lookup that throws admits the node rather than withholding it, which is the same fail-open posture `_resolve_column` documents for the scoping columns eleven lines above | tests/ (the suite is not organised per constraint; no case pins the fail-open branch)"
+  scope_enforced: "the retrieval filter, one ordered gate whose axes disagree on purpose | src/omega/sqlite_store/_query.py:340-373, :378-394, :1208-1211 | `violation()` returns the first reason a node fails — expired, superseded, flagged_for_review, excluded_type, session_id, project_path, entity_id, agent_type, valid_at — and the project axis is `metadata.get(\"project\") not in (None, \"\", self.project_path)`, so null and empty are admitted everywhere, as is a node carrying no `session_id`. The asymmetry worth knowing is flagged in the source and marked not to tidy: *\"entity_id admits unscoped records (None); agent_type does not.\"* Because `_resolve_column` is documented as failing open to `None` on a lookup error, that one failure mode then *admits* on the entity axis and *rejects* on the agent axis — the same error, opposite answers, and only the first is fail-open in effect | tests/"
+  audit_log: "removal and the flagging that precedes it | src/omega/schema.py:104-119, src/omega/bridge.py:4415, src/omega/sqlite_store/_maintenance.py:900-905, :967-972 | `forgetting_log` arrives in the v5→v6 migration as an append-only table of `node_id`, a content preview, the event type, a mandatory `reason`, `deleted_at` and a metadata blob, indexed on the timestamp and on the reason so the trail can be read either way round. `_log_forgetting` has thirteen call sites, and they are not all deletions: crossing the negative-feedback threshold writes a `feedback_flagged` row carrying the score and the stated reason, so the log records a memory being withheld as well as one being removed | tests/"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -383,6 +383,12 @@ Run from the root of the checkout at the pinned commit.
 | Deletion is logged with a reason | `grep -rn "forgetting_log" --include="*.py" src` | The table at `schema.py:108`, the reader at `bridge.py:4415` |
 
 ## History
+
+**2026-09-18** — [`4a3cfc699bc44f481f8725cec6da6ae4dea7a71d`](https://github.com/omega-memory/omega-memory/commit/4a3cfc699bc44f481f8725cec6da6ae4dea7a71d) — re-pinned from `7d24f3f`; 58 files changed and the tree a net 3,000 lines smaller, re-screened at the new pin. All three marks hold and all three records were one line each with a test field reading *tests*; each now carries what the code actually does.
+
+The finding that runs across two of them is a fail-open posture in the constraint pass. `_valid_at_ok` wraps its lookup in `except Exception`, logs at debug and returns `True` — a validity check that cannot run admits the node. `_resolve_column` documents the same behaviour for the scoping columns, and there the consequence is sharper than fail-open usually is: the source flags an asymmetry and marks it not to tidy — *"entity_id admits unscoped records (None); agent_type does not"* — so one failed lookup admits on the entity axis and rejects on the agent axis. Same error, opposite answers.
+
+Two smaller corrections. The `forgetting_log` is not only a deletion trail: `_log_forgetting` has thirteen call sites and one of them fires when a memory crosses `feedback_score <= -3`, writing a `feedback_flagged` row, so the table records withholding as well as removal. And `trust_state` stays withheld for a reason now grounded rather than assumed: `flagged_for_review` does filter the read path, but it is derived from an accumulated feedback score rather than asserted about the content, which is the distinction this atlas draws between a belief state and a computed one.
 
 **2026-09-11** — [`7d24f3f7b6af84597a86b86eb957ffb62e496412`](https://github.com/omega-memory/omega-memory/commit/7d24f3f7b6af84597a86b86eb957ffb62e496412) — re-read, 71 files and 8,548 insertions past the previous pin in a single commit, much of it tests. **All three marks re-verified and unchanged**, with `capability_evidence` records added where the report had none. **The sticky-flag finding holds and gets one degree sharper.** Nothing in `src/` sets `flagged_for_review` to false, deletes the key or otherwise resolves a flagged memory — the only writes are two `= True` assignments in `_maintenance.py`, and no `unflag`, `clear_flag` or `resolve_flag` verb exists. What the re-read adds is *why the feedback tool cannot help*: `context_handlers.py:535-536` excludes on the **flag**, while the score is what a person's `helpful` rating moves, so an adjudication that lifts a memory back above −3 changes a value the context filter no longer consults. The review tool's own query admits either condition, so its *"N need review"* list will show a memory whose score has fully recovered and offer no verb that removes it. Screened before reading: seven findings; nothing was installed or run.
 
