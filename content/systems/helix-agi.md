@@ -9,10 +9,10 @@ source_url: https://github.com/munch2u-a11y/Helix-AGI
 archive_name: "munch2u-a11y--Helix-AGI"
 revision: 7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5
 revision_url: https://github.com/munch2u-a11y/Helix-AGI/commit/7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: "negative_eval"
 capability_evidence:
-  negative_eval: "the scratchpad, which is the only store surface with a committed absence assertion | tests/test_scratchpad_postpone.py | `remove_note(note_id)` is called and the test then opens the file and asserts `assertNotIn(note_id, f.read())` — a deletion-durability assertion against that store's only read surface. It is narrow on purpose: nothing asserts that a *removed belief* is absent, and the test that would matter most is the one this design would fail, because a removed belief's content remains in the journal and the journal is a read path | tests/test_scratchpad_postpone.py:130"
+  negative_eval: "the scratchpad, which is the only store surface with a committed absence assertion | tests/test_scratchpad_postpone.py:55-76, :113-114, :116-130 | `remove_note(note_id)` is called and the test then opens the file and asserts `assertNotIn(note_id, f.read())` — a deletion-durability assertion against that store's only read surface. It is narrow on purpose: nothing asserts that a *removed belief* is absent, and the test that would matter most is the one this design would fail, because a removed belief's content remains in the journal and the journal is a read path | tests/test_scratchpad_postpone.py:130"
 stack_storage: "files"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -426,6 +426,22 @@ mutation log.
 | `documents/benchmark/` | Committed per-run benchmark JSON and reports |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`negative_eval` stands, and the record cited the weakest of the three cases in
+that file. `test_remove_postponed_note` (`:116-130`) does assert
+`assertNotIn(note_id, f.read())` after `remove_note`, but its only positive is
+`assertTrue(removed)` — the function's own return value rather than an
+independent observation, so the pair is the call agreeing with itself.
+
+Two cases beside it are stronger, because each pins a presence and an absence in
+the same file read. `test_auto_reactivation_on_read` (`:55-76`) lets a
+postponement expire and then asserts the note is back as
+`- [ ] ({note_id}) Expired postponed task` *and* that `postponed_until` is no
+longer in the disk content — the marker must be gone and the note must not be.
+`test_update_note_postpone_status` closes the same way at `:113-114`. The record
+now cites all three line ranges so the mark rests on the assertions that
+actually discriminate. No marks change.
 
 **2026-09-10** — [`7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5`](https://github.com/munch2u-a11y/Helix-AGI/commit/7ecefca0d13e35e28ab8d1a9447606cfb8d9f2a5) — re-pinned because the previous pin stopped being an ancestor of the default branch. `main` was rebuilt from a base of 8 July 2026 with three commits dated 20 August, abandoning the forty-three commits made between 6 and 16 August — the line that carried both of this atlas's earlier readings. Those commits remain fetchable and hold about 27,600 lines across `core/`, `memory/` and `tests/` that the branch does not, including the unified-retrieval layer, the task-cognition module and the semantic encoder; test files run thirty-eight on the branch against seventy-three on the abandoned line. Every claim in this report was re-verified against the branch and holds: the `MemoryManager.store` docstring, the journal's single-source-of-truth line, the dual 8D manifold with the 384D index and its FAISS threshold, the seven belief categories, the excluded-relation-count comment, and the central criticism — `remove_belief` writes the category file and clears the physics point, `archive_belief` sets mass to `0.01` and tags, and neither appends to the journal that `_resolve_memory_content` reads from. Every cited line number resolves to the same symbol. The mark holds: `tests/test_scratchpad_postpone.py:130` still asserts the removed note id is absent from the file. Both absence claims were re-run — the 63× token claim appears three times in the README and no file under `documents/benchmark/` measures tokens. Screened before reading: no auto-run surface, one build-time execution path in `setup.py`, and two unpinned dependency surfaces including twenty-nine `>=` requirements; nothing was installed, built or run.
 
