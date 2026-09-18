@@ -8266,7 +8266,7 @@ Privacy/deletion:
 - [Shweta-Mishra-ai/tokenmizer](https://github.com/Shweta-Mishra-ai/tokenmizer) at [`028fc8cc3f6bd6412c40464297ad65caadf57a3e`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/028fc8cc3f6bd6412c40464297ad65caadf57a3e)
 - [gi-dellav/zerostack](https://github.com/gi-dellav/zerostack) at [`efd142b3ac46c9db79b1c318cad25bfd309acc5f`](https://github.com/gi-dellav/zerostack/commit/efd142b3ac46c9db79b1c318cad25bfd309acc5f)
 - [deeplethe/lethe](https://github.com/deeplethe/lethe) at [`b6053b7bdacc78a91b9ea4bb25f32edad278c495`](https://github.com/deeplethe/lethe/commit/b6053b7bdacc78a91b9ea4bb25f32edad278c495)
-- [NovasPlace/CSM](https://github.com/NovasPlace/CSM) at [`4361d38de8672cffe06086e32b91ed41e73e100b`](https://github.com/NovasPlace/CSM/commit/4361d38de8672cffe06086e32b91ed41e73e100b)
+- [NovasPlace/CSM](https://github.com/NovasPlace/CSM) at [`9c7cfb22e525eb9210c3048cb0d44544b09b95d0`](https://github.com/NovasPlace/CSM/commit/9c7cfb22e525eb9210c3048cb0d44544b09b95d0)
 - [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) at [`fe66389083369c3159aa391117185c8f58b4d07c`](https://github.com/Graphify-Labs/graphify/commit/fe66389083369c3159aa391117185c8f58b4d07c)
 - [mthines/lorekit](https://github.com/mthines/lorekit) at [`b325977c959ed2d0d58f1168283973bf27a9c451`](https://github.com/mthines/lorekit/commit/b325977c959ed2d0d58f1168283973bf27a9c451)
 - [SyntheticAutonomicMind/CLIO](https://github.com/SyntheticAutonomicMind/CLIO) at [`e0a9574e76a2582334aed5ceed6f32a3a4a8a267`](https://github.com/SyntheticAutonomicMind/CLIO/commit/e0a9574e76a2582334aed5ceed6f32a3a4a8a267)
