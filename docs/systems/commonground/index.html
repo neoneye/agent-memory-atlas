@@ -132,7 +132,7 @@ contain.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Intelligent-Internet--CommonGround" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -620,6 +620,30 @@ rg -n &#39;valid_from|valid_to|as_of&#39; CommonGround                          
 cat .gitmodules                                                          # one entry: CG-Cardbox, the payload store, not in this tree
 rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs  # none: no paper</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. Both marks stand, and the
+<code>scope_enforced</code> record understated the front half. The
+phrase "taken from the caller's header" reads like a value the caller
+simply asserts; it is a <em>claim</em> that gets proved.
+<code>authenticate_agent_request</code> reads <code>project_id</code>
+and <code>agent_id</code> from configured headers
+(<code>service/auth.py:32-33</code>), rejects the request without a
+Bearer token, verifies the secret against
+<code>credential.secret_hash</code>, checks the credential is active and
+unexpired, and then refuses the claim outright —
+<code>if credential.project_id != project_id or credential.agent_id != agent_id: raise ForbiddenError("agent credential identity does not match claimed identity")</code>
+(<code>:57-58</code>). Only after that does the key reach the twenty-six
+<code>where project_id = %s</code> clauses in
+<code>infra/repositories.py</code>.</p>
+<p>One note for a later audit, because a grep will raise it: exactly one
+<code>select</code> in that file has no <code>project_id</code> on its
+own line (<code>:694</code>). It is a correlated <code>not exists</code>
+subquery, and its next line is
+<code>where x.project_id = t.project_id</code> (<code>:696</code>) —
+scoped by correlation to the outer row rather than by a literal. There
+is no unscoped read. <code>cg_kernel_ledger</code> takes no
+<code>UPDATE</code> and no <code>DELETE</code> anywhere in the tree. No
+marks change.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/Intelligent-Internet/CommonGround/commit/10b50ddb0fb4f0d5b4a58e841d6f40b52a3cbd5b"><code class="commit-id" title="10b50ddb0fb4f0d5b4a58e841d6f40b52a3cbd5b">10b50ddb…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 20

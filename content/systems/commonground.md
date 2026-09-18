@@ -9,10 +9,10 @@ source_url: https://github.com/Intelligent-Internet/CommonGround
 archive_name: "Intelligent-Internet--CommonGround"
 revision: 10b50ddb0fb4f0d5b4a58e841d6f40b52a3cbd5b
 revision_url: https://github.com/Intelligent-Internet/CommonGround/commit/10b50ddb0fb4f0d5b4a58e841d6f40b52a3cbd5b
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, audit_log"
 capability_evidence:
-  scope_enforced: "a project key taken from the caller's header and applied as a SQL predicate on every repository read | CommonGround/service/auth.py:32, CommonGround/infra/repositories.py (twenty-six `where project_id = %s` clauses, e.g. :123, :252, :283), CommonGround/infra/postgres.py:79-90, :106-130 | `project_id` is read from a configured request header and carried into the repository layer, where every read narrows on it — the composite primary keys make it structural rather than conventional: `cg_semantic_records` is keyed `(project_id, record_id)` with a second unique constraint on `(project_id, turn_id, turn_seq)`, `cg_ledger_scope_index` on `(project_id, scope_kind, scope_id, ledger_seq)`, and the foreign keys are composite so a row cannot reference a parent in another project | tests/test_admin_service_project_bootstrap.py:118-139 (one project's admin service registering an agent into another project is refused with 409 `caller project must match path project`, and the agent is then asserted absent from the target project's topology)"
+  scope_enforced: "a project key claimed in the caller's header, proved against the stored credential, and applied as a SQL predicate on every repository read | CommonGround/service/auth.py:32, CommonGround/infra/repositories.py (twenty-six `where project_id = %s` clauses, e.g. :123, :252, :283), CommonGround/infra/postgres.py:79-90, :106-130 | `project_id` is read from a configured request header and carried into the repository layer, where every read narrows on it — the composite primary keys make it structural rather than conventional: `cg_semantic_records` is keyed `(project_id, record_id)` with a second unique constraint on `(project_id, turn_id, turn_seq)`, `cg_ledger_scope_index` on `(project_id, scope_kind, scope_id, ledger_seq)`, and the foreign keys are composite so a row cannot reference a parent in another project | tests/test_admin_service_project_bootstrap.py:118-139 (one project's admin service registering an agent into another project is refused with 409 `caller project must match path project`, and the agent is then asserted absent from the target project's topology)"
   audit_log: "an append-only kernel ledger with an actor, a subject and a cause on every row, written by insert only | CommonGround/infra/postgres.py:106-130, CommonGround/infra/repositories.py:1604, :1656, CommonGround/kernel/ledger.py | `cg_kernel_ledger` carries a `ledger_seq bigint generated always as identity`, the `project_id`, an `event_type`, a `subject_kind`/`subject_id`, an `actor_kind`/`actor_id`, a nullable `cause_kind`/`cause_id` recording what produced the event, a `created_at`, a free `note`, a JSONB `annotations` blob, and a reference to the payload in Cardbox. Two statements in the repository layer write it and both are inserts — a search for an `update` or `delete` against the table returns nothing — and `cg_ledger_scope_index` gives a second access path by scope. The causal columns are the part worth naming: an audit that records *why* an event happened, not only that it did | tests/test_projection_feed.py (the project feed reads events back after a ledger sequence), the projection suites under tests/"
 stack_storage: "postgres, delegated"
 stack_retrieval: ""
@@ -418,5 +418,25 @@ rg -n -i 'arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi' README.md docs 
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+marks stand, and the `scope_enforced` record understated the front half. The
+phrase "taken from the caller's header" reads like a value the caller simply
+asserts; it is a *claim* that gets proved. `authenticate_agent_request` reads
+`project_id` and `agent_id` from configured headers (`service/auth.py:32-33`),
+rejects the request without a Bearer token, verifies the secret against
+`credential.secret_hash`, checks the credential is active and unexpired, and
+then refuses the claim outright —
+`if credential.project_id != project_id or credential.agent_id != agent_id:
+raise ForbiddenError("agent credential identity does not match claimed
+identity")` (`:57-58`). Only after that does the key reach the twenty-six
+`where project_id = %s` clauses in `infra/repositories.py`.
+
+One note for a later audit, because a grep will raise it: exactly one `select`
+in that file has no `project_id` on its own line (`:694`). It is a correlated
+`not exists` subquery, and its next line is
+`where x.project_id = t.project_id` (`:696`) — scoped by correlation to the
+outer row rather than by a literal. There is no unscoped read. `cg_kernel_ledger`
+takes no `UPDATE` and no `DELETE` anywhere in the tree. No marks change.
 
 **2026-09-10** — [`10b50ddb0fb4f0d5b4a58e841d6f40b52a3cbd5b`](https://github.com/Intelligent-Internet/CommonGround/commit/10b50ddb0fb4f0d5b4a58e841d6f40b52a3cbd5b) — first reading, at the head of `main`, the last commit of 20 May 2026. Screened before reading: one auto-run surface, one build-time execution path in a pytest conftest, no unpinned dependency surface, a `uv.lock` unchanged for 113 days, and an `AGENTS.md` treated as data; nothing was installed or run, and the read was made from a full clone without submodules. Two marks. The reading covered the ledger and its schema, the semantic records, the project scoping and the HTTP and CLI surfaces. CG-Cardbox — the payload store every record references — is a submodule and was not present in the checkout, so nothing here describes how content is retained, corrected or deleted; that is recorded as a limit rather than as an absence in the design.
