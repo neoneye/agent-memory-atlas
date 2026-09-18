@@ -9,11 +9,14 @@ source_url: https://github.com/sachitrafa/yourmemory
 archive_name: "sachitrafa--yourmemory"
 revision: 0bda3e0331e67b357832735f6beec3d3f7fb022e
 revision_url: https://github.com/sachitrafa/yourmemory/commit/0bda3e0331e67b357832735f6beec3d3f7fb022e
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, audit_log"
+capability_evidence:
+  scope_enforced: "user_id as a predicate on retrieval, compaction and the audit read | src/routes/retrieve.py, src/routes/compact.py, src/routes/audit.py:26, src/services/audit.py:85, :112 | `user_id` is a stored column and reaches the query on the paths that matter: the hybrid retrieval, the compaction pass that rewrites rows, and the audit listing, which takes `user_id` as a parameter of `get_events` rather than returning every actor's events. The audit writer normalises it — `(user_id or 'unknown').strip().lower()` — so the actor recorded on an event and the key filtered on a read are the same shape | the key is a caller-supplied parameter with nothing authenticating it, and the normalisation means a missing user becomes the literal `unknown` rather than an error, so events written without one share a bucket. The scope is a user and there is no project, agent or tenant dimension above it"
+  audit_log: "a hash-chained event log that records ids and never content, with its own retention sweep | src/services/audit.py:7-18, :52-61, :77-92, src/app.py:18, :28, :62 | every event stores timestamp, actor (`user_id` plus optional `agent_id`), action, operation, target id, detail, source, `prev_hash` and `row_hash`, where `row_hash` is the sha256 of `prev_hash` concatenated with the canonical fields — a chain over mutations, in the system's own store. The design decision worth the mark is stated in the module header: it deliberately logs *no raw memory content or query text*, 'so the audit log itself isn't a data-leak vector', which is the opposite of the usual failure where the audit trail becomes a second uncontrolled copy of the data | nothing reads the chain back to verify it — there is no verify function, only `get_events` for listing — and `prune_expired` drops rows past a retention window the app calls at startup, so the chain is prunable from its tail. The `replace` branch of the dedup resolver overwrites a memory without writing a `memory_history` row, so the audit knows a write happened and the history does not hold what it replaced"
 stack_storage: "sqlite, postgres, duckdb"
 stack_retrieval: "lexical, vector, graph"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A memory row with an importance, a recall count and a type-dependent decay rate"
   storage: "Postgres, SQLite or DuckDB behind one connection layer, with a graph and embeddings"
@@ -463,6 +466,12 @@ HotpotQA `:149-186`, token and LLM-call savings `:187-221`, decay-based pruning
 `:1-12`), `SECURITY.md`, `MEMORY_RULES.md`
 
 ## History
+
+**2026-09-18** — [`0bda3e0331e67b357832735f6beec3d3f7fb022e`](https://github.com/sachitrafa/yourmemory/commit/0bda3e0331e67b357832735f6beec3d3f7fb022e) — re-read at the same commit. Nothing needed correcting; both marks were re-derived and now carry evidence records.
+
+The audit design holds up on a second look and the reason is in the module's own header: the chain records timestamp, actor, action, operation, target id, `prev_hash` and `row_hash`, and deliberately logs *no raw memory content or query text*, 'so the audit log itself isn't a data-leak vector'. That is the inverse of the usual failure in this corpus, where an audit trail becomes a second uncontrolled copy of the data it audits. Two limits now sit in the record: nothing reads the chain back — there is no verify function, only `get_events` for listing — and `prune_expired` drops rows past a retention window that `app.py` calls at startup, so the chain is prunable from its tail.
+
+`memory_history` was traced to its writers and the report's claim holds exactly: the only `INSERT INTO memory_history` statements are in `routes/memories.py`, on the explicit update endpoint, with `reason = 'update'`. The dedup resolver's `replace` branch — documented in `services/resolve.py` as '0.85–0.92 + contradiction detected — overwrite with incoming' — writes no history row, so the content a contradiction displaced is gone while the audit chain records only that something happened. `stack_source` goes from seeded to reviewed.
 
 **2026-08-31** — [`0bda3e0331e67b357832735f6beec3d3f7fb022e`](https://github.com/sachitrafa/yourmemory/commit/0bda3e0331e67b357832735f6beec3d3f7fb022e) — same pin, two corrections, both in the direction of the report being harsher and looser than the code. Section 5 asserted "no supersession pointer and no tombstone… the prior content is gone from the store", and an open question said no supersession record was found. All three schemas define `memory_history` under the comment "Feature: supersession audit log" (`src/db/schema.sql:77-85`) and both explicit update paths write it before overwriting (`src/routes/memories.py:237-268`, `memory_mcp.py:787-816`). The criticism survives narrowed to the dedup-driven `replace`/`merge` branch (`src/routes/memories.py:98-116`, `memory_mcp.py:570-597`), which overwrites with no history insert, and to the fact that nothing in the repository reads the table back. `tombstone` was re-checked against the rubric and stays withheld: the log is keyed on `memory_id`, not on the rejected value. No mark moved. Second, the ranking formula was taken from `BENCHMARKS.md:241` rather than from code: `src/services/retrieve.py:21-22` sets `W_BM25 = W_VECTOR = 0.5`, not `0.4/0.6`, and `:411` adds an unconditional `temporal_score_boost` the document's formula omits. The two committed benchmark harnesses carry the document's constants under a comment reading "Production constants (mirror retrieve.py)", so the published figures describe a ranker the service does not run.
 

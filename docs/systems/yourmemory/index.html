@@ -116,7 +116,7 @@ ranking formula because it would bury old-but-valid memories.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/sachitrafa--yourmemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -613,6 +613,32 @@ retrieve.py" constant block <code>:50-58</code>, the direct-match score
 (the not-an-attestation framing <code>:1-12</code>),
 <code>SECURITY.md</code>, <code>MEMORY_RULES.md</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/sachitrafa/yourmemory/commit/0bda3e0331e67b357832735f6beec3d3f7fb022e"><code class="commit-id" title="0bda3e0331e67b357832735f6beec3d3f7fb022e">0bda3e03…</code></a>
+— re-read at the same commit. Nothing needed correcting; both marks were
+re-derived and now carry evidence records.</p>
+<p>The audit design holds up on a second look and the reason is in the
+module's own header: the chain records timestamp, actor, action,
+operation, target id, <code>prev_hash</code> and <code>row_hash</code>,
+and deliberately logs <em>no raw memory content or query text</em>, 'so
+the audit log itself isn't a data-leak vector'. That is the inverse of
+the usual failure in this corpus, where an audit trail becomes a second
+uncontrolled copy of the data it audits. Two limits now sit in the
+record: nothing reads the chain back — there is no verify function, only
+<code>get_events</code> for listing — and <code>prune_expired</code>
+drops rows past a retention window that <code>app.py</code> calls at
+startup, so the chain is prunable from its tail.</p>
+<p><code>memory_history</code> was traced to its writers and the
+report's claim holds exactly: the only
+<code>INSERT INTO memory_history</code> statements are in
+<code>routes/memories.py</code>, on the explicit update endpoint, with
+<code>reason = 'update'</code>. The dedup resolver's
+<code>replace</code> branch — documented in
+<code>services/resolve.py</code> as '0.85–0.92 + contradiction detected
+— overwrite with incoming' — writes no history row, so the content a
+contradiction displaced is gone while the audit chain records only that
+something happened. <code>stack_source</code> goes from seeded to
+reviewed.</p>
 <p><strong>2026-08-31</strong> — <a
 href="https://github.com/sachitrafa/yourmemory/commit/0bda3e0331e67b357832735f6beec3d3f7fb022e"><code class="commit-id" title="0bda3e0331e67b357832735f6beec3d3f7fb022e">0bda3e03…</code></a>
 — same pin, two corrections, both in the direction of the report being
