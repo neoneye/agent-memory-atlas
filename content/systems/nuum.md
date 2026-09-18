@@ -9,7 +9,7 @@ source_url: https://github.com/stevefunng/Nuum
 archive_name: "stevefunng--Nuum"
 revision: 51c9ec346b03e9c7885e4a81784bca14afae3c80
 revision_url: https://github.com/stevefunng/Nuum/commit/51c9ec346b03e9c7885e4a81784bca14afae3c80
-analyzed_at: 2026-09-11
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -211,5 +211,7 @@ ls .github                                                                  # ab
 ```
 
 ## History
+
+**2026-09-18** — [`51c9ec346b03e9c7885e4a81784bca14afae3c80`](https://github.com/stevefunng/Nuum/commit/51c9ec346b03e9c7885e4a81784bca14afae3c80) — re-read at the same commit; `main` has not moved since 7 September 2026 and nothing needed correcting. The withheld marks were re-tested rather than re-asserted, since a withholding rests on a search and a search has a scope. The negative-evaluation reasoning still holds exactly: *"forget removes a fact wherever it was filed"* writes one fact, forgets it, and asserts `all()` is `[]`, so a retriever returning nothing would pass — the fix the report suggests, seeding a second fact and asserting `all()` returns exactly that one, is still the change that would earn the mark. No test exercises `forget` or a `remove:` line through the runtime.
 
 **2026-09-11** — [`51c9ec346b03e9c7885e4a81784bca14afae3c80`](https://github.com/stevefunng/Nuum/commit/51c9ec346b03e9c7885e4a81784bca14afae3c80) — first reading. Screened with `scripts/screen_repo.py`: no auto-running configuration and no build-time execution path; eight manifests and `pnpm-lock.yaml` inside the seven-day cooldown, four manifests with floating ranges in one pnpm workspace under that lockfile, and an `AGENTS.md` read as data. Read only, nothing built or run.
