@@ -14648,7 +14648,9 @@ UserPromptSubmit hook, capture a detached daemon</td>
 <td>The memory daemon (double-fork, 60s poll) extracts learnings on a
 stale heartbeat via a headless
 <code>claude -p --model sonnet --dangerously-skip-permissions</code>
-subprocess; a failed extraction is marked done and never retried</td>
+subprocess; when the session id does not match a transcript filename it
+mines the most recently modified transcript from any project, and a
+failed extraction is marked done and never retried</td>
 <td>A confidence label (high/medium/low) is stored in metadata but read
 on no path; there is no discrete status, and nothing withholds a
 learning from recall</td>
@@ -14657,10 +14659,12 @@ actions — via a background model, and recall is hybrid RRF injected
 automatically; the handoff half survives compaction as git-tracked
 YAML</td>
 <td>The design overshoots the code: the default learnings backend cannot
-write, embeddings from different models share one unstamped 1024-d
-column, dedup is per-session while recall is global and unscoped,
-confidence and human-confirm are inert, and the artifact-index hook
-writes to a path that does not exist</td>
+write, the daemon falls back to the most recent transcript from any
+project and stamps it with the stale session's id, embeddings from
+different models share one unstamped 1024-d column, dedup is per-session
+while recall is global and unscoped, confidence and human-confirm are
+inert, and the artifact-index hook shells out to a path two segments
+off</td>
 </tr>
 <tr>
 <td><code>corbell</code></td>
@@ -29945,9 +29949,9 @@ and topic_key beneath it</td>
 plus a CLI and hook runtime for any MCP-aware editor</td>
 <td>A gc pass that recomputes decay and graduates layers, plus a sync
 outbox drained to a remote</td>
-<td>A confidence float with a named preset vocabulary beside an
-owner-endorsed verified flag with its own attribution; no rejected
-state, and the Contradicts edge is never written</td>
+<td>A confidence float with a named preset vocabulary beside a verified
+flag the agent can set through its own MCP tool; no rejected state, and
+the Contradicts edge is never written</td>
 <td>One redaction chokepoint covering every write path, ordered before
 truncation, and supersession that removes the old value from reads while
 keeping it in the lineage</td>
@@ -35205,7 +35209,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>172 of 580:</em> <a
+<p><em>171 of 580:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
@@ -35349,7 +35353,6 @@ href="../systems/rememora/"><code>rememora</code></a>, <a
 href="../systems/repowise/"><code>repowise</code></a>, <a
 href="../systems/ripwire/"><code>ripwire</code></a>, <a
 href="../systems/risuai/"><code>risuai</code></a>, <a
-href="../systems/runar-forge/"><code>runar-forge</code></a>, <a
 href="../systems/rushdb/"><code>rushdb</code></a>, <a
 href="../systems/sage-memory/"><code>sage-memory</code></a>, <a
 href="../systems/scope-recall-hermes/"><code>scope-recall-hermes</code></a>,

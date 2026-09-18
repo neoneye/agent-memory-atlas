@@ -122,7 +122,7 @@ each fix.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-14</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/crlome--runar-forge" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -130,7 +130,7 @@ each fix.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -352,7 +352,9 @@ ARCHIVAL.</li>
 <code>WHERE namespace = ?1 … ORDER BY created_at DESC LIMIT {} OFFSET {}</code>.</li>
 <li><strong>Verification</strong> — <code>mark_verified</code> at
 <code>librarian/mod.rs:1124</code>, resolving <code>verified_by</code>
-from <code>identity::resolve_author()</code>.</li>
+from <code>identity::resolve_author()</code>, reached only from
+<code>tool_verify</code> (<code>mcp/mod.rs:388</code>) behind the
+<code>muninn_verify</code> tool.</li>
 <li><strong>Recall</strong> — <code>recall_for_prompt</code> at
 <code>:547</code> and <code>fused_search</code> at
 <code>:525</code>.</li>
@@ -407,7 +409,8 @@ speculative 0.4</td>
 <tr>
 <td><code>verified</code>, <code>verified_at</code>,
 <code>verified_by</code></td>
-<td>owner endorsement, its time, and who did it</td>
+<td>the endorsement flag, its time, and the machine's
+<code>git config user.name</code></td>
 </tr>
 <tr>
 <td><code>author</code></td>
@@ -529,7 +532,10 @@ model's search. The <code>Injection</code> debug event records which
 entries were injected, how many, how large and how long it took.</p>
 <p><code>muninn_verify</code>'s description tells the model when to use
 it: <em>"Use when reviewing an agent-generated memory that is accurate
-and worth surfacing first."</em></p>
+and worth surfacing first."</em> That sentence is addressed to the
+model, and it is why the <code>human_review</code> mark is withheld in
+section 9 — the endorsement surface is one of the twenty-two tools the
+agent already holds.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>The trust machinery is extensive and stops one step
@@ -543,19 +549,38 @@ the enum member that would make it three — <code>Contradicts</code> — is
 declared and never written. A system can say "this is endorsed" and
 "this replaced that", and cannot say "this is wrong" or "these two
 disagree".</p>
-<p><strong><code>human_review</code> is earned, with a caveat that
-should be read alongside it.</strong> <code>muninn_verify</code> is an
-explicit endorsement surface, <code>verified_by</code> records who
-performed it from <code>git config user.name</code>, and it is separate
-from <code>author</code> so proposer and endorser are distinguishable.
-The caveat is that the only surface is an MCP tool — no CLI
-<code>verify</code> subcommand exists at this commit — so the
-<em>caller</em> can be the same agent that wrote the memory, while the
-<em>attribution</em> records whichever human's git config is configured.
-That is the self-endorsement hazard <a href="../open-second-brain/">Open
-Second Brain</a> has in its counters, relocated to a review flag, and it
-means a verified entry attests to a review having been requested rather
-than performed.</p>
+<p><strong><code>human_review</code> is withheld, and the reason is a
+call graph, not a judgement about intent.</strong> The mark asks whether
+the approver is a producer the agent cannot be. Here
+<code>muninn_verify</code> is declared in
+<code>tool_definitions()</code> (<code>mcp/mod.rs:1981-1990</code>),
+dispatched at <code>:287</code>, and its handler
+<code>tool_verify</code> takes a UUID and calls
+<code>lib.mark_verified(id)</code> with no further check
+(<code>:388-397</code>). The approve route is reachable from the agent's
+own tool surface, which is the condition for withholding, and there is
+no CLI <code>verify</code> subcommand at this commit to sit beside
+it.</p>
+<p>The attribution does not rescue it, and the first reading's reason
+for thinking it might does not survive a second look.
+<code>verified_by</code> and <code>author</code> are not two independent
+identities: both come from <code>identity::resolve_author()</code>
+(<code>librarian/mod.rs:1125</code> and <code>:201</code>), a cached
+shell-out to <code>git config user.name</code>.
+<code>mark_verified</code> has no override, so <code>verified_by</code>
+is always that name; <code>muninn_save</code> <em>does</em> take an
+<code>author</code> override (<code>mcp/mod.rs:2035</code>), so the one
+of the two fields the agent controls is the proposer, not the endorser.
+Left alone they are the same string. A verified entry therefore records
+that the verify tool ran on a machine whose git was configured by a
+human — not that a human read the entry. That is the self-endorsement
+hazard <a href="../open-second-brain/">Open Second Brain</a> has in its
+counters, relocated to a review flag.</p>
+<p>The mechanism is still worth reading, because the flag is
+load-bearing elsewhere: it multiplies the fused ranking by 1.25× and it
+fast-promotes a WORKING entry straight to SEMANTIC. Both of those are
+the right things to hang off a review — they are simply hanging off a
+switch the reviewed party can flip.</p>
 <p><strong><code>audit_log</code> is withheld, and two near-misses are
 why.</strong> The <code>debug_log</code> table is append-only and
 records real memory mutations — <code>LayerGraduation</code>,
@@ -757,6 +782,26 @@ their descriptions.</li>
 <code>src/wizard.rs</code>, <code>src/sync/</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <strong><code>human_review</code> is
+withdrawn.</strong> <code>muninn_verify</code> is declared in
+<code>tool_definitions()</code> and dispatched at
+<code>mcp/mod.rs:287</code> into a handler that calls
+<code>mark_verified</code> with no gate, so the approve route is
+reachable from the agent's own tool surface. The first reading awarded
+the mark while describing that hazard; the standing ruling is that the
+hazard <em>is</em> the test. The attribution argument also fails on
+inspection: <code>verified_by</code> and <code>author</code> both
+resolve from <code>identity::resolve_author()</code>, and the only
+override the MCP surface offers is on <code>author</code>. The headline
+finding is unchanged and re-derived — <code>graduate_layers_inner</code>
+calls <code>list</code> with <code>limit: Some(500)</code> and default
+filters (<code>librarian/mod.rs:996-1003</code>), and <code>list</code>
+compiles <code>ORDER BY created_at DESC LIMIT …</code>
+(<code>storage/sqlite.rs:710</code>). <code>scope_enforced</code> stands
+and is stronger than stated: both arms of the fused search carry
+<code>namespace</code> as a SQL predicate before scoring, not as a
+filter on results, and an evidence record now says so.</p>
 <p><strong>2026-08-14</strong> — <a
 href="https://github.com/crlome/runar-forge/commit/682248790ee1a6d916bd70a910d765be975270aa"><code class="commit-id" title="682248790ee1a6d916bd70a910d765be975270aa">68224879…</code></a>
 — first reading, at release 0.19.0 dated 11 August 2026. Screened before

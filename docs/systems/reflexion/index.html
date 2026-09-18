@@ -121,7 +121,7 @@ does.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-14</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/noahshinn--reflexion" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -343,8 +343,31 @@ lines, not by reloading them.</li>
 <li><strong>Tests</strong> — none, in any harness.</li>
 </ul>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
-<p>The entire schema:</p>
+<p>The entire schema, as AlfWorld's initializer builds it:</p>
 <pre class="json"><code>{ &quot;name&quot;: &quot;env_0&quot;, &quot;memory&quot;: [&quot;…plan…&quot;, &quot;…plan…&quot;], &quot;is_success&quot;: true, &quot;skip&quot;: false }</code></pre>
+<p>The twenty-two committed result files are not that shape. Every one
+of them — seven under <code>root/base_run_logs</code>, fifteen under
+<code>root/reflexion_run_logs</code>, 134 environments each — carries
+exactly <code>name</code>, <code>memory</code> and
+<code>is_success</code>, with no <code>skip</code>. That is WebShop's
+schema (<code>webshop_runs/main.py:49-53</code>), and it is what
+AlfWorld's own logs contain, so the committed record predates the field.
+The consequence is concrete: <code>--is_resume</code> loads one of these
+files verbatim (<code>alfworld_runs/main.py:33-39</code>), the trial
+itself never touches <code>skip</code>, and then
+<code>update_memory</code> evaluates
+<code>if not env['is_success'] and not env['skip']</code>
+(<code>generate_reflections.py:38</code>) and raises
+<code>KeyError: 'skip'</code>. Resuming AlfWorld from the logs this
+repository ships fails at the first reflection step, under the settings
+<code>run_reflexion.sh</code> uses.</p>
+<p><code>skip</code> is dead in the other direction too. It is written
+once, as <code>False</code>, at <code>alfworld_runs/main.py:53</code>,
+read once at <code>generate_reflections.py:38</code>, and set to
+<code>True</code> nowhere in the tree. WebShop, which reflects on the
+same trigger minus that clause, never declares it at all. So the one
+field separating the two harnesses' record formats is a field neither of
+them uses.</p>
 <p><code>memory</code> is an array of strings. That is the whole data
 model. There is no timestamp, no id, no provenance link back to the
 trajectory that produced the plan, no version, no confidence, and no
@@ -395,6 +418,18 @@ the usual sense. It is that <strong>the correct memory can become
 unreachable while remaining stored</strong>. An environment that fails
 eleven times has eleven plans on disk, and if the useful one was written
 first, no mechanism in the system can ever surface it again.</p>
+<p>The committed logs let that be counted rather than asserted. At the
+end of the fifteen-trial reflexion run
+(<code>root/reflexion_run_logs/env_results_trial_14.json</code>, 134
+environments), the store holds <strong>200 plans</strong>. Twenty-one
+environments hold more than three, and <strong>96 of those plans — just
+under half — sit outside any read window they will ever have</strong>,
+because nothing can shorten a <code>memory</code> list. The deepest
+environment holds fourteen plans and can show three. The same file
+records every one of those environments as solved, so the run that
+produced this evidence is the run the project cites as its result: the
+window did not have to work for the benchmark to be won, and the
+material it buried is what a longer-lived agent would have needed.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes are synchronous and between trials. <code>run_trial</code>
 returns, <code>update_memory</code> makes one LLM call per failed
@@ -403,7 +438,8 @@ run with 134 environments and a low success rate, the inter-trial gap is
 fifty-odd serial completions with no concurrency and no batching — the
 reflection pass, not the rollout, is often the wall clock.</p>
 <p>The trigger is
-<code>if not env['is_success'] and not env['skip']</code>. Success
+<code>if not env['is_success'] and not env['skip']</code> in AlfWorld
+and <code>if not env['is_success']</code> alone in WebShop. Success
 writes nothing. This is a deliberate and defensible choice for a
 benchmark — you only need advice where you failed — and it is the choice
 that makes the resulting store useless as a knowledge base. Nothing in
@@ -687,6 +723,22 @@ per-item reflection lists.</li>
 WebShop runs.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. The central claims re-verified in the tree: the read
+window is <code>memory[-3:]</code> at both injection and reflection in
+AlfWorld and WebShop and absent from the other two harnesses, and the
+write trigger is the failure gate in
+<code>generate_reflections.py:38</code>. The committed AlfWorld logs now
+carry the headline risk as a number — 200 plans over 134 environments at
+trial 14, 96 of them permanently outside the three-item window, against
+134 of 134 successes in the same file. Correction: the on-disk record
+shape is not the four-field schema the first reading printed. All
+twenty-two committed result files carry <code>name</code>,
+<code>memory</code> and <code>is_success</code> only, which is WebShop's
+schema, so an AlfWorld <code>--is_resume</code> from the logs this
+repository ships raises <code>KeyError: 'skip'</code> at the first
+reflection. <code>skip</code> itself is never set to <code>True</code>
+anywhere in the tree. No marks; the report carries none.</p>
 <p><strong>2026-08-14</strong> — <a
 href="https://github.com/noahshinn/reflexion/commit/218cf0ef1df84b05ce379dd4a8e47f17766733a0"><code class="commit-id" title="218cf0ef1df84b05ce379dd4a8e47f17766733a0">218cf0ef…</code></a>
 — first reading, at a commit dated 13 January 2025. Screened before

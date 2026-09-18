@@ -123,7 +123,7 @@ in more design than the code delivers.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-15</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/parcadei--Continuous-Claude-v3" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -257,11 +257,19 @@ flowchart TB
 <h2 id="3-architecture">3. Architecture</h2>
 <p>Two trees ship, and only one runs. <strong><code>opc/</code></strong>
 is the installable package and the authoritative source of the memory
-code; <strong><code>.claude/scripts/core/*.py</code></strong> is a
-near-identical copy whose imports (<code>from scripts.core.db …</code>)
-resolve against a <code>.claude/</code> directory that has no
-<code>db/</code> layer, so the copy would <code>ImportError</code> if
-invoked directly. The TypeScript hooks always run the Python from
+code; <strong><code>.claude/scripts/core/*.py</code></strong> is a stale
+copy whose imports (<code>from scripts.core.db …</code>) resolve against
+a <code>.claude/</code> directory that has no <code>db/</code> layer, so
+the copy would <code>ImportError</code> if invoked directly.
+"Near-identical" is too generous: <code>store_learning.py</code> and
+<code>recall_learnings.py</code> differ by a handful of lines, but
+<code>memory_daemon.py</code> differs by twenty-seven, and the
+divergence is behavioural — the dead copy reads <code>~/.opc-dev</code>
+before <code>~/.claude</code> and matches a transcript by id only, while
+the live <code>opc/</code> copy honours <code>CLAUDE_CONFIG_DIR</code>
+and adds the most-recent-transcript fallback that section 7 describes.
+When two copies of a daemon disagree, it is worth knowing which one the
+hooks reach. The TypeScript hooks always run the Python from
 <code>opc/</code> with <code>PYTHONPATH=opc</code>
 (<code>memory-awareness.ts:127-135</code>). Everything below is
 <code>opc/</code>.</p>
@@ -344,7 +352,8 @@ Paths</h2>
 session JSONL and spawns the headless extractor;
 <code>mark_extracted</code> (<code>:123-132</code>) sets
 <code>memory_extracted_at</code> immediately after queueing,
-<strong>success or not</strong>.</li>
+<strong>success or not</strong>. How it resolves that JSONL is the part
+to read closely — see section 7.</li>
 <li><strong>Thinking-block filter</strong> —
 <code>opc/scripts/core/extract_thinking_blocks.py:22-48</code> is a
 regex pre-filter for "perception signal" phrases; the headless
@@ -478,6 +487,29 @@ running"</em>, but <code>session-register</code> only writes the session
 row — it does not start the daemon. So capture depends on a
 <code>memory_daemon.py start</code> an operator runs by hand; without
 it, nothing is ever extracted.</li>
+<li><strong>The transcript it mines may not be the session's.</strong>
+<code>extract_memories</code> takes
+<code>(session_id, project_dir)</code>, and <code>project_dir</code>
+appears exactly twice in the file: in the signature and in a log line.
+It is never used to constrain the search. The glob is
+<code>CLAUDE_CONFIG_DIR/projects/*/*.jsonl</code> — every project on the
+machine — and the match is the substring test
+<code>if session_id in f.name or f.stem == session_id</code>
+(<code>:232-236</code>). When that fails, which the code's own comment
+says is <em>"common with truncated IDs"</em>, it falls back to
+<strong>the most recently modified transcript in the last ten minutes,
+from anywhere</strong> (<code>:238-247</code>). The headless extractor
+is then launched with
+<code>f"Extract learnings from session {session_id}. JSONL path: {jsonl_path}"</code>
+(<code>:280</code>) — session A's identity, session B's transcript — so
+the learnings are stored against a session whose reasoning they did not
+come from, and the one scope key a learning carries is wrong. It is also
+cross-project in the capture direction, which compounds the unscoped
+recall described in section 6: a stale session in one repository can be
+credited with the thinking of a live session in another.
+<code>stdout</code> and <code>stderr</code> are <code>DEVNULL</code>
+(<code>:282-283</code>), so nothing about the substitution surfaces
+except the daemon's own <code>"no ID match"</code> log line.</li>
 <li><strong>A failed extraction is marked done.</strong>
 <code>mark_extracted</code> sets
 <code>memory_extracted_at = NOW()</code> right after queueing,
@@ -538,8 +570,13 @@ or superseded. It survives compaction, which is its job; it does not
 carry a belief that can be found wrong and fixed. Two of its wiring
 details are also broken in the shipped layer: the
 <code>PostToolUse</code> hook that would populate the SQLite index
-shells out to a <code>scripts/artifact_index.py</code> path that does
-not exist in this layout, so the index is not auto-filled; and the
+shells out to
+<code>path.join(projectDir, 'scripts', 'artifact_index.py')</code>
+(<code>handoff-index.ts:216</code>, and the compiled
+<code>dist/handoff-index.mjs:140</code>), which is wrong by two segments
+— the file ships at <code>opc/scripts/core/artifact_index.py</code> and
+at <code>.claude/scripts/core/artifact_index.py</code>, never at
+<code>scripts/</code>. So the index is not auto-filled; and the
 per-instance "session affinity" table (terminal-PID → session) is
 written but never read, so the promised isolation between concurrent
 Claude instances in one repo does not take effect — selection falls back
@@ -740,6 +777,26 @@ event.</li>
 extractor's system prompt.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. Every negative claim in the first reading was re-run
+and holds: <code>memory_service.py</code> exists nowhere in the tree, so
+the default <code>sqlite</code> backend raises <code>ImportError</code>
+from <code>memory_factory.py</code> — under a message that blames a
+missing <code>aiosqlite</code> rather than a missing module;
+<code>delete_archival</code> has no caller in any language in the tree;
+and all five recall queries carry
+<code>metadata-&gt;&gt;'type' = 'session_learning'</code> and nothing
+else, so there is no scope, type or confidence filter on the read path.
+The artifact-index path is wrong by two segments, now named. <strong>New
+finding:</strong> <code>extract_memories</code> never uses the
+<code>project_dir</code> it is passed, matches a transcript to a session
+by substring, and on failure — which its own comment calls common —
+mines the most recently modified transcript from any project on the
+machine, then tells the extractor to file the result under the original
+session id. Capture is cross-project in the same way recall already was.
+Also corrected: the two shipped script trees are not near-identical;
+<code>memory_daemon.py</code> differs by twenty-seven lines, and that
+fallback is one of them. No marks; the report carries none.</p>
 <p><strong>2026-08-15</strong> — <a
 href="https://github.com/parcadei/Continuous-Claude-v3/commit/d07ff4b06b62f43771bc0c927d0211b734d6149e"><code class="commit-id" title="d07ff4b06b62f43771bc0c927d0211b734d6149e">d07ff4b0…</code></a>
 — first reading, at the <code>.claude</code> + <code>opc/</code> layout.

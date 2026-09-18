@@ -9,8 +9,10 @@ source_url: https://github.com/crlome/runar-forge
 archive_name: "crlome--runar-forge"
 revision: 682248790ee1a6d916bd70a910d765be975270aa
 revision_url: https://github.com/crlome/runar-forge/commit/682248790ee1a6d916bd70a910d765be975270aa
-analyzed_at: 2026-08-14
-capabilities: "scope_enforced, human_review"
+analyzed_at: 2026-09-18
+capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the fused search, both arms, as a SQL predicate | crates/muninn/src/librarian/mod.rs:597-626, crates/muninn/src/storage/sqlite.rs:771 (semantic_search), :836-838 (fts_search), :694-710 (list) | `fused_search_inner` resolves one namespace with `self.scope(namespace, project_id)` and hands the same `SearchQuery` to both arms; the FTS arm compiles `WHERE memory_fts MATCH ?1 AND e.namespace = ?2 AND e.deleted_at IS NULL` and the vector arm `WHERE e.namespace = ?1 AND e.deleted_at IS NULL` before any candidate is scored, so the key reaches the query rather than filtering the result. `list`, the counts, the session reads and the dedup lookups carry the same predicate | the namespace is a string the caller supplies, so this is a partition, not an auth boundary — nothing authenticates the caller"
 stack_storage: "sqlite, postgres"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -23,7 +25,7 @@ matrix:
   scoping: "namespace applied as a WHERE clause on every read, with project_id and topic_key beneath it"
   integration: "Twenty-two MCP tools across memory, sessions, plans and an icebox, plus a CLI and hook runtime for any MCP-aware editor"
   background: "A gc pass that recomputes decay and graduates layers, plus a sync outbox drained to a remote"
-  trust: "A confidence float with a named preset vocabulary beside an owner-endorsed verified flag with its own attribution; no rejected state, and the Contradicts edge is never written"
+  trust: "A confidence float with a named preset vocabulary beside a verified flag the agent can set through its own MCP tool; no rejected state, and the Contradicts edge is never written"
   strengths: "One redaction chokepoint covering every write path, ordered before truncation, and supersession that removes the old value from reads while keeping it in the lineage"
   risks: "Graduation lists the five hundred most recently created entries and orders by created_at DESC, so in a namespace past that size the oldest material can never be archived"
 ---
@@ -203,7 +205,8 @@ as data. Nothing was installed and nothing was built or run.
 - **List** — `storage/sqlite.rs:694` onward, `WHERE namespace = ?1 … ORDER BY
   created_at DESC LIMIT {} OFFSET {}`.
 - **Verification** — `mark_verified` at `librarian/mod.rs:1124`, resolving
-  `verified_by` from `identity::resolve_author()`.
+  `verified_by` from `identity::resolve_author()`, reached only from
+  `tool_verify` (`mcp/mod.rs:388`) behind the `muninn_verify` tool.
 - **Recall** — `recall_for_prompt` at `:547` and `fused_search` at `:525`.
 - **Edges** — `save_edge`, `get_edges`, `delete_edge` at `:1037`–`:1049`; the
   auto-linker writes `EdgeType::Related` at `:1538`.
@@ -225,7 +228,7 @@ atlas:
 | `access_count` | ranked-search hits; feeds the Hebbian promote and the decay boost |
 | `injected_count`, `last_injected_at` | automatic-recall injections, **reporting only** |
 | `confidence` | float, with presets verified 1.0 / observed 0.9 / inferred 0.7 / speculative 0.4 |
-| `verified`, `verified_at`, `verified_by` | owner endorsement, its time, and who did it |
+| `verified`, `verified_at`, `verified_by` | the endorsement flag, its time, and the machine's `git config user.name` |
 | `author` | proposer, from `git config user.name`, NULL for agent-origin rows |
 | `topic_key` | the supersession key |
 | `deleted_at` | soft delete; every normal read filters it out |
@@ -332,7 +335,9 @@ entries were injected, how many, how large and how long it took.
 
 `muninn_verify`'s description tells the model when to use it: *"Use when
 reviewing an agent-generated memory that is accurate and worth surfacing
-first."*
+first."* That sentence is addressed to the model, and it is why the
+`human_review` mark is withheld in section 9 — the endorsement surface is one
+of the twenty-two tools the agent already holds.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -346,16 +351,33 @@ it three — `Contradicts` — is declared and never written. A system can say "
 is endorsed" and "this replaced that", and cannot say "this is wrong" or "these
 two disagree".
 
-**`human_review` is earned, with a caveat that should be read alongside it.**
-`muninn_verify` is an explicit endorsement surface, `verified_by` records who
-performed it from `git config user.name`, and it is separate from `author` so
-proposer and endorser are distinguishable. The caveat is that the only surface
-is an MCP tool — no CLI `verify` subcommand exists at this commit — so the
-*caller* can be the same agent that wrote the memory, while the *attribution*
-records whichever human's git config is configured. That is the
+**`human_review` is withheld, and the reason is a call graph, not a judgement
+about intent.** The mark asks whether the approver is a producer the agent
+cannot be. Here `muninn_verify` is declared in `tool_definitions()`
+(`mcp/mod.rs:1981-1990`), dispatched at `:287`, and its handler `tool_verify`
+takes a UUID and calls `lib.mark_verified(id)` with no further check
+(`:388-397`). The approve route is reachable from the agent's own tool surface,
+which is the condition for withholding, and there is no CLI `verify`
+subcommand at this commit to sit beside it.
+
+The attribution does not rescue it, and the first reading's reason for thinking
+it might does not survive a second look. `verified_by` and `author` are not two
+independent identities: both come from `identity::resolve_author()`
+(`librarian/mod.rs:1125` and `:201`), a cached shell-out to
+`git config user.name`. `mark_verified` has no override, so `verified_by` is
+always that name; `muninn_save` *does* take an `author` override
+(`mcp/mod.rs:2035`), so the one of the two fields the agent controls is the
+proposer, not the endorser. Left alone they are the same string. A verified
+entry therefore records that the verify tool ran on a machine whose git was
+configured by a human — not that a human read the entry. That is the
 self-endorsement hazard [Open Second Brain](../open-second-brain/) has in its
-counters, relocated to a review flag, and it means a verified entry attests to a
-review having been requested rather than performed.
+counters, relocated to a review flag.
+
+The mechanism is still worth reading, because the flag is load-bearing
+elsewhere: it multiplies the fused ranking by 1.25× and it fast-promotes a
+WORKING entry straight to SEMANTIC. Both of those are the right things to hang
+off a review — they are simply hanging off a switch the reviewed party can
+flip.
 
 **`audit_log` is withheld, and two near-misses are why.** The `debug_log` table
 is append-only and records real memory mutations — `LayerGraduation`,
@@ -532,5 +554,21 @@ field stops meaning what the documentation says it means.
 - `crates/muninn/src/maintenance.rs`, `src/doctor.rs`, `src/setup.rs`, `src/wizard.rs`, `src/sync/`.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+**`human_review` is withdrawn.** `muninn_verify` is declared in
+`tool_definitions()` and dispatched at `mcp/mod.rs:287` into a handler that
+calls `mark_verified` with no gate, so the approve route is reachable from the
+agent's own tool surface. The first reading awarded the mark while describing
+that hazard; the standing ruling is that the hazard *is* the test. The
+attribution argument also fails on inspection: `verified_by` and `author` both
+resolve from `identity::resolve_author()`, and the only override the MCP
+surface offers is on `author`. The headline finding is unchanged and re-derived
+— `graduate_layers_inner` calls `list` with `limit: Some(500)` and default
+filters (`librarian/mod.rs:996-1003`), and `list` compiles
+`ORDER BY created_at DESC LIMIT …` (`storage/sqlite.rs:710`). `scope_enforced`
+stands and is stronger than stated: both arms of the fused search carry
+`namespace` as a SQL predicate before scoring, not as a filter on results, and
+an evidence record now says so.
 
 **2026-08-14** — [`682248790ee1a6d916bd70a910d765be975270aa`](https://github.com/crlome/runar-forge/commit/682248790ee1a6d916bd70a910d765be975270aa) — first reading, at release 0.19.0 dated 11 August 2026. Screened before opening: no auto-run surfaces, no build-time execution, no unpinned manifests, `Cargo.lock` present, four dependency surfaces inside the seven-day cooldown, and a `CLAUDE.md` read as data. Nothing was installed and nothing was built or run; the graduation cap was established by reading the caller against `list`'s `ORDER BY`, not by observing a store.

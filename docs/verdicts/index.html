@@ -10372,11 +10372,14 @@ actually observes (<code>is_success</code>), which is more grounding
 than most memory systems here have for deciding when to write
 anything.</li>
 <li>Biggest risk: the store grows forever behind a fixed three-item read
-window. <code>memory[-3:]</code> at injection and again at reflection
-means an environment that failed eleven times has eleven plans on disk
-and three that can be read; if the useful one was written first, nothing
-can surface it again. Nothing is ever retracted, only sunk, and a plan
-built on a wrong diagnosis is context for the next three plans
+window, and the committed logs measure it. <code>memory[-3:]</code> at
+injection and again at reflection; at the end of the fifteen-trial
+AlfWorld run the store holds 200 plans over 134 environments, twenty-one
+environments hold more than three, and 96 of those plans — just under
+half — sit outside any window they will ever have. The deepest holds
+fourteen and can show three. If the useful plan was written first,
+nothing can surface it again. Nothing is ever retracted, only sunk, and
+a plan built on a wrong diagnosis is context for the next three plans
 written.</li>
 <li>Most reusable component: the resumable env-config array.
 <code>{name, memory, is_success, skip}</code> dumped after every trial
@@ -10397,8 +10400,12 @@ not repeated, there is no success signal to gate the write, the scope is
 a user rather than an environment, and the corpus outgrows a three-item
 window on day one. Note also what the committed logs cannot settle: the
 "base" run's env configs also carry memory, and the format records no
-flags, so the tree holds two runs that differ and cannot say in
-what.</li>
+flags, so the tree holds two runs that differ and cannot say in what.
+All twenty-two of those files carry <code>name</code>,
+<code>memory</code> and <code>is_success</code> only — WebShop's schema,
+not AlfWorld's — so an AlfWorld <code>--is_resume</code> from the
+repository's own logs raises <code>KeyError: 'skip'</code> at the first
+reflection.</li>
 </ul>
 <h3 id="langgraph"><a
 href="../systems/langgraph/"><code>langgraph</code></a></h3>
@@ -10629,9 +10636,13 @@ diagnostics and a <code>gc --dry-run</code> that previews layer
 transitions. And a habit of writing its own postmortems, with counts,
 into the comment above each fix.</li>
 <li>Study when: you want durable structured memory across several coding
-tools with provenance that reaches a person — <code>author</code> from
-git config, <code>verified_by</code> separate from it, redaction history
-as tags, supersession as an edge. Supersession is done well: a topic-key
+tools with provenance and a real partition — <code>namespace</code> is a
+SQL predicate on both arms of the fused search before anything is
+scored, redaction history is stored as tags, and supersession is an
+edge. Read <code>verified_by</code> as a machine identity rather than a
+reviewer: it and <code>author</code> resolve from the same cached
+<code>git config user.name</code>, and the only override the MCP surface
+offers is on <code>author</code>. Supersession is done well: a topic-key
 collision soft-deletes the old row so reads exclude it and writes
 <code>Supersedes</code> new → old so the lineage keeps it.</li>
 <li>Do not copy when: you need to record that two memories disagree.
@@ -10640,10 +10651,14 @@ collision soft-deletes the old row so reads exclude it and writes
 exactly once in the crate — in the enum. Nothing constructs them and
 nothing reads them, so a system with a confidence scale, a verification
 flag and a supersession graph still has no way to represent conflict.
-Also note the review surface: <code>muninn_verify</code> grants a
-ranking bonus and a graduation fast-promote, its only caller is an MCP
-tool the writing agent can invoke, and the <code>verified_by</code> it
-records is whichever human's git config is configured.</li>
+Also note the review surface: <code>muninn_verify</code> grants a 1.25×
+ranking bonus and a graduation fast-promote, and it is one of the
+twenty-two tools the writing agent already holds — declared in
+<code>tool_definitions()</code>, dispatched into
+<code>mark_verified</code> with no gate, with no CLI equivalent beside
+it. The <code>human_review</code> mark is withheld for that reason; a
+verified entry records that the tool ran, not that anyone read the
+entry.</li>
 </ul>
 <h3 id="redcell"><a
 href="../systems/redcell/"><code>redcell</code></a></h3>
@@ -10914,12 +10929,17 @@ extraction call small.</li>
 confidentiality-and-correctness kind. The default learnings backend
 selects a <code>sqlite</code> service whose module is absent, so out of
 the box it silently no-ops unless a Postgres URL is set; recall is
-global across every project because a learning carries no project key;
-dedup runs per-session while recall runs cross-session, so duplicates
-accumulate; <code>confidence</code> is stored and read by nothing;
-embeddings from different providers share one unstamped 1024-d column;
-and the "user-confirm-learning" hook auto-captures on casual
-affirmations without showing anyone, and isn't wired anyway.</li>
+global across every project because a learning carries no project key,
+and so is capture — <code>extract_memories</code> ignores the
+<code>project_dir</code> it is handed, matches a transcript to a session
+by substring, and when that fails takes the most recently modified
+transcript from any project on the machine, then files the result under
+the original session id; dedup runs per-session while recall runs
+cross-session, so duplicates accumulate; <code>confidence</code> is
+stored and read by nothing; embeddings from different providers share
+one unstamped 1024-d column; and the "user-confirm-learning" hook
+auto-captures on casual affirmations without showing anyone, and isn't
+wired anyway.</li>
 <li>Most reusable component: the recall design — hybrid reciprocal-rank
 fusion over pgvector cosine and Postgres full-text, top-k, injected
 automatically on every prompt as a <code>MEMORY MATCH</code> — paired
