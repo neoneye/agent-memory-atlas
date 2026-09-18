@@ -9,23 +9,25 @@ source_url: https://github.com/Arvincreator/project-golem
 archive_name: "Arvincreator--project-golem"
 revision: 210658a11bee669df875cc6edc0511fac239d1ba
 revision_url: https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875cc6edc0511fac239d1ba
-analyzed_at: 2026-07-31
-capabilities: ""
+analyzed_at: 2026-09-18
+capabilities: "tombstone"
+capability_evidence:
+  tombstone: "the memory firewall, and the [AVOID_MEMORY] tag that writes rules into it | packages/protocol/NeuroShunter.js:257-280, src/services/MemoryFirewallService.js:199-225, src/core/ConversationManager.js:260-262, packages/protocol/ProtocolFormatter.js:125 | the system prompt tells the model *\"If user clearly requests 'do not mention X again', write concise phrase X in [AVOID_MEMORY]\"*; `NeuroShunter` then calls `firewall.addRule({pattern: X, scope, matchMode: 'contains', enabled: true})`, persisted to data/dashboard/memory-firewall.json. On every later recall `ConversationManager` passes the recalled passages through `filterMemories`, which drops any whose text matches an active rule and appends a hit — so the record is durable, keyed on the rejected value rather than on a row id, and consulted on the read path, which is what stops a later re-extraction of the same content from re-asserting it | the rule is created only when the model chooses to emit the tag, so there is no deterministic detector behind a user's 'forget that'. Matching is a lowercased substring while the store it guards is a vector store, so a paraphrase — exactly what semantic recall is good at surfacing — is not blocked. The shipped policy is `{enabled: true, rules: []}`, disabling the firewall disables every rule at once, and no committed test covers any of it"
 stack_storage: "lancedb, files, delegated"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A text passage with metadata and a stable id derived from its content, plus a separate experience record of rejected proposal types"
   storage: "LanceDB with a pluggable embedder — Gemini, Ollama or a local provider — and a flat JSON file for the experience store"
   retrieval: "Vector recall with an optional rerank, then a canonicalisation pass that resolves each hit against visibility and drops duplicates"
   write: "`memorize(text, metadata)` with a content-derived stable id; the experience store is written by proposal outcome"
-  update_delete: "`updateMemory`, `deleteMemory`, hidden and deleted flags applied on read, plus export and import of the whole store"
+  update_delete: "`updateMemory`, `deleteMemory`, hidden and deleted flags applied on read, plus export and import; and a firewall rule keyed on the rejected phrase that suppresses it on every later recall"
   scoping: "None. One store per working directory, no user, agent or session key"
   integration: "A desktop agent with a proposal loop, a memory firewall consulted by the protocol layer, and a dashboard"
   background: "None scheduled; the wake-up timer in the experience store is a field nothing reads"
-  trust: "None on the memory record. The experience store is the only place a judgement is kept, and it is the owner's"
+  trust: "None on the memory record. Judgement lives outside it — in the experience store's avoid list, and in firewall rules keyed on phrases the owner asked never to hear again"
   strengths: "A rejection record that is consulted before the next proposal — the shape the atlas asks for, at thirty-three lines"
-  risks: "The avoid list holds three entries, is keyed on proposal type rather than content, and any single success clears it entirely"
+  risks: "The avoid list holds three entries, accepts duplicates, is keyed on proposal type rather than content, and any single success clears it entirely"
 ---
 
 ## 1. Executive Summary
@@ -254,8 +256,66 @@ avoid list into the agent's context before the next proposal. That loop is the
 integration, and it is closed — the signal is produced by the same interaction it
 later biases.
 
-The memory firewall sits between the store and the protocol layer, consulted on
-the formatting path, with an empty default policy.
+**The memory firewall is a tombstone, and the first version of this report did
+not read it.** That reading stopped at the shipped configuration —
+`{ "enabled": true, "rules": [], "hits": [] }` — and filed the behaviour under a
+populated rule set as an open question. The behaviour is thirty lines of
+`MemoryFirewallService.js` and did not need a populated policy to read.
+
+The loop is four steps and it starts in the system prompt. `ProtocolFormatter`
+tells the model: *"If user clearly requests 'do not mention X again', write
+concise phrase X in `[AVOID_MEMORY]`."* `ResponseParser` extracts that block;
+`NeuroShunter` writes the phrase into long-term memory as a `type: 'avoid_memory'`
+record **and** calls
+
+```js
+firewall.addRule({ pattern, scope: `golem:${golemId}`, matchMode: 'contains', enabled: true })
+```
+
+which persists to `data/dashboard/memory-firewall.json`. From then on every
+recall passes through `ConversationManager.js:261`:
+
+```js
+const guarded = this.memoryFirewall.filterMemories(memories, { golemId: this.golemId });
+```
+
+and `filterMemories` drops any recalled passage matching an active in-scope rule,
+recording a hit as it goes. `brain.recall` is called from exactly one place in
+the codebase and the firewall is applied on the next line, so there is no second
+read path to leak through.
+
+That is the capability's definition almost word for word: a durable record of a
+rejected value, keyed on the value rather than on a row id, consulted on the read
+path so a later extraction cannot silently re-assert it. Deleting the memory
+would not have achieved it — the agent could learn the same thing again tomorrow;
+the rule survives re-learning. **`tombstone` is awarded**, one of the rarer marks
+in this atlas.
+
+Four limits belong beside it. The rule exists only if the *model* chooses to emit
+the tag, so there is no deterministic detector behind a user saying "forget
+that". Matching is a lowercased substring against a store that is retrieved by
+vector similarity — so the one thing semantic recall is best at, surfacing a
+paraphrase of X, is the one thing a `contains` rule cannot catch; the tombstone
+is lexical and the memory it guards is not. The shipped policy is empty and a
+single `enabled: false` switches off every rule at once. And nothing tests any of
+it.
+
+One detail is either careless or quietly right, depending on how you read it: the
+rejected phrase is also written into the vector store in plaintext, as a
+`visible: true` record. It is then unretrievable, because its own text contains
+the pattern and `filterMemories` blocks it — the avoid record tombstones itself.
+The dashboard can still read it, which is presumably the point.
+
+**`audit_log` is withheld** even though `hits[]` looks like one. It records
+blocks at recall — retrieval events, which the capability explicitly counts as
+the other half of the pattern — and it is a ring of the newest 500. Nothing logs
+the memory writes themselves.
+
+**`human_review` is withheld.** `web-dashboard/routes/api.memory-firewall.js`
+lets the owner add, edit, disable and delete rules and read the hit list, and the
+proposal loop puts actions to the owner for approval — but neither is a person
+adjudicating a *memory*. The owner writes policy and approves actions; no memory
+is held pending anyone's decision.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -349,9 +409,12 @@ reset, and a key. Fix those three and the file is still under fifty lines.
   obviously volatile.
 - **What was `nextWakeup` for?** It is in the default shape and in every save,
   and nothing reads it.
-- **What does the firewall do when rules exist?** The shipped policy is empty and
-  the consumers are three files away from the memory layer; the behaviour under a
-  populated rule set could not be read off the default configuration.
+- **Why is the block lexical when the recall is semantic?** A `contains` rule
+  cannot suppress the paraphrase a vector store is most likely to return, and the
+  embedder is already in the process that would need to compare them.
+- **Why is the avoid rule the model's judgement call?** The prompt asks the model
+  to notice "do not mention X again"; nothing detects it deterministically, so a
+  refusal that the model paraphrases instead of tagging leaves no record at all.
 
 ## Appendix: File Index
 
@@ -370,5 +433,9 @@ reset, and a key. Fix those three and the file is still under fifty lines.
 **Licence** — `LICENSE` (Project Golem Source-Available Non-Commercial License).
 
 ## History
+
+**2026-09-18** — [`210658a11bee669df875cc6edc0511fac239d1ba`](https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875cc6edc0511fac239d1ba) — re-read at the same commit. Nothing upstream had moved, so every change is the atlas's own, and the main one is a mark. **`tombstone` is awarded.** The first reading saw the memory firewall's shipped configuration — `{enabled: true, rules: [], hits: []}` — and filed its behaviour under a populated rule set as an open question; the behaviour is thirty lines of `MemoryFirewallService.filterMemories` and never needed a populated policy to read. The system prompt asks the model to write a phrase the user has asked never to hear again into `[AVOID_MEMORY]`; `NeuroShunter` turns that into a persisted firewall rule keyed on the phrase; and every recall — there is exactly one call site for `brain.recall` — passes through `filterMemories` on the next line. A durable record of a rejected value, keyed on the value, consulted on the read path. Section 9 carries the four limits, of which the sharpest is that the block is a lowercased substring while the store is retrieved by vector similarity, so the paraphrase semantic recall is best at surfacing is the case a `contains` rule cannot catch.
+
+`audit_log` and `human_review` were both examined and withheld, with the reasons in section 9: the `hits[]` array records recall-time blocks, which the capability counts as the other half of the pattern, and the owner writes firewall policy and approves proposed actions rather than adjudicating any memory. One detail was added to the experience store: `avoidList.push` does not deduplicate, so rejecting the same proposal type three times fills the three-entry list with three copies of it and evicts every other rejection. `stack_source` goes from seeded to reviewed.
 
 **2026-07-31** — [`210658a11bee669df875cc6edc0511fac239d1ba`](https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875cc6edc0511fac239d1ba) — first reading.

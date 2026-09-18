@@ -119,7 +119,7 @@ avoid them.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-31</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Arvincreator--project-golem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -127,7 +127,7 @@ avoid them.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -341,8 +341,64 @@ the memory hangs off them.</p>
 <code>getAdvice()</code> renders the avoid list into the agent's context
 before the next proposal. That loop is the integration, and it is closed
 — the signal is produced by the same interaction it later biases.</p>
-<p>The memory firewall sits between the store and the protocol layer,
-consulted on the formatting path, with an empty default policy.</p>
+<p><strong>The memory firewall is a tombstone, and the first version of
+this report did not read it.</strong> That reading stopped at the
+shipped configuration —
+<code>{ "enabled": true, "rules": [], "hits": [] }</code> — and filed
+the behaviour under a populated rule set as an open question. The
+behaviour is thirty lines of <code>MemoryFirewallService.js</code> and
+did not need a populated policy to read.</p>
+<p>The loop is four steps and it starts in the system prompt.
+<code>ProtocolFormatter</code> tells the model: <em>"If user clearly
+requests 'do not mention X again', write concise phrase X in
+<code>[AVOID_MEMORY]</code>."</em> <code>ResponseParser</code> extracts
+that block; <code>NeuroShunter</code> writes the phrase into long-term
+memory as a <code>type: 'avoid_memory'</code> record
+<strong>and</strong> calls</p>
+<pre class="js"><code>firewall.addRule({ pattern, scope: `golem:${golemId}`, matchMode: &#39;contains&#39;, enabled: true })</code></pre>
+<p>which persists to <code>data/dashboard/memory-firewall.json</code>.
+From then on every recall passes through
+<code>ConversationManager.js:261</code>:</p>
+<pre class="js"><code>const guarded = this.memoryFirewall.filterMemories(memories, { golemId: this.golemId });</code></pre>
+<p>and <code>filterMemories</code> drops any recalled passage matching
+an active in-scope rule, recording a hit as it goes.
+<code>brain.recall</code> is called from exactly one place in the
+codebase and the firewall is applied on the next line, so there is no
+second read path to leak through.</p>
+<p>That is the capability's definition almost word for word: a durable
+record of a rejected value, keyed on the value rather than on a row id,
+consulted on the read path so a later extraction cannot silently
+re-assert it. Deleting the memory would not have achieved it — the agent
+could learn the same thing again tomorrow; the rule survives
+re-learning. <strong><code>tombstone</code> is awarded</strong>, one of
+the rarer marks in this atlas.</p>
+<p>Four limits belong beside it. The rule exists only if the
+<em>model</em> chooses to emit the tag, so there is no deterministic
+detector behind a user saying "forget that". Matching is a lowercased
+substring against a store that is retrieved by vector similarity — so
+the one thing semantic recall is best at, surfacing a paraphrase of X,
+is the one thing a <code>contains</code> rule cannot catch; the
+tombstone is lexical and the memory it guards is not. The shipped policy
+is empty and a single <code>enabled: false</code> switches off every
+rule at once. And nothing tests any of it.</p>
+<p>One detail is either careless or quietly right, depending on how you
+read it: the rejected phrase is also written into the vector store in
+plaintext, as a <code>visible: true</code> record. It is then
+unretrievable, because its own text contains the pattern and
+<code>filterMemories</code> blocks it — the avoid record tombstones
+itself. The dashboard can still read it, which is presumably the
+point.</p>
+<p><strong><code>audit_log</code> is withheld</strong> even though
+<code>hits[]</code> looks like one. It records blocks at recall —
+retrieval events, which the capability explicitly counts as the other
+half of the pattern — and it is a ring of the newest 500. Nothing logs
+the memory writes themselves.</p>
+<p><strong><code>human_review</code> is withheld.</strong>
+<code>web-dashboard/routes/api.memory-firewall.js</code> lets the owner
+add, edit, disable and delete rules and read the hit list, and the
+proposal loop puts actions to the owner for approval — but neither is a
+person adjudicating a <em>memory</em>. The owner writes policy and
+approves actions; no memory is held pending anyone's decision.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>Visibility is enforced where it should be</strong> — on the
@@ -427,10 +483,14 @@ only the counter?</strong> The two are reset by the same line, and only
 one of them is obviously volatile.</li>
 <li><strong>What was <code>nextWakeup</code> for?</strong> It is in the
 default shape and in every save, and nothing reads it.</li>
-<li><strong>What does the firewall do when rules exist?</strong> The
-shipped policy is empty and the consumers are three files away from the
-memory layer; the behaviour under a populated rule set could not be read
-off the default configuration.</li>
+<li><strong>Why is the block lexical when the recall is
+semantic?</strong> A <code>contains</code> rule cannot suppress the
+paraphrase a vector store is most likely to return, and the embedder is
+already in the process that would need to compare them.</li>
+<li><strong>Why is the avoid rule the model's judgement call?</strong>
+The prompt asks the model to notice "do not mention X again"; nothing
+detects it deterministically, so a refusal that the model paraphrases
+instead of tagging leaves no record at all.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <p><strong>Rejection memory</strong> —
@@ -451,6 +511,36 @@ off the default configuration.</li>
 <p><strong>Licence</strong> — <code>LICENSE</code> (Project Golem
 Source-Available Non-Commercial License).</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875cc6edc0511fac239d1ba"><code class="commit-id" title="210658a11bee669df875cc6edc0511fac239d1ba">210658a1…</code></a>
+— re-read at the same commit. Nothing upstream had moved, so every
+change is the atlas's own, and the main one is a mark.
+<strong><code>tombstone</code> is awarded.</strong> The first reading
+saw the memory firewall's shipped configuration —
+<code>{enabled: true, rules: [], hits: []}</code> — and filed its
+behaviour under a populated rule set as an open question; the behaviour
+is thirty lines of <code>MemoryFirewallService.filterMemories</code> and
+never needed a populated policy to read. The system prompt asks the
+model to write a phrase the user has asked never to hear again into
+<code>[AVOID_MEMORY]</code>; <code>NeuroShunter</code> turns that into a
+persisted firewall rule keyed on the phrase; and every recall — there is
+exactly one call site for <code>brain.recall</code> — passes through
+<code>filterMemories</code> on the next line. A durable record of a
+rejected value, keyed on the value, consulted on the read path. Section
+9 carries the four limits, of which the sharpest is that the block is a
+lowercased substring while the store is retrieved by vector similarity,
+so the paraphrase semantic recall is best at surfacing is the case a
+<code>contains</code> rule cannot catch.</p>
+<p><code>audit_log</code> and <code>human_review</code> were both
+examined and withheld, with the reasons in section 9: the
+<code>hits[]</code> array records recall-time blocks, which the
+capability counts as the other half of the pattern, and the owner writes
+firewall policy and approves proposed actions rather than adjudicating
+any memory. One detail was added to the experience store:
+<code>avoidList.push</code> does not deduplicate, so rejecting the same
+proposal type three times fills the three-entry list with three copies
+of it and evicts every other rejection. <code>stack_source</code> goes
+from seeded to reviewed.</p>
 <p><strong>2026-07-31</strong> — <a
 href="https://github.com/Arvincreator/project-golem/commit/210658a11bee669df875cc6edc0511fac239d1ba"><code class="commit-id" title="210658a11bee669df875cc6edc0511fac239d1ba">210658a1…</code></a>
 — first reading.</p>

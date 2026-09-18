@@ -1277,8 +1277,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`project-golem`](../systems/project-golem/)
 - Best idea: `ExperienceMemory` — thirty-three lines that record which proposal types the owner declined and read them back into the agent's context before the next proposal. The rejection is written where the rejection already happens, needs no model, and is the one signal extraction can never produce.
 - Biggest risk: the avoid list holds three entries, is keyed on the proposal type rather than the value, and `recordSuccess()` clears it entirely — so one accepted suggestion erases every rejection before it.
+- Second idea: `[AVOID_MEMORY]` — the model turns "do not mention X again" into a persisted firewall rule keyed on the phrase, and every recall is filtered through it on the next line. A rejection that survives re-learning, which deleting the row would not.
 - Most reusable component: the outcome-gated write on the decline path, and the content-derived stable id that makes re-memorising idempotent.
-- Maturity impression: a competent LanceDB driver that resolves every recall hit against the canonical list so a stale index cannot produce a wrong answer — beside 74 test files, none of which covers the rejection loop.
+- Maturity impression: a competent LanceDB driver that resolves every recall hit against the canonical list so a stale index cannot produce a wrong answer — beside 74 test files, none of which covers the rejection loop or the firewall.
 - Study when: you are building anything that proposes work to a person and want the smallest complete answer to "they said no, now what".
 - Do not copy when: you need it commercially. The licence forbids it outright, and the memory is wired into a desktop app with no seam to lift it through.
 
