@@ -7,12 +7,11 @@ page_kind: system
 source_name: cosmicstack-labs/mercury-agent
 source_url: https://github.com/cosmicstack-labs/mercury-agent
 archive_name: "cosmicstack-labs--mercury-agent"
-revision: 31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe
-revision_url: https://github.com/cosmicstack-labs/mercury-agent/commit/31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe
-analyzed_at: 2026-09-14
-capabilities: "human_review"
+revision: 781daac263507ed28800f380242507364137caec
+revision_url: https://github.com/cosmicstack-labs/mercury-agent/commit/781daac263507ed28800f380242507364137caec
+analyzed_at: 2026-09-18
+capabilities: ""
 capability_evidence:
-  human_review: "the brain memory page — a person edits or deletes a stored memory, and the write reaches the store | ui/src/pages/brain/Memory.tsx:317 and :342, src/web/api/brain.ts:156-180 | each memory row renders an edit and a delete control; `onEdit` opens the editor and `handleSave` calls `api.brain.memory.update(id, data)`, `onDelete` calls `api.brain.memory.delete(id)`, and those reach `brain.put('/api/brain/memory/:id')` and `brain.delete('/api/brain/memory/:id')` against the same better-sqlite3 database the agent reads. The person is the adjudicator and the target is the live record, not a review queue. What this is *not* is an admission gate: `UserMemoryCandidate`s are inserted, merged and conflict-resolved automatically by `insertRecord`, `mergeRecord` and `resolveConflict`, so review is post-hoc | src/memory/user-memory.test.ts"
 stack_storage: "sqlite"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -272,6 +271,12 @@ Do not copy:
 - Tests: `src/memory/user-memory.test.ts`.
 
 ## History
+
+**2026-09-18** — [`781daac263507ed28800f380242507364137caec`](https://github.com/cosmicstack-labs/mercury-agent/commit/781daac263507ed28800f380242507364137caec) — re-pinned from `31013b0`; 80 files and +493 lines, re-screened at the new pin. **Human review withdrawn**, leaving no capability mark. The edit and delete controls on the brain memory page are real and they reach the same better-sqlite3 database the agent reads — and they act on memories that are already stored and already retrievable. The [narrowed rubric](../../methodology/atlas-rubric/#human-review-surface) counts that as curation: the write has landed, and a person changing it afterwards is authoring rather than adjudicating.
+
+The schema settles it. `memories` carries `type`, `categories`, `shareable`, `scope`, `evidence_kind`, `source`, `confidence`, `importance`, `durability`, `evidence_count`, `provenance` and a `dismissed` flag defaulting to `0` — so a memory is live the moment it is inserted, and `dismissed` is a soft delete applied later. There is no pending or proposed value anywhere in it.
+
+The approval machinery the tree does carry is for something else: `approveTelegramPendingRequest`, `approveSignalPendingRequestByPairingCode`, `approveDiscordPendingRequest` and `approveSlackPendingRequest` admit a *person* to talk to the bot through a pairing code. That is access control over a channel, not admission control over a memory — the same distinction this atlas draws where an action queue sits beside a memory store.
 
 **2026-09-14** — [`31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe`](https://github.com/cosmicstack-labs/mercury-agent/commit/31013b0d0d64f0a4ea10432b5a55d975a7f9f2fe) — second reading, 55 commits on. Screened again: 0 auto-run surfaces, 2 build-time exec paths, 3 unpinned manifests and 2 dependency surfaces inside the seven-day cooldown; nothing was installed and nothing was run. Most of the diff is the website. `human_review` was re-tested at the producer — the brain page's per-row edit and delete reach `PUT` and `DELETE /api/brain/memory/:id` against the same database the agent reads — and holds; it carries the evidence record it had been asserted without, including the limit that candidates are admitted without passing a person. The stack row is promoted from seeded to reviewed and filled: better-sqlite3 with an FTS5 virtual table maintained by triggers and a `LIKE` fallback, which the seed recorded as unknown. The substantive addition since the previous pin is a `shareable` column gating an incremental cloud fetch. Its defaults are careful — column default `0`, existing rows backfilled private, the toggle `?? false`, stamping forward-only, and the chat surface disclosing that already-shareable memories are unchanged when sharing is switched off — but `mergeRecord` promotes an existing private record to shareable whenever a shareable candidate merges into it, and nothing demotes automatically.
 
