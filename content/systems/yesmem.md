@@ -9,10 +9,11 @@ source_url: https://github.com/carsteneu/yesmem
 archive_name: "carsteneu--yesmem"
 revision: d9e028735a04abaa236d14b7ae33efc413a330d4
 revision_url: https://github.com/carsteneu/yesmem/commit/d9e028735a04abaa236d14b7ae33efc413a330d4
-analyzed_at: 2026-09-10
-capabilities: "scope_enforced"
+analyzed_at: 2026-09-18
+capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "a stored project column applied as a WHERE predicate on the learning read paths, with an OR clause that admits every unscoped row | internal/storage/learnings.go:378, :405, :427, :63, :531 | `canonical_project` is a column on `learnings`, and the read paths carry it into the statement — `AND canonical_project = ?` on the narrow ones, `AND (canonical_project = ? OR canonical_project = '')` on the one that also admits unfiled rows, and a join predicate coalescing the canonical name over the raw one. So the key reaches the query rather than trimming its result. Two limits belong with the mark. The empty-string disjunct means anything never attributed is visible from every project, so the boundary is *this project plus the unfiled pile* rather than this project alone. And the mark certifies the predicate, not the value it is given: an August fix guards `repo.Root` coalescing behind `strings.HasPrefix(base, \"/\")` because a bare project name resolved to whatever repository hosts the running daemon, so learnings captured under a short name were attributed to the daemon's own repo | internal/daemon/handler_learnings_test.go `TestAttributeLearningProjectShortNameSession`"
+  negative_eval: "a committed case that pins the returned count, names both in-scope projects present, and asserts the third project's learning absent from the same result | internal/storage/learnings_test.go:872-943 (`TestCanonicalProjectFamilyScope`) | three learnings are seeded — one in `yesmem`, one in the `opencode-proxy` worktree that canonicalises to the same family, one in an unrelated `other` — and `GetActiveLearnings(\"\", \"yesmem\", \"\", \"\", 0)` is asserted to return exactly two. Both family members are then asserted present by project name and the third is asserted absent with the failure message *\"unrelated learning (other) leaked into yesmem scope\"*. The count assertion is the positive control: an empty result fails on `len(learnings) != 2` before either presence or absence is reached. The second half repeats the query from the worktree side and asserts the same two, so the family relation is proved symmetric rather than one-directional | 3,838 test functions across 366 files"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "seeded"
@@ -296,8 +297,20 @@ as a currency predicate (`valid_until IS NULL`), not as a validity bound in an
 as-of query. There is no read path that reconstructs what was believed at an
 earlier time.
 
-**Negative eval — no.** 355 test files, none asserting that particular material
-must not be retrieved.
+**Negative eval — yes, on the project boundary.** The earlier reading looked
+across 355 test files and found none asserting that particular material must not
+be retrieved; the case is `TestCanonicalProjectFamilyScope`
+(`internal/storage/learnings_test.go:872-943`), and it is the strong shape
+rather than a bare absence. Three learnings are seeded — one in `yesmem`, one in
+an `opencode-proxy` worktree that canonicalises into the same family, one in an
+unrelated `other` — and the query is asserted to return **exactly two**. Both
+family members are then named present, and the third is asserted absent with the
+message *"unrelated learning (other) leaked into yesmem scope"*. The count
+assertion is what makes the exclusion mean something: a retriever returning
+nothing fails on `len(learnings) != 2` before either half of the check is
+reached. The test then repeats the query from the worktree side and asserts the
+same two, so the family relation is proved symmetric rather than one-directional
+— which is the property the canonicalisation exists to provide.
 
 ## 10. Tests, Evals, and Benchmarks
 
@@ -439,6 +452,8 @@ migrations from `:12`), `internal/models/models.go`
 `internal/benchmark/`
 
 ## History
+
+**2026-09-18** — [`d9e028735a04abaa236d14b7ae33efc413a330d4`](https://github.com/carsteneu/yesmem/commit/d9e028735a04abaa236d14b7ae33efc413a330d4) — re-read at the same commit; `main` has not moved since 2 September 2026, so the finding is this report's. **Negative evaluation awarded**, reversing a withholding that rested on a survey rather than a search: `TestCanonicalProjectFamilyScope` pins the returned count at two, names both in-family projects present, and asserts the third project's learning absent with the message *"unrelated learning (other) leaked into yesmem scope"*, then repeats the query from the worktree side to prove the relation symmetric. The `scope_enforced` anchors were re-verified against `internal/storage/learnings.go` and hold, including the `canonical_project = '' ` disjunct that keeps the unfiled pile visible from every project. The test tree is 366 files carrying 3,838 test functions, not the 355 the earlier reading counted. Two marks.
 
 **2026-09-10** — [`d9e028735a04abaa236d14b7ae33efc413a330d4`](https://github.com/carsteneu/yesmem/commit/d9e028735a04abaa236d14b7ae33efc413a330d4) — read again, 50 commits past the previous pin, almost all of them on the orchestration surface: managed terminal windows, a bundled headless-Chrome capability, session resume and bootstrap, a stagnation monitor, and a `get_caps` summary mode. The memory findings are unchanged and each was re-run rather than carried forward. `SupersedeStatus` still has no reader: the only predicate mentioning it anywhere is the setter's own `WHERE id = ?`, so the highest-trust learnings still have their corrections dropped into a column nothing consults. `SetStalenessScore` still has no caller outside `learnings_staleness_test.go`, while `GetStalenessScores` is still consumed at `handler_hybrid.go:681` — a demotion the ranking applies and production never writes. `scope_enforced` holds and gains an evidence record; `canonical_project` reaches the `WHERE` on the learning reads, with the empty-string disjunct still admitting every unattributed row. One thing did move and it belongs to the other half of that mark: `attributeLearningProject` coalesced a bare project name through `repo.Root`, which resolves against the repository hosting the running daemon, so learnings captured under a short name were attributed to the daemon's own repo; the guard is now an absolute-path check with a regression test. Screened before reading: no auto-run surface, no manifest inside the seven-day cooldown, one build-time execution path and one unpinned dependency surface against a `go.sum` 91 days old; nothing was installed, built or run.
 

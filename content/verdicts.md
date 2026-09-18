@@ -1682,7 +1682,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Best idea: supersession resistance graded by a trust score computed from use count, stated source and importance, so a user-stated learning the agent has relied on forty times is not silently overwritten by one LLM extraction.
 - Biggest risk: the confirmation that gate depends on does not exist. `supersede_status = 'pending_confirmation'` is written at two sites and read by nothing — no query, no CLI command, no tool, no clear — so the highest-trust learnings are the only ones whose corrections are discarded.
 - Most reusable component: `quarantine_session` — one statement that removes an entire noisy session's learnings from vector search, BM25, associations and embedding refresh, reversibly.
-- Maturity impression: ~188,000 lines of Go with 356 test files and a LoCoMo run against a community-corrected dataset that also publishes the non-agentic score — beside a 55-column memory table carrying two more mechanisms wired in one direction only.
+- Maturity impression: ~188,000 lines of Go with 366 test files carrying 3,838 test functions, and a LoCoMo run against a community-corrected dataset that also publishes the non-agentic score — beside a 55-column memory table carrying two more mechanisms wired in one direction only.
 - Study when: you want correction to cost more for memories that have earned trust, and you will finish the loop.
 - Do not copy when: you need memory that is current within the session; extraction is asynchronous and the briefing shows the state as of the last pass.
 
