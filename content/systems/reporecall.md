@@ -9,7 +9,7 @@ source_url: https://github.com/jags111/reporecall
 archive_name: "jags111--reporecall"
 revision: 0c0a9ff61a99ac428927f99c1c449c04cadd0702
 revision_url: https://github.com/jags111/reporecall/commit/0c0a9ff61a99ac428927f99c1c449c04cadd0702
-analyzed_at: 2026-09-06
+analyzed_at: 2026-09-18
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "memory retrieval, as a committed case | test/memory/search.test.ts:155-180, src/memory/search.ts:118-121 | two memories with identical content are stored, one `active` and one `archived`; the default search must return only active rows and must not return the archived id, and the same query with `statuses: [\"archived\"]` must return it — a populated result with the excluded material present in the store and a positive control in the same case | test/benchmark/memory-benchmark.test.ts:556-586 pins that an archived episode stays out of the default episode search, and also out of the search that asks for archived rows, which the file records as expected"
@@ -478,5 +478,21 @@ git log --format=%an | sort | uniq -c                                # Nillo 38,
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`negative_eval` stands, and the control is the tightest form available: the case
+at `test/memory/search.test.ts:155-179` stores two memories with identical
+content and different statuses, asserts the default search returns no row with
+`id === "archived"`, and then re-runs *the same query* with
+`{ statuses: ["archived"] }` and asserts it comes back. Re-running the query
+rather than asserting a count rules out both failure modes at once — the row is
+in the store, and it matches the query — so the first assertion cannot pass by
+absence. Noted while tracing the filter: the default-deny is the `??` at
+`src/memory/search.ts:127`, `options?.statuses ?? ["active"]`, applied in the
+scoring loop at `:132`; a second status filter at `:197-202` runs only when
+`options.statuses` is supplied, over the same set the first already applied, so
+it can never remove a row the first kept. One enforcement point, one redundant
+one — worth knowing for anyone auditing where status is honoured. No marks
+change.
 
 **2026-09-06** — [`0c0a9ff61a99ac428927f99c1c449c04cadd0702`](https://github.com/jags111/reporecall/commit/0c0a9ff61a99ac428927f99c1c449c04cadd0702) — first reading, at the head of `main`, version 0.3.3 of 21 March 2026. Screened first: two auto-run surfaces (a committed `.mcp.json` that starts the server under `npx`, and an empty `.claude/settings.json`), a `prepublishOnly` build, 22 floating ranges behind a lockfile 169 days old, a `CLAUDE.md` treated as data; nothing installed or run. One mark; the six withheld are each explained in section 9. The tree is a copy of a project whose manifest repository no longer resolves and whose npm package continued to 0.9.1, recorded in section 1 and the appendix so the pin is read as what it is.

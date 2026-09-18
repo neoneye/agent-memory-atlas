@@ -137,7 +137,7 @@ repository the package points at no longer resolves.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-06</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jags111--reporecall" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -691,6 +691,25 @@ gh api repos/proofofwork-agency/reporecall                           # 404
 curl -s https://registry.npmjs.org/@proofofwork-agency%2Freporecall  # 23 versions, latest 0.9.1, modified 2026-08-04
 git log --format=%an | sort | uniq -c                                # Nillo 38, de-nial-lo 2; none by the hosting account</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>negative_eval</code> stands, and the control
+is the tightest form available: the case at
+<code>test/memory/search.test.ts:155-179</code> stores two memories with
+identical content and different statuses, asserts the default search
+returns no row with <code>id === "archived"</code>, and then re-runs
+<em>the same query</em> with <code>{ statuses: ["archived"] }</code> and
+asserts it comes back. Re-running the query rather than asserting a
+count rules out both failure modes at once — the row is in the store,
+and it matches the query — so the first assertion cannot pass by
+absence. Noted while tracing the filter: the default-deny is the
+<code>??</code> at <code>src/memory/search.ts:127</code>,
+<code>options?.statuses ?? ["active"]</code>, applied in the scoring
+loop at <code>:132</code>; a second status filter at
+<code>:197-202</code> runs only when <code>options.statuses</code> is
+supplied, over the same set the first already applied, so it can never
+remove a row the first kept. One enforcement point, one redundant one —
+worth knowing for anyone auditing where status is honoured. No marks
+change.</p>
 <p><strong>2026-09-06</strong> — <a
 href="https://github.com/jags111/reporecall/commit/0c0a9ff61a99ac428927f99c1c449c04cadd0702"><code class="commit-id" title="0c0a9ff61a99ac428927f99c1c449c04cadd0702">0c0a9ff6…</code></a>
 — first reading, at the head of <code>main</code>, version 0.3.3 of 21
