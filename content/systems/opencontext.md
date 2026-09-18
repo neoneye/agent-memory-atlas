@@ -9,7 +9,7 @@ source_url: https://github.com/0xranx/OpenContext
 archive_name: "0xranx--OpenContext"
 revision: 0649e7134346f6f5038a9b29cc5c824ae6a54f3f
 revision_url: https://github.com/0xranx/OpenContext/commit/0649e7134346f6f5038a9b29cc5c824ae6a54f3f
-analyzed_at: 2026-09-09
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files, sqlite, lancedb"
 stack_retrieval: "lexical, vector"
@@ -25,7 +25,7 @@ matrix:
   background: "An in-process event bus drives index sync on document lifecycle events; embeddings are fetched from an API"
   trust: "None. A doc carries a description and two timestamps — no status, no provenance, no confidence, no validity interval"
   strengths: "Memory stays as files the agent can already read and edit, so the store is an index rather than a second copy"
-  risks: "The doc_type filter runs after the candidate set is cut, so a filtered search can return fewer results than asked; and npm test skips the suite holding most of the cases"
+  risks: "The doc_type filter runs after the candidate set is cut — with no over-fetch at all on the content-aggregation path, so a filtered search there returns fewer than asked by construction; and `npm test` runs only the 55 JavaScript cases, leaving the 78 Rust cases in opencontext-core to `test:all`"
 ---
 
 ## 1. Executive Summary
@@ -273,6 +273,24 @@ grep -n "fn .*not_\|fn .*exclud\|fn .*filter" crates/opencontext-core/src/*/test
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+risk claims re-derived, and both get sharper. The `doc_type` filter is
+`hits.retain(…)` applied after the search returns, at
+`crates/opencontext-core/src/search/searcher.rs:84-90` — and how much headroom
+it eats depends on the aggregation: `search_limit` is `limit * 5` for the
+doc-aggregating modes but plain `limit` for `AggregateBy::Content` (`:70-75`).
+On that path there is no over-fetch at all, so any `doc_type` filter returns
+fewer rows than asked, always, not just sometimes.
+
+The test claim is right and worth stating with the numbers, because "the suite
+holding most of the cases" is ambiguous between two skipped suites. `npm test`
+is `test:core && test:search && test:native` — 55 cases across three
+directories. `test:all` adds `test:integration` (11 cases, the *smallest* suite)
+and `test:rust`, which is `cargo test --release --features search` in
+`opencontext-core` and holds 78 `#[test]` and `#[tokio::test]` functions: the
+largest body of tests in the repository, covering the store, and not run by the
+default command. No marks; the report carries none.
 
 **2026-09-09** — [`0649e7134346f6f5038a9b29cc5c824ae6a54f3f`](https://github.com/0xranx/OpenContext/commit/0649e7134346f6f5038a9b29cc5c824ae6a54f3f) — first reading, at the head of `main`, MIT, 93 commits, last pushed 16 June 2026. Screened before anything was read: no auto-run surface, four build-time execution points, three unpinned manifests all with lockfiles beside them, three lockfiles between 222 and 253 days old so the tree sits well outside the seven-day cooldown, and an `AGENTS.md` addressed to a reading agent, read as data. A `scripts/pre-commit` hook payload is present and inert — not installed into `.git/hooks` — and was read rather than run. Nothing was installed and no suite was run.
 

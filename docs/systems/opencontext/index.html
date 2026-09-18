@@ -117,7 +117,7 @@ to consume.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/0xranx--OpenContext" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -523,6 +523,29 @@ grep -rn &quot;audit\|history\|journal\|event_log&quot; crates/opencontext-core/
 grep -n &quot;fn .*not_\|fn .*exclud\|fn .*filter&quot; crates/opencontext-core/src/*/tests.rs crates/opencontext-core/src/tests.rs
 #   only *_not_found error paths; no case asserts a populated search omits a record</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. Both risk claims re-derived, and both get sharper.
+The <code>doc_type</code> filter is <code>hits.retain(…)</code> applied
+after the search returns, at
+<code>crates/opencontext-core/src/search/searcher.rs:84-90</code> — and
+how much headroom it eats depends on the aggregation:
+<code>search_limit</code> is <code>limit * 5</code> for the
+doc-aggregating modes but plain <code>limit</code> for
+<code>AggregateBy::Content</code> (<code>:70-75</code>). On that path
+there is no over-fetch at all, so any <code>doc_type</code> filter
+returns fewer rows than asked, always, not just sometimes.</p>
+<p>The test claim is right and worth stating with the numbers, because
+"the suite holding most of the cases" is ambiguous between two skipped
+suites. <code>npm test</code> is
+<code>test:core &amp;&amp; test:search &amp;&amp; test:native</code> —
+55 cases across three directories. <code>test:all</code> adds
+<code>test:integration</code> (11 cases, the <em>smallest</em> suite)
+and <code>test:rust</code>, which is
+<code>cargo test --release --features search</code> in
+<code>opencontext-core</code> and holds 78 <code>#[test]</code> and
+<code>#[tokio::test]</code> functions: the largest body of tests in the
+repository, covering the store, and not run by the default command. No
+marks; the report carries none.</p>
 <p><strong>2026-09-09</strong> — <a
 href="https://github.com/0xranx/OpenContext/commit/0649e7134346f6f5038a9b29cc5c824ae6a54f3f"><code class="commit-id" title="0649e7134346f6f5038a9b29cc5c824ae6a54f3f">0649e713…</code></a>
 — first reading, at the head of <code>main</code>, MIT, 93 commits, last
