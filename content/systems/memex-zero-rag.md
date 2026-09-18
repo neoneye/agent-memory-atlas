@@ -9,7 +9,7 @@ source_url: https://github.com/JPeetz/MeMex-Zero-RAG
 archive_name: "JPeetz--MeMex-Zero-RAG"
 revision: f955d993d06cdf621d8ca7e004a27850eb9b6d34
 revision_url: https://github.com/JPeetz/MeMex-Zero-RAG/commit/f955d993d06cdf621d8ca7e004a27850eb9b6d34
-analyzed_at: 2026-09-07
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -501,6 +501,21 @@ would assume are enforced, and those are the ones worth moving first.
 | `L1/` | Private context — and tracked in git |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. The
+claim the withheld `trust_state` mark rests on is now a complete call graph
+rather than an assertion. `status` — `draft | active | stale | quarantine` — is
+consulted in exactly three places in `mcp/server.py`: the enum check on write
+(`:920-921`), the transition guard in `wiki_revalidate` requiring the page to be
+`quarantine` already (`:1136`), and a comment (`:1129`). No read consults it, so
+a quarantined page is served exactly as an active one. The tests agree by
+omission: `test_wiki_flag.py` and `test_wiki_revalidate.py` between them cover
+setting the status, timestamping it, refusing an immutable page, requiring a
+reason and rejecting a revalidate on a non-flagged page — eleven cases about the
+*write* — and nothing anywhere asserts that a flagged page is absent from a
+read, which is why `negative_eval` is withheld too. `wiki_revalidate` is itself
+one of the registered MCP tools (`:307`), so the cycle that clears a quarantine
+is closed by the same actor that opened it. No marks; the report carries none.
 
 **2026-09-07** — [`f955d993d06cdf621d8ca7e004a27850eb9b6d34`](https://github.com/JPeetz/MeMex-Zero-RAG/commit/f955d993d06cdf621d8ca7e004a27850eb9b6d34) — the history was rewritten: the previous pin is no longer reachable from `main` and was fetched by its sha, and the two trees differ by 174 files, 275 insertions and 22,629 deletions — the private wiki content replaced with a neutral example, `wiki/contradictions.md` and `wiki/log.md` removed, `SCHEMA.md` given an optional `memory_type` taxonomy with a rule that untagged pages are never down-ranked, and `L1/` reduced to three tracked `*.example` templates, which closes the credentials finding. `mcp/` is byte-identical between the two trees, and that exposes four errors in the first reading, corrected above: the server had thirteen tools, not nine (`wiki_confidence`, `wiki_flag`, `wiki_revalidate`, `wiki_read_by_slug` were present); `tests/` held forty-three tests in three files, not none; `confidence.py` backs a tool and `search.py` is imported by `wiki_search`; and `wiki_search` applies a `min_confidence` floor. The status lifecycle those tools implement is agent-callable and unread by search, so every mark stays withheld. Screened before reading: one auto-run surface (`.mcp.json`), one build-time execution point, nothing installed or run.
 

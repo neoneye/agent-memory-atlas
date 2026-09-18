@@ -119,7 +119,7 @@ supposed to compound is an unranked substring scan.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/JPeetz--MeMex-Zero-RAG" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -732,6 +732,25 @@ stats, write</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. The claim the withheld <code>trust_state</code> mark
+rests on is now a complete call graph rather than an assertion.
+<code>status</code> — <code>draft | active | stale | quarantine</code> —
+is consulted in exactly three places in <code>mcp/server.py</code>: the
+enum check on write (<code>:920-921</code>), the transition guard in
+<code>wiki_revalidate</code> requiring the page to be
+<code>quarantine</code> already (<code>:1136</code>), and a comment
+(<code>:1129</code>). No read consults it, so a quarantined page is
+served exactly as an active one. The tests agree by omission:
+<code>test_wiki_flag.py</code> and <code>test_wiki_revalidate.py</code>
+between them cover setting the status, timestamping it, refusing an
+immutable page, requiring a reason and rejecting a revalidate on a
+non-flagged page — eleven cases about the <em>write</em> — and nothing
+anywhere asserts that a flagged page is absent from a read, which is why
+<code>negative_eval</code> is withheld too. <code>wiki_revalidate</code>
+is itself one of the registered MCP tools (<code>:307</code>), so the
+cycle that clears a quarantine is closed by the same actor that opened
+it. No marks; the report carries none.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/JPeetz/MeMex-Zero-RAG/commit/f955d993d06cdf621d8ca7e004a27850eb9b6d34"><code class="commit-id" title="f955d993d06cdf621d8ca7e004a27850eb9b6d34">f955d993…</code></a>
 — the history was rewritten: the previous pin is no longer reachable
