@@ -106,14 +106,14 @@ question unanswerable instead of picking a side.</p>
               <strong>vbcherepanov/total-agent-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/vbcherepanov/total-agent-memory/commit/14ccb6ca95567e58fd2a12b59096a818039f6d86" title="14ccb6ca95567e58fd2a12b59096a818039f6d86">
+            <a class="meta-pill revision-pill" href="https://github.com/vbcherepanov/total-agent-memory/commit/42c7007643eed76e8ae042798afc15569c08f1ae" title="42c7007643eed76e8ae042798afc15569c08f1ae">
               <span>Analyzed revision</span>
-              <code>14ccb6ca…</code>
+              <code>42c70076…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/vbcherepanov--total-agent-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -315,8 +315,41 @@ Python.</p>
 Trust</h2>
 <p><strong>Bitemporal — awarded.</strong> As-of query plus separately
 stored assertion time.</p>
-<p><strong>Scope enforced — awarded.</strong> <code>project</code> on
-the read path.</p>
+<p><strong>Scope enforced — awarded, and v14 is where it became
+interesting.</strong> The rule lives in one object.
+<code>SearchScope</code> holds project, type, branch and embedding
+space, and renders itself twice: <code>sql()</code> returns the
+predicates the query runs with, and <code>allows(record, db)</code>
+answers the same question about a record that reached the result set
+some other way. The second form exists because expansion is the classic
+leak — a hit pulled in by following an association never passed through
+the scoped query — and <code>server.py:3173</code>, <code>:3501</code>
+and <code>recall_modes.py:273</code> all re-check before returning.
+<code>test_v14_contracts.py</code> pins the pair: in-scope allowed,
+wrong project refused, wrong branch refused, a <code>deleted</code>
+status refused. And <code>benchmarks/memory_quality.py:159</code>
+computes
+<code>leaks = sum(not scope.allows(hit, store.db) for hit in hits)</code>
+— a measured leak rate, which almost nothing else in this corpus
+reports.</p>
+<p>Two copies of one rule is the pattern that usually drifts; keeping
+them as two methods on one dataclass is the mitigation, and it is the
+second system here to reach for it after memspec's
+<code>isVisibleFromScope</code>, whose comment says outright that it
+mirrors the SQL.</p>
+<p><strong>What the mark does not say</strong> is that the scope
+confines anything by default. <code>SearchScope.sql</code> appends
+<code>k.project=?</code> only <code>if value</code>, and the tool
+surface divides cleanly: writes take
+<code>a.get("project", "general")</code>, agent-facing reads take a bare
+<code>a.get("project")</code>. So <code>kg_at</code>,
+<code>recall</code> and the tag search return rows from every project
+when the model leaves the argument out. For a personal memory spanning a
+person's projects that is a product decision rather than a defect, but
+it is the opposite of what a reader takes from the word
+<em>enforced</em>, and the temporal graph's own supersession lookups —
+which <em>are</em> unconditional — are not the paths a question
+travels.</p>
 <p><strong>Negative eval — awarded</strong>, on two counts:
 <code>tests/test_negative_retrieval.py</code> is a committed suite whose
 subject is a mechanism that exists to produce IDK on adversarial
@@ -569,6 +602,29 @@ precedes an ingest</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/vbcherepanov/total-agent-memory/commit/42c7007643eed76e8ae042798afc15569c08f1ae"><code class="commit-id" title="42c7007643eed76e8ae042798afc15569c08f1ae">42c70076…</code></a>
+— re-pinned to v14.0.0; 191 files and +12,288 lines past the previous
+pin, re-screened at the new pin. All three marks hold and
+<code>scope_enforced</code> is both strengthened and qualified.
+Strengthened: <code>SearchScope</code> now renders one rule two ways,
+<code>sql()</code> for the query and <code>allows(record, db)</code> for
+anything retrieval expansion pulled in, re-checked at three production
+sites, pinned by <code>test_v14_contracts.py</code> and
+<em>measured</em> by <code>benchmarks/memory_quality.py:159</code>,
+which counts out-of-scope hits as a leak rate. Qualified: the record
+said the predicate was on <em>every</em> assertion read, and it is
+unconditional only on the temporal graph's four supersession lookups —
+<code>SearchScope.sql</code> appends the project clause
+<code>if value</code>, and the tool surface splits, writes taking
+<code>a.get("project", "general")</code> while <code>kg_at</code>,
+<code>recall</code> and the tag search take a bare
+<code>a.get("project")</code> and span every project when the model
+omits it. That split was there at the previous pin too. Also new in v14:
+an authenticated team server with separate personal, team and shared
+stores, a vision provider that must be named explicitly, per-space
+embedding queries with incompatible-model diagnostics, and the Windows
+UTF-8 and file-locking fixes.</p>
 <p><strong>2026-09-13</strong> — the repository was renamed from
 <code>vbcherepanov/claude-total-memory</code> to
 <code>vbcherepanov/total-agent-memory</code>, upstream of the pinned

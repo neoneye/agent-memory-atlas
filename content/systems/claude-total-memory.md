@@ -7,13 +7,13 @@ page_kind: system
 source_name: "vbcherepanov/total-agent-memory"
 source_url: https://github.com/vbcherepanov/total-agent-memory
 archive_name: "vbcherepanov--total-agent-memory"
-revision: 14ccb6ca95567e58fd2a12b59096a818039f6d86
-revision_url: https://github.com/vbcherepanov/total-agent-memory/commit/14ccb6ca95567e58fd2a12b59096a818039f6d86
-analyzed_at: 2026-09-11
+revision: 42c7007643eed76e8ae042798afc15569c08f1ae
+revision_url: https://github.com/vbcherepanov/total-agent-memory/commit/42c7007643eed76e8ae042798afc15569c08f1ae
+analyzed_at: 2026-09-18
 capabilities: "bitemporal, scope_enforced, negative_eval"
 capability_evidence:
-  bitemporal: "the temporal knowledge graph | src/temporal_kg.py:201-207 | `valid_from <= timestamp AND (valid_to IS NULL OR valid_to > timestamp)` as an as-of read over an append-only assertion log | tests/test_temporal_kg.py::test_add_fact_supersedes_previous_object"
-  scope_enforced: "every assertion read | src/temporal_kg.py:84,:106,:146 | `AND valid_to IS NULL AND project = ?` on each current-assertion query, with the same predicate through the procedural store | tests/test_temporal_kg.py"
+  bitemporal: "the temporal knowledge graph | src/temporal_kg.py:205-230 | `valid_from <= timestamp AND (valid_to IS NULL OR valid_to > timestamp)` as an as-of read over an append-only assertion log | tests/test_temporal_kg.py::test_add_fact_supersedes_previous_object"
+  scope_enforced: "one rule expressed twice — as a SQL predicate and as a Python predicate re-applied after retrieval expansion | src/memory_core/retrieval.py:84-112 (`SearchScope.sql`), :114-131 (`SearchScope.allows`), src/server.py:3173, :3501, src/recall_modes.py:273, src/temporal_kg.py:92, :115, :130, :164 | `SearchScope` carries the scope as data — project, type, branch, embedding space — and renders it two ways: `sql()` emits the `WHERE` predicates the query runs with, and `allows(record, db)` decides the same question about a record that arrived some other way. That second form is the v14 answer to expansion leak: a hit pulled in by graph or association expansion never went through the scoped query, so three production sites re-check it, and `benchmarks/memory_quality.py:159` counts `not scope.allows(hit, db)` over a result set as a **leak rate** rather than leaving it to inspection. In the temporal graph the predicate is unconditional on the four supersession lookups. The qualification a reader needs is that scope here narrows rather than confines: `SearchScope.sql` appends `k.project=?` only `if value`, and the tool surface splits on this — writes take `a.get(\"project\", \"general\")` while agent-facing reads take a bare `a.get(\"project\")`, so `kg_at`, `recall` and the tag search return rows from every project when the model omits the argument | tests/test_v14_contracts.py:18-24 (in-scope allowed; wrong project, wrong branch and a deleted status each refused), tests/test_temporal_kg.py"
   negative_eval: "the current view | tests/test_temporal_kg.py:90-107 | after a supersession `get_current` is asserted to hold exactly one row carrying the new object, while `timeline` is asserted to hold both — the superseded value present in history and absent from the view | test_add_fact_supersedes_previous_object"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -24,7 +24,7 @@ matrix:
   retrieval: "Six-stage hybrid — BM25, semantic, fuzzy, graph, cross-encoder, MMR — then a negative-evidence pass"
   write: "Assertions appended; a conflicting assertion closes the prior one with superseded_by"
   update_delete: "valid_to is set with an invalidation_reason; nothing is edited or removed in place"
-  scoping: "project is a WHERE clause on every assertion read, alongside valid_to IS NULL"
+  scoping: "one `SearchScope` object rendered both as SQL predicates and as an `allows()` check re-applied to anything retrieval expansion pulled in, with a benchmark counting out-of-scope hits as a leak rate; unconditional on the temporal graph's supersession lookups, and a narrowing filter rather than a confinement elsewhere — writes default to the `general` project, reads take whatever project the caller names and span all of them when it names none"
   integration: "MCP server, CLI, hooks, nine IDE installers, Docker, launchd and systemd units"
   background: "Enrichment, triple-extraction and representation queues plus a consolidation daemon"
   trust: "NLI entail/neutral/contradict with two calibration profiles; confidence is a float on the assertion"
@@ -213,7 +213,33 @@ can read and edit without touching Python.
 
 **Bitemporal — awarded.** As-of query plus separately stored assertion time.
 
-**Scope enforced — awarded.** `project` on the read path.
+**Scope enforced — awarded, and v14 is where it became interesting.** The rule
+lives in one object. `SearchScope` holds project, type, branch and embedding
+space, and renders itself twice: `sql()` returns the predicates the query runs
+with, and `allows(record, db)` answers the same question about a record that
+reached the result set some other way. The second form exists because expansion
+is the classic leak — a hit pulled in by following an association never passed
+through the scoped query — and `server.py:3173`, `:3501` and
+`recall_modes.py:273` all re-check before returning. `test_v14_contracts.py`
+pins the pair: in-scope allowed, wrong project refused, wrong branch refused, a
+`deleted` status refused. And `benchmarks/memory_quality.py:159` computes
+`leaks = sum(not scope.allows(hit, store.db) for hit in hits)` — a measured
+leak rate, which almost nothing else in this corpus reports.
+
+Two copies of one rule is the pattern that usually drifts; keeping them as two
+methods on one dataclass is the mitigation, and it is the second system here to
+reach for it after memspec's `isVisibleFromScope`, whose comment says outright
+that it mirrors the SQL.
+
+**What the mark does not say** is that the scope confines anything by default.
+`SearchScope.sql` appends `k.project=?` only `if value`, and the tool surface
+divides cleanly: writes take `a.get("project", "general")`, agent-facing reads
+take a bare `a.get("project")`. So `kg_at`, `recall` and the tag search return
+rows from every project when the model leaves the argument out. For a personal
+memory spanning a person's projects that is a product decision rather than a
+defect, but it is the opposite of what a reader takes from the word *enforced*,
+and the temporal graph's own supersession lookups — which *are* unconditional —
+are not the paths a question travels.
 
 **Negative eval — awarded**, on two counts: `tests/test_negative_retrieval.py`
 is a committed suite whose subject is a mechanism that exists to produce IDK on
@@ -410,6 +436,8 @@ Run from the root of the checkout at the pinned commit.
 | Tree and suite size | `find . -name "*.py" \| xargs wc -l \| tail -1`; `ls tests/*.py \| wc -l` | 112,233 lines; 159 test files |
 
 ## History
+
+**2026-09-18** — [`42c7007643eed76e8ae042798afc15569c08f1ae`](https://github.com/vbcherepanov/total-agent-memory/commit/42c7007643eed76e8ae042798afc15569c08f1ae) — re-pinned to v14.0.0; 191 files and +12,288 lines past the previous pin, re-screened at the new pin. All three marks hold and `scope_enforced` is both strengthened and qualified. Strengthened: `SearchScope` now renders one rule two ways, `sql()` for the query and `allows(record, db)` for anything retrieval expansion pulled in, re-checked at three production sites, pinned by `test_v14_contracts.py` and *measured* by `benchmarks/memory_quality.py:159`, which counts out-of-scope hits as a leak rate. Qualified: the record said the predicate was on *every* assertion read, and it is unconditional only on the temporal graph's four supersession lookups — `SearchScope.sql` appends the project clause `if value`, and the tool surface splits, writes taking `a.get("project", "general")` while `kg_at`, `recall` and the tag search take a bare `a.get("project")` and span every project when the model omits it. That split was there at the previous pin too. Also new in v14: an authenticated team server with separate personal, team and shared stores, a vision provider that must be named explicitly, per-space embedding queries with incompatible-model diagnostics, and the Windows UTF-8 and file-locking fixes.
 
 **2026-09-13** — the repository was renamed from `vbcherepanov/claude-total-memory` to `vbcherepanov/total-agent-memory`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/vbcherepanov--total-agent-memory` to match.
 
