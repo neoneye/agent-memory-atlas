@@ -7,12 +7,11 @@ page_kind: system
 source_name: "AgentToolkit/altk-evolve"
 source_url: https://github.com/AgentToolkit/altk-evolve
 archive_name: "AgentToolkit--altk-evolve"
-revision: 3361a7234a8dcac0c1216f7d4fda27a1342af8cf
-revision_url: https://github.com/AgentToolkit/altk-evolve/commit/3361a7234a8dcac0c1216f7d4fda27a1342af8cf
-analyzed_at: 2026-09-15
-capabilities: "human_review, negative_eval"
+revision: b81d64ee56d29f7492eb666bad4e60642eb92add
+revision_url: https://github.com/AgentToolkit/altk-evolve/commit/b81d64ee56d29f7492eb666bad4e60642eb92add
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  human_review: "the web UI's entity explorer | altk_evolve/frontend/ui/src/components/EntityExplorer.tsx:28 handleDelete, :152-156 confirm dialog; altk_evolve/frontend/api/routes.py:185 DELETE /namespaces/{namespace_id}/entities/{entity_id}, :200 POST entities | the server serves a UI at /ui/ where a person browses each namespace's guidelines and other entities, opens an entity's detail, creates one, and deletes one behind a confirmation, all through the same backend template methods the agent's writes use, so a legal-hold plugin can still veto the delete; the Lite plugins keep each learned entity as a Markdown file under .evolve/entities/ that the README tells the user to inspect or remove | altk_evolve/frontend/ui/src/components/EntityExplorer.test.tsx"
   negative_eval: "the entity sharing suite | tests/unit/test_entity_sharing_e2e.py:113-128 | publishes a guideline in one namespace, writes a private note in another, calls the cross-namespace public discovery, and asserts the published guideline is returned while the private note is not; `:95-100` asserts an entity reverted to private disappears from public results | tests/unit/test_entity_sharing_e2e.py:128"
 stack_storage: "files, postgres, milvus"
 stack_retrieval: "lexical, vector"
@@ -70,7 +69,7 @@ The run artifacts behind those numbers are not committed.
 The store forgets destructively. Conflict resolution can DELETE or overwrite an
 entity by id, and nothing on the server side records what it replaced.
 
-Two marks: `human_review`, `negative_eval`.
+One mark: `negative_eval`.
 
 ## 2. Mental Model
 
@@ -92,7 +91,7 @@ flowchart TB
     CORE --> INJ["injected into the agent's context"]
     RET --> INJ
     RETN["retention policy"] -->|"age, disuse, cascade, deleted source"| STORE
-    UI["web UI entity explorer"] -->|"person deletes"| STORE
+    UI["web UI entity explorer"] -->|"person deletes a live entity"| STORE
 ```
 
 `support` is how a guideline earns standing: a count carried in metadata that
@@ -158,7 +157,14 @@ data. Nothing was installed or run.
 - **Sharing** — `publish_entity` and `unpublish_entity` in the MCP server set
   `visibility`, `owner_id` and `published_at`; `get_public_entities` discovers
   public entities across namespaces.
-- **UI delete** — `EntityExplorer.tsx:28`, `routes.py:185`.
+- **UI delete** — `EntityExplorer.tsx:28`, `routes.py:185`. A person browses a
+  namespace's entities, opens one, creates one and deletes one behind a
+  confirmation, through the same backend template methods the agent's own writes
+  use — so a legal-hold plugin can veto the delete either way. This is a
+  correction surface over live entities and not a review gate, which is why the
+  report does not carry `human_review`: nothing is withheld pending anyone's
+  decision. The retention queue described in section 9 is the nearest thing to a
+  waiting state, and what waits there is a *deletion*, not an admission.
 
 ## 5. Memory Data Model
 
@@ -306,5 +312,7 @@ the intended shape.
 - `git ls-files | grep -i result` — no AppWorld run files
 
 ## History
+
+**2026-09-19** — re-pinned to [`b81d64ee56d29f7492eb666bad4e60642eb92add`](https://github.com/AgentToolkit/altk-evolve/commit/b81d64ee56d29f7492eb666bad4e60642eb92add), 5 commits on and none of them under `altk_evolve/` — the fourteen changed files are docs, CI and pre-commit config. `human_review` is **withdrawn**, and the code did not change: the record described the entity explorer's browse, create and delete-behind-a-confirmation, which is authoring over live entities rather than a state a memory waits in. The retention candidate machine (`altk_evolve/retention/collection.py:227`, statuses `pending`, `held`, `review`, `deleted`) was tested as the alternative and is a governance queue for *deletions* — the entity is already in use while it waits, so it is not the admission gate the mark asks for. `negative_eval` stands, anchors re-verified verbatim: `test_public_entity_in_one_namespace_visible_from_another` publishes a guideline in one namespace, writes a private note in another, and asserts the first is in the cross-namespace public result and the second is not. Screened again first; a dependency surface was inside the cooldown, so nothing was installed and no suite was run.
 
 **2026-09-15** — [`3361a7234a8dcac0c1216f7d4fda27a1342af8cf`](https://github.com/AgentToolkit/altk-evolve/commit/3361a7234a8dcac0c1216f7d4fda27a1342af8cf) — first reading, at a commit dated 14 September 2026. Screened before opening: one auto-run surface, three build-time execution points, two unpinned surfaces, two manifests inside the seven-day cooldown, and `AGENTS.md` read as data. Nothing was installed or run; the AppWorld figures are the project's published results, not reproduced.
