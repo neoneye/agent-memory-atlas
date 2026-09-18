@@ -7,12 +7,10 @@ page_kind: system
 source_name: ShenSeanChen/waku-agent
 source_url: https://github.com/ShenSeanChen/waku-agent
 archive_name: "ShenSeanChen--waku-agent"
-revision: d49c260fb57ce7f63406385d4efc4ccf1a70dd67
-revision_url: https://github.com/ShenSeanChen/waku-agent/commit/d49c260fb57ce7f63406385d4efc4ccf1a70dd67
-analyzed_at: 2026-09-14
-capabilities: "human_review"
-capability_evidence:
-  human_review: "dashboard memory tab — a person edits or deletes the agent's own facts and episodes | waku/ops/static/js/memory.js:15-23 | each fact row renders an edit and a delete control; `saveFact` and `delMem` post `update_fact`, `delete_fact` and `delete_episode` to `/api/memory`, which `dashboard.py:1128` routes to `memory_action`, and that calls `SqliteFactStore.update`/`.delete` and `SqliteEpisodeStore.delete` against the same SQLite file the agent reads on its next turn. The person is the adjudicator and the write is to the live store, not to a review queue the agent never sees | evals/deterministic/test_episodic_store_switch.py:155, evals/deterministic/test_skill_encoding.py:96"
+revision: 761c42011f13828512aff6cfa0689e8087bfc700
+revision_url: https://github.com/ShenSeanChen/waku-agent/commit/761c42011f13828512aff6cfa0689e8087bfc700
+analyzed_at: 2026-09-19
+capabilities: ""
 stack_storage: "sqlite, postgres, delegated"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -229,7 +227,7 @@ A CLI agent plus a local dashboard, with sixty deterministic eval files under `e
 
 The model's agency over memory is wider than the memory package suggests: it can search, correct and delete its own facts and episodes, append a standing behaviour rule to its persona, and author a new skill — the last two gated so that the destructive halves stay with the human. `waku/ops/dashboard.py:546` groups the three under `_SELFMGMT`, which is the project's own name for the boundary.
 
-The dashboard's memory tab is a review surface in the sense this atlas means: a person reads the stored facts and episodes and can rewrite or remove any of them, against the same SQLite file the agent reads on its next turn. It is not an approval queue — nothing waits for a human before entering memory — so it adjudicates after the fact rather than gating.
+The dashboard's memory tab is a correction surface, not a review one. A person reads the stored facts and episodes and can rewrite or remove any of them, against the same SQLite file the agent reads on its next turn. Nothing waits for a human before entering memory; the tab adjudicates after the fact. That is why this report no longer carries `human_review` — the mark asks whether a memory waits in a state until an actor the producing agent cannot be resolves it, and here every memory is live the moment it is written, with the same rows reachable by the agent's own `manage_memory` tool. Two doors onto one live table is a correction path, which the report credits below on its own terms.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -293,7 +291,7 @@ one of the more carefully-reasoned memory evals in the corpus. See the
 
 `evals/judge/test_retrieval_gate_accuracy.py` is 643 lines against the question the eleven plumbing tests do not ask. Twelve hand-curated cases — three each of chitchat, direct-fact, follow-up-from-history and missing-memory — pair a message with the facts that exist at the time and a ground-truth `should_retrieve` label. The reasoning around it is better than the reasoning in most benchmark papers. The two error directions are named, costed and reported apart, because *"an average that hides which way the gate is failing is the thing this eval exists to prevent"*; the 4:1 weighting is written as `FALSE_NEGATIVE_COST` specifically so a reader can disagree with the number and change it; and a separate test scores the *query* a yes carries, on the grounds that "a correct yes carrying a useless query retrieves nothing — from the outside that is indistinguishable from a correct no."
 
-`negative_eval` is withheld, and the file makes the reason checkable rather than arguable. Three things have to hold for the mark and the third does not:
+`negative_eval` is withheld, and the file makes the reason checkable rather than arguable. Re-tested at this pin against the changed file and the five new deterministic suites; the arithmetic below is unchanged. Three things have to hold for the mark and the third does not:
 
 - The per-case test does assert, with `assert_test(..., threshold=0.6)`, and it runs over the `should_retrieve: false` cases. But the judge never sees the label — by design it scores whether the decision was *defensible*, not whether it was correct — so nothing here says that a particular fact must stay out of a particular prompt.
 - The summary test compares against the labels and is the only place a needless retrieval is counted. It is also explicit that it does not gate: *"This test MEASURES; it does not gate. A false negative does not fail it."*
@@ -334,6 +332,8 @@ Do not copy:
 - The data model as a belief store. The correction verbs are here; what is missing is anything that makes a correction survive the next automatic write, and that is the part that matters once memory is more than a week old.
 - The gate eval as a regression barrier. Copy its structure — labelled cases, both directions reported, the cost ratio as a named constant — and then add an assertion that the degenerate answers fail.
 
+**Waku Memory, new at this pin,** is a hosted MCP server at `https://api.waku.one/mcp` that `waku connect waku-memory` adds to `WAKU_HOME/mcp.json` and signs into in a browser (`waku/connect.py`, `waku/tools/waku_memory.py`). Its pitch is one memory shared across Claude Code, Codex, Grok Bot and this agent. The module is careful about the boundary — *"The two stores are separate: nothing here copies local memory up"* — and it migrates a config copied from a README that still showed a host retired on 2026-08-29 rather than failing like an outage. Nothing about the hosted store's own model is in this repository, so nothing about it is assessed here; what is in the tree is a client that adds a server entry and caches a token.
+
 ## 12. Open Questions
 
 - What does the gate eval actually score in practice? It needs a provider key and live small models, and no run is committed, so the numbers the harness is built to produce are not in the tree.
@@ -357,6 +357,8 @@ Do not copy:
 - Evals: `evals/deterministic/test_working_memory.py`, `test_cli_memory.py`, `test_retrieval_gate.py`, `test_consolidation.py`, `test_episodic_store_switch.py`, `test_skill_encoding.py`, `test_fact_store_conformance.py`, `test_memory_arena.py`, `test_memory_search.py`.
 
 ## History
+
+**2026-09-19** — [`761c42011f13828512aff6cfa0689e8087bfc700`](https://github.com/ShenSeanChen/waku-agent/commit/761c42011f13828512aff6cfa0689e8087bfc700) — 7 commits on, 91 files, 8 of them under `waku/` and only `memory/procedural/exporter.py` inside the memory package. `human_review` is **withdrawn**. The code did not change; the question did. This report already said what settles it — the dashboard memory tab "is not an approval queue — nothing waits for a human before entering memory" — and the mark's test is now whether a memory waits in a state until an actor the producing agent cannot be resolves it. Editing a live row after the fact is not that, and the agent's own `manage_memory` reaches the same rows through the same store. The correction path keeps every other credit the report gives it. `negative_eval` was re-tested against the changed `evals/judge/test_retrieval_gate_accuracy.py` and the five new deterministic suites and stays withheld on the same arithmetic. New at this pin: `waku connect waku-memory`, a client for a hosted MCP memory service, recorded in section 9 and assessed no further because nothing of its model is in this tree. Screened again first; a dependency surface was inside the cooldown, so nothing was installed and no suite was run.
 
 **2026-09-14** — [`d49c260fb57ce7f63406385d4efc4ccf1a70dd67`](https://github.com/ShenSeanChen/waku-agent/commit/d49c260fb57ce7f63406385d4efc4ccf1a70dd67) — 35 commits on. Screened first: 0 auto-run surfaces, 2 build-time exec, and `pyproject.toml` changed the day of the reading, so the tree was inside the cooldown; nothing was installed and nothing was run. `waku/memory/` did not change at all — the diff is the dashboard's design system, MCP OAuth and remote transport, and eleven new deterministic eval files. One published criticism was closed upstream and is corrected here: [issue #77](https://github.com/ShenSeanChen/waku-agent/issues/77) is answered by `evals/judge/test_retrieval_gate_accuracy.py`, so the gate's accuracy is measured, and the report asserted the opposite in six places. `negative_eval` was re-tested against it and is withheld: the per-case judge is not shown the label, and the summary's `weighted >= 0.5` floor is unreachable from the needless-retrieval side — six positives, six negatives and a 4:1 cost ratio put an always-retrieve gate at 0.8. `human_review` was re-tested by the producer path from the dashboard's fact rows through `/api/memory` to `SqliteFactStore.update`/`.delete` and holds; it now carries the evidence record it had been asserted without.
 
