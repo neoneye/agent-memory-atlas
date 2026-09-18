@@ -9,7 +9,7 @@ source_url: https://github.com/khoj-ai/khoj
 archive_name: "khoj-ai--khoj"
 revision: ae229ca894c0b80ad84664afcfdde523b5e87057
 revision_url: https://github.com/khoj-ai/khoj/commit/ae229ca894c0b80ad84664afcfdde523b5e87057
-analyzed_at: 2026-09-07
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "user and agent as WHERE clauses on both recall arms | src/khoj/database/adapters/__init__.py:2292-2353, src/khoj/routers/api_chat.py:977-983, src/khoj/routers/api_memories.py:23-70 | `pull_memories` and `search_memories` filter `UserMemory` by `user` always and by `agent` when the conversation's agent is not the default one, so a custom agent sees only facts saved under it while the default agent sees every fact of the user; `save_memory` stamps the agent on the row; the memories API filters every read, update and delete by the authenticated user | tests/test_memory_settings.py:274-480 (default agent sees all, a custom agent only its own, users isolated, two custom agents cannot see each other's facts)"
@@ -438,5 +438,16 @@ first. Take the scoping tests and the double gate; build the rest.
   `rg -n -i 'arxiv|bibtex|citation' README.md documentation/docs` (none).
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+marks stand. One detail of the `negative_eval` case deserves promoting, because
+it is the assertion that makes the other three safe:
+`test_pull_memories_custom_agent_sees_only_own_memories` seeds four facts — no
+agent, the default agent, and two custom agents — asserts the custom agent's own
+fact is present, asserts the other three absent by text, and then closes with
+`assert len(memories) == 1` (`tests/test_memory_settings.py:331-336`). Without
+that count, a regression returning nothing would satisfy all three `not in`
+assertions and pass. With it, the case cannot be green unless the filter both
+excluded the right rows and kept the right one. No marks change.
 
 **2026-09-07** — [`ae229ca894c0b80ad84664afcfdde523b5e87057`](https://github.com/khoj-ai/khoj/commit/ae229ca894c0b80ad84664afcfdde523b5e87057) — first reading, at the head of `master`, 5,180 commits in, the last dated 1 August 2026. The screen found a devcontainer and a VS Code settings file that execute on open and five unpinned surfaces; nothing was in the seven-day cooldown and nothing was installed or run. Two marks: `scope_enforced` for user and agent as filters on both recall arms, `negative_eval` for the isolation cases that seed the excluded facts. `human_review` withheld: the settings list edits and deletes live facts and adjudicates no candidate. `trust_state`, `tombstone`, `bitemporal` and `audit_log` withheld: a fact has no state, deletion leaves no record, the only times are record times, and nothing logs a mutation.
