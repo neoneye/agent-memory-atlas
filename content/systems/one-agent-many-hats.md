@@ -9,11 +9,11 @@ source_url: https://github.com/klairtech/one-agent-many-hats
 archive_name: "klairtech--one-agent-many-hats"
 revision: a90396cff12b1e2fbb8a14f74eef6c6c89105b4f
 revision_url: https://github.com/klairtech/one-agent-many-hats/commit/a90396cff12b1e2fbb8a14f74eef6c6c89105b4f
-analyzed_at: 2026-08-17
+analyzed_at: 2026-09-18
 capabilities: "trust_state, human_review, negative_eval"
 capability_evidence:
   trust_state: "the lesson store | src/memory/lessons.ts | `LessonStatus` runs draft → canary → active → disabled and `applyLifecycle` moves it on concrete outcomes — 2 accepts at confidence ≥ 0.6 promotes, 3 rejects or confidence < 0.2 disables, 6 injections with 0 matches expires as noise; `select` skips `disabled` on the read path | test/memory.test.ts — 'rejection lowers confidence and repeated rejection disables the lesson', 'acceptance promotes a canary lesson to active'"
-  human_review: "every memory layer, through the feedback verb | src/cli/main.ts, src/ui/server.ts | `hats feedback <runId> good|bad|correct` and `POST /api/feedback` reach `MemoryLayers.feedback`, which rewrites takeaway verdicts and lesson confidence; the UI additionally calls `persona.forgetFact` and `lessons.setStatus(…, 'disabled')`, and `hats memory` prints every layer with its status | none — the CLI and HTTP surfaces are untested"
+  human_review: "every memory layer, through the feedback verb | src/cli/main.ts, src/ui/server.ts | `hats feedback <runId> good|bad|correct` and `POST /api/feedback` reach `MemoryLayers.feedback`, which rewrites takeaway verdicts and lesson confidence; the UI additionally calls `persona.forgetFact` and `lessons.setStatus(…, 'disabled')`, and `hats memory` prints every layer with its status | none — the CLI and HTTP surfaces are untested. The separation from the producer is the tool registry's contents rather than a boundary: `ALL_TOOLS` (`src/tools/index.ts:32-50`) offers nineteen families and no memory or feedback verb among them, but two of those families are `run_command` and `fetch_url` (`builtin/system.ts:20`, `:112`), so an agent that decided to run `hats feedback` or POST to the local `/api/feedback` would not be stopped by anything. Nothing points it there; nothing prevents it either"
   negative_eval: "takeaway retrieval | test/memory.test.ts | 'a rejected takeaway never returns; a corrected one returns corrected' seeds two takeaways, rejects one, and asserts `hits.length === 0` with the message 'a rejected takeaway must never be retrieved again'; the persona case asserts four environment facts never enter the store and carries three real facts as a discriminating control | the tests are the mechanism"
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
@@ -653,5 +653,21 @@ is 36 commits in three days.
   `test/registry-invariants.test.ts`
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. All
+three marks re-derived and all three stand. `trust_state`: the lifecycle is at
+`lessons.ts:232-241` — `rejects >= 3` or confidence below the disable floor
+retires a lesson, one injected run moves `draft` to `canary`, and
+`PROMOTE_AFTER_ACCEPTS` with `confidence >= 0.6` promotes to `active`.
+`negative_eval`: `test/memory.test.ts:99-111` seeds two takeaways, rejects one,
+and asserts `hits.length === 0` with the message *"a rejected takeaway must
+never be retrieved again"*, with the second takeaway left in the store as the
+discriminating control. `human_review`: the feedback verb is reachable from the
+CLI and from the browser panel's `POST /api/feedback` and appears nowhere in the
+agent's own tool registry — which is the test the mark asks. Added to that
+record, because it is the honest limit: the registry also carries `run_command`
+and `fetch_url`, so the producer is separated from the approver by what the
+registry omits rather than by anything that would refuse the call. No marks
+change.
 
 **2026-08-17** — [`a90396cff12b1e2fbb8a14f74eef6c6c89105b4f`](https://github.com/klairtech/one-agent-many-hats/commit/a90396cff12b1e2fbb8a14f74eef6c6c89105b4f) — First reading, at 36 commits over three days (first commit 15 August 2026). Screened before reading: 0 auto-run surfaces, 0 build-time execution paths, 2 manifests inside the seven-day cooldown, 1 unpinned surface with a lockfile beside it — the two declared dependencies are `typescript` and `@types/node`, both build-time. Nothing was installed, built or run; the committed working paper was read in its published form at sandeepkavety.com because the PDF in the tree does not extract to legible text with the tools on this machine. Three marks: `trust_state` (the lesson lifecycle), `human_review` (feedback as a verb across CLI, REPL and panel), `negative_eval` (a committed assertion that a rejected takeaway is never retrieved). Four near-misses stated in place — a `Lesson.scope` field that no read path filters on, a hash-chained audit log that records no memory mutation and whose strict write form is exported and never called, memory stores created without the file mode their own helper supports, and a distillation loop that the scheduler does not run. Three paper claims checked against the code: the layer model holds, the scoping safeguard is delivered by the directory rather than the field it names, and the conservative cold-start profile is one paragraph of prompt rather than the tighter budgets and mandatory review the paper describes.

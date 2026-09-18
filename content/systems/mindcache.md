@@ -9,11 +9,11 @@ source_url: https://github.com/faisalhussain-devs/MindCache
 archive_name: "faisalhussain-devs--MindCache"
 revision: 45b904a7d6d29d0f6ac1b15cfd9b61508a5e33b4
 revision_url: https://github.com/faisalhussain-devs/MindCache/commit/45b904a7d6d29d0f6ac1b15cfd9b61508a5e33b4
-analyzed_at: 2026-08-18
+analyzed_at: 2026-09-18
 capabilities: "trust_state, scope_enforced"
 capability_evidence:
-  trust_state: "the decision store — a status column written by the analyzer and filtered wherever candidates are gathered | mindcache/Database/decision_analyzer.py | `DecisionStateAnalyzer.analyze_cluster` validates each returned value against the five-name set before assigning and drops an unrecognised one; `status.in_([\"active\", \"conditional\"])` filters at six sites plus the embedder type map | none"
-  scope_enforced: "retrieval — `user_id` on every memory table, refused rather than defaulted at the assembly fetch | mindcache/retrieval/active_path.py | `_fetch_memories_batch` raises `ValueError(\"user_id is required\")` before querying; `_fetch_topics_batch` beside it defaults to `None` and filters only `if user_id:` | tests/test_client.py::test_reset_does_not_affect_other_users covers cross-user isolation on reset only; the retrieval guard and the ingestion-grounding scope are untested"
+  trust_state: "the decision store — a status column written by the analyzer and filtered wherever candidates are gathered | mindcache/Database/decision_analyzer.py | `DecisionStateAnalyzer.analyze_cluster` validates each returned value against the five-name set before assigning and drops an unrecognised one; `status.in_([\"active\", \"conditional\"])` filters at six sites plus the embedder type map | the assembly path itself carries no status term — `active_path.py` never mentions `status` — and does not need one, because every id it fetches by came from a `root_cache` query that filtered. That is sound and it is also load-bearing: a future candidate source that skips the filter would put a deprecated decision straight into the prompt with nothing downstream to catch it"
+  scope_enforced: "retrieval — `user_id` on every memory table, refused rather than defaulted at the assembly fetch | mindcache/retrieval/active_path.py | `_fetch_memories_batch` raises `ValueError(\"user_id is required\")` before querying; `_fetch_topics_batch` beside it defaults to `None` and filters only `if user_id:`, but its sole call site is seven lines below the refusal and passes the same value, so the default is never exercised — the difference is that only one of the two can be made to leak | tests/test_client.py::test_reset_does_not_affect_other_users covers cross-user isolation on reset only; the retrieval guard and the ingestion-grounding scope are untested"
 stack_storage: "sqlite, postgres"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -478,6 +478,19 @@ says.
 | `tests/` | 66 tests over in-memory SQLite, run by CI |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+marks stand, re-derived. `status.in_(["active", "conditional"])` is at
+`db_manager.py:607`, `client.py:309`, `root_cache.py:430`, `:472`, `:811`,
+`:844` and in the embedder type map at `embedder.py:168`; `_fetch_memories_batch`
+still raises `ValueError("user_id is required")` at `active_path.py:786`.
+Corrected in the `scope_enforced` record, which stopped one clause too early: it
+named `_fetch_topics_batch`'s `user_id=None` default without the half the body
+already carried — the sole caller is `active_path.py:596`, seven lines after the
+refusal at `:589`, and passes the same value, so the permissive default is never
+reached. Added to the `trust_state` record: the assembly path holds no status
+term at all and is safe only because every candidate id arrives from a filtered
+`root_cache` query. No marks change.
 
 **2026-08-18** — [`45b904a7d6d29d0f6ac1b15cfd9b61508a5e33b4`](https://github.com/faisalhussain-devs/MindCache/commit/45b904a7d6d29d0f6ac1b15cfd9b61508a5e33b4) — re-read three commits on. The screen reported no auto-run file, a `pyproject.toml` changed four days earlier and a `tests/conftest.py` executing on collection, so again nothing was installed and no test was run; `Query.filter_by`'s signature was checked against SQLAlchemy's own documentation rather than by import.
 
