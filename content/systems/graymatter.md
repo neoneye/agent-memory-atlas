@@ -9,11 +9,10 @@ source_url: https://github.com/angelnicolasc/graymatter
 archive_name: "angelnicolasc--graymatter"
 revision: d03c408e22c935d232d3c9456ed03188300eff28
 revision_url: https://github.com/angelnicolasc/graymatter/commit/d03c408e22c935d232d3c9456ed03188300eff28
-analyzed_at: 2026-09-12
-capabilities: "audit_log, human_review, negative_eval"
+analyzed_at: 2026-09-18
+capabilities: "audit_log, negative_eval"
 capability_evidence:
   audit_log: "agent self-edit trail written by the `memory_reflect` MCP tool | cmd/graymatter/internal/audit/audit.go:15-121, cmd/graymatter/internal/mcp/handlers.go:379-386 | every `memory_reflect` action — `add`, `update`, `forget`, `link`, `pin`, `unpin` — appends one `Entry{Timestamp, Action, Agent, OldText, NewText, Source}` to the `kg_audit` bbolt bucket in the store's own `gray.db`, keyed by a fixed-width RFC3339 timestamp so bbolt's byte order is time order; `prune` trims oldest-first at `MaxEntries = 10000`. Nothing in the tree reads the bucket back: `audit` exports only `Write` and `Failures`, `grep -rn 'kg_audit'` finds the writer, its test and a changelog line, and `graymatter doctor --audit` is a documentation audit over `CLAUDE.md`/`AGENTS.md`, not this trail. The CLI correction path writes no entry at all | cmd/graymatter/internal/audit/audit_test.go:27-115"
-  human_review: "CLI adjudication of stored facts | cmd/graymatter/main.go:74-99, cmd/graymatter/cmd_revise.go:34-74, cmd/graymatter/cmd_pin.go:21-38 | `reviseCmd`, `forgetCmd`, `pinCmd` and `unpinCmd` are registered on the root command, so a person runs `graymatter revise <agent> <old> <new>` to retire a value and name its replacement, `graymatter forget <agent> <fact>` to retire it with none, and `pin`/`unpin` to exempt a fact from decay, pruning and summarisation. `runRevise` and `runForget` set `SupersededBy` through the same machinery the MCP tools use, and `UpdateFact` latches it so no in-flight snapshot can un-retire the result | cmd/graymatter/cmd_revise_test.go:72-118, cmd/graymatter/cmd_pin_test.go:33-74"
   negative_eval: "recall exclusion of superseded facts, and cross-agent recall isolation | pkg/memory/supersede_test.go:88-108, cmd/graymatter/cmd_revise_test.go:72-118, pkg/memory/namespace_isolation_test.go:12-51, benchmarks/revision_currency/main_test.go:36-52 | `TestRecall_ExcludesSupersededFact` stores a dead and a live fact, retires the dead one and pairs `assertAbsent(got, \"Lemon Squeezy\")` with `assertPresent(got, \"Polar\")`, so the case fails on an empty result. `TestReviseRemovesTheStaleValueFromRecall` adds a precondition — `if stale != 2 { t.Fatalf(\"precondition: want both stale values recallable\") }` — proving the fixture retrieved both stale values before the revision. The revision-currency gate asserts the revised arm shows zero retired facts and separately that `rep.Flat.StaleShown != 0`, failing when the control arm stops reproducing the problem. All run in CI under `-race` | .github/workflows/ci.yml:112"
 stack_storage: "kv, files"
 stack_retrieval: "lexical, vector"
@@ -168,6 +167,18 @@ Adapting this elsewhere is cheap: the MCP server is standard, the Go library int
 
 **Withheld marks, and why.**
 
+- **`human_review`** — withheld, reversing an earlier award that rested on the
+  CLI. `graymatter revise`, `forget`, `pin` and `unpin` are real commands and a
+  person can run them, but they are a second door onto machinery the agent
+  already holds: `memory_reflect` is one of the seven MCP tools, and its
+  `action` enum at `internal/mcp/server.go:530` is
+  `["add", "update", "forget", "link", "pin", "unpin"]` — the same four verbs
+  and two more. The project's own generated instructions point the model
+  straight at them: *"A stored fact becomes wrong | `memory_reflect` with
+  `action="update"` or `action="forget"`"*, and *"The user or authoritative
+  project policy declares a stored fact permanent | `memory_reflect` with
+  `action="pin"`"* (`cmd_init_instructions.go:97-98`). A verb a system tells
+  the agent to use is not an adjudication a person performs.
 - **`tombstone`** — withheld. `SupersededBy` is supersession keyed on a *record*: it retires a row and names its replacement. Nothing is keyed on the value, `Put` has no dedup of any kind, and no path consults retirement history before a write, so re-writing a forgotten string creates a new live fact. The near-miss is genuine and worth stating: the retirement itself is unusually durable, and what is missing is only the value-keyed index that would make it survive re-assertion.
 - **`trust_state`** — withheld, and this is the sharpest case in the tree. `Confidence` is a real discrete field with exactly the right vocabulary — `verified`, `inferred`, `unverified` — validated at the write path and rejected otherwise. Every reader is display-only: `explain.go` copies it into a receipt, `cmd_tui.go` prints it, the Obsidian exporter writes it into frontmatter. `grep -rn 'Confidence' --include='*.go' pkg/memory/recall.go pkg/memory/recall_indexed.go pkg/memory/consolidate.go` returns nothing — it reaches no ranking, no filter and no consolidation decision. The field's own doc comment concedes it: *"it never affects ranking, decay or pruning."* And its only producer, `PutConfident`, is absent from the MCP and CLI surfaces, so an agent cannot mark a fact unverified at all.
 - **`bitemporal`** — withheld. Record time only; the search above returns nothing.
@@ -263,5 +274,7 @@ Absence claims in this report rest on these, run at the tree root:
 - `grep -rn 'arxiv\|bibtex\|@article\|@misc\|Citation\|doi' README.md docs/` and `ls CITATION*` — one ADR citing a third-party study; no paper or citation file for GrayMatter itself.
 
 ## History
+
+**2026-09-18** — [`d03c408e22c935d232d3c9456ed03188300eff28`](https://github.com/angelnicolasc/graymatter/commit/d03c408e22c935d232d3c9456ed03188300eff28) — re-read at the same commit; `main` has not moved, so the correction is this report's. **Human review withdrawn.** The record described `graymatter revise|forget|pin|unpin` as CLI adjudication and noted, accurately, that they run *"the same machinery the MCP tools use"* — which is the reason the mark fails rather than a detail beside it. `memory_reflect` is one of the seven MCP tools and its `action` enum is `add`, `update`, `forget`, `link`, `pin`, `unpin`; the generated agent instructions at `cmd_init_instructions.go:97-98` tell the model to reach for `action="update"` or `"forget"` when a stored fact becomes wrong, and `action="pin"` when policy makes one permanent. The CLI is a second door, not a gate. `audit_log` and `negative_eval` hold, and the `audit_log` record's own observation — that the CLI correction path writes no audit entry while the MCP one does — points the same way.
 
 **2026-09-12** — [`d03c408e22c935d232d3c9456ed03188300eff28`](https://github.com/angelnicolasc/graymatter/commit/d03c408e22c935d232d3c9456ed03188300eff28) — first reading, at the v0.19.1 release merge dated 7 September 2026. Screened before reading: 3 auto-run surfaces (`.mcp.json`, `server.json`, `smithery.yaml` — all MCP manifests declaring the project's own `graymatter mcp serve`, no network fetch and no out-of-tree reads), 6 dependency surfaces inside the seven-day cooldown and 1 unpinned manifest (`www/package.json`, the docs site, with a lockfile present); nothing executed, nothing installed, and no benchmark run — every number quoted here is read from a committed artifact or a committed test.
