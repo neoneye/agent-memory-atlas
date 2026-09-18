@@ -119,7 +119,7 @@ drop-in RAG replacement with no delete path and no tests.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-16</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/munch2u-a11y--Cognitive-Spatial-Memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -316,7 +316,8 @@ or a top-k floor today, this is the alternative shape.</li>
 <li><strong>Give a position permanence by deriving it from an immutable
 projection.</strong> A fixed orthogonal matrix means an id's address
 never moves between runs, so the index is reproducible without storing
-coordinates.</li>
+coordinates — <em>provided the embedding that feeds it is the same
+one</em>. See the note below on what that permanence rests on.</li>
 <li><strong>State the ranking law as an equation in the README and
 implement it literally.</strong> <code>F = T × m / d²</code> is
 checkable in one grep, which is more than most retrieval descriptions in
@@ -324,6 +325,30 @@ this corpus permit.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
+<li><strong>Calling a position permanent when the thing it is derived
+from can change underneath it.</strong> <code>CognitiveProjection</code>
+is deterministic — <code>PROJECTION_SEED = 42</code>, a
+Johnson–Lindenstrauss matrix built once from
+<code>(in_dim, out_dim, seed)</code> — so the same embedding always
+lands at the same 8D address. But the matrix is a function of the
+embedding's <em>dimension</em> only, and nothing in the persisted state
+records which embedding model produced the vectors.
+<code>save_state</code> writes a flat
+<code>{point_id: {position, type, confidence, importance, relations_count, weight, content, last_accessed, created_at}}</code>
+map with no header — no model id, no embedding dimension, no seed, no
+schema version — and <code>load_state</code> reads it back
+unconditionally (<code>cognitive_space.py:1306-1345</code>). Two
+different models of the same width project through the same matrix into
+the same manifold, and a model of a different width makes
+<code>CognitiveProjection.load</code> rebuild on a shape mismatch
+(<code>:145-152</code>) while the old points keep coordinates computed
+under the previous matrix. Either way the gravity law keeps measuring
+Euclidean distance between addresses that no longer mean the same thing,
+and says nothing. The two properties that make this unrecoverable rather
+than merely wrong are the ones the design is proudest of: positions are
+permanent, and there is no removal path, so there is nothing to re-embed
+and nothing to drop. A one-line header on the state file — model,
+dimension, seed — turns a silent corruption into a startup error.</li>
 <li><strong>Shipping a retrieval store with no removal path.</strong>
 Not as a gap to fill later: <code>store</code>, <code>add_belief</code>
 and <code>add_memory</code> have no counterpart, so the API has no shape
@@ -397,6 +422,25 @@ backends</li>
 point at the author's local filesystem</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. Every negative claim re-run and confirmed: no
+<code>delete</code>, <code>forget</code>, <code>remove</code>,
+<code>purge</code>, <code>compact</code>, <code>evict</code> or
+<code>prune</code> is defined anywhere in the package; there is no test
+file in the tree; and the <code>file:///home/nemo/…</code> links are
+still in <code>docs/audit_part2_mind_engine_entry.md</code>. The ranking
+law reads literally as documented —
+<code>temperature * mass / (d * d)</code> at
+<code>cognitive_space.py:504</code> and the vector form
+<code>temperature * mass * direction / (dist ** 3)</code> at
+<code>:913</code>. <strong>New finding:</strong> the permanence the
+design rests on is permanence with respect to the projection, not to the
+embedding. <code>save_state</code> writes a bare point map with no
+model, dimension, seed or schema stamp and <code>load_state</code>
+accepts it, so swapping the embedding provider leaves old and new points
+sharing one 8D space on incomparable terms — and with no delete and no
+re-embed path, nothing can undo it. No marks; the report carries
+none.</p>
 <p><strong>2026-08-16</strong> — <a
 href="https://github.com/munch2u-a11y/Cognitive-Spatial-Memory/commit/39df03a18d202a25f4c066d662109f85128886ef"><code class="commit-id" title="39df03a18d202a25f4c066d662109f85128886ef">39df03a1…</code></a>
 — First reading, at the repository's single commit, dated 2026-05-23.

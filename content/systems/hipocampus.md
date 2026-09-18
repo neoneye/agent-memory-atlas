@@ -9,7 +9,7 @@ source_url: https://github.com/kevin-hs-sohn/hipocampus
 archive_name: "kevin-hs-sohn--hipocampus"
 revision: df88ca19d42a3aba4caeaba4512da46cae7827da
 revision_url: https://github.com/kevin-hs-sohn/hipocampus/commit/df88ca19d42a3aba4caeaba4512da46cae7827da
-analyzed_at: 2026-08-17
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
@@ -24,8 +24,8 @@ matrix:
   integration: "Installed as a Claude Code plugin, or `npx hipocampus init` for OpenCode, OpenClaw and Codex. Three hooks — SessionStart injects the protocol and creates the tree, PreCompact and TaskCompleted run the compactor — plus five skills the agent reads"
   background: "None. Compaction is triggered by the platform's own pre-compaction event or by a completed task, and the deterministic half runs in-process in a few hundred lines of Node"
   trust: "None over content. `status: tentative|fixed` on a compaction node is temporal — tentative means the period is still open and the node is regenerated from its sources; a `?` in the Topics Index means a reference entry is due for verification"
-  strengths: "The root node answers *do I know about this?* rather than *what do I know*, which is the question that decides whether a search happens; a tentative node is regenerated from its sources rather than patched, so a summary never drifts by increments; and the one thing the project tests is that secrets never reach a log it will never delete"
-  risks: "Nothing can be corrected — a wrong statement in a daily log is permanent by design, and the only thing that changes is what the summaries above it say; the benchmark that carries the project's central claim lives in another repository, so no result is committed here; and no commit since 25 April 2026"
+  strengths: "The root node answers *do I know about this?* rather than *what do I know*, which is the question that decides whether a search happens; a tentative node is regenerated from its sources rather than patched, so a summary never drifts by increments; and the one thing the project chose to test is the secret scanner, which is the right thing to have chosen"
+  risks: "The only test transcribes the secret scanner instead of importing it, and `compact.mjs` exports nothing, so a change to the six patterns leaves the suite green; nothing can be corrected — a wrong statement in a daily log is permanent by design, and the only thing that changes is what the summaries above it say; the benchmark that carries the project's central claim lives in another repository, so no result is committed here; and no commit since 25 April 2026"
 ---
 
 ## 1. Executive Summary
@@ -248,6 +248,20 @@ That test carries more weight here than it would elsewhere, because it is the
 only defence. The store has no delete, so a secret that gets past the scanner is
 in a permanent leaf node and in every summary that quotes it.
 
+Which makes how the test is wired the thing to check, and it is wired by copy.
+`cli/compact.test.mjs` imports exactly one thing — `node:assert` — and then
+re-declares `SECRET_PATTERNS`, `scanLine`, `redactLine` and `scanSecrets` in its
+own file. It never loads `cli/compact.mjs`, and it could not: that file contains
+no `export` statement, so nothing in it is importable. The two pattern arrays are
+byte-identical at this commit, so every assertion above is true of the shipped
+scanner today — by coincidence of transcription, not by construction. Edit the
+six regexes in `compact.mjs` and the suite stays green, because it is not
+looking at them. There is also nothing that runs it: `package.json` has no
+`scripts` block at all, the file's own header comment is the invocation
+(*"Run: node hipocampus/cli/compact.test.mjs"*), and there is no CI workflow in
+the tree. A duplicated test is a weak guard everywhere; against a store that
+cannot delete, it guards the one thing that cannot be undone.
+
 Deletion, correction and supersession are absent by design, and the specs say so
 three times: raw logs *"must never be deleted — they are permanent leaf nodes"*,
 compaction nodes are *"index supplements — originals are never deleted"*, and
@@ -324,11 +338,14 @@ between that and a public repository.
 
 ## 10. Tests, Evals, and Benchmarks
 
-One test file, 69 lines, entirely about the secret scanner — discussed above and
-better than its size suggests, because it asserts the false-positive cases as
-carefully as the true ones. Nothing tests compaction, the tentative/fixed
-transition, the exclusion rules or the ROOT.md rebuild. There is no CI workflow
-in the tree.
+One test file, 69 lines, entirely about the secret scanner — discussed above,
+and well chosen in what it asserts, since it covers the false-positive cases as
+carefully as the true ones. What it does not do is exercise the shipped code: it
+transcribes the patterns and the three functions into the test file rather than
+importing them, and `compact.mjs` exports nothing to import. Nothing tests
+compaction, the tentative/fixed transition, the exclusion rules or the ROOT.md
+rebuild. `package.json` declares no `scripts`, so nothing runs the one test
+either, and there is no CI workflow in the tree.
 
 **The benchmark is the project's strongest claim and it is external.** The README
 reports results on MemAware — *"900 implicit context questions across 3 months of
@@ -467,5 +484,17 @@ than a moving one.
 - `templates/` — the six seeded files
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+**Correction to the strongest positive claim.** The secret scanner is still the
+right thing to have tested, but `cli/compact.test.mjs` does not test it: the
+file imports only `node:assert` and re-declares the six patterns and the three
+functions locally, and `cli/compact.mjs` contains no `export` statement, so the
+shipped scanner cannot be imported. The arrays match byte for byte at this
+commit, so the assertions hold today by transcription rather than by
+construction. `package.json` declares no `scripts` block, so nothing invokes the
+test, and there is no CI workflow. Everything else re-verified: `scanSecrets` is
+applied once, at `compact.mjs:217`, on the way into the raw daily log. No marks
+change; the report carries none.
 
 **2026-08-17** — [`df88ca19d42a3aba4caeaba4512da46cae7827da`](https://github.com/kevin-hs-sohn/hipocampus/commit/df88ca19d42a3aba4caeaba4512da46cae7827da) — First reading, at version 0.5.3 and 86 commits, on a repository whose first commit is dated 15 March 2026 and whose last is 25 April 2026. Screened before reading, and the screen is worth recording because it under-reported: `scripts/screen_repo.py` scanned two files and found **zero** auto-run surfaces, while the project's entire distribution mechanism is agent hooks — `hooks/hooks.json` registers `SessionStart`, `PreCompact` and `TaskCompleted`, and `.claude-plugin/` declares a Claude Code plugin. Neither path was on the screener's fixed list, which is the limitation its own skill documents; `.claude-plugin/`, `hooks/` and `hooks/hooks.json` were added to it in the same change that published this report, so a reader running the screen today sees three surfaces rather than none. All three were read by hand before anything else: each invokes the project's own code (`bash hooks/session-start.sh`, `npx hipocampus compact`), the session-start script creates directories and a config in the project and prints the memory protocol to stdout, and nothing reaches outside the working directory or the npm registry. Nothing was installed, built or run. No capability mark. Four near-misses stated in place: a `status: tentative|fixed` field that reads epistemic and is temporal, a `?` marker that flags a reference's age rather than any doubt about it, a `feedback` type stored at the highest compaction priority with rule/reason/trigger and never applied to what it corrects, and a 69-line redaction suite that asserts material must not be *stored* where the mark asks for material that must not be *retrieved*. The benchmark carrying the project's central claim — MemAware, 900 implicit-context questions with a no-memory arm and two search baselines — lives in `kevin-hs-sohn/memaware`, so no result is committed to this repository and none was reproduced here.

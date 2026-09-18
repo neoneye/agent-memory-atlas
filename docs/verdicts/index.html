@@ -11352,9 +11352,14 @@ in the package, and no journal; <code>store</code>,
 <code>add_belief</code> and <code>add_memory</code> have no counterpart,
 so the API has no shape a caller could delete against. That is offered
 as <em>"a drop-in RAG replacement"</em>, and a store you cannot delete
-from does not drop into a pipeline that could. The same absence is why
-the report carries no capability mark: no status, no scope key, no
-validity time, no audit — one omission rather than seven.</li>
+from does not drop into a pipeline that could. It compounds with what
+the permanent positions rest on: the projection is deterministic in the
+embedding's dimension, but <code>save_state</code> records no model,
+dimension or seed, so changing the embedding provider leaves old and new
+points sharing one 8D manifold on incomparable terms — with no re-embed
+path and no delete to undo it. The same absence is why the report
+carries no capability mark: no status, no scope key, no validity time,
+no audit — one omission rather than seven.</li>
 <li>Most reusable component: <code>cognitive_space.py</code> as reading.
 1,533 legible lines covering the fixed Johnson–Lindenstrauss projection
 to 8D, the KD-tree registry, the 512-anchor gravity field and the
@@ -11622,10 +11627,14 @@ rewrites its edges and deletes the folded node; <code>rename</code>
 changes a display name; neither writes a durable event, because
 <code>record_run</code> appends to a <code>runs</code> array in
 <code>state.json</code> truncated to the last two hundred entries and
-rewritten whole. Re-assert a merged-away name and it returns as a new
-provisional entity. Beside that, the same hook file that blocks the stop
-tells the agent the loop <em>"does not need permission"</em> — a
-mechanism and a pre-authorisation shipped in one file that
+rewritten whole. The name itself is not lost — merge repoints every
+alias to the survivor and <code>resolve_name</code> falls back to a
+type-agnostic lookup, so re-asserting a merged-away name resolves rather
+than creating a node — but the merge leaves no trace beyond that, and it
+also unlinks the folded entity's generated profile file. Beside that,
+the same hook file that blocks the stop tells the agent the loop
+<em>"does not need permission"</em> — a mechanism and a
+pre-authorisation shipped in one file that
 <code>growmos integrate</code> writes into a repository.</li>
 <li>Most reusable component: <code>Graph.check_claim</code>, for its
 failure behaviour. Four verdicts — supported, pair_supported,
@@ -11686,7 +11695,10 @@ rotation"</em>, <em>"password policy requires 12 characters"</em>,
 is…"</em> all pass through — the exact lines a conversation
 <em>about</em> security produces, and the ones a careless redactor eats.
 It is also the only test in the repository, guarding the only defence a
-store with no delete has.</li>
+store with no delete has — and it guards it at arm's length: the file
+imports only <code>node:assert</code> and transcribes the patterns and
+functions rather than importing them, because <code>compact.mjs</code>
+exports nothing. Take the negative cases, not the wiring.</li>
 <li>Maturity impression: MIT, version 0.5.3, 86 commits between 15 March
 and 25 April 2026 with <strong>no commit since</strong>; 1,796 lines of
 Node and 2,289 lines of specification, skills and templates; no CI. No
@@ -11726,7 +11738,11 @@ rate, so an unused memory sits at 0.5 — updated after every episode from
 that episode's outcome, with eviction below 0.35 held back until the
 record has been used at least three times. This atlas complains
 repeatedly about an importance score written once and never moved; this
-is the counter-example.</li>
+is the counter-example. Note where that three-use floor lives: it is an
+argument the caller passes, not an invariant of the store, and the
+FastAPI prune endpoint defaults it to zero — at which a record retrieved
+once in a failed episode scores 0.333 and is deleted on the first
+evidence against it.</li>
 <li>Biggest risk: <strong>6,044 lines of memory subsystem with no test
 of its own.</strong> The repository's large <code>tests/</code> tree is
 inherited from <code>verl</code>, and its one memory-named file is about

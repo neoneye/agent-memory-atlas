@@ -9,7 +9,7 @@ source_url: https://github.com/KnowledgeXLab/MemHarness
 archive_name: "KnowledgeXLab--MemHarness"
 revision: 31329e8e084c7fdf20556874950f6c2100b8b28e
 revision_url: https://github.com/KnowledgeXLab/MemHarness/commit/31329e8e084c7fdf20556874950f6c2100b8b28e
-analyzed_at: 2026-08-17
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "vector"
@@ -19,7 +19,7 @@ matrix:
   storage: "A Milvus collection per task (`agent_memories_<task_name>`), run locally as Milvus Lite; the trajectory window itself is an in-process list inherited from verl-agent"
   retrieval: "The policy writes its own query, the store embeds it and returns top-k by cosine with a `min_score` floor, optionally restricted to records from successful episodes, then near-duplicate hits are dropped in embedding space before anything reaches the prompt"
   write: "After each episode a summarizer distils experiences from the trajectory and writes them back with embedding-space deduplication; nothing is written during the episode"
-  update_delete: "No correction and no per-value rejection. A record's utility counters update after every episode that retrieved it, and `prune_low_utility_memories(threshold=0.35, min_uses=3)` deletes those whose smoothed success rate falls below the floor once they have been used at least three times"
+  update_delete: "No correction and no per-value rejection. A record's utility counters update after every episode that retrieved it, and `prune_low_utility_memories` deletes those whose smoothed success rate falls below a threshold once they have been used a minimum number of times — both numbers supplied by the caller, 0.35 and 3 from the trainer and 0.0 and 0 from the HTTP surface"
   scoping: "`task_name` is stored on every record and AND-ed into the dedupe probe and the random-state sampler, and it is absent from the filter on the retrieval that feeds the agent. Isolation comes from the collection name defaulting to the task"
   integration: "Not a library an application calls — a training stack. The memory manager sits inside a verl-agent rollout, and the loop is exercised through ALFWorld, WebShop, AppWorld, Sokoban and a search environment"
   background: "None over the store during an episode. Write-back runs at episode end; the utility prune runs every N global training steps, wrapped so a failure prints and lets training continue"
@@ -62,7 +62,24 @@ id that appears in that trajectory's retrieval events has its counters
 incremented, with success taken from the episode's own outcome. Then
 `prune_low_utility_memories(threshold=0.35, min_uses=3)` deletes the records
 whose measured rate has fallen below the floor, and the `min_uses` guard is what
-stops one unlucky episode from evicting a good memory. This atlas repeatedly
+stops one unlucky episode from evicting a good memory.
+
+That guard lives in the caller, not in the store. `prune_low_utility_memories`
+takes both numbers as required arguments and only clamps with
+`min_uses = max(0, int(min_uses))` (`milvus_store.py:613-617`); the trainer
+supplies 0.35 and 3 from `prune_score_threshold` and `min_uses_before_prune`
+(`memory_manager.py:355-356`), while the HTTP surface reads
+`int(body.get("min_uses", 0))` (`memory_fastapi.py:93`). An empty body is
+harmless, because `score_threshold` defaults to `0.0` and nothing scores below
+it. A body that carries the threshold and omits the floor is not: at
+`min_uses = 0`, a record retrieved once in a failed episode scores
+`(0 + 1) / (1 + 2) = 0.333`, under 0.35, and is deleted on the first evidence
+against it — which is precisely the case the design says three uses exist to
+prevent. The repository's own client always sends both fields
+(`memory_store.py:157`), so this bites an operator posting to `/memories/prune`
+by hand rather than the training loop. The general form is worth naming: when a
+safety floor is a caller's argument rather than the store's own invariant, it
+holds only for the callers you audited. This atlas repeatedly
 finds a ranking prior that is assigned at write time and never moves; here the
 prior is a measurement.
 
@@ -331,6 +348,10 @@ Three things a reader should hold alongside those figures. **No run artifacts
 are committed**: `run_scripts/` carries the two training scripts and
 `examples/data_preprocess`, and there is no results directory, no per-task
 output and no seed record, so the numbers are reproducible only by retraining.
+Re-run at this pin, a search of the tree for `.jsonl`, `.csv`, `results*` or
+`.log` outside the vendored `verl/` returns one hit — a WebShop HTML template.
+The published figures ship as `assets/main_results.png` and
+`assets/ood_results.png`: images.
 The comparison is against the authors' own baselines under their own harness,
 which is ordinary for the field and still means the reader is trusting one
 group's stack end to end. And an independent attempt to use the same idea
@@ -455,5 +476,19 @@ than the code that demonstrates it.
 - `verl/` — the vendored trainer
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. The
+central mechanisms re-derived: `compute_utility_score` is
+`(c_succ + 1) / (c_use + 2)` under a docstring naming the Beta(1,1) prior, and
+the scope asymmetry is exactly as first read — `_scoped_search_filter_expr`
+composes `task_name` and `success`, the insert-time dedupe probe
+(`milvus_store.py:211`) and the random-state sampler (`:726`) call it, and
+`retrieve` builds its filter inline and sets only `success == true`
+(`:409-410`), never the task term. `scope_enforced` stays withheld. The
+subsystem still has no test of its own, and the headline figures are still two
+PNGs. **New finding:** the `min_uses` floor is a caller's argument rather than
+the store's invariant, and the FastAPI surface defaults it to zero, where a
+single failed episode is enough to score a record at 0.333 and delete it. No
+marks change; the report carries none.
 
 **2026-08-17** — [`31329e8e084c7fdf20556874950f6c2100b8b28e`](https://github.com/KnowledgeXLab/MemHarness/commit/31329e8e084c7fdf20556874950f6c2100b8b28e) — First reading, at 84 commits since 5 March 2026, with the paper at [arXiv:2607.28272](https://arxiv.org/abs/2607.28272) (30 July 2026, cs.AI). Screened before reading: 0 auto-run surfaces, 3 build-time execution paths, 8 unpinned dependency surfaces across four requirements files, nothing inside the seven-day cooldown; nothing was installed, built or run — the stack wants conda, vLLM, flash-attn and a served embedding model. In scope where [MemAgent](../../compare/#not-in-scope-conversation-window-management) is not: the experience bank is a Milvus collection that outlives the episode, is retrieved by a query the policy writes, and carries per-record counters that change with use. No capability mark. The four near-misses worth stating: a `value` that is a genuine measured prior — `(succ + 1) / (use + 2)` over episodes that retrieved the record — and therefore a float where the rubric asks for a discrete state; a `task_name` scope key that is stored, escaped and AND-ed into the insert-time dedupe probe and the random-state sampler but not into the retrieval that feeds the agent, leaving the boundary to a collection name that defaults per task; provenance rich enough to reconstruct a memory's origin, used for the policy's critique rather than recorded as an audit of mutations; and pruning that deletes by measured utility rather than by any rejection keyed on a value, so a pruned lesson can be re-derived and reinserted. The subsystem is 6,044 lines and has no test of its own; the repository's large `tests/` tree is inherited from `verl` and its one memory-named file concerns GPU buffers. No run artifacts are committed for the published ALFWorld and WebShop figures.

@@ -117,7 +117,7 @@ compaction tree whose leaves are permanent by design.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-17</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kevin-hs-sohn--hipocampus" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -371,6 +371,23 @@ corrupt the memory of the discussion that mattered.</p>
 it is the only defence. The store has no delete, so a secret that gets
 past the scanner is in a permanent leaf node and in every summary that
 quotes it.</p>
+<p>Which makes how the test is wired the thing to check, and it is wired
+by copy. <code>cli/compact.test.mjs</code> imports exactly one thing —
+<code>node:assert</code> — and then re-declares
+<code>SECRET_PATTERNS</code>, <code>scanLine</code>,
+<code>redactLine</code> and <code>scanSecrets</code> in its own file. It
+never loads <code>cli/compact.mjs</code>, and it could not: that file
+contains no <code>export</code> statement, so nothing in it is
+importable. The two pattern arrays are byte-identical at this commit, so
+every assertion above is true of the shipped scanner today — by
+coincidence of transcription, not by construction. Edit the six regexes
+in <code>compact.mjs</code> and the suite stays green, because it is not
+looking at them. There is also nothing that runs it:
+<code>package.json</code> has no <code>scripts</code> block at all, the
+file's own header comment is the invocation (<em>"Run: node
+hipocampus/cli/compact.test.mjs"</em>), and there is no CI workflow in
+the tree. A duplicated test is a weak guard everywhere; against a store
+that cannot delete, it guards the one thing that cannot be undone.</p>
 <p>Deletion, correction and supersession are absent by design, and the
 specs say so three times: raw logs <em>"must never be deleted — they are
 permanent leaf nodes"</em>, compaction nodes are <em>"index supplements
@@ -447,10 +464,15 @@ repository.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p>One test file, 69 lines, entirely about the secret scanner —
-discussed above and better than its size suggests, because it asserts
-the false-positive cases as carefully as the true ones. Nothing tests
+discussed above, and well chosen in what it asserts, since it covers the
+false-positive cases as carefully as the true ones. What it does not do
+is exercise the shipped code: it transcribes the patterns and the three
+functions into the test file rather than importing them, and
+<code>compact.mjs</code> exports nothing to import. Nothing tests
 compaction, the tentative/fixed transition, the exclusion rules or the
-ROOT.md rebuild. There is no CI workflow in the tree.</p>
+ROOT.md rebuild. <code>package.json</code> declares no
+<code>scripts</code>, so nothing runs the one test either, and there is
+no CI workflow in the tree.</p>
 <p><strong>The benchmark is the project's strongest claim and it is
 external.</strong> The README reports results on MemAware — <em>"900
 implicit context questions across 3 months of conversation
@@ -609,6 +631,20 @@ the three auto-run surfaces</li>
 <li><code>templates/</code> — the six seeded files</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <strong>Correction to the strongest positive
+claim.</strong> The secret scanner is still the right thing to have
+tested, but <code>cli/compact.test.mjs</code> does not test it: the file
+imports only <code>node:assert</code> and re-declares the six patterns
+and the three functions locally, and <code>cli/compact.mjs</code>
+contains no <code>export</code> statement, so the shipped scanner cannot
+be imported. The arrays match byte for byte at this commit, so the
+assertions hold today by transcription rather than by construction.
+<code>package.json</code> declares no <code>scripts</code> block, so
+nothing invokes the test, and there is no CI workflow. Everything else
+re-verified: <code>scanSecrets</code> is applied once, at
+<code>compact.mjs:217</code>, on the way into the raw daily log. No
+marks change; the report carries none.</p>
 <p><strong>2026-08-17</strong> — <a
 href="https://github.com/kevin-hs-sohn/hipocampus/commit/df88ca19d42a3aba4caeaba4512da46cae7827da"><code class="commit-id" title="df88ca19d42a3aba4caeaba4512da46cae7827da">df88ca19…</code></a>
 — First reading, at version 0.5.3 and 86 commits, on a repository whose

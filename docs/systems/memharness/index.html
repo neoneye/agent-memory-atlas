@@ -121,7 +121,7 @@ succeeded.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-17</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/KnowledgeXLab--MemHarness" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -181,9 +181,30 @@ incremented, with success taken from the episode's own outcome. Then
 <code>prune_low_utility_memories(threshold=0.35, min_uses=3)</code>
 deletes the records whose measured rate has fallen below the floor, and
 the <code>min_uses</code> guard is what stops one unlucky episode from
-evicting a good memory. This atlas repeatedly finds a ranking prior that
-is assigned at write time and never moves; here the prior is a
-measurement.</p>
+evicting a good memory.</p>
+<p>That guard lives in the caller, not in the store.
+<code>prune_low_utility_memories</code> takes both numbers as required
+arguments and only clamps with
+<code>min_uses = max(0, int(min_uses))</code>
+(<code>milvus_store.py:613-617</code>); the trainer supplies 0.35 and 3
+from <code>prune_score_threshold</code> and
+<code>min_uses_before_prune</code>
+(<code>memory_manager.py:355-356</code>), while the HTTP surface reads
+<code>int(body.get("min_uses", 0))</code>
+(<code>memory_fastapi.py:93</code>). An empty body is harmless, because
+<code>score_threshold</code> defaults to <code>0.0</code> and nothing
+scores below it. A body that carries the threshold and omits the floor
+is not: at <code>min_uses = 0</code>, a record retrieved once in a
+failed episode scores <code>(0 + 1) / (1 + 2) = 0.333</code>, under
+0.35, and is deleted on the first evidence against it — which is
+precisely the case the design says three uses exist to prevent. The
+repository's own client always sends both fields
+(<code>memory_store.py:157</code>), so this bites an operator posting to
+<code>/memories/prune</code> by hand rather than the training loop. The
+general form is worth naming: when a safety floor is a caller's argument
+rather than the store's own invariant, it holds only for the callers you
+audited. This atlas repeatedly finds a ranking prior that is assigned at
+write time and never moves; here the prior is a measurement.</p>
 <p><strong>Where it is weakest is verification and boundaries.</strong>
 The memory subsystem is 6,044 lines and <strong>has no test of its
 own</strong> — the large <code>tests/</code> tree is verl's, and its
@@ -474,11 +495,16 @@ supplying it with context.</p>
 run artifacts are committed</strong>: <code>run_scripts/</code> carries
 the two training scripts and <code>examples/data_preprocess</code>, and
 there is no results directory, no per-task output and no seed record, so
-the numbers are reproducible only by retraining. The comparison is
-against the authors' own baselines under their own harness, which is
-ordinary for the field and still means the reader is trusting one
-group's stack end to end. And an independent attempt to use the same
-idea measured much less: the study behind <a
+the numbers are reproducible only by retraining. Re-run at this pin, a
+search of the tree for <code>.jsonl</code>, <code>.csv</code>,
+<code>results*</code> or <code>.log</code> outside the vendored
+<code>verl/</code> returns one hit — a WebShop HTML template. The
+published figures ship as <code>assets/main_results.png</code> and
+<code>assets/ood_results.png</code>: images. The comparison is against
+the authors' own baselines under their own harness, which is ordinary
+for the field and still means the reader is trusting one group's stack
+end to end. And an independent attempt to use the same idea measured
+much less: the study behind <a
 href="https://www.pinglin.tw/blog/the-shapes-of-agent-memory/"><em>The
 Shapes of Agent Memory</em></a> records MemHarness's published 0.852 on
 ALFWorld as the bar, and its own experience-bank arm reached 0.645 with
@@ -613,6 +639,24 @@ WebShop, AppWorld, Sokoban, search</li>
 <li><code>verl/</code> — the vendored trainer</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. The central mechanisms re-derived:
+<code>compute_utility_score</code> is
+<code>(c_succ + 1) / (c_use + 2)</code> under a docstring naming the
+Beta(1,1) prior, and the scope asymmetry is exactly as first read —
+<code>_scoped_search_filter_expr</code> composes <code>task_name</code>
+and <code>success</code>, the insert-time dedupe probe
+(<code>milvus_store.py:211</code>) and the random-state sampler
+(<code>:726</code>) call it, and <code>retrieve</code> builds its filter
+inline and sets only <code>success == true</code>
+(<code>:409-410</code>), never the task term.
+<code>scope_enforced</code> stays withheld. The subsystem still has no
+test of its own, and the headline figures are still two PNGs.
+<strong>New finding:</strong> the <code>min_uses</code> floor is a
+caller's argument rather than the store's invariant, and the FastAPI
+surface defaults it to zero, where a single failed episode is enough to
+score a record at 0.333 and delete it. No marks change; the report
+carries none.</p>
 <p><strong>2026-08-17</strong> — <a
 href="https://github.com/KnowledgeXLab/MemHarness/commit/31329e8e084c7fdf20556874950f6c2100b8b28e"><code class="commit-id" title="31329e8e084c7fdf20556874950f6c2100b8b28e">31329e8e…</code></a>
 — First reading, at 84 commits since 5 March 2026, with the paper at <a

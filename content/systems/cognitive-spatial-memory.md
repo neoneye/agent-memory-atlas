@@ -9,7 +9,7 @@ source_url: https://github.com/munch2u-a11y/Cognitive-Spatial-Memory
 archive_name: "munch2u-a11y--Cognitive-Spatial-Memory"
 revision: 39df03a18d202a25f4c066d662109f85128886ef
 revision_url: https://github.com/munch2u-a11y/Cognitive-Spatial-Memory/commit/39df03a18d202a25f4c066d662109f85128886ef
-analyzed_at: 2026-08-16
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files, sqlite, chroma"
 stack_retrieval: "vector"
@@ -25,7 +25,7 @@ matrix:
   background: "A pulse step that decays temperature and recomputes gravity anchors, driven by the caller rather than scheduled"
   trust: "None. Confidence feeds mass, so belief strength is a ranking weight; there is no status and no state that withholds a point from retrieval"
   strengths: "A retrieval law stated as an equation and implemented as stated, where recency is a force rather than a filter, so nothing is excluded by a cutoff; and an honest docstring naming the parent system the engine came from"
-  risks: "There is no deletion of any kind — no delete, forget, supersede or compact — behind a drop-in RAG replacement claim; there are no tests and no evaluation of that claim; and the committed audits link file:///home/nemo paths that resolve for nobody"
+  risks: "The persisted state carries no record of which embedding model produced its permanent positions, so changing the provider silently mixes two manifolds that nothing can re-embed or remove; there is no deletion of any kind — no delete, forget, supersede or compact — behind a drop-in RAG replacement claim; there are no tests and no evaluation of that claim; and the committed audits link file:///home/nemo paths that resolve for nobody"
 ---
 
 ## 1. Executive Summary
@@ -211,13 +211,36 @@ artifacts; the extraction shipped none.
   shape.
 - **Give a position permanence by deriving it from an immutable projection.** A
   fixed orthogonal matrix means an id's address never moves between runs, so the
-  index is reproducible without storing coordinates.
+  index is reproducible without storing coordinates — *provided the embedding
+  that feeds it is the same one*. See the note below on what that permanence
+  rests on.
 - **State the ranking law as an equation in the README and implement it
   literally.** `F = T × m / d²` is checkable in one grep, which is more than most
   retrieval descriptions in this corpus permit.
 
 ### Avoid
 
+- **Calling a position permanent when the thing it is derived from can change
+  underneath it.** `CognitiveProjection` is deterministic —
+  `PROJECTION_SEED = 42`, a Johnson–Lindenstrauss matrix built once from
+  `(in_dim, out_dim, seed)` — so the same embedding always lands at the same 8D
+  address. But the matrix is a function of the embedding's *dimension* only, and
+  nothing in the persisted state records which embedding model produced the
+  vectors. `save_state` writes a flat `{point_id: {position, type, confidence,
+  importance, relations_count, weight, content, last_accessed, created_at}}` map
+  with no header — no model id, no embedding dimension, no seed, no schema
+  version — and `load_state` reads it back unconditionally
+  (`cognitive_space.py:1306-1345`). Two different models of the same width
+  project through the same matrix into the same manifold, and a model of a
+  different width makes `CognitiveProjection.load` rebuild on a shape mismatch
+  (`:145-152`) while the old points keep coordinates computed under the previous
+  matrix. Either way the gravity law keeps measuring Euclidean distance between
+  addresses that no longer mean the same thing, and says nothing. The two
+  properties that make this unrecoverable rather than merely wrong are the ones
+  the design is proudest of: positions are permanent, and there is no removal
+  path, so there is nothing to re-embed and nothing to drop. A one-line header on
+  the state file — model, dimension, seed — turns a silent corruption into a
+  startup error.
 - **Shipping a retrieval store with no removal path.** Not as a gap to fill
   later: `store`, `add_belief` and `add_memory` have no counterpart, so the API
   has no shape for a caller to delete against, and adopters will build on that.
@@ -278,5 +301,19 @@ documented deletion gaps to weigh.
   self-documentation whose file links point at the author's local filesystem
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Every
+negative claim re-run and confirmed: no `delete`, `forget`, `remove`, `purge`,
+`compact`, `evict` or `prune` is defined anywhere in the package; there is no
+test file in the tree; and the `file:///home/nemo/…` links are still in
+`docs/audit_part2_mind_engine_entry.md`. The ranking law reads literally as
+documented — `temperature * mass / (d * d)` at `cognitive_space.py:504` and the
+vector form `temperature * mass * direction / (dist ** 3)` at `:913`. **New
+finding:** the permanence the design rests on is permanence with respect to the
+projection, not to the embedding. `save_state` writes a bare point map with no
+model, dimension, seed or schema stamp and `load_state` accepts it, so swapping
+the embedding provider leaves old and new points sharing one 8D space on
+incomparable terms — and with no delete and no re-embed path, nothing can undo
+it. No marks; the report carries none.
 
 **2026-08-16** — [`39df03a18d202a25f4c066d662109f85128886ef`](https://github.com/munch2u-a11y/Cognitive-Spatial-Memory/commit/39df03a18d202a25f4c066d662109f85128886ef) — First reading, at the repository's single commit, dated 2026-05-23. Screened first: 0 auto-run surfaces, 0 build-time execution paths, 2 unpinned dependency surfaces with no lockfile; nothing was installed or run. No capability marks. The engine is disclosed in its own docstring as extracted from [Helix AGI](../helix-agi/), which this atlas already reports, so it is not independent evidence for gravity-ranked retrieval. The README's `F = T × m / d²` is implemented as stated at `cognitive_space.py:504`. There is no delete, forget, supersede or compact path anywhere in the package, no scope key, no status field, no audit record and no tests, behind a "drop-in RAG replacement" claim with no committed comparison. No paper.

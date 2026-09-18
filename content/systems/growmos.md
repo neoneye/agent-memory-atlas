@@ -9,7 +9,7 @@ source_url: https://github.com/codician-team/growmos
 archive_name: "codician-team--growmos"
 revision: 510deb2dfee151fb79402b0a3274025f9c1c2c71
 revision_url: https://github.com/codician-team/growmos/commit/510deb2dfee151fb79402b0a3274025f9c1c2c71
-analyzed_at: 2026-08-17
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical, graph"
@@ -19,7 +19,7 @@ matrix:
   storage: "`.growmos/` beside the repo — `entities.jsonl`, `relations.jsonl`, `aliases.jsonl`, `mentions.jsonl`, `sources.jsonl`, `profiles/*.json`, `journal.md`, `eval/gold/*.json`. Plain files, hand-editable, no database, and no runtime dependency at all"
   retrieval: "Seeds by alias containment then token overlap against the question, a k-hop induced subgraph around them, serialized as triples sorted by corroboration with each edge's id and source labels attached — the answer schema then requires `cited_edges` and a `not_in_graph` list"
   write: "Three one-line verbs — `remember`, `link`, `journal` — plus an extraction pipeline that hands judgment to whatever agent you already run as a task packet (prompt + JSON shape + the exact `apply` command). No API key required; a headless provider mode exists for cron"
-  update_delete: "`merge` folds one entity into another, rewriting its edges and deleting the source node; `rename` changes a display name; `compact` prunes dangling edges and aliases. Nothing records that a fact was wrong, and re-asserting a merged-away name creates it again"
+  update_delete: "`merge` folds one entity into another, rewriting its edges, repointing every alias and deleting the source node and its profile file; `rename` changes a display name; `compact` prunes dangling edges and aliases. Nothing records that a fact was wrong, or that a merge happened"
   scoping: "One `.growmos/` per repository and no scope key on any record. The graph is shared by every agent and person working in that directory, which is the stated design"
   integration: "An MCP server, a CLI, and installed hooks: `SessionStart` prints the brief and the pending work, `Stop` returns `{\"decision\": \"block\"}` while packets are outstanding. `growmos integrate` writes the config for Claude Code, Codex, Grok, Cursor and Gemini"
   background: "None on a schedule. Work is queued by content hash — a changed document flips its source row back to `pending` — and drained by the agent when a hook or a human asks for the next packet"
@@ -424,7 +424,18 @@ prose only if they have it.
 - **A merge that deletes without a record.** Folding one entity into another is
   the single most destructive operation here, and afterwards nothing in the store
   says it happened — the ring buffer in `state.json` holds two hundred runs and
-  is rewritten whole. Re-assert the merged-away name and it returns as new.
+  is rewritten whole. The folded node is `del`-ed from `entities` and its
+  generated profile file is `unlink`-ed (`store.py:510-517`), so the only trace
+  is that the survivor now answers to both names.
+
+  The name itself does survive, and better than the first reading credited.
+  `merge` repoints every alias key whose value was the folded id and then
+  registers the folded entity's own name against the survivor's type
+  (`store.py:490-493`), and `resolve_name` falls back to a type-agnostic lookup
+  that returns the single match when the typed key misses (`:328-330`). So
+  re-asserting a merged-away name under any type — including one neither entity
+  ever carried — resolves to the survivor rather than creating a new node. What
+  is missing is the *record*, not the resolution.
 - **A validity range nothing reads.** `when` is written, preserved through a
   merge, and consulted by no query and no serializer. Either a read takes an
   as-of parameter or the field is documentation with a schema.
@@ -506,5 +517,19 @@ memory system is most of the question.
   and the eval case that asserts recall below 1.0
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+**Correction.** The first reading said re-asserting a merged-away name brings it
+back as a new entity. It does not: `merge` repoints every alias whose value was
+the folded id and adds the folded name under the survivor's type
+(`store.py:490-493`), and `resolve_name`'s type-agnostic fallback returns the
+single match whenever the typed key misses (`:328-330`), so the name resolves to
+the survivor under any type. The surrounding claim stands and is now the whole
+claim: a merge leaves no record that it happened, and it also `unlink`s the
+folded entity's profile file. Everything else re-verified in the tree — the edge
+id is `"r_" + short_hash(f"{s}|{norm_predicate(p)}|{t}", 12)` (`:395`),
+`confidence` is `max(1, len(rec["sources"]))` (`:413`), and `when` is read in
+exactly one place, the merge that carries it forward (`:508-509`), and by no
+query, serializer or exporter. No marks; the report carries none.
 
 **2026-08-17** — [`510deb2dfee151fb79402b0a3274025f9c1c2c71`](https://github.com/codician-team/growmos/commit/510deb2dfee151fb79402b0a3274025f9c1c2c71) — First reading, at 23 commits on a repository whose first commit is dated the same day, 17 August 2026, published to PyPI as `growmos` 0.1.5. Screened first: three auto-run surfaces, all invoking the project's own binary and all read before anything else — `.claude/settings.json` (`SessionStart` and `Stop` hooks running `growmos hook …`), `.mcp.json` and `server.json` (both declaring `growmos mcp`) — plus one manifest changed the same day, inside the seven-day cooldown, and one unpinned surface with no lockfile. Nothing was installed, built or run, so the twenty committed tests were read rather than executed. No capability mark: seven near-misses are stated in place, of which four are the interesting ones — a `provisional` entity state that every health surface counts and no read path filters on, a `when` validity range written and preserved through a merge but consulted by nothing, an append-only provenance file that records extractions while entity merges and renames leave only a two-hundred-entry ring buffer in `state.json`, and a structured review verdict (`ok`/`issues`/`fixes`, attributed to `agent` or `human`) that is written to a memo rather than onto the node it judged. The mechanisms worth the report are the content-derived edge id with confidence as a count of corroborating documents, the default exclusion of agent instruction files as *"protocol, not knowledge"*, the fact-check that refutes with the adjacent true edges, and the `Stop` hook that returns `{"decision": "block"}` while packets are pending — beside which the same hook file tells the agent the loop *"does not need permission"*. No paper; `METHODOLOGY.md` credits an external playbook that is not in the repository.

@@ -122,7 +122,7 @@ until it has.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-17</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/codician-team--growmos" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -572,28 +572,41 @@ regression detector.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>Telling the model, in a hook, that an action does not need
-permission.</strong> The blocking stop is a mechanism; <em>"it is quick
-and does not need permission"</em> is prose that pre-authorises a tool
-loop on the user's behalf, in a file installed into their repository by
-an integrate command.</li>
-<li><strong>A merge that deletes without a record.</strong> Folding one
-entity into another is the single most destructive operation here, and
-afterwards nothing in the store says it happened — the ring buffer in
-<code>state.json</code> holds two hundred runs and is rewritten whole.
-Re-assert the merged-away name and it returns as new.</li>
-<li><strong>A validity range nothing reads.</strong> <code>when</code>
-is written, preserved through a merge, and consulted by no query and no
-serializer. Either a read takes an as-of parameter or the field is
-documentation with a schema.</li>
-<li><strong>A review verdict that lands beside the thing it
+<li><p><strong>Telling the model, in a hook, that an action does not
+need permission.</strong> The blocking stop is a mechanism; <em>"it is
+quick and does not need permission"</em> is prose that pre-authorises a
+tool loop on the user's behalf, in a file installed into their
+repository by an integrate command.</p></li>
+<li><p><strong>A merge that deletes without a record.</strong> Folding
+one entity into another is the single most destructive operation here,
+and afterwards nothing in the store says it happened — the ring buffer
+in <code>state.json</code> holds two hundred runs and is rewritten
+whole. The folded node is <code>del</code>-ed from <code>entities</code>
+and its generated profile file is <code>unlink</code>-ed
+(<code>store.py:510-517</code>), so the only trace is that the survivor
+now answers to both names.</p>
+<p>The name itself does survive, and better than the first reading
+credited. <code>merge</code> repoints every alias key whose value was
+the folded id and then registers the folded entity's own name against
+the survivor's type (<code>store.py:490-493</code>), and
+<code>resolve_name</code> falls back to a type-agnostic lookup that
+returns the single match when the typed key misses
+(<code>:328-330</code>). So re-asserting a merged-away name under any
+type — including one neither entity ever carried — resolves to the
+survivor rather than creating a new node. What is missing is the
+<em>record</em>, not the resolution.</p></li>
+<li><p><strong>A validity range nothing reads.</strong>
+<code>when</code> is written, preserved through a merge, and consulted
+by no query and no serializer. Either a read takes an as-of parameter or
+the field is documentation with a schema.</p></li>
+<li><p><strong>A review verdict that lands beside the thing it
 judged.</strong> <code>{ok, issues, fixes}</code> is a good shape;
 writing it to a memo while the node keeps its edges unchanged means the
-next query cannot tell that somebody found it wrong.</li>
-<li><strong>A state that every health check counts and no query
+next query cannot tell that somebody found it wrong.</p></li>
+<li><p><strong>A state that every health check counts and no query
 filters.</strong> <code>provisional</code> is reported everywhere and
 enforced nowhere, so the graph is honest in its dashboards and
-unqualified in its answers.</li>
+unqualified in its answers.</p></li>
 </ul>
 <h3 id="fit">Fit</h3>
 <p>Take this if you want a shared, inspectable graph in the repository
@@ -685,6 +698,24 @@ fact-check refusal case and the eval case that asserts recall below
 1.0</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <strong>Correction.</strong> The first reading said
+re-asserting a merged-away name brings it back as a new entity. It does
+not: <code>merge</code> repoints every alias whose value was the folded
+id and adds the folded name under the survivor's type
+(<code>store.py:490-493</code>), and <code>resolve_name</code>'s
+type-agnostic fallback returns the single match whenever the typed key
+misses (<code>:328-330</code>), so the name resolves to the survivor
+under any type. The surrounding claim stands and is now the whole claim:
+a merge leaves no record that it happened, and it also
+<code>unlink</code>s the folded entity's profile file. Everything else
+re-verified in the tree — the edge id is
+<code>"r_" + short_hash(f"{s}|{norm_predicate(p)}|{t}", 12)</code>
+(<code>:395</code>), <code>confidence</code> is
+<code>max(1, len(rec["sources"]))</code> (<code>:413</code>), and
+<code>when</code> is read in exactly one place, the merge that carries
+it forward (<code>:508-509</code>), and by no query, serializer or
+exporter. No marks; the report carries none.</p>
 <p><strong>2026-08-17</strong> — <a
 href="https://github.com/codician-team/growmos/commit/510deb2dfee151fb79402b0a3274025f9c1c2c71"><code class="commit-id" title="510deb2dfee151fb79402b0a3274025f9c1c2c71">510deb2d…</code></a>
 — First reading, at 23 commits on a repository whose first commit is
