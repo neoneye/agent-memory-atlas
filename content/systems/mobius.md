@@ -9,11 +9,10 @@ source_url: https://github.com/nutshellai-tech/mobius
 archive_name: "nutshellai-tech--mobius"
 revision: 0f74ca8412f42f65bcb68c7cd2be7f4978acef29
 revision_url: https://github.com/nutshellai-tech/mobius/commit/0f74ca8412f42f65bcb68c7cd2be7f4978acef29
-analyzed_at: 2026-09-11
-capabilities: "scope_enforced, human_review"
+analyzed_at: 2026-09-18
+capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "the catalog read, not the directory layout | mobius/backend/services/access-control.ts:409-427, reached from routes/memories.ts:128-131 | `canReadContextItem` parses the item id for its stored `userId`, `scope` and `projectId` and checks them against the caller, then consults `contextPolicy` and `allowedByVisibility` over `resource_acl_entries`; the `user=`/`project=` path segments are the storage partition | unknown"
-  human_review: "per-user hides and ACL management | mobius/backend/services/access-control.ts | a person suppresses an item without deleting it, and `can_manage` gates who may change a policy | unknown"
 stack_storage: "files, sqlite"
 stack_retrieval: ""
 stack_source: "reviewed"
@@ -244,7 +243,23 @@ Around it, SQLite carries the multi-tenant model this store leans on:
 `user_resource_hides` for per-user suppression that is not deletion, and
 `project_user_context_whitelists` for scoping what context a given user's session
 may draw on. Those are the columns doing the epistemic work in this product, and
-they are about permission rather than belief.
+they are about permission rather than belief — which is also why the
+human-review mark does not survive a second reading. `setHidden` writes one row
+keyed `(user_id, resource_type, resource_id)` and `isHidden` is applied on the
+memory read path at `routes/memories.ts:130`, as a JavaScript filter over the
+returned list rather than a predicate in the query. That is a personal mute: it
+changes what one user sees and nothing about what the store holds or admits.
+`can_manage` beside it decides who may edit an ACL, which is authorisation.
+Neither is a memory waiting in a state for a person to adjudicate.
+
+Nor is there such a state elsewhere. The only multi-valued `decision` column in
+the tree is `agent_bridge_messages.decision`, `pending | accepted | held |
+refused | expired` — and it is decided by `decidingSessionId`, the receiving
+*agent*, with the refusal message reading 目标 Agent 已拒绝消息, "the target Agent
+has refused the message". The nearest thing to a person in the loop is the
+password re-authentication on project deletion, recorded with an outcome of
+`pending | succeeded | denied | failed` in `project_deletion_audit_log` — a
+destructive act gated and logged, not a memory reviewed.
 
 ## 6. Retrieval Mechanics
 
@@ -503,6 +518,8 @@ Run from the root of the checkout at the pinned commit.
 | Nothing timestamps or versions a memory | `grep -rniE "updated_at\|version\|author" --include="*.ts" mobius/backend/services/memories-fs.ts` | Nothing on the memory record |
 
 ## History
+
+**2026-09-18** — [`0f74ca8412f42f65bcb68c7cd2be7f4978acef29`](https://github.com/nutshellai-tech/mobius/commit/0f74ca8412f42f65bcb68c7cd2be7f4978acef29) — re-read at the same commit; `main` has not moved since 10 September 2026, so the correction is this report's. **Human review withdrawn.** The record cited per-user hides and `can_manage`, and the body already had the argument against it: those columns are about permission rather than belief. `setHidden` writes one row per `(user_id, resource_type, resource_id)` and `isHidden` filters the memory list in JavaScript at `routes/memories.ts:130` — a personal mute that changes what one user sees, not what the store admits; `can_manage` decides who may edit an ACL. A search of the whole tree for a pending-until-adjudicated state found one candidate, `agent_bridge_messages.decision` (`pending | accepted | held | refused | expired`), and it is decided by the receiving session — the other *agent* — with the refusal message saying so in as many words. The password-gated project deletion, logged with a `pending | succeeded | denied | failed` outcome and an actor, is a destructive act gated and recorded rather than a memory reviewed. One mark. The bespoke non-commercial licence was re-read for riders touching analysis and carries none: its restrictions are attribution, sublicensing and trademark.
 
 **2026-09-11** — [`0f74ca8412f42f65bcb68c7cd2be7f4978acef29`](https://github.com/nutshellai-tech/mobius/commit/0f74ca8412f42f65bcb68c7cd2be7f4978acef29) — re-read, 183 files and 17,941 insertions past the previous pin in a single commit. **Both marks hold and `scope_enforced` has its basis stated.** The eyebrow names the directory path, and a `user=<id>/project=<id>` path is a partition — no key on a record, no predicate on a query. The predicate is one layer up and was already half-named in the matrix: every catalog read goes through `canReadContextItem`, which parses the item's own id for `userId`, `scope` and `projectId`, checks them against the caller, and falls through to `resource_acl_entries`. Section 9 now says which of the two the mark measures. Path containment is unchanged, with `withinRoot` on both `findById` branches. **One addition worth the report**: `services/trust-boundary.ts` fences material drawn from another session in `<external_session_context>` tags, escapes those tags where they appear in the content so the fence cannot be forged from inside, and instructs the model that the contents are reference rather than instruction — under a docstring that declines the overclaim this atlas keeps finding: *"This is a prompt boundary, not an authorization boundary. Callers must still enforce access control and capability policy before constructing a context."* The gaps in section 9 are unchanged: no timestamp, no author, no version on a memory, and content is still never scanned before injection. Screened before reading: nineteen findings across twenty-three files; nothing was installed or run.
 
