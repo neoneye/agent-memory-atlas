@@ -9,11 +9,11 @@ source_url: https://github.com/24kchengYe/MemoMind
 archive_name: "24kchengYe--MemoMind"
 revision: d45a7a08dfec155f38c0bed41d1159f7c6234fc1
 revision_url: https://github.com/24kchengYe/MemoMind/commit/d45a7a08dfec155f38c0bed41d1159f7c6234fc1
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "postgres"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Hindsight's units — source chunks, world and experience facts, observations, reflections"
   storage: "PostgreSQL with pgvector, in a per-user embedded instance the installer provisions"
@@ -25,7 +25,7 @@ matrix:
   background: "Engine consolidation, plus a scheduled backup-and-prune script"
   trust: "proof_count is the only signal this project acts on, and it acts on it by deleting"
   strengths: "A documented patch set naming four real defects in an upstream memory engine"
-  risks: "The installer sed-replaces password with trust across the database's pg_hba.conf"
+  risks: "The installer sed-replaces password with trust across the database's pg_hba.conf; and the README asserts MIT with no licence file, over 160 vendored upstream files carrying none of their own"
 ---
 
 ## 1. Executive Summary
@@ -240,6 +240,23 @@ The patch blocks are individually guarded by `grep -q` so re-running is safe, an
 the reference copy under `engine/` is the recovery path. That is about as good as
 this approach gets; a fork or an upstream PR would be better.
 
+**The licence is asserted and absent, over a tree the project did not write.**
+`README.md:13` carries an `![License: MIT]` badge linking to `[LICENSE](LICENSE)`
+and `:709` a `## License` section reading `MIT` — and there is no `LICENSE` file
+in the repository. That alone is the position this atlas has recorded before:
+worse than a licence merely missing, because the badge gives a reader a reason
+not to look.
+
+Here it compounds. `engine/` holds **160 vendored files** — `hindsight/` and
+`hindsight_api/`, the upstream engine this project exists to patch — and none of
+them carries a `LICENSE`, `COPYING`, `NOTICE` or copyright header of its own.
+`PATCHES.md` names the provenance exactly (*"Base version: `hindsight-all` +
+`hindsight-api` (pip)"*), so the omission is not concealment; it is a redistribution
+whose terms are stated by a badge over code the badge's author does not own. For
+a reader whose question is "can I take the patch set", the patch set is the part
+that is clearly this project's to give, and it is the smallest part of what is
+committed.
+
 ## 10. Tests, Evals, and Benchmarks
 
 **No paper, no benchmark, no test directory.** `docs/` holds screenshots,
@@ -342,5 +359,9 @@ trivial-observation skip `:92-123`), `patch_hindsight.py`
 epistemic weakness this project's Patch 3 independently corroborates
 
 ## History
+
+**2026-09-18** — [`d45a7a08dfec155f38c0bed41d1159f7c6234fc1`](https://github.com/24kchengYe/MemoMind/commit/d45a7a08dfec155f38c0bed41d1159f7c6234fc1) — re-read at the same commit. The headline holds verbatim: `install.sh:74` is `sed -i 's/password/trust/g' "$PG_HBA"` followed by `echo "  Database auth fixed (trust mode)"`, and `PATCHES.md` still names its four patches with file, change and reason.
+
+The addition is a licensing finding the first reading did not make. `README.md:13` carries an MIT badge linking to `[LICENSE](LICENSE)` and `:709` a `## License` section reading `MIT`, and no `LICENSE` file exists in the repository — the same asserted-and-absent shape recorded for Membase. It compounds here because `engine/` is 160 vendored files of `hindsight` and `hindsight_api`, none carrying a licence, notice or copyright header of its own, so the badge states terms over code the project did not write. `PATCHES.md` names the upstream precisely, so this is an omission rather than concealment — but for a reader asking what they may borrow, the patch set is the part that is unambiguously this project's to give and the smallest part of what is committed. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`d45a7a08dfec155f38c0bed41d1159f7c6234fc1`](https://github.com/24kchengYe/MemoMind/commit/d45a7a08dfec155f38c0bed41d1159f7c6234fc1) — first reading. Screened before reading; the tree was read, never installed, and no patch effect was reproduced.
