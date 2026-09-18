@@ -119,7 +119,7 @@ facts that point back at the recording that produced them.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-31</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/xD4O--memento" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -323,10 +323,36 @@ tables filtered by category, status and user.</p>
 Every downstream store is derived from segments; a mis-transcribed name
 is a wrong concept and possibly a wrong profile fact, with no path
 back.</li>
-<li><strong>No semantic retrieval.</strong> Postgres FTS finds the words
-that were said, not what was meant, which for spoken logs — full of
-pronouns and half-sentences — misses more than it would over written
-text.</li>
+<li><strong>There is semantic retrieval, and the first version of this
+report said there was not.</strong> <code>segments.embedding</code> is a
+<code>vector(768)</code> filled by the worker with nomic-embed-text,
+indexed <code>USING hnsw (embedding vector_cosine_ops)</code>, and
+<code>web/src/lib/search.ts</code> runs the lexical and vector lanes
+concurrently, then appends the semantic hits the lexical lane did not
+already return. <code>/search</code> shows the literal matches; the
+semantic lane exists for Ask and the live agent's
+<code>search_journal</code> tool.</li>
+<li><strong>The distance ceiling is the part worth copying.</strong>
+<code>SEMANTIC_MAX_DIST</code> defaults to 0.33, and the comment records
+how the number was chosen: without a ceiling a nearest-neighbour query
+returns its full <code>LIMIT</code> however far the rows are, and the
+nearest distance <em>for pure gibberish</em> was measured at ~0.47 on a
+90-segment corpus against ~0.34 on a 600-segment one, so the ceiling
+sits under the larger corpus's noise floor. The same comment notes that
+the nomic task prefixes are omitted on both sides and that adding them
+roughly tripled the signal-to-noise gap in testing, but would require
+re-embedding every segment. That is a measured threshold with its own
+corpus-size caveat written down, which is rare.</li>
+<li><strong>A missed embedding is missed forever.</strong>
+<code>embed_texts</code> returns <code>None</code> on any failure —
+<em>"search degrades to FTS without these"</em> — and the indexer's
+<code>if embeddings:</code> then skips the <code>UPDATE</code>, while
+the entry still advances to <code>indexed</code>. No query anywhere in
+the repository looks for <code>embedding IS NULL</code>, so nothing
+backfills. A transient embedder outage during indexing removes those
+segments from the semantic lane permanently, and the
+<code>AND s.embedding IS NOT NULL</code> in the search query makes the
+loss invisible rather than an error.</li>
 <li><strong>A sealed entry is invisible to search by design</strong>,
 which is correct, and means a user who forgets they sealed something has
 no way to find it.</li>
@@ -365,13 +391,70 @@ distinguishes "derived from an entry that has since been deleted" from
 — a user deleting one video should not silently lose a preference — but
 the third option, a tombstone on the link, is the one that would let the
 system say what happened.</p>
+<p><strong>And the clause only fires on the one path that
+matters.</strong> <code>deleted_at</code> is a soft delete, so
+<code>ON DELETE SET NULL</code> never triggers from the trash — the only
+hard <code>DELETE FROM entries</code> is <code>api/vault/purge</code>,
+which requires the row to be in the trash already, is scoped to the
+user, and collects the object keys before it deletes the rows because
+<em>"a stray object is recoverable, a half-deleted row is not"</em>. Its
+docstring also states the consequence outright: <em>"pins, threads,
+profile_facts and story_topics keep their rows with a null source"</em>.
+So the orphaning is a decision, not an oversight — and the decision is
+that the only way a user can truly erase a recording leaves everything
+the system concluded from it still asserting itself, with the evidence
+gone. For a journal whose <code>profile_facts</code> categories include
+<code>sensitivity</code>, that is the sharpest edge in the system.</p>
 <p><strong>Deletion is soft everywhere and enforced by partial
 index</strong>, which is a genuine strength: liveness cannot be
 forgotten because the index that makes the query viable already encodes
 it.</p>
-<p><strong>There is no trust state.</strong> <code>source</code> is
-provenance, not status; nothing marks a derived fact uncertain, and the
-reflection pass can re-derive anything a user deleted.</p>
+<p><strong>The seal holds, and it holds structurally rather than by a
+filter.</strong> Eleven queries across the web layer carry
+<code>status &lt;&gt; 'sealed'</code> — the timeline, the entry read,
+the media GET, the calendar, the day view, the export, the counts — and
+two carry <code>status = 'sealed'</code> deliberately, to show a capsule
+count without its contents. Neither search lane carries the predicate,
+and does not need to: <code>deliver_on</code> is written only by the
+<code>INSERT</code> in <code>api/entries</code>, the media upload
+decides <code>sealed</code> against it once, and the worker polls
+<code>status = 'uploaded'</code>, so a sealed entry is never transcribed
+and has no segments to match. The invariant rests on an insert-only
+column rather than a read predicate, which is sound here and would stop
+being sound the moment a delivery date became editable.</p>
+<p><strong>One write is missing the user key the rest of the codebase
+applies.</strong> The media <code>PUT</code> in
+<code>api/entries/[id]/media</code> updates <code>media_uri</code>,
+<code>media_mime</code>, <code>status</code> and <code>error</code>
+<code>WHERE id = $3</code> — no <code>user_id</code>, where the
+<code>GET</code> three lines below it and every other statement in the
+repository carry one. With the app pinned to a single
+<code>USER_ID</code> constant nothing exploits it today; it is the one
+place in an otherwise uniform pattern where the boundary is absent.</p>
+<p><strong>There is no trust state</strong>, and the status columns that
+look like one are not. <code>threads</code> carries
+<code>open | resolved | dropped</code>, <code>pins</code> carries
+<code>active | done | dismissed</code> and <code>story_topics</code>
+carries <code>pending | done | skipped</code> — three workflow
+vocabularies about whether a task is still being pursued, none of them a
+statement about whether the content is believed. <code>source</code> is
+provenance, not status; <code>profile_facts</code> has no supersession,
+no validity window and no status at all, so nothing marks a derived fact
+uncertain and the reflection pass can re-derive anything a user
+deleted.</p>
+<p><strong>Profile facts dedup semantically and never
+supersede.</strong> Before inserting, the reflection pass embeds the
+candidate and refuses it if any live fact sits within cosine distance
+0.35 — <em>"LLMs rephrase known facts despite instructions"</em> —
+falling back to an exact lowercased string match when the embedder is
+unreachable, which is a much weaker filter at exactly the moment
+rephrasing is most likely to slip through. Two consequences follow. The
+probe is category-blind, so a <code>sensitivity</code> fact can be
+suppressed by a near-identical <code>context</code> one. And a fact that
+has <em>changed</em> is by construction further than 0.35 from its
+predecessor, so it is inserted alongside it and both stay live: the
+profile accumulates contradictions rather than correcting them, and
+nothing in the schema can express which one is current.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
 <p>No test suite was found. For a system whose correctness lives in a
@@ -405,6 +488,14 @@ the predicate is also a query that misses the index.</p>
 gone.</strong> The daily-summary compiler removes summaries for days
 that lost all their entries. Most systems here let derived artifacts
 outlive their evidence silently.</p>
+<p><strong>Calibrate a distance ceiling against gibberish, and write
+down the corpus size you measured on.</strong> Memento's semantic lane
+caps neighbours at cosine 0.33, and the comment beside the constant says
+the nearest distance for pure gibberish was ~0.47 on a 90-segment corpus
+and ~0.34 on a 600-segment one. That is the right experiment — the noise
+floor moves with corpus size, so a threshold without a corpus size
+attached is not a measurement — and almost nothing else in this atlas
+records both numbers.</p>
 <p><strong>Model sensitivity as a category of fact.</strong>
 <code>sensitivity</code> sitting beside <code>value</code> and
 <code>preference</code> gives the agent somewhere to record "be careful
@@ -461,6 +552,43 @@ transcription and indexing steps).</p>
 <p><strong>Licence</strong> — <code>LICENSE</code> (PolyForm
 Noncommercial License 1.0.0).</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/xD4O/memento/commit/f8e1dc14235f74602ebc7d5a2c5d108901ff3b6b"><code class="commit-id" title="f8e1dc14235f74602ebc7d5a2c5d108901ff3b6b">f8e1dc14…</code></a>
+— re-read at the same commit. Nothing upstream had moved, so every
+correction is the atlas's own, and the largest was a negative existence
+claim: section 6 said there was no semantic retrieval. There is.
+<code>segments.embedding</code> is a <code>vector(768)</code> written by
+the worker with nomic-embed-text, indexed with HNSW, and queried as a
+second lane beside Postgres full text with a measured distance ceiling;
+<code>profile_facts</code> carries embeddings too, and the reflection
+pass uses them to refuse a fact within cosine 0.35 of a live one.
+<code>stack_retrieval</code> goes from <code>lexical</code> to
+<code>lexical, vector</code> and <code>stack_source</code> from seeded
+to reviewed.</p>
+<p>Three further findings. A segment whose embedding failed is never
+re-embedded — <code>embed_texts</code> returns <code>None</code>, the
+indexer's <code>if embeddings:</code> skips the update, the entry still
+reaches <code>indexed</code>, and no query anywhere looks for
+<code>embedding IS NULL</code> — so an embedder outage during indexing
+silently removes those segments from the semantic lane for good. The
+fact dedup is category-blind and has no supersession, so a changed fact
+is inserted beside its predecessor and the profile accumulates
+contradictions. And the media <code>PUT</code> updates
+<code>WHERE id = $3</code> with no <code>user_id</code>, the one
+statement in the repository without the key that every other one
+carries.</p>
+<p>Two of the previous reading's claims were sharpened rather than
+corrected. The seal was verified across every read path: eleven queries
+carry <code>status &lt;&gt; 'sealed'</code>, neither search lane does,
+and it does not need to, because <code>deliver_on</code> is written only
+at <code>INSERT</code> and a sealed entry is never transcribed — the
+invariant rests on an insert-only column rather than a predicate. And
+the <code>ON DELETE SET NULL</code> orphaning fires only from
+<code>api/vault/purge</code>, whose own docstring states that
+<code>profile_facts</code> keep their rows with a null source — so it is
+a stated decision, and the decision is that the only path a user has to
+truly erase a recording leaves every conclusion drawn from it still
+asserting itself.</p>
 <p><strong>2026-07-31</strong> — <a
 href="https://github.com/xD4O/memento/commit/f8e1dc14235f74602ebc7d5a2c5d108901ff3b6b"><code class="commit-id" title="f8e1dc14235f74602ebc7d5a2c5d108901ff3b6b">f8e1dc14…</code></a>
 — first reading.</p>

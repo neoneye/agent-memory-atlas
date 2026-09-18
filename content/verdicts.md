@@ -1293,9 +1293,10 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`memento`](../systems/memento/)
 - Best idea: a memory sealed until a date. `status = 'sealed'` with a `deliver_on` column puts an entry outside transcription, indexing and the timeline entirely, and a worker pass moves it into the normal pipeline when the date arrives — enforcement by state rather than by a predicate every query must remember.
-- Biggest risk: `source_entry_id` is `ON DELETE SET NULL`, so deleting a recording leaves every fact derived from it in place with its provenance silently erased — indistinguishable from a fact that never had a source.
+- Biggest risk: the vault purge — the only path that truly erases a recording — deliberately keeps every fact, pin and thread derived from it, with the provenance link set to null. The evidence goes and the conclusion stays, on a table whose categories include `sensitivity`.
+- Second idea: a semantic distance ceiling calibrated against gibberish, with the corpus size it was measured on written down beside it — ~0.47 nearest distance on 90 segments, ~0.34 on 600, so the cap sits at 0.33.
 - Most reusable component: partial indexes that encode liveness — every live index declared `WHERE deleted_at IS NULL`, so the fast path and the correct path are the same object.
-- Maturity impression: a 208-line schema with status vocabularies, soft delete everywhere and a worker that deletes a daily summary when its source entries are gone — beside no test suite at all.
+- Maturity impression: a 208-line schema with status vocabularies, soft delete everywhere and a worker that deletes a daily summary when its source entries are gone — beside no test suite at all, and a segment whose embedding failed that nothing ever re-embeds.
 - Study when: you need memory that becomes available rather than memory that fades, or you want the cleanest small example of provenance from a derived fact to its evidence.
 - Do not copy when: you need it commercially — PolyForm Noncommercial forbids it — or you need a correction to survive, since a deleted profile fact can be re-derived by the next reflection pass.
 

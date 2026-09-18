@@ -22272,10 +22272,13 @@ measured</td>
 facts, threads, pins and concepts above it</td>
 <td>Postgres — entries, segments with a GIN full-text index, concepts,
 threads, profile facts, pins, daily summaries</td>
-<td>Full-text over segments and category listings over the derived
-tables, with soft-deleted rows excluded by partial index</td>
-<td>A worker pipeline — upload, transcribe, index — then a reflection
-pass that derives facts, threads and pins from indexed entries</td>
+<td>Two concurrent lanes over segments — Postgres full text and an HNSW
+vector neighbourhood capped at cosine distance 0.33 — plus category
+listings over the derived tables, with soft-deleted rows excluded by
+partial index</td>
+<td>A worker pipeline — upload, transcribe, embed, index — then a
+reflection pass that derives facts, threads and pins, refusing a fact
+within cosine 0.35 of a live one</td>
 <td><code>deleted_at</code> everywhere, with every live index declared
 <code>WHERE deleted_at IS NULL</code>; status vocabularies for threads
 and pins</td>
