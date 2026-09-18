@@ -381,9 +381,15 @@ retrieval need.</li>
 href="../systems/graphnosis/"><code>graphnosis</code></a></h3>
 <ul>
 <li>Best idea: <strong>the consent gate blocks on a human and cannot
-leak its own answer.</strong> When an MCP client asks for a tier policy
-does not auto-allow, the server registers a pending prompt, pushes it to
-the desktop app and <em>awaits the click</em> —
+leak its own answer.</strong> Read the default scope first:
+<code>gatedTiers</code> holds <code>sensitive</code> alone unless
+<code>extraPrecautionMode</code> is on, and engrams default to
+<code>deidentified</code>, so on a stock install nothing is gated — the
+project's argument is that installing the connector was the consent for
+that tier. Where it does apply, the mechanism is the cleanest producer
+test in this corpus. When an MCP client asks for a tier policy does not
+auto-allow, the server registers a pending prompt, pushes it to the
+desktop app and <em>awaits the click</em> —
 <code>{allow, durationMs}</code>, <code>{deny}</code> or
 <code>{timeout}</code>. The headless fallback is a phrase HMAC-derived
 per tier over a rolling window, compared in constant time, and
@@ -782,11 +788,15 @@ AGPL-3.0.</li>
 answer.</strong> <code>deny(kb, s, r, o)</code> stores an explicit
 <code>(X, NOT_R, Y)</code> triple in the same substrate — <em>"positive
 certainty about non-membership"</em>, distinguished in the header from
-"we don't know" — and the lookup runs on the read path <em>and</em> on
-both paths that manufacture new facts: chain induction checks it before
-accepting an induced fact, rule instantiation checks it at a score
-floor. Most tombstones in this corpus guard a write and leave the
-system's own inference free to regenerate what was refused.</li>
+"we don't know" — and the lookup runs on both paths that manufacture new
+facts, by themselves: chain induction checks it before accepting an
+induced fact, rule instantiation checks it at a score floor. On the read
+path it is a step the caller takes —
+<code>filter_against_negatives</code> is applied to a candidate list,
+and no KB query calls it — so the guarantee is strong where a fact would
+be regenerated and opt-in where one would merely be returned. Most
+tombstones in this corpus guard a write and leave the system's own
+inference free to regenerate what was refused.</li>
 <li>Second idea: <strong>"I don't know" is a named state, because the
 cleanup always answers.</strong> <code>idk_detection.py</code> exists on
 the observation that <em>"every retrieval returns SOME top candidate

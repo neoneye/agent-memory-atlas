@@ -9,11 +9,11 @@ source_url: https://github.com/nehloo-interactive/graphnosis-app
 archive_name: "nehloo-interactive--graphnosis-app"
 revision: b79be25df98d1dd47eb9a01d0da37f9881ab7b85
 revision_url: https://github.com/nehloo-interactive/graphnosis-app/commit/b79be25df98d1dd47eb9a01d0da37f9881ab7b85
-analyzed_at: 2026-08-23
+analyzed_at: 2026-09-18
 capabilities: "audit_log, human_review, negative_eval"
 capability_evidence:
   audit_log: "the per-device op-log | apps/desktop-sidecar/src/host.ts:1415 (`OpLogWriter`), oplog-safe-read.ts, oplog-retention.ts, oplog-report.ts | an append-only encrypted chunked file per device, written through a single instance with the invariant stated at the constructor — *\\\"All op writes in this host go through this.oplogWriter.emit(...)\\\"* — and 35 emit sites carrying a ten-value op vocabulary (`addNode`, `editNode`, `deleteNode`, `addEdge`, `deleteEdge`, `merge`, `ingestSource`, `renameSource`, `reorderSource`, `forgetSource`), each with `before` and `after` payloads and a `reason` naming the subsystem that caused it — `brain:temporal-decay`, `brain:reinforce-on-recall`, `brain:consolidation-cleanup`. The codec is in the pinned `graphnosis-secure-sync` dependency, which this repository does not contain; what is here is the writer's call sites and a memory-bounded reader written to replace the SDK's whole-file one | tests/mcp-audit.test.ts asserts recall and remember events are present"
-  human_review: "the MCP consent gate and the correction preview | apps/desktop-sidecar/src/consent-prompts.ts, mcp-server.ts:1162-1181, correction.ts | two independent surfaces. The consent gate is **blocking and synchronous**: when a (client, tier) is not auto-allowed the MCP server registers a pending prompt, emits it to the frontend and *awaits the user's click*, resolving to allow-with-duration, deny, or timeout. The phrase fallback is HMAC-derived per tier over a time window, compared in constant time, and *\\\"never logged or returned via MCP\\\"*, so the client asking for permission cannot read the answer out of the system. Separately, a correction — deterministic or LLM-parsed — produces a diff that is *\\\"only a PREVIEW — nothing is written until the user reviews and approves it\\\"*, and temporal decay is designed to route low-confidence nodes into a review deck *\\\"where the user can confirm or dismiss them deliberately\\\"* rather than deleting them | tests/ covers the audit trail of the gated tools; the gate's own timeout path is exercised by the headless fallback"
+  human_review: "the MCP consent gate, on the sensitive tier by default, and the correction preview | apps/desktop-sidecar/src/consent-prompts.ts, mcp-server.ts:1162-1181, correction.ts | two independent surfaces. The consent gate is **blocking and synchronous**: when a (client, tier) is not auto-allowed the MCP server registers a pending prompt, emits it to the frontend and *awaits the user's click*, resolving to allow-with-duration, deny, or timeout. The phrase fallback is HMAC-derived per tier over a time window, compared in constant time, and *\\\"never logged or returned via MCP\\\"*, so the client asking for permission cannot read the answer out of the system. Separately, a correction — deterministic or LLM-parsed — produces a diff that is *\\\"only a PREVIEW — nothing is written until the user reviews and approves it\\\"*, and temporal decay is designed to route low-confidence nodes into a review deck *\\\"where the user can confirm or dismiss them deliberately\\\"* rather than deleting them | tests/ covers the audit trail of the gated tools; the gate's own timeout path is exercised by the headless fallback"
   negative_eval: "the mutation suite | tests/mutations.test.ts:41-55 | a forget-then-recall case with its control in the same block: recall a person's name and assert it appears in the top texts, call `forgetSource`, assert nodes were soft-deleted, recall the same query and assert the name *does not* appear — followed by an idempotence check that a second forget returns zero nodes. Asserting the absence beside the presence is what makes the negative meaningful; a suite that only checked the second half would pass against a recall that had stopped working | the tests are the mechanism, run through the repository's own `runSuite` harness"
 stack_storage: "delegated, files"
 stack_retrieval: "vector, graph, lexical"
@@ -465,5 +465,21 @@ question from whether you may ship it.
   `_helpers.ts`) and 69 `.test.ts` files beside the sources
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. The
+`human_review` mechanism is the strongest instance of the mark in this corpus
+and the producer test is explicit in the code: the consent phrase is
+`HMAC-SHA256(cortex_secret, tier:window)` (`mcp-server.ts:1163-1172`) and the
+only exported reader is `getConsentPhraseForTier`, whose sole caller is the
+Electron IPC bridge at `ipc.ts:2626` — the phrase reaches the user's own window
+and never an MCP response, so the model cannot obtain what it would need to
+approve itself. Qualified, because the first reading did not say which tiers it
+covers: `gatedTiers` holds `sensitive` alone (`:1406`) and adds `deidentified`
+only when `settings.ai.extraPrecautionMode === true` (`:1781-1783`), with
+`consentFlowRuns = extraPrecaution || missingTiers.includes('sensitive')`
+(`:1848`). Engrams default to `deidentified`, so on a default install no recall
+is gated at all; the project's stated reasoning is that installing the connector
+was the consent for that tier. The gate is real and unforgeable where it
+applies, and where it applies is a setting. No marks change.
 
 **2026-08-23** — [`b79be25df98d1dd47eb9a01d0da37f9881ab7b85`](https://github.com/nehloo-interactive/graphnosis-app/commit/b79be25df98d1dd47eb9a01d0da37f9881ab7b85) — first reading, at app version 1.37.0, 984 commits since 11 May 2026. Screened before anything was read: one auto-run surface, two build-time execution points, eight unpinned surfaces including a non-registry dependency — `@nehloo-interactive/graphnosis-secure-sync` pinned as `github:nehloo-interactive/graphnosis-secure-sync#v0.4.1` — and a `CLAUDE.md` addressed to a reading agent. Nothing was installed, nothing was built and no test was run. The graph store, its encryption and the op-log codec live in that pinned dependency and were not read; this report covers the ~111,000-line sidecar around it, and says so where a claim would otherwise reach past the boundary. Three marks. `scope_enforced` is withheld because separation is by named graph and this reading did not trace a stored principal key reaching a query inside one; `trust_state` is withheld because `confidence` carries belief, use-recency and deletion in a single float; `bitemporal` is withheld because `validUntil` records when the system expired a node and no separate validity start was traced; `tombstone` is withheld because nothing keys on a removed value.

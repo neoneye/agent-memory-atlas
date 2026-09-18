@@ -9,10 +9,10 @@ source_url: https://github.com/NORTHTEKDevs/rck
 archive_name: "NORTHTEKDevs--rck"
 revision: 440f6259266ffd69073b676caf0f78d9a343e111
 revision_url: https://github.com/NORTHTEKDevs/rck/commit/440f6259266ffd69073b676caf0f78d9a343e111
-analyzed_at: 2026-08-23
+analyzed_at: 2026-09-18
 capabilities: "tombstone, negative_eval"
 capability_evidence:
-  tombstone: "the negative-fact layer, consulted on retrieval and on both derivation paths | rck/negative_facts.py (`deny`, `denied_pairs_for`, `filter_against_negatives`), rck/chain_induction.py:280, rck/rule_instantiation.py:113, rck/conscious_agent.py:77, rck/contradiction.py:144 | `deny(kb, s, r, o)` stores an explicit `(X, NOT_R, Y)` triple in the same substrate, keyed on the value rather than on a row id, and the module states the distinction it rests on: a negative fact is *\\\"positive certainty about non-membership\\\"*, structurally different from the IDK state. `filter_against_negatives` removes denied answers from a candidate list on the read path — and the stronger property is that the two *derivation* paths consult it too: an induced chain checks `denied_pairs_for` before the induced fact is accepted, and rule instantiation does the same at a 0.10 score floor. So a denial refuses not only the answer but the inference that would regenerate it, which is more than most holders of this mark do. `contradiction.py` flags the case where `(X, R, Y)` and `(X, NOT_R, Y)` are both stored | tests/test_negative_facts.py `test_filter_drops_denied_candidates` asserts `\\\"animal\\\" in objs` and `\\\"vegetable\\\" not in objs` after a deny, with `test_filter_passthrough_when_no_denials` as the control that the filter is not simply dropping everything"
+  tombstone: "the negative-fact layer, applied automatically on both derivation paths and by an explicit call on the read path | rck/negative_facts.py (`deny`, `denied_pairs_for`, `filter_against_negatives`), rck/chain_induction.py:280, rck/rule_instantiation.py:113, rck/conscious_agent.py:77, rck/contradiction.py:144 | `deny(kb, s, r, o)` stores an explicit `(X, NOT_R, Y)` triple in the same substrate, keyed on the value rather than on a row id, and the module states the distinction it rests on: a negative fact is *\\\"positive certainty about non-membership\\\"*, structurally different from the IDK state. `filter_against_negatives` removes denied answers from a candidate list on the read path, though the asymmetry is worth stating: on the read side it is a function the caller applies to candidates it already has. `ConsciousAgent` exposes it as `filter_negatives` (`conscious_agent.py:273-280`) and no KB query calls it, so a caller who queries and does not filter gets the denied answer back. The stronger property is that the two *derivation* paths consult it too: an induced chain checks `denied_pairs_for` before the induced fact is accepted, and rule instantiation does the same at a 0.10 score floor. So a denial refuses not only the answer but the inference that would regenerate it, which is more than most holders of this mark do. `contradiction.py` flags the case where `(X, R, Y)` and `(X, NOT_R, Y)` are both stored | tests/test_negative_facts.py `test_filter_drops_denied_candidates` asserts `\\\"animal\\\" in objs` and `\\\"vegetable\\\" not in objs` after a deny, with `test_filter_passthrough_when_no_denials` as the control that the filter is not simply dropping everything"
   negative_eval: "the negative-fact and contradiction suites | tests/test_negative_facts.py:74,:100, tests/test_contradiction.py, tests/test_negation_propagation.py, tests/test_idk_detection.py | committed cases asserting a specific candidate is absent from a populated result set — `\\\"vegetable\\\" not in objs` while `\\\"animal\\\" in objs` — with a passthrough control in the same file establishing that the filter returns candidates when nothing is denied, so neither half can pass vacuously. 907 test functions across 111 files sit behind them | the tests are the mechanism, run in public CI"
 stack_storage: "memory, files"
 stack_retrieval: "vector, graph"
@@ -437,5 +437,21 @@ quantifies.
   `test_negative_facts.py` carries the mark
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+marks stand, re-derived. `tombstone`: `deny`, `denied_pairs_for` and
+`filter_against_negatives` are at `negative_facts.py:53`, `:64` and `:76`, and
+all four consulting sites are live — `chain_induction.py:280`,
+`rule_instantiation.py:113` at its 0.10 floor, `contradiction.py:144`, and the
+`ConsciousAgent` wrapper at `:273-280`. `negative_eval`:
+`tests/test_negative_facts.py:74` asserts `"vegetable" not in objs` with
+`"animal" in objs` beside it, and `test_filter_passthrough_when_no_denials` is
+the positive control. Qualified in the `tombstone` record, because the first
+reading's "consulted on retrieval" reads stronger than the code is: the two
+derivation paths call `denied_pairs_for` themselves, but on the read side the
+filter is a function the caller applies to a candidate list — no KB query
+invokes it, and `ConsciousAgent.filter_negatives` has no caller in the library
+outside the quickstart example and the tests. Automatic where a fact would be
+regenerated; opt-in where one would be returned. No marks change.
 
 **2026-08-23** — [`440f6259266ffd69073b676caf0f78d9a343e111`](https://github.com/NORTHTEKDevs/rck/commit/440f6259266ffd69073b676caf0f78d9a343e111) — first reading, at v16.0, Apache-2.0, ~20,000 lines across 131 modules, 82 commits since 21 May 2026. Screened before anything was read: no auto-run surface, one build-time execution point (a `Makefile` in the paper directory), one unpinned surface, nothing inside the cooldown. Nothing was installed, no test was run and no benchmark was executed. Two marks. `audit_log` is withheld on retention rather than shape — the write-ahead log is append-only, fsync'd and records every mutation, and is truncated at every checkpoint by design, so it is a recovery mechanism. `trust_state` is withheld because KNOWN/AMBIGUOUS/IDK is computed per query and discarded, the same reading applied to Heimdall's read-time verdicts. `bitemporal` is absent: provenance carries `timestamp` and `last_seen`, both record-axis, and `temporal.py` is common-sense reasoning about months and seasons rather than fact validity. `scope_enforced` is absent by principal; `universes.py` isolates a hypothesis, not a tenant.

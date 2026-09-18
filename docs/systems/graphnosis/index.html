@@ -117,7 +117,7 @@ whose deletion is a confidence value.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-23</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/nehloo-interactive--graphnosis-app" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -603,6 +603,27 @@ suite.</li>
 <code>.test.ts</code> files beside the sources</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. The <code>human_review</code> mechanism is the
+strongest instance of the mark in this corpus and the producer test is
+explicit in the code: the consent phrase is
+<code>HMAC-SHA256(cortex_secret, tier:window)</code>
+(<code>mcp-server.ts:1163-1172</code>) and the only exported reader is
+<code>getConsentPhraseForTier</code>, whose sole caller is the Electron
+IPC bridge at <code>ipc.ts:2626</code> — the phrase reaches the user's
+own window and never an MCP response, so the model cannot obtain what it
+would need to approve itself. Qualified, because the first reading did
+not say which tiers it covers: <code>gatedTiers</code> holds
+<code>sensitive</code> alone (<code>:1406</code>) and adds
+<code>deidentified</code> only when
+<code>settings.ai.extraPrecautionMode === true</code>
+(<code>:1781-1783</code>), with
+<code>consentFlowRuns = extraPrecaution || missingTiers.includes('sensitive')</code>
+(<code>:1848</code>). Engrams default to <code>deidentified</code>, so
+on a default install no recall is gated at all; the project's stated
+reasoning is that installing the connector was the consent for that
+tier. The gate is real and unforgeable where it applies, and where it
+applies is a setting. No marks change.</p>
 <p><strong>2026-08-23</strong> — <a
 href="https://github.com/nehloo-interactive/graphnosis-app/commit/b79be25df98d1dd47eb9a01d0da37f9881ab7b85"><code class="commit-id" title="b79be25df98d1dd47eb9a01d0da37f9881ab7b85">b79be25d…</code></a>
 — first reading, at app version 1.37.0, 984 commits since 11 May 2026.
