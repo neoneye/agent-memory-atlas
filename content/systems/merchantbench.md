@@ -9,7 +9,7 @@ source_url: https://github.com/KhanCold/merchantbench
 archive_name: "KhanCold--merchantbench"
 revision: f44ce969aeccfd65d1eef6afe50f69868e510946
 revision_url: https://github.com/KhanCold/merchantbench/commit/f44ce969aeccfd65d1eef6afe50f69868e510946
-analyzed_at: 2026-08-30
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, audit_log, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
@@ -702,5 +702,21 @@ own memory layer against a long horizon may be the more useful half anyway.
   artifact-absence skips.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. All
+three marks re-derived. `scope_enforced` is the strongest form of the mark in
+this corpus and the mechanism deserves naming: the dispatcher does not merely
+ignore an `agent_id` the model sends, it removes the parameter from what the
+model can set — `accepted = {"env", "agent_id"}` filters those names out of the
+model's kwargs and the handler is then called as
+`handler(env, agent_id, **kwargs)` with the harness's own value
+(`env/tools/dispatch.py:143-163`). `_memory_doc_path` derives
+`runs/<run_id>/agent/memory/<agent_id>.md` from it through
+`re.sub(r"[^A-Za-z0-9_.-]+", "_", …)` (`env/tools/tools.py:2161-2166`). Compare
+[outworked](../outworked/), where the scope is a string the model supplies and
+the session already knows better. `negative_eval` re-verified at
+`tests/test_memory_doc_tools.py:135-145`: both agents write before either reads,
+and each read is asserted equal to its own document, so the case fails on an
+empty result and on a crossed one alike. No marks change.
 
 **2026-08-30** — [`f44ce969aeccfd65d1eef6afe50f69868e510946`](https://github.com/KhanCold/merchantbench/commit/f44ce969aeccfd65d1eef6afe50f69868e510946) — first reading, at the eleventh commit. Screened before reading: no auto-run hooks and no build-time execution, four requirement files floating on `>=`; nothing was installed and nothing was run. Three marks. The memory mechanism is two tools and two files, and the report is built around the compaction boundary rather than around the store, because that is where the design makes its one consequential choice. The paper's headline recomputes from its own Table 1 (59.46 / 217.61 = 27.34%) and its 26-tool inventory recomputes from the registry minus the default denylist; the memory ablation the scenario file is two commented lines away from does not exist.

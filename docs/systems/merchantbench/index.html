@@ -113,7 +113,7 @@ tool call the agent has to remember to make.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-30</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/KhanCold--merchantbench" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -856,6 +856,27 @@ arithmetic.</li>
 artifact-absence skips.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. All three marks re-derived.
+<code>scope_enforced</code> is the strongest form of the mark in this
+corpus and the mechanism deserves naming: the dispatcher does not merely
+ignore an <code>agent_id</code> the model sends, it removes the
+parameter from what the model can set —
+<code>accepted = {"env", "agent_id"}</code> filters those names out of
+the model's kwargs and the handler is then called as
+<code>handler(env, agent_id, **kwargs)</code> with the harness's own
+value (<code>env/tools/dispatch.py:143-163</code>).
+<code>_memory_doc_path</code> derives
+<code>runs/&lt;run_id&gt;/agent/memory/&lt;agent_id&gt;.md</code> from
+it through <code>re.sub(r"[^A-Za-z0-9_.-]+", "_", …)</code>
+(<code>env/tools/tools.py:2161-2166</code>). Compare <a
+href="../outworked/">outworked</a>, where the scope is a string the
+model supplies and the session already knows better.
+<code>negative_eval</code> re-verified at
+<code>tests/test_memory_doc_tools.py:135-145</code>: both agents write
+before either reads, and each read is asserted equal to its own
+document, so the case fails on an empty result and on a crossed one
+alike. No marks change.</p>
 <p><strong>2026-08-30</strong> — <a
 href="https://github.com/KhanCold/merchantbench/commit/f44ce969aeccfd65d1eef6afe50f69868e510946"><code class="commit-id" title="f44ce969aeccfd65d1eef6afe50f69868e510946">f44ce969…</code></a>
 — first reading, at the eleventh commit. Screened before reading: no
