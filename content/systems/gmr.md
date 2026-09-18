@@ -9,7 +9,7 @@ source_url: https://github.com/Anchorstate-Lab/GMR
 archive_name: "Anchorstate-Lab--GMR"
 revision: 34845baba22aee4c46200e0adc68699c8ee4cde0
 revision_url: https://github.com/Anchorstate-Lab/GMR/commit/34845baba22aee4c46200e0adc68699c8ee4cde0
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: "trust_state, audit_log, negative_eval"
 capability_evidence:
   trust_state: "an anchor's discrete state at the sequence a memory was bound decides whether that memory is treated as current, and a separate two-value verifiability marks whether the observation behind it is reproducible at all | crates/gmr-core/src/anchor.rs, crates/gmr-core/src/probe.rs, crates/gmr-core/src/journal.rs | `State` carries the anchor's status including terminal statuses, `Close` and `Superseded`, and a memory's currency is read at the journal sequence it was bound at rather than at the latest entry — so a memory bound under a state the anchor has since left is not silently carried forward. Beside it `Verifiability::Closed` versus `Open` records whether a probe is reproducible or believed on a declaration, which the runtime reports rather than resolves. The line the design holds is that neither field says whether the memory is *correct*: they say whether its basis moved and whether the basis can be checked | crates/gmr-runtime/tests/grounding.rs and state_machine.rs"
@@ -599,6 +599,30 @@ decay-and-reinforcement systems here ask less and promise less.
 - `tools/msis/` — `fixture.py` (the ground truth), `grade.py` (the two gates and the ungated precision metric), `run.sh`, and a README stating the bar.
 
 ## History
+
+**2026-09-18** — re-read at the pinned commit `34845bab`. **The subject has
+moved:** HEAD is `7bee2a08`, and `crates/` differs from the pin — as do
+`console/`, `dist/` and `docs/`, while `batteries/` and `examples/` match. The
+memory code is in `crates/`, so this report is due a re-pin and a re-screen
+rather than another read at the same commit. What follows was verified at the
+pin the report names.
+
+Both checked marks stand, and both are enforced rather than asserted.
+`audit_log`: the append-only property is twenty-six SQLite triggers —
+`BEFORE UPDATE` and `BEFORE DELETE` pairs raising
+`RAISE(ABORT, 'append_only')` — across eight tables: `journal`, `bindings`,
+`binding_anchors`, `binding_revocations`, `binding_revoked_tags`, `links`,
+`link_revocations` and `sealed` (`gmr-store/src/sqlite/schema.rs:160-192`). The
+database refuses the mutation; no caller has to remember not to make it.
+
+`negative_eval`: `a_revoked_record_is_no_longer_listed_under_the_anchor`
+(`gmr-runtime/tests/grounding.rs:629-668`) binds a memory, asserts its anchors
+are non-empty, revokes it, asserts the revocation returned exactly that anchor,
+then asserts emptiness on *two* read surfaces — `binding_of(...).anchors()` and
+`grounded(anchor).memories`. Its own failure message states the property the
+rubric asks for: *"revoked, while every assertion and the revocation itself
+remain in the table"*. The rows stay; the reads stop returning them. No marks
+change.
 
 **2026-09-10** — [`34845baba22aee4c46200e0adc68699c8ee4cde0`](https://github.com/Anchorstate-Lab/GMR/commit/34845baba22aee4c46200e0adc68699c8ee4cde0) — read again at release v0.6.4, 246 commits and 471 files past the previous pin. Screened first: two dependency surfaces inside the seven-day cooldown, three build-time execution paths, one unpinned surface under `console/python`, and a `dist/moment/pre-push` hook payload that is inert until something installs it; nothing was installed or run. The three marks hold, and two published claims did not. Section 10 said no committed measurement existed: `gmr health` computes an anchor and corpus census from the journal — including anchors that never answered, anchors that answered without moving a memory, barren anchors and unsupervised claims — and `tools/msis` is an acceptance harness with a synthetic fixture, four scenarios and two gates, which reports minimality precision and deliberately does not gate on it. Section 9's tombstone paragraph said the machinery was absent: `binding_revocations` and `binding_revoked_tags` exist and are deliberately scoped to the binding rows a revocation observed, so a later re-add survives — the mark stays withheld, on a refusal rather than an absence. The append-only property moved from convention to sixteen database triggers. Test attributes went from 223 to 858 and the tree from about 11,500 lines of Rust to 50,501 across eight crates and four sibling trees. The absence claim that no scope filter exists anywhere in the runtime or store was re-run and holds.
 

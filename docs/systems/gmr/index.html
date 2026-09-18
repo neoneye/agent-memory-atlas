@@ -122,7 +122,7 @@ assumption is surfaced rather than trusted.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Anchorstate-Lab--GMR" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -831,6 +831,34 @@ truth), <code>grade.py</code> (the two gates and the ungated precision
 metric), <code>run.sh</code>, and a README stating the bar.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the pinned commit
+<code>34845bab</code>. <strong>The subject has moved:</strong> HEAD is
+<code>7bee2a08</code>, and <code>crates/</code> differs from the pin —
+as do <code>console/</code>, <code>dist/</code> and <code>docs/</code>,
+while <code>batteries/</code> and <code>examples/</code> match. The
+memory code is in <code>crates/</code>, so this report is due a re-pin
+and a re-screen rather than another read at the same commit. What
+follows was verified at the pin the report names.</p>
+<p>Both checked marks stand, and both are enforced rather than asserted.
+<code>audit_log</code>: the append-only property is twenty-six SQLite
+triggers — <code>BEFORE UPDATE</code> and <code>BEFORE DELETE</code>
+pairs raising <code>RAISE(ABORT, 'append_only')</code> — across eight
+tables: <code>journal</code>, <code>bindings</code>,
+<code>binding_anchors</code>, <code>binding_revocations</code>,
+<code>binding_revoked_tags</code>, <code>links</code>,
+<code>link_revocations</code> and <code>sealed</code>
+(<code>gmr-store/src/sqlite/schema.rs:160-192</code>). The database
+refuses the mutation; no caller has to remember not to make it.</p>
+<p><code>negative_eval</code>:
+<code>a_revoked_record_is_no_longer_listed_under_the_anchor</code>
+(<code>gmr-runtime/tests/grounding.rs:629-668</code>) binds a memory,
+asserts its anchors are non-empty, revokes it, asserts the revocation
+returned exactly that anchor, then asserts emptiness on <em>two</em>
+read surfaces — <code>binding_of(...).anchors()</code> and
+<code>grounded(anchor).memories</code>. Its own failure message states
+the property the rubric asks for: <em>"revoked, while every assertion
+and the revocation itself remain in the table"</em>. The rows stay; the
+reads stop returning them. No marks change.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/Anchorstate-Lab/GMR/commit/34845baba22aee4c46200e0adc68699c8ee4cde0"><code class="commit-id" title="34845baba22aee4c46200e0adc68699c8ee4cde0">34845bab…</code></a>
 — read again at release v0.6.4, 246 commits and 471 files past the
