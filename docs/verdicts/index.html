@@ -2840,15 +2840,23 @@ time.</strong> <code>MemoryStore</code>, <code>update_confidence</code>
 and <code>prune</code> appear nowhere outside <code>tests/</code>;
 <code>IdeationMemory</code> and <code>WritingMemory</code> have no
 production caller; and the single construction of
-<code>ExperimentMemory</code> passes
-<code>store_dir=run_dir / "experiment_memory"</code>. The self-evolution
-module is worse in a more interesting way: its docstring promises
-lessons <em>"injected into future runs"</em> and its usage example
-constructs <code>EvolutionStore(Path("evolution"))</code>, while both
-real callers pass <code>run_dir / "evolution"</code> and nothing scans a
-sibling run directory. One argument decides whether a subsystem is
-memory or scratch space, and neither the type signature nor the 500-line
-test suite distinguishes them.</li>
+<code>ExperimentMemory</code> passes <code>store_dir=</code>, a keyword
+that constructor does not take — it declares
+<code>(store, retriever, embed_fn=None)</code> — so it raises
+<code>TypeError</code> into a debug-level <code>except</code> on every
+run and leaves an empty <code>experiment_memory/</code> directory that
+looks like a store. The write that would have used it is dead twice
+more: the <code>and exp_memory:</code> guard can never be true, and the
+block behind it imports an <code>ExperimentOutcome</code> defined
+nowhere and calls a <code>record_outcome</code> the class does not have.
+No memory class here is constructible outside its own tests. The
+self-evolution module is worse in a more interesting way: its docstring
+promises lessons <em>"injected into future runs"</em> and its usage
+example constructs <code>EvolutionStore(Path("evolution"))</code>, while
+both real callers pass <code>run_dir / "evolution"</code> and nothing
+scans a sibling run directory. One argument decides whether a subsystem
+is memory or scratch space, and neither the type signature nor the
+500-line test suite distinguishes them.</li>
 <li>Maturity impression: MIT, 81,500 lines across 275 modules, an arXiv
 paper, ARC-Bench on Hugging Face, 101 test files, a CLI, an MCP server,
 a dashboard, and a 5,064-line human-in-the-loop subsystem that inspects

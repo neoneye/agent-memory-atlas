@@ -122,7 +122,7 @@ cross-run.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-24</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/aiming-lab--AutoResearchClaw" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -279,14 +279,41 @@ than at what the system remembers — the mirror image of a system whose
 review queue holds memories and whose artifacts nobody sees.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
-<p><strong>The one production construction of a memory.</strong>
-<code>pipeline/runner.py:472-479</code> creates
-<code>run_dir / "experiment_memory"</code>, wraps it in
-<code>ExperimentMemory</code>, and guards the whole thing in a
-<code>try</code> that logs at debug and continues: <em>"Experiment
-memory initialisation skipped"</em>. A memory layer that fails to
-initialise leaves <code>exp_memory = None</code> and the run proceeds
-without it, silently.</p>
+<p><strong>The one production construction of a memory, and it cannot
+succeed.</strong> <code>pipeline/runner.py:472-479</code> creates
+<code>run_dir / "experiment_memory"</code>, then calls
+<code>ExperimentMemory(store_dir=str(_mem_dir))</code>. That class takes
+<code>(store: MemoryStore, retriever: MemoryRetriever, embed_fn: Any = None)</code>
+and no <code>store_dir</code> at all
+(<code>memory/experiment_memory.py:24-32</code>), and it is the only
+definition of the name in the tree — so the call raises
+<code>TypeError</code> on an unexpected keyword <em>and</em> on two
+missing positionals, every time. The <code>try</code> around it logs at
+debug and continues: <em>"Experiment memory initialisation
+skipped"</em>. <code>exp_memory</code> stays <code>None</code>, and the
+directory created one line earlier stays behind, so every run leaves an
+<code>experiment_memory/</code> folder that looks like a store and is
+permanently empty.</p>
+<p>The write that would have used it is dead twice over. At
+<code>:602</code> the guard reads <code>… and exp_memory:</code>, which
+is never true; and inside it, <code>:603-620</code> imports
+<code>ExperimentOutcome</code> from
+<code>researchclaw.memory.experiment_memory</code>, where no such name
+is defined — the class does not exist anywhere in the repository — and
+calls <code>exp_memory.record_outcome(...)</code>, a method
+<code>ExperimentMemory</code> does not have (it offers
+<code>record_hyperparams</code>, <code>record_architecture</code> and
+<code>record_training_trick</code>). That block is wrapped in its own
+bare <code>except Exception</code>. Three independent failures on one
+path, each swallowed, and the tests never touch it: every
+<code>ExperimentMemory(...)</code> in <code>tests/</code> passes the
+positional <code>(store, retriever)</code> the class actually
+declares.</p>
+<p>So the honest statement about this system's memory is stronger than
+"no production caller for two of the three categories". <strong>No
+memory class in this repository is constructible outside its own test
+suite.</strong> What survives a run is the skill file the MetaClaw
+bridge writes, which section 5 describes, and nothing else.</p>
 <p><strong>Lesson extraction.</strong> After the stages complete,
 <code>extract_lessons(results, run_id=run_id, run_dir=run_dir)</code>
 classifies failures, slow stages and quality issues into six
@@ -520,6 +547,26 @@ and the store path),
 and 100 other files</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <strong>Correction, and it strengthens the
+finding.</strong> The first reading said <code>ExperimentMemory</code>
+<em>is</em> constructed at <code>run_dir/experiment_memory</code>. It is
+attempted there and cannot succeed: <code>runner.py:477</code> passes
+<code>store_dir=str(_mem_dir)</code> to a constructor declaring
+<code>(store: MemoryStore, retriever: MemoryRetriever, embed_fn=None)</code>
+(<code>memory/experiment_memory.py:24-32</code>), the only definition of
+that name in the tree, so the call raises <code>TypeError</code> into a
+<code>except Exception</code> that logs at debug. The directory is
+created one line earlier and stays, empty, in every run. The
+corresponding write is dead twice more — the
+<code>and exp_memory:</code> guard at <code>:602</code> is never true,
+and the block it protects imports <code>ExperimentOutcome</code>, which
+is defined nowhere, and calls <code>record_outcome</code>, which
+<code>ExperimentMemory</code> does not have. Re-verified alongside it:
+<code>MemoryStore</code>, <code>IdeationMemory</code> and
+<code>WritingMemory</code> are still constructed only in
+<code>tests/test_memory_system.py</code>. No marks; the report carries
+none.</p>
 <p><strong>2026-08-24</strong> — <a
 href="https://github.com/aiming-lab/AutoResearchClaw/commit/be4ba4755bf1b52220f25e13b2293b5956590070"><code class="commit-id" title="be4ba4755bf1b52220f25e13b2293b5956590070">be4ba475…</code></a>
 — first reading, MIT, 81,500 lines of Python across 275 modules, 303

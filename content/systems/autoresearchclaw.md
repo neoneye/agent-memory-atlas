@@ -9,7 +9,7 @@ source_url: https://github.com/aiming-lab/AutoResearchClaw
 archive_name: "aiming-lab--AutoResearchClaw"
 revision: be4ba4755bf1b52220f25e13b2293b5956590070
 revision_url: https://github.com/aiming-lab/AutoResearchClaw/commit/be4ba4755bf1b52220f25e13b2293b5956590070
-analyzed_at: 2026-08-24
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "vector"
@@ -25,7 +25,7 @@ matrix:
   background: "Lesson extraction after a run, a MetaClaw bridge that promotes high-severity lessons to skills, and a prompt overlay assembled per stage"
   trust: "A confidence float updated by a clamped delta, plus `access_count` and `last_accessed`. No status, no provenance beyond a free-form metadata dict"
   strengths: "The prompt overlay is built in two labelled sections and the code names which of them is cross-run, so the boundary between per-run state and durable memory is written down where it is decided"
-  risks: "`MemoryStore` is constructed only in tests; `ExperimentMemory` is constructed at `run_dir/experiment_memory`; `IdeationMemory` and `WritingMemory` have no production caller at all; and the self-evolution store whose docstring promises to inject lessons into future runs is built at `run_dir/evolution` by both of its callers"
+  risks: "No memory class is constructible outside the test suite — the single production call passes `store_dir=` to a constructor that takes `(store, retriever)`, raises `TypeError` into a debug-level `except`, and leaves an empty `experiment_memory/` directory behind; `IdeationMemory` and `WritingMemory` have no production caller at all; and the self-evolution store whose docstring promises to inject lessons into future runs is built at `run_dir/evolution` by both of its callers"
 ---
 
 ## 1. Executive Summary
@@ -163,11 +163,34 @@ artifacts nobody sees.
 
 ## 4. Essential Implementation Paths
 
-**The one production construction of a memory.** `pipeline/runner.py:472-479`
-creates `run_dir / "experiment_memory"`, wraps it in `ExperimentMemory`, and
-guards the whole thing in a `try` that logs at debug and continues:
-*"Experiment memory initialisation skipped"*. A memory layer that fails to
-initialise leaves `exp_memory = None` and the run proceeds without it, silently.
+**The one production construction of a memory, and it cannot succeed.**
+`pipeline/runner.py:472-479` creates `run_dir / "experiment_memory"`, then calls
+`ExperimentMemory(store_dir=str(_mem_dir))`. That class takes
+`(store: MemoryStore, retriever: MemoryRetriever, embed_fn: Any = None)` and no
+`store_dir` at all (`memory/experiment_memory.py:24-32`), and it is the only
+definition of the name in the tree — so the call raises `TypeError` on an
+unexpected keyword *and* on two missing positionals, every time. The `try`
+around it logs at debug and continues: *"Experiment memory initialisation
+skipped"*. `exp_memory` stays `None`, and the directory created one line earlier
+stays behind, so every run leaves an `experiment_memory/` folder that looks like
+a store and is permanently empty.
+
+The write that would have used it is dead twice over. At `:602` the guard reads
+`… and exp_memory:`, which is never true; and inside it, `:603-620` imports
+`ExperimentOutcome` from `researchclaw.memory.experiment_memory`, where no such
+name is defined — the class does not exist anywhere in the repository — and
+calls `exp_memory.record_outcome(...)`, a method `ExperimentMemory` does not
+have (it offers `record_hyperparams`, `record_architecture` and
+`record_training_trick`). That block is wrapped in its own bare
+`except Exception`. Three independent failures on one path, each swallowed, and
+the tests never touch it: every `ExperimentMemory(...)` in `tests/` passes the
+positional `(store, retriever)` the class actually declares.
+
+So the honest statement about this system's memory is stronger than "no
+production caller for two of the three categories". **No memory class in this
+repository is constructible outside its own test suite.** What survives a run is
+the skill file the MetaClaw bridge writes, which section 5 describes, and
+nothing else.
 
 **Lesson extraction.** After the stages complete, `extract_lessons(results,
 run_id=run_id, run_dir=run_dir)` classifies failures, slow stages and quality
@@ -373,5 +396,21 @@ commit, wired into one run at a time.
 - **Tests:** `tests/test_memory_system.py`, and 100 other files
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+**Correction, and it strengthens the finding.** The first reading said
+`ExperimentMemory` *is* constructed at `run_dir/experiment_memory`. It is
+attempted there and cannot succeed: `runner.py:477` passes
+`store_dir=str(_mem_dir)` to a constructor declaring
+`(store: MemoryStore, retriever: MemoryRetriever, embed_fn=None)`
+(`memory/experiment_memory.py:24-32`), the only definition of that name in the
+tree, so the call raises `TypeError` into a `except Exception` that logs at
+debug. The directory is created one line earlier and stays, empty, in every run.
+The corresponding write is dead twice more — the `and exp_memory:` guard at
+`:602` is never true, and the block it protects imports `ExperimentOutcome`,
+which is defined nowhere, and calls `record_outcome`, which `ExperimentMemory`
+does not have. Re-verified alongside it: `MemoryStore`, `IdeationMemory` and
+`WritingMemory` are still constructed only in `tests/test_memory_system.py`. No
+marks; the report carries none.
 
 **2026-08-24** — [`be4ba4755bf1b52220f25e13b2293b5956590070`](https://github.com/aiming-lab/AutoResearchClaw/commit/be4ba4755bf1b52220f25e13b2293b5956590070) — first reading, MIT, 81,500 lines of Python across 275 modules, 303 commits since 15 March 2026, with an arXiv paper and a released benchmark. Screened before anything was read: no auto-run surface, one build-time execution point (`tests/conftest.py` on pytest collection), one unpinned surface; nothing was installed and no test was run. Admitted on the skill-promotion path — high-severity lessons become `arc-*` skill directories under `~/.metaclaw/skills` that later runs inline — and not on the `memory/` package, whose one production construction is `ExperimentMemory(store_dir=run_dir / "experiment_memory")`; `MemoryStore`, `update_confidence` and `prune` appear outside `tests/` nowhere, and `IdeationMemory` and `WritingMemory` have no production caller. `EvolutionStore`, whose module docstring describes injecting lessons into future runs and whose usage example uses a stable path, is constructed at `run_dir / "evolution"` at both call sites, and nothing scans a sibling run directory. No capability marks: confidence is a float with no discrete state, both timestamps are record-axis, category separates kinds rather than principals, `save()` rewrites each JSONL whole, the 5,064-line human-in-the-loop subsystem never imports the memory package, and no committed test asserts that particular material is absent from a result set.

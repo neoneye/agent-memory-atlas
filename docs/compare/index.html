@@ -12487,13 +12487,15 @@ provenance beyond a free-form metadata dict</td>
 <td>The prompt overlay is built in two labelled sections and the code
 names which of them is cross-run, so the boundary between per-run state
 and durable memory is written down where it is decided</td>
-<td><code>MemoryStore</code> is constructed only in tests;
-<code>ExperimentMemory</code> is constructed at
-<code>run_dir/experiment_memory</code>; <code>IdeationMemory</code> and
-<code>WritingMemory</code> have no production caller at all; and the
-self-evolution store whose docstring promises to inject lessons into
-future runs is built at <code>run_dir/evolution</code> by both of its
-callers</td>
+<td>No memory class is constructible outside the test suite — the single
+production call passes <code>store_dir=</code> to a constructor that
+takes <code>(store, retriever)</code>, raises <code>TypeError</code>
+into a debug-level <code>except</code>, and leaves an empty
+<code>experiment_memory/</code> directory behind;
+<code>IdeationMemory</code> and <code>WritingMemory</code> have no
+production caller at all; and the self-evolution store whose docstring
+promises to inject lessons into future runs is built at
+<code>run_dir/evolution</code> by both of its callers</td>
 </tr>
 <tr>
 <td><code>basemode</code></td>
