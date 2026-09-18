@@ -9,7 +9,7 @@ source_url: https://github.com/gobii-ai/gobii-platform
 archive_name: "gobii-ai--gobii-platform"
 revision: c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb
 revision_url: https://github.com/gobii-ai/gobii-platform/commit/c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb
-analyzed_at: 2026-09-11
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "the summary tier, not the SQLite tier | api/agent/core/prompt_context.py:4995,:5000 and api/agent/core/history_compaction.py:38,:51 | `PersistentAgentStepSnapshot` and `PersistentAgentCommsSnapshot` carry an `agent` foreign key on the row and every read filters `.filter(agent=agent)`; the per-agent SQLite file is a partition guarded by an authorizer, which is a different boundary | tests"
@@ -169,6 +169,23 @@ statements, `sqlite_query_quality` inspects them, `json_goldilocks` (1,166
 lines) and the digest modules size results to fit a prompt, and the guardrails
 register safe pure-computation functions such as `REGEXP` so common patterns do
 not require the blocked ones.
+
+**The denial set is worth reading in full**, because the choices are argued
+rather than copied. The authorizer refuses two actions, `ATTACH` and `DETACH` —
+which is what makes one file per agent a boundary rather than a filing
+convention, since SQL that cannot attach cannot reach a sibling's database.
+Five functions go: `load_extension`, `readfile`, `writefile`, `edit`,
+`fts3_tokenizer`. And five pragmas, which is the half a shorter list would miss
+— `database_list` would enumerate what is attached, `key` and `rekey` are the
+SQLCipher handles, and `temp_store` with `temp_store_directory` would let a
+query choose where SQLite writes its temporary files, which is a filesystem
+write that survives blocking `writefile`. `VACUUM` is refused separately, by
+pattern on the statement text rather than through the authorizer, because
+`VACUUM INTO` writes a file; the pattern allows an `EXPLAIN` or
+`EXPLAIN QUERY PLAN` prefix so the obvious wrapper does not slip past, and
+`_strip_comments_and_literals` runs first so a comment cannot hide the keyword.
+A text check is the weaker of the two mechanisms, and it is used only where the
+authorizer has no action code to hang on.
 
 ## 7. Write Mechanics
 
@@ -362,6 +379,8 @@ Run from the root of the checkout at the pinned commit.
 | No platform-level correction is expressible | `grep -rn "DELETE FROM" --include="*.py" api \| grep -i agent_db` | Nothing generic; deletion is whatever SQL the model writes |
 
 ## History
+
+**2026-09-18** — [`c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb`](https://github.com/gobii-ai/gobii-platform/commit/c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb) — re-read at the same commit; `main` has not moved since 21 August 2026. The mark and its anchors were re-verified and hold: `PersistentAgentStepSnapshot` and `PersistentAgentCommsSnapshot` still carry the `agent` foreign key and every read still filters on it. Nothing needed correcting. One thing is described more fully: the authorizer's denial set, where the pragma half does the work a shorter list would miss — `database_list` enumerates attachments, `key` and `rekey` are the SQLCipher handles, and `temp_store_directory` would let a query pick where SQLite writes temporary files, a filesystem write that outlives the block on `writefile`. `VACUUM` is refused by statement pattern rather than by the authorizer, because `VACUUM INTO` writes a file and there is no action code for it; the pattern tolerates an `EXPLAIN` prefix and runs after comments and literals are stripped.
 
 **2026-09-11** — [`c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb`](https://github.com/gobii-ai/gobii-platform/commit/c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb) — re-read, 598 files and 71,496 insertions past the previous pin in a single commit. **The mark holds and its basis is corrected.** The previous edition awarded `scope_enforced` on the SQLite side, describing the boundary as *"partition plus capability … rather than a `WHERE` clause"* — which is accurate, and is the shape the atlas does not count: one file per agent UUID, no scope column on a row, no predicate on a query. What does earn the mark is the tier that carries memory between cycles: `PersistentAgentStepSnapshot` and `PersistentAgentCommsSnapshot` hold an `agent` foreign key as a column, and every read filters on it — `prompt_context.py:4995` and `:5000` when assembling the prompt, `history_compaction.py:38` and `:51` when walking the chain. The authorizer paragraph is kept and reframed as what it is, a guard on a partition, aimed correctly at a threat where the model writes the SQL. The built-in ephemeral contract grew to seven tables, each still annotated with its own mortality in the prompt — a `messages` snapshot, a `files` index and an `agent_skills` mirror joined the list. The tombstone finding is unchanged and remains the sharpest instance of its kind here: deletion is not expressible at the platform level, because the tables differ per agent and were invented by a model. Screened before reading: twelve findings; nothing was installed or run.
 

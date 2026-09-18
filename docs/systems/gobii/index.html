@@ -121,7 +121,7 @@ prompt.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/gobii-ai--gobii-platform" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -291,6 +291,27 @@ them, <code>json_goldilocks</code> (1,166 lines) and the digest modules
 size results to fit a prompt, and the guardrails register safe
 pure-computation functions such as <code>REGEXP</code> so common
 patterns do not require the blocked ones.</p>
+<p><strong>The denial set is worth reading in full</strong>, because the
+choices are argued rather than copied. The authorizer refuses two
+actions, <code>ATTACH</code> and <code>DETACH</code> — which is what
+makes one file per agent a boundary rather than a filing convention,
+since SQL that cannot attach cannot reach a sibling's database. Five
+functions go: <code>load_extension</code>, <code>readfile</code>,
+<code>writefile</code>, <code>edit</code>, <code>fts3_tokenizer</code>.
+And five pragmas, which is the half a shorter list would miss —
+<code>database_list</code> would enumerate what is attached,
+<code>key</code> and <code>rekey</code> are the SQLCipher handles, and
+<code>temp_store</code> with <code>temp_store_directory</code> would let
+a query choose where SQLite writes its temporary files, which is a
+filesystem write that survives blocking <code>writefile</code>.
+<code>VACUUM</code> is refused separately, by pattern on the statement
+text rather than through the authorizer, because
+<code>VACUUM INTO</code> writes a file; the pattern allows an
+<code>EXPLAIN</code> or <code>EXPLAIN QUERY PLAN</code> prefix so the
+obvious wrapper does not slip past, and
+<code>_strip_comments_and_literals</code> runs first so a comment cannot
+hide the keyword. A text check is the weaker of the two mechanisms, and
+it is used only where the authorizer has no action code to hang on.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
 <p>Writes block, and they are the model's own SQL through the batch
 tool. There is no extraction pass: nothing is remembered that the agent
@@ -572,6 +593,24 @@ plus the authorizer</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/gobii-ai/gobii-platform/commit/c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb"><code class="commit-id" title="c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb">c9929bf8…</code></a>
+— re-read at the same commit; <code>main</code> has not moved since 21
+August 2026. The mark and its anchors were re-verified and hold:
+<code>PersistentAgentStepSnapshot</code> and
+<code>PersistentAgentCommsSnapshot</code> still carry the
+<code>agent</code> foreign key and every read still filters on it.
+Nothing needed correcting. One thing is described more fully: the
+authorizer's denial set, where the pragma half does the work a shorter
+list would miss — <code>database_list</code> enumerates attachments,
+<code>key</code> and <code>rekey</code> are the SQLCipher handles, and
+<code>temp_store_directory</code> would let a query pick where SQLite
+writes temporary files, a filesystem write that outlives the block on
+<code>writefile</code>. <code>VACUUM</code> is refused by statement
+pattern rather than by the authorizer, because <code>VACUUM INTO</code>
+writes a file and there is no action code for it; the pattern tolerates
+an <code>EXPLAIN</code> prefix and runs after comments and literals are
+stripped.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/gobii-ai/gobii-platform/commit/c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb"><code class="commit-id" title="c9929bf8ea59b4695b99dcab59aa6c97a09c5bdb">c9929bf8…</code></a>
 — re-read, 598 files and 71,496 insertions past the previous pin in a
