@@ -9,14 +9,14 @@ source_url: https://github.com/jordanmccann/agentmemory
 archive_name: "jordanmccann--agentmemory"
 revision: 3aa3b8389896f81dd813fdf9176ef3ca122d809e
 revision_url: https://github.com/jordanmccann/agentmemory/commit/3aa3b8389896f81dd813fdf9176ef3ca122d809e
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: ""
-stack_storage: ""
+stack_storage: "sqlite, memory"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "An extracted memory with importance and lineage, indexed in an ANN structure"
-  storage: "A local store with a dense embedder and a cross-encoder reranker, no external service"
+  storage: "A fresh in-process SQLite store per benchmark case — `:memory:`, so nothing survives the run — with an HNSW index (M=16, ef_construction=200, ef_search=100) over an all-mpnet-base-v2 embedder and a cross-encoder reranker"
   retrieval: "Dense retrieval with reranking under a per-question-type token budget"
   write: "Extraction, classification, consolidation and calibration passes over ingested sessions"
   update_delete: "Consolidation and a GDPR module; no supersession or tombstone found"
@@ -216,6 +216,22 @@ contain. What is established is that three committed artifacts name the oracle
 variant, the README claims `_S` and disclaims oracle access, and the self-audit's
 reasoning covers the harness but not the corpus.
 
+**A second reading looked for a way to close that gap from inside the repository
+and there is not one.** `fullrun_opus6.log` records the dataset path, the case
+count, the two model names, the token budgets and then per-question accuracy
+lines; it logs no ingest count, no session count and no per-case token figure
+that would let the haystack be sized from the outside. Grepping it for session
+numbers is actively misleading — the integers that look like counts, `14`, `37`,
+`58`, `93`, `124`, are the running `multi-session` question-type tallies in the
+periodic accuracy table, not sessions ingested. So the open question stays open
+for the reason the previous paragraph gives, and a future reader can skip that
+search.
+
+What the re-read does confirm, against the harness rather than the docs: neither
+`haystack_session_ids` nor `answer_session_ids` appears anywhere in
+`run_longmemeval_full.py`, and every reference to the case is
+`case["haystack_sessions"]`. The self-audit's checkable claims hold.
+
 **One flag settles it.** The harness already takes `--dataset`. A re-run against
 `longmemeval_s.json`, with the log and result file committed the same way, would
 either confirm the record or replace it with a number that means what it says.
@@ -315,5 +331,11 @@ budgets); `FINAL_REPORT_OPUS6_WORLDRECORD.md`
 per-category results, the 16-day story)
 
 ## History
+
+**2026-09-18** — [`3aa3b8389896f81dd813fdf9176ef3ca122d809e`](https://github.com/jordanmccann/agentmemory/commit/3aa3b8389896f81dd813fdf9176ef3ca122d809e) — re-read at the same commit, and it confirms the previous reading rather than changing it. The three artifacts still name `longmemeval_oracle.json`, the README still claims `LongMemEval_S` with no oracle access, and the self-audit's claims about the harness were checked directly this time: neither `haystack_session_ids` nor `answer_session_ids` appears anywhere in `run_longmemeval_full.py`, and every reference to the case is `case["haystack_sessions"]`. Those claims hold.
+
+The re-read also looked for a way to size the haystack from inside the repository, and there is not one — `fullrun_opus6.log` records the dataset path, the case count, the models, the token budgets and per-question accuracy, and no ingest or session count at all. The integers in it that look like session counts are the running `multi-session` question-type tallies, which is a trap worth naming so the next reader does not repeat the search. Section 10 now says so.
+
+`stack_storage` was empty and is now `sqlite, memory`: each case gets a fresh `:memory:` SQLite store, so nothing survives the run, with an HNSW index at M=16 / ef_construction=200 / ef_search=100 over `all-mpnet-base-v2` and a cross-encoder reranker above it. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`3aa3b8389896f81dd813fdf9176ef3ca122d809e`](https://github.com/jordanmccann/agentmemory/commit/3aa3b8389896f81dd813fdf9176ef3ca122d809e) — first reading. Screened before reading; the tree was read, nothing was installed and no evaluation was run. The 481-of-500 figure was recounted from the committed per-case records and matches. The dataset file itself is not committed and was not obtained.
