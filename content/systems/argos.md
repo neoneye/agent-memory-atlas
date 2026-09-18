@@ -9,7 +9,7 @@ source_url: https://github.com/bobaba76/Argos
 archive_name: "bobaba76--Argos"
 revision: 755f652a5d1cff21b1a38c371f5790f79feb87af
 revision_url: https://github.com/bobaba76/Argos/commit/755f652a5d1cff21b1a38c371f5790f79feb87af
-analyzed_at: 2026-09-07
+analyzed_at: 2026-09-18
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "both write paths, on the value and on the claim slot | argos_plugin/store_core.py:243-268, argos_plugin/store_write.py:247-266,:1108-1130,:3120-3160,:3213-3260 | `delete_memory` and the erase workflow write `deletion_tombstones` keyed on a case- and whitespace-insensitive hash of the content plus category and user scope; a review decision of `rejected` and every conflict resolution write `rejection_ledger` keyed on `(subject, predicate, user_scope)` so a paraphrase is caught; `remember` (the direct `memory_save` path) and `save_candidate` (the proposal path) both call `tombstone_check` and `rejection_check` and return `None` on a hit, so the reviewer never sees a resurrected fact; both are reversible only by an explicit `purge_*` | argos_plugin/tests/test_deletion_tombstones.py (`test_refeed_blocked_after_delete`, `test_refeed_blocked_case_whitespace_insensitive`, `test_other_content_and_category_unaffected`, `test_purge_tombstone_allows_refeed`, `test_tombstone_scoped_by_user`), argos_plugin/tests/test_rejection_scope.py (`test_specific_claim_rejection_still_blocks_same_slot`)"
@@ -620,6 +620,20 @@ python3 -c "import json;print(sum(json.loads(l)['autoeval_label']['label'] for l
 ```
 
 ## History
+
+**2026-09-18** — re-read with the subject still gone, and the archive
+re-verified because the seven marks rest on it. `bobaba76/Argos` still returns
+*"Repository not found"*, and `scripts/state/archive-sync.jsonl` records the
+fork as `no-parent` twice on 2026-09-17 — a status that is ambiguous in general
+(it also covers a rate-limited run) and unambiguous here, because the 404 is
+reproducible. The pinned commit is intact in the atlas fork: fetched by sha from
+`agent-memory-atlas-archive/bobaba76--Argos`, `755f652a` resolves and carries
+tree `ff366504c38ded4a6b1f55419518202ffb4047eb`. Spot-checked against that
+fetch, `argos_plugin/store_core.py` is 702 lines and `store_write.py` 3,304,
+with `CREATE TABLE IF NOT EXISTS deletion_tombstones` at `store_core.py:243` —
+the anchor the `tombstone` record cites. So every line this report quotes can
+still be checked, by that fork, at the commit the marks were tested against. No
+marks change.
 
 **2026-09-16** — [`755f652a5d1cff21b1a38c371f5790f79feb87af`](https://github.com/bobaba76/Argos/commit/755f652a5d1cff21b1a38c371f5790f79feb87af) — re-read attempted; `bobaba76/Argos` returns 404 from both the web and the API, with no redirect, so the repository was deleted or made private rather than renamed. The pin is unchanged because there is nothing newer to move to. The commit itself is preserved in the atlas's archive fork, [`agent-memory-atlas-archive/bobaba76--Argos`](https://github.com/agent-memory-atlas-archive/bobaba76--Argos), which is where a reader can now check the quotations; the source and revision links in this report keep naming the original, which is what they are a record of. No mark was re-tested against a newer commit and none is withdrawn: the code each one rests on still exists at this sha.
 
