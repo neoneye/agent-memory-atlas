@@ -7,12 +7,12 @@ page_kind: system
 source_name: "fozikio/cortex-engine"
 source_url: https://github.com/fozikio/cortex-engine
 archive_name: "fozikio--cortex-engine"
-revision: 233561b486d0e10bb52df32dea7d22d374086ab0
-revision_url: https://github.com/fozikio/cortex-engine/commit/233561b486d0e10bb52df32dea7d22d374086ab0
-analyzed_at: 2026-09-11
+revision: a0925da1d98fea3419b6dee11048598e989bfc93
+revision_url: https://github.com/fozikio/cortex-engine/commit/a0925da1d98fea3419b6dee11048598e989bfc93
+analyzed_at: 2026-09-18
 capabilities: "audit_log"
 capability_evidence:
-  audit_log: "belief revision | src/tools/believe.ts:55 and src/tools/forget.ts:50 | the belief log and the memory update commit in one transaction, so a revision cannot land without its record | src/engines"
+  audit_log: "belief revision, written inside the same transaction as the memory update | src/tools/believe.ts:55-73, src/tools/forget.ts:50-72, src/core/types.ts:255-271 | `believe` embeds the new definition *before* opening the transaction — the comment gives the reason, that an LLM or network call inside `withTransaction` holds the writer mutex open — then `putBelief` and `updateMemory` commit together, so there is no belief entry pointing at a memory that was never updated and no memory whose history is missing its revision row. `forget` does the same for a fade, writing an entry whose `old_definition` and `new_definition` are identical because only the salience moved. One edge is worth knowing: the fade's `putBelief` sits behind `if (reason)`, and `reason` defaults to `'Intentionally faded'` when the argument is absent — so the branch is always taken in practice, but a caller passing `reason: \"\"` explicitly fades the memory with no belief row, which is the one way past a guard whose own comment says the fade *\"is never visible without its audit-trail entry\"* | src/engines"
 stack_storage: "sqlite, files"
 stack_retrieval: "graph"
 stack_source: "seeded"
@@ -198,16 +198,72 @@ asserted again.
 An MCP server with 60 tools, a REST surface, hooks, skills, an OpenClaw plugin,
 Docker, and setup scripts for both shells.
 
-**The REST blocklist is a design idea worth naming.** Per the README, destructive
-tools — `forget`, `dream`, `evolve`, `resolve`, `thread_resolve` — "are blocked
-from the generic REST endpoint; they remain available via MCP for direct agent
-access." Authorisation that depends on *which transport* the call arrived over is
-an unusual and defensible model: the agent's own channel can consolidate and
-forget; a generic HTTP caller cannot. This report did not locate the enforcing
-list in the source, so the claim is recorded as documented rather than verified.
+**The REST restriction is a design idea worth naming, and the code is stricter
+than the README.** The README describes a blocklist — `forget`, `dream`,
+`evolve`, `resolve`, `thread_resolve` "are blocked from the generic REST
+endpoint; they remain available via MCP for direct agent access." The earlier
+reading could not find the enforcing list and recorded the claim as documented
+rather than verified. It is at `src/rest/server.ts:407-427`, and it is an
+allowlist, not a blocklist:
 
-REST auth uses `crypto.timingSafeEqual`, and the plugin loader validates import
-paths against trusted directories.
+```
+const REST_TOOL_ALLOWLIST = new Set([
+  // Read-only queries
+  'query', 'retrieve', 'stats', 'vitals_get',
+  'threads_list', 'ops_query', 'content_list', 'retrieval_audit',
+  // Append-only writes (no destructive effect on existing state)
+  'ops_append', 'thread_create',
+]);
+```
+
+Anything not in those ten names — twelve entries, two of them append-only
+writes — gets a 403 naming the transport: *"Use a dedicated endpoint or MCP
+transport."* A blocklist of five would leave roughly fifty-five tools reachable
+over the generic endpoint; this leaves twelve. The comment also covers the case
+the README does not: plugin-registered tools are excluded by default because
+*"they ship with unknown trust semantics."* Authorisation that depends on which
+transport the call arrived over remains the unusual and defensible part; the
+documentation undersells it.
+
+REST auth uses `crypto.timingSafeEqual`. Since 1.8.0 MCP is also served over
+Streamable HTTP at `/mcp` on the same REST server, which exists to fix a real
+constraint rather than to add a feature: stdio meant one server process per
+session, so a main checkout and a worktree put two processes on one SQLite file,
+which the project's own `docs/concurrency.md` forbids. The allowlist above
+guards the generic `/api/tools` endpoint and not an agent's own MCP session, so
+the transport distinction survives the new transport.
+
+**The plugin loader's trust boundary is drawn on where the path came from.**
+`loadPlugins` refuses a `file://` import that does not resolve under
+`node_modules/@fozikio` or `node_modules/cortex-`, unless the caller passes
+`{ trusted: true }` — and exactly one caller does, `src/mcp/server.ts:107`,
+loading the paths an operator wrote under `plugins:` in their own config. The
+reasoning is in the loader's comment and it is the right distinction: the
+allowlist exists to stop a *tool argument* from loading arbitrary code, and a
+config file the operator wrote is not a tool argument. The same comment records
+what the allowlist used to be worth: `resolve('.')` was in it, *"which trivially
+defeated the sandbox — any file under the working directory was treated as
+trusted."*
+
+**`memory_origin: 'source'` is a write boundary rather than a trust state.** A
+mirrored verbatim memory carries it, and five separate cognition paths check
+`isSource` and step around it — clustering will not route an observation to one,
+scoring will not reschedule it, abstraction never samples it as a member, and
+refine and hindsight leave it out. `checkRewrite` makes the refusal first and
+unconditionally, before any of its text heuristics run:
+
+```
+if (input.origin === 'source') {
+  return { ok: false, reasons: ['source memory: mirrored verbatim, never rewritten'] };
+}
+```
+
+It earns no mark here because retrieval, edge discovery and spread activation
+see a source memory exactly as they see any other — the field gates what may be
+*written over*, not what comes back. It is worth copying anyway: a store that
+mirrors an external artifact needs a way to say *this text is not mine to
+improve*, and a flag the derivation paths all consult is cheaper than hoping the
+prompt says so.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -361,6 +417,8 @@ Run from the root of the checkout at the pinned commit.
 | Tree and suite size | `find src -name "*.ts" \| xargs wc -l \| tail -1` | 32,142 lines; 326 test cases |
 
 ## History
+
+**2026-09-18** — [`a0925da1d98fea3419b6dee11048598e989bfc93`](https://github.com/fozikio/cortex-engine/commit/a0925da1d98fea3419b6dee11048598e989bfc93) — re-pinned from `233561b`; 61 files and +3,712 lines under `src/`, versions 1.7.1 through 1.9.1, and the tree was re-screened at the new pin (two auto-run surfaces, four manifests inside the cooldown by the shallow clone's tip date, three unpinned dependency surfaces, no build-time execution path; nothing installed or run). The open item from the previous reading is closed, and the answer runs the project's way: the REST restriction the README describes as a five-tool blocklist is implemented at `src/rest/server.ts:407-427` as a twelve-name allowlist — ten read-only queries and two append-only writes — with everything else answering 403, and plugin-registered tools excluded by default because *"they ship with unknown trust semantics."* The code is stricter than its own documentation. The `audit_log` record is re-anchored and gains the one edge in it: `forget`'s `putBelief` sits behind `if (reason)`, and although `reason` defaults to `'Intentionally faded'`, an explicit `reason: ""` fades a memory with no belief row. New since the last pin and described here for the first time: MCP over Streamable HTTP at `/mcp`, which exists so two sessions on one repo stop putting two processes on one SQLite file; a plugin trust boundary drawn on whether a path came from a tool argument or from the operator's own config, whose comment records that `resolve('.')` used to sit in the allowlist and *"trivially defeated the sandbox"*; and `memory_origin: 'source'`, a write boundary that five cognition paths and `checkRewrite`'s first branch all respect, and that no read path consults.
 
 **2026-09-11** — [`233561b486d0e10bb52df32dea7d22d374086ab0`](https://github.com/fozikio/cortex-engine/commit/233561b486d0e10bb52df32dea7d22d374086ab0) — re-read, 23 files and 796 insertions past the previous pin in a single commit. `audit_log` re-verified — the belief log and the memory update still commit in one transaction, in both `believe` and `forget`, each with a comment saying why. **The stated risk narrows rather than closes**: there is still no evaluation of retrieval quality, and `src/tools/retrieval-audit.ts` inspects one query rather than scoring a corpus. What did get measured is the acceptance gate on model-generated thoughts, and the change there is worth recording. `src/engines/thought-quality.ts` replaces a string blocklist with a structural check, and its docstring gives the argument: *"Blocklists are brittle: they encode one model's failure vocabulary and say nothing about whether the thought is grounded in the evidence it claims to derive from."* Grounding is now the threshold — the fraction of the thought's content words appearing in the evidence it was generated from, so *"generic LLM filler … shares almost no vocabulary with real evidence and scores near zero regardless of which model produced it"* — and the old marker list survives only as a weak signal that cannot veto a well-grounded thought alone. The empirical provenance is dated in the source: the markers were derived from dream-contamination incidents with Gemini and Ollama 14B on 2026-04-02. Twenty-nine committed cases cover it in both directions, including three that separate a legitimate memory *about* memory corruption from a refinement that defines the memory instead of its subject. Screened before reading: eleven findings; nothing was installed or run.
 

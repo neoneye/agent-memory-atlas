@@ -111,14 +111,14 @@ instead.</p>
               <strong>fozikio/cortex-engine</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/fozikio/cortex-engine/commit/233561b486d0e10bb52df32dea7d22d374086ab0" title="233561b486d0e10bb52df32dea7d22d374086ab0">
+            <a class="meta-pill revision-pill" href="https://github.com/fozikio/cortex-engine/commit/a0925da1d98fea3419b6dee11048598e989bfc93" title="a0925da1d98fea3419b6dee11048598e989bfc93">
               <span>Analyzed revision</span>
-              <code>233561b4…</code>
+              <code>a0925da1…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/fozikio--cortex-engine" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -309,18 +309,71 @@ nothing prevents a refuted value being asserted again.</p>
 <h2 id="8-agent-integration">8. Agent Integration</h2>
 <p>An MCP server with 60 tools, a REST surface, hooks, skills, an
 OpenClaw plugin, Docker, and setup scripts for both shells.</p>
-<p><strong>The REST blocklist is a design idea worth naming.</strong>
-Per the README, destructive tools — <code>forget</code>,
-<code>dream</code>, <code>evolve</code>, <code>resolve</code>,
-<code>thread_resolve</code> — "are blocked from the generic REST
-endpoint; they remain available via MCP for direct agent access."
-Authorisation that depends on <em>which transport</em> the call arrived
-over is an unusual and defensible model: the agent's own channel can
-consolidate and forget; a generic HTTP caller cannot. This report did
-not locate the enforcing list in the source, so the claim is recorded as
-documented rather than verified.</p>
-<p>REST auth uses <code>crypto.timingSafeEqual</code>, and the plugin
-loader validates import paths against trusted directories.</p>
+<p><strong>The REST restriction is a design idea worth naming, and the
+code is stricter than the README.</strong> The README describes a
+blocklist — <code>forget</code>, <code>dream</code>,
+<code>evolve</code>, <code>resolve</code>, <code>thread_resolve</code>
+"are blocked from the generic REST endpoint; they remain available via
+MCP for direct agent access." The earlier reading could not find the
+enforcing list and recorded the claim as documented rather than
+verified. It is at <code>src/rest/server.ts:407-427</code>, and it is an
+allowlist, not a blocklist:</p>
+<pre><code>const REST_TOOL_ALLOWLIST = new Set([
+  // Read-only queries
+  &#39;query&#39;, &#39;retrieve&#39;, &#39;stats&#39;, &#39;vitals_get&#39;,
+  &#39;threads_list&#39;, &#39;ops_query&#39;, &#39;content_list&#39;, &#39;retrieval_audit&#39;,
+  // Append-only writes (no destructive effect on existing state)
+  &#39;ops_append&#39;, &#39;thread_create&#39;,
+]);</code></pre>
+<p>Anything not in those ten names — twelve entries, two of them
+append-only writes — gets a 403 naming the transport: <em>"Use a
+dedicated endpoint or MCP transport."</em> A blocklist of five would
+leave roughly fifty-five tools reachable over the generic endpoint; this
+leaves twelve. The comment also covers the case the README does not:
+plugin-registered tools are excluded by default because <em>"they ship
+with unknown trust semantics."</em> Authorisation that depends on which
+transport the call arrived over remains the unusual and defensible part;
+the documentation undersells it.</p>
+<p>REST auth uses <code>crypto.timingSafeEqual</code>. Since 1.8.0 MCP
+is also served over Streamable HTTP at <code>/mcp</code> on the same
+REST server, which exists to fix a real constraint rather than to add a
+feature: stdio meant one server process per session, so a main checkout
+and a worktree put two processes on one SQLite file, which the project's
+own <code>docs/concurrency.md</code> forbids. The allowlist above guards
+the generic <code>/api/tools</code> endpoint and not an agent's own MCP
+session, so the transport distinction survives the new transport.</p>
+<p><strong>The plugin loader's trust boundary is drawn on where the path
+came from.</strong> <code>loadPlugins</code> refuses a
+<code>file://</code> import that does not resolve under
+<code>node_modules/@fozikio</code> or <code>node_modules/cortex-</code>,
+unless the caller passes <code>{ trusted: true }</code> — and exactly
+one caller does, <code>src/mcp/server.ts:107</code>, loading the paths
+an operator wrote under <code>plugins:</code> in their own config. The
+reasoning is in the loader's comment and it is the right distinction:
+the allowlist exists to stop a <em>tool argument</em> from loading
+arbitrary code, and a config file the operator wrote is not a tool
+argument. The same comment records what the allowlist used to be worth:
+<code>resolve('.')</code> was in it, <em>"which trivially defeated the
+sandbox — any file under the working directory was treated as
+trusted."</em></p>
+<p><strong><code>memory_origin: 'source'</code> is a write boundary
+rather than a trust state.</strong> A mirrored verbatim memory carries
+it, and five separate cognition paths check <code>isSource</code> and
+step around it — clustering will not route an observation to one,
+scoring will not reschedule it, abstraction never samples it as a
+member, and refine and hindsight leave it out. <code>checkRewrite</code>
+makes the refusal first and unconditionally, before any of its text
+heuristics run:</p>
+<pre><code>if (input.origin === &#39;source&#39;) {
+  return { ok: false, reasons: [&#39;source memory: mirrored verbatim, never rewritten&#39;] };
+}</code></pre>
+<p>It earns no mark here because retrieval, edge discovery and spread
+activation see a source memory exactly as they see any other — the field
+gates what may be <em>written over</em>, not what comes back. It is
+worth copying anyway: a store that mirrors an external artifact needs a
+way to say <em>this text is not mine to improve</em>, and a flag the
+derivation paths all consult is cheaper than hoping the prompt says
+so.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>One mark: audit log.</strong> <code>beliefs</code> is an
@@ -523,6 +576,34 @@ from a definition <em>of</em> the memory</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/fozikio/cortex-engine/commit/a0925da1d98fea3419b6dee11048598e989bfc93"><code class="commit-id" title="a0925da1d98fea3419b6dee11048598e989bfc93">a0925da1…</code></a>
+— re-pinned from <code>233561b</code>; 61 files and +3,712 lines under
+<code>src/</code>, versions 1.7.1 through 1.9.1, and the tree was
+re-screened at the new pin (two auto-run surfaces, four manifests inside
+the cooldown by the shallow clone's tip date, three unpinned dependency
+surfaces, no build-time execution path; nothing installed or run). The
+open item from the previous reading is closed, and the answer runs the
+project's way: the REST restriction the README describes as a five-tool
+blocklist is implemented at <code>src/rest/server.ts:407-427</code> as a
+twelve-name allowlist — ten read-only queries and two append-only writes
+— with everything else answering 403, and plugin-registered tools
+excluded by default because <em>"they ship with unknown trust
+semantics."</em> The code is stricter than its own documentation. The
+<code>audit_log</code> record is re-anchored and gains the one edge in
+it: <code>forget</code>'s <code>putBelief</code> sits behind
+<code>if (reason)</code>, and although <code>reason</code> defaults to
+<code>'Intentionally faded'</code>, an explicit <code>reason: ""</code>
+fades a memory with no belief row. New since the last pin and described
+here for the first time: MCP over Streamable HTTP at <code>/mcp</code>,
+which exists so two sessions on one repo stop putting two processes on
+one SQLite file; a plugin trust boundary drawn on whether a path came
+from a tool argument or from the operator's own config, whose comment
+records that <code>resolve('.')</code> used to sit in the allowlist and
+<em>"trivially defeated the sandbox"</em>; and
+<code>memory_origin: 'source'</code>, a write boundary that five
+cognition paths and <code>checkRewrite</code>'s first branch all
+respect, and that no read path consults.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/fozikio/cortex-engine/commit/233561b486d0e10bb52df32dea7d22d374086ab0"><code class="commit-id" title="233561b486d0e10bb52df32dea7d22d374086ab0">233561b4…</code></a>
 — re-read, 23 files and 796 insertions past the previous pin in a single
