@@ -113,7 +113,7 @@ history.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-13</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ctxr-dev--llm-wiki-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -960,6 +960,32 @@ Evidence</h3>
 <li><code>PERFORMANCE.md</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/ctxr-dev/llm-wiki-memory/commit/4e7f98f3851ca51a8159852aff57a2512794a877"><code class="commit-id" title="4e7f98f3851ca51a8159852aff57a2512794a877">4e7f98f3…</code></a>
+— re-read at the same commit; <code>main</code> has not moved. The mark
+holds and its record is re-anchored, because it was pointing at the
+wrong mechanism. The Lexical editor is a person editing rows that are
+already stored — curation, which the <a
+href="../../methodology/atlas-rubric/#human-review-surface">narrowed
+rubric</a> no longer counts. What does count is the self-improvement
+write gate, and specifically its <code>PreToolUse</code> hook: it opens
+<code>transcript_path</code>, tests the last user turn against a
+save-phrase pattern, returns <code>allow</code> on a match and
+<code>ask</code> otherwise, and counts prior gated writes in the turn so
+a batch cannot ride one approval. Reading the conversation off disk is
+what the model cannot forge.</p>
+<p>Two limits are now stated with it, both of which the project's own
+layer table is honest about. The hook is Claude Code only and switchable
+through <code>gate.claudeHookEnabled</code>; on Cursor, Codex or a
+generic client the remaining deterministic layer is the server checking
+<code>gate.userRequested === true</code>, and
+<code>contract.mjs:189</code> declares that as
+<code>z.boolean().optional()</code> on the request — a field the model
+fills in. <code>docs/write-gate.md</code> calls the server layer
+<em>"the airtight bottom layer for hook-less clients"</em> and says the
+model <em>"can't forge <code>userRequested</code>"</em>; the first is
+true against a missing flag and the second is the one sentence in that
+document the code does not support.</p>
 <p><strong>2026-09-13</strong> — <a
 href="https://github.com/ctxr-dev/llm-wiki-memory/commit/4e7f98f3851ca51a8159852aff57a2512794a877"><code class="commit-id" title="4e7f98f3851ca51a8159852aff57a2512794a877">4e7f98f3…</code></a>
 — re-read, 18 commits past the previous pin across 178 files, most of it
