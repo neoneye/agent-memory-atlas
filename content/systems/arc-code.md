@@ -9,7 +9,7 @@ source_url: https://github.com/jerber/arc-code
 archive_name: "jerber--arc-code"
 revision: 6b33c1f7c2ad45997663c69157f5559d1be61bd9
 revision_url: https://github.com/jerber/arc-code/commit/6b33c1f7c2ad45997663c69157f5559d1be61bd9
-analyzed_at: 2026-08-12
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "postgres, files"
 stack_retrieval: "lexical"
@@ -245,12 +245,32 @@ gets for a design change.
 actuator separation directly, and the README records that some Codex runs did try
 to find published solutions.
 
-**The archive's size test.** Stated as an assumption in the code and true of the
-log, false of the notes. The consequence is bounded — the agent's own memory is
-unaffected, because it reads the live file — but the permanent record of what the
-agent believed can silently lag what it actually wrote. For a repository whose
-published artifact *is* the session record, that is the defect worth fixing, and
-a hash instead of a length closes it.
+**The archive's size test, and the argument the code makes for it.**
+`push_artifacts` uploads "every file whose size no longer matches what is
+stored" — `if stored.get(name) != len(body)` — and the docstring states the
+assumption outright:
+
+> Size is a coarse test and a cheap one, and every file here is append-only or
+> rewritten whole, so a change that keeps the length is not a thing that happens.
+
+That defence is right about the log and wrong about the notes, and the reason is
+the second half of its own sentence. Append-only is safe: a longer file always
+has a different length. *Rewritten whole* is exactly the case where a
+same-length change is ordinary rather than improbable — swapping a digit,
+correcting a word, reordering two lines of `notes.md` all preserve the byte
+count. The clause offered as reassurance names the failing case.
+
+The consequence is bounded — the agent's own memory is unaffected, because it
+reads the live file — but the permanent record of what the agent believed can
+silently lag what it actually wrote. For a repository whose published artifact
+*is* the session record, that is the defect worth fixing, and a hash instead of a
+length closes it.
+
+Worth crediting in the same function: the comment above the loop explains why it
+reads the body and takes `len(body)` rather than calling `stat()` a second time —
+the log is being appended to while the mirror runs, and "a size that disagrees
+with its body is a lie about what is stored". The author is careful about the
+concurrent-write failure two lines from the one the size test cannot see.
 
 **The verdict is kept twice, on purpose.** `games.audit` holds what was judged
 when the session ran; `games.reaudit` holds a stricter later reading. Neither
@@ -389,5 +409,11 @@ the failure study makes a business case for.
 | `tests/`, `verify_*.py` | 112 test functions plus fence, sandbox and broker checks |
 
 ## History
+
+**2026-09-18** — [`6b33c1f7c2ad45997663c69157f5559d1be61bd9`](https://github.com/jerber/arc-code/commit/6b33c1f7c2ad45997663c69157f5559d1be61bd9) — re-read at the same commit. The headline risk was verified at its source and the passage now quotes the code's own defence of it. `rig/db.py:356` is `push_artifacts`, whose docstring says *"Size is a coarse test and a cheap one, and every file here is append-only or rewritten whole, so a change that keeps the length is not a thing that happens"*, and the test is `if stored.get(name) != len(body)`.
+
+The argument fails on the clause it offers as reassurance: append-only is safe, but *rewritten whole* — which is how the agent edits `notes.md` — is exactly where a same-length change is ordinary. Section 9 says so now rather than calling the assumption merely false.
+
+Two lines above, the same function is careful about a different failure: the comment explains that it reads the body and takes `len(body)` rather than calling `stat()` twice, because the log is being appended to while the mirror runs and "a size that disagrees with its body is a lie about what is stored". That is worth crediting beside the gap.
 
 **2026-08-12** — [`6b33c1f7c2ad45997663c69157f5559d1be61bd9`](https://github.com/jerber/arc-code/commit/6b33c1f7c2ad45997663c69157f5559d1be61bd9) — first reading. The screen reported a build-time exec path in `tests/conftest.py` and two dependency surfaces changed the day of the reading, inside the seven-day cooldown, so nothing was installed and no test was run. Claims here come from the source, the committed session workspaces and `docs/failure-modes.md`.
