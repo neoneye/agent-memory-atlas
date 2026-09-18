@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Lyellr88/marm-memory"
 source_url: https://github.com/Lyellr88/marm-memory
 archive_name: "Lyellr88--marm-memory"
-revision: 0b4013de9e854fccd211d7fdb8e35ff6596ec4a1
-revision_url: https://github.com/Lyellr88/marm-memory/commit/0b4013de9e854fccd211d7fdb8e35ff6596ec4a1
-analyzed_at: 2026-09-12
+revision: f3d626cb7eb879765b92fff2647db8105eee7a4a
+revision_url: https://github.com/Lyellr88/marm-memory/commit/f3d626cb7eb879765b92fff2647db8105eee7a4a
+analyzed_at: 2026-09-18
 capabilities: "tombstone, scope_enforced, human_review, negative_eval"
 capability_evidence:
   tombstone: "concept-graph entity review | marm-mcp-server/marm_mcp_server/core/concept_db.py:236-248, :307-343, :378-406, marm-mcp-server/marm_mcp_server/core/concept_review.py:191-225, marm-mcp-server/marm_mcp_server/services/concept_build_engine.py:293-301, marm-mcp-server/marm_mcp_server/console/endpoints/concepts.py:181-184 | `remove_entity` writes `INSERT OR IGNORE INTO concept_entity_suppressions (name, session_name, project, platform)` before it deletes the row, so the record is keyed on the entity *name* in its scope rather than on the row id. Every extraction goes through `ConceptDB.resolve_entity_name`, which follows the alias chain and then returns `None` for a suppressed name; the build engine's `if canonical_name is None: continue` drops it, so re-extracting the same memory cannot re-assert it. `backup_and_reset_concept_database` drops `entities`, `relationships`, `entity_code_links`, `concept_build_runs` and `concept_schema_metadata` and deliberately leaves the three review tables, so the suppression outlives the graph. The producer is the Console's `DELETE /api/concepts/entities/{entity_id}`, reachable from `marm-memory console` | marm-mcp-server/tests/test_concept_review.py:72-86, which removes an entity, calls `backup_and_reset_concept_database`, and asserts `resolve_entity_name` still returns `None`"
@@ -302,5 +302,11 @@ It is the wrong fit for a shared multi-agent deployment despite the `--swarm` pr
 - `rg -n '"causes"' marm-mcp-server/tests/` — no match; nothing pins the shadowed predicate
 
 ## History
+
+**2026-09-18** — [`f3d626cb7eb879765b92fff2647db8105eee7a4a`](https://github.com/Lyellr88/marm-memory/commit/f3d626cb7eb879765b92fff2647db8105eee7a4a) — re-pinned from `0b4013d`; 71 files and +2,346 lines, re-screened at the new pin. The `human_review` mark was producer-tested rather than taken from its description, since the corpus-wide rate for that mark is poor — and it holds. The adjudicating verbs are not on the agent's surface: the MCP servers publish roughly forty `marm_*` tools, among them `marm_concept_build` and `marm_concept_recall` for building and reading the graph, and there is no merge, no dismiss and no duplicate-resolution verb in the list. Merge and dismiss are routes on the Console, a separate FastAPI app bound to `127.0.0.1` behind a `TrustedHostMiddleware` allowlist, with the buttons in `BuildAndDuplicates.tsx`.
+
+The caveat the record should carry is the Console's own access rule at `console/app.py:112-133`: when `MARM_API_KEY` is unset, any request whose client IP is loopback is let through, and only when a key is set does it require a `Bearer` token compared with `secrets.compare_digest`. So by default the adjudication endpoints are open to anything running on the same machine, which includes a shell an agent's host harness may hand it. The verb is off the tool surface — which is what the mark tests — and the door it sits behind is a locally-trusted one until a key is configured.
+
+Also worth recording from the same reading: `marm_stage_compaction_summaries` and `marm_apply_compaction` *are* both agent tools, so the compaction staging step is one the writer can clear itself. That is a different mechanism from the concept queue and earns nothing here, but a reader comparing the two surfaces should know they are not built the same way.
 
 **2026-09-12** — [`0b4013de9e854fccd211d7fdb8e35ff6596ec4a1`](https://github.com/Lyellr88/marm-memory/commit/0b4013de9e854fccd211d7fdb8e35ff6596ec4a1) — first reading, at a commit dated 3 September 2026. Screened before reading: 0 auto-run surfaces, 3 build-time execution points (a `preinstall` in `marm-console/package.json` that deletes stray lockfiles and exits non-zero unless the installer is pnpm, and two `conftest.py` files), 5 unpinned dependency surfaces (`marm-mcp-server/requirements.txt` and `requirements-glama.txt` with ranges rather than `==`, `pyproject.toml` with no lockfile, and the two console manifests), and one `AGENTS.md` read as data; `marm-console/pnpm-lock.yaml` unchanged for 8 days, outside the cooldown. Nothing was installed, built or run; every claim here comes from reading, except the predicate-shadowing check, which was reproduced by re-implementing `_PREDICATE_TRIGGERS` and its matching loop in a scratch Python file.
