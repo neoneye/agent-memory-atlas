@@ -122,7 +122,7 @@ other agent.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Ste2027--ContextMeld" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -331,6 +331,21 @@ only place it sits, and a second consumer of the same command inherits
 nothing. Moving the predicate into the Rust query — the session's
 project and agent are known on that side — would put it where the store
 is.</p>
+<p><strong>And that move is larger than passing the argument.</strong>
+<code>Database::memories</code> does carry a scope predicate,
+<code>(?2='' OR scope=?2)</code>, so the enum can reach SQL; the two
+keys the handoff actually matches on cannot. <code>project</code>
+appears in that statement only inside the substring haystack
+<code>instr(lower(title || ' ' || body || ' ' || tags || ' ' || project), …)</code>,
+and <code>agents</code> is a JSON array serialised into a text column
+that the statement never mentions at all — an agent-scoped filter would
+need a JSON containment test, not a column compare. The project-path
+half already exists a few hundred lines away:
+<code>database.rs:262</code> counts a project's memories with
+<code>WHERE deleted_at IS NULL AND scope='project' AND project=?1</code>,
+which is exactly the predicate the builder re-implements in TypeScript.
+The fix is not hypothetical; half of it is written down elsewhere in the
+same file tree.</p>
 <p><strong>An explicit staging bypasses it, on purpose.</strong> A
 memory staged from the Memories page is offered and preselected whatever
 its scope. That is the person overriding the filter, and the
@@ -433,6 +448,25 @@ rg -n -i &quot;api\.openai\.com|api\.anthropic\.com|reqwest&quot; src-tauri/src 
 rg -n &quot;scope&quot; src-tauri/src/memories.rs                           # the query takes scope only as an optional listing filter
 rg -n &quot;\.memories\(|search_memories\(&quot; src-tauri/src src         # the builder calls memories(&quot;&quot;, &quot;&quot;, false, offset) and filters itself</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/Ste2027/ContextMeld/commit/77d0acbdeda5769d181e7398dcea32be4e70edc9"><code class="commit-id" title="77d0acbdeda5769d181e7398dcea32be4e70edc9">77d0acbd…</code></a>
+— re-read at the same commit; nothing upstream moved. Both marks
+re-verified against the code and both hold: the handoff filter is still
+the only scope predicate on the path that reaches an agent, and
+<code>Insights.test.tsx</code> still asserts the foreign project's
+memory absent beside a global one present. The report's own
+recommendation is sharpened, because it was cheaper-sounding than it is.
+<code>Database::memories</code> does carry a scope predicate —
+<code>(?2='' OR scope=?2)</code>, live whenever
+<code>MemoryLibrary</code> passes a scope — so the enum can reach SQL;
+but <code>project</code> appears in that statement only inside the
+substring haystack, and <code>agents</code> is a serialised JSON array
+the statement never mentions, so neither of the two keys the builder
+actually matches on can be expressed there as written. The project-path
+half of the predicate already exists at <code>database.rs:262</code>,
+counting a project's memories with
+<code>scope='project' AND project=?1</code> — the same test the handoff
+re-implements in TypeScript.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/Ste2027/ContextMeld/commit/77d0acbdeda5769d181e7398dcea32be4e70edc9"><code class="commit-id" title="77d0acbdeda5769d181e7398dcea32be4e70edc9">77d0acbd…</code></a>
 — first reading. Screened with <code>scripts/screen_repo.py</code>: no
