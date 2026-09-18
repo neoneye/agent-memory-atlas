@@ -733,6 +733,36 @@ rg -n &#39;maintenance|operator_mode&#39; tooling.py | awk -F: &#39;$1&gt;=708 &
 rg -n &#39;journal|scope_recall_store&#39; scripts/benchmark.locomo.py scripts/locomo_benchmark_lib.py   # journal disabled; turns stored through scope_recall_store
 rg -n -i &#39;arxiv|bibtex|@article|@misc|doi\.org|zenodo&#39; . --glob &#39;!tests/**&#39;; ls | grep -i citation   # 0: no paper</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — checked against
+<code class="commit-id" title="abe54277867ca516b09b230093b9e2e6a9dbaaa6">abe54277…</code> and
+<strong>deliberately not re-pinned</strong>. The tree has been rewritten
+rather than revised: 1,130 files changed, +95,899 and −294,328 lines,
+the flat modules replaced by packages, and every file this report's six
+evidence records anchor into — <code>candidate_review.py</code>,
+<code>tooling.py</code>, <code>memory_quality.py</code>,
+<code>memory_browser.py</code> — is gone. Moving the pin without
+re-reading would leave six records pointing at nothing, so the report
+stays at <code>578b955</code>, which it still describes accurately, and
+a full re-read is owed.</p>
+<p>One change is worth recording now because it answers this report's
+own stated weakness. The <code>human_review</code> record noted that the
+promotion transition was <em>"exposed to the model as
+<code>scope_recall_memory</code> with <code>dry_run=false</code>"</em>,
+and at the old pin <code>tooling.py:141-170</code> did exactly that —
+<code>dry_run</code> defaulted to <code>True</code> and passing
+<code>false</code> applied the change. At HEAD the agent-facing surface
+is <code>adapters/hermes/tool_surface.py</code>, and it publishes seven
+tools: <code>recall</code>, <code>inspect</code>, <code>profile</code>,
+<code>entity</code>, <code>revise</code>, <code>forget</code>,
+<code>status</code>. There is no promotion verb, no candidate verb and
+no <code>scope_recall_memory</code>. The candidate lifecycle itself
+survives and has grown — <code>candidate_lifecycle</code>,
+<code>candidate_evidence</code>, <code>candidate_evaluations</code> and
+<code>work_items</code>, with <code>JUDGEABLE_STATES</code> of
+<code>proposed</code> and <code>disputed</code> — but whether a person
+or an evaluation moves a candidate out of those states is the question
+the re-read has to answer, and it is not one to settle from a file
+listing.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/410979729/scope-recall-hermes/commit/578b955802df753f2e2208e26eab6f71971285a0"><code class="commit-id" title="578b955802df753f2e2208e26eab6f71971285a0">578b9558…</code></a>
 — first reading. Screened with <code>scripts/screen_repo.py</code>: no
