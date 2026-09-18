@@ -179,6 +179,11 @@ registers no verb on its agent-facing surface.
 user's own message text and refuses it off the trusted channel.
 [Agent Mesh](../../systems/agent-mesh/) refuses to run its CLI approval at all
 when `sys.stdin.isatty()` is false.
+[WeKnora](../../systems/weknora/) shows the shape without any actor check at
+all, because the producing side simply has no reach: an inferred memory is
+`pending`, both prompt-injection queries filter `status = active`, confirmation
+happens over an HTTP route, and the agent's single memory tool is a read while
+the shipped MCP server's twenty-nine tools name no memory verb.
 
 **Why:** fully automatic memory, memory a person can review before it takes
 effect, and memory a person authors are three different products with three
