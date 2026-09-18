@@ -122,7 +122,7 @@ the row and consults it nowhere.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/munch2u-a11y--AIMAOS" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -534,6 +534,26 @@ refinement, cache and inbound index</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. Both risk claims re-derived, and they turn out to be
+the same gap seen twice. <code>previous_content</code> occurs exactly
+once in the tree outside tests —
+<code>existing["previous_content"] = old_content</code> at
+<code>core/mrag/memory/belief_store.py:752</code> — so it is written by
+the supersede path and read by nothing: one write, zero reads.
+Re-asserting an overwritten value therefore supersedes back, with the
+field recording each swap and informing none of them.</p>
+<p>And nothing exercises that path. Of the twelve files under
+<code>tests/</code>, not one imports <code>mrag.memory</code> or
+<code>belief_store</code>; the only files that touch beliefs at all are
+benchmarks — <code>benchmark_delegation.py:75</code> and
+<code>:119</code> count
+<code>identity_store.get_all_beliefs_flat()</code> before and after a
+run — which measure an agent rather than the store's merge-or-supersede
+logic. So the field that exists to carry a correction is unread, and the
+code that writes it is untested, which is why the correction behaviour
+can be described from the source and not from a committed case. No
+marks; the report carries none.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/munch2u-a11y/AIMAOS/commit/0d8c58c2bee5addc72a13c5c95839635d809b5b0"><code class="commit-id" title="0d8c58c2bee5addc72a13c5c95839635d809b5b0">0d8c58c2…</code></a>
 — read again, 4 commits past the previous pin, of which three add UI

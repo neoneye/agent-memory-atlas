@@ -9,7 +9,7 @@ source_url: https://github.com/munch2u-a11y/AIMAOS
 archive_name: "munch2u-a11y--AIMAOS"
 revision: 0d8c58c2bee5addc72a13c5c95839635d809b5b0
 revision_url: https://github.com/munch2u-a11y/AIMAOS/commit/0d8c58c2bee5addc72a13c5c95839635d809b5b0
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "sqlite, files, delegated"
 stack_retrieval: "vector"
@@ -368,6 +368,24 @@ epistemic status and a history row beside it.
 | `System Technical Documents/AIMAOS_flaw_report_and_benchmarks.md` | Release audit that retires its own earlier numbers |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+risk claims re-derived, and they turn out to be the same gap seen twice.
+`previous_content` occurs exactly once in the tree outside tests —
+`existing["previous_content"] = old_content` at
+`core/mrag/memory/belief_store.py:752` — so it is written by the supersede path
+and read by nothing: one write, zero reads. Re-asserting an overwritten value
+therefore supersedes back, with the field recording each swap and informing
+none of them.
+
+And nothing exercises that path. Of the twelve files under `tests/`, not one
+imports `mrag.memory` or `belief_store`; the only files that touch beliefs at
+all are benchmarks — `benchmark_delegation.py:75` and `:119` count
+`identity_store.get_all_beliefs_flat()` before and after a run — which measure
+an agent rather than the store's merge-or-supersede logic. So the field that
+exists to carry a correction is unread, and the code that writes it is untested,
+which is why the correction behaviour can be described from the source and not
+from a committed case. No marks; the report carries none.
 
 **2026-09-10** — [`0d8c58c2bee5addc72a13c5c95839635d809b5b0`](https://github.com/munch2u-a11y/AIMAOS/commit/0d8c58c2bee5addc72a13c5c95839635d809b5b0) — read again, 4 commits past the previous pin, of which three add UI widgets and document-display notes and one is a Dependabot bump. **`core/mrag/` is byte-identical**, so every finding about the belief store, the consolidator, the journal and the injection path is unchanged. All three absence claims were re-run and hold: `previous_content` has exactly one occurrence in the tree, the write at `belief_store.py:752`, and no reader; no test covers the memory package; and no scope predicate exists anywhere in `core/mrag`. **`scope_enforced` is withdrawn**, not because anything moved but because the mark asks for a stored scope key applied as a filter on the read path and this store has neither — the boundary is a directory derived from the agent's name, which is a different property and is described as one. Screened before reading: no auto-run surface, no manifest inside the seven-day cooldown, one build-time execution path and two unpinned dependency surfaces; nothing was installed or run.
 
