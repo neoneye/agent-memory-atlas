@@ -9,10 +9,10 @@ source_url: https://github.com/NIMI-research/Tycho
 archive_name: "NIMI-research--Tycho"
 revision: f68912a764372ead0a610db2e1c011d41ce5197e
 revision_url: https://github.com/NIMI-research/Tycho/commit/f68912a764372ead0a610db2e1c011d41ce5197e
-analyzed_at: 2026-08-27
+analyzed_at: 2026-09-18
 capabilities: "negative_eval"
 capability_evidence:
-  negative_eval: "test_workspace_versioning.py, asserting the snapshot boundary in both directions | tests/workspace/test_workspace_versioning.py:20-42,:78-100, tycho/workspace/version_store.py:21-40 | the snapshot is supposed to capture what the *agent* authored and exclude what the *harness* observed, and the test pins both halves over one fixture. `world_model.py` is asserted present in `contents`; `world_map.npy` is asserted present in `file_versions` and **absent** from `contents`, because a binary goes to a content-addressed blob rather than inline; `level_0/turn_000.txt` and `attempts/level_0_attempt_000/level_0/turn_000.txt` are asserted absent from `file_versions` entirely, as harness evidence. The sharp pairing is the last one: `level_0/agent_helper.json`, an agent-authored file in the *same directory* as excluded evidence, is asserted present. The boundary is tested, not just the exclusion. `test_materializer_restores_manifest_and_preserves_harness_evidence` closes the other side — restoring an earlier snapshot deletes `stale.py`, which the manifest does not name, and **preserves** `level_0/turn_000.txt`, so rolling the agent's memory back does not destroy the observational record | this is the test"
+  negative_eval: "test_workspace_versioning.py, asserting in both directions the one predicate that draws the authored/observed boundary everywhere | tests/workspace/test_workspace_versioning.py:20-42,:78-100, tycho/workspace/version_store.py:21-40 | the snapshot is supposed to capture what the *agent* authored and exclude what the *harness* observed, and the test pins both halves over one fixture. `world_model.py` is asserted present in `contents`; `world_map.npy` is asserted present in `file_versions` and **absent** from `contents`, because a binary goes to a content-addressed blob rather than inline; `level_0/turn_000.txt` and `attempts/level_0_attempt_000/level_0/turn_000.txt` are asserted absent from `file_versions` entirely, as harness evidence. The sharp pairing is the last one: `level_0/agent_helper.json`, an agent-authored file in the *same directory* as excluded evidence, is asserted present. The boundary is tested, not just the exclusion. `test_materializer_restores_manifest_and_preserves_harness_evidence` closes the other side — restoring an earlier snapshot deletes `stale.py`, which the manifest does not name, and **preserves** `level_0/turn_000.txt`, so rolling the agent's memory back does not destroy the observational record | this is the test"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -301,6 +301,22 @@ snapshots are readable, and what changed, is not recorded in the tree read here.
 | `tests/workspace/test_workspace_versioning.py` | The boundary test, both directions |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`negative_eval` stands and is stronger than the record said. The assertions at
+`tests/workspace/test_workspace_versioning.py:29-37` are two-directional over
+one fixture — `world_model.py` present in `contents`, `world_map.npy` present in
+`file_versions` and absent from `contents`, `level_0/turn_000.txt` and the
+archived attempt absent from `file_versions`, `level_0/agent_helper.json`
+present — so neither half can pass by the snapshot simply being empty. What the
+first reading did not trace is how far that assertion reaches: the boundary is
+one predicate, `is_causal_workspace_path` at `version_store.py:43`, used at
+`:90`, `:115` and `:162` on the snapshot side, imported by
+`harness/record_slim.py:23` (which re-exports it as `_is_authored` for three
+more filters) and by `harness/run_parallel.py:270`, and imported again by
+`viewer/viz.py:35` under a comment naming it the single source of truth. Seven
+consumers, one definition, and the committed case pins it. That is the opposite
+of the duplicated-predicate shape this atlas usually finds. No marks change.
 
 **2026-08-28** — [`f68912a764372ead0a610db2e1c011d41ce5197e`](https://github.com/NIMI-research/Tycho/commit/f68912a764372ead0a610db2e1c011d41ce5197e) — same commit, second reading, covering the benchmark evidence the first pass left unopened. `artifacts/` holds six committed scorecard files, one per evaluated policy; every published mean recomputes exactly from its own per-environment table, and four of the six hold the model at Claude Opus 4.8 and vary only the world-model policy, which makes them an ablation rather than a scoreboard. Section 10 carries the table, the 9.42-RHAE price of the world model, the arm where falsification-triggered rebuilding underperforms rebuilding on demand, and the single-trajectory-per-game qualification the project states itself. `artifacts/evaluation_integrity.json` accounts for the scorecards' `trace-replay` tag with per-arm trace digests and a `scorecard_equal_canonical_trace` assertion. The open question about whether anything in `artifacts/` was a committed run record is answered and removed; it is replaced by one about why the falsification trigger loses. Marks unchanged at one.
 

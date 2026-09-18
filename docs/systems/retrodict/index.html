@@ -113,7 +113,7 @@ that ranks the raw log above it.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-27</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ryanbbrown--Retrodict" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -268,9 +268,20 @@ it may be planned on, what triggers a revision — are questions most
 memory systems in this atlas never write down at all.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>1,435 lines of tests across eight files, and none of them touches the
-playbook. The suite covers the log writer, the plan parser, the live
-cache, the prompt assembly and the tool sandbox — including
+<p>1,435 lines of tests across eight files. Two of them name the
+playbook and both test the prompt rather than the mechanism:
+<code>test_system_prompt_prescribes_curated_playbook_memory</code>
+asserts <code>"playbook.md" in prompt</code>, and
+<code>test_fresh_session_prompt_directs_reading_playbook_first</code>
+asserts the fresh-session prompt tells the agent to read it first
+(<code>tests/test_prompts.py:73</code>, <code>:111</code>). That is the
+whole of the playbook's coverage, and it is consistent rather than
+ironic: <code>playbook</code> appears in exactly one module under
+<code>src/</code> — <code>arc3/prompts.py</code> — so there is no
+playbook code to test. The suite pins the instruction because the
+instruction is the implementation. Beyond that the suite covers the log
+writer, the plan parser, the live cache, the prompt assembly and the
+tool sandbox — including
 <code>assert not result.ok, f"{module} must not be importable by the agent"</code>,
 a real must-not assertion, but about import isolation rather than memory
 retrieval. <code>negative_eval</code> is withheld on that: no committed
@@ -370,6 +381,21 @@ against</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. The central claim is confirmed from the other
+direction: <code>playbook</code> occurs in exactly one module under
+<code>src/</code>, <code>arc3/prompts.py</code>, so the curated memory
+is entirely a file the model is instructed to maintain and there is no
+code that reads, writes or validates it. Two corrections. The suite is
+not untouched by the playbook — <code>tests/test_prompts.py:73</code>
+and <code>:111</code> name it — but both assert the prompt string, which
+is the only layer where it exists. And the repository ships <strong>no
+licence</strong>: there is no <code>LICENSE</code> file, no
+<code>license</code> field in <code>pyproject.toml</code>, and no
+licence statement in the README, so the default is all rights reserved.
+The maturity impression now says so, because every other verdict in this
+atlas opens with a licence and a reader comparing them would otherwise
+assume one was granted. No marks; the report carries none.</p>
 <p><strong>2026-08-28</strong> — <a
 href="https://github.com/ryanbbrown/Retrodict/commit/71672e8e5adb008360f52a61ef9e2adf91a62d89"><code class="commit-id" title="71672e8e5adb008360f52a61ef9e2adf91a62d89">71672e8e…</code></a>
 — same commit, second reading, covering the published scorecard. It

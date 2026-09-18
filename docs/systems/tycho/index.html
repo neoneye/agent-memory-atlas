@@ -118,7 +118,7 @@ preserved across a restore.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-27</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/NIMI-research--Tycho" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -490,6 +490,27 @@ restore</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>negative_eval</code> stands and is stronger
+than the record said. The assertions at
+<code>tests/workspace/test_workspace_versioning.py:29-37</code> are
+two-directional over one fixture — <code>world_model.py</code> present
+in <code>contents</code>, <code>world_map.npy</code> present in
+<code>file_versions</code> and absent from <code>contents</code>,
+<code>level_0/turn_000.txt</code> and the archived attempt absent from
+<code>file_versions</code>, <code>level_0/agent_helper.json</code>
+present — so neither half can pass by the snapshot simply being empty.
+What the first reading did not trace is how far that assertion reaches:
+the boundary is one predicate, <code>is_causal_workspace_path</code> at
+<code>version_store.py:43</code>, used at <code>:90</code>,
+<code>:115</code> and <code>:162</code> on the snapshot side, imported
+by <code>harness/record_slim.py:23</code> (which re-exports it as
+<code>_is_authored</code> for three more filters) and by
+<code>harness/run_parallel.py:270</code>, and imported again by
+<code>viewer/viz.py:35</code> under a comment naming it the single
+source of truth. Seven consumers, one definition, and the committed case
+pins it. That is the opposite of the duplicated-predicate shape this
+atlas usually finds. No marks change.</p>
 <p><strong>2026-08-28</strong> — <a
 href="https://github.com/NIMI-research/Tycho/commit/f68912a764372ead0a610db2e1c011d41ce5197e"><code class="commit-id" title="f68912a764372ead0a610db2e1c011d41ce5197e">f68912a7…</code></a>
 — same commit, second reading, covering the benchmark evidence the first

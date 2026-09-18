@@ -9,7 +9,7 @@ source_url: https://github.com/ryanbbrown/Retrodict
 archive_name: "ryanbbrown--Retrodict"
 revision: 71672e8e5adb008360f52a61ef9e2adf91a62d89
 revision_url: https://github.com/ryanbbrown/Retrodict/commit/71672e8e5adb008360f52a61ef9e2adf91a62d89
-analyzed_at: 2026-08-27
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -173,9 +173,17 @@ all.
 
 ## 10. Tests, Evals, and Benchmarks
 
-1,435 lines of tests across eight files, and none of them touches the playbook.
-The suite covers the log writer, the plan parser, the live cache, the prompt
-assembly and the tool sandbox — including `assert not result.ok, f"{module}
+1,435 lines of tests across eight files. Two of them name the playbook and
+both test the prompt rather than the mechanism:
+`test_system_prompt_prescribes_curated_playbook_memory` asserts
+`"playbook.md" in prompt`, and `test_fresh_session_prompt_directs_reading_playbook_first`
+asserts the fresh-session prompt tells the agent to read it first
+(`tests/test_prompts.py:73`, `:111`). That is the whole of the playbook's
+coverage, and it is consistent rather than ironic: `playbook` appears in exactly
+one module under `src/` — `arc3/prompts.py` — so there is no playbook code to
+test. The suite pins the instruction because the instruction is the
+implementation. Beyond that the suite covers the log writer, the plan parser,
+the live cache, the prompt assembly and the tool sandbox — including `assert not result.ok, f"{module}
 must not be importable by the agent"`, a real must-not assertion, but about
 import isolation rather than memory retrieval. `negative_eval` is withheld on
 that: no committed case asserts that particular material stays out of a recall
@@ -250,6 +258,19 @@ repository does not, and no test asserts it.
 | `docs/arc-agi-3-harness-comparison.md` | The cost and run-selection qualifications |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. The
+central claim is confirmed from the other direction: `playbook` occurs in
+exactly one module under `src/`, `arc3/prompts.py`, so the curated memory is
+entirely a file the model is instructed to maintain and there is no code that
+reads, writes or validates it. Two corrections. The suite is not untouched by
+the playbook — `tests/test_prompts.py:73` and `:111` name it — but both assert
+the prompt string, which is the only layer where it exists. And the repository
+ships **no licence**: there is no `LICENSE` file, no `license` field in
+`pyproject.toml`, and no licence statement in the README, so the default is all
+rights reserved. The maturity impression now says so, because every other
+verdict in this atlas opens with a licence and a reader comparing them would
+otherwise assume one was granted. No marks; the report carries none.
 
 **2026-08-28** — [`71672e8e5adb008360f52a61ef9e2adf91a62d89`](https://github.com/ryanbbrown/Retrodict/commit/71672e8e5adb008360f52a61ef9e2adf91a62d89) — same commit, second reading, covering the published scorecard. It records 183/183 levels and 25/25 environments, every one `WIN`, in 7,703 actions, and the 25 per-environment scores average to the published 99.8564. That reframes the README's own comparison: this harness and [Tycho](../tycho/) solved exactly the same levels, the 0.14-point gap is action efficiency on two games out of twenty-five, and this one cost $654 against $2,986. Section 10 says so. Marks unchanged at none.
 
