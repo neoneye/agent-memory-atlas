@@ -237,17 +237,17 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 
 | Stored in | Systems | Read off code | | Retrieval arm | Systems | Read off code |
 | --- | ---: | ---: | --- | --- | ---: | ---: |
-| SQLite | 280 | 219 | | Lexical | 397 | 328 |
-| Files on disk | 277 | 220 | | Vector | 364 | 286 |
-| Postgres | 106 | 78 | | Graph | 165 | 133 |
+| SQLite | 280 | 220 | | Lexical | 398 | 329 |
+| Files on disk | 277 | 221 | | Vector | 364 | 287 |
+| Postgres | 106 | 79 | | Graph | 165 | 133 |
 | Delegated to the adopter | 47 | 31 | | No arm named in the review | 79 | 45 |
-| Graph database | 35 | 27 | |  |  |  |
+| Graph database | 35 | 28 | |  |  |  |
 | In-process only | 28 | 20 | |  |  |  |
 | Chroma | 26 | 21 | |  |  |  |
 | Qdrant | 20 | 12 | |  |  |  |
 | LanceDB | 16 | 11 | |  |  |  |
 | Embedded key-value | 15 | 10 | |  |  |  |
-| Redis | 14 | 7 | |  |  |  |
+| Redis | 14 | 8 | |  |  |  |
 | Milvus | 9 | 7 | |  |  |  |
 | MongoDB | 8 | 6 | |  |  |  |
 | FAISS | 8 | 5 | |  |  |  |
@@ -257,6 +257,6 @@ nor graph channel; that is a gap in the review, not a system without retrieval.
 | Weaviate | 1 | 1 | |  |  |  |
 | TepinDB | 1 | 1 | |  |  |  |
 
-Counted across 580 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 443 of 580 reports have been read that way, and the other 137 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
+Counted across 580 reports, each of which may name more than one store. The **Read off code** column is the part of each row confirmed against the tree at the pinned commit: 444 of 580 reports have been read that way, and the other 136 were derived from the review's own summary lines and are labelled `seeded` rather than `reviewed`. Read the first number as what the corpus says about itself and the second as what has been checked.
 
 <!-- END GENERATED STACK -->

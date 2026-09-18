@@ -7,18 +7,18 @@ page_kind: system
 source_name: "virtual-context/virtual-context"
 source_url: https://github.com/virtual-context/virtual-context
 archive_name: "virtual-context--virtual-context"
-revision: 65d2640e15547519f54bec0ddcfab4210c1dd06f
-revision_url: https://github.com/virtual-context/virtual-context/commit/65d2640e15547519f54bec0ddcfab4210c1dd06f
-analyzed_at: 2026-09-10
+revision: f5adda099e3d3d9e63878bba938fa5b12a928519
+revision_url: https://github.com/virtual-context/virtual-context/commit/f5adda099e3d3d9e63878bba938fa5b12a928519
+analyzed_at: 2026-09-18
 capabilities: "bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   bitemporal: "actor-card entries, not facts | virtual_context/storage/sqlite.py:14179 and virtual_context/actor_card_validity.py:45-53 | `valid_from`/`expires_at` filtered by `actor_card_is_active(..., now=)` on the read path, beside `created_at`/`updated_at` as record time | tests/test_actor_card_validity.py"
   scope_enforced: "every relational read path | virtual_context/storage/sqlite.py, virtual_context/storage/audience_proof.py:46-52 | `tenant_id`, `conversation_id` and `audience_conversation_id` as WHERE predicates over shared tables | tests/test_storage_domain_contracts.py"
-  audit_log: "fact mutations | virtual_context/storage/fact_mutations.py:112-160 | `fact_decisions` append-only, with a BEFORE UPDATE trigger raising `fact decision content is immutable` on any column but `conversation_id` | tests/test_fact_lifecycle_contracts.py"
+  audit_log: "fact mutations | virtual_context/storage/fact_mutations.py:112-160 | `fact_decisions` append-only, with a BEFORE UPDATE trigger raising `fact decision content is immutable` on any column but `conversation_id`, built on both dialects — a plpgsql `to_jsonb(NEW) - 'conversation_id' IS DISTINCT FROM` comparison on Postgres, an enumerated `NEW.x IS NOT OLD.x` WHEN clause on SQLite that is dropped and rebuilt when an additive migration widens the table. The guard covers UPDATE only: there is no BEFORE DELETE on `fact_decisions` on either dialect, while `canonical_turns`, `source_event_times`, `assistant_channel_enrichment` and the two audience-reassignment tables in the same storage layer all carry one | tests/test_fact_lifecycle_contracts.py"
   negative_eval: "the temporal retrieval path | tests/test_temporal_resolver.py:193-250 | a private-DM segment seeded as a search hit inside the window is asserted absent while the public one is asserted present | test_remember_when_requires_exact_audience_bound_summary_provenance"
 stack_storage: "sqlite, postgres, redis, graph, files"
-stack_retrieval: "vector"
-stack_source: "seeded"
+stack_retrieval: "lexical, vector"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Three: a segment (a compacted span of turns with summary and full text), a fact (subject/verb/object with a temporal status, typed links and an author actor), and an actor-card entry (a kind-checked claim about a person citing the fact ids it rests on)"
   storage: "SQLite or Postgres with pgvector as the relational store — segments, facts, fact links and embeddings, actor cards, canonical turns, a tag graph, per-tag summaries and a cost ledger — beside Neo4j and FalkorDB fact-link backends, a filesystem backend and Redis for session state"
@@ -26,11 +26,11 @@ matrix:
   write: "Turns are tagged by an LLM after the response, compacted under budget pressure, and superseded when contradicted — with every accept and reject written to `fact_decisions` inside the same transaction"
   update_delete: "A supersession checker sets `superseded_by` and search appends `IS NULL`; an actor-card entry can also expire out of the read path on its own validity window; conversations tombstone in Redis with a day-long TTL"
   scoping: "Three keys applied as predicates, not partitions: `tenant_id`, `conversation_id` and `audience_conversation_id`, with 354 conversation and 85 tenant predicates in the SQLite backend alone and an `audience_scope` CHECK on every card entry"
-  integration: "A proxy in front of the provider API, an MCP server, a CLI, a TUI, a Discord community surface and an OpenClaw integration"
+  integration: "A proxy in front of the provider API, an MCP server, a CLI, a TUI, a Discord community surface and an OpenClaw integration. A typed-judgment layer can route five named decision seams — rerank, query intent, temporal intent, safety-critical and actor-card admission — to an external service, in three modes: `legacy` (never called, the default), `shadow` (the legacy answer is used and the external one logged for comparison) and `jev` (the external answer is used, falling back to legacy on any failure). Each engine owns its own runtime so two engines in one process cannot share a mode, and the config comment says it is not tenant-settable in the hosted product"
   background: "Tag generation, vocabulary canonicalisation, tag splitting, per-tag summarisation, compaction and a due-queue of actor-card rebuilds"
-  trust: "None epistemic. `facts.status` is a temporal status — is this still happening — and `actor_card_entries.confidence` is a float nothing filters on; the discrete verdict is on the *decision*, in the ledger, not on the fact"
+  trust: "None epistemic. `facts.status` is a temporal status — is this still happening — and `actor_card_entries.confidence` is a float nothing filters on — it appears in two `ORDER BY e.kind, e.confidence DESC` clauses and in no `WHERE`, and its only comparison anywhere is a write-time range check that the value is finite and within 0.0–1.0. The discrete verdict is on the *decision*, in the ledger, not on the fact"
   strengths: "An append-only decision ledger a database trigger refuses to let anyone edit, recording the before, the after, the proposal and the reason for every accept and every reject"
-  risks: "Everything about the vocabulary is an LLM judgement, and only the end-to-end accuracy is measured; and the rejects the ledger keeps are never read back, so the same wrong fact can be proposed and refused forever"
+  risks: "Everything about the vocabulary is an LLM judgement, and only the end-to-end accuracy is measured; and the ledger has no production reader at all — `get_fact_decisions` is carried through the store protocol and the composite store, and every caller outside the storage layer is a test — so the same wrong fact can be proposed and refused forever"
 ---
 
 ## 1. Executive Summary
@@ -272,6 +272,13 @@ summaries, and the working set is assembled under a token budget with cold
 topics collapsing to their summaries under pressure and the model able to expand
 them through tools when it needs detail.
 
+Underneath the tag layer the store is lexical as well as dense, which this
+report's stack row previously did not say. `quote_search` describes itself as
+orchestrating *"FTS, semantic embedding search, and description scanning"*, and
+the SQLite backend declares `segments_fts`, `segments_fts_full`, `facts_fts` and
+a `tool_outputs_fts` contentless index as FTS5 virtual tables with live `MATCH`
+queries against them. The dense path is one of three, not the retrieval.
+
 **`scope_enforced` is earned three times over and none of it is partitioning.**
 `tenant_id`, `conversation_id` and `audience_conversation_id` are columns on
 shared tables and appear as `WHERE` predicates on the read paths; the audience
@@ -341,7 +348,16 @@ an `operation_id`. Beside them `cost_log` remains an append-only per-event spend
 record and `tag_summaries` carries the provenance of every derived summary
 (`source_segment_refs`, `source_turn_numbers`, `generated_by_turn_id`,
 `covers_through_turn`). This is among the more complete audit surfaces in the
-corpus, and the one thing it lacks is a reader.
+corpus, and two things qualify it. The first is that it lacks a reader:
+`get_fact_decisions` is declared on the store protocol, implemented on the
+composite store and the relational backend, and called from tests and nowhere
+else — no CLI verb, no MCP tool and no engine path reads a decision back.
+The second is narrower and worth naming because the same codebase does the
+other thing four times over: the immutability guard is `BEFORE UPDATE`, and
+there is no `BEFORE DELETE` on `fact_decisions` in either dialect, while
+`canonical_turns`, `source_event_times`, `assistant_channel_enrichment` and the
+two audience-reassignment tables each carry a delete trigger. A ledger row
+cannot be rewritten; it can be removed.
 
 **Bitemporal — awarded on actor cards only**, per section 5, with the fact tier's
 coalesced `when_date` explaining why it stops there.
@@ -355,6 +371,23 @@ assertion cannot pass on an empty result.
 
 **Trust state, tombstone, human review — no**, for the reasons in section 7. The
 Redis conversation tombstone is a fencing token, as section 3 describes.
+
+**A typed-judgment layer now sits between the engine and five of its
+decisions**, and the shape of the switch is the interesting part. `JUDGMENT_SEAMS`
+names them — rerank, query intent, temporal intent, safety-critical, and
+actor-card admission — and `JudgmentConfig.mode` selects one of three
+behaviours per seam: `legacy`, the default, in which the external service is
+never called; `shadow`, in which the existing answer is used and the external
+one is logged beside it for comparison; and `jev`, in which the external answer
+is used and any failure falls back to legacy with a logged reason. A shadow mode
+that logs both answers is how you would find out whether a judgement swap is
+safe before making it, and it is rarer in this corpus than it should be. Each
+engine owns its own runtime so two engines in one process cannot share a mode,
+and the module registry is documented as the default for code with no engine in
+hand — tests and the benchmark harness — and never written by the engine. The
+head commit at this pin is about the boundary rather than the mechanism:
+*"keep stored-claim validation on the deterministic safety predicate"*, which
+is a decision to leave one seam off the model path.
 
 **The concentration of judgement is the risk.** Tag assignment, vocabulary
 convergence, splitting, summarisation, supersession and actor-card curation are
@@ -560,6 +593,8 @@ Run from the root of the checkout at the pinned commit.
 | Tree size | `find . -name "*.py" -not -path "./.git/*" \| xargs wc -l \| tail -1` | 306,547 total; 137,619 under `virtual_context/`, 151,627 under `tests/` across 406 files |
 
 ## History
+
+**2026-09-18** — [`f5adda099e3d3d9e63878bba938fa5b12a928519`](https://github.com/virtual-context/virtual-context/commit/f5adda099e3d3d9e63878bba938fa5b12a928519) — re-pinned from `65d2640`; 20 files and 1,112 insertions under the package, none of them in `storage/`, so the four marks' subject code is unchanged and all four were re-verified against it rather than re-derived. Two corrections to this report, both ours rather than upstream's: the stack row said the retrieval was vector, where `quote_search` orchestrates FTS, embedding search and description scanning over four FTS5 virtual tables with live `MATCH` queries — the row is now `lexical, vector` and marked reviewed rather than seeded; and the audit-log record described an append-only ledger without saying that the immutability guard is `BEFORE UPDATE` only, with no delete trigger on `fact_decisions` in either dialect while five neighbouring tables in the same storage layer carry one. The unread-ledger finding is sharpened rather than changed: `get_fact_decisions` exists on the protocol, the composite store and the backend, and every caller outside `storage/` is a test. New at this pin: a 626-line typed-judgment layer routing five named seams — rerank, query intent, temporal intent, safety-critical and actor-card admission — to an external service in `legacy` / `shadow` / `jev` modes, defaulting to legacy, per engine rather than per process; the head commit keeps stored-claim validation off it, on the deterministic safety predicate.
 
 **2026-09-10** — [`65d2640e15547519f54bec0ddcfab4210c1dd06f`](https://github.com/virtual-context/virtual-context/commit/65d2640e15547519f54bec0ddcfab4210c1dd06f) — re-read. 291 files and 60,668 insertions past the previous pin, 21,357 of them inside the memory paths, and the report's central negative claims are the casualties. **Two marks added.** `audit_log` was awarded at the first reading on `cost_log` and summary provenance with the explicit caveat *"it is not a mutation log of the memory itself"* — it is one now: `fact_decisions` records every accept and reject of a fact mutation with the proposal, the before, the after, the reason and a policy version, in the same transaction as the mutation, under a `BEFORE UPDATE` trigger that raises `fact decision content is immutable`. `negative_eval` is added on `test_remember_when_requires_exact_audience_bound_summary_provenance`, which seeds a public and a private-DM segment as matching hits inside the same window and asserts the result is exactly `["public"]`. `bitemporal` is added on actor-card entries, whose `valid_from`/`expires_at` are filtered at an injectable `now` beside `created_at`/`updated_at` — and withheld from the fact tier, because `compactor.py:2242` writes the record time into the validity column when extraction produced no date, collapsing the two axes at the write rather than in the query. `scope_enforced` holds and the sentence limiting it — *"the boundary here is a conversation rather than a tenant"* — is stale: there is a `tenant_id` axis and an `audience_conversation_id` axis, the latter with reassignment receipts a read refuses to serve without. `tombstone` is still withheld and now for a sharper reason: the rejected value **is** recorded, and nothing reads it back. Two memory units were added since the first reading — a `facts` table with typed links and embeddings, and kind-checked actor cards citing the fact ids they rest on — and the tree grew from roughly 257,000 lines of Python to 306,547, of which the test tree is now larger than the package. Schema line numbers in the appendix were all stale and are re-pinned; recorded searches added, which the report shipped without. Screened before reading: two dependency manifests changed inside the seven-day cooldown, three pytest `conftest.py` files execute on collection; nothing was installed, built or run.
 

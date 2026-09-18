@@ -33413,19 +33413,33 @@ Redis with a day-long TTL</td>
 tenant predicates in the SQLite backend alone and an
 <code>audience_scope</code> CHECK on every card entry</td>
 <td>A proxy in front of the provider API, an MCP server, a CLI, a TUI, a
-Discord community surface and an OpenClaw integration</td>
+Discord community surface and an OpenClaw integration. A typed-judgment
+layer can route five named decision seams — rerank, query intent,
+temporal intent, safety-critical and actor-card admission — to an
+external service, in three modes: <code>legacy</code> (never called, the
+default), <code>shadow</code> (the legacy answer is used and the
+external one logged for comparison) and <code>jev</code> (the external
+answer is used, falling back to legacy on any failure). Each engine owns
+its own runtime so two engines in one process cannot share a mode, and
+the config comment says it is not tenant-settable in the hosted
+product</td>
 <td>Tag generation, vocabulary canonicalisation, tag splitting, per-tag
 summarisation, compaction and a due-queue of actor-card rebuilds</td>
 <td>None epistemic. <code>facts.status</code> is a temporal status — is
 this still happening — and <code>actor_card_entries.confidence</code> is
-a float nothing filters on; the discrete verdict is on the
-<em>decision</em>, in the ledger, not on the fact</td>
+a float nothing filters on — it appears in two
+<code>ORDER BY e.kind, e.confidence DESC</code> clauses and in no
+<code>WHERE</code>, and its only comparison anywhere is a write-time
+range check that the value is finite and within 0.0–1.0. The discrete
+verdict is on the <em>decision</em>, in the ledger, not on the fact</td>
 <td>An append-only decision ledger a database trigger refuses to let
 anyone edit, recording the before, the after, the proposal and the
 reason for every accept and every reject</td>
 <td>Everything about the vocabulary is an LLM judgement, and only the
-end-to-end accuracy is measured; and the rejects the ledger keeps are
-never read back, so the same wrong fact can be proposed and refused
+end-to-end accuracy is measured; and the ledger has no production reader
+at all — <code>get_fact_decisions</code> is carried through the store
+protocol and the composite store, and every caller outside the storage
+layer is a test — so the same wrong fact can be proposed and refused
 forever</td>
 </tr>
 <tr>
@@ -41250,7 +41264,7 @@ href="https://github.com/prefrontal-systems/cortexgraph/commit/81a2daa3436f09236
 <li><a
 href="https://github.com/virtual-context/virtual-context">virtual-context/virtual-context</a>
 at <a
-href="https://github.com/virtual-context/virtual-context/commit/65d2640e15547519f54bec0ddcfab4210c1dd06f"><code class="commit-id" title="65d2640e15547519f54bec0ddcfab4210c1dd06f">65d2640e…</code></a>
+href="https://github.com/virtual-context/virtual-context/commit/f5adda099e3d3d9e63878bba938fa5b12a928519"><code class="commit-id" title="f5adda099e3d3d9e63878bba938fa5b12a928519">f5adda09…</code></a>
 — AGPL-3.0 with a commercial-licence contact</li>
 <li><a
 href="https://github.com/SuanmoSuanyangTechnology/MemoryBear">SuanmoSuanyangTechnology/MemoryBear</a>

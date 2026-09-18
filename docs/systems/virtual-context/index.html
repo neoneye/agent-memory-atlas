@@ -107,14 +107,14 @@ ledger a database trigger refuses to let anyone edit.</p>
               <strong>virtual-context/virtual-context</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/virtual-context/virtual-context/commit/65d2640e15547519f54bec0ddcfab4210c1dd06f" title="65d2640e15547519f54bec0ddcfab4210c1dd06f">
+            <a class="meta-pill revision-pill" href="https://github.com/virtual-context/virtual-context/commit/f5adda099e3d3d9e63878bba938fa5b12a928519" title="f5adda099e3d3d9e63878bba938fa5b12a928519">
               <span>Analyzed revision</span>
-              <code>65d2640e…</code>
+              <code>f5adda09…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/virtual-context--virtual-context" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -387,6 +387,15 @@ segments and tag summaries, and the working set is assembled under a
 token budget with cold topics collapsing to their summaries under
 pressure and the model able to expand them through tools when it needs
 detail.</p>
+<p>Underneath the tag layer the store is lexical as well as dense, which
+this report's stack row previously did not say.
+<code>quote_search</code> describes itself as orchestrating <em>"FTS,
+semantic embedding search, and description scanning"</em>, and the
+SQLite backend declares <code>segments_fts</code>,
+<code>segments_fts_full</code>, <code>facts_fts</code> and a
+<code>tool_outputs_fts</code> contentless index as FTS5 virtual tables
+with live <code>MATCH</code> queries against them. The dense path is one
+of three, not the retrieval.</p>
 <p><strong><code>scope_enforced</code> is earned three times over and
 none of it is partitioning.</strong> <code>tenant_id</code>,
 <code>conversation_id</code> and <code>audience_conversation_id</code>
@@ -461,8 +470,20 @@ append-only per-event spend record and <code>tag_summaries</code>
 carries the provenance of every derived summary
 (<code>source_segment_refs</code>, <code>source_turn_numbers</code>,
 <code>generated_by_turn_id</code>, <code>covers_through_turn</code>).
-This is among the more complete audit surfaces in the corpus, and the
-one thing it lacks is a reader.</p>
+This is among the more complete audit surfaces in the corpus, and two
+things qualify it. The first is that it lacks a reader:
+<code>get_fact_decisions</code> is declared on the store protocol,
+implemented on the composite store and the relational backend, and
+called from tests and nowhere else — no CLI verb, no MCP tool and no
+engine path reads a decision back. The second is narrower and worth
+naming because the same codebase does the other thing four times over:
+the immutability guard is <code>BEFORE UPDATE</code>, and there is no
+<code>BEFORE DELETE</code> on <code>fact_decisions</code> in either
+dialect, while <code>canonical_turns</code>,
+<code>source_event_times</code>,
+<code>assistant_channel_enrichment</code> and the two
+audience-reassignment tables each carry a delete trigger. A ledger row
+cannot be rewritten; it can be removed.</p>
 <p><strong>Bitemporal — awarded on actor cards only</strong>, per
 section 5, with the fact tier's coalesced <code>when_date</code>
 explaining why it stops there.</p>
@@ -476,6 +497,25 @@ empty result.</p>
 <p><strong>Trust state, tombstone, human review — no</strong>, for the
 reasons in section 7. The Redis conversation tombstone is a fencing
 token, as section 3 describes.</p>
+<p><strong>A typed-judgment layer now sits between the engine and five
+of its decisions</strong>, and the shape of the switch is the
+interesting part. <code>JUDGMENT_SEAMS</code> names them — rerank, query
+intent, temporal intent, safety-critical, and actor-card admission — and
+<code>JudgmentConfig.mode</code> selects one of three behaviours per
+seam: <code>legacy</code>, the default, in which the external service is
+never called; <code>shadow</code>, in which the existing answer is used
+and the external one is logged beside it for comparison; and
+<code>jev</code>, in which the external answer is used and any failure
+falls back to legacy with a logged reason. A shadow mode that logs both
+answers is how you would find out whether a judgement swap is safe
+before making it, and it is rarer in this corpus than it should be. Each
+engine owns its own runtime so two engines in one process cannot share a
+mode, and the module registry is documented as the default for code with
+no engine in hand — tests and the benchmark harness — and never written
+by the engine. The head commit at this pin is about the boundary rather
+than the mechanism: <em>"keep stored-claim validation on the
+deterministic safety predicate"</em>, which is a decision to leave one
+seam off the model path.</p>
 <p><strong>The concentration of judgement is the risk.</strong> Tag
 assignment, vocabulary convergence, splitting, summarisation,
 supersession and actor-card curation are all model calls, and the only
@@ -753,6 +793,30 @@ under <code>tests/</code> across 406 files</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/virtual-context/virtual-context/commit/f5adda099e3d3d9e63878bba938fa5b12a928519"><code class="commit-id" title="f5adda099e3d3d9e63878bba938fa5b12a928519">f5adda09…</code></a>
+— re-pinned from <code>65d2640</code>; 20 files and 1,112 insertions
+under the package, none of them in <code>storage/</code>, so the four
+marks' subject code is unchanged and all four were re-verified against
+it rather than re-derived. Two corrections to this report, both ours
+rather than upstream's: the stack row said the retrieval was vector,
+where <code>quote_search</code> orchestrates FTS, embedding search and
+description scanning over four FTS5 virtual tables with live
+<code>MATCH</code> queries — the row is now <code>lexical, vector</code>
+and marked reviewed rather than seeded; and the audit-log record
+described an append-only ledger without saying that the immutability
+guard is <code>BEFORE UPDATE</code> only, with no delete trigger on
+<code>fact_decisions</code> in either dialect while five neighbouring
+tables in the same storage layer carry one. The unread-ledger finding is
+sharpened rather than changed: <code>get_fact_decisions</code> exists on
+the protocol, the composite store and the backend, and every caller
+outside <code>storage/</code> is a test. New at this pin: a 626-line
+typed-judgment layer routing five named seams — rerank, query intent,
+temporal intent, safety-critical and actor-card admission — to an
+external service in <code>legacy</code> / <code>shadow</code> /
+<code>jev</code> modes, defaulting to legacy, per engine rather than per
+process; the head commit keeps stored-claim validation off it, on the
+deterministic safety predicate.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/virtual-context/virtual-context/commit/65d2640e15547519f54bec0ddcfab4210c1dd06f"><code class="commit-id" title="65d2640e15547519f54bec0ddcfab4210c1dd06f">65d2640e…</code></a>
 — re-read. 291 files and 60,668 insertions past the previous pin, 21,357
