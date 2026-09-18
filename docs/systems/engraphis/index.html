@@ -110,14 +110,14 @@ written reason.</p>
               <strong>Coding-Dev-Tools/engraphis</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Coding-Dev-Tools/engraphis/commit/c4964809e2a519daf3022d21b0b6a24b4af99ef6" title="c4964809e2a519daf3022d21b0b6a24b4af99ef6">
+            <a class="meta-pill revision-pill" href="https://github.com/Coding-Dev-Tools/engraphis/commit/ca790261f499e0d124cdc7131235ffff89637248" title="ca790261f499e0d124cdc7131235ffff89637248">
               <span>Analyzed revision</span>
-              <code>c4964809…</code>
+              <code>ca790261…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-13</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Coding-Dev-Tools--engraphis" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -501,6 +501,38 @@ grep -rn &quot;review_state&quot; --include=&quot;*.py&quot; . | grep -v &quot;/
 grep -rn -i &quot;arxiv\|bibtex\|@article\|citation\|doi&quot; README.md docs/
 ls CITATION.cff</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/Coding-Dev-Tools/engraphis/commit/ca790261f499e0d124cdc7131235ffff89637248"><code class="commit-id" title="ca790261f499e0d124cdc7131235ffff89637248">ca790261…</code></a>
+— re-pinned from <code>c496480</code>; 36 files and +1,139 lines,
+re-screened at the new pin. The <code>human_review</code> mark was
+re-tested against the <a
+href="../../methodology/atlas-rubric/#human-review-surface">rubric's
+narrowed wording</a> — nineteen of twenty-four marks failed that pass
+elsewhere in the corpus — and <strong>this one holds, on the half that
+matters</strong>. There is no approve verb on the agent's surface at
+all: the only MCP review tool is <code>engraphis_conflict_review</code>,
+annotated <code>readOnlyHint: True</code>, whose docstring adds that
+<em>"pending and quarantined bodies are never returned to an
+agent"</em>, so the model cannot read a pending memory's content, let
+alone admit it. <code>POST /dashboard/review/approve</code> carries
+<code>include_in_schema=False</code>, checks the HttpOnly session, a
+custom <code>X-Engraphis-Browser-Session</code> header, a per-session
+CSRF value under <code>hmac.compare_digest</code>, and a non-empty
+reason.</p>
+<p>One sentence in the record needs narrowing, though, because it reads
+as a stronger claim than the code makes. <em>"A bearer token cannot
+invoke it"</em> is exactly true — an <code>Authorization</code> header
+is not a route in — but the deployment token is still the root of the
+session: <code>POST /api/auth/session</code> takes
+<code>ENGRAPHIS_API_TOKEN</code>, sets the signed cookie, and returns
+the <code>review_csrf_token</code> <strong>in its JSON body</strong>. A
+caller holding that token can therefore obtain both halves in one
+exchange and then approve. The custom header and the CSRF value defend
+against cross-site forgery from a browser, which is what they are for;
+they are not a defence against a local holder of the deployment token.
+Whether that describes the agent is a deployment fact rather than a code
+fact — an agent given only the MCP surface never sees the token — and
+the mark rests on the surface, which is clean.</p>
 <p><strong>2026-09-13</strong> — <a
 href="https://github.com/Coding-Dev-Tools/engraphis/commit/c4964809e2a519daf3022d21b0b6a24b4af99ef6"><code class="commit-id" title="c4964809e2a519daf3022d21b0b6a24b4af99ef6">c4964809…</code></a>
 — first reading. Screened before anything was read: two auto-run

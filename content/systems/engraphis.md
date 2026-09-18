@@ -7,9 +7,9 @@ page_kind: system
 source_name: "Coding-Dev-Tools/engraphis"
 source_url: https://github.com/Coding-Dev-Tools/engraphis
 archive_name: "Coding-Dev-Tools--engraphis"
-revision: c4964809e2a519daf3022d21b0b6a24b4af99ef6
-revision_url: https://github.com/Coding-Dev-Tools/engraphis/commit/c4964809e2a519daf3022d21b0b6a24b4af99ef6
-analyzed_at: 2026-09-13
+revision: ca790261f499e0d124cdc7131235ffff89637248
+revision_url: https://github.com/Coding-Dev-Tools/engraphis/commit/ca790261f499e0d124cdc7131235ffff89637248
+analyzed_at: 2026-09-18
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   trust_state: "the memory, as a review state that gates the packed prompt | engraphis/core/poisoning.py:18-19 (REVIEW_PENDING, REVIEW_APPROVED), engraphis/service.py:641-655, :7011-7014 | every write is stamped `pending` unless it came from a local agent source that did not arrive over http, mcp or remote ingress, in which case it is `approved`; quarantine is a third state applied by the poisoning detector. The read path is where it bites — the packer drops a memory when it is quarantined, pending or conflicted, so a pending claim is stored, listable and excluded from what the model sees. It is not merely a write-time genre, because the approval endpoint moves it | eval/adversarial_memory_security.py:221-223 asserts a caller-asserted trusted flag is downgraded to trusted false, review_state pending, trust_downgraded true"
@@ -375,5 +375,9 @@ ls CITATION.cff
 ```
 
 ## History
+
+**2026-09-18** — [`ca790261f499e0d124cdc7131235ffff89637248`](https://github.com/Coding-Dev-Tools/engraphis/commit/ca790261f499e0d124cdc7131235ffff89637248) — re-pinned from `c496480`; 36 files and +1,139 lines, re-screened at the new pin. The `human_review` mark was re-tested against the [rubric's narrowed wording](../../methodology/atlas-rubric/#human-review-surface) — nineteen of twenty-four marks failed that pass elsewhere in the corpus — and **this one holds, on the half that matters**. There is no approve verb on the agent's surface at all: the only MCP review tool is `engraphis_conflict_review`, annotated `readOnlyHint: True`, whose docstring adds that *"pending and quarantined bodies are never returned to an agent"*, so the model cannot read a pending memory's content, let alone admit it. `POST /dashboard/review/approve` carries `include_in_schema=False`, checks the HttpOnly session, a custom `X-Engraphis-Browser-Session` header, a per-session CSRF value under `hmac.compare_digest`, and a non-empty reason.
+
+One sentence in the record needs narrowing, though, because it reads as a stronger claim than the code makes. *"A bearer token cannot invoke it"* is exactly true — an `Authorization` header is not a route in — but the deployment token is still the root of the session: `POST /api/auth/session` takes `ENGRAPHIS_API_TOKEN`, sets the signed cookie, and returns the `review_csrf_token` **in its JSON body**. A caller holding that token can therefore obtain both halves in one exchange and then approve. The custom header and the CSRF value defend against cross-site forgery from a browser, which is what they are for; they are not a defence against a local holder of the deployment token. Whether that describes the agent is a deployment fact rather than a code fact — an agent given only the MCP surface never sees the token — and the mark rests on the surface, which is clean.
 
 **2026-09-13** — [`c4964809e2a519daf3022d21b0b6a24b4af99ef6`](https://github.com/Coding-Dev-Tools/engraphis/commit/c4964809e2a519daf3022d21b0b6a24b4af99ef6) — first reading. Screened before anything was read: two auto-run surfaces, a `.claude-plugin/` marketplace manifest and committed `.githooks/pre-commit`, plus seven dependency files changed the day of the pin and inside the seven-day cooldown. Nothing was installed, no hook was registered and no eval was run. Six marks. `tombstone` is withheld deliberately rather than for absence — `core/sync.py` implements tombstones and they are delete-sync markers keyed on an id, which this atlas's rubric names as not the mark. `human_review` was nearly withheld in error: the MCP inbox is read-only and a grep of the routes for `review_state` returns nothing, which reads as a display-only surface until a wider search finds `POST /dashboard/review/approve` calling into the service rather than touching the field. The open-core boundary is stated in the README and only the local engine was read.
