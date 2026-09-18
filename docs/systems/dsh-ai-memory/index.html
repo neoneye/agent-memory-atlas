@@ -126,7 +126,7 @@ instead of promoting it.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/zzjzzb--ai-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -191,16 +191,22 @@ checks expiry first, so under this preset no working note is ever
 promoted — recall hides it at sixty minutes and the next consolidate
 deletes it. The policy's own doc comment and <code>docs/USAGE.md</code>
 both warn against exactly this configuration, and every test and example
-that shows <code>chat</code> promoting first sets the delay to zero. An
-untiered note is <code>working</code> unless it contains one of a few
-English phrases. The one frequency signal the lifecycle uses,
-<code>access_count</code>, is incremented for every hit the per-prompt
-prefetch returns, so appearing in two prompts meets the bar for the
-untimed <code>profile</code> tier. And retrieval under the plugin is
-lexical in all but name: the only embedder is a 64-dimension hash of
-whole tokens, <code>HostSession</code> offers no way to inject another,
-and the tokenizer treats an unpunctuated run of Chinese characters as
-one token.</p>
+that shows <code>chat</code> promoting first sets the delay to zero.
+There is one way out of it that the preset does not advertise:
+<code>pinned_skip_expiry</code> defaults to true and its comment reads
+<em>"Pinned rows skip retention expiry (they can still promote)"</em>,
+so pinning a working note is the difference between its being deleted at
+sixty minutes and its being promoted at sixty minutes. A durability
+decision the model makes by calling a pin tool, rather than one the
+preset gets right. An untiered note is <code>working</code> unless it
+contains one of a few English phrases. The one frequency signal the
+lifecycle uses, <code>access_count</code>, is incremented for every hit
+the per-prompt prefetch returns, so appearing in two prompts meets the
+bar for the untimed <code>profile</code> tier. And retrieval under the
+plugin is lexical in all but name: the only embedder is a 64-dimension
+hash of whole tokens, <code>HostSession</code> offers no way to inject
+another, and the tokenizer treats an unpunctuated run of Chinese
+characters as one token.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is whatever text the model passes to
 <code>memory_remember</code>, or harness code passes to
@@ -703,6 +709,25 @@ rg -n &quot;scan_limit&quot; tests                                         # one
 rg -n &quot;fn .*clock|Clock&quot; src                                     # 0: no injectable clock
 ls .github                                                       # absent: no CI</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/zzjzzb/ai-memory/commit/9208281522612ebb349dff2e1b7e07a9c7683def"><code class="commit-id" title="9208281522612ebb349dff2e1b7e07a9c7683def">92082815…</code></a>
+— re-read at the same commit; <code>main</code> has not moved since the
+first reading. Every claim was re-tested and every one held, so nothing
+here is a correction. The headline finding is exact:
+<code>Policy::chat()</code> sets <code>retention.working</code> to
+<code>Duration::from_secs(60 * 60)</code> and does not touch
+<code>working_to_episodic_after</code>, whose default is the same
+<code>60 * 60</code>, and <code>consolidate</code> checks expiry before
+promotion. <code>recall</code> still opens
+<code>WHERE m.project_id = ?</code> before any scoring, with the same
+predicate on get, list, pin and forget, and
+<code>multi_project_recall_never_crosses</code> still asserts the alpha
+result non-empty, all-alpha, and free of beta's phrase.
+<code>tier</code> is a checked enum used as a read predicate with live
+promotion writers, but the three values are durability classes rather
+than judgements about the content, which is why it earns no trust state.
+One detail added: <code>pinned_skip_expiry</code> defaults to true, so
+pinning is the documented way past the preset's TTL trap.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/zzjzzb/ai-memory/commit/9208281522612ebb349dff2e1b7e07a9c7683def"><code class="commit-id" title="9208281522612ebb349dff2e1b7e07a9c7683def">92082815…</code></a>
 — first reading. Screened with <code>scripts/screen_repo.py</code>: no
