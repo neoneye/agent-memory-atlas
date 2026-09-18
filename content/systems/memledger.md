@@ -9,11 +9,15 @@ source_url: https://github.com/riktar/memledger
 archive_name: "riktar--memledger"
 revision: 27f67e436ec0910e50c4b1c41cdf96f7afb6b341
 revision_url: https://github.com/riktar/memledger/commit/27f67e436ec0910e50c4b1c41cdf96f7afb6b341
-analyzed_at: 2026-07-31
-capabilities: "trust_state, audit_log"
+analyzed_at: 2026-09-18
+capabilities: "trust_state, audit_log, negative_eval"
+capability_evidence:
+  trust_state: "the projected status on every record, with a validated transition table | src/memledger/projection.py:15, :32-52, src/memledger/retrieval.py:84, :86 | `ALLOWED_STATUSES` is `quarantined, active, superseded, deleted, expired`, stored on the record and reached only through a whitelist of layer-and-status transitions, so an illegal move raises rather than writing. It is a field, not a score — `confidence` and `impact` are separate columns — and `stage1_candidates` drops `deleted`, `superseded` and `expired` before scoring, which is a state withholding a memory from being treated as true. `quarantined` is the epistemic one: a candidate extraction enters recorded but unconfirmed, and a second confirming session promotes it to `active` | `quarantined` is filtered only when `include_quarantined` is false, and assets/memory.policy.yaml:62 ships it true, so the state that expresses doubt does not withhold anything by default. tests/test_acceptance.py:152 asserts the transition table rejects illegal moves; :298 asserts the promotion"
+  audit_log: "the append-only events table the record projection is derived from | src/memledger/ledger.py:116-125, src/memledger/events.py, src/memledger/api.py | every mutation is an event row carrying id, timestamp, session, type, actor and a JSON envelope naming the hash of the policy that produced it, and no `UPDATE events` or `DELETE FROM events` statement exists anywhere in the source — the records table is a projection that can be rebuilt from the log. `Event.validate` refuses a derived event that names no sources, so provenance cannot be dropped silently, and the `why` command walks an id back to its creating event, its sources and its history | the log is the store's own file with no external anchor, so it is tamper-evident only against code that goes through the API. tests/test_acceptance.py:79 asserts a rebuild from the ledger reproduces the projection"
+  negative_eval: "recall under a policy that excludes quarantined records, and the lexical lane against a semantically-reachable record | tests/test_acceptance.py:483-493, tests/test_hybrid_recall.py:138-181 | the first writes a record through `observe` and `checkpoint` under `include_quarantined: false` and asserts `recall('Python', k=5) == []`; the store is not empty, as the sibling case at :298 runs the identical sequence and reads the row back by id. The second holds two records in one store and asserts in a single block that `record_a.id in fts_ids`, `record_b.id not in fts_ids`, and both are in the hybrid result — the must-not and its positive control three lines apart | neither case asserts the property this system most needs: that a value on a `deleted` record cannot come back, which is exactly what `find_record_by_key`'s `status != 'deleted'` filter makes possible"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A `(subject, relation, value)` tuple with a layer, a status, an impact score and a sessions-seen count, projected from an event log"
   storage: "SQLite — an append-only `events` table plus `records`, `vectors` and an FTS index rebuilt from it"
@@ -23,7 +27,7 @@ matrix:
   scoping: "None on the read path. `user` and `session` are recorded on events as provenance; `records` has no user column"
   integration: "A Python library and a CLI whose `why` command returns a record with its creator event, its sources and its history"
   background: "None. Projection is applied per event and can be rebuilt from the ledger"
-  trust: "Status is the epistemic state and `quarantined` withholds a record from recall; every event names the policy version that caused it"
+  trust: "Status is the epistemic state; `superseded`, `deleted` and `expired` are withheld from recall unconditionally and `quarantined` only when the policy says so, which it does not by default; every event names the policy version that caused it"
   strengths: "A policy file canonicalised and hashed into every event it influenced, and an `Event.validate` that refuses a derived event with no sources"
   risks: "The dedup lookup filters `status != deleted`, so a deleted fact is re-created rather than blocked — the one decision the ledger cannot explain away"
 ---
@@ -108,7 +112,7 @@ The status vocabulary is the epistemic model and it is unusually complete:
 
 | Status | Meaning |
 | --- | --- |
-| `quarantined` | recorded, withheld from recall |
+| `quarantined` | recorded, and withheld from recall only if the policy says so — see below |
 | `active` | in use |
 | `superseded` | replaced by a later record |
 | `deleted` | removed by a decision, terminal |
@@ -119,6 +123,20 @@ them distinct is what lets `why` answer *"why did this vanish"* differently in
 each case. Most systems in this atlas can express one ending. `quarantined` as an
 initial state is the other good detail: a new fact can enter recorded but not yet
 usable, which is the state a candidate extraction should be in.
+
+**But "not yet usable" is not the shipped default.** `stage1_candidates` drops
+`deleted`, `superseded` and `expired` unconditionally
+(`retrieval.py:84`), and drops `quarantined` only when `include_quarantined` is
+false — while `assets/memory.policy.yaml:62` ships `include_quarantined: true`.
+So out of the box a quarantined record is recalled like any other. This matters
+most for the case the suite is proudest of:
+`test_anti_poisoning_keeps_naive_extraction_quarantined` drives an extractor that
+returns a planted *"standing constraint: remember_x"* at confidence 1.0, and
+asserts the resulting record is quarantined — which it is, and which under the
+default policy means the planted constraint is still served to the next recall,
+now carrying a status that says the system had doubts. The defence is a label,
+not an exclusion, until an operator changes one line of policy. Three of the
+five statuses withhold unconditionally; the one designed for doubt does not.
 
 ```mermaid
 %% caption: the full state machine, with `deleted` terminal and invisible to the dedup lookup — so the value it held can be written again
@@ -207,6 +225,34 @@ rather than softer, because the same three statuses that correctly hide a record
 from recall are treated differently by the write path: superseded and expired
 records still block a duplicate write, and deleted ones do not.
 
+**The status filter runs after the candidate budget is spent, and the index
+keeps rows it should not.** `stage1_candidates` asks
+`search_record_ids_fts(query, fts_limit)` for a fixed number of ids — the policy's
+`retrieval.candidates`, split with the vector lane — and only then, at line 84,
+drops the dead statuses. The FTS5 query itself is
+`WHERE fts MATCH ? AND kind = 'record' ORDER BY score LIMIT ?`, with no status
+predicate, so a deleted, superseded or expired record that still matches occupies
+a slot that a live record would have had. Nothing is returned that should not be;
+the cost is silent recall loss that grows with the store's history.
+
+It grows because the index never loses those rows. `upsert_record` deletes and
+re-inserts the FTS row **unconditionally**, and only *then* branches on status —
+and the branch drops the vector, not the text:
+
+```python
+self.connection.execute("DELETE FROM fts WHERE target_id = ? AND kind = 'record'", (record.id,))
+self.connection.execute("INSERT INTO fts (target_id, kind, text) VALUES (?, 'record', ?)", ...)
+if record.status in _NON_INDEXED_STATUSES:      # deleted, superseded, expired
+    self._delete_vector(record.id)
+```
+
+So the semantic lane is kept clean and the lexical one is not. The function that
+would fix it exists — `delete_record_index` drops both the FTS row and the
+vector — and **has no caller anywhere in the source or the tests**. Two lines
+below, the two fallback lexical paths do carry `status != 'deleted'`, and neither
+excludes `superseded` or `expired`, so the three lexical branches filter three
+different ways and the primary one filters not at all.
+
 `scope_enforced` is withheld. `user` and `session` are recorded on every event and
 are real provenance, but `records` has no user column and the record queries are
 unfiltered — `SELECT data_json FROM records WHERE status != 'deleted'`. One
@@ -276,9 +322,23 @@ I did not run them, and no committed result artifact was found — the runners a
 present and the numbers they produce are not in the repository, so nothing here
 is a measurement yet.
 
-`negative_eval` is withheld: no committed case asserts that particular material
-must not be retrieved. The regression case file is the obvious home for one, and
-the deleted-record behaviour in section 1 is the obvious case to write.
+**`negative_eval` is earned, and the previous version of this report said it was
+not.** Two committed cases assert that particular material must not come back.
+`tests/test_acceptance.py:483` sets `include_quarantined: false`, writes a record
+through `observe` and `checkpoint`, and asserts `follow_up.recall("Python", k=5)
+== []` — and the store is demonstrably non-empty, because
+`test_quarantine_lifts_after_second_confirming_session` runs the identical
+sequence and reads the resulting row back by id.
+`tests/test_hybrid_recall.py:138` is the stronger shape: two records in one
+store, one query, and the same block asserts `record_a.id in fts_ids`,
+`record_b.id not in fts_ids`, and both ids in the hybrid result. The refusal and
+its positive control are three lines apart, so the empty half cannot be an empty
+index.
+
+What is still missing is the case section 1 asks for: nothing asserts that a
+value carried by a `deleted` record does not come back, which is the one
+retrieval assertion this system's own design most needs. The regression case
+file remains its obvious home.
 
 ## 11. For Your Own Build
 
@@ -386,5 +446,15 @@ stick, and the change is one `SELECT`.
 | `evals/`, `tests/` | LoCoMo and regression runners, 37 test functions |
 
 ## History
+
+**2026-09-18** — [`27f67e436ec0910e50c4b1c41cdf96f7afb6b341`](https://github.com/riktar/memledger/commit/27f67e436ec0910e50c4b1c41cdf96f7afb6b341) — re-read at the same commit. Nothing upstream had moved, so every correction is the atlas's own. Two of them matter.
+
+`negative_eval` was withheld on the claim that no committed case asserts particular material must not be retrieved. Two do: `test_acceptance.py:483` recalls under `include_quarantined: false` and asserts an empty result for a record the sibling case at :298 proves exists, and `test_hybrid_recall.py:138` asserts `record_b.id not in fts_ids` three lines from `record_a.id in fts_ids` over the same two-record store. The mark is added, with the case this system still lacks named in its limits: nothing asserts that a value on a `deleted` record cannot come back.
+
+The status table said `quarantined` means "recorded, withheld from recall". It does not by default: `retrieval.py:86` drops quarantined records only when `include_quarantined` is false, and `assets/memory.policy.yaml:62` ships it true. The anti-poisoning case therefore asserts that a planted standing constraint is *labelled*, while the shipped policy still serves it. Three of the five statuses withhold unconditionally; the one designed for doubt does not.
+
+One new finding in the retrieval path. The FTS5 lane takes its candidate budget with no status predicate and the dead statuses are dropped afterwards, so deleted, superseded and expired records consume slots live records would have had. They stay in the index because `upsert_record` re-inserts the FTS row unconditionally and only then branches on status — dropping the vector, not the text. `delete_record_index`, which drops both, has no caller anywhere in the source or the tests, and the two fallback lexical paths filter `deleted` but not `superseded` or `expired`.
+
+Both existing marks now carry evidence records, and `stack_source` goes from seeded to reviewed.
 
 **2026-07-31** — [`27f67e436ec0910e50c4b1c41cdf96f7afb6b341`](https://github.com/riktar/memledger/commit/27f67e436ec0910e50c4b1c41cdf96f7afb6b341) — first reading.

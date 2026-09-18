@@ -1364,8 +1364,9 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 ### [`memledger`](../systems/memledger/)
 - Best idea: `memory.policy.yaml` is canonicalised (RFC 8785) and hashed, and the hash is recorded in every event it influenced — so a decision points at the policy version that actually produced it, and editing the policy never rewrites history. Nothing else here can say which version of its own rules made a call.
 - Biggest risk: the dedup lookup is `WHERE subject = ? AND relation = ? AND value_json = ? AND status != 'deleted'`, so a fact the user deleted is not found and a fresh active record is created. The deletion is durable, keyed on the value, and terminal in the state machine; the one query that could enforce it skips it.
+- Second risk: `quarantined` is the state for doubt and it withholds nothing by default — `include_quarantined` ships true, so the anti-poisoning case asserts a planted standing constraint is *labelled* while the shipped policy still serves it.
 - Most reusable component: the event envelope and its validator — actor, cause, `policy_hash`, `sources` required for derived events, and an `LLMCall` block required if and only if the actor is a model.
-- Maturity impression: sixteen commits over a week, 37 tests, a LoCoMo runner and a regression case file — and no committed result artifact, so the runners are process rather than evidence.
+- Maturity impression: sixteen commits over a week, 37 tests including two that assert particular material must not come back, a LoCoMo runner and a regression case file — and no committed result artifact, so the runners are process rather than evidence.
 - Study when: you cannot answer "why does my agent believe this", or you want a five-status memory state machine with its legal transitions written down as a checked set and two terminal states.
 - Do not copy when: you need the correction to stick. The states are right and nothing consults them on write, which is the whole gap in one sentence.
 

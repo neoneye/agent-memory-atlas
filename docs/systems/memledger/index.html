@@ -118,7 +118,7 @@ the write path refuses to consult.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-07-31</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/riktar--memledger" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -126,7 +126,7 @@ the write path refuses to consult.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -229,7 +229,8 @@ complete:</p>
 <tbody>
 <tr>
 <td><code>quarantined</code></td>
-<td>recorded, withheld from recall</td>
+<td>recorded, and withheld from recall only if the policy says so — see
+below</td>
 </tr>
 <tr>
 <td><code>active</code></td>
@@ -256,6 +257,24 @@ vanish"</em> differently in each case. Most systems in this atlas can
 express one ending. <code>quarantined</code> as an initial state is the
 other good detail: a new fact can enter recorded but not yet usable,
 which is the state a candidate extraction should be in.</p>
+<p><strong>But "not yet usable" is not the shipped default.</strong>
+<code>stage1_candidates</code> drops <code>deleted</code>,
+<code>superseded</code> and <code>expired</code> unconditionally
+(<code>retrieval.py:84</code>), and drops <code>quarantined</code> only
+when <code>include_quarantined</code> is false — while
+<code>assets/memory.policy.yaml:62</code> ships
+<code>include_quarantined: true</code>. So out of the box a quarantined
+record is recalled like any other. This matters most for the case the
+suite is proudest of:
+<code>test_anti_poisoning_keeps_naive_extraction_quarantined</code>
+drives an extractor that returns a planted <em>"standing constraint:
+remember_x"</em> at confidence 1.0, and asserts the resulting record is
+quarantined — which it is, and which under the default policy means the
+planted constraint is still served to the next recall, now carrying a
+status that says the system had doubts. The defence is a label, not an
+exclusion, until an operator changes one line of policy. Three of the
+five statuses withhold unconditionally; the one designed for doubt does
+not.</p>
 <figure class="diagram"><figcaption class="diagram-caption">Diagram — the full state machine, with `deleted` terminal and invisible to the dedup lookup — so the value it held can be written again</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the full state machine, with `deleted` terminal and invisible to the dedup lookup — so the value it held can be written again
 stateDiagram-v2
     [*] --&gt; quarantined
@@ -374,6 +393,34 @@ dedup gap in section 1 sharper rather than softer, because the same
 three statuses that correctly hide a record from recall are treated
 differently by the write path: superseded and expired records still
 block a duplicate write, and deleted ones do not.</p>
+<p><strong>The status filter runs after the candidate budget is spent,
+and the index keeps rows it should not.</strong>
+<code>stage1_candidates</code> asks
+<code>search_record_ids_fts(query, fts_limit)</code> for a fixed number
+of ids — the policy's <code>retrieval.candidates</code>, split with the
+vector lane — and only then, at line 84, drops the dead statuses. The
+FTS5 query itself is
+<code>WHERE fts MATCH ? AND kind = 'record' ORDER BY score LIMIT ?</code>,
+with no status predicate, so a deleted, superseded or expired record
+that still matches occupies a slot that a live record would have had.
+Nothing is returned that should not be; the cost is silent recall loss
+that grows with the store's history.</p>
+<p>It grows because the index never loses those rows.
+<code>upsert_record</code> deletes and re-inserts the FTS row
+<strong>unconditionally</strong>, and only <em>then</em> branches on
+status — and the branch drops the vector, not the text:</p>
+<pre class="python"><code>self.connection.execute(&quot;DELETE FROM fts WHERE target_id = ? AND kind = &#39;record&#39;&quot;, (record.id,))
+self.connection.execute(&quot;INSERT INTO fts (target_id, kind, text) VALUES (?, &#39;record&#39;, ?)&quot;, ...)
+if record.status in _NON_INDEXED_STATUSES:      # deleted, superseded, expired
+    self._delete_vector(record.id)</code></pre>
+<p>So the semantic lane is kept clean and the lexical one is not. The
+function that would fix it exists — <code>delete_record_index</code>
+drops both the FTS row and the vector — and <strong>has no caller
+anywhere in the source or the tests</strong>. Two lines below, the two
+fallback lexical paths do carry <code>status != 'deleted'</code>, and
+neither excludes <code>superseded</code> or <code>expired</code>, so the
+three lexical branches filter three different ways and the primary one
+filters not at all.</p>
 <p><code>scope_enforced</code> is withheld. <code>user</code> and
 <code>session</code> are recorded on every event and are real
 provenance, but <code>records</code> has no user column and the record
@@ -442,10 +489,26 @@ regression case file is ahead of most of this atlas on process.</p>
 <p>I did not run them, and no committed result artifact was found — the
 runners are present and the numbers they produce are not in the
 repository, so nothing here is a measurement yet.</p>
-<p><code>negative_eval</code> is withheld: no committed case asserts
-that particular material must not be retrieved. The regression case file
-is the obvious home for one, and the deleted-record behaviour in section
-1 is the obvious case to write.</p>
+<p><strong><code>negative_eval</code> is earned, and the previous
+version of this report said it was not.</strong> Two committed cases
+assert that particular material must not come back.
+<code>tests/test_acceptance.py:483</code> sets
+<code>include_quarantined: false</code>, writes a record through
+<code>observe</code> and <code>checkpoint</code>, and asserts
+<code>follow_up.recall("Python", k=5) == []</code> — and the store is
+demonstrably non-empty, because
+<code>test_quarantine_lifts_after_second_confirming_session</code> runs
+the identical sequence and reads the resulting row back by id.
+<code>tests/test_hybrid_recall.py:138</code> is the stronger shape: two
+records in one store, one query, and the same block asserts
+<code>record_a.id in fts_ids</code>,
+<code>record_b.id not in fts_ids</code>, and both ids in the hybrid
+result. The refusal and its positive control are three lines apart, so
+the empty half cannot be an empty index.</p>
+<p>What is still missing is the case section 1 asks for: nothing asserts
+that a value carried by a <code>deleted</code> record does not come
+back, which is the one retrieval assertion this system's own design most
+needs. The regression case file remains its obvious home.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <p><strong>Hash your policy into every event it influenced.</strong>
@@ -582,6 +645,42 @@ the validator</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/riktar/memledger/commit/27f67e436ec0910e50c4b1c41cdf96f7afb6b341"><code class="commit-id" title="27f67e436ec0910e50c4b1c41cdf96f7afb6b341">27f67e43…</code></a>
+— re-read at the same commit. Nothing upstream had moved, so every
+correction is the atlas's own. Two of them matter.</p>
+<p><code>negative_eval</code> was withheld on the claim that no
+committed case asserts particular material must not be retrieved. Two
+do: <code>test_acceptance.py:483</code> recalls under
+<code>include_quarantined: false</code> and asserts an empty result for
+a record the sibling case at :298 proves exists, and
+<code>test_hybrid_recall.py:138</code> asserts
+<code>record_b.id not in fts_ids</code> three lines from
+<code>record_a.id in fts_ids</code> over the same two-record store. The
+mark is added, with the case this system still lacks named in its
+limits: nothing asserts that a value on a <code>deleted</code> record
+cannot come back.</p>
+<p>The status table said <code>quarantined</code> means "recorded,
+withheld from recall". It does not by default:
+<code>retrieval.py:86</code> drops quarantined records only when
+<code>include_quarantined</code> is false, and
+<code>assets/memory.policy.yaml:62</code> ships it true. The
+anti-poisoning case therefore asserts that a planted standing constraint
+is <em>labelled</em>, while the shipped policy still serves it. Three of
+the five statuses withhold unconditionally; the one designed for doubt
+does not.</p>
+<p>One new finding in the retrieval path. The FTS5 lane takes its
+candidate budget with no status predicate and the dead statuses are
+dropped afterwards, so deleted, superseded and expired records consume
+slots live records would have had. They stay in the index because
+<code>upsert_record</code> re-inserts the FTS row unconditionally and
+only then branches on status — dropping the vector, not the text.
+<code>delete_record_index</code>, which drops both, has no caller
+anywhere in the source or the tests, and the two fallback lexical paths
+filter <code>deleted</code> but not <code>superseded</code> or
+<code>expired</code>.</p>
+<p>Both existing marks now carry evidence records, and
+<code>stack_source</code> goes from seeded to reviewed.</p>
 <p><strong>2026-07-31</strong> — <a
 href="https://github.com/riktar/memledger/commit/27f67e436ec0910e50c4b1c41cdf96f7afb6b341"><code class="commit-id" title="27f67e436ec0910e50c4b1c41cdf96f7afb6b341">27f67e43…</code></a>
 — first reading.</p>
