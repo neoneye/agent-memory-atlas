@@ -118,7 +118,7 @@ history.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/rlabs-inc--memory-ts" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -236,6 +236,35 @@ distinction between the five is meaningful: <code>pending</code> is not
 yet believed, <code>superseded</code> was replaced,
 <code>deprecated</code> was retired, <code>archived</code> was put
 away.</p>
+<p><strong>The consumer is more finished than the producer, and the gap
+is the whole correction story.</strong> The read side is genuinely
+worked out: superseded rows are deliberately <em>not</em> filtered in
+the match phase — <em>"NOTE: Don't filter superseded_by here - we handle
+redirects in Phase 1"</em> — and <code>retrieval.ts:486-493</code>
+instead follows <code>superseded_by ?? resolved_by</code>, loads the
+replacement, and surfaces it in the superseded memory's place, logging
+the redirect. A reader who asks about an outdated fact gets the
+corrected one rather than nothing.</p>
+<p>But nothing writes the fields it reads. <code>superseded_by</code>
+and <code>resolved_by</code> are assigned exactly twice each in the
+source, both times as <code>null</code> in the two creation paths
+(<code>store.ts:250</code>, <code>:253</code>, <code>:526</code>,
+<code>:529</code>), and no literal <code>'pending'</code>,
+<code>'superseded'</code>, <code>'deprecated'</code> or
+<code>'archived'</code> is assigned to <code>status</code> anywhere. The
+curator — the component that writes memories at session end — never
+mentions either. The one surface that can set them is
+<code>PATCH /memory/:id</code> in <code>server/index.ts:477</code>,
+which takes <code>status</code> and the curation flags as optional body
+fields, so a person or an external tool can mark a memory superseded by
+hand.</p>
+<p>The mark stands on that: the status is stored, the filter is on the
+read path, and a live writer exists. What belongs beside it is that in
+an unattended install nothing ever moves a memory off
+<code>active</code>, so the five-state vocabulary has one reachable
+value and the redirect machinery never fires. <code>pending</code> in
+particular is a state the pipeline cannot produce, which makes it a
+description of an intent rather than a state the system enters.</p>
 <p><strong><code>sessions_since_surfaced</code> counts decay in
 sessions, not in time.</strong> That is a better unit for this workload
 than a wall-clock half-life: a memory that has not been relevant across
@@ -307,10 +336,34 @@ natural next measurement, and <code>sessions_since_surfaced</code> is
 already the column that would answer the first.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>No paper, no benchmark, no test directory.</strong>
-<code>test-curation.ts</code> is a <code>#!/usr/bin/env bun</code>
-script that curates one session id and prints the summary, the tone and
-the memories.</p>
+<p><strong>No paper and no benchmark — but there is a test suite, and
+the first version of this report said there was not.</strong>
+<code>src/core/engine.test.ts</code> is 313 lines of
+<code>bun:test</code> covering three describes and ten cases: the store
+round-trip, session tracking, summaries and stats; the retrieval
+scorer's <code>action_required</code> boost, trigger-phrase matching and
+<code>maxMemories</code> limit; and two engine cases. It sits beside
+<code>test-curation.ts</code>, the <code>#!/usr/bin/env bun</code>
+script that curates one session id and prints the result, which the
+earlier text called the only exercise of the system.</p>
+<p><strong>And its deduplication case cannot fail, in the file's own
+words.</strong> The test is named
+<code>should deduplicate memories within session</code>, its comments
+say <em>"Third request - same session, should NOT get same memory
+again"</em> and <em>"Second query should find the memory, third should
+not (already injected)"</em>, and the assertion is:</p>
+<pre class="ts"><code>console.log(`Result2 memories: ${memory2Count}, Result3 memories: ${memory3Count}`)
+
+// At least verify the deduplication logic is running
+expect(result3.memories.length).toBeLessThanOrEqual(result2.memories.length)</code></pre>
+<p><code>&lt;=</code> passes when dedup does nothing and both counts are
+equal, and passes again when retrieval returns nothing and both are
+zero. The intended assertion is written down twice in the comments; the
+code declines to make it, and the third comment admits as much. This is
+the shape the atlas's <a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-09-17-the-test-that-cannot-fail.md">test-that-cannot-fail
+note</a> collects, and an unusually candid instance — the author
+recorded the gap rather than hiding it behind a passing name.</p>
 <p>The schema changelog is, in an unusual sense, the evaluation record
 this project does have: seven fields removed with a stated reason each
 is evidence that somebody checked whether the design was carrying its
@@ -413,6 +466,38 @@ replacement guard <code>:491</code>, the linked-memory guard
 <p><strong>Surfaces</strong> — <code>src/server/</code>,
 <code>src/cli/</code>, <code>hooks/</code>, <code>skills/</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/rlabs-inc/memory-ts/commit/8fcadf6d8783869878a64d42aec3ed88f7f91a70"><code class="commit-id" title="8fcadf6d8783869878a64d42aec3ed88f7f91a70">8fcadf6d…</code></a>
+— re-read at the same commit. Nothing upstream had moved, so every
+correction is the atlas's own, and the first reading had read the status
+field without asking who writes it.</p>
+<p>Nothing does. <code>superseded_by</code> and <code>resolved_by</code>
+are assigned four times between them, all <code>null</code> in the two
+creation paths, and no literal <code>'pending'</code>,
+<code>'superseded'</code>, <code>'deprecated'</code> or
+<code>'archived'</code> is assigned to <code>status</code> anywhere in
+the source; the curator never mentions either. Meanwhile the read side
+is fully built — superseded rows are deliberately left in the match
+phase so <code>retrieval.ts:486-493</code> can follow
+<code>superseded_by</code> and surface the replacement instead. The only
+writer is the optional <code>status</code> field on
+<code>PATCH /memory/:id</code>. <code>trust_state</code> stands, because
+the status is stored, filtered on the read path and settable by a live
+surface, and the limit is now in its evidence record: an unattended
+install never leaves <code>active</code>, so the redirect never fires
+and <code>pending</code> is a state the pipeline cannot produce.</p>
+<p>Section 10 said there was no test directory and that
+<code>test-curation.ts</code> was the only exercise of the system.
+<code>src/core/engine.test.ts</code> is 313 lines of
+<code>bun:test</code> with ten cases over the store, the retrieval
+scorer and the engine. One of them is worth its own paragraph: the case
+named <code>should deduplicate memories within session</code> asserts
+<code>result3.memories.length</code> is less than <strong>or equal
+to</strong> <code>result2.memories.length</code>, which passes when
+deduplication does nothing and passes again when retrieval returns
+nothing — and the file says so, in three comments that state the
+assertion the code does not make. <code>stack_source</code> goes from
+seeded to reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/rlabs-inc/memory-ts/commit/8fcadf6d8783869878a64d42aec3ed88f7f91a70"><code class="commit-id" title="8fcadf6d8783869878a64d42aec3ed88f7f91a70">8fcadf6d…</code></a>
 — first reading. Screened before reading; the tree was read, never

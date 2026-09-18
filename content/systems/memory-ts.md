@@ -9,11 +9,13 @@ source_url: https://github.com/rlabs-inc/memory-ts
 archive_name: "rlabs-inc--memory-ts"
 revision: 8fcadf6d8783869878a64d42aec3ed88f7f91a70
 revision_url: https://github.com/rlabs-inc/memory-ts/commit/8fcadf6d8783869878a64d42aec3ed88f7f91a70
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: "trust_state"
+capability_evidence:
+  trust_state: "the five-value status on the memory record, filtered out of retrieval | src/types/memory.ts:106, src/core/retrieval.ts:158, :812, :486-493, src/server/index.ts:477 | `status` is one of `active`, `pending`, `superseded`, `deprecated` or `archived` on the stored record — a field, not a score, with `importance_weight` and `confidence_score` as separate columns — and both retrieval entry points drop anything that is not active: `if (memory.status && memory.status !== 'active') return false`. The replacement and linked-memory lookups separately skip `archived` and `deprecated`, and a superseded row is redirected to the memory named by `superseded_by` rather than simply dropped, so a corrected fact still answers the question the stale one would have | no automatic producer moves a memory off `active`: `superseded_by` and `resolved_by` are written only as null at creation, no literal non-active status is assigned anywhere in the source, and the curator never touches either. The only writer is the optional `status` field on `PATCH /memory/:id`, so the vocabulary is reachable by hand and not by the pipeline. No committed test covers the filter"
 stack_storage: "files"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A two-tier memory — a headline always shown, full content expanded on demand"
   storage: "A filesystem-backed store with vectors and cosine similarity, no external service"
@@ -123,6 +125,32 @@ and the distinction between the five is meaningful: `pending` is not yet
 believed, `superseded` was replaced, `deprecated` was retired, `archived` was put
 away.
 
+**The consumer is more finished than the producer, and the gap is the whole
+correction story.** The read side is genuinely worked out: superseded rows are
+deliberately *not* filtered in the match phase — *"NOTE: Don't filter
+superseded_by here - we handle redirects in Phase 1"* — and
+`retrieval.ts:486-493` instead follows `superseded_by ?? resolved_by`, loads the
+replacement, and surfaces it in the superseded memory's place, logging the
+redirect. A reader who asks about an outdated fact gets the corrected one rather
+than nothing.
+
+But nothing writes the fields it reads. `superseded_by` and `resolved_by` are
+assigned exactly twice each in the source, both times as `null` in the two
+creation paths (`store.ts:250`, `:253`, `:526`, `:529`), and no literal
+`'pending'`, `'superseded'`, `'deprecated'` or `'archived'` is assigned to
+`status` anywhere. The curator — the component that writes memories at session
+end — never mentions either. The one surface that can set them is
+`PATCH /memory/:id` in `server/index.ts:477`, which takes `status` and the
+curation flags as optional body fields, so a person or an external tool can mark
+a memory superseded by hand.
+
+The mark stands on that: the status is stored, the filter is on the read path,
+and a live writer exists. What belongs beside it is that in an unattended
+install nothing ever moves a memory off `active`, so the five-state vocabulary
+has one reachable value and the redirect machinery never fires. `pending` in
+particular is a state the pipeline cannot produce, which makes it a description
+of an intent rather than a state the system enters.
+
 **`sessions_since_surfaced` counts decay in sessions, not in time.** That is a
 better unit for this workload than a wall-clock half-life: a memory that has not
 been relevant across twenty working sessions is stale whether those took a week
@@ -197,9 +225,35 @@ an existing memory — would be the natural next measurement, and
 
 ## 10. Tests, Evals, and Benchmarks
 
-**No paper, no benchmark, no test directory.** `test-curation.ts` is a
-`#!/usr/bin/env bun` script that curates one session id and prints the summary,
-the tone and the memories.
+**No paper and no benchmark — but there is a test suite, and the first version of
+this report said there was not.** `src/core/engine.test.ts` is 313 lines of
+`bun:test` covering three describes and ten cases: the store round-trip, session
+tracking, summaries and stats; the retrieval scorer's `action_required` boost,
+trigger-phrase matching and `maxMemories` limit; and two engine cases. It sits
+beside `test-curation.ts`, the `#!/usr/bin/env bun` script that curates one
+session id and prints the result, which the earlier text called the only
+exercise of the system.
+
+**And its deduplication case cannot fail, in the file's own words.** The test is
+named `should deduplicate memories within session`, its comments say *"Third
+request - same session, should NOT get same memory again"* and *"Second query
+should find the memory, third should not (already injected)"*, and the assertion
+is:
+
+```ts
+console.log(`Result2 memories: ${memory2Count}, Result3 memories: ${memory3Count}`)
+
+// At least verify the deduplication logic is running
+expect(result3.memories.length).toBeLessThanOrEqual(result2.memories.length)
+```
+
+`<=` passes when dedup does nothing and both counts are equal, and passes again
+when retrieval returns nothing and both are zero. The intended assertion is
+written down twice in the comments; the code declines to make it, and the third
+comment admits as much. This is the shape the atlas's
+[test-that-cannot-fail note](https://github.com/neoneye/agent-memory-atlas/blob/main/notes/2026-09-17-the-test-that-cannot-fail.md)
+collects, and an unusually candid instance — the author recorded the gap rather
+than hiding it behind a passing name.
 
 The schema changelog is, in an unusual sense, the evaluation record this project
 does have: seven fields removed with a stated reason each is evidence that
@@ -289,5 +343,11 @@ reasons `:20-34`, `confidence_score` `:43`, `context_type` enum `:46`, `status`
 **Surfaces** — `src/server/`, `src/cli/`, `hooks/`, `skills/`
 
 ## History
+
+**2026-09-18** — [`8fcadf6d8783869878a64d42aec3ed88f7f91a70`](https://github.com/rlabs-inc/memory-ts/commit/8fcadf6d8783869878a64d42aec3ed88f7f91a70) — re-read at the same commit. Nothing upstream had moved, so every correction is the atlas's own, and the first reading had read the status field without asking who writes it.
+
+Nothing does. `superseded_by` and `resolved_by` are assigned four times between them, all `null` in the two creation paths, and no literal `'pending'`, `'superseded'`, `'deprecated'` or `'archived'` is assigned to `status` anywhere in the source; the curator never mentions either. Meanwhile the read side is fully built — superseded rows are deliberately left in the match phase so `retrieval.ts:486-493` can follow `superseded_by` and surface the replacement instead. The only writer is the optional `status` field on `PATCH /memory/:id`. `trust_state` stands, because the status is stored, filtered on the read path and settable by a live surface, and the limit is now in its evidence record: an unattended install never leaves `active`, so the redirect never fires and `pending` is a state the pipeline cannot produce.
+
+Section 10 said there was no test directory and that `test-curation.ts` was the only exercise of the system. `src/core/engine.test.ts` is 313 lines of `bun:test` with ten cases over the store, the retrieval scorer and the engine. One of them is worth its own paragraph: the case named `should deduplicate memories within session` asserts `result3.memories.length` is less than **or equal to** `result2.memories.length`, which passes when deduplication does nothing and passes again when retrieval returns nothing — and the file says so, in three comments that state the assertion the code does not make. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`8fcadf6d8783869878a64d42aec3ed88f7f91a70`](https://github.com/rlabs-inc/memory-ts/commit/8fcadf6d8783869878a64d42aec3ed88f7f91a70) — first reading. Screened before reading; the tree was read, never installed, and no curation was run.

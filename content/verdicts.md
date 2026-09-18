@@ -2335,10 +2335,11 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 
 ### [`memory-ts`](../systems/memory-ts/)
 
+- Second risk, and the irony: the project that went looking for fields nothing reads shipped a correction path nothing writes. `superseded_by` and `resolved_by` are only ever set to null, no non-active `status` is assigned anywhere in the source, and the retrieval redirect built to surface a replacement can only fire after someone calls `PATCH /memory/:id` by hand.
 - Best idea: a schema that deleted seven of its own fields and recorded the evidence for each — `emotional_resonance` ("580 variants, never used"), `component` ("always empty"), `parent_id`/`child_ids` ("no logic implemented"), `knowledge_domain` ("overlaps with project_id + domain"). This atlas spends much of its time finding declared-and-unread fields; this is a project that went looking for its own and left the receipts.
 - Biggest risk: the curator is the product and is a subprocess call to an external CLI, exercised by one hand-run script at the repository root that prints the result of curating a single session. What fraction of curated memories are ever surfaced is the measurement, and `sessions_since_surfaced` already holds the answer.
 - Most reusable component: the two-tier memory — a headline always shown and full content expanded on demand, with auto-expand rules (`action_required`, `awaiting_decision`, 5+ signals) saying when brevity is the wrong default. Two fields rather than truncation at render time means retrieval shows twenty summaries for the cost of two full memories.
-- Maturity impression: 11,600 lines of TypeScript with a five-state status filtered on the retrieval path *and* in the replacement and linked-memory lookups, decay counted in sessions rather than days, and a migrations directory — because the schema actually changes.
+- Maturity impression: 11,600 lines of TypeScript with a five-state status filtered on the retrieval path *and* in the replacement and linked-memory lookups, decay counted in sessions rather than days, and a migrations directory — because the schema actually changes. Ten `bun:test` cases beside it, one of which is named for deduplication and asserts `<=`, so it passes whether or not deduplication happens; the comments say what it meant to assert.
 - Study when: you suspect half your schema is fields nothing reads.
 - Do not copy when: you need supersession to hold — `superseded_by` records the replacement and nothing stops the old content being re-extracted from a later transcript.
 

@@ -8231,6 +8231,13 @@ from the graph's edges, which a rejected candidate never acquired.</li>
 <h3 id="memory-ts"><a
 href="../systems/memory-ts/"><code>memory-ts</code></a></h3>
 <ul>
+<li>Second risk, and the irony: the project that went looking for fields
+nothing reads shipped a correction path nothing writes.
+<code>superseded_by</code> and <code>resolved_by</code> are only ever
+set to null, no non-active <code>status</code> is assigned anywhere in
+the source, and the retrieval redirect built to surface a replacement
+can only fire after someone calls <code>PATCH /memory/:id</code> by
+hand.</li>
 <li>Best idea: a schema that deleted seven of its own fields and
 recorded the evidence for each — <code>emotional_resonance</code> ("580
 variants, never used"), <code>component</code> ("always empty"),
@@ -8253,7 +8260,11 @@ for the cost of two full memories.</li>
 <li>Maturity impression: 11,600 lines of TypeScript with a five-state
 status filtered on the retrieval path <em>and</em> in the replacement
 and linked-memory lookups, decay counted in sessions rather than days,
-and a migrations directory — because the schema actually changes.</li>
+and a migrations directory — because the schema actually changes. Ten
+<code>bun:test</code> cases beside it, one of which is named for
+deduplication and asserts <code>&lt;=</code>, so it passes whether or
+not deduplication happens; the comments say what it meant to
+assert.</li>
 <li>Study when: you suspect half your schema is fields nothing
 reads.</li>
 <li>Do not copy when: you need supersession to hold —
