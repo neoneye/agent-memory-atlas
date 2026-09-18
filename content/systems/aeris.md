@@ -9,13 +9,13 @@ source_url: https://github.com/Cedrick-Coto/Aeris
 archive_name: "Cedrick-Coto--Aeris"
 revision: 68a2bd6d11a12beab705ce400e5c3a052d7f71db
 revision_url: https://github.com/Cedrick-Coto/Aeris/commit/68a2bd6d11a12beab705ce400e5c3a052d7f71db
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: "negative_eval"
 stack_storage: "sqlite, files, memory"
 stack_retrieval: ""
 stack_source: "seeded"
 capability_evidence:
-  negative_eval: "model-facing projection, not the memory store | tests/Aeris.Engine.Tests/SemanticExtractorTests.cs:640-661,:1231-1248 | four DoesNotContain assertions on the serialized SemanticState, over a state built from a world carrying a memory and a goal | SemanticExtractorTests"
+  negative_eval: "model-facing projection, not the memory store | tests/Aeris.Engine.Tests/SemanticExtractorTests.cs:640-661,:1231-1248, with the positive control at :472 and :636-637 | six `DoesNotContain` assertions on the serialized `SemanticState` — `EntityId`, a raw `\"Value\":`, `Entity(`, `Arch.`, `Store` — over states built from a world carrying a memory, a goal and an emotion | neither of the two cases carries a positive assertion of its own, so the non-vacuity comes from the suite around them: `Assert.Contains(\"Memoria-1\", state.LongTermMemory.Memories[0].Description)` at `:472` and the two `KnownEntities` assertions at `:636-637`, four lines above the first must-not, establish that the projection does carry memories and entities"
 matrix:
   memory_unit: "A fixed-size struct — type, category, importance, certainty, emotional weight, involved entity, location, a forgotten flag — carrying no text at all, beside a belief struct with a status enum and pointers to the memories supporting and contradicting it"
   storage: "In-process stores keyed by entity id, serialized whole into JSON world snapshots at a tick interval by a generic resource loop no test exercises for them; no database, despite an ADR selecting SQLite"
@@ -528,6 +528,24 @@ longer contains this code; the archive fork does.
 | All eight package references exactly pinned | `grep -rn "PackageReference" --include="*.csproj" .` | 8 references, 8 with an exact `Version="..."` |
 
 ## History
+
+**2026-09-18** — re-read at the pinned commit `68a2bd6d`. **Upstream has moved
+and so has the subject:** HEAD is `d94d63ba`, and `rev-parse <pin>:src` and
+`<pin>:tests` both differ from HEAD's, so unlike [Monet](../monet/) this is not
+a re-pin that could be skipped — the memory code itself has changed since this
+reading, and the report should be re-pinned and re-screened rather than merely
+re-read. What follows was verified at the pin the report names.
+
+`negative_eval` stands, and the record now says where its non-vacuity comes
+from, because neither cited case supplies it. `Extract_NoEntityIds_InOutput`
+(`:640-661`) and `Validation_JsonOutput_IsCleanString` (`:1231-1248`) are six
+`DoesNotContain` assertions and nothing else — an empty `SemanticState` would
+satisfy every one. What rules that out is the surrounding suite:
+`Assert.Contains("Memoria-1", state.LongTermMemory.Memories[0].Description)` at
+`:472` and the two `KnownEntities` assertions at `:636-637`, four lines above
+the first must-not, establish that the projection carries the material whose
+engine identifiers the must-nots then exclude. Naming those lines is what makes
+the mark re-checkable. No marks change.
 
 **2026-09-17** — re-read against the upstream head, `d94d63ba32cd`, three commits past this report's pin, and **not re-pinned**. `ab1f18c` deleted the project's entire implementation — 16,809 lines across 130 files — with the author's stated reason being that the implementation was bad and they did not understand how it had reached that state. What remains is two `.csproj` files, the documentation, the changelog and the ADRs; `SemanticExtractorTests.cs`, which carries this report's only mark, no longer exists. Re-pinning would point every section at a tree without the code it describes, so `revision` stays where it is and section 1 now opens with the removal. The mark is retained and scoped to the pin, following the same rule applied to Silica and Letta: the evidence was verified at that commit and the archive fork holds the tree. Nothing was installed, built or run.
 
