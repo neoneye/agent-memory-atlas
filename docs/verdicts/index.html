@@ -15230,33 +15230,40 @@ the runtime derives, never a field a caller sets.</strong>
 combinations and raises <code>TrustGateViolation</code> on anything
 else, so an unrecognised provenance is an exception rather than a quiet
 default — and the one legacy compatibility row resolves to
-<code>untrusted</code> rather than being grandfathered upward.</li>
+<code>untrusted</code> rather than being grandfathered upward. The one
+wildcard is <code>pending_review</code>, which short-circuits the lookup
+and is untrusted whatever carried it.</li>
 <li>Biggest risk: <strong>it refuses without remembering.</strong>
 Poisoned content, unconfirmed external assertions and suspicious entries
 are all rejected at admission, and none of those refusals is written
-down keyed on the value. The attacker's second attempt is judged as
-freshly as the first — in a system whose security document cites MINJA
-and AgentPoison by name.</li>
+down keyed on the value — only <code>memory.timeline_promote</code>
+audits a reject, with a content digest nothing consults at admission.
+The attacker's second attempt is judged as freshly as the first — in a
+system whose security document cites MINJA and AgentPoison by name.</li>
 <li>Most reusable component: the owner-scope contract in
 <code>memory/manager.py</code> — a request naming a user without a
 workspace is rejected rather than narrowed,
 <code>_entry_matches_owner</code> gates every surface, and an
 out-of-scope supersession returns
 <code>supersedes_target_not_found</code> so the check cannot be used as
-an oracle for what exists elsewhere.</li>
+an oracle for what exists elsewhere. Beside it, the rule that a
+<code>note.create</code> the model proposes counts as user-confirmed
+only when every field it would store is structurally anchored in the
+text of the current user turn.</li>
 <li>Maturity impression: Apache-2.0, 2,114 commits between 28 January
 and 27 August 2026 by five authors, version 0.8.2.1, 141,275 lines under
 <code>src/</code> with 13,963 in the memory package, beside 212,716
 lines of tests holding 4,974 functions and a twenty-six-file adversarial
-suite; four of seven capability marks.</li>
+suite; five of seven capability marks.</li>
 <li>Study when: you are building an agent with real capability and have
 concluded that prompt injection is answered by enforcement rather than
 by restriction, and you want the memory to carry provenance into that
 argument rather than sit outside it.</li>
 <li>Do not copy when: you want a memory library — this is a daemon and
 the memory is not addressable without it — or when you need a validity
-interval, a queue where a person adjudicates a pending memory, or a
-record of what the system has already refused.</li>
+interval, a record of what the system has already refused, or a review
+queue reachable from somewhere other than a terminal, since
+<code>/identity</code> is refused off the <code>cli</code> channel.</li>
 </ul>
 <h3 id="mcp-memory-service"><a
 href="../systems/mcp-memory-service/"><code>mcp-memory-service</code></a></h3>

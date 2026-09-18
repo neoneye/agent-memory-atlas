@@ -30446,7 +30446,10 @@ matrix and raises on an unknown combination; PII is detected and
 redacted into the stored value; an external-origin write that is neither
 confirmed nor pending review is refused, as is a suspicious one. Trust
 fields are set by the runtime from the ingress handle, never accepted
-from the caller</td>
+from the caller — and a <code>note.create</code> or
+<code>todo.create</code> the model proposes counts as user-confirmed
+only when every field it would store is structurally anchored in the
+sanitised text of the current user turn</td>
 <td>Supersession by pointer — a new entry names the one it replaces, the
 old keeps a <code>superseded_by</code> and drops out of the identity
 surface, and a supersession whose target is outside the caller's owner
@@ -30471,27 +30474,37 @@ metrics script and gate that a person runs</td>
 <td>The trust band is the epistemic field and it admits or withholds;
 confidence is a number the same rule carries and is used for weighting.
 The triple that produces both is validated rather than free-form, and an
-unenumerated combination is an exception rather than a default.
-Consolidation cannot raise trust — its writes are untrusted by
-construction. Historical thread content is surfaced with an explicit
-statement that it does not authorise action</td>
+unenumerated combination is an exception rather than a default — except
+for <code>pending_review</code>, which short-circuits the lookup and is
+untrusted whatever carried it. Consolidation cannot raise trust — its
+writes are untrusted by construction. Historical thread content is
+surfaced with an explicit statement that it does not authorise
+action</td>
 <td>A trust band derived from a validated triple rather than asserted by
 a caller, with an unknown combination raising instead of defaulting; an
 owner scope that refuses a half-specified request rather than filtering
 on the half it was given; an identity surface whose test pins the exact
 returned set before asserting what is absent; an append-only event store
 keyed to the entry it describes; a consolidation worker that
-mathematically cannot upgrade trust; a security document that cites the
-memory-poisoning literature it is defending against</td>
+mathematically cannot upgrade trust; a review queue a person lists and
+adjudicates with <code>/identity</code>, on a channel check, while the
+model's thirty-five-tool surface carries no memory verb; a
+<code>note.create</code> that only counts as user-confirmed when every
+stored field is structurally anchored in the text of the current user
+turn; a security document that cites the memory-poisoning literature it
+is defending against</td>
 <td>No validity time — <code>as_of</code> is a reference clock for
 decay, not an interval on the record, so a fact true last quarter cannot
-say so; no record of a rejected value, so a write refused as poisoned
-leaves nothing a later write consults and the same claim can be
-attempted again; <code>pending_review</code> is a status the read path
-can include and the admin path backs off for, but no surface lists
-pending entries for a person to adjudicate; the six surfaces each filter
-for themselves, so only identity applies the trust band and a reader
-should not assume the others do</td>
+say so; no record of a rejected value on the ordinary write path, so a
+write refused as poisoned leaves nothing a later write consults and the
+same claim can be attempted again — only
+<code>memory.timeline_promote</code> audits its rejects, with a content
+digest nothing reads back at admission; the review queue is reachable
+only from a <code>cli</code> session in the default mode, so a pending
+candidate raised on a messaging channel waits for the person to come
+back to the terminal; the six surfaces each filter for themselves, so
+only identity applies the trust band and a reader should not assume the
+others do</td>
 </tr>
 <tr>
 <td><code>shodh-memory</code></td>
@@ -35231,7 +35244,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>166 of 580:</em> <a
+<p><em>167 of 580:</em> <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
@@ -35377,6 +35390,7 @@ href="../systems/sage-memory/"><code>sage-memory</code></a>, <a
 href="../systems/scope-recall-hermes/"><code>scope-recall-hermes</code></a>,
 <a href="../systems/second-me/"><code>second-me</code></a>, <a
 href="../systems/semantica/"><code>semantica</code></a>, <a
+href="../systems/shisad/"><code>shisad</code></a>, <a
 href="../systems/sibyl-memory/"><code>sibyl-memory</code></a>, <a
 href="../systems/signetai/"><code>signetai</code></a>, <a
 href="../systems/slowave/"><code>slowave</code></a>, <a

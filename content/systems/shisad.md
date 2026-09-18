@@ -9,13 +9,14 @@ source_url: https://github.com/shisa-ai/shisad
 archive_name: "shisa-ai--shisad"
 revision: e4e33e5980ef5e47b40b3fbfce44bd45e7faec0b
 revision_url: https://github.com/shisa-ai/shisad/commit/e4e33e5980ef5e47b40b3fbfce44bd45e7faec0b
-analyzed_at: 2026-09-10
-capabilities: "trust_state, scope_enforced, audit_log, negative_eval"
+analyzed_at: 2026-09-18
+capabilities: "trust_state, scope_enforced, audit_log, negative_eval, human_review"
 capability_evidence:
-  trust_state: "a three-value trust band derived from a validated triple and applied as an admission filter on the identity surface | src/shisad/memory/trust.py:8-36, :88-101, :170-185, src/shisad/memory/surfaces/identity.py:40-58, src/shisad/memory/ingestion.py:130, :216-221 | `_VALID_TRUST_MATRIX` maps `(source_origin, channel_trust, confirmation_status)` to a `TrustRule` carrying a `TrustBand` of `elevated`, `observed` or `untrusted` plus a confidence and a confidence mode. Eight source origins, seven channel trusts and six confirmation statuses do not multiply out — only the enumerated combinations are legal, and an unlisted triple raises `TrustGateViolation` rather than defaulting. `observed` is downgraded to `untrusted` when the feature is off. `build_identity_pack` admits an entry only when its band is `elevated`, its `superseded_by` is None and its origin is not in the blocked set, so the band withholds rather than reorders | tests/unit/test_memory_surfaces.py:95-109 (the identity pack equals exactly the two elevated entries, `count == 2`, every kept entry is elevated, and the observed entry and the plain fact are each asserted absent)"
+  trust_state: "a three-value trust band derived from a validated triple and applied as an admission filter on the identity surface | src/shisad/memory/trust.py:8-36, :88-101, :170-185, src/shisad/memory/surfaces/identity.py:40-58, src/shisad/memory/ingestion.py:130, :216-221 | `_VALID_TRUST_MATRIX` maps `(source_origin, channel_trust, confirmation_status)` to a `TrustRule` carrying a `TrustBand` of `elevated`, `observed` or `untrusted` plus a confidence and a confidence mode. Eight source origins, seven channel trusts and six confirmation statuses do not multiply out — for five of the six confirmation statuses only the enumerated combinations are legal, and an unlisted triple raises `TrustGateViolation` rather than defaulting. The sixth, `pending_review`, short-circuits at `:174` before the lookup and resolves to a fixed untrusted rule for any origin and channel, so the matrix is a whitelist with one wildcard row rather than a whitelist outright. `observed` is downgraded to `untrusted` when the feature is off. `build_identity_pack` admits an entry only when its band is `elevated`, its `superseded_by` is None and its origin is not in the blocked set, so the band withholds rather than reorders | tests/unit/test_memory_surfaces.py:95-109 (the identity pack equals exactly the two elevated entries, `count == 2`, every kept entry is elevated, and the observed entry and the plain fact are each asserted absent)"
   scope_enforced: "an owner pair of user and workspace that fails closed, applied on both the write and the read paths | src/shisad/memory/manager.py:250-257, :386-391, :587, :629, :677, :827 | a write that names a `user_id` or a `workspace_id`, or asks for `include_unowned`, is rejected with `owner_scope_requires_user_and_workspace` unless *both* normalise to a value — naming a user without a workspace is refused rather than treated as a partial scope. `_entry_matches_owner` is then applied at every read that surfaces entries, and a supersession whose target is outside the caller's owner scope is rejected as `supersedes_target_not_found`, so the scope check cannot be probed by attempting to supersede something invisible | tests/unit/test_impl_admin_channel_ingress.py:3250-3259 (a legacy entry is in the surfaced ids and another workspace's entry is not, over a real `compile_active_attention`), tests/unit/test_memory_surfaces.py:428, :724"
-  audit_log: "a SQLite-backed append-only event store for memory lifecycle events, written from the ingestion and manager write paths | src/shisad/memory/events.py:17-60, src/shisad/memory/sqlite_schema.py:121-133, :187-188, src/shisad/memory/ingestion.py:1120, src/shisad/memory/manager.py:2555, src/shisad/daemon/event_wiring.py:236-256, src/shisad/daemon/services.py:1130 | `MemoryEvent` is described as *\"Canonical append-only memory event record\"* and carries an event id, the `entry_id` it concerns, an `event_type`, a timestamp, an `actor` defaulting to `memory_manager`, the `ingress_handle_id` that admitted it and a JSON metadata blob; `MemoryEventStore` is *\"SQLite-backed append-only event store for memory lifecycle events\"* over a `memory_events` table indexed on `(entry_id, timestamp)` and `(event_type, timestamp)`. Two production call sites append, and the daemon separately wires `audit_memory_event` as the ingestion audit hook so `memory.write` and `memory.evidence_read` also publish typed events | tests/unit/test_memory_events.py and the ingestion suites"
+  audit_log: "a SQLite-backed append-only event store for memory lifecycle events, written from the ingestion and manager write paths | src/shisad/memory/events.py:17-60, src/shisad/memory/sqlite_schema.py:121-133, :187-188, src/shisad/memory/ingestion.py:1120, src/shisad/memory/manager.py:2555, src/shisad/daemon/event_wiring.py:236-256, src/shisad/daemon/services.py:1130 | `MemoryEvent` is described as *\"Canonical append-only memory event record\"* and carries an event id, the `entry_id` it concerns, an `event_type`, a timestamp, an `actor` defaulting to `memory_manager`, the `ingress_handle_id` that admitted it and a JSON metadata blob; `MemoryEventStore` is *\"SQLite-backed append-only event store for memory lifecycle events\"* over a `memory_events` table indexed on `(entry_id, timestamp)` and `(event_type, timestamp)`. Append-only is the writer's convention rather than a schema constraint: the statement at `events.py:44-60` is `INSERT OR REPLACE` keyed on `event_id`, and what makes it append-only is that `event_id` defaults to a fresh `uuid4().hex` per event — there is no trigger or unique-violation path the way an append-only table would normally be built. Two production call sites append, and the daemon separately wires `audit_memory_event` as the ingestion audit hook so `memory.write` and `memory.evidence_read` also publish typed events | tests/unit/test_memory_events.py and the ingestion suites"
   negative_eval: "committed cases asserting a specific entry is absent from a compiled surface, each with present controls in the same result | tests/unit/test_memory_surfaces.py:95-109, tests/unit/test_impl_admin_channel_ingress.py:3250-3259, tests/adversarial/test_adversarial_hardening.py:177-199 | the identity case pins the returned ids to an exact two-element list and then asserts the observed entry and the plain fact are each absent, so an empty pack fails on the equality before it reaches the absence checks. The workspace case asserts one entry present and another workspace's absent from the same `compile_active_attention` call. The poisoning fixture is a third shape — three cases where two attacker instructions must come back `reject` or `require_confirmation` and a legitimate user fact must come back `allow` or `require_confirmation` — which gates admission rather than retrieval and is reported as such | the same files; `tests/adversarial/` holds twenty-six further files and `tests/adversarial/memory/poisoning_cases.json` is the fixture"
+  human_review: "a pending-review queue a person lists and adjudicates by typed command on the trusted channel, with the approve verb absent from the agent's tool surface | src/shisad/memory/manager.py:655-690, src/shisad/daemon/handlers/_impl_session.py:14430-14450, :14462-14487, :14502-14546, src/shisad/daemon/handlers/_impl.py:7947-7981, src/shisad/security/pep.py:707-742, src/shisad/daemon/handlers/_impl_confirmation.py:3272-3279 | `list_review_queue` returns the entries whose confirmation status is `pending_review`, filtered by the owner pair, and `/identity review` renders them as `id [entry_type] value` for the persona, preference and soft-constraint types. `/identity accept|reject|edit <id>` adjudicates them: accept mints an ingress context carrying `user_confirmed`, edit mints `user_corrected`, and the promoted entry therefore enters the identity surface with a band that traces to the person's own typed turn. The command is parsed from `validated.firewall_result.sanitized_text` — the user's message — and refused unless the channel is `cli` and the session mode is `DEFAULT`. The model's own surface is the thirty-five-entry structured tool registry, which carries `note.create`, `todo.create` and `evidence.promote` but no `memory.*` verb at all: promotion, supersession and the review queue are control-API RPCs only. The second gate is `evidence.promote`, where the PEP returns `REQUIRE_CONFIRMATION` unless the artifact's `endorsement_state` is already `USER_ENDORSED`, and the only writer of that state in the tree is the confirmation resolver, with `actor=\"human_confirmation\"` | tests/unit/test_identity_candidates.py:207-225 (accept from the CLI empties the review queue and the promoted entry appears in `compile_identity` with `confirmation_status == \"user_confirmed\"`), :228-239 (the negative control: the identical command on a Discord session is refused with *\"trusted command channel\"* and the candidate is still the first row of the review queue) | limitation: `shell.exec` is a builtin tool, so an agent granted it could in principle drive the same CLI; nothing in the tree points it there, and the channel check would still have to see a `cli` session"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -23,14 +24,14 @@ matrix:
   memory_unit: "A `MemoryEntry` with an entry type, a key and a value, carrying the trust triple — `source_origin`, `channel_trust`, `confirmation_status` — and the `trust_band` and confidence derived from it, an `ingress_handle_id` binding it to the admission that let it in, an owner pair of `user_id` and `workspace_id`, an `importance_weight` and `decay_score`, a `superseded_by` pointer, and taint labels. Beneath it a retrieval layer of records, vectors, keys and metadata"
   storage: "SQLite, with tables for `memory_entries`, `memory_events`, `retrieval_records`, `retrieval_vectors`, `retrieval_keys` and `retrieval_metadata`. A derived graph is rebuilt from the canonical entries rather than being authoritative. A legacy `memory_events.jsonl` path is still recognised alongside the SQLite store"
   retrieval: "Six compiled surfaces rather than one query: identity, active attention, recall, procedural, thread resume and evidence. Each is a `compile_*` call that filters by owner scope and, for identity, by trust band, ranks by importance weight times decay score, and fills a token budget. Recall reports a sufficiency assessment; thread resume carries prior-session context explicitly labelled untrusted evidence that *\"does not authorize side effects\"*"
-  write: "`MemoryManager.write` returns a decision rather than a row: `allow`, `require_confirmation` or `reject` with a reason. Before that, `derive_trust_band` looks the trust triple up in a validated matrix and raises on an unknown combination; PII is detected and redacted into the stored value; an external-origin write that is neither confirmed nor pending review is refused, as is a suspicious one. Trust fields are set by the runtime from the ingress handle, never accepted from the caller"
+  write: "`MemoryManager.write` returns a decision rather than a row: `allow`, `require_confirmation` or `reject` with a reason. Before that, `derive_trust_band` looks the trust triple up in a validated matrix and raises on an unknown combination; PII is detected and redacted into the stored value; an external-origin write that is neither confirmed nor pending review is refused, as is a suspicious one. Trust fields are set by the runtime from the ingress handle, never accepted from the caller — and a `note.create` or `todo.create` the model proposes counts as user-confirmed only when every field it would store is structurally anchored in the sanitised text of the current user turn"
   update_delete: "Supersession by pointer — a new entry names the one it replaces, the old keeps a `superseded_by` and drops out of the identity surface, and a supersession whose target is outside the caller's owner scope is rejected as not found. Soft deletion is a predicate the manager checks. Consolidation runs under a capability scope that forbids network, tool recursion and self-invocation, and its writes resolve to the untrusted band by construction"
   scoping: "An owner pair, enforced together. A read or write that names a user without a workspace is rejected outright rather than falling back to a partial filter, and `_entry_matches_owner` gates every surface. Session-scoped entries are filtered separately, and channel participation binds an entry to the channel that produced it"
   integration: "A long-running daemon with a CLI, a TUI, channel adapters for messaging platforms, a scheduler, a sandboxed executor, a policy enforcement point in front of every action, and a self-modification subsystem. Memory is one subsystem of a security architecture rather than a standalone service"
   background: "A consolidation worker under an explicit capability scope; a summarizer; identity-candidate detection; a derived graph rebuilt from canonical entries; a decay score applied at read time; an adversarial metrics script and gate that a person runs"
-  trust: "The trust band is the epistemic field and it admits or withholds; confidence is a number the same rule carries and is used for weighting. The triple that produces both is validated rather than free-form, and an unenumerated combination is an exception rather than a default. Consolidation cannot raise trust — its writes are untrusted by construction. Historical thread content is surfaced with an explicit statement that it does not authorise action"
-  strengths: "A trust band derived from a validated triple rather than asserted by a caller, with an unknown combination raising instead of defaulting; an owner scope that refuses a half-specified request rather than filtering on the half it was given; an identity surface whose test pins the exact returned set before asserting what is absent; an append-only event store keyed to the entry it describes; a consolidation worker that mathematically cannot upgrade trust; a security document that cites the memory-poisoning literature it is defending against"
-  risks: "No validity time — `as_of` is a reference clock for decay, not an interval on the record, so a fact true last quarter cannot say so; no record of a rejected value, so a write refused as poisoned leaves nothing a later write consults and the same claim can be attempted again; `pending_review` is a status the read path can include and the admin path backs off for, but no surface lists pending entries for a person to adjudicate; the six surfaces each filter for themselves, so only identity applies the trust band and a reader should not assume the others do"
+  trust: "The trust band is the epistemic field and it admits or withholds; confidence is a number the same rule carries and is used for weighting. The triple that produces both is validated rather than free-form, and an unenumerated combination is an exception rather than a default — except for `pending_review`, which short-circuits the lookup and is untrusted whatever carried it. Consolidation cannot raise trust — its writes are untrusted by construction. Historical thread content is surfaced with an explicit statement that it does not authorise action"
+  strengths: "A trust band derived from a validated triple rather than asserted by a caller, with an unknown combination raising instead of defaulting; an owner scope that refuses a half-specified request rather than filtering on the half it was given; an identity surface whose test pins the exact returned set before asserting what is absent; an append-only event store keyed to the entry it describes; a consolidation worker that mathematically cannot upgrade trust; a review queue a person lists and adjudicates with `/identity`, on a channel check, while the model's thirty-five-tool surface carries no memory verb; a `note.create` that only counts as user-confirmed when every stored field is structurally anchored in the text of the current user turn; a security document that cites the memory-poisoning literature it is defending against"
+  risks: "No validity time — `as_of` is a reference clock for decay, not an interval on the record, so a fact true last quarter cannot say so; no record of a rejected value on the ordinary write path, so a write refused as poisoned leaves nothing a later write consults and the same claim can be attempted again — only `memory.timeline_promote` audits its rejects, with a content digest nothing reads back at admission; the review queue is reachable only from a `cli` session in the default mode, so a pending candidate raised on a messaging channel waits for the person to come back to the terminal; the six surfaces each filter for themselves, so only identity applies the trust band and a reader should not assume the others do"
 ---
 
 ## 1. Executive Summary
@@ -54,7 +55,9 @@ band of `elevated`, `observed` or `untrusted`, a confidence and a confidence
 mode. There are eight source origins, seven channel trusts and six confirmation
 statuses, and they do not multiply out: only enumerated combinations are legal,
 and an unlisted triple raises `TrustGateViolation` rather than defaulting to
-something safe-looking. A caller cannot set the band; the runtime derives it
+something safe-looking. One confirmation status is exempt — `pending_review`
+returns a fixed untrusted rule before the lookup runs, whatever origin and
+channel it arrived on. A caller cannot set the band; the runtime derives it
 from the ingress handle that admitted the content.
 
 **The band withholds on at least one surface.** `build_identity_pack` admits an
@@ -79,7 +82,9 @@ memory event record"* — an event id, the `entry_id` it concerns, a type, a
 timestamp, an actor, the `ingress_handle_id`, and metadata — and
 `MemoryEventStore` is *"SQLite-backed append-only event store for memory
 lifecycle events"* over a `memory_events` table indexed for both entry-first and
-type-first reads. Two production call sites append to it, and the daemon
+type-first reads. The insert is `INSERT OR REPLACE` on a per-event `uuid4`, so
+the append-only property is the writer's discipline rather than something the
+schema refuses to break. Two production call sites append to it, and the daemon
 separately wires an audit hook so writes and evidence reads publish typed events.
 
 **Where it stops.** There is no validity time: `as_of` in the ingestion path is
@@ -117,7 +122,7 @@ authorise side effects. Evidence goes back to the original chunk. Each compiles
 under a token budget; each filters for what it is for.
 
 ```mermaid
-%% caption: content arrives with an ingress handle that supplies a trust triple; the triple is looked up in a validated matrix that raises on an unknown combination, and the resulting band is set by the runtime rather than the caller; the write is a decision — allow, require confirmation, or reject — and owner scope is refused unless user and workspace are both given; six surfaces compile separately, and only identity filters on the trust band
+%% caption: content arrives with an ingress handle that supplies a trust triple; the triple is looked up in a validated matrix that raises on an unknown combination, and the resulting band is set by the runtime rather than the caller; the write is a decision — allow, require confirmation, or reject — and owner scope is refused unless user and workspace are both given; six surfaces compile separately, and only identity filters on the trust band; a pending-review entry waits in a queue until a person types the adjudicating command on the trusted channel
 flowchart TB
     IN["content arrives on a channel"]
     IH["ingress handle minted<br/>SHA-256 bound to the content"]
@@ -133,12 +138,17 @@ flowchart TB
     EV[("memory_events — append only<br/>entry_id, type, actor,<br/>ingress_handle_id")]
     ID["identity pack<br/>elevated only, not superseded,<br/>origin not blocked"]
     OTH["active attention · recall ·<br/>procedural · thread resume · evidence<br/>each filters for itself"]
+    PEND["pending_review<br/>short-circuits the matrix<br/>untrusted, never surfaced"]
+    RQ["list_review_queue"]
+    CMD["/identity review | accept | reject | edit<br/>typed by a person, cli channel only<br/>no memory verb on the agent's tool surface"]
 
     IN --> IH
     IH --> TRIPLE
     TRIPLE --> MX
     MX -->|"not enumerated"| RAISE
+    MX -->|"pending_review"| PEND
     MX -->|enumerated| BAND
+    PEND --> DEC
     BAND --> DEC
     DEC -->|"external, unconfirmed"| REJ
     DEC -->|suspicious| CONF
@@ -148,6 +158,9 @@ flowchart TB
     ST --> EV
     ST --> ID
     ST --> OTH
+    ST --> RQ
+    RQ --> CMD
+    CMD -->|"accept: user_confirmed<br/>edit: user_corrected"| ID
 ```
 
 ## 3. Architecture
@@ -303,7 +316,11 @@ saying so.
 A CLI and a TUI are the operator surfaces; channel adapters connect messaging
 platforms; `contrib/ledger-bridge` is a TypeScript sidecar. The CLI's `pending`
 command is *"Pending action review and decision commands"* — action review,
-which is the policy enforcement point's queue, not a memory review queue.
+which is the policy enforcement point's queue. The memory review queue is a
+separate surface reached by typing `/identity` into a session: `review` lists
+the pending candidates, `accept`, `reject` and `edit` adjudicate one by id. It
+is handled in `daemon/handlers/_impl_session.py` rather than under `cli/` or
+`ui/`, which is why a search scoped to those two directories finds nothing.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -312,14 +329,17 @@ validated triple, used by `build_identity_pack` to decide admission rather than
 order. The confidence that rides beside it is a separate number with its own
 mode. Two details raise this above the usual: an unenumerated triple raises
 instead of defaulting, and the one compatibility row in the matrix is marked
-untrusted rather than grandfathered into elevation.
+untrusted rather than grandfathered into elevation. The one qualification is
+that `pending_review` is answered before the matrix is consulted, so the
+whitelist has a wildcard row — a safe one, since it resolves to untrusted.
 
 **Scope — awarded.** An owner pair enforced together, refusing a half-specified
 request rather than filtering on the half supplied, applied at every surface,
 and closed against probing through supersession.
 
-**Audit log — awarded.** An append-only SQLite event store whose record type
-says so, keyed to the entry it describes, carrying the ingress handle that
+**Audit log — awarded.** A SQLite event store whose record type calls itself
+append-only and whose writer keeps that promise by minting a fresh event id per
+event rather than by any constraint the table imposes, keyed to the entry it describes, carrying the ingress handle that
 admitted the entry — which means an auditor can walk from an event back to the
 admission decision that let the content in. Two production call sites append,
 and the daemon wires a second audit hook that publishes typed events.
@@ -334,7 +354,9 @@ from the same compiled surface.
 **Tombstone — withheld, and it is the gap worth naming.** This system refuses a
 great deal at admission: poisoned content, unconfirmed external assertions,
 suspicious entries. None of those refusals is written down as a rejection keyed
-on the value. The same claim can be presented again and will be judged again on
+on the value — with one narrow exception, `memory.timeline_promote`, which
+audits its own rejects with a content digest that nothing consults at
+admission. The same claim can be presented again and will be judged again on
 its provenance and its content, with no memory that it was already refused. A
 system whose threat model is memory poisoning — and whose security document
 cites MINJA and AgentPoison by name — is the one place a rejected-value record
@@ -342,15 +364,32 @@ would pay for itself most directly.
 
 **Bitemporal — withheld.** No validity interval; `as_of` is a decay clock.
 
-**Human review — withheld, with a real near miss.** `pending_review` is a
-first-class confirmation status, the read path takes an `include_pending_review`
-flag, and the admin migration path backs off when a pending-review entry exists
-for a key. What is missing is the surface: nothing lists pending-review memories
-for a person to approve or reject. The confirmation machinery that does exist —
-the approver, the PEP queue, the CLI's `pending` commands — adjudicates
-*actions*, which is a different object. A memory write can return
-`require_confirmation`, and the tree does not show that decision reaching a
-person as a memory question.
+**Human review — awarded.** `pending_review` is a first-class confirmation
+status, the read path takes an `include_pending_review` flag, and
+`MemoryManager.list_review_queue` returns exactly the entries holding that
+status, filtered by the owner pair. The surface over it is `/identity`: `review`
+prints the pending persona facts, preferences and soft constraints as
+`id [entry_type] value`, and `accept`, `reject` and `edit` adjudicate one by id.
+Accept mints an ingress context with `user_confirmed`, edit with
+`user_corrected`, so a promoted candidate carries a band that traces back to the
+person's own typed turn rather than to the process that proposed it.
+
+The producer test is the one that matters, and this system passes it twice. The
+command is read out of `validated.firewall_result.sanitized_text` — the user's
+message — and refused unless the channel is `cli` and the session mode is
+`DEFAULT`; a model emits tool calls, and tool calls are not user messages. The
+model's surface is the thirty-five-entry structured tool registry, which holds
+`note.create`, `todo.create`, `thread.resume` and `evidence.promote` and no
+`memory.*` verb of any kind: promotion, supersession and the review queue are
+control-API RPCs the agent has no name for. The second gate is
+`evidence.promote` itself, where the policy enforcement point returns
+`REQUIRE_CONFIRMATION` unless the artifact's `endorsement_state` is already
+`USER_ENDORSED` — and the sole writer of that state anywhere in the tree is the
+confirmation resolver, recording `actor="human_confirmation"`.
+
+The caveat to state plainly: `shell.exec` is a builtin tool, so an agent granted
+it could in principle drive the same CLI. Nothing points it there, and the
+channel check would still have to see a `cli` session in the default mode.
 
 **One thing this system does that the rubric has no mark for.** Thread-resume
 content is surfaced with an explicit statement that it is untrusted and does not
@@ -452,9 +491,10 @@ need the system to remember what it has already refused.
 - Should a refused write leave a record keyed on the value? The threat model
   names memory poisoning, the write path already computes a decision and a
   reason, and nothing persists the pair.
-- Is there a surface for `pending_review` memories that the reading missed? The
-  status, the read flag and the admin back-off all exist; the queue does not
-  appear in the CLI or the TUI.
+- Should the review queue be reachable from somewhere other than a terminal? A
+  candidate raised on a messaging channel sits in `list_review_queue` until the
+  person opens a `cli` session in the default mode, because `/identity` is
+  refused anywhere else.
 - Should surfaces other than identity filter on the trust band? Active attention
   and recall take owner scope but not band, so an `observed` entry can reach the
   planner through them.
@@ -472,6 +512,8 @@ need the system to remember what it has already refused.
 | `src/shisad/memory/events.py` | — | `MemoryEvent` (17-28) and `MemoryEventStore` (30-60) |
 | `src/shisad/memory/sqlite_schema.py` | — | `memory_entries`, `memory_events` (121-133), the retrieval tables, the indexes (187-188) |
 | `src/shisad/memory/ingress.py`, `identity_candidates.py`, `timeline.py` | — | Handle minting; identity observation detection; temporal search |
+| `src/shisad/daemon/handlers/_impl_session.py` | — | The `/identity` review commands (14430-14546); the current-turn anchoring rule for a proposed `note.create` (2489-2527) |
+| `src/shisad/daemon/handlers/_impl.py`, `security/pep.py` | — | The thirty-five-entry structured tool registry (7947-7981); the endorsement gate on `evidence.promote` (707-742) |
 | `src/shisad/memory/consolidation/`, `graph/` | — | The capability-scoped worker; the rebuildable derived graph |
 | `src/shisad/daemon/event_wiring.py`, `services.py` | — | `audit_memory_event` (236-256); the hook wiring (1130) |
 | `tests/adversarial/` | — | Twenty-six files plus `exfil`, `injection`, `memory`, `rag`, `skills`, `tools`; `memory/poisoning_cases.json` |
@@ -485,11 +527,14 @@ Searches behind the absence claims above, run from the repository root:
 rg -n 'valid_from|valid_to|valid_time|effective_at' src/shisad/memory   # none; the one observed_at is on a participation record, not a memory entry
 rg -n 'as_of' src/shisad/memory/ingestion.py                            # a reference clock for decay, not an interval
 rg -n 'trust_band' src --glob '!tests/**'                               # the only admission filter is surfaces/identity.py:54
-rg -n 'pending_review' src/shisad/cli src/shisad/ui                      # none: no surface lists pending-review memories
+rg -n 'pending_review' src/shisad/cli src/shisad/ui                      # none here, but the queue is in daemon/handlers/, not under cli/ or ui/
+rg -n 'list_review_queue|"/identity"' src/shisad                         # the queue and the command that adjudicates it
 rg -n -i 'arxiv|bibtex|@article|Citation' README.md docs                # citations to others; no paper of its own
 rg -n 'endswith\("1"\)' scripts/m6_adversarial_metrics.py                # the RAG arm skipping its own control case
 ```
 
 ## History
+
+**2026-09-18** — [`e4e33e5980ef5e47b40b3fbfce44bd45e7faec0b`](https://github.com/shisa-ai/shisad/commit/e4e33e5980ef5e47b40b3fbfce44bd45e7faec0b) — re-read at the same commit; nothing upstream moved, so the corrections here are the first reading's. **Human review awarded**, reversing a withheld mark: `MemoryManager.list_review_queue` returns the `pending_review` entries and `/identity review | accept | reject | edit` adjudicates them, parsed from the user's own message and refused off the `cli` channel, while the agent's thirty-five-entry structured tool registry carries no `memory.*` verb; `evidence.promote` is separately gated by the policy enforcement point unless the artifact is `USER_ENDORSED`, a state only the confirmation resolver writes. The first reading's absence claim came from a search scoped to `src/shisad/cli` and `src/shisad/ui`, where the queue does not live. Two further corrections: the trust matrix is a whitelist with one wildcard row, because `pending_review` short-circuits before the lookup for any origin and channel; and the event store's append-only property is the writer's per-event `uuid4`, not a schema constraint, since the statement is `INSERT OR REPLACE`. The rejected-value gap is narrowed rather than withdrawn — `memory.timeline_promote` does audit its rejects with a content digest, and nothing reads it back at admission. Five marks.
 
 **2026-09-10** — [`e4e33e5980ef5e47b40b3fbfce44bd45e7faec0b`](https://github.com/shisa-ai/shisad/commit/e4e33e5980ef5e47b40b3fbfce44bd45e7faec0b) — first reading, at the head of `main`, the last commit of 27 August 2026, tagged past `v0.8.2.1`. Screened before reading: one auto-run surface, four build-time execution paths, one unpinned dependency surface, nothing inside the seven-day cooldown, and an `AGENTS.md` and `CLAUDE.md` treated as data; nothing was installed or run, and the read was made from a full clone. Four marks. The reading covered the trust matrix, the ingress binding, the write decision and its refusals, the owner-scope enforcement, the six compiled surfaces and the event store; the policy enforcement point, the sandbox, the skills subsystem and the self-modification machinery were read as context rather than as subject. This repository was reached through a third-party research corpus that documents it at `v0.7.3`; the reading here is of the tree at the commit above, and the marks reflect that rather than the corpus's description.

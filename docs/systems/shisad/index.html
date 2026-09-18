@@ -134,7 +134,7 @@ describes.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/shisa-ai--shisad" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -142,7 +142,7 @@ describes.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -181,8 +181,11 @@ confidence mode. There are eight source origins, seven channel trusts
 and six confirmation statuses, and they do not multiply out: only
 enumerated combinations are legal, and an unlisted triple raises
 <code>TrustGateViolation</code> rather than defaulting to something
-safe-looking. A caller cannot set the band; the runtime derives it from
-the ingress handle that admitted the content.</p>
+safe-looking. One confirmation status is exempt —
+<code>pending_review</code> returns a fixed untrusted rule before the
+lookup runs, whatever origin and channel it arrived on. A caller cannot
+set the band; the runtime derives it from the ingress handle that
+admitted the content.</p>
 <p><strong>The band withholds on at least one surface.</strong>
 <code>build_identity_pack</code> admits an entry only when its
 <code>trust_band == "elevated"</code>, its <code>superseded_by</code> is
@@ -210,9 +213,11 @@ type, a timestamp, an actor, the <code>ingress_handle_id</code>, and
 metadata — and <code>MemoryEventStore</code> is <em>"SQLite-backed
 append-only event store for memory lifecycle events"</em> over a
 <code>memory_events</code> table indexed for both entry-first and
-type-first reads. Two production call sites append to it, and the daemon
-separately wires an audit hook so writes and evidence reads publish
-typed events.</p>
+type-first reads. The insert is <code>INSERT OR REPLACE</code> on a
+per-event <code>uuid4</code>, so the append-only property is the
+writer's discipline rather than something the schema refuses to break.
+Two production call sites append to it, and the daemon separately wires
+an audit hook so writes and evidence reads publish typed events.</p>
 <p><strong>Where it stops.</strong> There is no validity time:
 <code>as_of</code> in the ingestion path is a reference clock for decay,
 not an interval on the record. And there is no record of a rejected
@@ -245,7 +250,7 @@ know how to do. Thread resume carries prior-session context forward and
 labels it untrusted evidence that does not authorise side effects.
 Evidence goes back to the original chunk. Each compiles under a token
 budget; each filters for what it is for.</p>
-<figure class="diagram"><figcaption class="diagram-caption">Diagram — content arrives with an ingress handle that supplies a trust triple; the triple is looked up in a validated matrix that raises on an unknown combination, and the resulting band is set by the runtime rather than the caller; the write is a decision — allow, require confirmation, or reject — and owner scope is refused unless user and workspace are both given; six surfaces compile separately, and only identity filters on the trust band</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: content arrives with an ingress handle that supplies a trust triple; the triple is looked up in a validated matrix that raises on an unknown combination, and the resulting band is set by the runtime rather than the caller; the write is a decision — allow, require confirmation, or reject — and owner scope is refused unless user and workspace are both given; six surfaces compile separately, and only identity filters on the trust band
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — content arrives with an ingress handle that supplies a trust triple; the triple is looked up in a validated matrix that raises on an unknown combination, and the resulting band is set by the runtime rather than the caller; the write is a decision — allow, require confirmation, or reject — and owner scope is refused unless user and workspace are both given; six surfaces compile separately, and only identity filters on the trust band; a pending-review entry waits in a queue until a person types the adjudicating command on the trusted channel</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: content arrives with an ingress handle that supplies a trust triple; the triple is looked up in a validated matrix that raises on an unknown combination, and the resulting band is set by the runtime rather than the caller; the write is a decision — allow, require confirmation, or reject — and owner scope is refused unless user and workspace are both given; six surfaces compile separately, and only identity filters on the trust band; a pending-review entry waits in a queue until a person types the adjudicating command on the trusted channel
 flowchart TB
     IN[&quot;content arrives on a channel&quot;]
     IH[&quot;ingress handle minted&lt;br/&gt;SHA-256 bound to the content&quot;]
@@ -261,12 +266,17 @@ flowchart TB
     EV[(&quot;memory_events — append only&lt;br/&gt;entry_id, type, actor,&lt;br/&gt;ingress_handle_id&quot;)]
     ID[&quot;identity pack&lt;br/&gt;elevated only, not superseded,&lt;br/&gt;origin not blocked&quot;]
     OTH[&quot;active attention · recall ·&lt;br/&gt;procedural · thread resume · evidence&lt;br/&gt;each filters for itself&quot;]
+    PEND[&quot;pending_review&lt;br/&gt;short-circuits the matrix&lt;br/&gt;untrusted, never surfaced&quot;]
+    RQ[&quot;list_review_queue&quot;]
+    CMD[&quot;/identity review | accept | reject | edit&lt;br/&gt;typed by a person, cli channel only&lt;br/&gt;no memory verb on the agent&#39;s tool surface&quot;]
 
     IN --&gt; IH
     IH --&gt; TRIPLE
     TRIPLE --&gt; MX
     MX --&gt;|&quot;not enumerated&quot;| RAISE
+    MX --&gt;|&quot;pending_review&quot;| PEND
     MX --&gt;|enumerated| BAND
+    PEND --&gt; DEC
     BAND --&gt; DEC
     DEC --&gt;|&quot;external, unconfirmed&quot;| REJ
     DEC --&gt;|suspicious| CONF
@@ -275,7 +285,10 @@ flowchart TB
     OWN --&gt;|both| ST
     ST --&gt; EV
     ST --&gt; ID
-    ST --&gt; OTH</code></pre></details></figure>
+    ST --&gt; OTH
+    ST --&gt; RQ
+    RQ --&gt; CMD
+    CMD --&gt;|&quot;accept: user_confirmed&lt;br/&gt;edit: user_corrected&quot;| ID</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p>A Python daemon, 141,275 lines under <code>src/shisad/</code>,
 organised by concern rather than by layer: <code>approver</code>,
@@ -455,7 +468,13 @@ so.</p>
 messaging platforms; <code>contrib/ledger-bridge</code> is a TypeScript
 sidecar. The CLI's <code>pending</code> command is <em>"Pending action
 review and decision commands"</em> — action review, which is the policy
-enforcement point's queue, not a memory review queue.</p>
+enforcement point's queue. The memory review queue is a separate surface
+reached by typing <code>/identity</code> into a session:
+<code>review</code> lists the pending candidates, <code>accept</code>,
+<code>reject</code> and <code>edit</code> adjudicate one by id. It is
+handled in <code>daemon/handlers/_impl_session.py</code> rather than
+under <code>cli/</code> or <code>ui/</code>, which is why a search
+scoped to those two directories finds nothing.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p><strong>Trust state — awarded.</strong> A stored, discrete,
@@ -464,17 +483,22 @@ three-value band derived from a validated triple, used by
 The confidence that rides beside it is a separate number with its own
 mode. Two details raise this above the usual: an unenumerated triple
 raises instead of defaulting, and the one compatibility row in the
-matrix is marked untrusted rather than grandfathered into elevation.</p>
+matrix is marked untrusted rather than grandfathered into elevation. The
+one qualification is that <code>pending_review</code> is answered before
+the matrix is consulted, so the whitelist has a wildcard row — a safe
+one, since it resolves to untrusted.</p>
 <p><strong>Scope — awarded.</strong> An owner pair enforced together,
 refusing a half-specified request rather than filtering on the half
 supplied, applied at every surface, and closed against probing through
 supersession.</p>
-<p><strong>Audit log — awarded.</strong> An append-only SQLite event
-store whose record type says so, keyed to the entry it describes,
-carrying the ingress handle that admitted the entry — which means an
-auditor can walk from an event back to the admission decision that let
-the content in. Two production call sites append, and the daemon wires a
-second audit hook that publishes typed events.</p>
+<p><strong>Audit log — awarded.</strong> A SQLite event store whose
+record type calls itself append-only and whose writer keeps that promise
+by minting a fresh event id per event rather than by any constraint the
+table imposes, keyed to the entry it describes, carrying the ingress
+handle that admitted the entry — which means an auditor can walk from an
+event back to the admission decision that let the content in. Two
+production call sites append, and the daemon wires a second audit hook
+that publishes typed events.</p>
 <p><strong>Negative evaluation — awarded.</strong> The identity case
 pins the returned ids to an exact two-element list, asserts the count,
 asserts every kept entry is elevated, and <em>then</em> asserts the
@@ -485,25 +509,50 @@ same compiled surface.</p>
 <p><strong>Tombstone — withheld, and it is the gap worth
 naming.</strong> This system refuses a great deal at admission: poisoned
 content, unconfirmed external assertions, suspicious entries. None of
-those refusals is written down as a rejection keyed on the value. The
-same claim can be presented again and will be judged again on its
-provenance and its content, with no memory that it was already refused.
-A system whose threat model is memory poisoning — and whose security
-document cites MINJA and AgentPoison by name — is the one place a
-rejected-value record would pay for itself most directly.</p>
+those refusals is written down as a rejection keyed on the value — with
+one narrow exception, <code>memory.timeline_promote</code>, which audits
+its own rejects with a content digest that nothing consults at
+admission. The same claim can be presented again and will be judged
+again on its provenance and its content, with no memory that it was
+already refused. A system whose threat model is memory poisoning — and
+whose security document cites MINJA and AgentPoison by name — is the one
+place a rejected-value record would pay for itself most directly.</p>
 <p><strong>Bitemporal — withheld.</strong> No validity interval;
 <code>as_of</code> is a decay clock.</p>
-<p><strong>Human review — withheld, with a real near miss.</strong>
-<code>pending_review</code> is a first-class confirmation status, the
-read path takes an <code>include_pending_review</code> flag, and the
-admin migration path backs off when a pending-review entry exists for a
-key. What is missing is the surface: nothing lists pending-review
-memories for a person to approve or reject. The confirmation machinery
-that does exist — the approver, the PEP queue, the CLI's
-<code>pending</code> commands — adjudicates <em>actions</em>, which is a
-different object. A memory write can return
-<code>require_confirmation</code>, and the tree does not show that
-decision reaching a person as a memory question.</p>
+<p><strong>Human review — awarded.</strong> <code>pending_review</code>
+is a first-class confirmation status, the read path takes an
+<code>include_pending_review</code> flag, and
+<code>MemoryManager.list_review_queue</code> returns exactly the entries
+holding that status, filtered by the owner pair. The surface over it is
+<code>/identity</code>: <code>review</code> prints the pending persona
+facts, preferences and soft constraints as
+<code>id [entry_type] value</code>, and <code>accept</code>,
+<code>reject</code> and <code>edit</code> adjudicate one by id. Accept
+mints an ingress context with <code>user_confirmed</code>, edit with
+<code>user_corrected</code>, so a promoted candidate carries a band that
+traces back to the person's own typed turn rather than to the process
+that proposed it.</p>
+<p>The producer test is the one that matters, and this system passes it
+twice. The command is read out of
+<code>validated.firewall_result.sanitized_text</code> — the user's
+message — and refused unless the channel is <code>cli</code> and the
+session mode is <code>DEFAULT</code>; a model emits tool calls, and tool
+calls are not user messages. The model's surface is the
+thirty-five-entry structured tool registry, which holds
+<code>note.create</code>, <code>todo.create</code>,
+<code>thread.resume</code> and <code>evidence.promote</code> and no
+<code>memory.*</code> verb of any kind: promotion, supersession and the
+review queue are control-API RPCs the agent has no name for. The second
+gate is <code>evidence.promote</code> itself, where the policy
+enforcement point returns <code>REQUIRE_CONFIRMATION</code> unless the
+artifact's <code>endorsement_state</code> is already
+<code>USER_ENDORSED</code> — and the sole writer of that state anywhere
+in the tree is the confirmation resolver, recording
+<code>actor="human_confirmation"</code>.</p>
+<p>The caveat to state plainly: <code>shell.exec</code> is a builtin
+tool, so an agent granted it could in principle drive the same CLI.
+Nothing points it there, and the channel check would still have to see a
+<code>cli</code> session in the default mode.</p>
 <p><strong>One thing this system does that the rubric has no mark
 for.</strong> Thread-resume content is surfaced with an explicit
 statement that it is untrusted and does not authorise side effects.
@@ -610,9 +659,11 @@ need the system to remember what it has already refused.</p>
 <li>Should a refused write leave a record keyed on the value? The threat
 model names memory poisoning, the write path already computes a decision
 and a reason, and nothing persists the pair.</li>
-<li>Is there a surface for <code>pending_review</code> memories that the
-reading missed? The status, the read flag and the admin back-off all
-exist; the queue does not appear in the CLI or the TUI.</li>
+<li>Should the review queue be reachable from somewhere other than a
+terminal? A candidate raised on a messaging channel sits in
+<code>list_review_queue</code> until the person opens a <code>cli</code>
+session in the default mode, because <code>/identity</code> is refused
+anywhere else.</li>
 <li>Should surfaces other than identity filter on the trust band? Active
 attention and recall take owner scope but not band, so an
 <code>observed</code> entry can reach the planner through them.</li>
@@ -676,6 +727,20 @@ the retrieval tables, the indexes (187-188)</td>
 <td>Handle minting; identity observation detection; temporal search</td>
 </tr>
 <tr>
+<td><code>src/shisad/daemon/handlers/_impl_session.py</code></td>
+<td>—</td>
+<td>The <code>/identity</code> review commands (14430-14546); the
+current-turn anchoring rule for a proposed <code>note.create</code>
+(2489-2527)</td>
+</tr>
+<tr>
+<td><code>src/shisad/daemon/handlers/_impl.py</code>,
+<code>security/pep.py</code></td>
+<td>—</td>
+<td>The thirty-five-entry structured tool registry (7947-7981); the
+endorsement gate on <code>evidence.promote</code> (707-742)</td>
+</tr>
+<tr>
 <td><code>src/shisad/memory/consolidation/</code>,
 <code>graph/</code></td>
 <td>—</td>
@@ -721,10 +786,34 @@ root:</p>
 <pre class="sh"><code>rg -n &#39;valid_from|valid_to|valid_time|effective_at&#39; src/shisad/memory   # none; the one observed_at is on a participation record, not a memory entry
 rg -n &#39;as_of&#39; src/shisad/memory/ingestion.py                            # a reference clock for decay, not an interval
 rg -n &#39;trust_band&#39; src --glob &#39;!tests/**&#39;                               # the only admission filter is surfaces/identity.py:54
-rg -n &#39;pending_review&#39; src/shisad/cli src/shisad/ui                      # none: no surface lists pending-review memories
+rg -n &#39;pending_review&#39; src/shisad/cli src/shisad/ui                      # none here, but the queue is in daemon/handlers/, not under cli/ or ui/
+rg -n &#39;list_review_queue|&quot;/identity&quot;&#39; src/shisad                         # the queue and the command that adjudicates it
 rg -n -i &#39;arxiv|bibtex|@article|Citation&#39; README.md docs                # citations to others; no paper of its own
 rg -n &#39;endswith\(&quot;1&quot;\)&#39; scripts/m6_adversarial_metrics.py                # the RAG arm skipping its own control case</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/shisa-ai/shisad/commit/e4e33e5980ef5e47b40b3fbfce44bd45e7faec0b"><code class="commit-id" title="e4e33e5980ef5e47b40b3fbfce44bd45e7faec0b">e4e33e59…</code></a>
+— re-read at the same commit; nothing upstream moved, so the corrections
+here are the first reading's. <strong>Human review awarded</strong>,
+reversing a withheld mark: <code>MemoryManager.list_review_queue</code>
+returns the <code>pending_review</code> entries and
+<code>/identity review | accept | reject | edit</code> adjudicates them,
+parsed from the user's own message and refused off the <code>cli</code>
+channel, while the agent's thirty-five-entry structured tool registry
+carries no <code>memory.*</code> verb; <code>evidence.promote</code> is
+separately gated by the policy enforcement point unless the artifact is
+<code>USER_ENDORSED</code>, a state only the confirmation resolver
+writes. The first reading's absence claim came from a search scoped to
+<code>src/shisad/cli</code> and <code>src/shisad/ui</code>, where the
+queue does not live. Two further corrections: the trust matrix is a
+whitelist with one wildcard row, because <code>pending_review</code>
+short-circuits before the lookup for any origin and channel; and the
+event store's append-only property is the writer's per-event
+<code>uuid4</code>, not a schema constraint, since the statement is
+<code>INSERT OR REPLACE</code>. The rejected-value gap is narrowed
+rather than withdrawn — <code>memory.timeline_promote</code> does audit
+its rejects with a content digest, and nothing reads it back at
+admission. Five marks.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/shisa-ai/shisad/commit/e4e33e5980ef5e47b40b3fbfce44bd45e7faec0b"><code class="commit-id" title="e4e33e5980ef5e47b40b3fbfce44bd45e7faec0b">e4e33e59…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 27
