@@ -9,7 +9,7 @@ source_url: https://github.com/fpytloun/mnemory
 archive_name: "fpytloun--mnemory"
 revision: c67b9167e18f1730786c07c48f883674425dd681
 revision_url: https://github.com/fpytloun/mnemory/commit/c67b9167e18f1730786c07c48f883674425dd681
-analyzed_at: 2026-09-07
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, human_review, audit_log"
 capability_evidence:
   scope_enforced: "the owner scope condition | mnemory/storage/vector.py:73-95, :97-107, :550-586, :755-759 | `user_id` as a `must` condition inside every Qdrant search and browse, an owner condition for memories shared beyond their author, and beside them an active-revision condition that admits only `revision_state: active` or rows written before the field existed | tests/test_memory.py:3482 (an agent-scoped memory is absent from a shared query, with the positive control in the sibling test), :3597"
@@ -622,6 +622,22 @@ rg -n 'delete_lineage' mnemory/revisions.py                           # :1976 �
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`human_review` stands, and the producer test is now written down. The MCP server
+exposes nineteen `@mcp.tool()` functions in `mnemory/server.py` —
+`add_memory`, `add_memories`, `update_memory`, `delete_memory`,
+`delete_memories`, `delete_all_memories`, the search and artifact families and
+the rest — and not one of them is an fsck verb. The review cycle lives on the
+HTTP surface instead: `POST /api/fsck`, `/audit`, `/auto-run` and
+`GET /api/fsck/{check_id}` (`mnemory/api/fsck.py:135`, `:189`, `:221`, `:255`).
+`server.py` holds a lazy `_fsck_service` handle (`:118`, `:203-206`) and wraps
+no tool around it. So the agent can add, update and delete memories at will, and
+cannot start, review or apply an fsck. One qualification belongs beside the
+mark: `POST /api/fsck/auto-run` runs the check *and* auto-applies every fix
+meeting the configured confidence and severity thresholds, with no review step —
+an operator can therefore choose the unreviewed path, which is a setting rather
+than a default. No marks change.
 
 **2026-09-07** — [`c67b9167e18f1730786c07c48f883674425dd681`](https://github.com/fpytloun/mnemory/commit/c67b9167e18f1730786c07c48f883674425dd681) — re-pinned nine commits on — fixes, a docs note and two merges, and two of 6 and 7 September that add a revision model, an operations journal, trusted signed-request ingestion and validation decay: 24,112 lines inserted, 4,158 of them in one new module. The published claim that no audit record of any mutation existed was true at the previous pin and is not true at this one; `audit_log` is awarded for the journal, with its checkpoint shape and its privacy-erase exception stated, and the section 9 and 12 text that pressed on the gap is replaced by what closed it. `trust_state` was checked against the new `validation_state` and stays withheld on the usage clause. Line anchors for the phases, the scope condition and the penalties were re-verified and moved; `stack_source` promoted from `seeded` to `reviewed` after checking the store and arm lists against the code. Screened first: no auto-run surface, two build-time execution paths, two unpinned surfaces, two manifests inside the seven-day cooldown, `AGENTS.md` treated as data; nothing installed or run, the read made from a full clone.
 

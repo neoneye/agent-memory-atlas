@@ -133,7 +133,7 @@ per lineage.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/fpytloun--mnemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -826,6 +826,28 @@ rg -n &#39;def test_.*(retract|superseded)&#39; tests/*.py                    # 
 find benchmarks -name &#39;*.json&#39; -o -name &#39;*results*&#39;                  # none: no committed LoCoMo artifact
 rg -n &#39;delete_lineage&#39; mnemory/revisions.py                           # :1976 — the one physical erasure of journal records</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>human_review</code> stands, and the producer
+test is now written down. The MCP server exposes nineteen
+<code>@mcp.tool()</code> functions in <code>mnemory/server.py</code> —
+<code>add_memory</code>, <code>add_memories</code>,
+<code>update_memory</code>, <code>delete_memory</code>,
+<code>delete_memories</code>, <code>delete_all_memories</code>, the
+search and artifact families and the rest — and not one of them is an
+fsck verb. The review cycle lives on the HTTP surface instead:
+<code>POST /api/fsck</code>, <code>/audit</code>, <code>/auto-run</code>
+and <code>GET /api/fsck/{check_id}</code>
+(<code>mnemory/api/fsck.py:135</code>, <code>:189</code>,
+<code>:221</code>, <code>:255</code>). <code>server.py</code> holds a
+lazy <code>_fsck_service</code> handle (<code>:118</code>,
+<code>:203-206</code>) and wraps no tool around it. So the agent can
+add, update and delete memories at will, and cannot start, review or
+apply an fsck. One qualification belongs beside the mark:
+<code>POST /api/fsck/auto-run</code> runs the check <em>and</em>
+auto-applies every fix meeting the configured confidence and severity
+thresholds, with no review step — an operator can therefore choose the
+unreviewed path, which is a setting rather than a default. No marks
+change.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/fpytloun/mnemory/commit/c67b9167e18f1730786c07c48f883674425dd681"><code class="commit-id" title="c67b9167e18f1730786c07c48f883674425dd681">c67b9167…</code></a>
 — re-pinned nine commits on — fixes, a docs note and two merges, and two
