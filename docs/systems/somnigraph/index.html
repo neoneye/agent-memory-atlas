@@ -137,7 +137,7 @@ running.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/AlexisOlson--somnigraph" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -145,7 +145,7 @@ running.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (41%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -210,11 +210,7 @@ low-ranked until a person confirms it. <code>audit_log</code> because
 mutations — <code>created</code>, <code>superseded</code>,
 <code>updated</code> with the changed field names, <code>deleted</code>,
 <code>edge_weight_change</code> with the weight before and after —
-alongside its retrieval events. <code>human_review</code> because
-<code>review_pending</code> is a queue with list, confirm, edit and
-reject, and because the instructions the project asks a user to install
-make the rating loop mandatory: <em>"Don't skip this — it's the
-selection pressure that shapes future retrieval."</em></p>
+alongside its retrieval events.</p>
 <p><strong>Two near-misses, both stated by the project itself.</strong>
 <code>dedup_rejected</code> records a refused write with its summary and
 the vector distance that refused it — and the architecture page says
@@ -499,10 +495,19 @@ successor, <code>edge_weight_change</code> with before and after —
 through one writer, into an append-only table nothing deletes from, and
 two scripts read it back. The retrieval events sharing the table are the
 other half of the pattern and do not count toward the mark.</p>
-<p><strong>Human review — awarded.</strong> A queue with list, confirm,
-edit and reject standing between auto-capture and retrievability, and a
-rating call the design treats as selection pressure rather than
-telemetry.</p>
+<p><strong>Human review — withheld.</strong> The queue is real:
+auto-captured memories land <code>pending</code> and reach retrieval
+only when something confirms them. What confirms them is a tool the
+agent holds. <code>review_pending</code> carries
+<code>@mcp.tool()</code> at <code>src/memory_server.py:320-333</code>,
+and its documented actions are
+<code>list, confirm, confirm_all, discard, discard_all</code> — so one
+call clears the whole queue. The instruction the project asks a user to
+install — <em>"Don't skip this — it's the selection pressure that shapes
+future retrieval"</em> — is addressed to the model, and prose is not a
+producer test. The pending state still earns its keep as a
+<code>trust_state</code>; what it does not establish is a second
+party.</p>
 <p><strong>Tombstone — withheld, and the project agrees.</strong>
 <code>dedup_rejected</code> is durable and detailed and consulted by
 nothing on the write path, by design and with the design written down.
@@ -755,6 +760,27 @@ grep -rn &#39;valid_until\|valid_from&#39; src scripts --include=&#39;*.py&#39; 
 grep -rn -i &#39;project\|tenant\|user_id\|workspace&#39; src --include=&#39;*.py&#39;  # session transcript paths only; no scope key on a record
 grep -rn &#39;dedup_rejected&#39; src scripts docs                           # written once, read by two analysis scripts, consulted by no write path</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <strong><code>human_review</code> is
+withdrawn.</strong> <code>review_pending</code> is decorated
+<code>@mcp.tool()</code> (<code>src/memory_server.py:320</code>) and
+delegates to <code>impl_review_pending</code>
+(<code>memory/tools.py:1524</code>); its action set includes
+<code>confirm_all</code>, so the agent can promote every pending capture
+in a single call. Nothing in the tree restricts the verb to a human
+caller. That makes six this week — <a
+href="../runar-forge/">RunarForge</a>, <a
+href="../sift-kg/">sift-kg</a>, <a href="../memsem/">memsem</a>, <a
+href="../monet/">Monet</a>, <a href="../gitmem/">gitmem</a> and this one
+— where a pending-until-approved design hands the approve verb back to
+the producer.</p>
+<p><code>trust_state</code> and <code>audit_log</code> are untouched and
+remain the reasons to read this system: the lifecycle table records
+<code>created</code>, <code>superseded</code>, <code>updated</code> with
+the changed field names, <code>deleted</code> and
+<code>edge_weight_change</code> with the weight before and after, which
+is a fuller mutation record than most of the corpus keeps. Evidence
+coverage floor 1247 -&gt; 1246.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/AlexisOlson/somnigraph/commit/6dc4d3497adb63df888ccf9874d33a166f65b09c"><code class="commit-id" title="6dc4d3497adb63df888ccf9874d33a166f65b09c">6dc4d349…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 27

@@ -9,12 +9,11 @@ source_url: https://github.com/AlexisOlson/somnigraph
 archive_name: "AlexisOlson--somnigraph"
 revision: 6dc4d3497adb63df888ccf9874d33a166f65b09c
 revision_url: https://github.com/AlexisOlson/somnigraph/commit/6dc4d3497adb63df888ccf9874d33a166f65b09c
-analyzed_at: 2026-09-10
-capabilities: "trust_state, audit_log, human_review"
+analyzed_at: 2026-09-18
+capabilities: "trust_state, audit_log"
 capability_evidence:
   trust_state: "an auto-captured memory is written `pending` and every retrieval path filters to `active`, so it is absent from recall rather than ranked low until a person confirms it | src/memory/db.py:123, :143-146, src/memory/tools.py:71, :768, :953, :1712, :1533-1589 | `memories.status` defaults to `active`, and `_insert_memory` writes `pending` when the caller asks for it. The partial index `idx_memories_pending ON memories(created_at) WHERE status = 'pending'` exists so the review queue is cheap, and the retrieval surfaces — startup load, the recall hydration, the decay read and the theme scan — each carry `WHERE status = 'active'`. `deleted` is the third value, set by `forget()` and by the supersede branch of the write path, and it too is excluded. What the status is *not* is a confidence: a separate `confidence` column exists and is a number, backfilled to 0.3 for pending rows, and it feeds scoring rather than admission | no unit tests cover the transition; the eleven `assert` statements in this tree are all feature-matrix shape and determinism checks under `experiments/sleep-bench/`"
   audit_log: "an append-only event table carrying lifecycle mutations beside retrieval events, with the changed field names in the payload | src/memory/db.py:190-210, src/memory/events.py:18-49, src/memory/tools.py:424-425, :436, :1200 area | `memory_events(id INTEGER PRIMARY KEY AUTOINCREMENT, memory_id, event_type, query, session_id, co_memory_ids, similarity_score, context, created_at)` is commented in the schema as the *\"retrieval and lifecycle event log (append-only)\"*, written only through `_log_event`, and indexed three ways. The mutation half is what earns the mark: `created` with its source, `superseded` naming the successor, `updated` carrying the list of changed fields, `updated` with `action: deleted`, `edge_weight_change` with the weight before and after, and `dedup_rejected` with the rejected write's summary and the vector distance that rejected it. The retrieval half — `retrieved`, `feedback`, `recall_meta`, `recall_miss`, `recall_cutoff` — is the other half of the pattern and would not earn this on its own. Beside it `sleep_log` keeps a `per_memory_changes` blob per consolidation run. No statement deletes from either | `scripts/tune_memory.py:2047` reads the log back by event type, and the write-shadow histogram script buckets it"
-  human_review: "a review queue a person works through before an auto-captured memory becomes retrievable, plus a mid-session rating call the design treats as the selection pressure on retrieval | src/memory/tools.py:1524-1610, src/memory_server.py, README.md | `review_pending` takes `list`, `confirm`, `edit` and `reject`: listing reads the `pending` partial index, confirming flips the row to `active`, editing replaces the content first, and there is a bulk confirm-all. Until that happens the memory is written, embedded and FTS-indexed but filtered out of every read. `forget()` is a person's or the agent's explicit removal rather than a decay outcome. And the instructions the project asks a user to paste into their `CLAUDE.md` make the rating loop mandatory: *\"Rate ALL memories: 1.0 = directly useful, 0.0 = surfaced but unused. Don't skip this — it's the selection pressure that shapes future retrieval\"* | the ground-truth pipeline under `scripts/` is a second human-in-the-loop surface: `judge_ground_truth.py` grades query-memory pairs on a 0.0-to-1.0 relevance scale for NDCG tuning"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -77,10 +76,7 @@ written `pending` and every read filters to `active`, so it is absent rather tha
 low-ranked until a person confirms it. `audit_log` because `memory_events` is an
 append-only table carrying lifecycle mutations — `created`, `superseded`,
 `updated` with the changed field names, `deleted`, `edge_weight_change` with the
-weight before and after — alongside its retrieval events. `human_review` because
-`review_pending` is a queue with list, confirm, edit and reject, and because the
-instructions the project asks a user to install make the rating loop mandatory:
-*"Don't skip this — it's the selection pressure that shapes future retrieval."*
+weight before and after — alongside its retrieval events.
 
 **Two near-misses, both stated by the project itself.** `dedup_rejected` records
 a refused write with its summary and the vector distance that refused it — and
@@ -353,9 +349,15 @@ an append-only table nothing deletes from, and two scripts read it back. The
 retrieval events sharing the table are the other half of the pattern and do not
 count toward the mark.
 
-**Human review — awarded.** A queue with list, confirm, edit and reject standing
-between auto-capture and retrievability, and a rating call the design treats as
-selection pressure rather than telemetry.
+**Human review — withheld.** The queue is real: auto-captured memories land
+`pending` and reach retrieval only when something confirms them. What confirms
+them is a tool the agent holds. `review_pending` carries `@mcp.tool()` at
+`src/memory_server.py:320-333`, and its documented actions are
+`list, confirm, confirm_all, discard, discard_all` — so one call clears the whole
+queue. The instruction the project asks a user to install — *"Don't skip this —
+it's the selection pressure that shapes future retrieval"* — is addressed to the
+model, and prose is not a producer test. The pending state still earns its keep
+as a `trust_state`; what it does not establish is a second party.
 
 **Tombstone — withheld, and the project agrees.** `dedup_rejected` is durable and
 detailed and consulted by nothing on the write path, by design and with the
@@ -523,5 +525,21 @@ grep -rn 'dedup_rejected' src scripts docs                           # written o
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+**`human_review` is withdrawn.** `review_pending` is decorated `@mcp.tool()`
+(`src/memory_server.py:320`) and delegates to `impl_review_pending`
+(`memory/tools.py:1524`); its action set includes `confirm_all`, so the agent
+can promote every pending capture in a single call. Nothing in the tree
+restricts the verb to a human caller. That makes six this week —
+[RunarForge](../runar-forge/), [sift-kg](../sift-kg/), [memsem](../memsem/),
+[Monet](../monet/), [gitmem](../gitmem/) and this one — where a
+pending-until-approved design hands the approve verb back to the producer.
+
+`trust_state` and `audit_log` are untouched and remain the reasons to read this
+system: the lifecycle table records `created`, `superseded`, `updated` with the
+changed field names, `deleted` and `edge_weight_change` with the weight before
+and after, which is a fuller mutation record than most of the corpus keeps.
+Evidence coverage floor 1247 -> 1246.
 
 **2026-09-10** — [`6dc4d3497adb63df888ccf9874d33a166f65b09c`](https://github.com/AlexisOlson/somnigraph/commit/6dc4d3497adb63df888ccf9874d33a166f65b09c) — first reading, at the head of `main`, the last commit of 27 July 2026. Screened before reading: no auto-run surface, no manifest inside the seven-day cooldown, no build-time execution path and no unpinned dependency surface, with a `uv.lock` 161 days old and a `CLAUDE.md` treated as data; nothing was installed, built or run, and the read was made from a full clone. Three marks. The reading covered the schema and its event log, the write path with its privacy stripping and dedup branches, the retrieval fusion and post-fusion scoring, the reranker loader and its missing-value policy, the review queue, the decay constants and the graph module; the sleep scripts, the tuning and ground-truth tooling, the four experiment trees and the 188 research analyses were read as context rather than as subject. The licence is Apache-2.0 under a Commons Clause condition, which is not an open-source licence.
