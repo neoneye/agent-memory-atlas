@@ -9,7 +9,7 @@ source_url: https://github.com/GoogleCloudPlatform/generative-ai/tree/main/gemin
 archive_name: "GoogleCloudPlatform--generative-ai"
 revision: 97597c46d0c2fe9a3c187b970d32d93100f738fd
 revision_url: https://github.com/GoogleCloudPlatform/generative-ai/commit/97597c46d0c2fe9a3c187b970d32d93100f738fd
-analyzed_at: 2026-08-15
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "sqlite"
 stack_retrieval: ""
@@ -22,10 +22,10 @@ matrix:
   update_delete: "Delete a memory by id (hard DELETE) or clear everything; no update, no supersession, no rejected-value record; re-ingesting the same content from a new path is unguarded"
   scoping: "None — a single SQLite file for a single user; no per-user, per-project or per-agent key"
   integration: "A Google ADK multi-agent app (ingest, consolidate, query specialists behind an orchestrator) on Gemini Flash-Lite, with a file watcher, an HTTP API and a Streamlit dashboard"
-  background: "An always-on consolidation loop on a 30-minute timer reads unconsolidated memories, has the model find connections and a cross-cutting insight, writes a consolidation and marks the sources consolidated"
+  background: "An always-on consolidation loop on a 30-minute timer reads the ten *newest* unconsolidated memories, has the model find connections and a cross-cutting insight, writes a consolidation and marks consolidated whichever source ids the model passed back"
   trust: "importance is a 0–1 float and consolidated is a processing flag; there is no discrete epistemic status and nothing withholds a memory from being read"
   strengths: "A clean, embedding-free design that bets the store fits in context and replaces retrieval with an LLM read, plus a genuine always-on consolidation daemon that compresses and connects rather than merely appending"
-  risks: "It scales only as far as fifty rows in a prompt — there is no retrieval, so recall is a recency window, not relevance; and correction is a hard delete with no rejected-value record, so a re-ingested claim returns"
+  risks: "The consolidation daemon pages newest-first, ten per half hour, with no offset and no catch-up, so a backlog past ten rows is never worked through while the daemon's own log prints the growing count; it scales only as far as fifty rows in a prompt — there is no retrieval, so recall is a recency window, not relevance; and correction is a hard delete with no rejected-value record, so a re-ingested claim returns"
 ---
 
 ## 1. Executive Summary
@@ -50,6 +50,26 @@ consolidated. This is a real always-on daemon doing active compression and
 connection, not the batched summarization most systems here run at write time; it
 is the closest thing in the corpus to the "replay and connect during sleep" framing
 taken literally, on a clock, as its own process.
+
+It pages the wrong way, though, and the daemon's own log line shows it. The gate
+counts the whole backlog — `SELECT COUNT(*) … WHERE consolidated = 0`, run once
+per tick, printed as *"Running consolidation (N unconsolidated memories)"*
+(`agent.py:532-536`) — but the tool the model then calls reads
+`WHERE consolidated = 0 ORDER BY created_at DESC LIMIT 10` (`:176-178`). Newest
+first, ten at a time, once every thirty minutes. Ingest more than ten memories in
+a half-hour and the tail never comes back into the window: each pass takes the
+ten newest unconsolidated rows and marks them done, so the rows behind them stay
+`consolidated = 0` forever while the printed count keeps climbing. There is no
+offset, no oldest-first pass and no catch-up anywhere in the file.
+
+The marking is the model's call as well. `store_consolidation` sets
+`consolidated = 1` only for the `source_ids` the model passed back (`:222-223`),
+so a row the model read and chose to omit stays unconsolidated — which is the
+right shape if something else would retry it, and here nothing does: it simply
+waits in a queue that is served newest-first. This is the third shape of the same
+bug in this corpus, after [RunarForge](../runar-forge/)'s graduation sweep and
+[MemoryBank](../memorybank/)'s forgetting pass: a maintenance job whose job is to
+work through a backlog, ordered by recency, capped, with no offset.
 
 The design is honest about what it is and the atlas should be too: it earns **none
 of the seven capability marks**, and the reasons are structural rather than
@@ -376,5 +396,21 @@ tuning knob.
 - `README.md`, `docs/` — the sample's documentation and the design narrative.
 
 ## History
+
+**2026-09-18** — re-read at the same pin. The monorepo has moved since, but the
+subject has not: `rev-parse` of `gemini/agents/always-on-memory-agent` gives the
+same tree, `fb43b60c3ed336fc017014ac891f64f899f526a8`, at the pinned commit and
+at the current default-branch tip, so no re-pin is needed and every error found
+here is the atlas's own. Re-verified in `agent.py`: no search function of any
+kind, `read_all_memories` at `ORDER BY created_at DESC LIMIT 50` (`:156`),
+`read_consolidation_history` at `LIMIT 10` (`:238`), and correction as a hard
+`DELETE` by id or a clear-all (`:276`, `:287-289`). **New finding:** the
+consolidation daemon pages its backlog newest-first. The tick gate counts every
+unconsolidated row and logs that number, while
+`read_unconsolidated_memories` takes `ORDER BY created_at DESC LIMIT 10` with no
+offset and no catch-up pass, and `store_consolidation` marks done only the ids
+the model passed back — so above ten new memories per half hour the oldest are
+never consolidated and the logged count climbs. No marks; the report carries
+none.
 
 **2026-08-15** — [`97597c46d0c2fe9a3c187b970d32d93100f738fd`](https://github.com/GoogleCloudPlatform/generative-ai/commit/97597c46d0c2fe9a3c187b970d32d93100f738fd) — first reading, as vendored in Google's `generative-ai` samples monorepo under `gemini/agents/always-on-memory-agent`; the standalone origin is `Shubhamsaboo/always-on-memory-agent` (MIT, © Shubham Saboo). Screened before reading: build-time execution points and unpinned surfaces typical of a Python sample; nothing was installed or run. The embedding-free store, the load-and-read query (`read_all_memories` at `LIMIT 50`, no search), the 30-minute `consolidation_loop`, and the hard-delete correction were read from `agent.py` and cross-checked against the README's design narrative. No capability mark is earned; the dashboard is a display-and-delete surface (a `human_review` near-miss, withheld). No tests and no paper exist in the tree.

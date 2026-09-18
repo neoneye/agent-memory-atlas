@@ -125,7 +125,7 @@ insights on a timer, the way sleep is said to.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-15</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/GoogleCloudPlatform--generative-ai" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -173,6 +173,31 @@ compression and connection, not the batched summarization most systems
 here run at write time; it is the closest thing in the corpus to the
 "replay and connect during sleep" framing taken literally, on a clock,
 as its own process.</p>
+<p>It pages the wrong way, though, and the daemon's own log line shows
+it. The gate counts the whole backlog —
+<code>SELECT COUNT(*) … WHERE consolidated = 0</code>, run once per
+tick, printed as <em>"Running consolidation (N unconsolidated
+memories)"</em> (<code>agent.py:532-536</code>) — but the tool the model
+then calls reads
+<code>WHERE consolidated = 0 ORDER BY created_at DESC LIMIT 10</code>
+(<code>:176-178</code>). Newest first, ten at a time, once every thirty
+minutes. Ingest more than ten memories in a half-hour and the tail never
+comes back into the window: each pass takes the ten newest
+unconsolidated rows and marks them done, so the rows behind them stay
+<code>consolidated = 0</code> forever while the printed count keeps
+climbing. There is no offset, no oldest-first pass and no catch-up
+anywhere in the file.</p>
+<p>The marking is the model's call as well.
+<code>store_consolidation</code> sets <code>consolidated = 1</code> only
+for the <code>source_ids</code> the model passed back
+(<code>:222-223</code>), so a row the model read and chose to omit stays
+unconsolidated — which is the right shape if something else would retry
+it, and here nothing does: it simply waits in a queue that is served
+newest-first. This is the third shape of the same bug in this corpus,
+after <a href="../runar-forge/">RunarForge</a>'s graduation sweep and <a
+href="../memorybank/">MemoryBank</a>'s forgetting pass: a maintenance
+job whose job is to work through a backlog, ordered by recency, capped,
+with no offset.</p>
 <p>The design is honest about what it is and the atlas should be too: it
 earns <strong>none of the seven capability marks</strong>, and the
 reasons are structural rather than oversights. There is no scope key
@@ -537,6 +562,26 @@ Bank tabs, memory cards, stats, upload, delete.</li>
 documentation and the design narrative.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same pin. The monorepo
+has moved since, but the subject has not: <code>rev-parse</code> of
+<code>gemini/agents/always-on-memory-agent</code> gives the same tree,
+<code class="commit-id" title="fb43b60c3ed336fc017014ac891f64f899f526a8">fb43b60c…</code>, at the pinned
+commit and at the current default-branch tip, so no re-pin is needed and
+every error found here is the atlas's own. Re-verified in
+<code>agent.py</code>: no search function of any kind,
+<code>read_all_memories</code> at
+<code>ORDER BY created_at DESC LIMIT 50</code> (<code>:156</code>),
+<code>read_consolidation_history</code> at <code>LIMIT 10</code>
+(<code>:238</code>), and correction as a hard <code>DELETE</code> by id
+or a clear-all (<code>:276</code>, <code>:287-289</code>). <strong>New
+finding:</strong> the consolidation daemon pages its backlog
+newest-first. The tick gate counts every unconsolidated row and logs
+that number, while <code>read_unconsolidated_memories</code> takes
+<code>ORDER BY created_at DESC LIMIT 10</code> with no offset and no
+catch-up pass, and <code>store_consolidation</code> marks done only the
+ids the model passed back — so above ten new memories per half hour the
+oldest are never consolidated and the logged count climbs. No marks; the
+report carries none.</p>
 <p><strong>2026-08-15</strong> — <a
 href="https://github.com/GoogleCloudPlatform/generative-ai/commit/97597c46d0c2fe9a3c187b970d32d93100f738fd"><code class="commit-id" title="97597c46d0c2fe9a3c187b970d32d93100f738fd">97597c46…</code></a>
 — first reading, as vendored in Google's <code>generative-ai</code>

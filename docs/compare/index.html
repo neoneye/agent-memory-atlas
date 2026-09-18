@@ -11589,10 +11589,10 @@ per-project or per-agent key</td>
 <td>A Google ADK multi-agent app (ingest, consolidate, query specialists
 behind an orchestrator) on Gemini Flash-Lite, with a file watcher, an
 HTTP API and a Streamlit dashboard</td>
-<td>An always-on consolidation loop on a 30-minute timer reads
-unconsolidated memories, has the model find connections and a
-cross-cutting insight, writes a consolidation and marks the sources
-consolidated</td>
+<td>An always-on consolidation loop on a 30-minute timer reads the ten
+<em>newest</em> unconsolidated memories, has the model find connections
+and a cross-cutting insight, writes a consolidation and marks
+consolidated whichever source ids the model passed back</td>
 <td>importance is a 0–1 float and consolidated is a processing flag;
 there is no discrete epistemic status and nothing withholds a memory
 from being read</td>
@@ -11600,10 +11600,12 @@ from being read</td>
 and replaces retrieval with an LLM read, plus a genuine always-on
 consolidation daemon that compresses and connects rather than merely
 appending</td>
-<td>It scales only as far as fifty rows in a prompt — there is no
-retrieval, so recall is a recency window, not relevance; and correction
-is a hard delete with no rejected-value record, so a re-ingested claim
-returns</td>
+<td>The consolidation daemon pages newest-first, ten per half hour, with
+no offset and no catch-up, so a backlog past ten rows is never worked
+through while the daemon's own log prints the growing count; it scales
+only as far as fifty rows in a prompt — there is no retrieval, so recall
+is a recency window, not relevance; and correction is a hard delete with
+no rejected-value record, so a re-ingested claim returns</td>
 </tr>
 <tr>
 <td><code>anatid</code></td>

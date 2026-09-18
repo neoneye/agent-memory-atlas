@@ -11116,10 +11116,14 @@ marks the sources done — the "compress and connect during sleep" idea
 done as real background work.</li>
 <li>Biggest risk: recall is a recency window, not relevance. Past the
 fifty most recent rows a memory is invisible to a query unless a
-consolidation folded it in; the design does not scale beyond what fits
-the context window, and it is not trying to. Correction is a hard delete
-with no rejected-value record, so a re-ingested claim returns and a
-deleted memory can leave a dangling <code>source_id</code> inside a
+consolidation folded it in — and the consolidation that would fold it in
+pages newest-first, ten rows per half hour, with no offset and no
+catch-up, so past ten new memories in a tick the oldest are never
+consolidated while the daemon's own log prints the whole growing backlog
+count; the design does not scale beyond what fits the context window,
+and it is not trying to. Correction is a hard delete with no
+rejected-value record, so a re-ingested claim returns and a deleted
+memory can leave a dangling <code>source_id</code> inside a
 consolidation.</li>
 <li>Most reusable component: the load-and-read query paired with the
 standalone consolidation loop — the anti-RAG shape (structured capture,
