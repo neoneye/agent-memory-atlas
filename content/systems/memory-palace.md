@@ -9,11 +9,14 @@ source_url: https://github.com/agi-is-going-to-arrive/memory-palace
 archive_name: "agi-is-going-to-arrive--memory-palace"
 revision: 56c9bed39957f615da0b66b5e1459281d8fd1fef
 revision_url: https://github.com/agi-is-going-to-arrive/memory-palace/commit/56c9bed39957f615da0b66b5e1459281d8fd1fef
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: "trust_state, human_review"
+capability_evidence:
+  trust_state: "review_state on derived procedural memory, defaulting to draft and filtered on the recommend path | backend/core/procedural_engine.py:9, :119, :254, :291, :309, :349 | a synthesised procedure is persisted with `review_state=ProceduralReviewState.DRAFT` — the module header states the rule outright, that it 'persists it with review_state=draft' — and the vocabulary is draft, human_reviewed, rejected. It is a stored discrete field rather than a score, the draft listing is `WHERE review_state = :state`, and a draft is never recommended: the state that means 'not yet believed' withholds the memory from the path that would act on it | the state applies to derived procedural memory rather than to the captured memories underneath it, so a raw memory has no review state at all; and the rejection is keyed on the row, so re-deriving the same procedure from the same source produces a fresh draft with nothing recording that its predecessor was refused"
+  human_review: "the cleanup review record — server-minted token plus confirmation phrase, consumed once, and absent from the MCP surface | backend/runtime_state.py:1386-1435, :1437-1470, backend/api/forgetting.py:297, backend/api/maintenance.py:3972, backend/core/forgetting_engine.py:15, :284-293 | an archive or purge 'REQUIRES a non-empty review_token that passes the configured review_token_validator hook'. The token is not a string the caller invents: `create_review` mints a record server-side, and `consume_review` checks it with `hmac.compare_digest` against the stored token *and* a separate `confirmation_phrase`, expires it, and pops it so it cannot be replayed. The engine then records a `review_token_fingerprint` on the result, so the decision is attributable. Decisively, `create_review` has exactly two callers — `api/forgetting.py` and `api/maintenance.py`, the FastAPI routes the React dashboard drives — and neither is exposed through the MCP server, so the model that proposes a deletion cannot mint the token that authorises it | the gate is on the destructive path (archive, purge) rather than on ordinary writes, and the validator is a pluggable hook whose default strictness is a deployment choice; a person is required by the absence of an agent-reachable route rather than by an identity check"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A memory row addressed by one or more (domain, path) pairs, chunked for retrieval, with derived gists, summaries and procedures above it"
   storage: "SQLite through SQLAlchemy, FTS5 for lexical, a vector table or sqlite-vec for dense, JSON snapshot files on disk"
@@ -446,5 +449,11 @@ paired rollbacks, `backend/db/migration_gate.py`, `migration_runner.py`
 **Benchmarks** — `docs/EVALUATION_EN.md`, `backend/tests/benchmark/`
 
 ## History
+
+**2026-09-18** — [`56c9bed39957f615da0b66b5e1459281d8fd1fef`](https://github.com/agi-is-going-to-arrive/memory-palace/commit/56c9bed39957f615da0b66b5e1459281d8fd1fef) — re-read at the same commit. Nothing needed correcting, and the `human_review` mark came out stronger than the first reading recorded, on the test that has withdrawn it elsewhere in this atlas.
+
+The review token is not a string the caller invents. `create_review` mints a record server-side; `consume_review` compares both the token and a separate `confirmation_phrase` with `hmac.compare_digest`, expires the record and pops it so it cannot be replayed; and the engine records a `review_token_fingerprint` on the result. The decisive fact is the call graph: `create_review` has exactly two callers, `api/forgetting.py:297` and `api/maintenance.py:3972`, both FastAPI routes the React dashboard drives, and neither is reachable from the MCP server — so the model that proposes a deletion cannot mint the token that authorises it. That is the property whose absence cost Wax and MemCP the same mark.
+
+`trust_state` was re-derived from `procedural_engine.py`, whose module header states the rule in prose — a synthesised procedure 'persists it with `review_state='draft'`' — with the draft listing as `WHERE review_state = :state`. The limit now in the record is that the state applies to derived procedural memory and not to the captured memories underneath it. The unwritten `access_log` still has no writer outside the migration tests. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — [`56c9bed39957f615da0b66b5e1459281d8fd1fef`](https://github.com/agi-is-going-to-arrive/memory-palace/commit/56c9bed39957f615da0b66b5e1459281d8fd1fef) — first reading. Screened before reading: no auto-run surface, build-time execution in `backend/api/setup.py` and `backend/tests/conftest.py`, three unpinned dependency surfaces. The tree was read, never installed, and no test was run.

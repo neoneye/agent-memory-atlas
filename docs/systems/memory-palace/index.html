@@ -115,7 +115,7 @@ and an audit table that nothing writes to.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-09</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/agi-is-going-to-arrive--memory-palace" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -630,6 +630,32 @@ rollbacks, <code>backend/db/migration_gate.py</code>,
 <p><strong>Benchmarks</strong> — <code>docs/EVALUATION_EN.md</code>,
 <code>backend/tests/benchmark/</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/agi-is-going-to-arrive/memory-palace/commit/56c9bed39957f615da0b66b5e1459281d8fd1fef"><code class="commit-id" title="56c9bed39957f615da0b66b5e1459281d8fd1fef">56c9bed3…</code></a>
+— re-read at the same commit. Nothing needed correcting, and the
+<code>human_review</code> mark came out stronger than the first reading
+recorded, on the test that has withdrawn it elsewhere in this atlas.</p>
+<p>The review token is not a string the caller invents.
+<code>create_review</code> mints a record server-side;
+<code>consume_review</code> compares both the token and a separate
+<code>confirmation_phrase</code> with <code>hmac.compare_digest</code>,
+expires the record and pops it so it cannot be replayed; and the engine
+records a <code>review_token_fingerprint</code> on the result. The
+decisive fact is the call graph: <code>create_review</code> has exactly
+two callers, <code>api/forgetting.py:297</code> and
+<code>api/maintenance.py:3972</code>, both FastAPI routes the React
+dashboard drives, and neither is reachable from the MCP server — so the
+model that proposes a deletion cannot mint the token that authorises it.
+That is the property whose absence cost Wax and MemCP the same mark.</p>
+<p><code>trust_state</code> was re-derived from
+<code>procedural_engine.py</code>, whose module header states the rule
+in prose — a synthesised procedure 'persists it with
+<code>review_state='draft'</code>' — with the draft listing as
+<code>WHERE review_state = :state</code>. The limit now in the record is
+that the state applies to derived procedural memory and not to the
+captured memories underneath it. The unwritten <code>access_log</code>
+still has no writer outside the migration tests.
+<code>stack_source</code> goes from seeded to reviewed.</p>
 <p><strong>2026-08-09</strong> — <a
 href="https://github.com/agi-is-going-to-arrive/memory-palace/commit/56c9bed39957f615da0b66b5e1459281d8fd1fef"><code class="commit-id" title="56c9bed39957f615da0b66b5e1459281d8fd1fef">56c9bed3…</code></a>
 — first reading. Screened before reading: no auto-run surface,
