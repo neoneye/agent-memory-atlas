@@ -9,11 +9,13 @@ source_url: https://github.com/Alby2007/PLTM-Claude-repost-
 archive_name: "Alby2007--PLTM-Claude-repost-"
 revision: 5146bfbfd2f210674da5a3b16c04ac0ddf6803f0
 revision_url: https://github.com/Alby2007/PLTM-Claude-repost-/commit/5146bfbfd2f210674da5a3b16c04ac0ddf6803f0
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced"
+capability_evidence:
+  scope_enforced: "the user key on every typed-memory read, including the FTS join | src/memory/memory_types.py:258, :364, :410, :522, :534, :1064 | `user_id` is a stored column on `typed_memories` and reaches the query on each read: the per-type listing (`WHERE user_id = ? AND memory_type = ?`), the filtered search whose conditions list begins with `user_id = ?`, the full-text arm (`WHERE typed_memories_fts MATCH ? AND tm.user_id = ?` — the key is applied to the join rather than to the virtual table, so an FTS hit belonging to another user is discarded before it is returned), the statistics queries and the episodic window | the key is a caller-supplied argument with nothing authenticating it, so a caller can read another user's memories by passing their id; and it is applied on the `typed_memories` schema only — the competing atoms-and-provenance schema of section 5 has its own pipeline, where the jury's quarantined output is dropped rather than stored. No committed test asserts the boundary"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "Two competing units — a subject/predicate/object atom, and a typed_memories row"
   storage: "SQLite; an atoms + provenance schema and a separate typed_memories schema with FTS"
@@ -185,6 +187,45 @@ rejection"*. There is no record keyed on the rejected value, so the same content
 arriving again is judged again from scratch — and if the judges are
 non-deterministic or the rules change, it can be admitted next time with nothing
 recording that it was once refused.
+
+**And on the other write path a quarantine is dropped outright.** There are two
+pipelines in this repository and they disagree about what quarantine means. The
+typed-memory path is the one described above: `memory/memory_types.py:276-279`
+halves the strength and appends the marker. The atom path does this:
+
+```python
+approved_atoms, rejected_atoms, quarantined_atoms = await self.jury.deliberate_batch(atoms)
+approved_count = len(approved_atoms)
+rejected_count = len(rejected_atoms)
+quarantined_count = len(quarantined_atoms)
+...
+atoms_with_verdicts = [(atom, atom.jury_history[-1]) for atom in approved_atoms if atom.jury_history]
+write_stats = await self.write_lane.process_verdicts(atoms_with_verdicts)
+```
+
+Only `approved_atoms` reaches the write lane. `quarantined_atoms` and
+`rejected_atoms` are unpacked, their lengths assigned to locals, and then never
+referenced again — `quarantined_count` and `rejected_count` do not even reach the
+`MemoryUpdate` the stage yields, which carries `atoms_approved` alone. So on this
+path a quarantine is a rejection with a variable name, the atom is gone, and the
+count that would have told anyone is computed and discarded. This report's
+eyebrow is literal here rather than figurative.
+
+**There are three verdict enums, and the four judges are split across two of
+them.** `core/models.py:58` defines `JudgeVerdict`, whose docstring says
+*"(legacy)"*; `:67` defines `JuryVerdict`, *"(new 4-judge system)"*; and
+`memory_types.py:253` imports a third, `Verdict`, from
+`src.memory.memory_jury`, inside the function that handles the verdict. Of the
+judges: `base_judge.py` — the class the others inherit from — `memory_judge.py`
+and `safety_judge.py` use the legacy enum, `consensus_judge.py` and
+`time_judge.py` use the new one, and `orchestrator.py` imports both. The adapter
+described below exists to reconcile that split.
+
+The legacy enum also carries a fourth value this report should have named:
+`APPROVE`, `REJECT`, `QUARANTINE` and **`ESCALATE`**. `ESCALATE` appears nowhere
+else in the repository — no judge returns it, no handler branches on it, no test
+names it. It is the verdict that would have required a person, and it survives
+as a string in an enum the code calls legacy.
 
 **The jury's individual verdicts are discarded at the adapter.**
 `convert_to_legacy_decision` maps a four-judge `SimpleJuryDecision` onto the older
@@ -366,6 +407,10 @@ print `:458`), `benchmarks/compare_with_mem0.py` (the apples-to-apples framing
 `migrate_atoms_to_typed.py`
 
 ## History
+
+**2026-09-18** — [`5146bfbfd2f210674da5a3b16c04ac0ddf6803f0`](https://github.com/Alby2007/PLTM-Claude-repost-/commit/5146bfbfd2f210674da5a3b16c04ac0ddf6803f0) — re-read at the same commit. The quarantine handling was verified verbatim at `memory/memory_types.py:276-279` — `mem.strength = max(0.1, mem.strength * 0.5)` and the marker appended to `mem.context` — and `scope_enforced` now carries an evidence record, including the detail that the full-text arm applies `user_id` to the join rather than to the virtual table.
+
+Three additions, all in section 7. The atom pipeline drops a quarantine outright: `memory_pipeline.py:93-108` unpacks `quarantined_atoms` and `rejected_atoms`, assigns their lengths to locals, references neither again, and passes only `approved_atoms` to the write lane — so the counts are computed and discarded and the atoms are gone. The two write paths therefore disagree about what the verdict means. There are three verdict enums rather than one: `JudgeVerdict` marked *"(legacy)"*, `JuryVerdict` marked *"(new 4-judge system)"*, and a `Verdict` imported from `src.memory.memory_jury` inside the handler; `base_judge`, `memory_judge` and `safety_judge` use the legacy one, `consensus_judge` and `time_judge` the new one, and `orchestrator` both, which is what the legacy adapter exists to reconcile. And the legacy enum carries a fourth value, `ESCALATE`, which appears nowhere else in the repository — the verdict that would have required a person, surviving as a string. `stack_source` goes from seeded to reviewed.
 
 **2026-09-13** — the repository was renamed from `Alby2007/PLTM-Claude` to `Alby2007/PLTM-Claude-repost-`, upstream of the pinned commit and after the reading below. No re-reading: the pin, `analyzed_at` and every finding are unchanged, and only `source_name`, `source_url`, `revision_url`, `archive_name` and the repositories-inspected entry moved. The slug is unchanged, so no published URL moved. The archive fork was renamed to `agent-memory-atlas-archive/Alby2007--PLTM-Claude-repost-` to match.
 
