@@ -9,7 +9,7 @@ source_url: https://github.com/sebastianbrzustowicz/Agentic-GraphRAG-Blueprint
 archive_name: "sebastianbrzustowicz--Agentic-GraphRAG-Blueprint"
 revision: e33f5f690e3b22efbf4f89d5c273a575699dd6ec
 revision_url: https://github.com/sebastianbrzustowicz/Agentic-GraphRAG-Blueprint/commit/e33f5f690e3b22efbf4f89d5c273a575699dd6ec
-analyzed_at: 2026-08-30
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "chroma, files"
 stack_retrieval: "vector, graph"
@@ -601,5 +601,19 @@ write, the edge write and the state file — which is to say most of
   concurrent ingest.
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Two
+risk claims re-derived, both exact. The cross-document linking hint is
+`sorted(known_entities)[:150]` appended to the extraction system prompt
+(`backend/src/ingestion.py:118`), so past a hundred and fifty entities the ones
+the extractor is told to reuse are chosen by alphabet — an entity named later in
+the alphabet stops being offered for reuse and starts being re-extracted under
+whatever name the model picks. The frozen description is sharper than stated:
+`GraphStore.add_node` *would* merge, `self._graph.nodes[node_id].update(attributes)`
+on an existing id (`storage/graph_store.py:13-17`), but the ingestion caller
+guards it with `if name not in known_entities:` (`ingestion.py:423-429`), so a
+second sighting never reaches the store. The capability to revise is present and
+the call site declines it, which is a different thing from not having it. No
+marks; the report carries none.
 
 **2026-08-30** — [`e33f5f690e3b22efbf4f89d5c273a575699dd6ec`](https://github.com/sebastianbrzustowicz/Agentic-GraphRAG-Blueprint/commit/e33f5f690e3b22efbf4f89d5c273a575699dd6ec) — first reading, at the 37th commit of a repository whose first commit is dated 28 August 2026. Screened before reading: no auto-run surfaces, two build-time execution surfaces (a `Makefile` and `backend/conftest.py`), four unpinned surfaces, and **every dependency manifest inside the seven-day freshness cooldown** — nothing was installed and nothing was run, and no claim in this report depends on executing the tree. No marks. The report is organised around what happens on the second ingestion, because that is where a GraphRAG index either corrects itself or accumulates, and this one does one of each.

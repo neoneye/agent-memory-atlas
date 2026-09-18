@@ -115,7 +115,7 @@ and whose store removes exactly one kind of thing.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-30</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/sebastianbrzustowicz--Agentic-GraphRAG-Blueprint" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -770,6 +770,24 @@ incremental test with exact call counts.</li>
 sanitisation, the 409 on concurrent ingest.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. Two risk claims re-derived, both exact. The
+cross-document linking hint is <code>sorted(known_entities)[:150]</code>
+appended to the extraction system prompt
+(<code>backend/src/ingestion.py:118</code>), so past a hundred and fifty
+entities the ones the extractor is told to reuse are chosen by alphabet
+— an entity named later in the alphabet stops being offered for reuse
+and starts being re-extracted under whatever name the model picks. The
+frozen description is sharper than stated:
+<code>GraphStore.add_node</code> <em>would</em> merge,
+<code>self._graph.nodes[node_id].update(attributes)</code> on an
+existing id (<code>storage/graph_store.py:13-17</code>), but the
+ingestion caller guards it with
+<code>if name not in known_entities:</code>
+(<code>ingestion.py:423-429</code>), so a second sighting never reaches
+the store. The capability to revise is present and the call site
+declines it, which is a different thing from not having it. No marks;
+the report carries none.</p>
 <p><strong>2026-08-30</strong> — <a
 href="https://github.com/sebastianbrzustowicz/Agentic-GraphRAG-Blueprint/commit/e33f5f690e3b22efbf4f89d5c273a575699dd6ec"><code class="commit-id" title="e33f5f690e3b22efbf4f89d5c273a575699dd6ec">e33f5f69…</code></a>
 — first reading, at the 37th commit of a repository whose first commit

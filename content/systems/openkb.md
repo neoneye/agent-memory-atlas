@@ -9,7 +9,7 @@ source_url: https://github.com/VectifyAI/OpenKB
 archive_name: "VectifyAI--OpenKB"
 revision: ff54396e575ee6feb0113b631a34caa082b441cc
 revision_url: https://github.com/VectifyAI/OpenKB/commit/ff54396e575ee6feb0113b631a34caa082b441cc
-analyzed_at: 2026-08-29
+analyzed_at: 2026-09-18
 capabilities: "audit_log, human_review"
 capability_evidence:
   audit_log: "the wiki itself — an append-only operations log beside the pages it describes | openkb/log.py:9-21, api.py:298,:331, and the ingest/recompile/remove call sites | `append_log` opens `wiki/log.md` in append mode and writes `## [YYYY-MM-DD HH:MM:SS] operation | description`; there is no rewrite path anywhere in the tree. Mutations reach it — `ingest` twice, `recompile` twice, `remove` once — so it is a record of memory mutations rather than only of reads. Two caveats belong with the mark: `query` is logged into the same file, mixing retrieval with mutation, and an entry is a bare operation-plus-string with no page ids and no before/after, so `recompile` records counts and nothing about which pages changed | none — no committed test asserts a log entry was written"
@@ -300,5 +300,20 @@ comparison and no artifact makes it.
 | `tests/test_mutation.py`, `tests/test_recompile.py` | The journal and leftover-file assertions |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+marks stand, and `human_review` now carries the producer test it always implied.
+The four page endpoints are `POST /api/v1/page`, `POST /api/v1/page/delete`,
+`POST /api/v1/page/links` and `PUT /api/v1/page`
+(`openkb/api_pages_router.py:31`, `:48`, `:65`, `:80`), and no agent tool
+reaches the two that mutate. Every wiki tool handed to a model is a read —
+`list_wiki_dir`, `read_wiki_file`, `get_page_content`, `get_image`, `query_wiki`
+in `skill/creator.py:173-179`, `read_file` and `get_page_content` in
+`agent/query.py:120`, `list_files` and `read_file` in `agent/linter.py:99` — and
+the two write tools in the tree, `write_skill_file` and `write_file`, write
+skill and output files rather than wiki pages. So the correction surface belongs
+to the person. What it is not is a gate: a compiled page is live the moment it
+is written, and the endpoints let a human fix it afterwards. The mark is for the
+purpose-built surface, not for an approval the write waits on. No marks change.
 
 **2026-08-29** — [`ff54396e575ee6feb0113b631a34caa082b441cc`](https://github.com/VectifyAI/OpenKB/commit/ff54396e575ee6feb0113b631a34caa082b441cc) — first reading, Apache-2.0, 18,989 lines under `openkb/` and 22,036 across 63 test files, 175 commits since 4 April 2026. Screened before reading: one auto-run surface, one build-time execution surface, one unpinned surface, and both lockfiles unchanged for more than a month; `AGENTS.md` and `CLAUDE.md` are addressed to a reading agent and were treated as data. Nothing was installed and nothing was run. Two marks. `audit_log` rests on `wiki/log.md`, opened in append mode with no rewrite path, carrying `ingest`, `recompile` and `remove` beside `query` and `lint`. `human_review` rests on the page API and frontend — read, edit, delete and backlinks over a compiled page. `trust_state` is withheld and it is the report's sharpest absence: an LLM linter looks for pages that *"make conflicting claims about the same fact"* and writes what it finds into `reports/`, and no field on the page it concerns changes. `scope_enforced` is withheld on the same basis as [MemBukkit](../membukkit/) — the boundary is the knowledge-base directory rather than a key on a record, and no query filters on one. `tombstone` and `bitemporal` are absent: `hashes.json` is a content registry for change detection, not a record of a rejected value, and a page carries no time. `negative_eval` is withheld — the suite's negatives are about journals, leftover files and CLI output, not about material staying out of an answer. `stack_retrieval` is empty because there is none of the three arms in the tree: no embeddings, no vectors, no BM25, and retrieval is a query agent walking `index.md`. The reading covers the schema, the compiler, the query and lint agents, the mutation layer, the log and the page API; the frontend, the Skill Factory, the deck generator and the PageIndex dependency were not traced.
