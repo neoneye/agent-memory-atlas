@@ -117,7 +117,7 @@ system it cites as prior art.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-11</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/calibrae--palazzo" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -804,6 +804,28 @@ states</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/calibrae/palazzo/commit/07a788ac1f4c06343d697a149857e4df9a621a8a"><code class="commit-id" title="07a788ac1f4c06343d697a149857e4df9a621a8a">07a788ac…</code></a>
+— re-read at the same commit; <code>main</code> has not moved, so what
+is here is this report's. The mark holds and its record was thin — no
+anchors, and a test field reading <em>unknown</em> when
+<code>src/wal.rs</code> carries three inline tests, one per branch of
+the design. The record now names the split that makes the mark:
+<code>log</code> is best-effort and warns, <code>log_strict</code>
+errors when the entry cannot be appended <em>or when no WAL path is
+configured at all</em>, and both delete call sites propagate it with
+<code>?</code> before Qdrant is touched.</p>
+<p>One correction, to a word in the project's own comment rather than to
+the mechanism. <code>log_strict</code> is documented as erroring when an
+entry cannot be <em>durably</em> appended, and <code>append</code> opens
+the file, <code>writeln!</code>s a line and drops it — there is no
+<code>sync_all</code> or <code>sync_data</code> in the module. The entry
+is therefore ordered ahead of the delete and its failure does refuse the
+delete, which is the whole substance of the mark; what it is not is
+durable against a host that loses power between the write reaching the
+page cache and the page cache reaching disk. An audit trail whose only
+copy is on the same machine as the store it audits is worth knowing the
+flush semantics of.</p>
 <p><strong>2026-09-11</strong> — <a
 href="https://github.com/calibrae/palazzo/commit/07a788ac1f4c06343d697a149857e4df9a621a8a"><code class="commit-id" title="07a788ac1f4c06343d697a149857e4df9a621a8a">07a788ac…</code></a>
 — re-read, 17 files past the previous pin in a single commit; the memory
