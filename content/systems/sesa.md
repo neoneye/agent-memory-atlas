@@ -9,15 +9,15 @@ source_url: https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents
 archive_name: "Zenghuang-Fu--SESA-Self-Evolving-Search-Agents"
 revision: 74de5d77a19774cfba53d6950d47633a2d632430
 revision_url: https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents/commit/74de5d77a19774cfba53d6950d47633a2d632430
-analyzed_at: 2026-08-09
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "files"
 stack_retrieval: "vector"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A Skill Card — category, pattern, common confusion, key distinction, trigger keywords and up to three query templates — carrying its own retrieved, helpful and hurt counters"
   storage: "One detached Ray actor holding a Python list and a float32 matrix, persisted as `skills.jsonl` plus a per-update `skills_step_N.jsonl` snapshot and a `meta.json`"
-  retrieval: "Dense cosine over mean-pooled e5-base-v2 on CPU, top three, no score floor and no use of the usefulness counters"
+  retrieval: "Dense cosine over mean-pooled e5-base-v2 on CPU, top three, no score floor and no use of the usefulness counters; one question per call, since the batch method has no caller"
   write: "Failures only. A bounded queue of failed rollouts is drained at a step boundary and each entry is abstracted into a card by a judge model, then dropped if it is within 0.93 cosine of anything already in the bank"
   update_delete: "No update path. A card is evicted once `net_score < 0` and it has been retrieved at least three times, or forced out by the 800-card cap in ascending net-score order; seeds are immune"
   scoping: "None. One globally named actor, one bank, no user, tenant, run or task key anywhere in the record"
@@ -284,6 +284,28 @@ last of those is a leakage control in prose — the card is meant to generalise,
 to memorise the answer — and it is the only place the leakage risk is addressed
 at all.
 
+**Except that the code has a second control, and the one call site cannot reach
+it.** `retrieve` takes an `exclude_uids` parameter and implements it —
+`indices = [i for i in indices if self.skills[i].get('source_uid') not in exclude_uids]`
+— which is exactly the guard you would want: do not hand the solver a card
+distilled from the very failure it is retrying. The only production call is in
+the problem extractor:
+
+```python
+self._skill_bank_handle.retrieve.remote(question_text),
+```
+
+One positional argument. No `top_k`, no `exclude_uids`. So the parameter that
+would stop a card being returned to its own source problem is implemented,
+reachable only by a caller that does not exist, and invisible to a grep for
+`.retrieve(` because the call goes through Ray's `.remote`.
+
+`retrieve_batch` is the other half of the same shape: it embeds all the
+questions in one call and shares the similarity matrix across them, and nothing
+in the repository calls it. Every rollout pays its own CPU embedding for one
+question while the batched path sits unused — which is the same cost pattern as
+the whole-bank re-embedding described below, in the other direction.
+
 ### Operational cost
 
 Per update: up to thirty judge completions at `judge_max_tokens` 4500 in the
@@ -502,6 +524,12 @@ need them.
 | `quarl/utils/sesa_data_manager.py` | 319 | In-process problem pool; not persisted, so not memory by this atlas's bar |
 
 ## History
+
+**2026-09-18** — [`74de5d77a19774cfba53d6950d47633a2d632430`](https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents/commit/74de5d77a19774cfba53d6950d47633a2d632430) — re-read at the same commit. Nothing needed correcting, and the matrix's claim that the anti-leakage parameter is implemented and never called now has its evidence in the body rather than only in the frontmatter.
+
+`SkillBank.retrieve` takes `exclude_uids` and implements it as a filter on `source_uid`, which is precisely the guard against handing the solver a card distilled from the failure it is retrying. The single production call site is `self._skill_bank_handle.retrieve.remote(question_text)` in the problem extractor — one positional argument, so the parameter is unreachable from the only place it would matter. Worth noting for anyone re-running the search: the call is invisible to a grep for `.retrieve(` because it goes through Ray's `.remote`.
+
+`retrieve_batch` is the same shape in the other direction: it embeds every question in one call and shares the similarity matrix, and nothing in the repository calls it, so each rollout pays a separate CPU embedding. `stack_source` goes from seeded to reviewed.
 
 **2026-08-09** — the paper was read after the first pass and corrected one claim in it. Section 10 said no ablation was present; that is true of the repository and false of the work — [arXiv:2607.29468](https://arxiv.org/abs/2607.29468) Table 3 isolates failure distillation at 2.7 points of seven-benchmark average, and the abstract splits the memory's value between the trained weights and the retained bank. The section now carries the paper's evaluation, the finding that the paper's mechanism description matches the code exactly, and the finding that its 157-skill seed bank is absent from the tree. Nothing was reproduced; the numbers are read from the paper.
 
