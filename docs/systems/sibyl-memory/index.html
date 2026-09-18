@@ -135,7 +135,7 @@ reaches it.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-08</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Sibyl-Labs--Sibyl-Memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -648,6 +648,29 @@ rg -n &#39;skill_proposal|accept_skill|reject_skill&#39; -g &#39;*.py&#39; sibyl
 rg -ni &#39;fastapi|flask|uvicorn|starlette|http.server&#39; -g &#39;*.py&#39; .                     # 0: the engine is local, not a service
 rg -n &#39;pytest&#39; .github/                                                              # 0: no CI runs the suite</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>human_review</code> stands, and the producer
+test is now written down so a later reader can re-run it in one grep.
+The MCP server exposes exactly eight tools —
+<code>memory_remember</code>, <code>memory_recall</code>,
+<code>memory_search</code>, <code>memory_list</code>,
+<code>memory_forget</code>, <code>memory_set_state</code>,
+<code>memory_get_state</code> and <code>memory_record_event</code>, each
+behind an <code>@mcp.tool()</code> decorator in
+<code>sibyl-memory-mcp/src/sibyl_memory_mcp/server.py</code>
+(<code>:486</code>, <code>:508</code>, <code>:530</code>,
+<code>:685</code>, <code>:710</code>, <code>:725</code>,
+<code>:743</code>, <code>:775</code>). None of them accepts or rejects a
+proposal. <code>accept_skill_proposal</code> lives on the Python client
+(<code>client.py:1221-1225</code>) and delegates to
+<code>Learner.accept_proposal</code> (<code>learning.py:481</code>),
+which is reachable from a program a person writes and from nowhere on
+the agent's tool surface — the same shape as <a
+href="../mimir/">Mimir</a> and <a href="../openkb/">OpenKB</a>, and the
+opposite of <a href="../memsem/">memsem</a>, where the review verb is
+itself a registered tool. Note that <code>memory_forget</code>
+<em>is</em> on that surface: the agent can remove a memory, it simply
+cannot promote a proposal into one. No marks change.</p>
 <p><strong>2026-09-08</strong> — <a
 href="https://github.com/Sibyl-Labs/Sibyl-Memory/commit/761bfc64799f637dd1ff70fbd07bdb997c2fd806"><code class="commit-id" title="761bfc64799f637dd1ff70fbd07bdb997c2fd806">761bfc64…</code></a>
 — first reading, at the head of <code>main</code>, one day after the

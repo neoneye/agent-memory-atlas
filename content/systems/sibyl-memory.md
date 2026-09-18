@@ -9,7 +9,7 @@ source_url: https://github.com/Sibyl-Labs/Sibyl-Memory
 archive_name: "Sibyl-Labs--Sibyl-Memory"
 revision: 761bfc64799f637dd1ff70fbd07bdb997c2fd806
 revision_url: https://github.com/Sibyl-Labs/Sibyl-Memory/commit/761bfc64799f637dd1ff70fbd07bdb997c2fd806
-analyzed_at: 2026-09-08
+analyzed_at: 2026-09-18
 capabilities: "scope_enforced, human_review, negative_eval"
 capability_evidence:
   scope_enforced: "a tenant key on every base and index table, applied on every read, with the isolation weakness documented in the source | sibyl-memory-client/src/sibyl_memory_client/schema.sql:29, :66, :78, :127, :139, :178, :205, :232, :264, client.py:708, :925, :944, :1009, :1136, :1349, :1669, :1690, :1710, :1743, shadow.py:1208, :1223 | `tenant_id` is `NOT NULL` on every base table and an `UNINDEXED` column on every FTS5 virtual table and the trigram shadow; it is validated at construction, bound into every insert, and carried in the WHERE clause of every exact read, all four cross-tier search queries and both shadow queries. The authors' own lock comment states the limit precisely — the clause is a trailing post-filter rather than index-enforced isolation, index-level enforcement needs a migration that would break existing databases, and the comment forbids removing, reordering or conditioning it | sibyl-memory-client/tests/test_prelaunch_audit_2026_06_25.py:550-575, tests/test_smoke.py:170-197, sibyl-memory-langgraph/tests/test_adv_security.py:178-195"
@@ -451,5 +451,22 @@ rg -n 'pytest' .github/                                                         
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`human_review` stands, and the producer test is now written down so a later
+reader can re-run it in one grep. The MCP server exposes exactly eight tools —
+`memory_remember`, `memory_recall`, `memory_search`, `memory_list`,
+`memory_forget`, `memory_set_state`, `memory_get_state` and
+`memory_record_event`, each behind an `@mcp.tool()` decorator in
+`sibyl-memory-mcp/src/sibyl_memory_mcp/server.py` (`:486`, `:508`, `:530`,
+`:685`, `:710`, `:725`, `:743`, `:775`). None of them accepts or rejects a
+proposal. `accept_skill_proposal` lives on the Python client
+(`client.py:1221-1225`) and delegates to `Learner.accept_proposal`
+(`learning.py:481`), which is reachable from a program a person writes and from
+nowhere on the agent's tool surface — the same shape as
+[Mimir](../mimir/) and [OpenKB](../openkb/), and the opposite of
+[memsem](../memsem/), where the review verb is itself a registered tool. Note
+that `memory_forget` *is* on that surface: the agent can remove a memory, it
+simply cannot promote a proposal into one. No marks change.
 
 **2026-09-08** — [`761bfc64799f637dd1ff70fbd07bdb997c2fd806`](https://github.com/Sibyl-Labs/Sibyl-Memory/commit/761bfc64799f637dd1ff70fbd07bdb997c2fd806) — first reading, at the head of `main`, one day after the last commit. Screened before anything was read: no auto-run surface, three build-time execution points, four manifests inside the seven-day cooldown; nothing was installed or run, and the read was made from a full clone. The first question settled was whether the memory implementation is here or behind a hosted service: it is here, with no web framework in the tree and the Docker entrypoint a stdio server, and what is remote is a capacity gate and a usage heartbeat carrying no content. Three marks. `scope_enforced` rests on a tenant key in every read query, and the report carries the authors' own lock comment saying it is a post-filter on an unindexed column rather than index-enforced isolation. `human_review` rests on the skill-proposal accept and reject paths, with both qualifications stated — paid-tier gated, and reachable from no shipped interface. `negative_eval` rests on four kinds of exclusion case including a prompt-injection payload asserted absent from three search surfaces. `tombstone`, `trust_state`, `bitemporal` and `audit_log` were each examined and withheld, the first with its near-miss in section 9. The reading covers the schema, the write and search paths, the verification layer, the verdict channel and the learning queue; the CLI's activation and tier machinery, the Hermes plugin adapter and the capacity protocol were treated as context.
