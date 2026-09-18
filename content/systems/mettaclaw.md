@@ -9,7 +9,7 @@ source_url: https://github.com/patham9/mettaclaw
 archive_name: "patham9--mettaclaw"
 revision: 7b30527b0896cf0b9377ed2b37aef93711b0aab0
 revision_url: https://github.com/patham9/mettaclaw/commit/7b30527b0896cf0b9377ed2b37aef93711b0aab0
-analyzed_at: 2026-08-21
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "chroma, sqlite, files"
 stack_retrieval: "vector"
@@ -25,7 +25,7 @@ matrix:
   background: "None. Promotion decays as a function of elapsed time when it is read, not on a schedule"
   trust: "A promotion float in [0, 10] that decays as a power law of days since it was last set, rated by the agent itself"
   strengths: "The reinforcement signal is a deliberate tool call rather than an inference from retrieval telemetry, and recall refuses to collapse two priors into one score"
-  risks: "The rater is the model whose recall it improves, promotion is keyed on a timestamp so it moves every memory written in that second, and there is not one test in the repository"
+  risks: "Every read and write goes through `lib_chromadb`, a second repository pulled by `git-import!` with no tag or commit, so the storage semantics are unpinned; the rater is the model whose recall it improves, promotion is keyed on a timestamp so it moves every memory written in that second, and there is not one test in the repository"
 ---
 
 ## 1. Executive Summary
@@ -166,6 +166,25 @@ and outside this reading.
 write back `min(10, v+1)` or `max(0, v−1)` with `lasttime` set to now, then
 `promotion_commit()`. The clamp at both ends is deliberate and small: a memory
 cannot be promoted into permanence or demoted into negative standing.
+
+**The store itself is not in this repository.** `lib_chromadb` — `remember`,
+`query_by_ids`, `query_with_ids_and_dists` and `ids_by_time`, which is every
+write and every read — is fetched at load time by
+`!(git-import! "https://github.com/patham9/petta_lib_chromadb.git")`
+(`lib_mettaclaw.metta:18-19`), with no tag, branch or commit named. So the
+storage and retrieval semantics of this system live at whatever that
+repository's default branch says today, and can change without a commit here.
+Read at `petta_lib_chromadb` `218484875d5d1bfb217a9a03d3983dc1ed9d406c`,
+`ids_by_time(t)` is `COLLECTION.get(where={"time": t})` — exact equality on the
+stored `time` string — and the write path stores `(get_time_as_string)`, which
+`src/utils.metta:25-27` formats as `"%Y-%m-%d %H:%M:%S"`. Second resolution and
+an equality match: the granularity claim below holds, and it holds because of
+code in a second repository that nothing pins.
+
+The promotion *ledger* is keyed differently, and the asymmetry is worth holding:
+`promotion_key` accepts only a UUID and raises `TypeError` otherwise
+(`src/helper.py:203-210`), so the ledger addresses one memory at a time while
+the tool that writes to it addresses a second.
 
 **Decay** — `(get-promotion $current_time $uuid)` is where the ledger becomes a
 score: `value × (1 + Δseconds/86400)^−0.7`. It is computed on read, so nothing
@@ -448,5 +467,21 @@ controlled experiment on whether the signal is worth its complexity.
 | `lib_llm_ext.py` | Model and embedding bridges, local and OpenAI |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+**The first reading described a function it had not read.** `ids_by_time`,
+`remember`, `query_by_ids` and `query_with_ids_and_dists` — the whole storage
+layer — are not in this tree: `lib_mettaclaw.metta:18-19` pulls them from
+`patham9/petta_lib_chromadb` with `git-import!` and no tag, branch or commit, so
+the semantics can move without a commit here. Cloned and read at
+`218484875d5d1bfb217a9a03d3983dc1ed9d406c`: `ids_by_time(t)` is
+`COLLECTION.get(where={"time": t})`, an exact-equality match, and
+`get_time_as_string` formats `"%Y-%m-%d %H:%M:%S"` (`src/utils.metta:25-27`).
+The granularity claim — one `(promote t)` moves every memory written in that
+second — is therefore correct, and is now grounded rather than inferred. Also
+verified in this tree: there is still no test file of any kind, the
+`promotion_key` helper accepts only a UUID and raises `TypeError` otherwise
+(`src/helper.py:203-210`), and `(demote $time)` floors at `0.0` without removing
+anything. No marks; the report carries none.
 
 **2026-08-21** — [`7b30527b0896cf0b9377ed2b37aef93711b0aab0`](https://github.com/patham9/mettaclaw/commit/7b30527b0896cf0b9377ed2b37aef93711b0aab0) — first reading. The screen returned **NOTHING SCANNED**: the repository carries no package manifest of any kind, so the dependency surface was read by hand rather than parsed, and that is recorded as an unread surface rather than a clean one. Nothing was installed, PeTTa was not cloned and no agent was run; every claim is from reading the 19 files in the tree. `capabilities: ""` — assessed against all seven, with the Non-Axiomatic Logic near-miss stated in section 9. The shared early history with [OmegaClaw-Core](../omegaclaw-core/) was established by comparing root commits, which are identical in both repositories.

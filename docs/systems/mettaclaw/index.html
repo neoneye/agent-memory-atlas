@@ -119,7 +119,7 @@ beside a similarity slice rather than blending them.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-21</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/patham9--mettaclaw" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -279,6 +279,30 @@ decayed promotion, and write back <code>min(10, v+1)</code> or
 <code>promotion_commit()</code>. The clamp at both ends is deliberate
 and small: a memory cannot be promoted into permanence or demoted into
 negative standing.</p>
+<p><strong>The store itself is not in this repository.</strong>
+<code>lib_chromadb</code> — <code>remember</code>,
+<code>query_by_ids</code>, <code>query_with_ids_and_dists</code> and
+<code>ids_by_time</code>, which is every write and every read — is
+fetched at load time by
+<code>!(git-import! "https://github.com/patham9/petta_lib_chromadb.git")</code>
+(<code>lib_mettaclaw.metta:18-19</code>), with no tag, branch or commit
+named. So the storage and retrieval semantics of this system live at
+whatever that repository's default branch says today, and can change
+without a commit here. Read at <code>petta_lib_chromadb</code>
+<code class="commit-id" title="218484875d5d1bfb217a9a03d3983dc1ed9d406c">21848487…</code>,
+<code>ids_by_time(t)</code> is
+<code>COLLECTION.get(where={"time": t})</code> — exact equality on the
+stored <code>time</code> string — and the write path stores
+<code>(get_time_as_string)</code>, which
+<code>src/utils.metta:25-27</code> formats as
+<code>"%Y-%m-%d %H:%M:%S"</code>. Second resolution and an equality
+match: the granularity claim below holds, and it holds because of code
+in a second repository that nothing pins.</p>
+<p>The promotion <em>ledger</em> is keyed differently, and the asymmetry
+is worth holding: <code>promotion_key</code> accepts only a UUID and
+raises <code>TypeError</code> otherwise
+(<code>src/helper.py:203-210</code>), so the ledger addresses one memory
+at a time while the tool that writes to it addresses a second.</p>
 <p><strong>Decay</strong> —
 <code>(get-promotion $current_time $uuid)</code> is where the ledger
 becomes a score: <code>value × (1 + Δseconds/86400)^−0.7</code>. It is
@@ -590,6 +614,28 @@ AtomSpace</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <strong>The first reading described a function it
+had not read.</strong> <code>ids_by_time</code>, <code>remember</code>,
+<code>query_by_ids</code> and <code>query_with_ids_and_dists</code> —
+the whole storage layer — are not in this tree:
+<code>lib_mettaclaw.metta:18-19</code> pulls them from
+<code>patham9/petta_lib_chromadb</code> with <code>git-import!</code>
+and no tag, branch or commit, so the semantics can move without a commit
+here. Cloned and read at
+<code class="commit-id" title="218484875d5d1bfb217a9a03d3983dc1ed9d406c">21848487…</code>:
+<code>ids_by_time(t)</code> is
+<code>COLLECTION.get(where={"time": t})</code>, an exact-equality match,
+and <code>get_time_as_string</code> formats
+<code>"%Y-%m-%d %H:%M:%S"</code> (<code>src/utils.metta:25-27</code>).
+The granularity claim — one <code>(promote t)</code> moves every memory
+written in that second — is therefore correct, and is now grounded
+rather than inferred. Also verified in this tree: there is still no test
+file of any kind, the <code>promotion_key</code> helper accepts only a
+UUID and raises <code>TypeError</code> otherwise
+(<code>src/helper.py:203-210</code>), and <code>(demote $time)</code>
+floors at <code>0.0</code> without removing anything. No marks; the
+report carries none.</p>
 <p><strong>2026-08-21</strong> — <a
 href="https://github.com/patham9/mettaclaw/commit/7b30527b0896cf0b9377ed2b37aef93711b0aab0"><code class="commit-id" title="7b30527b0896cf0b9377ed2b37aef93711b0aab0">7b30527b…</code></a>
 — first reading. The screen returned <strong>NOTHING SCANNED</strong>:

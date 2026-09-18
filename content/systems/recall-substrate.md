@@ -9,10 +9,10 @@ source_url: https://github.com/H-XX-D/recall-memory-substrate
 archive_name: "H-XX-D--recall-memory-substrate"
 revision: b448f24e85309d3a3adc56bc1ad1aaca5d920d89
 revision_url: https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89
-analyzed_at: 2026-08-21
+analyzed_at: 2026-09-18
 capabilities: "trust_state, negative_eval"
 capability_evidence:
-  trust_state: "how a claim was established, on the cell and consulted by the write gate | src/types.ts:112, src/firewall.ts:92, src/adapters.ts, src/programs.ts, src/local-import.ts | `verification` is `unverified | checked | tested | external`, set at build time from the proposal and raised to `checked` by adapters, analysis, import and programs. It is epistemic rather than lifecycle and it does work: `attenuateConfidence` treats `checked`, `tested` or `external` as support, so an unsupported high-confidence claim is capped and a verified one is not. `status` (`active | superseded | annexed`) carries lifecycle on a separate axis and `signatureStatus` (`unsigned | signed | verified`) carries attestation on a third | src/firewall.test.ts:93 asserts a `checked` proposal keeps 0.9 where an unsupported one is capped; src/mcp-server.test.ts:718 pins the four-value enum on the tool schema"
+  trust_state: "how a claim was established, on the cell, with the lifecycle axis beside it filtering the read path | src/types.ts:112, src/firewall.ts:92, src/adapters.ts, src/programs.ts, src/local-import.ts | `verification` is `unverified | checked | tested | external`, set at build time from the proposal and raised to `checked` by adapters, analysis, import and programs. It is epistemic rather than lifecycle and it does work: `attenuateConfidence` treats `checked`, `tested` or `external` as support, so an unsupported high-confidence claim is capped and a verified one is not. `status` (`active | superseded | annexed`) carries lifecycle on a separate axis, and it is the axis that reaches retrieval: `compile.ts:205` and `:318` both `continue` past any linked cell whose `status !== \"active\"`, so a superseded or annexed cell is dropped before the assembled context is built. The mark rests on the pair — `verification` is the state expressing a judgement about the content, `status` is the state that filters the read. `signatureStatus` (`unsigned | signed | verified`) carries attestation on a third | src/firewall.test.ts:93 asserts a `checked` proposal keeps 0.9 where an unsupported one is capped; src/mcp-server.test.ts:718 pins the four-value enum on the tool schema"
   negative_eval: "cross-project retrieval, asserted as an exact result set | src/subgraph.test.ts:157, src/pages.test.ts:290, src/local-import.test.ts:195 | `subgraphCells: project filter matches scope.project` seeds one cell in `proj-a` and a second, newer, otherwise-matching cell in `proj-b`, filters on `proj-a`, and asserts `results.length === 1` with `results[0].title === \"in-proj\"` — the out-of-project cell exists, matches, ranks higher by recency, and is asserted absent, with the in-project cell as the positive control in the same assertion. `getRecallPage honors since together with project` repeats it on the page path across both the SQL push-down and the app-side fallback, asserting the two agree. On the write side, a hyperedge with a member outside the selected project is counted partial and `local.listHyperedges(10).length === 0` | the three tests are the mechanism"
 stack_storage: "sqlite"
 stack_retrieval: "graph"
@@ -399,6 +399,20 @@ dependencies, and are the two files worth reading whatever you are building.
 **Tests** — one `.test.ts` beside every source module
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. Both
+marks stand, re-derived. `verification` is on the cell at `types.ts:112` and
+consulted by `hasSupportEvidence` at `firewall.ts:89-96`, with live writers
+setting `checked` or `tested` in `adapters.ts:322`, `local-import.ts:99`,
+`programs.ts:277`, `analysis.ts:478` and `evals.ts:445`. The `negative_eval`
+case at `subgraph.test.ts:157` seeds a `proj-a` cell and a *newer* `proj-b` cell
+— newer, so it would lead on recency if the filter were absent — then asserts
+`results.length === 1` and the surviving title. Corrected in the `trust_state`
+record: it named the write gate as where the status is consulted, which left the
+rubric's read-path requirement unstated. The axis that reaches retrieval is
+`status`: `compile.ts:205` and `:318` skip any linked cell that is not `active`,
+so superseded and annexed cells never enter the assembled context. The mark rests
+on the pair, and the record now says which half does which job. No marks change.
 
 **2026-08-21** — [`b448f24e85309d3a3adc56bc1ad1aaca5d920d89`](https://github.com/H-XX-D/recall-memory-substrate/commit/b448f24e85309d3a3adc56bc1ad1aaca5d920d89) — second reading, at the same commit: `main` had not moved. Screened again first; the findings were unchanged apart from `package-lock.json` having aged past the cooldown, and nothing was installed or run. Two corrections. `negative_eval` is awarded on cross-project retrieval cases that were present at the first reading and not found, because the search was for `not.toContain` and `toHaveLength(0)` while this suite is `node:test` and writes `assert.equal(results.length, 1)`. And section 6's claim that no stored scope key reaches a read-path predicate was wrong: `project` is a generated indexed column, `activeWhere` pushes `project = ?` into SQL, and two read paths and two MCP tools use it — the accurate statement is that `compile.ts`, the path that pushes memory into every turn, never passes one, which is why the mark is still withheld. `stack_source` promoted from `seeded` to `reviewed`.
 
