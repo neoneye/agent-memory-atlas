@@ -9,7 +9,7 @@ source_url: https://github.com/Cosmonapse/cosmonapse-core
 archive_name: "Cosmonapse--cosmonapse-core"
 revision: 4746260080c925bed78a5b2ec6fb099f70278bd3
 revision_url: https://github.com/Cosmonapse/cosmonapse-core/commit/4746260080c925bed78a5b2ec6fb099f70278bd3
-analyzed_at: 2026-09-10
+analyzed_at: 2026-09-18
 capabilities: ""
 stack_storage: "sqlite, postgres"
 stack_retrieval: ""
@@ -283,6 +283,24 @@ is answered by whatever you bind underneath it.
 | `packages/python-sdk/cosmonapse/engram/client.py` | 297 | `EngramClient` |
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved. The
+risk claim is exact and the code makes it a little sharper.
+`_saga_journal: dict[str, list[dict[str, Any]]] | None = None` is a class
+attribute that each instance lazily replaces with its own dict on the first
+journaled write (`engram/base.py:398-417`) — nothing writes it to disk, so a
+worker that dies mid-workflow loses every inverse op while the provisional
+writes it already made stay in the store, unmarked.
+
+Two details follow from the journal being per-instance rather than per-trace
+anywhere durable. A `compensate(trace_id)` issued against a *different* instance
+of the same engram — a second worker, a rebuilt host — finds no journal, and the
+method's first line is `if not self._saga_journal: return 0` (`:428-429`): the
+caller is told zero operations were reversed and nothing distinguishes that from
+a trace that genuinely had nothing to undo. And within a live journal the replay
+is best-effort by design — a failing inverse is logged and the loop continues
+(`:439-443`) — so a partial unwind also returns a count rather than an error.
+The count is the only signal either way. No marks; the report carries none.
 
 **2026-09-10** — [`4746260080c925bed78a5b2ec6fb099f70278bd3`](https://github.com/Cosmonapse/cosmonapse-core/commit/4746260080c925bed78a5b2ec6fb099f70278bd3) — read again, 26 commits and 222 files past the previous pin. **`cosmonapse/engram/` is byte-identical**: the same six files at the same 2,322 lines, so every finding about the contract, the five typed errors, `can_serve`, `compensate` and the in-process saga journal is unchanged, and `_saga_journal` is still a `dict` on the Engram instance. What moved is around it — the project grew to about 51,000 lines, the Python and TypeScript SDKs were substantially reworked, and two React packages arrived: `prism-ui`, a bus visualization served by `cosmo prism` and shipped inside the Python wheel, and `genesis-ui`. The three absence claims were re-run and hold: `namespace` still appears exactly once in the engram package, in a docstring about hosting; no test kills a process between `imprint` and `commit`; and there is no benchmark anywhere in the tree. No capability mark moves. Screened before reading: no auto-run surface, no manifest inside the seven-day cooldown, no build-time execution path, and three unpinned dependency surfaces against three lockfiles; nothing was installed or run.
 

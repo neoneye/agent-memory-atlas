@@ -118,7 +118,7 @@ journal that lives in a process dictionary.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Cosmonapse--cosmonapse-core" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -437,6 +437,27 @@ against the implementation here.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. The risk claim is exact and the code makes it a
+little sharper.
+<code>_saga_journal: dict[str, list[dict[str, Any]]] | None = None</code>
+is a class attribute that each instance lazily replaces with its own
+dict on the first journaled write (<code>engram/base.py:398-417</code>)
+— nothing writes it to disk, so a worker that dies mid-workflow loses
+every inverse op while the provisional writes it already made stay in
+the store, unmarked.</p>
+<p>Two details follow from the journal being per-instance rather than
+per-trace anywhere durable. A <code>compensate(trace_id)</code> issued
+against a <em>different</em> instance of the same engram — a second
+worker, a rebuilt host — finds no journal, and the method's first line
+is <code>if not self._saga_journal: return 0</code>
+(<code>:428-429</code>): the caller is told zero operations were
+reversed and nothing distinguishes that from a trace that genuinely had
+nothing to undo. And within a live journal the replay is best-effort by
+design — a failing inverse is logged and the loop continues
+(<code>:439-443</code>) — so a partial unwind also returns a count
+rather than an error. The count is the only signal either way. No marks;
+the report carries none.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/Cosmonapse/cosmonapse-core/commit/4746260080c925bed78a5b2ec6fb099f70278bd3"><code class="commit-id" title="4746260080c925bed78a5b2ec6fb099f70278bd3">47462600…</code></a>
 — read again, 26 commits and 222 files past the previous pin.
