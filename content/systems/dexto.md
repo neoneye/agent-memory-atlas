@@ -7,12 +7,11 @@ page_kind: system
 source_name: "truffle-ai/dexto"
 source_url: https://github.com/truffle-ai/dexto
 archive_name: "truffle-ai--dexto"
-revision: a910e0ef36f2a538c0bb0d4f17e83c4ec8293735
-revision_url: https://github.com/truffle-ai/dexto/commit/a910e0ef36f2a538c0bb0d4f17e83c4ec8293735
-analyzed_at: 2026-09-14
-capabilities: "human_review"
+revision: ac56fbfcd8e7a682fc0e96c690e5b6362980181d
+revision_url: https://github.com/truffle-ai/dexto/commit/ac56fbfcd8e7a682fc0e96c690e5b6362980181d
+analyzed_at: 2026-09-18
+capabilities: ""
 capability_evidence:
-  human_review: "the memory panel — a person deletes a stored memory, and that is the whole of the human surface | packages/webui/components/MemoryPanel.tsx:36-39 and :228-252, packages/server/src/hono/routes/memory.ts:246 | `useDeleteMemory()` drives `deleteMemoryMutation.mutateAsync({ memoryId })` behind a confirmation dialog reading *\"This will permanently delete this memory. This action cannot be undone.\"*, and the route calls `agent.memoryManager.delete(id)` against the same store the system-prompt contributor reads. The limit is worth stating: `pinned` — the flag that decides what survives a `pinnedOnly` injection — is rendered in the panel as a ring and a badge and cannot be set from it. Pinning and updating are agent tools (`packages/tools-lifecycle/src/memory-tools.ts:159, :195-197`), so the model curates and the person can only remove | no committed test covers the panel; `memory.ts:246` is the route under it"
 stack_storage: "memory"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -337,6 +336,10 @@ yourself.
 **Licence** — `LICENSE` (Elastic License 2.0).
 
 ## History
+
+**2026-09-18** — [`ac56fbfcd8e7a682fc0e96c690e5b6362980181d`](https://github.com/truffle-ai/dexto/commit/ac56fbfcd8e7a682fc0e96c690e5b6362980181d) — re-pinned from `a910e0e`; two files and +24 lines, re-screened at the new pin. **Human review withdrawn**, leaving no capability mark. The record described the surface accurately and the [narrowed rubric](../../methodology/atlas-rubric/#human-review-surface) no longer counts it: *"a person deletes a stored memory, and that is the whole of the human surface"*. A delete behind a confirmation dialog acts on a memory that is already stored and already being read into the system prompt — curation after the fact, not a state anything waits in.
+
+Checked before withdrawing, because a queue elsewhere would have changed the answer: `packages/core/src/approval/` is a real approval system, and its `APPROVAL_TYPES` are `tool_approval`, `command_approval`, `elicitation` and `custom`. It gates actions rather than memory admission, which is the same distinction this atlas draws for a policy-enforcement queue in a coordination system — a different object under a similar name. Nothing in the memory path holds a write pending.
 
 **2026-09-14** — [`a910e0ef36f2a538c0bb0d4f17e83c4ec8293735`](https://github.com/truffle-ai/dexto/commit/a910e0ef36f2a538c0bb0d4f17e83c4ec8293735) — second reading, 7 commits on. Screened again: a dependency surface was inside the seven-day cooldown, so nothing was installed and nothing was run. The diff is 200 files of web UI and model-picker work; `packages/core/src/memory/` and `packages/core/src/storage/memories/` did not change at all. `human_review` was re-tested at the producer and holds, and now carries the evidence record it had been asserted without — together with the limit the first reading did not draw out: the panel can delete a memory but cannot pin one. `pinned` decides what survives a `pinnedOnly` injection, it is rendered in the panel as a ring and a badge, and the only writers are the agent tools in `packages/tools-lifecycle/src/memory-tools.ts`. The model curates the memory; the person can remove from it.
 
