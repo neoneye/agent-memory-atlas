@@ -6,23 +6,26 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A public memory shared across
 agents, where a superseded note is excluded from search before indexing
-and a superseded claim is only demoted — by a fixed penalty the claim's
-own accumulated confirmations pay back.">
+and a superseded claim is only demoted — by a flat penalty its own
+confirmations pay back on the public API, and by a multiplier that
+refuses to on the other surface.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="OpenAkashic — Agent Memory Atlas">
     <meta property="og:description" content="A public memory shared
 across agents, where a superseded note is excluded from search before
-indexing and a superseded claim is only demoted — by a fixed penalty the
-claim's own accumulated confirmations pay back.">
+indexing and a superseded claim is only demoted — by a flat penalty its
+own confirmations pay back on the public API, and by a multiplier that
+refuses to on the other surface.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="OpenAkashic — Agent Memory Atlas">
     <meta name="twitter:description" content="A public memory shared
 across agents, where a superseded note is excluded from search before
-indexing and a superseded claim is only demoted — by a fixed penalty the
-claim's own accumulated confirmations pay back.">
+indexing and a superseded claim is only demoted — by a flat penalty its
+own confirmations pay back on the public API, and by a multiplier that
+refuses to on the other surface.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>OpenAkashic — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -44,7 +47,7 @@ claim's own accumulated confirmations pay back.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "OpenAkashic",
-      "description": "A public memory shared across agents, where a superseded note is excluded from search before indexing and a superseded claim is only demoted \u2014 by a fixed penalty the claim's own accumulated confirmations pay back.",
+      "description": "A public memory shared across agents, where a superseded note is excluded from search before indexing and a superseded claim is only demoted \u2014 by a flat penalty its own confirmations pay back on the public API, and by a multiplier that refuses to on the other surface.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -102,8 +105,9 @@ claim's own accumulated confirmations pay back.">
           <h1>OpenAkashic</h1>
           <p class="document-deck">A public memory shared across agents,
 where a superseded note is excluded from search before indexing and a
-superseded claim is only demoted — by a fixed penalty the claim's own
-accumulated confirmations pay back.</p>
+superseded claim is only demoted — by a flat penalty its own
+confirmations pay back on the public API, and by a multiplier that
+refuses to on the other surface.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/szara7678/OpenAkashic">
               <span>Source</span>
@@ -117,7 +121,7 @@ accumulated confirmations pay back.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-08-13</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/szara7678--OpenAkashic" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -187,6 +191,37 @@ claim that was believed longest.</p>
 it returns <em>"Top result is superseded. See newer version at … via
 read_note."</em> — disclosure rather than concealment, which is the
 right instinct. It fires only for the top result.</p>
+<p><strong>And the repository already contains the fix, on a different
+surface.</strong> The −0.42 above is
+<code>api/app/retrieval.py:437</code>, the additive SQL expression
+behind the public HTTP API, where the confirmation term is
+<code>LEAST(greatest(confirm_count, 0), 12) * 0.015</code> with nothing
+exempting a superseded row from it. The closed-web server scores the
+same five states multiplicatively instead, and closes the gap in one
+line:</p>
+<pre class="python"><code>def _claim_trust_multiplier(status, confirm_count, dispute_count):
+    base = {&quot;unreviewed&quot;: 1.0, &quot;confirmed&quot;: 1.08, &quot;disputed&quot;: 0.74,
+            &quot;superseded&quot;: 0.35, &quot;merged&quot;: 0.46}.get(status, 1.0)
+    confirm_boost = 1.0 + 0.05 * math.log(1 + max(0, confirm_count))
+    dispute_penalty = 1.0 / (1.0 + 0.18 * max(0, dispute_count))
+    if status in {&quot;superseded&quot;, &quot;merged&quot;}:
+        confirm_boost = 1.0
+    return base * confirm_boost * dispute_penalty</code></pre>
+<p>Three things are different and each matters. The penalty is
+multiplicative, so it scales with the score rather than being outrun by
+it. The confirmation boost is logarithmic rather than linear. And
+<code>if status in {"superseded", "merged"}: confirm_boost = 1.0</code>
+states the rule outright: once a claim is superseded, its accumulated
+confirmations stop paying. A committed test pins it —
+<code>test_claim_trust_multiplier_penalizes_disputes_and_superseded</code>
+computes all three states at <code>confirm_count=3</code> and asserts
+<code>superseded &lt; disputed &lt; confirmed</code>, which is precisely
+the ordering the public API cannot guarantee.</p>
+<p>So this is not a project that has not thought about the problem. It
+is one that solved it on the surface its own web client uses and left
+the additive form on the surface anyone can query without a token. The
+defect and its correction are both committed, twenty directories apart,
+and nothing reconciles them.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A claim has two independent statuses and they answer different
 questions.</p>
@@ -606,6 +641,30 @@ fallback</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/szara7678/OpenAkashic/commit/6c916d9aac6198de0912a97739ff95d439a9b382"><code class="commit-id" title="6c916d9aac6198de0912a97739ff95d439a9b382">6c916d9a…</code></a>
+— re-read at the same commit. Both marks now carry evidence records, and
+the headline finding turned out to be half the story.</p>
+<p>The −0.42 penalty and the linear confirmation credit are real, at
+<code>api/app/retrieval.py:434-442</code>, and the previous reading's
+re-derivation of the arithmetic checks out — the confirmation term is
+<code>LEAST(greatest(confirm_count, 0), 12) * 0.015</code>, so twelve
+confirmations are worth +0.18 against a flat −0.42, with nothing
+exempting a superseded row. What the first reading did not find is that
+the repository already contains the correction.
+<code>closed-web/server/app/site.py:252</code> scores the same five
+states multiplicatively and closes the gap in one line:
+<code>if status in {"superseded", "merged"}: confirm_boost = 1.0</code>.
+The penalty scales with the score instead of being outrun by it, the
+boost is logarithmic rather than linear, and a committed test —
+<code>test_claim_trust_multiplier_penalizes_disputes_and_superseded</code>
+— computes all three states at <code>confirm_count=3</code> and asserts
+<code>superseded &lt; disputed &lt; confirmed</code>.</p>
+<p>So the finding is sharper than a missing guard: the guard exists, on
+the surface the project's own web client uses, and the additive form
+remains on the surface anyone can query without a token. Both are
+committed, twenty directories apart, and nothing reconciles them.
+Section 1 and the matrix risk row now say that.</p>
 <p><strong>2026-08-13</strong> — <a
 href="https://github.com/szara7678/OpenAkashic/commit/6c916d9aac6198de0912a97739ff95d439a9b382"><code class="commit-id" title="6c916d9aac6198de0912a97739ff95d439a9b382">6c916d9a…</code></a>
 — first reading. The screen reported two MCP manifests declaring start

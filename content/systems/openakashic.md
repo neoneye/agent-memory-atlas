@@ -1,7 +1,7 @@
 ---
 title: "OpenAkashic"
 eyebrow: "One memory, every agent"
-description: "A public memory shared across agents, where a superseded note is excluded from search before indexing and a superseded claim is only demoted — by a fixed penalty the claim's own accumulated confirmations pay back."
+description: "A public memory shared across agents, where a superseded note is excluded from search before indexing and a superseded claim is only demoted — by a flat penalty its own confirmations pay back on the public API, and by a multiplier that refuses to on the other surface."
 root: ../..
 page_kind: system
 source_name: "szara7678/OpenAkashic"
@@ -9,8 +9,11 @@ source_url: https://github.com/szara7678/OpenAkashic
 archive_name: "szara7678--OpenAkashic"
 revision: 6c916d9aac6198de0912a97739ff95d439a9b382
 revision_url: https://github.com/szara7678/OpenAkashic/commit/6c916d9aac6198de0912a97739ff95d439a9b382
-analyzed_at: 2026-08-13
+analyzed_at: 2026-09-18
 capabilities: "trust_state, negative_eval"
+capability_evidence:
+  trust_state: "the five-value claim review status, scored on both read surfaces | api/app/retrieval.py:434-442, closed-web/server/app/site.py:252-264, :821, closed-web/server/tests/test_search_and_trust.py:64-70 | `claim_review_status` is a stored discrete value — unreviewed, confirmed, disputed, superseded, merged — held beside separate `confirm_count` and `dispute_count` integers, so it is a status rather than a score. Both read paths consult it: the public API adds a per-state term inside its ranking SQL, and the closed-web server multiplies by `_claim_trust_multiplier`, which zeroes the confirmation boost for superseded and merged rows so their accumulated confirmations stop paying. A committed test asserts the resulting order, `superseded < disputed < confirmed`, with three confirmations on each | the two surfaces disagree about how much the status is worth: the public API's flat −0.42 is offset by up to +0.18 of linear confirmation credit with no exemption, so a well-confirmed superseded claim can outrank its own successor there — the closed-web guard exists and does not apply to it. No state withholds a claim from retrieval entirely; superseded material is demoted, and only note-path supersession is an exclusion"
+  negative_eval: "the vault note search, asserting superseded notes never reach the index | closed-web/server/tests/test_search_closed_notes_excludes_superseded_notes_before_indexing, closed-web/server/app/site.py (_is_superseded_search_note) | `_is_superseded_search_note` drops a note before the ranker sees it, and the committed case asserts the superseded rows are absent from the result rather than merely ranked low — a must-not about a retrieval result, over a corpus that also holds the live successor, so the refusal is targeted rather than an empty index | the assertion covers the vault note path only. On the claim path nothing asserts that a superseded claim stays out of a result set, which is exactly where the public API's additive scoring makes it possible for one to lead"
 stack_storage: "postgres, files"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -25,7 +28,7 @@ matrix:
   background: "Sagwan, a scheduled LLM loop that consolidates accumulated reviews on a capsule and decides its verdict"
   trust: "Five review states — unreviewed, confirmed, disputed, superseded, merged — each a fixed score delta, beside confirm and dispute counts capped at twelve"
   strengths: "Supersession is disclosed to the caller rather than hidden, and the note search excludes superseded material before it reaches the ranker, with a committed test asserting exactly that"
-  risks: "On the claim path the supersede penalty is fixed while the confirmations that offset it accumulate, so the best-established claim resists demotion most"
+  risks: "On the public API's claim path the supersede penalty is a flat −0.42 while the confirmations that offset it accumulate linearly, so the best-established claim resists demotion most — and the closed-web server scores the same states multiplicatively with the confirmation boost zeroed for superseded rows, so the fix is committed on one surface and not the other"
 ---
 
 ## 1. Executive Summary
@@ -73,6 +76,39 @@ The MCP layer catches part of that: when the top result is superseded it returns
 *"Top result is superseded. See newer version at … via read_note."* — disclosure
 rather than concealment, which is the right instinct. It fires only for the top
 result.
+
+**And the repository already contains the fix, on a different surface.** The
+−0.42 above is `api/app/retrieval.py:437`, the additive SQL expression behind the
+public HTTP API, where the confirmation term is
+`LEAST(greatest(confirm_count, 0), 12) * 0.015` with nothing exempting a
+superseded row from it. The closed-web server scores the same five states
+multiplicatively instead, and closes the gap in one line:
+
+```python
+def _claim_trust_multiplier(status, confirm_count, dispute_count):
+    base = {"unreviewed": 1.0, "confirmed": 1.08, "disputed": 0.74,
+            "superseded": 0.35, "merged": 0.46}.get(status, 1.0)
+    confirm_boost = 1.0 + 0.05 * math.log(1 + max(0, confirm_count))
+    dispute_penalty = 1.0 / (1.0 + 0.18 * max(0, dispute_count))
+    if status in {"superseded", "merged"}:
+        confirm_boost = 1.0
+    return base * confirm_boost * dispute_penalty
+```
+
+Three things are different and each matters. The penalty is multiplicative, so it
+scales with the score rather than being outrun by it. The confirmation boost is
+logarithmic rather than linear. And `if status in {"superseded", "merged"}:
+confirm_boost = 1.0` states the rule outright: once a claim is superseded, its
+accumulated confirmations stop paying. A committed test pins it —
+`test_claim_trust_multiplier_penalizes_disputes_and_superseded` computes all
+three states at `confirm_count=3` and asserts
+`superseded < disputed < confirmed`, which is precisely the ordering the public
+API cannot guarantee.
+
+So this is not a project that has not thought about the problem. It is one that
+solved it on the surface its own web client uses and left the additive form on
+the surface anyone can query without a token. The defect and its correction are
+both committed, twenty directories apart, and nothing reconciles them.
 
 ## 2. Mental Model
 
@@ -431,5 +467,11 @@ agent that reads it, and neither can ask the other anything.
 | `install.sh`, `server.json`, `smithery.yaml` | Distribution; two manifests declaring start commands |
 
 ## History
+
+**2026-09-18** — [`6c916d9aac6198de0912a97739ff95d439a9b382`](https://github.com/szara7678/OpenAkashic/commit/6c916d9aac6198de0912a97739ff95d439a9b382) — re-read at the same commit. Both marks now carry evidence records, and the headline finding turned out to be half the story.
+
+The −0.42 penalty and the linear confirmation credit are real, at `api/app/retrieval.py:434-442`, and the previous reading's re-derivation of the arithmetic checks out — the confirmation term is `LEAST(greatest(confirm_count, 0), 12) * 0.015`, so twelve confirmations are worth +0.18 against a flat −0.42, with nothing exempting a superseded row. What the first reading did not find is that the repository already contains the correction. `closed-web/server/app/site.py:252` scores the same five states multiplicatively and closes the gap in one line: `if status in {"superseded", "merged"}: confirm_boost = 1.0`. The penalty scales with the score instead of being outrun by it, the boost is logarithmic rather than linear, and a committed test — `test_claim_trust_multiplier_penalizes_disputes_and_superseded` — computes all three states at `confirm_count=3` and asserts `superseded < disputed < confirmed`.
+
+So the finding is sharper than a missing guard: the guard exists, on the surface the project's own web client uses, and the additive form remains on the surface anyone can query without a token. Both are committed, twenty directories apart, and nothing reconciles them. Section 1 and the matrix risk row now say that.
 
 **2026-08-13** — [`6c916d9aac6198de0912a97739ff95d439a9b382`](https://github.com/szara7678/OpenAkashic/commit/6c916d9aac6198de0912a97739ff95d439a9b382) — first reading. The screen reported two MCP manifests declaring start commands, two unpinned dependency surfaces and an `AGENTS.md` addressed to a reading agent, read as data; nothing was installed and nothing was run. The ranking result in section 9 was obtained by transcribing the SQL scoring expression into a scratch implementation and evaluating both claims, without importing the repository.
