@@ -137,7 +137,7 @@ nothing yet writes.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-07</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/drobins25--craft" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -746,6 +746,29 @@ rg -n &#39;learnings&#39; tests/*.sh                                          # 
 rg -n -i &#39;arxiv|doi\.org|bibtex&#39; README.md                              # none: no paper
 rg -n &#39;rm&#39; hooks/scripts/auto-approve-plugin-scripts.sh               # one pattern, :22, root paths only</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — re-read at the same commit; nothing
+upstream has moved. <code>human_review</code> stands, and the re-read
+pins both what makes it real and what makes it conditional. What makes
+it real: the promotion step in
+<code>commands/craft-reflect.md:107-119</code> is an
+<strong>AskUserQuestion</strong> — <em>"Apply learnings to
+harness?"</em> with Apply all / Review each / Skip for now — and that is
+a tool whose answer the model cannot produce; the harness routes it to
+the person and waits. Learnings sit at <code>status: pending</code> in
+<code>.craft/.learnings.yaml</code> until it is answered, and two hooks
+count what is waiting (<code>session-start.sh:152</code>,
+<code>post-compact-reinject.sh:93</code>). What makes it conditional:
+nothing in code holds the door. <code>check-write-permission.py</code>
+is a real <code>PreToolUse</code> gate — it denies a <code>Write</code>
+to an existing <code>.craft/design/tokens.yaml</code> outright
+(<code>:239-263</code>) — but its Check 1b returns early for any path
+containing <code>/.claude/</code> (<code>:273-275</code>), which is
+exactly where an approved learning lands. So the approval is a question
+the model cannot answer, asked by a prompt the model could skip, over a
+destination the permission hook explicitly allows. Same shape as <a
+href="../one-agent-many-hats/">One Agent, Many Hats</a> and <a
+href="../openkb/">OpenKB</a>: the separation is real and it is upheld by
+what the surrounding files do not do. No marks change.</p>
 <p><strong>2026-09-07</strong> — <a
 href="https://github.com/drobins25/craft/commit/7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0"><code class="commit-id" title="7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0">7006381d…</code></a>
 — first reading, at the head of <code>main</code>. Screened first: four

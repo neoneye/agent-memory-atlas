@@ -9,7 +9,7 @@ source_url: https://github.com/drobins25/craft
 archive_name: "drobins25--craft"
 revision: 7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0
 revision_url: https://github.com/drobins25/craft/commit/7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0
-analyzed_at: 2026-09-07
+analyzed_at: 2026-09-18
 capabilities: "human_review"
 capability_evidence:
   human_review: "the reflect drain and the decision lock | commands/craft-reflect.md:21-25,:108-120,:123-310, hooks/scripts/session-start.sh:150-156, skills/lock-decision/SKILL.md:28-46, hooks/scripts/merge-tokens.py:1-30, hooks/scripts/check-write-permission.py:233-265 | a learning is written to `.craft/.learnings.yaml` with `status: pending`, a quote, a source and an occurrence count, and stays there; the session hook counts pending entries and injects nothing from them; `/craft:reflect` lists them and asks *Apply all / Review each / Skip for now*, writes only what is approved into `.claude/CLAUDE.md`, `.claude/rules/`, `.claude/settings.local.json` hooks or `.claude/skills/`, and marks each `status: written` with a date; a design decision becomes a standard only through the lock skill's confirm step, and an existing `tokens.yaml` can be changed only through a merge script that prints a per-key conflict report for the person first and refuses whole-file writes | tests/test-check-write-permission.sh (the gate denies a whole-file write to an existing tokens.yaml), tests/test-create-cycle.sh:130-137 (the learnings file is created empty)"
@@ -481,5 +481,25 @@ rg -n 'rm' hooks/scripts/auto-approve-plugin-scripts.sh               # one patt
 ```
 
 ## History
+
+**2026-09-18** — re-read at the same commit; nothing upstream has moved.
+`human_review` stands, and the re-read pins both what makes it real and what
+makes it conditional. What makes it real: the promotion step in
+`commands/craft-reflect.md:107-119` is an **AskUserQuestion** — *"Apply
+learnings to harness?"* with Apply all / Review each / Skip for now — and that
+is a tool whose answer the model cannot produce; the harness routes it to the
+person and waits. Learnings sit at `status: pending` in `.craft/.learnings.yaml`
+until it is answered, and two hooks count what is waiting
+(`session-start.sh:152`, `post-compact-reinject.sh:93`). What makes it
+conditional: nothing in code holds the door. `check-write-permission.py` is a
+real `PreToolUse` gate — it denies a `Write` to an existing
+`.craft/design/tokens.yaml` outright (`:239-263`) — but its Check 1b returns
+early for any path containing `/.claude/` (`:273-275`), which is exactly where
+an approved learning lands. So the approval is a question the model cannot
+answer, asked by a prompt the model could skip, over a destination the
+permission hook explicitly allows. Same shape as
+[One Agent, Many Hats](../one-agent-many-hats/) and
+[OpenKB](../openkb/): the separation is real and it is upheld by what the
+surrounding files do not do. No marks change.
 
 **2026-09-07** — [`7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0`](https://github.com/drobins25/craft/commit/7006381d0b01990e5d3fc3d3b9d97cf9a5e545a0) — first reading, at the head of `main`. Screened first: four auto-run surfaces (the plugin manifest, the hook registrations, an `.mcp.json` starting `npx chrome-devtools-mcp@latest`, and `CLAUDE.md` treated as data) and one manifest inside the seven-day cooldown; every registered hook script was read before anything else, and a search over all 61 found no network or home-directory access; nothing installed or run. Read from a depth-one clone, with the commit count, first-commit date and contributor list from the GitHub API. One mark. The auto-approve hook is stated as a fact about the plugin, not a verdict on its author's reasons, which the script gives.
