@@ -123,7 +123,7 @@ Codex.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-10</strong>
+              <strong>2026-09-18</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ultracontext--ultracontext" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -188,13 +188,26 @@ circulating those ids between agents, teammates and dashboards.</p>
 <p><strong>The redactor covers one of the two copies of the same
 text.</strong> The sync daemon builds each payload as
 <code>content: { message: normalized.message, …, raw: safeRaw }</code>
-where <code>safeRaw = redact(normalized.raw)</code>. The raw transcript
-entry is masked against four secret patterns and a sensitive-key-name
-test; <code>normalized.message</code> — the conversation text extracted
-from that same raw entry, and the field a reader actually gets back — is
-not passed through <code>redact</code> at all. A key pasted into a
-prompt is <code>sk-***</code> in <code>raw</code> and intact in
-<code>message</code>. No test in the tree mentions the redactor.</p>
+where <code>safeRaw = redact(normalized.raw)</code>. It does so twice,
+in two places that would have to be fixed together:
+<code>daemon.mjs:810-814</code> on the single-event append and
+<code>:902-906</code> inside the bulk path's
+<code>sessionEvents.map</code>, each constructing the same object
+literal with the same asymmetry. The raw transcript entry is masked
+against four secret patterns and a sensitive-key-name test;
+<code>normalized.message</code> — the conversation text extracted from
+that same raw entry, and the field a reader actually gets back — is not
+passed through <code>redact</code> at all. A key pasted into a prompt is
+<code>sk-***</code> in <code>raw</code> and intact in
+<code>message</code>. The asymmetry runs the other way too and is worth
+knowing before trusting either field: <code>redact</code> truncates
+every string it walks to 8,000 characters, so <code>raw</code> is both
+masked and clipped while <code>message</code> is neither — the two
+copies of one event differ in length as well as in safety. No test in
+the tree mentions the redactor, and the check has to be run against
+<code>*.mjs</code>: the daemon, the redactor and their tests are ESM
+JavaScript, not TypeScript, so a search scoped to <code>*.ts</code>
+reports the module as absent rather than untested.</p>
 <p><strong>One declared gate has no runtime consumer.</strong>
 <code>AGENT_COMPAT</code> records which CLI versions each parser was
 verified against and which cross-agent resume pairs have fixture
@@ -700,6 +713,27 @@ grep -rn &#39;isResumePairTested&#39; --include=&#39;*.mjs&#39; . | grep -v node
 grep -rn -i &#39;status|confidence|verified|superseded|stale&#39; packages/core/src packages/storage/src apps/api/src  # HTTP status codes and key verification only
 grep -rn -i &#39;arxiv|bibtex|CITATION&#39; README.md                                    # nothing: no paper</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-18</strong> — <a
+href="https://github.com/ultracontext/ultracontext/commit/736b471125b727a9b6473688b18ef5a22727d48c"><code class="commit-id" title="736b471125b727a9b6473688b18ef5a22727d48c">736b4711…</code></a>
+— re-read at the same commit; <code>main</code> has not moved since 1
+June 2026 and the lockfile is 108 days old, so anything found here is
+this report's rather than the project's. Every claim was re-tested and
+every one held: <code>findRootContextByPublicId</code> still takes no
+project and <code>create</code>'s <code>from</code> resolution is still
+its only caller; <code>AGENT_COMPAT</code> is still imported by
+<code>roundtrip.test.mjs</code> and nothing else; the writer is still
+<code>target === "codex" ? writeCodexSession : writeClaudeSession</code>;
+and no test mentions the redactor. Three anchors sharpened. The
+cross-project fork is reachable over the service and not only through
+the library — <code>POST /contexts</code> reads <code>projectId</code>
+from the auth context, parses the body and hands both to
+<code>createContext</code> without checking that <code>body.from</code>
+belongs to that project. The redactor asymmetry exists at two call sites
+rather than one, <code>daemon.mjs:810-814</code> and
+<code>:902-906</code>, single-append and bulk, which is what a fix would
+have to cover. And <code>redact</code> truncates every string it walks
+to 8,000 characters, so <code>raw</code> is clipped as well as masked
+while <code>message</code> is neither.</p>
 <p><strong>2026-09-10</strong> — <a
 href="https://github.com/ultracontext/ultracontext/commit/736b471125b727a9b6473688b18ef5a22727d48c"><code class="commit-id" title="736b471125b727a9b6473688b18ef5a22727d48c">736b4711…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 1
