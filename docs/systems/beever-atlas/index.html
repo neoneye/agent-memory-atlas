@@ -120,7 +120,7 @@ sites fall back to when those reads throw.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Beever-AI--beever-atlas" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -453,6 +453,28 @@ grep -rn &quot;potential_contradiction&quot; src --include=&#39;*.py&#39;      #
 grep -rn &quot;invalid_at&quot; src --include=&#39;*.py&#39; | grep -v weaviate_store   # nothing outside the store consults it
 grep -rn &quot;as_of\|asof\|point_in_time&quot; src --include=&#39;*.py&#39;   # 0 — no as-of read</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/Beever-AI/beever-atlas/commit/7d791af27ef4aa19644cb385c7ca24619bc4f848"><code class="commit-id" title="7d791af27ef4aa19644cb385c7ca24619bc4f848">7d791af2…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin. Every claim
+held, including the one worth re-checking: <code>bm25_search</code>
+(<code>stores/weaviate_store.py:916-944</code>) still takes no
+<code>include_superseded</code> argument and still returns
+<code>[self._obj_to_fact(obj) for obj in result.objects]</code> with no
+<code>invalid_at</code> test, while the other three methods carry the
+parameter and the skip. What the re-read adds is where that lands.
+<code>bm25_search</code> has three production callers
+(<code>capabilities/memory.py:196</code>, <code>:303</code>,
+<code>:398</code>) and all three are fallbacks, entered under <em>hybrid
+search failed, falling back to bm25</em>. So the exclusion is not
+missing from a secondary surface someone might reach deliberately — it
+is missing from the path the system takes when the primary one has
+already failed, which is when a superseded fact is least likely to be
+noticed and most likely to matter. A missing predicate on a fallback is
+worse than one on a main path for exactly that reason. The four
+regression tests cover <code>true_hybrid_search</code> and
+<code>semantic_search</code>; <code>pseudo_hybrid_search</code> carries
+the filter and is untested, and the keyword path is neither. Re-read
+from a fresh clone; nothing was installed and no suite was run.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/Beever-AI/beever-atlas/commit/7d791af27ef4aa19644cb385c7ca24619bc4f848"><code class="commit-id" title="7d791af27ef4aa19644cb385c7ca24619bc4f848">7d791af2…</code></a>
 — first reading, at the head of <code>main</code>, 680 commits in.
