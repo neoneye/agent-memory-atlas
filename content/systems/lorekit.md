@@ -7,14 +7,13 @@ page_kind: system
 source_name: "mthines/lorekit"
 source_url: https://github.com/mthines/lorekit
 archive_name: "mthines--lorekit"
-revision: b325977c959ed2d0d58f1168283973bf27a9c451
-revision_url: https://github.com/mthines/lorekit/commit/b325977c959ed2d0d58f1168283973bf27a9c451
-analyzed_at: 2026-09-16
-capabilities: "scope_enforced, audit_log, human_review"
+revision: 07d2ce84baf6b6ba01b1424cc1253a4de4ee144d
+revision_url: https://github.com/mthines/lorekit/commit/07d2ce84baf6b6ba01b1424cc1253a4de4ee144d
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, audit_log"
 capability_evidence:
   scope_enforced: "the scope key is an equality predicate on every read, and the wider tenant-visibility filter is one module that mirrors a single SQL source of truth under a parity test | packages/mcp-core/src/tools/read.ts:8-16, :67, packages/mcp-core/src/scope/scope-precedence.ts, packages/mcp-core/src/auth/tenant-scope.ts:1-18, supabase/functions/_shared/auth/tenant-scope.ts | `read` validates the scope against `ScopeSchema` and, when one is supplied, applies `.eq('scope', input.scope)` to the query, so the stored key reaches the statement rather than trimming its result. The scope argument became optional in this window and an omitted one now resolves the key across every scope the caller can already see, picking one winner by scope type — project, branch, repo, global — then most-recently-updated, then scope ascending; the widening is over the scope-type dimension only and sits inside the tenant predicate, not around it. Above it the tenant predicate — a caller sees their own rows or any row owned by an org they belong to — is deliberately a filter-shaper only: it *never re-derives membership itself*, taking an already-resolved org-id list so *the predicate can never drift from the SQL side*, whose sole source of truth is `lorekit_member_org_ids()`. The copy the Deno edge functions import is a second file by necessity and the duplication is named rather than accidental, with a parity spec guarding the pair. The known duplication with a test asserting the mirror is the safer of the two answers this corpus keeps finding | packages/mcp-core/src/auth/tenant-scope.spec.ts, tenant-scope-usage.spec.ts"
   audit_log: "an append-only table with no update or delete policy, a closed action vocabulary, and a committed test that fails when the vocabulary and the schema disagree | supabase/migrations/00010_audit_log.sql:30-75, 00089_audit_log_groom_actions.sql, packages/mcp-core/src/audit/audit-vocabulary.spec.ts | `audit_log` records a user, an action from a `CHECK`-constrained list, a resource type and id, a target and a metadata blob, with RLS granting select only on one's own rows and *deliberately NO update or delete policy — the log is append-only / immutable via the API surface*. Widening the vocabulary is forward-only, a drop and re-add of the CHECK, and the reason is stated: `recordAudit` never throws on a rejected action, so a call whose action the CHECK refuses *is swallowed and logged to the server console only, leaving a silent, permanent hole* — which is why `audit-vocabulary.spec.ts` parses the newest action-CHECK migration and fails when it differs from the TypeScript `AUDIT_ACTIONS` set. The limit belongs with the mark: an update's row carries `metadata: { scope, key }` and not the value that changed | packages/mcp-core/src/audit/audit.spec.ts, packages/mcp-core/src/tools/write.spec.ts:169"
-  human_review: "the one operation that destroys is a confirmation a person must give, and it cannot be satisfied by omission | packages/cli/src/commands/purge.mjs:10-27 | The purge command reasons its gate out in the source: the purge RPCs return their count only after deleting and the REST dry-run header returns nothing previewable, so *\"would purge N\" cannot be answered honestly* and *the gate is therefore a confirmation, not a preview* — prompt on an interactive terminal, and require `--yes` when there is nobody to ask, because *an agent loop must not be able to trigger one by omission*. A scoped key is refused server-side and the refusal is passed through verbatim, never retried, split or re-scoped. Beside it the retention-policy path keeps preview and apply honest from the other direction: one candidate function is the single source of truth for what matches, so *a previewed count always equals what a run archives* | packages/cli/test, supabase/migrations/00088_retention_policies.sql"
 stack_storage: "postgres, files"
 stack_retrieval: "lexical"
 stack_source: "seeded"
@@ -206,7 +205,18 @@ rules that AUTO-ARCHIVE (never hard-delete) matching lessons"*, reusing the
 existing soft-archive; the migration states that *"a policy NEVER hard-deletes;
 hard purge stays exactly where it is… manual, confirm-or---yes"*. So the
 automated half can only move a lesson out of retrieval, and the half that
-destroys stays a human act.
+destroys stays a deliberate act.
+
+That gate is well reasoned and is not `human_review`, which is why this report
+does not carry the mark. It guards *destruction*, not admission — nothing waits
+in a state before it can be believed — and its non-interactive form is a flag
+the caller passes: `purge.mjs:18-19` requires `--yes` "when there is nobody to
+ask (a pipe, CI, or `--json`)". A confirmation prompt with a flag that satisfies
+it is a guard against a slip rather than against a decision. The reasoning
+behind it is still worth copying, and the comment gives it plainly: no dry run
+is possible because the RPCs return their count only after deleting, so *"the
+gate is therefore a confirmation, not a preview"*, and *"an agent loop must not
+be able to trigger one by omission."*
 
 The preview property is the part to copy. One function,
 `lorekit_groom_candidates`, is *"the single source of truth for 'what matches' —
@@ -617,6 +627,8 @@ and `retrospective.md`;
 `org-permissions.spec.ts`.
 
 ## History
+
+**2026-09-19** — re-pinned to [`07d2ce84baf6b6ba01b1424cc1253a4de4ee144d`](https://github.com/mthines/lorekit/commit/07d2ce84baf6b6ba01b1424cc1253a4de4ee144d). `human_review` is **withdrawn**. The gate it rested on is a confirmation prompt on the destructive purge — the record quoted the source saying exactly that, *"the gate is therefore a confirmation, not a preview"* — and a confirmation is a permission step rather than a state a memory waits in. It also guards destruction rather than admission, and its non-interactive form is `--yes`, a flag the caller supplies. The reasoning that produced it is better than the mark it cannot earn and stays in section 7 in full, including why no dry run is possible and why *"an agent loop must not be able to trigger one by omission."* The tree carries no admission state on a lesson at this pin. `scope_enforced` and `audit_log` stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`b325977c959ed2d0d58f1168283973bf27a9c451`](https://github.com/mthines/lorekit/commit/b325977c959ed2d0d58f1168283973bf27a9c451) — re-read after 9 commits. `packages/cli/src/commands/purge.mjs` and `supabase/migrations/00010_audit_log.sql` are byte-identical, so `human_review` and `audit_log` rest on unchanged code; `read.ts` moved. All three marks hold. The change is a scope one and is written up in section 6: the scope argument became optional, and an omitted scope widens across the scopes the caller can already see rather than failing — deliberately not defaulting to `global`, which the source argues would convert a loud error into a silent miss. The mark is unaffected because the widening runs over scope types inside the tenant predicate rather than around it, and the evidence record is updated to say so rather than continuing to describe an unconditional equality filter. Re-screened at this commit: one agent-directed file, one build-time execution path, five floating versions, one manifest inside the cooldown. Nothing was installed, built or run.
 
