@@ -118,7 +118,7 @@ superseded entry must never win the injection lane.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/The-825--breadcrumbs" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -494,12 +494,19 @@ happens.</li>
 <li><strong>Merge gating</strong> —
 <code>ci-kit/workflows/greenlight_tiers.classify(files)</code> returns
 <code>AUTO</code> only when every changed file is an addition or
-modification inside <code>docs/</code>, <code>checklists/</code>,
-<code>README.md</code> or <code>planning/DECISIONS.md</code>; every
+modification inside <code>docs/</code> or <code>checklists/</code>, or
+is one of the three in <code>SAFE_EXACT</code> — <code>README.md</code>,
+<code>planning/DECISIONS.md</code>, <code>SESSION_STATE.md</code>; every
 deletion, every rename, an empty list and everything else returns
 <code>GATED</code>, which means the human approval label is required.
 <code>.github/workflows/automerge.yml</code> runs it from the base
-branch's checkout.</li>
+branch's checkout, so a PR editing the policy cannot loosen the gate on
+itself. Worth reading the safe set against the memory model: the JSONL
+ledgers and the TSV index live under <code>templates/</code>, which is
+<em>always</em> gated because there the <code>.md</code> files "ARE
+behavior-bearing product, not prose" — but the decisions ledger and the
+<code>SESSION_STATE</code> handoff are in the safe set, and those are
+memory too.</li>
 <li><strong>Integrity</strong> — <code>mem check</code>: duplicate keys
 or aliases across rows, empty fields, a <code>checked</code> value that
 is neither a date nor <code>-</code>, a <code>source</code> path that
@@ -1006,8 +1013,19 @@ unlabeled, and every path — <code>workflow_run</code>,
 through one <code>considerPR()</code>. The memory here is files in git,
 so that label is the act of a person approving what goes into the shared
 store, and the desk's curation contract routes explicitly through it:
-<em>"The gardener proposes; a human merges."</em> The mark is earned on
-that.</p>
+<em>"The gardener proposes; a human merges."</em> The batch labeller
+does not weaken it — <code>greenlight-all.yml</code> is
+<code>workflow_dispatch</code> only, and says so: <em>"Dispatching this
+workflow IS the operator's approval action."</em> The mark is earned on
+that, for the ledgers.</p>
+<p>It is not earned for all of the store, and the tier list is where
+that shows.
+<code>SAFE_EXACT = ("README.md", "planning/DECISIONS.md", "SESSION_STATE.md")</code>:
+an agent branch that only appends to the decisions ledger or refreshes
+the handoff merges on green with nobody labelling anything. The JSONL
+and TSV rows are protected because <code>templates/</code> is
+behavior-bearing; the two markdown files that carry settled decisions
+and the cross-session handoff are not.</p>
 <p>It is worth being exact about what it is. It is a repository gate,
 not a memory gate: there is no reviewer field on a row, no approved
 status, nothing in any store recording that an adjudication happened. It
@@ -1480,6 +1498,23 @@ case study, the limitations</li>
 the diff tiers that decide when it applies</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — audited at the unchanged pin <a
+href="https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73"><code class="commit-id" title="bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73">bf0b6a2b…</code></a>;
+nothing upstream moved. <code>human_review</code> stands, with a
+correction to what it covers. The previous record cited the merge gate
+over "the git-resident ledgers" without reading <code>SAFE_EXACT</code>
+against the memory model. Reading it: the JSONL ledgers and the TSV
+index live under <code>templates/</code>, which the policy always gates
+because those files "ARE behavior-bearing product, not prose" — so the
+mark holds there — but <code>SAFE_EXACT</code> is
+<code>("README.md", "planning/DECISIONS.md", "SESSION_STATE.md")</code>,
+and the decisions ledger and the markdown handoff are memory that merges
+on green with no label. Section 4's list of the safe set had omitted
+<code>SESSION_STATE.md</code> entirely. The batch labeller was checked
+too and does not weaken the gate: <code>greenlight-all.yml</code> is
+<code>workflow_dispatch</code> only and states that dispatching it is
+the operator's approval action. Screened again first; nothing was
+installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73"><code class="commit-id" title="bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73">bf0b6a2b…</code></a>
 — re-read at a commit dated 14 September 2026, 29 commits past the

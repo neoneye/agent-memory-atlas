@@ -9,7 +9,7 @@ source_url: https://github.com/The-825/breadcrumbs
 archive_name: "The-825--breadcrumbs"
 revision: bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73
 revision_url: https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73
-analyzed_at: 2026-09-16
+analyzed_at: 2026-09-19
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "files"
 stack_retrieval: ""
@@ -19,7 +19,7 @@ capability_evidence:
   tombstone: "engine semantic tier | templates/ledger-tools/memory_engine.py | reject_fact writes tombstones.json keyed on the rejected value; store_fact raises when the incoming value matches one | memory_engine.py --selftest, 'a tombstoned value is refused on re-assertion'"
   trust_state: "engine semantic tier | templates/ledger-tools/memory_engine.py | status asserted vs verified, promoted only by verify_fact, which raises on empty evidence | memory_engine.py --selftest, 'verify_fact refuses empty evidence'"
   audit_log: "engine episodic tier | templates/ledger-tools/memory_engine.py | episodes.jsonl carries COMPACTION, SUPERSEDED, REJECTED and TOMBSTONE_LIFTED rows, the second with the prior value and prior status | memory_engine.py --selftest, 'the prior value and status are logged before the overwrite'"
-  human_review: "the git-resident ledgers | .github/workflows/automerge.yml | considerPR refuses to merge an agent branch without the greenlight label unless greenlight_tiers.classify returns AUTO on every changed file | greenlight_tiers.py --selftest, ten tier cases"
+  human_review: "the merge gate over the ledger files, which are outside the auto-merge safe set | .github/workflows/automerge.yml, ci-kit/workflows/greenlight_tiers.py:14-54, ci-kit/workflows/greenlight-all.yml:8-21 | `considerPR` refuses to merge an agent branch without the `greenlight` label unless `classify` returns AUTO on every changed file, and the JSONL ledgers and the TSV index live under `templates/`, which the policy *always* gates — the comment gives the reason: in this repository the files there `ARE behavior-bearing product, not prose`. Deletions and renames gate anywhere. The batch labeller is `workflow_dispatch` only, and says why: `Dispatching this workflow IS the operator's approval action`. The limit belongs with the mark and is sharper than it looks: `SAFE_EXACT` is `(\"README.md\", \"planning/DECISIONS.md\", \"SESSION_STATE.md\")`, so the decisions ledger and the markdown handoff — both part of this store — merge on green with no label at all | greenlight_tiers.py --selftest, ten tier cases"
   bitemporal: "the semantic tier, two clocks that compose on the read path | templates/ledger-tools/memory_engine.py:253 (`store_fact`), :548 (`compose_context`) | `store_fact` records `recorded_at` unconditionally and takes optional `valid_from`/`valid_until`, documented as *\"the VALID-AT axis: when the fact was true in the world, distinct from recorded_at (when the memory learned it)\"*. `compose_context(as_of=…, valid_at=…)` filters them independently — `as_of` drops facts learned after the cutoff, `valid_at` drops facts windowed away from the moment — and the docstring names the composed query: *\"as_of + valid_at asks what did we believe at T about what was true at T2, the stale-belief postmortem query\"*. Unstamped facts are always included and the assembled header says so. A third detail makes the replay honest rather than merely temporal: a `verified` fact whose `verified_at` is absent or later than `as_of` renders as `asserted` in the replayed view, a read-time mask that leaves storage untouched | templates/ledger-tools/memory_engine_golden.json case `learned-time-replay-excludes-the-future`, run by `memory_engine_exam.py`"
   negative_eval: "conclusions ledger injection lane | templates/ledger-tools/retrieval_exam.py | run_forbidden_check replays the boot matcher and names a superseded entry that still wins a slot | retrieval_exam.py --selftest, four forbidden-hit cases"
 matrix:
@@ -336,10 +336,16 @@ pitch, and it is accurate.
   before any work happens.
 - **Merge gating** — `ci-kit/workflows/greenlight_tiers.classify(files)` returns
   `AUTO` only when every changed file is an addition or modification inside
-  `docs/`, `checklists/`, `README.md` or `planning/DECISIONS.md`; every deletion,
+  `docs/` or `checklists/`, or is one of the three in `SAFE_EXACT` —
+  `README.md`, `planning/DECISIONS.md`, `SESSION_STATE.md`; every deletion,
   every rename, an empty list and everything else returns `GATED`, which means
   the human approval label is required. `.github/workflows/automerge.yml` runs
-  it from the base branch's checkout.
+  it from the base branch's checkout, so a PR editing the policy cannot loosen
+  the gate on itself. Worth reading the safe set against the memory model: the
+  JSONL ledgers and the TSV index live under `templates/`, which is *always*
+  gated because there the `.md` files "ARE behavior-bearing product, not prose"
+  — but the decisions ledger and the `SESSION_STATE` handoff are in the safe
+  set, and those are memory too.
 - **Integrity** — `mem check`: duplicate keys or aliases across rows, empty
   fields, a `checked` value that is neither a date nor `-`, a `source` path that
   resolves at neither the desk directory nor the repo root, a malformed journal
@@ -752,8 +758,17 @@ labels array counting as unlabeled, and every path — `workflow_run`,
 `pull_request`, `workflow_dispatch` — funnelled through one `considerPR()`. The
 memory here is files in git, so that label is the act of a person approving what
 goes into the shared store, and the desk's curation contract routes explicitly
-through it: *"The gardener proposes; a human merges."* The mark is earned on
-that.
+through it: *"The gardener proposes; a human merges."* The batch labeller does
+not weaken it — `greenlight-all.yml` is `workflow_dispatch` only, and says so:
+*"Dispatching this workflow IS the operator's approval action."* The mark is
+earned on that, for the ledgers.
+
+It is not earned for all of the store, and the tier list is where that shows.
+`SAFE_EXACT = ("README.md", "planning/DECISIONS.md", "SESSION_STATE.md")`: an
+agent branch that only appends to the decisions ledger or refreshes the handoff
+merges on green with nobody labelling anything. The JSONL and TSV rows are
+protected because `templates/` is behavior-bearing; the two markdown files that
+carry settled decisions and the cross-session handoff are not.
 
 It is worth being exact about what it is. It is a repository gate, not a
 memory gate: there is no reviewer field on a row, no approved status,
@@ -1118,6 +1133,8 @@ teams have never asked about the memory they already have.
 - `.github/workflows/automerge.yml`, `ci-kit/workflows/greenlight_tiers.py` — the label gate and the diff tiers that decide when it applies
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73`](https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73); nothing upstream moved. `human_review` stands, with a correction to what it covers. The previous record cited the merge gate over "the git-resident ledgers" without reading `SAFE_EXACT` against the memory model. Reading it: the JSONL ledgers and the TSV index live under `templates/`, which the policy always gates because those files "ARE behavior-bearing product, not prose" — so the mark holds there — but `SAFE_EXACT` is `("README.md", "planning/DECISIONS.md", "SESSION_STATE.md")`, and the decisions ledger and the markdown handoff are memory that merges on green with no label. Section 4's list of the safe set had omitted `SESSION_STATE.md` entirely. The batch labeller was checked too and does not weaken the gate: `greenlight-all.yml` is `workflow_dispatch` only and states that dispatching it is the operator's approval action. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73`](https://github.com/The-825/breadcrumbs/commit/bf0b6a2b6aa23c01ca30a40c1aa6466844d3cf73) — re-read at a commit dated 14 September 2026, 29 commits past the previous pin. The change to `templates/ledger-tools/` is purely additive: `memory_engine.py`, `retrieval_exam.py` and `scoped_context.py` are byte-identical, so all seven marks and every line number behind them stand unchanged. What arrived beside them is `shared_work_checkpoint.py`, 1,244 lines with a 338-line JSON Schema and a fixture, storing bounded control evidence in an adopter-owned JSONL file and stating its own limits in the docstring: it holds no prompts, transcripts, provider output, personal records or credentials, makes no network call, and does not *"push, approve, merge, or deploy."* Its epistemic rule is the part worth naming — *"[a] requested or configured model is not observed evidence"*, and *"[s]essions that do not call this tool remain uninstrumented and cannot be claimed as checkpointed"*, so the artefact refuses to speak for what it did not see. Its `--selftest` carries twenty-four checks that are mostly refusals with a positive control beside them: an unknown observed model, a configured model substituted for the observed one, and a stale plan revision each have to raise, and a session without a receipt has to come back unclaimable. Screened before reading, from a full clone: no auto-run surface, no build-time execution point, no unpinned dependency surface and nothing inside the seven-day cooldown; two agent-addressed instruction files were recorded as data. Nothing was installed, built or run.
 
