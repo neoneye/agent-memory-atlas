@@ -7,14 +7,14 @@ page_kind: system
 source_name: "adea-ai/cortana"
 source_url: https://github.com/adea-ai/cortana
 archive_name: "adea-ai--cortana"
-revision: 6b76a1dbd38a18a32c502e963f0d380f5b92d75f
-revision_url: https://github.com/adea-ai/cortana/commit/6b76a1dbd38a18a32c502e963f0d380f5b92d75f
-analyzed_at: 2026-09-16
+revision: 9609d2ab5f916b2795500ed98c57dd2388592144
+revision_url: https://github.com/adea-ai/cortana/commit/9609d2ab5f916b2795500ed98c57dd2388592144
+analyzed_at: 2026-09-19
 capabilities: "trust_state, bitemporal, scope_enforced"
 capability_evidence:
-  trust_state: "a stored status every read requires to be active, with supersession recorded on the row rather than by deletion | src/store.rs:380, :1820, :1833, :1881, :2083 | `memories.status` is `NOT NULL` beside a `supersedes_id`, and every read path carries `status='active'` — the point read, the update guards, and the full-text search. A superseded memory keeps its row and its `supersedes_id` link and stops being returned, so the correction is recoverable rather than a delete | src/store.rs:1900"
-  bitemporal: "three time columns kept apart — when it was observed, the window it is valid in, and when the row was written — with the validity window gated by a moment the query is given | src/store.rs:383-388, :1820, :2090-2091 | `memories` carries `observed_at`, `valid_from`, `valid_until` and `created_at`/`updated_at` as separate columns. The search gates on the supplied moment in both directions — `AND m.valid_from<=?8 AND (m.valid_until IS NULL OR julianday(m.valid_until)>julianday(?8))` — and the point read applies the same upper bound, so a memory whose validity has not begun or has ended is absent from an answer without being removed from the store | src/store.rs:1820"
-  scope_enforced: "the access list is applied inside the search query, and a row whose ACL is not a well-formed array of strings is excluded rather than treated as unrestricted | src/store.rs:2089, :2093-2112 | Beyond `AND (?6 IS NULL OR m.scope=?6)` and `AND (?7 OR m.scope<>'owner-global')` — an explicit flag a caller must set to reach owner-global rows — the query validates the row's own ACL before matching it: `json_valid(m.acl_json)`, `json_type(m.acl_json)='array'`, and `NOT EXISTS (SELECT 1 FROM json_each(m.acl_json) WHERE type<>'text')`. Only then does it admit the row on an empty ACL or a principal match against the caller's principal list. A malformed ACL therefore fails closed: it matches nothing, instead of degrading to the empty-means-public branch | src/store.rs:1820"
+  trust_state: "a stored status every recall read requires to be active, with supersession recorded on the row rather than by deletion, and two reads that leave the predicate out on purpose | crates/core/src/store.rs:380 (the column), :1819, :1832, :1880, :1899, :2082, :2792, :3788, :3808, :3861 (the filters), :3755-3762 (the by-id fetch) and :3992-4081 (`export_memories_with_axes_as_owner`) | `memories.status` is `NOT NULL` beside a `supersedes_id`, and `status=active` is composed into the counting read, the update guards, the full-text search, the ACL lookup, the validity stamp and the aggregate rollups — a dozen sites in one file. A superseded memory keeps its row and its `supersedes_id` link and stops being returned, so the correction is recoverable rather than a delete. Two reads omit the clause and both are the right ones: the point read by id returns the row with its `status` column so the caller can see what it got, and the owner export carries the full ACL predicate but no status filter, because an export that dropped superseded rows would be a lossy backup | crates/core/src/store.rs:1899"
+  bitemporal: "three time columns kept apart — when it was observed, the window it is valid in, and when the row was written — with the validity window gated by a moment the query is given | crates/core/src/store.rs:383-388, :1820, :2090-2091 | `memories` carries `observed_at`, `valid_from`, `valid_until` and `created_at`/`updated_at` as separate columns. The search gates on the supplied moment in both directions — `AND m.valid_from<=?8 AND (m.valid_until IS NULL OR julianday(m.valid_until)>julianday(?8))` — and the point read applies the same upper bound, so a memory whose validity has not begun or has ended is absent from an answer without being removed from the store | crates/core/src/store.rs:1819"
+  scope_enforced: "the access list is applied inside the search query, and a row whose ACL is not a well-formed array of strings is excluded rather than treated as unrestricted | crates/core/src/store.rs:2088, :2093-2111 | Beyond `AND (?6 IS NULL OR m.scope=?6)` and `AND (?7 OR m.scope<>'owner-global')` — an explicit flag a caller must set to reach owner-global rows — the query validates the row's own ACL before matching it: `json_valid(m.acl_json)`, `json_type(m.acl_json)='array'`, and `NOT EXISTS (SELECT 1 FROM json_each(m.acl_json) WHERE type<>'text')`. Only then does it admit the row on an empty ACL or a principal match against the caller's principal list. A malformed ACL therefore fails closed: it matches nothing, instead of degrading to the empty-means-public branch | crates/core/src/store.rs:1819"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -146,7 +146,7 @@ flowchart TB
 
 | File | Role |
 | --- | --- |
-| `src/store.rs` | The schema, the gated search, the candidate lifecycle (11,171 lines) |
+| `crates/core/src/store.rs` | The schema, the gated search, the candidate lifecycle (11,171 lines) |
 | `src/api.rs`, `src/mcp.rs` | The HTTP and MCP surfaces |
 | `src/consolidation.rs`, `src/derived.rs` | Consolidation jobs and derived state |
 | `src/knowledge_graph.rs`, `src/context.rs` | The graph and context compilation |
@@ -155,11 +155,11 @@ flowchart TB
 
 ## 4. Essential Implementation Paths
 
-`src/store.rs:2076-2115` — one query, and everything it refuses to assume.
+`crates/core/src/store.rs:2075-2114` — one query, and everything it refuses to assume.
 
-`src/store.rs:366-412` — memories and their staging table, side by side.
+`crates/core/src/store.rs:366-412` — memories and their staging table, side by side.
 
-`src/store.rs:3273` — a rejection that records its reason under a compare-and-set.
+`crates/core/src/store.rs:3271` — a rejection that records its reason under a compare-and-set.
 
 ## 5. Memory Data Model
 
@@ -231,10 +231,12 @@ read gates on it.
 
 | Path | What to read it for |
 | --- | --- |
-| `src/store.rs:2076-2115` | An ACL validated before it is trusted |
-| `src/store.rs:366-412` | Three clocks, an ACL, and a staging table |
-| `src/store.rs:3273` | A rejection with a reason, guarded |
+| `crates/core/src/store.rs:2075-2114` | An ACL validated before it is trusted |
+| `crates/core/src/store.rs:366-412` | Three clocks, an ACL, and a staging table |
+| `crates/core/src/store.rs:3271` | A rejection with a reason, guarded |
 
 ## History
 
-**2026-09-16** — [`6b76a1dbd38a18a32c502e963f0d380f5b92d75f`](https://github.com/adea-ai/cortana/commit/6b76a1dbd38a18a32c502e963f0d380f5b92d75f) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: eighteen files scanned, one auto-run surface, one build-time execution point, three unpinned surfaces and ten dependency files inside the seven-day cooldown. Nothing was installed, built or run.
+**2026-09-19** — [`9609d2ab5f916b2795500ed98c57dd2388592144`](https://github.com/adea-ai/cortana/commit/9609d2ab5f916b2795500ed98c57dd2388592144) — `trust_state` re-tested. Every anchor in this report pointed at `src/store.rs` and the file is now at `crates/core/src/store.rs` — the repository became a Cargo workspace since the previous pin, so thirteen citations across three marks and the file index were dead paths. They are re-mapped, with line numbers shifted by one or two. The mark holds and is wider than recorded: `status='active'` is composed into a dozen reads in that one file — the counting read (`:1819`), the update guards (`:1832`, `:1880`), the upsert (`:1899`), the full-text search (`:2082`), a second count (`:2792`), the ACL lookup (`:3788`), the validity stamp (`:3808`) and the aggregate rollups (`:3825-3893`) — against the record's five. Two reads omit it, and both are the ones that should: the point read by id (`:3755-3762`) returns the row with its `status` column so the caller sees what it got, and `export_memories_with_axes_as_owner` (`:3992-4081`) carries the full ACL predicate but no status filter, because an export that dropped superseded rows would be a lossy backup. The record now says so rather than claiming the predicate is universal. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-16** — [`9609d2ab5f916b2795500ed98c57dd2388592144`](https://github.com/adea-ai/cortana/commit/9609d2ab5f916b2795500ed98c57dd2388592144) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: eighteen files scanned, one auto-run surface, one build-time execution point, three unpinned surfaces and ten dependency files inside the seven-day cooldown. Nothing was installed, built or run.

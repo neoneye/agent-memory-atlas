@@ -111,14 +111,14 @@ query-only until each capability is separately authorised.</p>
               <strong>adea-ai/cortana</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/adea-ai/cortana/commit/6b76a1dbd38a18a32c502e963f0d380f5b92d75f" title="6b76a1dbd38a18a32c502e963f0d380f5b92d75f">
+            <a class="meta-pill revision-pill" href="https://github.com/adea-ai/cortana/commit/9609d2ab5f916b2795500ed98c57dd2388592144" title="9609d2ab5f916b2795500ed98c57dd2388592144">
               <span>Analyzed revision</span>
-              <code>6b76a1db…</code>
+              <code>9609d2ab…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/adea-ai--cortana" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -251,7 +251,7 @@ flowchart TB
 </thead>
 <tbody>
 <tr>
-<td><code>src/store.rs</code></td>
+<td><code>crates/core/src/store.rs</code></td>
 <td>The schema, the gated search, the candidate lifecycle (11,171
 lines)</td>
 </tr>
@@ -280,12 +280,12 @@ lines)</td>
 </table></div>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
-<p><code>src/store.rs:2076-2115</code> — one query, and everything it
-refuses to assume.</p>
-<p><code>src/store.rs:366-412</code> — memories and their staging table,
-side by side.</p>
-<p><code>src/store.rs:3273</code> — a rejection that records its reason
-under a compare-and-set.</p>
+<p><code>crates/core/src/store.rs:2075-2114</code> — one query, and
+everything it refuses to assume.</p>
+<p><code>crates/core/src/store.rs:366-412</code> — memories and their
+staging table, side by side.</p>
+<p><code>crates/core/src/store.rs:3271</code> — a rejection that records
+its reason under a compare-and-set.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>Both tables carry <code>acl_json</code> and
 <code>provenance_json</code> from the candidate stage onward, so an
@@ -348,22 +348,46 @@ candidate to memory and no read gates on it.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>src/store.rs:2076-2115</code></td>
+<td><code>crates/core/src/store.rs:2075-2114</code></td>
 <td>An ACL validated before it is trusted</td>
 </tr>
 <tr>
-<td><code>src/store.rs:366-412</code></td>
+<td><code>crates/core/src/store.rs:366-412</code></td>
 <td>Three clocks, an ACL, and a staging table</td>
 </tr>
 <tr>
-<td><code>src/store.rs:3273</code></td>
+<td><code>crates/core/src/store.rs:3271</code></td>
 <td>A rejection with a reason, guarded</td>
 </tr>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/adea-ai/cortana/commit/9609d2ab5f916b2795500ed98c57dd2388592144"><code class="commit-id" title="9609d2ab5f916b2795500ed98c57dd2388592144">9609d2ab…</code></a>
+— <code>trust_state</code> re-tested. Every anchor in this report
+pointed at <code>src/store.rs</code> and the file is now at
+<code>crates/core/src/store.rs</code> — the repository became a Cargo
+workspace since the previous pin, so thirteen citations across three
+marks and the file index were dead paths. They are re-mapped, with line
+numbers shifted by one or two. The mark holds and is wider than
+recorded: <code>status='active'</code> is composed into a dozen reads in
+that one file — the counting read (<code>:1819</code>), the update
+guards (<code>:1832</code>, <code>:1880</code>), the upsert
+(<code>:1899</code>), the full-text search (<code>:2082</code>), a
+second count (<code>:2792</code>), the ACL lookup (<code>:3788</code>),
+the validity stamp (<code>:3808</code>) and the aggregate rollups
+(<code>:3825-3893</code>) — against the record's five. Two reads omit
+it, and both are the ones that should: the point read by id
+(<code>:3755-3762</code>) returns the row with its <code>status</code>
+column so the caller sees what it got, and
+<code>export_memories_with_axes_as_owner</code>
+(<code>:3992-4081</code>) carries the full ACL predicate but no status
+filter, because an export that dropped superseded rows would be a lossy
+backup. The record now says so rather than claiming the predicate is
+universal. Screened again first; nothing was installed and no suite was
+run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/adea-ai/cortana/commit/6b76a1dbd38a18a32c502e963f0d380f5b92d75f"><code class="commit-id" title="6b76a1dbd38a18a32c502e963f0d380f5b92d75f">6b76a1db…</code></a>
+href="https://github.com/adea-ai/cortana/commit/9609d2ab5f916b2795500ed98c57dd2388592144"><code class="commit-id" title="9609d2ab5f916b2795500ed98c57dd2388592144">9609d2ab…</code></a>
 — first reading, at a commit dated 16 September 2026. Screened before
 opening, from a shallow clone: eighteen files scanned, one auto-run
 surface, one build-time execution point, three unpinned surfaces and ten
