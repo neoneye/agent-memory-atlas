@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A SQLite thought graph that decays
+nodes rather than deleting them, records every live-to-decayed
+transition in an audit table with a snapshot taken before the commit,
+promotes frequently-read nodes to an irreversible permanent status, and
+keeps a user-facing event clock separate from the storage clock the
+decay pass reads.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cashew — Agent Memory Atlas">
+    <meta property="og:description" content="A SQLite thought graph that
+decays nodes rather than deleting them, records every live-to-decayed
+transition in an audit table with a snapshot taken before the commit,
+promotes frequently-read nodes to an irreversible permanent status, and
+keeps a user-facing event clock separate from the storage clock the
+decay pass reads.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cashew — Agent Memory Atlas">
+    <meta name="twitter:description" content="A SQLite thought graph
+that decays nodes rather than deleting them, records every
+live-to-decayed transition in an audit table with a snapshot taken
+before the commit, promotes frequently-read nodes to an irreversible
+permanent status, and keeps a user-facing event clock separate from the
+storage clock the decay pass reads.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cashew — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Cashew",
+      "description": "A SQLite thought graph that decays nodes rather than deleting them, records every live-to-decayed transition in an audit table with a snapshot taken before the commit, promotes frequently-read nodes to an irreversible permanent status, and keeps a user-facing event clock separate from the storage clock the decay pass reads.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Personal thought graph</p>
+          <h1>Cashew</h1>
+          <p class="document-deck">A SQLite thought graph that decays
+nodes rather than deleting them, records every live-to-decayed
+transition in an audit table with a snapshot taken before the commit,
+promotes frequently-read nodes to an irreversible permanent status, and
+keeps a user-facing event clock separate from the storage clock the
+decay pass reads.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/rajkripal/cashew">
+              <span>Source</span>
+              <strong>rajkripal/cashew</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/rajkripal/cashew/commit/9c886cece87993869164770be85e2452be3e48cb" title="9c886cece87993869164770be85e2452be3e48cb">
+              <span>Analyzed revision</span>
+              <code>9c886cec…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/rajkripal--cashew" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>rajkripal--cashew</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cashew is a thought graph for one person, stored in one SQLite file,
+with a stated purpose its <code>PHILOSOPHY.md</code> puts plainly: two
+agents on the same base model with different cashew brains respond
+differently because they have different evidence about the human in
+front of them, and <em>"this divergence is the point of the
+system."</em> It also draws a boundary most memory systems blur —
+<em>"Cashew itself doesn't override anything. The agent's prompt decides
+how much weight to put on graph evidence versus model
+defaults."</em></p>
+<p>Three marks, and all three are about forgetting rather than
+believing.</p>
+<p><strong>Decay is a flag, not a delete</strong>, and the gate in front
+of it is the design. A node can only decay if it is not permanent, is
+older than the threshold, has an access count of zero, and has no edge
+to a <em>live</em> neighbour — with already-decayed neighbours
+explicitly not counting, because they are <em>"effectively gone"</em>.
+Nothing that was ever read, and nothing the live subgraph still reaches,
+is eligible.</p>
+<p><strong>Every transition is audited by one writer.</strong>
+<code>decay_audit.py</code> exists so that all decay execution sites
+call the same helper, and it snapshots the node's content and counters
+from the same connection so the audit row is a record of what was lost
+rather than a pointer to a row that changed.</p>
+<p><strong>The tests are the third mark</strong>, and one of them is
+worth copying wholesale: before asserting a decayed node is absent from
+a search, it asserts the node's vector row is <em>still in the
+index</em>, with the comment <em>"proving search has to filter it, not
+that it was never there."</em></p>
+<p><code>trust_state</code> is withheld: there is no epistemic state
+here at all. The only signal is access count, and it runs in the other
+direction — reads earn permanence.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Nodes accumulate; nothing is judged true or false; some things stop
+being reachable.</p>
+<p>A node arrives from an extractor, carries a type and a domain, and is
+linked to whatever it was derived from. Reading it increments a counter.
+Enough reads and it is promoted to <code>permanent</code>, which
+<code>permanence.py</code> describes as <em>binary and irreversible</em>
+— the comment in the file is <em>"you cannot erase traumas"</em>.</p>
+<p>At the other end, the sleep protocol looks for nodes nobody has read,
+that are old, and that nothing live points at. Those are marked decayed.
+They stay in the table, drop out of every retrieval, and their passing
+is written to an audit table.</p>
+<p>Between the two, two clocks run in parallel and are deliberately not
+interchangeable — one for when the store learned something, one for when
+the thing happened.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — extractors write thought nodes linked by derivation edges into one SQLite file; retrieval combines embedding similarity with graph traversal and excludes decayed nodes on both endpoints of every edge join, weighting recency from the event clock; the sleep protocol consolidates and cross-links, promotes frequently-read nodes to an irreversible permanent status, and decays only nodes that are old, never read and orphaned in the live subgraph — writing every live-to-decayed transition through one audit helper that snapshots the node before the caller commits</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: extractors write thought nodes linked by derivation edges into one SQLite file; retrieval combines embedding similarity with graph traversal and excludes decayed nodes on both endpoints of every edge join, weighting recency from the event clock; the sleep protocol consolidates and cross-links, promotes frequently-read nodes to an irreversible permanent status, and decays only nodes that are old, never read and orphaned in the live subgraph — writing every live-to-decayed transition through one audit helper that snapshots the node before the caller commits
+flowchart TD
+    subgraph Ingest
+        EX[&quot;extractors&lt;br/&gt;transcripts · files&quot;]
+        NODE[&quot;thought_nodes&lt;br/&gt;content · type · domain&lt;br/&gt;timestamp · referent_time&quot;]
+        EDGE[&quot;derivation_edges&quot;]
+    end
+
+    subgraph Read
+        EMB[&quot;embedding similarity&quot;]
+        TRAV[&quot;graph traversal&quot;]
+        FILT[&quot;decayed IS NULL OR decayed = 0&lt;br/&gt;on both edge endpoints&quot;]
+        REC[&quot;recency weight [0.5, 1.0]&lt;br/&gt;from COALESCE(referent_time, timestamp)&quot;]
+        ACC[&quot;access_count++&quot;]
+    end
+
+    subgraph Sleep[&quot;sleep protocol&quot;]
+        CONS[&quot;consolidate · cross-link&quot;]
+        PERM[&quot;promote to permanent&lt;br/&gt;binary, irreversible&quot;]
+        GATE[&quot;decay gate&lt;br/&gt;not permanent · access_count = 0&lt;br/&gt;age &gt;= threshold · no live edge&quot;]
+        CASC[&quot;cascade to children&lt;br/&gt;stricter 30d, no other live parent&quot;]
+    end
+
+    AUD[&quot;decay_audit&lt;br/&gt;one writer, snapshot before commit&quot;]
+
+    EX --&gt; NODE --&gt; EDGE
+    NODE --&gt; EMB --&gt; FILT
+    NODE --&gt; TRAV --&gt; FILT
+    FILT --&gt; REC --&gt; ACC
+    ACC --&gt; PERM
+    CONS --&gt; GATE
+    PERM -.exempt.-&gt; GATE
+    GATE --&gt; CASC
+    GATE --&gt; AUD
+    CASC --&gt; AUD</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema:</strong> <code>core/db.py</code> — the node columns
+the repository's own scripts rely on, listed explicitly rather than
+assumed.</li>
+<li><strong>Decay:</strong> <code>core/decay.py</code> — the gate, the
+cascade, and the two audit calls.</li>
+<li><strong>Audit:</strong> <code>core/decay_audit.py</code> — the
+single writer and its lazy schema.</li>
+<li><strong>Permanence:</strong> <code>core/permanence.py</code>.</li>
+<li><strong>Retrieval:</strong> <code>core/retrieval.py</code> — the
+decayed filter, the event clock and the recency weight.</li>
+<li><strong>Consolidation:</strong> <code>core/sleep.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The node columns are enumerated in <code>core/db.py</code> with an
+honest caveat — <em>"not exhaustive of every column — just the ones used
+by scripts we own"</em> — which is the sort of scoping most schema
+constants omit.</p>
+<p>Two fields deserve attention.</p>
+<p><strong><code>permanent</code></strong> is binary and one-way. The
+module's design notes give the reasoning in four bullets, including that
+the threshold should be <em>discoverable from data, not hardcoded
+magic</em>, and the promotion signal is access count on the premise that
+frequently retrieved means important.</p>
+<p><strong><code>referent_time</code></strong> is an event clock beside
+the storage <code>timestamp</code>. It is normalised on write by a
+helper that accepts ISO 8601 with an explicit offset, converts to UTC,
+and <strong>rejects naive datetimes outright</strong> — <em>"we refuse
+to guess local tz"</em> — raising on any parse failure with the stated
+preference to <em>"fail loud over silent drift."</em></p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Similarity search and graph traversal both exclude decayed nodes, and
+the edge join carries the predicate on <em>both</em> endpoints, so a
+live node cannot be used as a stepping stone to a decayed one.</p>
+<p>Recency is a gentle weight in <code>[0.5, 1.0]</code> that halves
+over about a year of event age, and its unknown case is chosen rather
+than defaulted: an unparseable timestamp neutralises to 1.0 rather than
+dropping the node, on the stated ground that ranking on similarity alone
+beats discarding.</p>
+<p>The clock the weight reads is
+<code>COALESCE(referent_time, timestamp)</code> — the biographical clock
+— and the helper that loads it carries a rule in its docstring worth
+quoting in full, because it is the thing most systems get wrong by
+accident:</p>
+<blockquote>
+<p>Callers on the operational side
+(decay/GC/declassify/embeddings/recent activity) must NOT use this
+helper — read <code>timestamp</code> directly instead.</p>
+</blockquote>
+<p>So a memory about something that happened last year, written today,
+ranks as old for the user and is young for the garbage collector. The
+two clocks answer different questions and the code says which is
+which.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Extractors pull nodes from agent transcripts and files. The sleep
+protocol is the interesting write path: a work-capped, batched,
+Numpy-backed pipeline that consolidates, cross-links, promotes and
+decays, wrapped by a backwards-compatible class so existing callers keep
+working — a division the module header states explicitly.</p>
+<p>Decay writes through <code>log_decay_event</code> on the caller's
+connection, before the caller commits, so the audit row and the flag are
+one transaction.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, a daemon, extractors including one for agent archives, a
+dashboard with its own metrics, and <code>skills/</code> and
+<code>integration/</code> directories for wiring an agent to the graph.
+Distributed on PyPI as <code>cashew-brain</code>, MIT-licensed.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Tombstone — awarded.</strong> The row survives, every read
+excludes it, and the gate that sets the flag is conservative in three
+independent ways at once: never read, old enough, and unreferenced by
+anything live.</p>
+<p><strong>Audit log — awarded.</strong> One writer, a snapshot taken
+from the node row on the caller's connection, and a lazily-created
+schema so an upgrade cannot lose the first events. One caveat belongs on
+the record: <code>gc_decay_audit</code> prunes the audit table, so the
+record of a forgetting is itself subject to retention.</p>
+<p><strong>Negative eval — awarded</strong>, on the pair quoted in the
+evidence record. The <code>permanent_but_decayed</code> integrity case
+is the rarer half: asserting the check returns 1 on a deliberately
+violated database proves the check can fail, which is the property a
+green integrity number otherwise cannot demonstrate.</p>
+<p><strong>Trust state — withheld, and there is nothing to withhold it
+from.</strong> No field records whether a node is believed, confirmed,
+disputed or superseded. Access count is the only signal, and it earns
+permanence rather than gating belief. That is consistent with the
+project's philosophy — the graph makes evidence available and the
+agent's prompt decides what to do with it — and it means a contradiction
+between two nodes is something the reader resolves, not the store.</p>
+<p><strong>Bitemporal — withheld.</strong> Two clocks exist and the
+separation between them is carefully enforced, but neither answers an
+as-of question: the event clock feeds a recency weight in the ranking,
+and no read returns the graph as it stood at a past instant.</p>
+<p><strong>Scope enforced — withheld.</strong> The boundary is one
+database per person. A <code>domain</code> field labels nodes but no
+read filters on it, so it orders and groups rather than partitions.</p>
+<p><strong>Human review — withheld.</strong> Nothing gates a node on
+anyone's approval.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> Searched the README,
+<code>DESIGN.md</code>, <code>PHILOSOPHY.md</code> and
+<code>docs/</code> for <code>arxiv</code>, <code>@article</code>,
+<code>@misc</code>, <code>doi.org</code> and a
+<code>CITATION.cff</code>: none.</p>
+<p>42 test files with a <code>pytest.ini</code>, and the two that matter
+are in section 9's evidence record. The decayed-search case is the one
+to read: it asserts the stale vector row is present <em>before</em>
+searching, so the absence it then measures is measured against an index
+that really contains the thing being filtered. That ordering is the
+difference between a test that pins a filter and a test that passes
+because the fixture was empty, and this project wrote the comment
+explaining it.</p>
+<p>No retrieval benchmark is committed and none is claimed. A
+<code>metrics-dashboard</code> and a <code>metrics.py</code> exist for
+operational counters rather than for scoring retrieval quality.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Prove the fixture contains what your filter must
+remove.</strong> One extra assertion before the search — the stale row
+is still in the index — turns an absence check into evidence about the
+filter.</li>
+<li><strong>Make an integrity check fail on purpose in a test.</strong>
+A checker that only ever reports zero is indistinguishable from a
+checker that cannot report anything else.</li>
+<li><strong>Gate forgetting on reachability, not just age.</strong>
+Never read, old enough, <em>and</em> no edge to a live neighbour — with
+an already-decayed neighbour not counting — is a garbage collector
+rather than a TTL.</li>
+<li><strong>Name which clock each caller may read.</strong> One
+docstring line forbidding the operational passes from using the
+biographical clock prevents a whole class of quiet drift.</li>
+<li><strong>Snapshot on the caller's connection.</strong> The audit row
+and the state change then commit together, and the record describes what
+was lost rather than pointing at a row that has already changed.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The decay audit is garbage-collected. What retention does it keep,
+and is there a deployment where the audit should outlive the nodes it
+describes?</li>
+<li><code>permanent</code> is irreversible by design. What happens to a
+node promoted by a burst of reads that later turns out to be noise — is
+re-extraction the only route?</li>
+<li><code>mood_state</code> is a column on every node and did not
+surface in the retrieval paths this reading covered. What reads it?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema and paths: <code>core/db.py</code></li>
+<li>Decay and cascade: <code>core/decay.py</code></li>
+<li>Decay audit: <code>core/decay_audit.py</code></li>
+<li>Permanence: <code>core/permanence.py</code></li>
+<li>Retrieval, clocks and recency: <code>core/retrieval.py</code></li>
+<li>Traversal: <code>core/traversal.py</code></li>
+<li>Consolidation: <code>core/sleep.py</code></li>
+<li>Event-clock normalisation: <code>core/session.py</code></li>
+<li>Tests: <code>tests/test_embeddings.py</code>,
+<code>tests/test_permanence.py</code>, <code>tests/test_decay.py</code>,
+<code>tests/test_retrieval.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/rajkripal/cashew/commit/9c886cece87993869164770be85e2452be3e48cb"><code class="commit-id" title="9c886cece87993869164770be85e2452be3e48cb">9c886cec…</code></a>
+— first reading, at the head of <code>main</code>, version 1.2.1 on PyPI
+as <code>cashew-brain</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: a
+<code>tests/conftest.py</code> that executes on pytest collection, a
+<code>pyproject.toml</code> declaring dependencies with no lockfile
+beside it and changed five days before the reading, and a
+<code>CLAUDE.md</code> addressed to a reading agent — read as data
+throughout. Nothing was installed, built or run. Three marks. The
+reading covered the node schema and its two flags, the decay gate and
+its cascade, the audit helper and its snapshot discipline, the
+permanence promotion, the retrieval filters on both edge endpoints, the
+two clocks and the rule separating them, and the two test cases the
+marks rest on; the dashboard, the daemon and the extractor family were
+read as context rather than as subject. MIT. Four marks are withheld
+with reasons in section 9, and the one worth repeating is
+<code>trust_state</code>: there is no field recording whether a node is
+believed, and the project's own philosophy says why — the graph makes
+evidence available and the agent's prompt decides what weight to give
+it.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

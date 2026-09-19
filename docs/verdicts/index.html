@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 586 reports.</strong></p>
+<p><strong>This page covers all 587 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -23389,6 +23389,69 @@ people are already reading it.</li>
 <li>Do not copy when: you need a discrete state a memory can hold —
 every epistemic axis here is a number, and the enums are operational or
 access-control.</li>
+</ul>
+<h3 id="cashew"><a
+href="../systems/cashew/"><code>cashew</code></a></h3>
+<ul>
+<li>Best idea: <strong>prove the index still contains the thing your
+filter must remove, then assert the absence.</strong> The decayed-node
+search test marks a node decayed and asserts its vector row is <em>still
+present</em> before searching — the comment says why, "proving search
+has to filter it, not that it was never there" — and only then asserts
+the id is missing from the results and a live node on the same query
+still ranks. Presence of the filtered thing, absence in the result, and
+a positive control, in one test.</li>
+<li>Second idea: <strong>gate forgetting on reachability, not
+age.</strong> A node can only decay if it is not permanent, is older
+than the threshold, has an access count of zero, and has no edge to a
+<em>live</em> neighbour — with an already-decayed neighbour explicitly
+not counting because it is effectively gone. Cascading holds children to
+a stricter thirty-day threshold and spares any child with another live
+parent. That is a garbage collector, not a TTL.</li>
+<li>Third idea: <strong>one writer for every transition, snapshotting on
+the caller's connection.</strong> <code>decay_audit.py</code> exists so
+all decay execution sites call the same helper; it reads the node's
+content, counters and source from <code>thought_nodes</code> before the
+caller commits, so the audit row describes what was lost rather than
+pointing at a row that has already changed, and the record and the state
+change land in one transaction.</li>
+<li>Fourth idea: <strong>name which clock each caller may read.</strong>
+<code>referent_time</code> is the biographical event clock and
+<code>timestamp</code> the storage clock, and the helper that loads the
+former carries the rule in its docstring: the operational side — decay,
+GC, declassify, embeddings, recent activity — must not use it and must
+read <code>timestamp</code> directly. Normalisation rejects naive
+datetimes outright rather than guessing a timezone, on the stated
+preference to fail loud over silent drift.</li>
+<li>Biggest risk: <strong>the record of a forgetting has a retention of
+its own.</strong> <code>gc_decay_audit</code> prunes the
+<code>decay_audit</code> table, so the audit that makes decay reviewable
+is subject to the same disappearance it documents. Anyone relying on it
+as a long-horizon record needs to know its window.</li>
+<li>Second risk: <code>permanent</code> is binary and irreversible by
+design — the module says so — so a node promoted by a burst of reads can
+never be demoted, and re-extraction is the only route back.</li>
+<li>Third risk: there is no scope predicate on any read path. The
+boundary is one database per person and <code>domain</code> is a label
+that orders and groups rather than partitions; a deployment sharing one
+file between contexts has nothing enforcing the split.</li>
+<li>Most reusable component: <code>core/decay_audit.py</code> — a small
+single-writer audit helper with the snapshot-before-commit discipline
+and a lazily-created schema, liftable into any store that flags rows
+instead of deleting them.</li>
+<li>Maturity impression: MIT, on PyPI as <code>cashew-brain</code> at
+1.2.1, 42 test files with a <code>pytest.ini</code>, a
+<code>DESIGN.md</code> and a <code>PHILOSOPHY.md</code> that state the
+project's boundaries in their own words, plus a CLI, a daemon,
+extractors and a metrics dashboard — a maintained personal-scale system
+rather than a product.</li>
+<li>Study when: you are building anything that forgets, and want the
+forgetting to be reviewable, conservative and provably filtered rather
+than merely deleted.</li>
+<li>Do not copy when: you need a memory that can be believed, disputed
+or retired — there is no epistemic state here at all, and the project's
+philosophy is explicit that the graph supplies evidence and the agent's
+prompt decides what weight to give it.</li>
 </ul>
         </article>
       </div>

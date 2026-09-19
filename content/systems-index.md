@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **586 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **587 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -106,6 +106,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <ul class="az">
 <li><a class="az-row" href="../systems/cambium/"><span class="az-id">Cambium</span><span class="az-what">A standard, not a store</span><code class="az-repo">KimGLee/Cambium</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/camel/"><span class="az-id">CAMEL</span><span class="az-what">Message store with vector recall</span><code class="az-repo">camel-ai/camel</code><span class="az-caps"></span></a></li>
+<li><a class="az-row" href="../systems/cashew/"><span class="az-id">Cashew</span><span class="az-what">Personal thought graph</span><code class="az-repo">rajkripal/cashew</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/cass-memory-system/"><span class="az-id">CASS</span><span class="az-what">A blocklist that survives paraphrase</span><code class="az-repo">Dicklesworthstone/cass_memory_system</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/caura/"><span class="az-id">Caura</span><span class="az-what">A rejected skill is remembered by its fingerprint</span><code class="az-repo">caura-ai/caura</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/chitta-field/"><span class="az-id">chitta-field</span><span class="az-what">A veto is an Option, not a zero</span><code class="az-repo">genomewalker/chitta-field</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Mutation audit</span></span></a></li>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 586 reports.**
+**This page covers all 587 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5169,3 +5169,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 with a patent rider, PyPI at 0.84.0, 525 test files organised per module, 63 top-level packages including federation, metering, entitlement, calibration and compliance, Docker and Lambda images, a self-audit script with a committed report, and a version-migration guide — a commercial product rather than a reference implementation.
 - Study when: you are validating a partition key that crosses a trust boundary, or designing an audit record you expect to extend after other people are already reading it.
 - Do not copy when: you need a discrete state a memory can hold — every epistemic axis here is a number, and the enums are operational or access-control.
+
+### [`cashew`](../systems/cashew/)
+- Best idea: **prove the index still contains the thing your filter must remove, then assert the absence.** The decayed-node search test marks a node decayed and asserts its vector row is *still present* before searching — the comment says why, "proving search has to filter it, not that it was never there" — and only then asserts the id is missing from the results and a live node on the same query still ranks. Presence of the filtered thing, absence in the result, and a positive control, in one test.
+- Second idea: **gate forgetting on reachability, not age.** A node can only decay if it is not permanent, is older than the threshold, has an access count of zero, and has no edge to a *live* neighbour — with an already-decayed neighbour explicitly not counting because it is effectively gone. Cascading holds children to a stricter thirty-day threshold and spares any child with another live parent. That is a garbage collector, not a TTL.
+- Third idea: **one writer for every transition, snapshotting on the caller's connection.** `decay_audit.py` exists so all decay execution sites call the same helper; it reads the node's content, counters and source from `thought_nodes` before the caller commits, so the audit row describes what was lost rather than pointing at a row that has already changed, and the record and the state change land in one transaction.
+- Fourth idea: **name which clock each caller may read.** `referent_time` is the biographical event clock and `timestamp` the storage clock, and the helper that loads the former carries the rule in its docstring: the operational side — decay, GC, declassify, embeddings, recent activity — must not use it and must read `timestamp` directly. Normalisation rejects naive datetimes outright rather than guessing a timezone, on the stated preference to fail loud over silent drift.
+- Biggest risk: **the record of a forgetting has a retention of its own.** `gc_decay_audit` prunes the `decay_audit` table, so the audit that makes decay reviewable is subject to the same disappearance it documents. Anyone relying on it as a long-horizon record needs to know its window.
+- Second risk: `permanent` is binary and irreversible by design — the module says so — so a node promoted by a burst of reads can never be demoted, and re-extraction is the only route back.
+- Third risk: there is no scope predicate on any read path. The boundary is one database per person and `domain` is a label that orders and groups rather than partitions; a deployment sharing one file between contexts has nothing enforcing the split.
+- Most reusable component: `core/decay_audit.py` — a small single-writer audit helper with the snapshot-before-commit discipline and a lazily-created schema, liftable into any store that flags rows instead of deleting them.
+- Maturity impression: MIT, on PyPI as `cashew-brain` at 1.2.1, 42 test files with a `pytest.ini`, a `DESIGN.md` and a `PHILOSOPHY.md` that state the project's boundaries in their own words, plus a CLI, a daemon, extractors and a metrics dashboard — a maintained personal-scale system rather than a product.
+- Study when: you are building anything that forgets, and want the forgetting to be reviewable, conservative and provably filtered rather than merely deleted.
+- Do not copy when: you need a memory that can be believed, disputed or retired — there is no epistemic state here at all, and the project's philosophy is explicit that the graph supplies evidence and the agent's prompt decides what weight to give it.
