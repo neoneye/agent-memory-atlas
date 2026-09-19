@@ -9,10 +9,8 @@ source_url: https://github.com/offendingcommit/openconcho
 archive_name: "offendingcommit--openconcho"
 revision: b5e25646d3f91e54c4aacf111c0f8ff734cead87
 revision_url: https://github.com/offendingcommit/openconcho/commit/b5e25646d3f91e54c4aacf111c0f8ff734cead87
-analyzed_at: 2026-09-16
-capabilities: "human_review"
-capability_evidence:
-  human_review: "a browser over another system's derived beliefs where a person creates and permanently deletes them | packages/web/src/components/conclusions/ConclusionBrowser.tsx:74, :284-306, packages/web/src/api/queries.ts:702-712 | `ConclusionBrowser` renders Honcho's conclusions and wires two mutations: `CreateConclusionModal` writes a new conclusion into the workspace, and a `ConfirmDialog` titled \"Delete conclusion\" — \"This conclusion will be permanently removed.\" — calls `useDeleteConclusion`, which issues `DELETE /v3/workspaces/{workspace_id}/conclusions/{conclusion_id}` against the live server. The person's decision is the authority: the conclusion is gone from Honcho's store, not hidden in the client | packages/web/src/test/dreams.test.ts"
+analyzed_at: 2026-09-19
+capabilities: ""
 stack_storage: "delegated"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -43,6 +41,16 @@ to see: the conclusions a server has drawn about them. Honcho's conclusions are
 typed — `explicit`, `deductive`, `inductive`, `contradiction` — and OpenConcho
 browses them, creates them, and deletes them permanently, with a confirmation
 dialog that says so.
+
+That is authoring and deletion over a live store, not a review gate, which is
+why this report carries no capability mark. A conclusion is already in Honcho
+when the browser shows it; creating one writes straight through, and deleting
+one issues `DELETE /v3/workspaces/{workspace_id}/conclusions/{conclusion_id}`
+against the server. Nothing in `packages/web/src` holds a conclusion in a state
+pending anyone's decision — the only `pending` in the tree is the dialectic
+playground's request status. The value of the project is the window, not a gate:
+it is the rare case of a reader being shown the beliefs a server has drawn about
+them, and the two rendering caveats below matter more than any mark would.
 
 Two things about how it renders them are worth knowing before trusting the view.
 
@@ -243,5 +251,7 @@ Whether the desktop build keeps tokens anywhere other than the webview's
 | `packages/web/src/lib/config.ts` | Instance and token storage |
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`b5e25646d3f91e54c4aacf111c0f8ff734cead87`](https://github.com/offendingcommit/openconcho/commit/b5e25646d3f91e54c4aacf111c0f8ff734cead87); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, leaving the report with no capability mark, which is the right answer for what this is. The record described creating a conclusion and permanently deleting one — authoring and deletion over a store the conclusion is already in — and the mark asks for a memory that waits in a state until an actor the producing agent cannot be resolves it. `packages/web/src` holds nothing pending; the only `pending` in the tree is the dialectic playground's request status. Nothing else changes: this remains a report worth having because the window it opens — the conclusions a server has drawn about a person — is one users almost never get, and the two rendering caveats in section 1 are the findings that matter. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`b5e25646d3f91e54c4aacf111c0f8ff734cead87`](https://github.com/offendingcommit/openconcho/commit/b5e25646d3f91e54c4aacf111c0f8ff734cead87) — first reading, at a commit dated 13 August 2026. Screened before opening, from a shallow clone: seventeen files scanned, one auto-run surface, three build-time execution points, three unpinned surfaces, nothing inside the dependency cooldown, and the `CLAUDE.md` and `AGENTS.md` read as data. Nothing was installed, built or run.
