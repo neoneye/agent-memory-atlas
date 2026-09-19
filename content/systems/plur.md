@@ -7,16 +7,15 @@ page_kind: system
 source_name: "plur-ai/plur"
 source_url: https://github.com/plur-ai/plur
 archive_name: "plur-ai--plur"
-revision: f6e97819a4518f198cd0c37404643038404f7e39
-revision_url: https://github.com/plur-ai/plur/commit/f6e97819a4518f198cd0c37404643038404f7e39
-analyzed_at: 2026-09-16
-capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+revision: e26901c1376a5c9c37f94c1c7d84714e66e82797
+revision_url: https://github.com/plur-ai/plur/commit/e26901c1376a5c9c37f94c1c7d84714e66e82797
+analyzed_at: 2026-09-19
+capabilities: "trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   trust_state: "a commitment of draft that withholds an engram from injection while leaving it retrievable | packages/core/src/inject.ts:172-173, :657, :697, packages/mcp/src/tools.ts:1048, :1147, packages/core/src/index.ts:3440, :3489, packages/core/src/feedback.ts:45-53 | `commitment` is a five-value field — exploring, leaning, decided, locked, draft — and `skipForApproval` returns true for `draft`, which the injection loop uses to `continue` past the engram in both its selection and its spreading-activation pass; the producer is agent-reachable, since `plur_learn` and `plur_learn_batch` both take a `commitment` argument that reaches the persisted shape, and feedback cannot launder the value because `nextCommitment` returns an unrecognised state untouched. Combined with `status: retired`, filtered at index.ts:4837, the ladder is candidate, accepted, rejected | packages/core/test/draft-approval-gate.test.ts:38-67, packages/core/test/feedback.test.ts:126-129"
   bitemporal: "validity time on the engram, held apart from record time, and filtered independently on both read paths | packages/core/src/schemas/engram.ts:141-146, packages/core/src/expiry.ts:139-150, packages/core/src/index.ts:4872, packages/core/src/inject.ts:140-153, packages/core/src/validity.ts:108-121 | the temporal block carries `learned_at`, `valid_from`, `valid_until` and `ingested_at` and is described in the schema as bi-temporal anchoring; `created_at`, `updated_at` and each source's `stored_at` are the record axis and are always stamped; a caller supplies the window through `plur_learn`'s `valid_from`/`valid_until` arguments and `buildTemporal` writes it beside `learned_at`, the importer supplies `ingested_at`, and both the retrieval filter and the injection gate call the validity predicates independently of any record timestamp | packages/core/test/validity-instants.test.ts:219"
   scope_enforced: "a stored scope with two distinct read-side predicates, one of which matches nothing on an empty grant | packages/core/src/index.ts:4843-4844, :4860-4861, packages/core/src/scope-util.ts:70-74, :108-116, :126-141, packages/core/src/storage-indexed.ts:180, packages/core/src/storage-pglite.ts:437 | `scope` is a first-class field set per write from the tool argument, and the store holds many at once — global, local, and project, group, user and agent namespaces; `makeVisibilityPredicate` is segment-aware so a sibling whose name merely shares a prefix is excluded, while `scopeAllowFilter` is exact membership with an explicit rule that an empty permitted list matches nothing rather than everything; the filter is applied in the YAML arm and pushed down into the SQLite, PGLite and Postgres index arms | packages/core/test/scope-pushdown.test.ts:130-157, pglite-scope-pushdown.test.ts:163-165, read-side-scope-visibility.test.ts:319"
   audit_log: "an append-only monthly JSONL of twenty-one mutation event types in the system's own store | packages/core/src/history.ts:7, :26-40, :58-112, :93, packages/core/src/index.ts:3124-3129, :6448, :6510 | `appendHistory` opens `{root}/history/YYYY-MM.jsonl` in append mode and fsyncs, writing an event with a type, the engram id, a timestamp, a data payload and optional actor and reason; the union covers creation, update, merge, feedback, retirement, decrement, promotion, rescoping, failure reports, procedure evolution, recurrence, contradiction, scope promotion, buffer pruning, review, routing failure, co-injection, injection outcome, session scope change and two dedup kinds, with roughly thirty-five call sites across the core; a `plur_history` tool reads it back | packages/core/test suites covering retire, feedback and procedure evolution"
-  human_review: "a person adjudicates a contradiction and the losing engram is retired | packages/mcp/src/tools.ts:3855, :3865, :3880-3897, packages/cli/src/commands/tensions.ts:51-53, :113-129, packages/core/src/schemas/tension.ts:36-53 | detected contradictions are stored as tension records, and `plur tensions confirm|dismiss|resolve <id> --winner <engram-id>` on the command line, or the same three actions through the MCP tool, let a person confirm the contradiction, dismiss it, or pick a winner — which retires the loser; the verdict persists in `tensions.yaml`. The dashboard is not this: it is documented read-only with a single route that reveals a folder and writes nothing | packages/core and packages/cli tension suites"
   negative_eval: "three cases asserting a draft is absent from a populated injection, including through spreading activation | packages/core/test/draft-approval-gate.test.ts:38-46, :47-54, :57-67, packages/core/test/scope-pushdown.test.ts:130-157 | the first builds two engrams, one draft and one decided, and asserts the draft absent and the decided present in the same result; the second repeats it for a draft arriving inside an installed pack; the third asserts a draft cannot be reached through spreading activation with an approved neighbour present. Beside them, a scope case asserts that an empty permitted-scope list returns nothing where a populated filter returns rows, and a validity case asserts an expired engram absent | 337 `.not.toContain` assertions across the suite, with named exclusion files for scope, supersession, validity and pinned quota"
 stack_storage: "files, sqlite, postgres"
 stack_retrieval: "lexical, vector"
@@ -67,8 +66,7 @@ explicit rule in the source that an empty permitted list must match nothing —
 *"a principal with no permitted scopes must see nothing. NEVER treat an empty
 list as 'no filter'"*. `audit_log` on an append-only monthly JSONL of
 twenty-one mutation event types, fsynced, in the store's own directory.
-`human_review` on a tension queue where a person confirms, dismisses or resolves
-a detected contradiction and the loser is retired. `negative_eval` on three
+`negative_eval` on three
 cases asserting a draft absent from a populated injection, one of them through
 spreading activation.
 
@@ -206,7 +204,17 @@ than applied after loading.
   appends a retirement event with the before and after counts.
 - **Adjudicate.** `packages/mcp/src/tools.ts:3880-3897` and
   `packages/cli/src/commands/tensions.ts:113-129` confirm, dismiss or resolve a
-  tension; a resolve retires the loser.
+  tension; a resolve retires the loser. Both call the same three core functions
+  — `confirmTension`, `dismissTension`, `resolveTension` — and neither passes an
+  actor, which is why `human_review` was withdrawn on the 2026-09-19 re-read.
+  `plur_tensions` is a declared MCP tool whose `action` enum is
+  `confirm | dismiss | resolve`, and after a scan the tool's own reply tells the
+  model what to do next: *"Review each tension: action:\"confirm\" (real),
+  action:\"dismiss\" (false positive), or action:\"resolve\" + winner:<engram_id>
+  (retire the loser)"* (`:3955`). The agent that wrote both engrams can decide
+  which of them survives, and an unresolved tension does not withhold either —
+  it adds a `warnings` field to the injection result (`:1622`, `:1662`). The
+  adjudication is a real and well-shaped mechanism; it is not a human one.
 
 ## 5. Memory Data Model
 
@@ -342,9 +350,19 @@ store's own directory, with a reader tool. One property worth stating: the
 history directory is not in the sync path, so a store pushed to a team carries
 the engrams without the record of how they got there.
 
-**Human review — awarded.** A person confirms, dismisses or resolves a
-contradiction and the resolution retires the loser. This is adjudication of
-memory content, and the dashboard is correctly not counted as it writes nothing.
+**Human review — withheld, and the previous reading's own record said why.**
+It read *"or the same three actions through the MCP tool"*, and that clause is
+the finding rather than a detail. `plur_tensions` (`packages/mcp/src/tools.ts:3855`)
+declares `action: confirm | dismiss | resolve` to the model, the handler
+(`:3880-3897`) calls the same `confirmTension` / `dismissTension` /
+`resolveTension` the CLI calls, no actor is recorded on either path, and the
+tool's post-scan reply instructs the model to work the queue itself. So the
+producer can adjudicate its own contradictions. Nothing waits in the meantime
+either: an unresolved tension adds a `warnings` field to the injection result,
+not a withholding. The dashboard is still correctly not counted — it writes
+nothing — and the adjudication machinery itself is good; it is a contradiction
+ledger with a verdict, which is worth having and is not a human gate. The mark
+that does carry the withholding here is `trust_state`, above.
 
 **Negative evaluation — awarded.** Three draft-gate cases with positive controls
 in the same assertion, including one through spreading activation, plus scope
@@ -359,6 +377,18 @@ committed test asserts that re-learning a forgotten statement produces a new
 engram with a new id. The mark asks for a record keyed on the value that a later
 write consults; here the record exists and the write path deliberately looks
 past it.
+
+**A project config cannot quietly redirect memory to someone else's host.**
+A `.plur.yaml` in a cloned repository can name both `remote_url` and
+`remote_token`. `resolveProjectRemoteFromConfig` (`packages/core/src/project-remote.ts:79-99`)
+adopts them only if `isDirectoryTrusted` returns true for the directory the
+config was read from, fails closed on any error in that check, and the opencode
+adapter prints the refusal unconditionally rather than behind a debug flag —
+*"is not a trusted directory, and those settings would send prompt text to the
+host they name"*. The scope half of the same file is gated the same way, and
+both are resolved from one read of one resolved path, with the TOCTOU between
+"the file trust was checked against" and "the file whose fields are adopted"
+named in a comment as the reason.
 
 **What the delete story promises and does not do.** The tool table describes a
 retired memory as eventually pruned, and a comparison page describes erasure as
@@ -484,6 +514,8 @@ git show 19b74b5 --stat                                              # the harne
 ```
 
 ## History
+
+**2026-09-19** — re-pinned to [`e26901c1376a5c9c37f94c1c7d84714e66e82797`](https://github.com/plur-ai/plur/commit/e26901c1376a5c9c37f94c1c7d84714e66e82797), release 0.20.1, four commits on. **`human_review` is withdrawn; five marks stand.** The four files the mark rested on — `packages/mcp/src/tools.ts`, `packages/core/src/inject.ts`, `packages/cli/src/commands/tensions.ts`, `packages/core/src/schemas/tension.ts` — carry byte-identical blobs at both pins, so this is a correction to the previous reading rather than upstream drift. That reading's own evidence record contained the refutation: *"or the same three actions through the MCP tool."* `plur_tensions` declares `action: confirm | dismiss | resolve` on the agent's tool surface, the handler calls the same core functions the CLI calls with no actor on either path, and after a scan the tool's reply tells the model to work the queue. The producing agent can therefore adjudicate the contradiction between two engrams it wrote, and an unresolved tension withholds nothing — it adds a `warnings` field to the injection result. The adjudication ledger is still described in sections 4 and 9, where it stands on its own. The withholding mechanism in this system is the draft commitment, and that is `trust_state`, already awarded. New in the range and now in section 9: a `.plur.yaml` in a cloned repository may name a `remote_url` and a `remote_token`, and `resolveProjectRemoteFromConfig` adopts them only from a directory an explicit `plur trust` has covered, failing closed on any error and printing the refusal unconditionally. Screened again first: thirty-four files, three auto-run surfaces, one build-time execution point, thirteen unpinned surfaces, fifteen dependency files inside the cooldown, a `CLAUDE.md` recorded as data. Nothing installed, built or run.
 
 **2026-09-16** — [`f6e97819a4518f198cd0c37404643038404f7e39`](https://github.com/plur-ai/plur/commit/f6e97819a4518f198cd0c37404643038404f7e39) — re-read at a commit dated 2026-09-16, 8 commits past the previous pin. All six marks re-tested and held, and the validity axis is better defended: an unparseable stored bound is treated as absent so a data error cannot hide a memory, while an unparseable caller-supplied `now` throws a `RangeError` rather than silently answering as of the present moment. The evaluation instant now accepts RFC 3339 as well as a date, with a date still resolving to the end of its day. Screened before reading: three auto-run surfaces, one build-time execution point, 13 unpinned dependency surfaces and three dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
