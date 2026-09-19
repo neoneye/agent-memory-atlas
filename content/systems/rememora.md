@@ -7,13 +7,12 @@ page_kind: system
 source_name: "Rememora/rememora"
 source_url: https://github.com/Rememora/rememora
 archive_name: "Rememora--rememora"
-revision: 9fe78eba7d68b4387e867492268cc82ed104bbf3
-revision_url: https://github.com/Rememora/rememora/commit/9fe78eba7d68b4387e867492268cc82ed104bbf3
-analyzed_at: 2026-09-16
-capabilities: "audit_log, human_review, trust_state, negative_eval"
+revision: 58ac331e6a42c6f4135ba9b3bcd26b75625c2890
+revision_url: https://github.com/Rememora/rememora/commit/58ac331e6a42c6f4135ba9b3bcd26b75625c2890
+analyzed_at: 2026-09-19
+capabilities: "audit_log, trust_state, negative_eval"
 capability_evidence:
   audit_log: "two append-only records of what changed and why, one of them written in the same transaction as the writes it describes and carrying the statement that reverses them | src/migrations/003_curator.sql:27-40, src/models/watermark.rs:105, src/commands/evolve.rs:561-584, :691-710 | `curator_log` is described in its own DDL as the \"[a]udit log of every curation action performed by the curator\", constraining `action` to add, update, delete or noop and carrying the context id, a free-text `reason` and the `model` that decided. It has exactly one INSERT in the tree and no UPDATE or DELETE. Beside it, `evolve_undo` records each applied consolidation decision with the ids it retired, the id that replaced them, any id it created, and `undo_sql` — the literal statement that puts the memory back. The doc comment states the transactional property that makes it trustworthy: the row is written inside the decision's own transaction, so \"a decision that rolls back leaves no journal row claiming it happened\". The bound belongs with the mark: these cover curation and consolidation, not every write, and an ordinary `rememora save` is not journalled | a corpus-wide search for DELETE or UPDATE against either table returns nothing, and `test_applied_supersession_is_journalled_in_the_database` asserts one decision produces exactly one journal row naming the retired and surviving ids"
-  human_review: "a destructive pass that is dry-run unless explicitly armed, bounded before the model sees the work, and stripped of the automatic hooks that used to run it unattended | src/commands/evolve.rs:9-14, :133-134, :205-228, src/evolve.rs:24-35, src/commands/setup.rs:274-280 | `resolve_apply` is one line, requiring that no dry run was asked for and that either the flag or the environment armed it, so writes need an explicit `--apply` or `REMEMORA_APPLY=1`, and `--dry-run` overrides both; the constant's own doc calls the environment variable the one that \"arms the destructive path\". What routes work to a person rather than merely gating it is the refusal: a cluster over `MAX_CLUSTER_SIZE` is skipped before a token is spent, with the reason handed back as \"review it by hand\", on the argument that clustering is transitive so a large cluster is more likely \"one bad edge chaining unrelated memories than a genuine pile of duplicates\". And the project removed the surface that would have bypassed the person: `strip_rememora_hooks` self-heals an existing install, because \"Rememora no longer wires anything into Claude Code / Gemini CLI lifecycle hooks\" | `MAX_SUPERSEDE_PER_DECISION` is set to five and documented as \"the blast radius of a single LLM call ... deliberately much smaller than `MAX_CLUSTER_SIZE` so that even a fully-hallucinated decision can only retire a handful of records\""
   trust_state: "a stored supersession that withholds a memory from every retrieval arm and names what replaced it | src/migrations/001_initial.sql:40, src/search.rs:178, :403, src/timeline.rs:96, src/models/context.rs:161 | `contexts.superseded_by` is a self-referencing foreign key, and `superseded_by IS NULL` is appended to the full-text search, to the vector nearest-neighbour search and to the timeline query — so a retired memory is withheld by the store rather than annotated after the fact, on both retrieval arms rather than the one somebody remembered. It is an epistemic marker rather than a deletion: the row survives, its content is intact, and the column names the memory that replaced it, so a reader can follow the supersession forward. Two qualifications: it is one bit and a pointer rather than a vocabulary — there is no `stale`, no `disputed`, no `needs_review` — and the judgement behind it is a language model's, applied only when a person arms the pass | tests/behavior_propagation.rs:276-309 `propagation_excludes_superseded_contexts` supersedes one of two sibling memories and asserts the retired one is absent from a propagated search"
   negative_eval: "a populated store where the same result set must contain two named memories and must not contain a third | tests/behavior_search.rs:268-291, :300-313 | `search_supports_grouped_or_and` inserts three memories into one project — two about caching, one deliberately unrelated — runs a grouped boolean query, and asserts all three facts about the same result set: `Redis` is present, `Memcached` is present, and `Unrelated` is not. The two positive assertions are what make the negative one load-bearing, because a query that returned nothing would fail the test rather than pass it, which is the failure mode most must-not assertions in this corpus have. A second case at :300 repeats the shape, requiring `Locks` and forbidding `Order`. The assertions are on what the store's search returns rather than on a scoring function | tests/eval_retrieval.rs and the `bench/` directory carry a separate retrieval measurement, so the committed assertions are not the project's only evidence about recall"
 stack_storage: "sqlite"
@@ -236,11 +235,24 @@ dropping an event array that ends up empty rather than leaving it as `"Event":
 
 ## 9. Reliability, Safety, and Trust
 
-**Human review — awarded.** The dry-run default and the explicit arming are the
-gate; the oversized-cluster refusal is what actually routes work to a person,
-because it hands the cluster back with a reason rather than proceeding; and the
-hook removal is the strongest evidence, because it is a feature the project took
-away and wrote code to uninstall.
+**Human review — withdrawn on the 2026-09-19 re-read.** Each of the three legs
+is worth having and none of them is this mark. The arming is
+`resolve_apply = !dry_run && (apply_flag || env_armed)` — a flag the caller
+sets, which the rubric names as the `--force` shape: it guards against a slip,
+not against a decision. And a sibling command sets it for you:
+`rememora dream`, the command the project points you at for routine upkeep,
+builds its `EvolveArgs` with `apply: !args.dry_run`
+(`src/commands/dream.rs:41`), so the destructive pass runs armed by default
+there, and the CLI help invites wiring it to *"your own cron/launchd job"*
+(`src/main.rs:414-417`). The oversized-cluster refusal is real and is the best
+thing here — a system declining to act on its own weakest inference — but it
+routes nothing: the skip produces one `ActionReport` row in this run's printed
+summary (`src/commands/evolve.rs:209-228`), nothing durable records it, and the
+next run re-clusters and skips it again, so *"review it by hand"* names a queue
+that is never written down, let alone drained. The hook removal is the removal
+of an automation rather than a check on an actor; after it, nothing runs
+unattended unless the operator schedules it, which is a default, not a gate.
+All three keep their description in sections 1 and 9.
 
 **Audit log — awarded, and bounded.** Two append-only records, one of them
 transactional, covering curation and consolidation. An ordinary save is not
@@ -336,5 +348,7 @@ grep -rn 'valid_from\|valid_to\|as_of' src --include='*.rs'   # no validity axis
 ```
 
 ## History
+
+**2026-09-19** — re-pinned to [`58ac331e6a42c6f4135ba9b3bcd26b75625c2890`](https://github.com/Rememora/rememora/commit/58ac331e6a42c6f4135ba9b3bcd26b75625c2890). One commit since the previous pin, touching `README.md` only, so every source line below is byte-identical and this is a correction to our own reading. **`human_review` is withdrawn; three marks stand.** The arming flag is the `--force` shape the rubric names, and `rememora dream` — the command the project offers for routine upkeep and suggests wiring to cron — passes `apply: !dry_run` itself, so the gate is absent on the path most people will run. The oversized-cluster refusal, the best mechanism in the tool, hands a cluster back with *"review it by hand"* as one printed report row and writes nothing down, so there is no queue for a person to work. The hook removal is a default rather than an actor check. `audit_log`, `trust_state` and `negative_eval` re-verified unchanged. Screened again first: the same two dependency manifests, several files inside the cooldown, nothing installed or run.
 
 **2026-09-16** — [`9fe78eba7d68b4387e867492268cc82ed104bbf3`](https://github.com/Rememora/rememora/commit/9fe78eba7d68b4387e867492268cc82ed104bbf3) — first reading, at a commit dated 15 September 2026, version 1.7.0. Screened before opening, from a full clone so dependency ages are the project's own rather than the clone's: fourteen files scanned, one auto-run surface, one build-time execution point, two unpinned dependency surfaces and two dependency files inside the seven-day cooldown, with `app/src-tauri/Cargo.lock` unchanged for 143 days and `bench/pnpm-lock.yaml` for 168. `AGENTS.md` and `CLAUDE.md` are addressed to a reading agent and were recorded as data. Nothing was installed, built or run, and no benchmark was reproduced.

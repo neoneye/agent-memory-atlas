@@ -194,6 +194,16 @@ all, because the producing side simply has no reach: an inferred memory is
 `pending`, both prompt-injection queries filter `status = active`, confirmation
 happens over an HTTP route, and the agent's single memory tool is a read while
 the shipped MCP server's twenty-nine tools name no memory verb.
+[RE-call](../../systems/re-call/) writes the rule down. Its MCP server registers
+a plan verb and no apply twin, and says why in the docstring: *"There is
+deliberately no `recall_rewrite_apply`. The MCP client is the model, so letting
+it supply a reviewer id and an audit note would make the named human gate a
+formality it satisfies by typing a string: the gate becomes a field, not a
+person."* Its one fact-writing tool states the same rule as a property of its
+inputs — trust verdicts, timestamps, approval fields and writer identity are
+*"server-owned and cannot be supplied here"* — and the structural half holds
+underneath, since a downstream function takes a `PromotedFact` that only the
+promotion path produces.
 
 **Why:** fully automatic memory, memory a person can review before it takes
 effect, and memory a person authors are three different products with three

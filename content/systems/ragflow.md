@@ -7,16 +7,15 @@ page_kind: system
 source_name: "infiniflow/ragflow"
 source_url: https://github.com/infiniflow/ragflow
 archive_name: "infiniflow--ragflow"
-revision: 7bc159d64e565d7fa93cd56b866772dad66edf31
-revision_url: https://github.com/infiniflow/ragflow/commit/7bc159d64e565d7fa93cd56b866772dad66edf31
-analyzed_at: 2026-09-16
-capabilities: "scope_enforced, human_review, negative_eval"
+revision: 302ada2cdbdd72a5db4bd8e046478e52011fe4f0
+revision_url: https://github.com/infiniflow/ragflow/commit/302ada2cdbdd72a5db4bd8e046478e52011fe4f0
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, negative_eval"
 stack_storage: "elastic, redis, postgres"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
 capability_evidence:
   scope_enforced: "Memory message search, both runtimes | api/apps/services/memory_api_service.py:56-75,359-379, memory/utils/es_conn.py:144, memory/services/query.py:29-31, internal/service/memory.go | the accessible set is computed before the query and the query cannot widen it. `_memory_accessible` admits a memory when `memory.tenant_id == current_user.id`, or when `permissions == 'team'` *and* the owner is in `_joined_tenant_ids(current_user.id)`; `search_message` maps the caller's `memory_id` list through `_filter_accessible_memories` and passes only the survivors, and returns `[]` rather than searching when none survive. Below that, `ESConnection.search` executes `condition['memory_id'] = memory_ids` — an unconditional overwrite, so a caller cannot drop the predicate — and the index itself is `f'memory_{uid}'` per tenant, so a cross-tenant read needs a different index name as well as a different id. The Infinity, OceanBase and GaussDB adapters force the same predicate at `memory/utils/infinity_conn.py`, `ob_conn.py:244` and `gaussdb_conn.py:1062-1082`. The agent-side retrieval component is the documented exception and is analysed in section 8 | internal/service/memory_message_test.go::TestSearchMessageFiltersAccessibleMemoryAndDefaultsStatus"
-  human_review: "The per-memory Messages page | web/src/pages/memory/memory-message/message-table.tsx:85-118,247-264,417-422, api/apps/services/memory_api_service.py:340-356, api/apps/restful_apis/memory_api.py:240-275 | the page is not a viewer. Each row carries an `Enable` switch bound to `update_message_status`, which writes `status` on the stored document, and `search_message` defaults `condition_dict['status'] = 1`, so switching a row off removes it from every retrieval result while leaving it listed. Beside it a `Forget message` action with a confirmation dialog calls `forget_message`, which stamps `forget_at`; all four adapters default `hide_forgotten=True` and add `must_not exists forget_at`. Both are exposed on the REST surface (`PUT`/`DELETE /messages/<memory_id>:<message_id>`) and in the Python SDK (`Memory.update_message_status`, `Memory.forget_message`). What the surface cannot do is edit an entry's content or correct a wrong extraction — see section 5 | test/testcases/test_web_api/test_message_app/test_update_message_status.py::TestUpdateMessageStatus::test_update_to_false"
   negative_eval: "Go memory service, read path | internal/service/memory_message_test.go:575-700 | `seedMemoryMessages` seeds two rows — `mem-owned` on tenant `user-1` and `mem-other` on tenant `user-2`, the second with `Permissions: me`. `TestSearchMessageFiltersAccessibleMemoryAndDefaultsStatus` calls `svc.SearchMessage(ctx, \"user-1\", filter, params)` with `memory_id: []string{\"mem-owned\", \"mem-other\"}` and asserts `reflect.DeepEqual(req.Filter[\"memory_id\"], []string{\"mem-owned\"})` on the request that reached the doc engine — an exact one-element slice, so the case fails both if the other tenant's memory survives and if the filter comes back empty. `TestGetMessagesFiltersAccessibleMemoryAndBuildsRecentSearch` makes the same assertion on the recent-messages path and additionally asserts `IndexNames == [memory_user-1]`. Both run against an in-process `glebarez/sqlite` `:memory:` database with no skip path. The assertion is about a scope boundary rather than about a corrected value, and it covers the Go runtime only — the Python service that ships in the default `docker/docker-compose.yml` has no equivalent case | internal/service/memory_message_test.go::TestSearchMessageFiltersAccessibleMemoryAndDefaultsStatus"
 matrix:
   memory_unit: "A `message` document — `message_id`, `message_type`, `source_id`, `memory_id`, `user_id`, `agent_id`, `session_id`, `content`, `content_embed`, `valid_at`, `invalid_at`, `forget_at`, `status`. Every agent turn produces one `raw` document plus zero or more extracted children pointing back at it through `source_id`"
@@ -78,7 +77,7 @@ against `MemoryType`, nothing checks it against the memory's own bits, and
 nothing on the read path branches on it. Four typed memories behind one integer
 is a strong claim; at this commit it is a label.
 
-Three marks: `scope_enforced`, `human_review` and `negative_eval`. `tombstone`,
+Two marks: `scope_enforced` and `negative_eval`. `human_review`, `tombstone`,
 `trust_state`, `bitemporal` and `audit_log` were each examined and withheld, and
 the near-misses are named in sections 2, 5 and 9 — `status` in particular is a
 discrete field that genuinely withholds an entry from retrieval, and is a
@@ -586,9 +585,20 @@ reaches the agent's turn, the turn is written verbatim as a raw document, and th
 extraction LLM reads that text as part of its conversation input. A retrieved
 memory is then concatenated into a later prompt as an unlabelled content string
 with no delimiter and no provenance marker. Nothing scores, verifies or
-corroborates. The mitigation available to an operator is the Messages page —
-which is why `human_review` is the right mark for it and also why the review is
-after the fact.
+corroborates. The mitigation available to an operator is the Messages page, and
+the shape of that mitigation is why the 2026-09-19 re-read **withdrew
+`human_review`**: the review is after the fact. Every writer in
+`api/db/joint_services/memory_message_service.py` stamps `"status": True` on the
+raw message and on each extracted memory as it is saved (`:84`, `:99`, `:147`,
+`:412`), so nothing is ever held back; the read path's default —
+`if "status" not in condition_dict: condition_dict["status"] = 1`
+(`memory/services/messages.py:154-155`, where this filter now lives, having moved
+out of `memory_api_service.py` since the previous pin) — takes effect only once a
+person has switched a row off. The switch is real and it is honoured, and the
+`Forget message` action beside it stamps `forget_at` which all four adapters
+exclude by default; the operator surface deserves its description. What it is
+not is a state a memory waits in. The producing agent never needs the operator's
+permission, because it already has the prompt.
 
 **Race conditions.** Two writes to the same memory can both read the Redis total
 before either increments it, so the cap is advisory under concurrency;
@@ -861,6 +871,8 @@ rg -n 'Skip\(|t.Skip' internal/service/memory_message_test.go
 ```
 
 ## History
+
+**2026-09-19** — re-pinned to [`302ada2cdbdd72a5db4bd8e046478e52011fe4f0`](https://github.com/infiniflow/ragflow/commit/302ada2cdbdd72a5db4bd8e046478e52011fe4f0). **`human_review` is withdrawn; two marks stand.** The previous reading's own sentence names the reason — *"the review is after the fact"* — and under the producer test that is decisive: every writer stamps `"status": True` as the message is saved, so no memory ever waits, and the `Enable` switch is a retraction a person applies to something already in use. Two corrections came with the re-read. The status filter moved: `search_message` in `api/apps/services/memory_api_service.py` no longer sets `condition_dict["status"] = 1`, and the default now lives in `memory/services/messages.py:154-155`, so the mechanism survives at a new address and the old citation would have read as a removal. And `update_message_status` is reachable only from the REST surface and the Python SDK — the agent's own retrieval tool (`agent/tools/retrieval.py`) reads and writes nothing of the kind — which is worth recording because it makes the operator switch durable against the agent even though it is not a gate. `scope_enforced` and `negative_eval` re-verified at the new pin. Screened again first; nothing installed or run, and the read was made through the GitHub contents API rather than a clone, because this repository is large and only the memory subsystem is in scope.
 
 **2026-09-16** — [`7bc159d64e565d7fa93cd56b866772dad66edf31`](https://github.com/infiniflow/ragflow/commit/7bc159d64e565d7fa93cd56b866772dad66edf31) — re-read at a commit dated 2026-09-16, 444 commits past the previous pin. All three marks re-tested and held; the tenant predicate in `memory_api_service.py` is unchanged, admitting a memory only when its `tenant_id` is the caller's own or one they have joined. The addition worth recording is on the message endpoint: a client-supplied `user_id` is honoured only when the request authenticated as an API key, so attribution on behalf of an end user is a delegation available to a server-side principal and to nobody else — and the line that records it logs which path ran rather than the identifier, on the stated ground that the stored subject alone cannot distinguish them and that the id *"identifies an end user."* Screened before reading, from a clone deepened past the pin: one auto-run surface, 36 build-time execution points, eight unpinned dependency surfaces and eleven dependency files inside the seven-day cooldown — the shape of a large monorepo rather than a finding about the memory code. Nothing was installed, built or run.
 

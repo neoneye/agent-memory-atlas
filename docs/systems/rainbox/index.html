@@ -106,14 +106,14 @@ evals.</p>
               <strong>neoneye/RainBox</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/neoneye/RainBox/commit/848390c8d7fb91cf955703c3b6d09592579bf1c6" title="848390c8d7fb91cf955703c3b6d09592579bf1c6">
+            <a class="meta-pill revision-pill" href="https://github.com/neoneye/RainBox/commit/e09dd4f6ca2fc2ff0d35ab9743b76b37bc690bfc" title="e09dd4f6ca2fc2ff0d35ab9743b76b37bc690bfc">
               <span>Analyzed revision</span>
-              <code>848390c8…</code>
+              <code>e09dd4f6…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/neoneye--RainBox" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -1010,6 +1010,29 @@ added?</li>
 <code>test_assistant_profile.py</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — re-pinned to <a
+href="https://github.com/neoneye/RainBox/commit/e09dd4f6ca2fc2ff0d35ab9743b76b37bc690bfc"><code class="commit-id" title="e09dd4f6ca2fc2ff0d35ab9743b76b37bc690bfc">e09dd4f6…</code></a>,
+23 commits and 40 files on. <strong>All four marks hold.</strong> The
+range is the user-profile subsystem — profile fields, formatting
+guidance, identity, calibration and their views and tests — plus design
+notes; none of <code>source/db/memory.py</code>,
+<code>source/db/models.py</code> or
+<code>source/webapp/chat_api.py</code> is in it, so the anchors for
+<code>tombstone</code>, <code>trust_state</code> and
+<code>scope_enforced</code> are byte-identical and were re-read rather
+than re-derived. <code>human_review</code> was re-tested against the
+producer question and the record now cites the call graph rather than
+the state machine: <code>_propose_write</code>
+(<code>source/agents/assistant.py:6838-6848</code>) records an intent
+instead of dispatching, saying a confirm-tier write can never execute
+inline <em>"by code, not prompt discipline"</em>;
+<code>execute_write_intent</code> has exactly one caller, the HTTP
+confirm route, which resolves the approver with
+<code>db.get_human_user()</code> server-side rather than reading an
+identity from the request; and the executor refuses an intent that is
+not in <code>proposed</code> or whose payload hash has moved. That is an
+actor check on the channel with the approval bound to what was
+previewed. Screened again first; nothing installed or run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/neoneye/RainBox/commit/848390c8d7fb91cf955703c3b6d09592579bf1c6"><code class="commit-id" title="848390c8d7fb91cf955703c3b6d09592579bf1c6">848390c8…</code></a>
 — re-read after 62 commits. <code>source/db/memory.py</code>, which

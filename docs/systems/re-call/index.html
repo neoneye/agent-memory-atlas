@@ -115,14 +115,14 @@ to be measured before it was.</p>
               <strong>GiulioDER/RE-call</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/GiulioDER/RE-call/commit/1994fd256820df7970eac1f1d588a1961da16edf" title="1994fd256820df7970eac1f1d588a1961da16edf">
+            <a class="meta-pill revision-pill" href="https://github.com/GiulioDER/RE-call/commit/1157360f1e0704a06548d93a4f4797c415c722f9" title="1157360f1e0704a06548d93a4f4797c415c722f9">
               <span>Analyzed revision</span>
-              <code>1994fd25…</code>
+              <code>1157360f…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/GiulioDER--RE-call" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -146,11 +146,17 @@ to be measured before it was.</p>
         </aside>
         <article class="prose" id="article">
 <h2 id="1-executive-summary">1. Executive Summary</h2>
-<p>RE-call is "[m]emory that abstains instead of guessing" — Apache-2.0,
-version 0.13.0, 102,183 lines of Python across 253 modules with 494 test
-files, running on the caller's own PostgreSQL with pgvector. It stores
-source documents, indexes them, "and keeps validity and lineage attached
-to every hit."</p>
+<p>RE-call is "[m]emory that abstains instead of guessing" — version
+0.14.0, 103,088 lines of Python across 254 modules with 518 test files,
+running on the caller's own PostgreSQL with pgvector. <strong>The
+licence changed between the previous pin and this one</strong>: releases
+up to and including 0.13.x stay Apache-2.0, and this release and later
+ones are under the PolyForm Noncommercial License 1.0.0, which permits
+personal, educational and noncommercial research use and requires a
+separate written licence for commercial production, a hosted service or
+redistribution. A <code>COMMERCIAL_LICENSE.md</code> sits beside it in
+the tree. It stores source documents, indexes them, "and keeps validity
+and lineage attached to every hit."</p>
 <p>The pitch is a distinction rather than a feature:</p>
 <blockquote>
 <p>"Plain vector search returns nearby text. RE-call also asks whether
@@ -324,6 +330,23 @@ in-process against MCP transport, tool-definition context cost, and
 Claude Code with and without RE-call, calibrated and not.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
+<p><strong>The review gate is kept off the model's own surface, and the
+project says why.</strong> The MCP server registers
+<code>recall_rewrite_plan</code> and no apply twin, and the docstring is
+the clearest statement of this rule anywhere in the corpus: <em>"There
+is deliberately no <code>recall_rewrite_apply</code>. The MCP client is
+the model, so letting it supply a reviewer id and an audit note would
+make the named human gate a formality it satisfies by typing a string:
+the gate becomes a field, not a person. This surface proposes; a human
+applies at <code>recall rewrite apply</code>."</em> The plan tool hands
+back the exact CLI line a person would run
+(<code>recall_mcp/reasoning_admin.py:14-20</code>), so the handoff is
+spelled out rather than implied. The one fact-writing tool states the
+same rule as a property of its inputs: on
+<code>recall_apply_fact</code>, trust verdicts, timestamps, approval
+fields and writer identity are <em>"server-owned and cannot be supplied
+here"</em>. That is what <code>human_review</code> is for, and this is
+the version to copy.</p>
 <p>Fail-closed is the default posture and is written as such, including
 a broad exception catch annotated with its intent. The gaps are the
 configured ones: a development mode that serves <code>unverified</code>
@@ -396,6 +419,31 @@ note</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — re-pinned to <a
+href="https://github.com/GiulioDER/RE-call/commit/1157360f1e0704a06548d93a4f4797c415c722f9"><code class="commit-id" title="1157360f1e0704a06548d93a4f4797c415c722f9">1157360f…</code></a>,
+29 commits and 184 files on. <strong>All seven marks re-tested and
+held</strong>, and <code>human_review</code> is re-grounded on the thing
+that actually settles the producer test. The structural gate is
+unchanged — <code>_require_review_fields</code>
+(<code>recall/promotion.py:200-210</code>) still raises without a
+reviewer identity, a review timestamp and a non-blank audit note, and
+<code>recall/rewrite.py:26</code> still records that a downstream
+function cannot take an unreviewed proposal because only
+<code>promote_accepted_proposal</code> produces a
+<code>PromotedFact</code>. What the record now cites beside it is the
+absence: the MCP server registers <code>recall_rewrite_plan</code> and
+no apply twin, and its docstring states the rule this atlas's rubric
+arrived at independently — <em>"letting it supply a reviewer id and an
+audit note would make the named human gate a formality it satisfies by
+typing a string: the gate becomes a field, not a person."</em>
+<code>recall_apply_fact</code> repeats it as an input property, with
+approval fields and writer identity server-owned. Quoted in section 9,
+and re-call is added to the rubric's list of what passing looks like.
+The stated limit is unchanged: on the CLI path <code>reviewer_id</code>
+is a supplied string, so the mechanism is stronger than the attribution
+it records, and section 12 still asks whether it should be bound to an
+authenticated principal. Screened again first; nothing installed or
+run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/GiulioDER/RE-call/commit/1994fd256820df7970eac1f1d588a1961da16edf"><code class="commit-id" title="1994fd256820df7970eac1f1d588a1961da16edf">1994fd25…</code></a>
 — first reading, at a commit dated 16 September 2026. Screened before
