@@ -128,7 +128,7 @@ figure.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/CodeAbra--iai-personal-memory-engine" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -136,7 +136,7 @@ figure.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -202,11 +202,14 @@ records a failing gate — ΔMRR of −0.035 against plain cosine on the
 classical metric — beside the passing ones, with a note explaining why
 that metric is not the promise. Neither the README nor
 <code>BENCHMARKS.md</code> mentions it.</p>
-<p>Three marks. <code>audit_log</code> on the insert-only
-<code>events</code> table. <code>human_review</code> on pin,
-forget-hint, rescue and teach in the desktop view and CLI.
-<code>negative_eval</code> on temporal-recall and quarantine tests that
-assert exclusion with the positive control in the same case. Withheld:
+<p>Two marks. <code>audit_log</code> on the insert-only
+<code>events</code> table, and <code>negative_eval</code> on
+temporal-recall and quarantine tests that assert exclusion with the
+positive control in the same case. Withheld: <code>human_review</code> —
+the desktop view and CLI act directly on stored rows, and
+<code>pin</code>, <code>forget_hint</code>, <code>rescue</code> and
+<code>teach</code> are protection, deletion-queueing and authoring
+rather than a state a memory waits in before it can be believed;
 <code>tombstone</code> — the project's tombstone is a record-level soft
 delete with a TTL; <code>trust_state</code> — a float and a window;
 <code>bitemporal</code> — validity is derived from another record's
@@ -674,15 +677,25 @@ the MCP wrapper killing a busy daemon on a one-second probe miss among
 them. 3.0.2 fixed a torn read-only snapshot that served a truncated view
 of the write-ahead log as current, a stale row count paired with a
 current generation, and the two resurrection paths above.</p>
-<p><strong>The marks.</strong> <code>audit_log</code>,
-<code>human_review</code> and <code>negative_eval</code> are earned as
-the frontmatter states. <code>tombstone</code> is withheld:
-<code>tombstoned_at</code> is keyed on the record, and re-capturing the
-same text after the drop inserts it afresh — nothing remembers the value
-that was removed. <code>trust_state</code> is withheld: a float, a
-threshold on one write path, and a window. <code>bitemporal</code> is
-withheld as section 5 explains. <code>scope_enforced</code> is withheld
-because there is nothing to enforce.</p>
+<p><strong>The marks.</strong> <code>audit_log</code> and
+<code>negative_eval</code> are earned as the frontmatter states.
+<code>human_review</code> is withheld. The five tools BrainView and the
+CLI offer — <code>capture</code>, <code>teach</code>,
+<code>forget_hint</code>, <code>rescue</code>, <code>pin</code> — act on
+rows the agent is already reading: <code>pin</code> protects a record
+from the erasure predicate, <code>forget_hint</code> queues one
+<em>for</em> deletion and <code>rescue</code> cancels that queue, and
+<code>capture</code> and <code>teach</code> add rows outright. A
+protection flag, a deletion queue and an authoring verb are three useful
+things and none of them is an admission gate; nothing in
+<code>src/iai_mcp/</code> holds a memory pending anyone's decision.
+<code>tombstone</code> is withheld: <code>tombstoned_at</code> is keyed
+on the record, and re-capturing the same text after the drop inserts it
+afresh — nothing remembers the value that was removed.
+<code>trust_state</code> is withheld: a float, a threshold on one write
+path, and a window. <code>bitemporal</code> is withheld as section 5
+explains. <code>scope_enforced</code> is withheld because there is
+nothing to enforce.</p>
 <p><strong>Uncertainty</strong> is representable in one direction only:
 a row can be superseded, and a superseded row is served at half weight.
 It cannot be <em>unverified</em>, and a contradiction the model notices
@@ -901,6 +914,23 @@ ls CITATION*
 find tests -name &#39;test_*.py&#39; | wc -l
 grep -rh &#39;^def test_\|^    def test_&#39; tests | wc -l</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — audited at the unchanged pin <a
+href="https://github.com/CodeAbra/iai-personal-memory-engine/commit/c400059ac860929936719fc70a66f57ee60c712c"><code class="commit-id" title="c400059ac860929936719fc70a66f57ee60c712c">c400059a…</code></a>;
+nothing upstream moved, so the correction is ours.
+<code>human_review</code> is <strong>withdrawn</strong>, and the record
+awarded it in the same breath as naming the reason — it is <em>"the
+editing-surface form of the mark rather than an approval queue."</em>
+That form is no longer in the definition. Taken one at a time the five
+tools are a protection flag (<code>pin</code> excludes a record from the
+erasure predicate), a deletion queue and its cancel
+(<code>forget_hint</code>, <code>rescue</code>), and two authoring verbs
+(<code>capture</code>, <code>teach</code>); none holds a memory back
+before it can be believed, and <code>src/iai_mcp/</code> carries no such
+state. The forgetting design keeps its credit in section 6 — a queued
+record still carries its <code>user-forget-hint</code> provenance entry,
+which is more than most deletion paths record. <code>audit_log</code>
+and <code>negative_eval</code> stand. Screened again first; nothing was
+installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/CodeAbra/iai-personal-memory-engine/commit/c400059ac860929936719fc70a66f57ee60c712c"><code class="commit-id" title="c400059ac860929936719fc70a66f57ee60c712c">c400059a…</code></a>
 — re-read at a commit dated 2026-09-16, 7 commits past the previous pin,

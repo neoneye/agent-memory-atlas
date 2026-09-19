@@ -9,14 +9,13 @@ source_url: https://github.com/CodeAbra/iai-personal-memory-engine
 archive_name: "CodeAbra--iai-personal-memory-engine"
 revision: c400059ac860929936719fc70a66f57ee60c712c
 revision_url: https://github.com/CodeAbra/iai-personal-memory-engine/commit/c400059ac860929936719fc70a66f57ee60c712c
-analyzed_at: 2026-09-16
-capabilities: "audit_log, human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "audit_log, negative_eval"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
 capability_evidence:
   audit_log: "an `events` table written by insert only, each row's payload encrypted with the event id as associated data, recording the forgetting side of the store's mutations | src/iai_mcp/hippo/_table.py:185-208, src/iai_mcp/events.py:89-127, src/iai_mcp/brainview.py:1445-1451,:1649-1656, src/iai_mcp/store/_buffers.py:173-183, src/iai_mcp/lilli/cycle/sleep_pipeline/_erasure.py:104-115, src/iai_mcp/s5.py:154-172 | `write_event` builds a row with a fresh UUID, a kind, severity, domain, `ts`, an encrypted `data_json`, `session_id` and `source_ids_json`, and adds it through `HippoTable.add`; `rg -n 'DELETE FROM events|open_table\\(\"events\"\\)\\.delete' src/iai_mcp` finds no caller, so the table only grows. Kinds that name a mutation of memory: `forget_hint` and `forget_rescue` carrying the record id, `record_quarantined` with the id and reason, `stc_upgrade_pass` for a tier upgrade, `s5_invariant_update` and `identity_write_rejected` with the anchor and candidate ids, `erasure_agent_pass` with counts, `deferred_captures_quarantined`. What is not recorded: an ordinary capture writes no event, and `retrieve.contradict` writes none — the contradiction lives as an `edges` row and the recall-time `s4_contradiction` hint is a detection, not a mutation | tests/test_active_forgetting.py:321 test_erasure_event_body_shape_and_uniqueness, tests/test_temporal_recall.py:107-131"
-  human_review: "the BrainView desktop surface and the `iai` CLI act directly on stored rows | src/iai_mcp/brainview.py:776-801,:1408-1458,:1467,:1649-1658, src/iai_mcp/iai_cli.py:1316 | `pin` sets the `pinned` column that the erasure step's eligibility predicate excludes; `forget_hint` queues a record for the sleep cycle and appends a `user-forget-hint` provenance entry; `rescue` cancels the queue and writes `forget_rescue`; `teach` and `capture` add rows; the tool list at `:1843` is `capture, teach, forget_hint, rescue, pin`. A person is inspecting and adjudicating the rows the agent reads, which is the editing-surface form of the mark rather than an approval queue | tests/test_blob_quarantine.py:78 test_quarantine_spares_pinned_records"
   negative_eval: "retrieval-level exclusions with the positive control in the same case | tests/test_temporal_recall.py:355-421,:424-476, tests/test_blob_quarantine.py:207-238 | `test_as_of_same_day_boundary` inserts four raw rows around a boundary and asserts, from one `memory_temporal_recall` call, that the past and boundary-equal rows are in `ids` and the future and one-second-later rows are not; `test_as_of_tombstoned_after_t_appears` asserts a row tombstoned after `as_of` is served and one tombstoned before it is not. `test_quarantined_record_absent_from_recall_hits_and_anti_hits` captures a machine-notification blob, quarantines it, rebuilds the exact index, recalls with the blob's own embedding as the cue, and asserts its id is absent from both `hits` and `anti_hits` — the strongest possible cue for the excluded row | tests/test_temporal_recall.py:418-421"
 matrix:
   memory_unit: "A verbatim `records` row in one of five tiers, carrying an embedding, a hypervector, community and centrality, `pinned` and `never_decay`, `last_reviewed` and `labile_until`, `tombstoned_at` and `live`, a JSON provenance list of every capture, recall, hint and rescue that touched it, tags including `entity:` anchors, a `language`, and an `s5_trust_score` float; typed `edges` between rows, `contradicts` and `invariant_anchor` among them"
@@ -77,10 +76,12 @@ latest two records a failing gate — ΔMRR of −0.035 against plain cosine on 
 classical metric — beside the passing ones, with a note explaining why that
 metric is not the promise. Neither the README nor `BENCHMARKS.md` mentions it.
 
-Three marks. `audit_log` on the insert-only `events` table. `human_review` on
-pin, forget-hint, rescue and teach in the desktop view and CLI.
+Two marks. `audit_log` on the insert-only `events` table, and
 `negative_eval` on temporal-recall and quarantine tests that assert exclusion
-with the positive control in the same case. Withheld: `tombstone` — the
+with the positive control in the same case. Withheld: `human_review` — the
+desktop view and CLI act directly on stored rows, and `pin`, `forget_hint`,
+`rescue` and `teach` are protection, deletion-queueing and authoring rather
+than a state a memory waits in before it can be believed; `tombstone` — the
 project's tombstone is a record-level soft delete with a TTL; `trust_state` —
 a float and a window; `bitemporal` — validity is derived from another record's
 record time and the as-of query walks `created_at`; `scope_enforced` — one
@@ -510,8 +511,14 @@ one-second probe miss among them. 3.0.2 fixed a torn read-only snapshot that
 served a truncated view of the write-ahead log as current, a stale row count
 paired with a current generation, and the two resurrection paths above.
 
-**The marks.** `audit_log`, `human_review` and `negative_eval` are earned as
-the frontmatter states. `tombstone` is withheld: `tombstoned_at` is keyed on
+**The marks.** `audit_log` and `negative_eval` are earned as the frontmatter
+states. `human_review` is withheld. The five tools BrainView and the CLI offer —
+`capture`, `teach`, `forget_hint`, `rescue`, `pin` — act on rows the agent is
+already reading: `pin` protects a record from the erasure predicate,
+`forget_hint` queues one *for* deletion and `rescue` cancels that queue, and
+`capture` and `teach` add rows outright. A protection flag, a deletion queue and
+an authoring verb are three useful things and none of them is an admission gate;
+nothing in `src/iai_mcp/` holds a memory pending anyone's decision. `tombstone` is withheld: `tombstoned_at` is keyed on
 the record, and re-capturing the same text after the drop inserts it afresh —
 nothing remembers the value that was removed. `trust_state` is withheld: a
 float, a threshold on one write path, and a window. `bitemporal` is withheld
@@ -717,6 +724,8 @@ grep -rh '^def test_\|^    def test_' tests | wc -l
 ```
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`c400059ac860929936719fc70a66f57ee60c712c`](https://github.com/CodeAbra/iai-personal-memory-engine/commit/c400059ac860929936719fc70a66f57ee60c712c); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, and the record awarded it in the same breath as naming the reason — it is *"the editing-surface form of the mark rather than an approval queue."* That form is no longer in the definition. Taken one at a time the five tools are a protection flag (`pin` excludes a record from the erasure predicate), a deletion queue and its cancel (`forget_hint`, `rescue`), and two authoring verbs (`capture`, `teach`); none holds a memory back before it can be believed, and `src/iai_mcp/` carries no such state. The forgetting design keeps its credit in section 6 — a queued record still carries its `user-forget-hint` provenance entry, which is more than most deletion paths record. `audit_log` and `negative_eval` stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`c400059ac860929936719fc70a66f57ee60c712c`](https://github.com/CodeAbra/iai-personal-memory-engine/commit/c400059ac860929936719fc70a66f57ee60c712c) — re-read at a commit dated 2026-09-16, 7 commits past the previous pin, across 14,109 added lines. All three marks re-tested and held, and the mutation audit is better evidenced than it was: the store now refuses a deletion of an `events` row rather than merely never performing one, and `update()` restricts events content to the encryption envelope column with an allow-list that fails closed on an unknown column. The guard states its own limit — the connection-layer regex covering raw execute paths *"does not claim completeness."* `watermark_fence.py` is new and treats a derived layer running ahead of its source as a hard failure independent of any threshold, while grading ordinary lag. Screened before reading, from a full clone: one auto-run surface, four build-time execution points, two unpinned dependency surfaces and two dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
