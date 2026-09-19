@@ -9,12 +9,11 @@ source_url: https://github.com/krakozavr/MemContinuum
 archive_name: "krakozavr--MemContinuum"
 revision: e21bfa06c0201433742a657b222ad40c8f4d95f4
 revision_url: https://github.com/krakozavr/MemContinuum/commit/e21bfa06c0201433742a657b222ad40c8f4d95f4
-analyzed_at: 2026-09-16
-capabilities: "trust_state, audit_log, human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "trust_state, audit_log, negative_eval"
 capability_evidence:
   trust_state: "five authorities and five statuses collapsed into three enforcement classes that decide whether a violation blocks | memidx.py:3888-3889, :3918-3937, :4047-4134, memlint.py:671-697 | `CONSTRAINT_AUTHORITIES` is exactly `owner-verbatim` and `owner-ratified`; `HOLD_ELIGIBLE_AUTHORITIES` is `reviewer-finding`, `code-derived` and `agent-inference`; `invariant_enforcement_class` returns `context` for any link whose `status` is not `active`, `constraint` for a constraint authority, `hold` for a hold-eligible authority that also carries validated evidence, and `context` otherwise — and `cmd_drift` fails the run on a constraint violation, reports a hold violation unless `--strict-holds` is passed, and routes a `provisional` link's invariant to `revalidate` where it is never checked at all; the same two authority sets are imported by the linter rather than re-typed, so a new authority cannot drift between the classes | tests/test_memidx.py, tests/test_memlint.py, tests/test_v11.py (1,605 test functions across 17 modules)"
   audit_log: "the chain is the mutation record, and a git hook refuses to rewrite it | memlint.py:1410-1490, :1524, hooks/pre-commit-append-only.sh:130-160, scripts/repo-init.sh:1643, memidx.py:841-862 | every ruling is a link carrying `date`, `recorded_by`, `recorded_at`, and on a change of mind `reverses` and `reason_for_change`; `_link_diff_errors` compares each link against the same link at a git ref and treats every field outside `{link, status, superseded_by, promoted_by}` as frozen, so a new field is frozen by default rather than by enumeration; `status` may move only from `active`/`provisional` to one terminal value, once, and only as the sole change on that link, `superseded_by` may be added only in that move, `promoted_by` only once — a promotion to `active` is a new link, never an edit; the store's own `pre-commit` hook runs `memlint.py --against-ref HEAD --staged ROOT` and exits 1 when it fails, and the same check runs in CI where `--no-verify` cannot reach | tests/test_memlint.py, hooks/install-hooks.md:182-212"
-  human_review: "unratified material is kept out of both retrieval and enforcement, and only an append can change that | memidx.py:692-693, :2912-2917, :3918-3937, memlint.py:1440-1449, docs/SCHEMA.md:130-142 | anything under `inbox/` indexes as `type: inbox` whatever its own frontmatter claims, and `search` excludes inbox records and the link rows of inbox topics unless `--include-inbox` is passed, so a reviewer's proposal is staged rather than recalled; a `provisional` link is `CONTEXT` for drift and its invariant is never enforced; and the linter refuses any status edit back to `active` or `provisional`, so the promotion procedure — the owner is shown the exact text and affirms it, and a new `owner-ratified` link is appended with `promoted_by` set on the old one — is the only route to constraint authority | tests/test_memidx.py:2802-2867 (`test_inbox_records_are_typed_inbox_and_excluded_from_search_unless_included`), :2868 (`test_inbox_topics_own_link_rows_are_also_excluded_by_default`)"
   negative_eval: "the inbox exclusion, asserted against a populated result with the flag as the only variable | tests/test_memidx.py:2802-2867, :2868-2900 | one search for a term planted in three records — a real active topic and two inbox drops, one freeform and one whose frontmatter claims `type: topic` — returns the topic and asserts neither inbox path is present, then re-runs with `include_inbox=True` and asserts both are, with `status=[\"any\"]` on both runs so only the flag varies; a second case repeats it for a complete proposed topic whose own link rows must also stay out | the same file"
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical, vector"
@@ -77,16 +76,25 @@ passed, and never checks a `provisional` link at all** — it routes that one to
 a memory from being acted on, applied as a filter rather than a score, is what
 `trust_state` asks for.
 
-Two more marks. **`human_review`**: anything under `inbox/` indexes as
-`type: inbox` whatever its own frontmatter claims, and `search` excludes inbox
-records and the link rows of inbox topics unless asked for them, so a
-reviewer's proposal is staged rather than recalled; a `provisional` link's
-invariant is never enforced; and the linter refuses any status edit back toward
-`active`, so the promotion procedure is the only route to constraint authority.
-**`negative_eval`**: one search over three records planted with the same term
+One more mark. **`negative_eval`**: one search over three records planted with the same term
 returns the real topic and asserts both inbox drops are absent, then flips a
 single flag and asserts both are present
 (`tests/test_memidx.py:2802-2867`).
+
+**`human_review` is withheld, and the staging that looked like it earns
+`trust_state` instead.** The withholding is genuine: anything under `inbox/`
+indexes as `type: inbox` whatever its own frontmatter claims, `search` excludes
+inbox records and the link rows of inbox topics unless asked for them, a
+`provisional` link's invariant is never enforced, and the linter refuses a
+status edit back toward `active`. What is absent is an actor the producing agent
+cannot be. The only route out of staging is appending a link whose authority is
+`owner-verbatim` or `owner-ratified`, and `memlint.py:135-137` says what the
+second of those is: *"owner-ratified is the orchestrator's own paraphrase of
+what the owner affirmed, never a literal transcript."* The orchestrator writes
+it. The linter checks the shape — a constraint-tier ruling must carry
+`ruling.text` and `ruling.source` (`:123-128`), and an `owner-verbatim` text
+ending in a question mark is refused as *"schema-usage laundering"* — and
+nothing checks that the affirmation happened.
 
 Three findings sit against the design. **The scope key can never exclude
 anything.** Every record carries a `project` column and 64 read queries
@@ -550,6 +558,8 @@ rg -n 'this db keys rows by path alone' memidx.py                       # the re
 ```
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`e21bfa06c0201433742a657b222ad40c8f4d95f4`](https://github.com/krakozavr/MemContinuum/commit/e21bfa06c0201433742a657b222ad40c8f4d95f4); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**. Everything the record said about the staging is true and none of it is about an actor: `inbox/` material is typed `inbox` regardless of its frontmatter and excluded from search, and the linter refuses a status edit back toward `active`, so the promotion procedure really is the only route to constraint authority. But that route is an append the orchestrator performs, and `memlint.py:135-137` states what it contains — *"owner-ratified is the orchestrator's own paraphrase of what the owner affirmed, never a literal transcript."* The linter checks the ruling's shape and never that the affirmation occurred. The staging keeps its credit under `trust_state`, where the withholding belongs. `audit_log` and `negative_eval` stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`e21bfa06c0201433742a657b222ad40c8f4d95f4`](https://github.com/krakozavr/MemContinuum/commit/e21bfa06c0201433742a657b222ad40c8f4d95f4) — re-read at a commit dated 2026-09-15, 115 commits past the previous pin. All four marks re-tested and held. The only change to the anchored file is a directory-pruning helper for the code walk; no mechanism behind a mark moved. Screened before reading, from a full clone: one auto-run surface, no build-time execution point, two unpinned dependency surfaces and one dependency file inside the seven-day cooldown. Nothing was installed, built or run.
 

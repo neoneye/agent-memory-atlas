@@ -129,7 +129,7 @@ the model before it touches a governed file.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/krakozavr--MemContinuum" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -137,7 +137,7 @@ the model before it touches a governed file.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -202,18 +202,29 @@ all</strong> — it routes that one to <code>revalidate</code> instead
 (<code>:4047-4134</code>). A discrete status where one state withholds a
 memory from being acted on, applied as a filter rather than a score, is
 what <code>trust_state</code> asks for.</p>
-<p>Two more marks. <strong><code>human_review</code></strong>: anything
-under <code>inbox/</code> indexes as <code>type: inbox</code> whatever
-its own frontmatter claims, and <code>search</code> excludes inbox
-records and the link rows of inbox topics unless asked for them, so a
-reviewer's proposal is staged rather than recalled; a
-<code>provisional</code> link's invariant is never enforced; and the
-linter refuses any status edit back toward <code>active</code>, so the
-promotion procedure is the only route to constraint authority.
-<strong><code>negative_eval</code></strong>: one search over three
-records planted with the same term returns the real topic and asserts
-both inbox drops are absent, then flips a single flag and asserts both
-are present (<code>tests/test_memidx.py:2802-2867</code>).</p>
+<p>One more mark. <strong><code>negative_eval</code></strong>: one
+search over three records planted with the same term returns the real
+topic and asserts both inbox drops are absent, then flips a single flag
+and asserts both are present
+(<code>tests/test_memidx.py:2802-2867</code>).</p>
+<p><strong><code>human_review</code> is withheld, and the staging that
+looked like it earns <code>trust_state</code> instead.</strong> The
+withholding is genuine: anything under <code>inbox/</code> indexes as
+<code>type: inbox</code> whatever its own frontmatter claims,
+<code>search</code> excludes inbox records and the link rows of inbox
+topics unless asked for them, a <code>provisional</code> link's
+invariant is never enforced, and the linter refuses a status edit back
+toward <code>active</code>. What is absent is an actor the producing
+agent cannot be. The only route out of staging is appending a link whose
+authority is <code>owner-verbatim</code> or <code>owner-ratified</code>,
+and <code>memlint.py:135-137</code> says what the second of those is:
+<em>"owner-ratified is the orchestrator's own paraphrase of what the
+owner affirmed, never a literal transcript."</em> The orchestrator
+writes it. The linter checks the shape — a constraint-tier ruling must
+carry <code>ruling.text</code> and <code>ruling.source</code>
+(<code>:123-128</code>), and an <code>owner-verbatim</code> text ending
+in a question mark is refused as <em>"schema-usage laundering"</em> —
+and nothing checks that the affirmation happened.</p>
 <p>Three findings sit against the design. <strong>The scope key can
 never exclude anything.</strong> Every record carries a
 <code>project</code> column and 64 read queries filter on it, but
@@ -770,6 +781,23 @@ rg -n &#39;alternatives&#39; memidx.py memlint.py hooks/*.sh                    
 rg -n &#39;CREATE TABLE IF NOT EXISTS records&#39; -A2 memidx.py                # path TEXT PRIMARY KEY — one project per db
 rg -n &#39;this db keys rows by path alone&#39; memidx.py                       # the refusal, in the project&#39;s own words</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — audited at the unchanged pin <a
+href="https://github.com/krakozavr/MemContinuum/commit/e21bfa06c0201433742a657b222ad40c8f4d95f4"><code class="commit-id" title="e21bfa06c0201433742a657b222ad40c8f4d95f4">e21bfa06…</code></a>;
+nothing upstream moved, so the correction is ours.
+<code>human_review</code> is <strong>withdrawn</strong>. Everything the
+record said about the staging is true and none of it is about an actor:
+<code>inbox/</code> material is typed <code>inbox</code> regardless of
+its frontmatter and excluded from search, and the linter refuses a
+status edit back toward <code>active</code>, so the promotion procedure
+really is the only route to constraint authority. But that route is an
+append the orchestrator performs, and <code>memlint.py:135-137</code>
+states what it contains — <em>"owner-ratified is the orchestrator's own
+paraphrase of what the owner affirmed, never a literal transcript."</em>
+The linter checks the ruling's shape and never that the affirmation
+occurred. The staging keeps its credit under <code>trust_state</code>,
+where the withholding belongs. <code>audit_log</code> and
+<code>negative_eval</code> stand. Screened again first; nothing was
+installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/krakozavr/MemContinuum/commit/e21bfa06c0201433742a657b222ad40c8f4d95f4"><code class="commit-id" title="e21bfa06c0201433742a657b222ad40c8f4d95f4">e21bfa06…</code></a>
 — re-read at a commit dated 2026-09-15, 115 commits past the previous
