@@ -121,14 +121,14 @@ do.</p>
               <strong>yantrikos/yantrikdb</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/yantrikos/yantrikdb/commit/b189e799bd854285471ec6149ff0f298cc594ec8" title="b189e799bd854285471ec6149ff0f298cc594ec8">
+            <a class="meta-pill revision-pill" href="https://github.com/yantrikos/yantrikdb/commit/49c7aac1b78b74b296f7708a95d227073b4a666b" title="49c7aac1b78b74b296f7708a95d227073b4a666b">
               <span>Analyzed revision</span>
-              <code>b189e799…</code>
+              <code>49c7aac1…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yantrikos--yantrikdb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -497,8 +497,33 @@ that was not traced here.</p>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/yantrikos/yantrikdb/commit/49c7aac1b78b74b296f7708a95d227073b4a666b"><code class="commit-id" title="49c7aac1b78b74b296f7708a95d227073b4a666b">49c7aac1…</code></a>
+— <code>trust_state</code> re-tested. Both columns are where they were
+and the typed-beside-encrypted-metadata reason still stands. Two
+corrections to how the record described the predicate. It is not a flat
+<code>synthesis_state = 'verified'</code> everywhere: the gate is
+written
+<code>synthesis_state IS NULL OR synthesis_state = 'verified'</code>, so
+a memory that was never synthesised is not caught by a gate that does
+not apply to it — the null branch is a deliberate not-applicable case
+rather than an oversight, and it appears at
+<code>engine/thread.rs:604</code>, <code>:936</code> and in the module's
+own statement of the rule. And the predicate is three conditions rather
+than two: the module doc (<code>thread.rs:34-42</code>) lists
+<code>consolidation_status = 'active'</code> as recall's default, the
+synthesis lifecycle gate, and — under the v0.10 status read policy — not
+being the target of a selected active <code>supersedes</code> link. The
+same paragraph names something this sweep has been rewarding elsewhere:
+tombstoned rows are <em>excluded twice over</em>, by the status
+predicate and by <code>tombstone_inner</code> deleting their
+<code>memory_entities</code> rows, so a read path that lost the
+predicate would still not find them through the entity index. Twenty-one
+sites mention the verified state in all; the record now points at the
+statement of the rule rather than only at the audit queries. Screened
+again first; nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/yantrikos/yantrikdb/commit/b189e799bd854285471ec6149ff0f298cc594ec8"><code class="commit-id" title="b189e799bd854285471ec6149ff0f298cc594ec8">b189e799…</code></a>
+href="https://github.com/yantrikos/yantrikdb/commit/49c7aac1b78b74b296f7708a95d227073b4a666b"><code class="commit-id" title="49c7aac1b78b74b296f7708a95d227073b4a666b">49c7aac1…</code></a>
 — first reading of the engine repository in its own right, at a commit
 dated 14 September 2026. The atlas had previously read these crates only
 as a pinned dependency of <a href="../yantrikdb/">yantrikdb-server</a>
