@@ -150,10 +150,24 @@ def load_register(path: Path) -> list[dict]:
         text = report.read_text(encoding="utf-8")
         seen = re.search(r"^analyzed_at:\s*(\d{4}-\d{2}-\d{2})\s*$", text, re.M)
         pinned = re.search(r"^revision:\s*(\S+)\s*$", text, re.M)
-        if seen and seen.group(1) != row.get("analyzed_at"):
-            row["analyzed_at"] = seen.group(1)
-            row["days_since_analysis"] = (dt.date.today() - dt.date.fromisoformat(seen.group(1))).days
-            restated += 1
+        if seen:
+            # `days_since_analysis` is measured relative to the register's own
+            # run date and never ages afterwards, so it must be recomputed from
+            # TODAY on every load — not only when the date string changed. The
+            # narrower version of this restate rebuilt the age only for rows
+            # whose date had moved, which left every unchanged row reporting the
+            # age it had when the register was written: on 2026-09-19 against a
+            # register measured on the 17th, `tanglies-agentos` read
+            # `analyzed_at: 2026-09-11` and still claimed 6 days rather than 8.
+            # Harmless under a 21-day cap at two days of skew, and precisely the
+            # frozen-field bug that makes a fortnight-old register report a
+            # 21-day-old row as 7 and hold it out of the queue.
+            if seen.group(1) != row.get("analyzed_at"):
+                row["analyzed_at"] = seen.group(1)
+                restated += 1
+            row["days_since_analysis"] = (
+                dt.date.today() - dt.date.fromisoformat(row["analyzed_at"])
+            ).days
         # A report re-pinned since the measurement has no drift the register can
         # still vouch for, so it is not a candidate until the next run measures it.
         if pinned and row.get("revision") and pinned.group(1).strip('"') != row["revision"]:
@@ -331,17 +345,64 @@ def cmd_rank(args) -> int:
     for priority, row, why in ranked[: args.top]:
         print(f"{priority:7.3f}  {row['slug']:<32} {row['repo'] or '':<40} {why}")
     gone = [r for r in rows if r["status"] == "repo-gone"]
-    held = sum(
-        1
-        for r in rows
-        if r["status"] == "stale" and (r.get("days_since_analysis") or 0) < args.cadence_days
+    # Account for EVERY row, not just the two exclusions this line used to name.
+    # It previously reported the cadence-held and repo-gone counts only, so on a
+    # corpus that is caught up ("0 eligible of 579 rows; 112 held; 5 repo-gone")
+    # four hundred rows vanished from the summary and the reader could not tell
+    # an empty queue with nothing due from a register that had stopped working.
+    # The buckets below are mutually exclusive and are asserted to sum to len(rows).
+    buckets: dict[str, int] = {}
+
+    def bucket(name: str) -> None:
+        buckets[name] = buckets.get(name, 0) + 1
+
+    for r in rows:
+        status = r["status"]
+        if status == "repo-gone":
+            bucket("repo-gone")
+        elif status == "repinned-since-measurement":
+            bucket("re-pinned since this register was measured")
+        elif not r.get("source_url"):
+            bucket("no source url")
+        elif status in BROKEN:
+            bucket("pin no longer anchors")
+        elif status != "stale":
+            bucket(f"{status} — no drift to re-read")
+        elif (r.get("days_since_analysis") or 0) < args.cadence_days:
+            bucket(f"stale, inside the {args.cadence_days}-day cadence cap")
+        else:
+            bucket("eligible")
+
+    assert sum(buckets.values()) == len(rows), (
+        f"rank summary lost {len(rows) - sum(buckets.values())} row(s); the buckets "
+        f"above must partition the register"
     )
-    print(
-        f"\n{len(ranked)} eligible of {len(rows)} rows; {held} held by the "
-        f"{args.cadence_days}-day cadence cap; {len(gone)} excluded as repo-gone"
-        + (": " + ", ".join(r["slug"] for r in gone) if gone else ""),
-        file=sys.stderr,
-    )
+
+    lines = [f"\n{len(ranked)} eligible of {len(rows)} rows:"]
+    for name, count in sorted(buckets.items(), key=lambda kv: (-kv[1], kv[0])):
+        if name == "eligible":
+            continue
+        lines.append(f"  {count:5d}  {name}")
+    if gone:
+        lines.append("         " + ", ".join(r["slug"] for r in gone))
+
+    # When nothing is eligible, the number that says whether that is healthy is
+    # the oldest reading the cadence is holding back — not the eligible count.
+    if not ranked:
+        # Only the rows the cap is actually holding back. A re-pinned row is not
+        # a candidate at any age, and counting one drags the figure down and
+        # makes a caught-up corpus look fresher than it is.
+        due = [
+            r.get("days_since_analysis") or 0
+            for r in rows
+            if r["status"] == "stale" and r.get("source_url")
+        ]
+        if due:
+            lines.append(
+                f"\n  nothing is due: the oldest stale reading is {max(due)} days old, "
+                f"against a {args.cadence_days}-day cap."
+            )
+    print("\n".join(lines), file=sys.stderr)
     return 0
 
 
