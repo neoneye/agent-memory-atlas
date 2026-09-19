@@ -7,14 +7,13 @@ page_kind: system
 source_name: "ramakay/claude-self-reflect"
 source_url: https://github.com/ramakay/claude-self-reflect
 archive_name: "ramakay--claude-self-reflect"
-revision: c8c57558943e1427d058f5c7d1b238d77876b4a9
-revision_url: https://github.com/ramakay/claude-self-reflect/commit/c8c57558943e1427d058f5c7d1b238d77876b4a9
-analyzed_at: 2026-09-16
-capabilities: "scope_enforced, audit_log, human_review"
+revision: ca5655a841fbe5295f43f9fd789f1a7139437a32
+revision_url: https://github.com/ramakay/claude-self-reflect/commit/ca5655a841fbe5295f43f9fd789f1a7139437a32
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, audit_log"
 capability_evidence:
   scope_enforced: "the project predicate on both chunk arms of `csr_reflect_on_past` | mcp/tools.rs:310-320,:429-438, storage/queries.rs:436,:577-587, search/cross_project.rs:94-109 | `normalize_project_scope` takes the tool's `project` argument, the literal `all`, or the project encoded from `MCP_CLIENT_CWD`; the vector arm materialises `SELECT id FROM chunks WHERE project_name = ?1` into a `HashSet` and hands it to `search_chunks_filtered`, whose HNSW walk admits only ids in the set (search/mod.rs:348), and the FTS arm carries `WHERE chunks_fts MATCH ?1 AND c.project_name = ?2` in SQL; reflections are deliberately exempt from both and take a `* 0.3` multiplier instead, so a cross-project reflection is demoted rather than excluded | storage/queries.rs:2834-2846 (`sessions_for_file_filters_by_project`), whose fixture is proved live only by the sibling `sessions_for_file_none_project_is_unscoped` at :2848-2858; no test exercises the scoped branch of `reflect_on_past`, whose every call site in that file's own test module passes `Some(\"all\")`"
   audit_log: "the resolution ledger and the dream verdict log | storage/migrations.rs:556-567,:830-842, storage/queries.rs:2367-2392, storage/witness_verdicts.rs:169-253, mcp/tools.rs:671-693, dream/mod.rs:1-87 | `resolution_ledger` is append-only with `CHECK(status IN ('resolved','still_open','regressed'))` and mandatory `evidence`, written by `insert_resolutions` from the `csr_resolve` MCP tool and read latest-row-wins via `SELECT MAX(id) … GROUP BY chunk_id`; `witness_verdicts` is append-only `anchor_obsolete`/`superseded_by`/`anchor_reinstated` events minted by `dream::run_dream` and guarded by `insert_verdict_if_changed`, which skips only a candidate identical to the witness's latest event, so a B→A→B history keeps all three rows; neither table has an UPDATE or DELETE path anywhere in the crate | storage/mod.rs:1774-1800 (`resolution_ledger_insert_and_batch_read`), tests/dream_integration.rs:88-94 (`dream_end_to_end_supersession_rerun_idempotency_and_reinstatement`, the file's only test, which returns early and passes if `git` is unavailable)"
-  human_review: "the elicitation gate on `store_reflection` | mcp/mod.rs:296-327, mcp/elicitation.rs:18-62 | a reflection whose content exceeds `CONFIRMATION_THRESHOLD` of 2,000 characters triggers `create_elicitation` with a `{confirm: bool}` form carrying a 100-character preview, and anything but `ElicitationAction::Accept` returns \"Reflection storage declined by user.\" without writing the row or the vector; the gate fails open on a client that does not support elicitation, on a schema-build error, and on any transport error | mcp/elicitation.rs:66-82 (threshold boundaries at 500, 2,000 and 2,001 characters); no test drives the decline path end to end"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -113,7 +112,7 @@ flowchart TD
 
 **Background.** `daemon/mod.rs` owns the loops; `daemon/dream_cadence.rs` owns the dream schedule with a `meta`-table last-run key, a single-flight flag and a shared semaphore so a due cycle queues behind an active import.
 
-**MCP.** `mcp/mod.rs` declares fifteen `#[tool]` methods with MCP annotations; `mcp/tools.rs` holds their bodies; `mcp/elicitation.rs` holds the one confirmation dialog; `mcp/resources.rs`, `completions.rs` and `tasks.rs` cover the rest of the protocol surface.
+**MCP.** `mcp/mod.rs` declares fifteen `#[tool]` methods with MCP annotations; `mcp/tools.rs` holds their bodies; `mcp/elicitation.rs` holds the one confirmation dialog — a `{confirm: bool}` form raised only when a reflection exceeds the 2,000-character `CONFIRMATION_THRESHOLD`, which is a permission prompt rather than a review state, and is why this report does not carry `human_review`; `mcp/resources.rs`, `completions.rs` and `tasks.rs` cover the rest of the protocol surface.
 
 **Tests.** 1,277 test functions in `csr-engine` and 58 in `codewitness`, plus four integration files and `csr-engine/eval-kit/`.
 
@@ -258,7 +257,7 @@ flowchart TD
 
 ## 12. Open Questions
 
-- **Does the elicitation gate ever fire?** It depends on the MCP client implementing elicitation, and the code proceeds without confirmation whenever the call errors. Nothing in this tree establishes whether Claude Code supports it, and no test drives the decline path end to end.
+- **Does the elicitation gate ever fire?** It depends on the MCP client implementing elicitation, and the code proceeds without confirmation whenever the call errors. Nothing in this tree establishes whether Claude Code supports it, and no test drives the decline path end to end. Either way it is a confirmation, not a gate: the reflection is not parked anywhere while the dialog is open, and below the threshold no one is asked at all.
 - **What does the dream cycle's annotation do to a model's behaviour?** The paper states the end-task retrieval effect is unmeasured. `[stale anchor]` is a string in a result; whether a reading model demotes it, ignores it, or treats it as a fact about the code is unknown.
 - **How often does `Demote` fire in real use, given it requires no witness intact at HEAD?** The verdict is conversation-grained: one stale symbol flags every chunk of that conversation (`mcp/tools.rs:1478-1484`). Running the cycle on a large personal corpus would answer both the rate and the over-flagging.
 - **Does the project-scope fallback leak in practice?** That turns on whether Claude Code sets `MCP_CLIENT_CWD` for a stdio server, which cannot be read from this repository.
@@ -295,6 +294,8 @@ rg -o '#\[ignore' --glob '*.rs' .                            # 2: an opt-in self
 ```
 
 ## History
+
+**2026-09-19** — re-pinned to [`ca5655a841fbe5295f43f9fd789f1a7139437a32`](https://github.com/ramakay/claude-self-reflect/commit/ca5655a841fbe5295f43f9fd789f1a7139437a32). `human_review` is **withdrawn**. The mark rested on the elicitation gate, and an elicitation is a confirmation dialog: a `{confirm: bool}` form raised at the moment of the call, with nothing parked while it is open. The rubric counts a memory that waits in a state until an actor the producing agent cannot be resolves it, and a prompt guards against a slip rather than against a decision. Three further facts, all of them already in this report, point the same way — the gate fires only above a 2,000-character `CONFIRMATION_THRESHOLD` (`csr-engine/src/mcp/elicitation.rs:21`), it fails open on an unsupporting client, a schema error or any transport error, and no test drives the decline path end to end. `scope_enforced` and `audit_log` stand. Screened again first; nothing was installed, built or run.
 
 **2026-09-16** — [`c8c57558943e1427d058f5c7d1b238d77876b4a9`](https://github.com/ramakay/claude-self-reflect/commit/c8c57558943e1427d058f5c7d1b238d77876b4a9) — re-pinned after 2 commits. Nine of the ten anchored files are byte-identical; the tenth, `storage/queries.rs`, changed only in `bytes_to_vec`, from `chunks_exact(4)` to `as_chunks::<4>()` to satisfy a clippy gate — same bytes in, same floats out. All three marks stand on unchanged code. The other commit skips the HNSW index load and dump for write-only hooks, which is a startup cost rather than a retrieval-semantics change, and adds a hooks integration suite. Nothing was installed, built or run.
 
