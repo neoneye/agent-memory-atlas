@@ -129,7 +129,7 @@ agent's.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/openvurp--openvurp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -535,10 +535,42 @@ returns <code>REQUIRE_APPROVAL</code> for any tool with
 executor asks the UI; <em>always</em> grants a lease for the tool with
 <code>ttl_seconds=8*3600, max_uses=50</code>. In the heartbeat the UI is
 a <code>ResponseCollector</code> whose <code>confirm</code> returns
-<code>False</code> (<code>main.py:263-266</code>), so an autonomous
+<code>False</code> (<code>main.py:263-266</code>) under the comment
+<em>"with nobody to ask, silence means no"</em>, so an autonomous
 promotion is refused in <code>safe</code> mode — and pre-approved in
 <code>auto</code> mode, because <code>preapproved</code> is decided
 before the source is looked at.</p>
+<p><strong><code>auto</code> mode cannot be reached from anything the
+project ships.</strong> The help panel advertises
+<code>/mode &lt;m&gt; safe · auto · plan</code>
+(<code>main.py:790</code>), and the terminal's slash dispatcher handles
+eight commands, none of them <code>/mode</code>
+(<code>main.py:148-172</code>). <code>set_approval_mode</code>
+(<code>core/agent.py:429-440</code>) has no caller anywhere in the tree,
+and no dashboard route, settings key or channel command writes the mode
+either — <code>approval_mode</code> appears in eight places across two
+files and every one of them reads it. The mode is loaded once at
+construction from <code>memory/runtime/approval_mode.json</code>
+(<code>core/agent.py:209</code>, <code>:418-427</code>), and that file
+defaults to <code>safe</code> and is missing on a fresh install. So the
+gate this report describes as <em>"skipped in auto mode"</em> is, at
+this commit, skipped only by someone who edits a runtime JSON file by
+hand. That is a defect — an advertised command that does nothing — and
+it is also why the approval path is stronger in practice than the mode
+flag makes it look.</p>
+<p><strong>Where the answer comes from.</strong>
+<code>core/approvals.py</code> publishes the question to the activity
+bus with a one-time token and blocks the tool until the answer arrives
+at <code>POST /api/approvals/&lt;token&gt;</code>
+(<code>dashboard.py:617-622</code>) or through
+<code>ChannelConversation.answer_approval</code>
+(<code>core/conversation.py:340-344</code>). Both are human surfaces. No
+tool in <code>tools/</code> answers one: <code>web_fetch</code> issues a
+GET (<code>tools/web.py:26</code>), so the model's declared surface
+cannot reach a JSON POST. The general <code>shell</code> tool could, and
+that is the stated limit of this reading rather than a finding — the
+module's own reasoning is the right one to quote: <em>"if we cannot even
+ask, it does not run."</em></p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><code>memories</code> (<code>core/vector_memory.py:62-89</code>):</p>
 <pre class="sql"><code>CREATE TABLE IF NOT EXISTS memories (
@@ -1003,10 +1035,21 @@ is <em>sì</em> on the path with the least verification.</li>
 immortality, and a memory that was wrong twice can never fade.</li>
 <li><strong>An approval prompt that truncates the thing being
 approved.</strong> A hundred characters of JSON is a title. Show the
-content, or do not call it review.</li>
+content, or do not call it review. <code>learning_promote</code> makes
+the cost concrete: <code>force: true</code> skips the verification gate
+(<code>core/learning.py:314</code>), it is the last property in the tool
+schema, and <code>_describe_action</code> renders
+<code>learning_promote({...})</code> cut at 100 characters — so on any
+promotion carrying real <code>content</code>, the flag that matters is
+past the cut in the sentence the owner reads.</li>
 <li><strong>A mode flag decided before the caller is known.</strong>
 <code>preapproved = mode == "auto"</code> at the top of the function
 means an autonomous cycle inherits the owner's convenience setting.</li>
+<li><strong>A setting the help text offers and no code changes.</strong>
+<code>/mode</code> is documented in the command panel, has no handler,
+and its setter has no caller. An advertised switch that silently does
+nothing is worse than an absent one, because a reader budgets risk
+against a control they believe they have.</li>
 <li><strong>Two lifetimes for one lesson.</strong> A file deleted at 90
 days and a vector row that never fades is a lesson that is gone from the
 place people look and present in the place the model looks.</li>
@@ -1142,6 +1185,32 @@ rg -n &#39;Mirror|\.run\(&#39; tests/test_learning_per_agent.py
 rg -n -i &#39;arxiv|bibtex|citation|doi\.org&#39; README.md ROADMAP.md docs
 grep -c &#39;def test_&#39; tests/*.py | awk -F: &#39;{s+=$2} END {print s}&#39;</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — re-read at the same pin <a
+href="https://github.com/openvurp/openvurp/commit/fc68e643e8df7282757af8af4d8d4adfb0975eb0"><code class="commit-id" title="fc68e643e8df7282757af8af4d8d4adfb0975eb0">fc68e643…</code></a>,
+still the tip of <code>main</code>; nothing upstream has moved since 4
+September 2026, so everything found here is a correction to this report.
+<strong><code>human_review</code> holds</strong>, and the reason is
+firmer than the previous record said. The approval question is published
+to the activity bus with a one-time token and the tool blocks on it; the
+answer arrives only from <code>POST /api/approvals/&lt;token&gt;</code>
+or a messaging channel; <code>web_fetch</code> issues a GET, so no
+declared tool can answer one, and the general <code>shell</code> tool is
+now named in the record as the stated limit. Silence is a no after 180
+s, the heartbeat UI returns <code>False</code> outright, and a failure
+to publish the question refuses the action. The record's caveat about
+<code>auto</code> mode is now qualified: <code>set_approval_mode</code>
+has no caller anywhere in the tree and <code>/mode</code> has no handler
+in the eight-command slash dispatcher, so the mode can only change by
+hand-editing <code>memory/runtime/approval_mode.json</code>, which
+defaults to <code>safe</code>. The advertised-but-unimplemented
+<code>/mode</code> is written up as a defect in section 11. Also
+sharpened there: <code>force: true</code> skips the promotion's
+verification gate and sits past the 100-character cut of the approval
+prompt, so the flag that matters can be invisible in the sentence the
+owner reads. Screened again first: four files, no auto-run surface, no
+build-time execution point, two unpinned manifests with no lockfile
+beside them, nothing inside the cooldown this time. Nothing installed or
+run. Four marks, unchanged.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/openvurp/openvurp/commit/fc68e643e8df7282757af8af4d8d4adfb0975eb0"><code class="commit-id" title="fc68e643e8df7282757af8af4d8d4adfb0975eb0">fc68e643…</code></a>
 — re-read at a commit dated 4 September 2026, 3 commits past the

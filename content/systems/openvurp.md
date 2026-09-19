@@ -9,7 +9,7 @@ source_url: https://github.com/openvurp/openvurp
 archive_name: "openvurp--openvurp"
 revision: fc68e643e8df7282757af8af4d8d4adfb0975eb0
 revision_url: https://github.com/openvurp/openvurp/commit/fc68e643e8df7282757af8af4d8d4adfb0975eb0
-analyzed_at: 2026-09-16
+analyzed_at: 2026-09-19
 capabilities: "scope_enforced, audit_log, human_review, negative_eval"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
@@ -17,7 +17,7 @@ stack_source: "reviewed"
 capability_evidence:
   scope_enforced: "the agent id as a directory, resolved from a context variable on both the write and the read arm | core/scope.py:24-51, core/memory.py:29-39, core/agent.py:1309-1340, core/swarm.py:561-567,:691-706 | `set_scope(member.id)` wraps every tool a roster agent runs; `_remember_handler` writes through `memory_for(current_scope())`, whose `MemoryManager` roots itself at `agent_home(memory_dir, scope)` = `memory/agents/<id>/`; `Swarm._memories` reads back with `memory_for(member.id).get_relevant(prompt, …)` and injects the result as a system message. The scope is the path, so a query cannot name another agent's rows. What the key does not cover is the learning side — see section 9 | tests/test_memory_per_agent.py:44-52 test_what_one_remembers_the_other_does_not_find"
   audit_log: "an append-only, redacted event log per scope in the system's own store, with promotion and rollback as event kinds | core/learning.py:193-209,:333-342,:370-378,:553-557, core/vector_memory.py:319-369 | `LearningLoop.record_event` appends one JSON line to `learning/events.jsonl` with `open(path, \"a\")` and never rewrites it; `promote_candidate` records `kind=\"promotion\"` naming the lesson file, `rollback_lesson` records `kind=\"rollback\"` with the reason, and every event carries `timestamp`, `actor`, `source` and passes through `redact`. `VectorMemory.fade` appends each removed row to `.faded/faded.jsonl` with `faded_at` before deleting it. What is not recorded: a `remember` write reaches only the hash-chained `audit/audit.jsonl` as a `TOOL_CALL` with a 160-character argument preview | this is the log"
-  human_review: "the promotion of a lesson is an approval-gated tool in the default mode | tools/learning.py:143-178,:181-202, core/security/policy.py:75-80, core/executor.py:84-169 | `LEARNING_PROMOTE_TOOL` and `LEARNING_ROLLBACK_TOOL` declare `requires_approval=True`; `ToolPolicyEngine.evaluate` returns `REQUIRE_APPROVAL` for any such tool, and `Executor.execute` then asks the UI with `_describe_action` — the tool name plus the first 100 characters of the JSON arguments — accepting *yes*, *no* or *always*, where *always* grants a `CapabilityLease` of eight hours or fifty uses. A *no* is returned to the model as *\"L'OWNER HA RIFIUTATO questa azione\"*. In `auto` mode `_execute_tool` passes `preapproved=True` and the gate is skipped for every caller including the heartbeat; in the web UI an unanswered prompt is a *no* after 180 s | tests/test_policy_engine.py, tests/test_capability_leases.py"
+  human_review: "the promotion of a lesson is an approval-gated tool, and the mode that would skip the gate has no setter | tools/learning.py:143-179, :181-203, core/security/policy.py:75-80, core/executor.py:84-169, core/approvals.py:41-75, core/agent.py:429-440 | `LEARNING_PROMOTE_TOOL` and `LEARNING_ROLLBACK_TOOL` declare `requires_approval=True`; `ToolPolicyEngine.evaluate` returns `REQUIRE_APPROVAL` for any such tool, and `Executor.execute` then asks the UI with `_describe_action` — the tool name plus the first 100 characters of the JSON arguments — accepting yes, no or always, where always grants a `CapabilityLease` of eight hours or fifty uses. The answer arrives from the dashboard route `POST /api/approvals/<token>` or a messaging channel, never from a tool: `web_fetch` issues a GET, so no declared tool can answer, and the general `shell` tool is the stated limit of this reading. Silence is a no after 180 s, the heartbeat UI returns False outright, and a failure to publish the question refuses the action. `auto` mode would skip the gate, but `set_approval_mode` has no caller anywhere in the tree and `/mode` has no handler, so the mode can only be changed by hand-editing `memory/runtime/approval_mode.json`, which defaults to `safe` | tests/test_policy_engine.py, tests/test_capability_leases.py"
   negative_eval: "a scope test with its positive control in the same case | tests/test_memory_per_agent.py:44-52 | `test_what_one_remembers_the_other_does_not_find` writes one memory into amanda's store, asserts `\"Crucial\" in amanda.get_relevant(\"SSD Crucial prezzo\", session_type=\"main\")` — the control that proves the retriever returns something — and then asserts `\"Crucial\" not in ciccio.get_relevant(...)` over a second `MemoryManager` rooted at another id. The query shares one word with the memory, on purpose, because the FTS5 AND-of-words bug this test accompanies made recall fail on exactly that shape. Caveat: the case begins `if not amanda.remember(...): pytest.skip(...)`, so a build without FTS5 is green having asserted nothing; and ciccio's store is empty, so the negative half rests on the positive control rather than on a populated result set | tests/test_memory_per_agent.py:44-52"
 matrix:
   memory_unit: "A row in a per-agent `memories` table — free text, a category string, an optional float32 embedding, `created_at`, `accessed_at`, `access_count`, JSON metadata — beside Markdown lesson files, JSON profile/pattern/project files, JSONL learning and journal events, and a `cases.json` of corrections to replay"
@@ -345,9 +345,34 @@ RBAC, then hands to `Executor.execute`. The policy engine returns
 no valid `CapabilityLease` matches actor, source, tool and risk, the executor
 asks the UI; *always* grants a lease for the tool with `ttl_seconds=8*3600,
 max_uses=50`. In the heartbeat the UI is a `ResponseCollector` whose `confirm`
-returns `False` (`main.py:263-266`), so an autonomous promotion is refused in
-`safe` mode — and pre-approved in `auto` mode, because `preapproved` is decided
-before the source is looked at.
+returns `False` (`main.py:263-266`) under the comment *"with nobody to ask,
+silence means no"*, so an autonomous promotion is refused in `safe` mode — and
+pre-approved in `auto` mode, because `preapproved` is decided before the source
+is looked at.
+
+**`auto` mode cannot be reached from anything the project ships.** The help
+panel advertises `/mode <m> safe · auto · plan` (`main.py:790`), and the
+terminal's slash dispatcher handles eight commands, none of them `/mode`
+(`main.py:148-172`). `set_approval_mode` (`core/agent.py:429-440`) has no caller
+anywhere in the tree, and no dashboard route, settings key or channel command
+writes the mode either — `approval_mode` appears in eight places across two
+files and every one of them reads it. The mode is loaded once at construction
+from `memory/runtime/approval_mode.json` (`core/agent.py:209`, `:418-427`), and
+that file defaults to `safe` and is missing on a fresh install. So the gate this
+report describes as *"skipped in auto mode"* is, at this commit, skipped only by
+someone who edits a runtime JSON file by hand. That is a defect — an advertised
+command that does nothing — and it is also why the approval path is stronger in
+practice than the mode flag makes it look.
+
+**Where the answer comes from.** `core/approvals.py` publishes the question to
+the activity bus with a one-time token and blocks the tool until the answer
+arrives at `POST /api/approvals/<token>` (`dashboard.py:617-622`) or through
+`ChannelConversation.answer_approval` (`core/conversation.py:340-344`). Both are
+human surfaces. No tool in `tools/` answers one: `web_fetch` issues a GET
+(`tools/web.py:26`), so the model's declared surface cannot reach a JSON POST.
+The general `shell` tool could, and that is the stated limit of this reading
+rather than a finding — the module's own reasoning is the right one to quote:
+*"if we cannot even ask, it does not run."*
 
 ## 5. Memory Data Model
 
@@ -733,9 +758,19 @@ again.
   can never fade.
 - **An approval prompt that truncates the thing being approved.** A hundred
   characters of JSON is a title. Show the content, or do not call it review.
+  `learning_promote` makes the cost concrete: `force: true` skips the
+  verification gate (`core/learning.py:314`), it is the last property in the
+  tool schema, and `_describe_action` renders
+  `learning_promote({...})` cut at 100 characters — so on any promotion carrying
+  real `content`, the flag that matters is past the cut in the sentence the
+  owner reads.
 - **A mode flag decided before the caller is known.** `preapproved = mode ==
   "auto"` at the top of the function means an autonomous cycle inherits the
   owner's convenience setting.
+- **A setting the help text offers and no code changes.** `/mode` is documented
+  in the command panel, has no handler, and its setter has no caller. An
+  advertised switch that silently does nothing is worse than an absent one,
+  because a reader budgets risk against a control they believe they have.
 - **Two lifetimes for one lesson.** A file deleted at 90 days and a vector row
   that never fades is a lesson that is gone from the place people look and
   present in the place the model looks.
@@ -843,6 +878,8 @@ grep -c 'def test_' tests/*.py | awk -F: '{s+=$2} END {print s}'
 ```
 
 ## History
+
+**2026-09-19** — re-read at the same pin [`fc68e643e8df7282757af8af4d8d4adfb0975eb0`](https://github.com/openvurp/openvurp/commit/fc68e643e8df7282757af8af4d8d4adfb0975eb0), still the tip of `main`; nothing upstream has moved since 4 September 2026, so everything found here is a correction to this report. **`human_review` holds**, and the reason is firmer than the previous record said. The approval question is published to the activity bus with a one-time token and the tool blocks on it; the answer arrives only from `POST /api/approvals/<token>` or a messaging channel; `web_fetch` issues a GET, so no declared tool can answer one, and the general `shell` tool is now named in the record as the stated limit. Silence is a no after 180 s, the heartbeat UI returns `False` outright, and a failure to publish the question refuses the action. The record's caveat about `auto` mode is now qualified: `set_approval_mode` has no caller anywhere in the tree and `/mode` has no handler in the eight-command slash dispatcher, so the mode can only change by hand-editing `memory/runtime/approval_mode.json`, which defaults to `safe`. The advertised-but-unimplemented `/mode` is written up as a defect in section 11. Also sharpened there: `force: true` skips the promotion's verification gate and sits past the 100-character cut of the approval prompt, so the flag that matters can be invisible in the sentence the owner reads. Screened again first: four files, no auto-run surface, no build-time execution point, two unpinned manifests with no lockfile beside them, nothing inside the cooldown this time. Nothing installed or run. Four marks, unchanged.
 
 **2026-09-16** — [`fc68e643e8df7282757af8af4d8d4adfb0975eb0`](https://github.com/openvurp/openvurp/commit/fc68e643e8df7282757af8af4d8d4adfb0975eb0) — re-read at a commit dated 4 September 2026, 3 commits past the previous pin. The anchored files are untouched: the comparison lists ten changed files and none of them is an anchor. Spot-checking the scope producer confirms the ambient shape the report describes — `_SCOPE` is a contextvar set by `set_scope` and read by `current_scope`, with `scoped_dir` placing an agent's archive under it, so the scope travels with the call rather than being passed at each site. All marks hold. Screened before reading, from a full clone: no auto-run surface, no build-time execution point, two unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
