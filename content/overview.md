@@ -8866,6 +8866,25 @@ papers cited by arXiv id — is read from the sources linked inline.
   questions, described as the highest score for a self-hosted memory system —
   is a product claim whose evidence lives on the vendor's own site, and this
   atlas has not checked it.
+- **Two repositories were examined and their memory belongs to something the
+  atlas already reports.** `letta-ai/trajectory` normalises agent transcripts
+  from fourteen runtimes — Claude Code, Codex, OpenHands, Cursor, Gemini CLI,
+  pi, hermes, droid and others — into one canonical record schema for training
+  and evaluation. It keeps nothing:
+  `grep -rli 'memory\|recall\|retriev\|forget\|supersede\|tombstone' src`
+  returns nothing at the commit read, and the only store it touches is somebody
+  else's, a Deep Agents LangGraph checkpoint it decodes by thread id. Reading a
+  transcript format is not keeping memory. `666ghj/MiroFish` is an AGPL-3.0
+  multi-agent simulation engine whose agents are described as having long-term
+  memory; that memory is Zep Cloud, which has [its own report](../systems/zep/).
+  MiroFish's own memory-adjacent code is roughly 476 lines of client policy — a
+  shared client with timeouts and caps, a process-local graph lifecycle lock
+  whose docstring says it does not replace a distributed one, edge paging, and a
+  validator bounding what an LLM may invent as a graph ontology. Its only local
+  database holds the simulation's `post` and `comment` tables, read back for the
+  interface. Reporting either would credit another system's mechanisms under a
+  second name, which is the thing that makes a capability count mean less than
+  it says.
 - This is an implementation-oriented static review, not a runtime benchmark.
 - **A repository was declined on its licence, and the licence is the only thing
   read.** `Dicklesworthstone/eidetic_engine_cli` ships an MIT licence carrying an
