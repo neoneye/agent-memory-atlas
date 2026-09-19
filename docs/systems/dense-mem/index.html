@@ -123,14 +123,14 @@ model, with no person in the loop.</p>
               <strong>markhuangai/dense-mem</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/markhuangai/dense-mem/commit/26b95700646b22265e696ae27df7e1a240eebc43" title="26b95700646b22265e696ae27df7e1a240eebc43">
+            <a class="meta-pill revision-pill" href="https://github.com/markhuangai/dense-mem/commit/939c86b2bcf2b29bbfcf0e1dd6ee09300c6b4286" title="939c86b2bcf2b29bbfcf0e1dd6ee09300c6b4286">
               <span>Analyzed revision</span>
-              <code>26b95700…</code>
+              <code>939c86b2…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/markhuangai--dense-mem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -515,8 +515,33 @@ baseline across versions?</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/markhuangai/dense-mem/commit/939c86b2bcf2b29bbfcf0e1dd6ee09300c6b4286"><code class="commit-id" title="939c86b2bcf2b29bbfcf0e1dd6ee09300c6b4286">939c86b2…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line. The
+record cited only the migration — the vocabulary, the CHECK constraints
+and the partial indexes — and asserted in passing that the read path
+uses those indexes without naming a read. The reads are in Go, and they
+are there: recall eligibility is a CTE filtering
+<code>relationship.status = 'active' AND relationship.support_count &gt; 0</code>
+(<code>internal/recall/postgres/recall_relationship_repository.go:142-150</code>),
+and <code>status = 'active'</code> appears nine times across
+<code>internal/recall/postgres/</code> and
+<code>internal/search/postgres/</code>. The record now carries those
+anchors, so the mark rests on a read rather than on a constraint. One
+thing the reading turned up that the record should state:
+<code>tier</code> appears in none of those queries. The partial indexes
+are predicated on
+<code>status = 'active' AND tier IN ('validated_claim','fact')</code>,
+and what makes the tier half true of every row the status half admits is
+<code>relationship_records_active_tier_check</code>
+(<code>:243-247</code>), not any <code>WHERE</code> clause — the
+constraint says a candidate is never active and an active row is a
+validated_claim or a fact. That is a stronger arrangement than repeating
+the predicate, and it is worth naming as such rather than describing the
+index as something the query spells out. Screened again first; nothing
+was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/markhuangai/dense-mem/commit/26b95700646b22265e696ae27df7e1a240eebc43"><code class="commit-id" title="26b95700646b22265e696ae27df7e1a240eebc43">26b95700…</code></a>
+href="https://github.com/markhuangai/dense-mem/commit/939c86b2bcf2b29bbfcf0e1dd6ee09300c6b4286"><code class="commit-id" title="939c86b2bcf2b29bbfcf0e1dd6ee09300c6b4286">939c86b2…</code></a>
 — first reading, at a commit dated 15 September 2026. Screened before
 opening, from a shallow clone: sixteen files, one auto-run surface (a
 <code>.githooks/</code> directory), no build-time execution points, two
