@@ -9,10 +9,9 @@ source_url: https://github.com/lna-lab/distill-kura
 archive_name: "lna-lab--distill-kura"
 revision: 33aec61dcd28076848bfdfa9dfdf5902300fe109
 revision_url: https://github.com/lna-lab/distill-kura/commit/33aec61dcd28076848bfdfa9dfdf5902300fe109
-analyzed_at: 2026-09-15
-capabilities: "human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  human_review: "the draft queue and the person's commands | distill_kura/distill/pipeline.py:1721-1731 drafts_of; distill_kura/cli.py:849-865 `kura distill drafts` and `kura distill pour <slug>`; distill_kura/cli.py:804-816 `kura profile apply` | `drafts_of` is documented as \"a listing for a person, not a gate\": it prints each staged draft's slug, evidence classes and trigger, and `pour <slug>` admits one after re-checking its gate mark and manifest (`pipeline.py:889-914`). `profile apply` copies a model-drafted profile over `profile.md`, which the distiller then reads after the store's charter — \"a person's act, never automatic\", with no other caller. The designed loop sends drafts to a scribe model instead (`drain`, run by `kura tend`), so the person's door is optional | tests/test_profile.py:150 test_cli_show_draft_apply_and_frozen"
   negative_eval: "recall's must-not cases | tests/test_registry_and_recall.py:374 test_the_degraded_word_path_never_recalls_the_comment_s_example | against a real store, asserts that word-overlap recall does not return `its-slug`, the example link in the index header comment, that every pick is a real memory, and in the same test that `tell me about cooling` still returns `cooling`; tests/test_fastpath.py:87 asserts a nonsense question yields no tier-zero hit and the verdict `no-confident-hit`, beside `:45`, where a direct question hits `ssd-tier-mission` with no thinker | tests/test_registry_and_recall.py:374"
 stack_storage: "files"
 stack_retrieval: "lexical, graph"
@@ -60,7 +59,17 @@ retired memory is marked on its index line and still recalled like any other,
 and the line in its body that names the successor competes for room when recall
 trims a long memory.
 
-Two marks: `human_review`, `negative_eval`.
+One mark: `negative_eval`. `human_review` is withheld because the draft queue's
+designed drain is a model. `drafts_of` says so of itself — *"a listing for a
+person, not a gate"* — and while `kura distill pour <slug>` lets a person admit
+one draft, `drain` (`distill/pipeline.py:1078`, run by `kura tend`) maps
+`judge_draft` over every signed draft in a thread pool and pours what the model
+approves. The person's door is one of two and it is the optional one. The
+mechanism around that judge is still worth reading, and section 9 keeps it: a
+draft whose mark is invalid for its current name is quarantined *without* being
+judged, on the stated ground that *"the judge must never be a mint"*, and a
+verdict binds the exact bytes it judged, so a draft another drain fixed while
+the model was thinking is left for the next pass instead of being poured.
 
 ## 2. Mental Model
 
@@ -406,5 +415,7 @@ prompt, or where who said what in a journal cannot be trusted.
 - `sed -n 1130,1145p distill_kura/store.py` — `_apply` unlinks the write-ahead entry after applying it
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`33aec61dcd28076848bfdfa9dfdf5902300fe109`](https://github.com/lna-lab/distill-kura/commit/33aec61dcd28076848bfdfa9dfdf5902300fe109); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, and the record's own last clause was the reason: *"The designed loop sends drafts to a scribe model instead (`drain`, run by `kura tend`), so the person's door is optional."* Read against the question the mark now asks — does a memory wait until an actor the producing agent cannot be resolves it — an optional door is no door: `drain` maps `judge_draft` over the signed drafts and pours what the model approves. The care taken *inside* that judge is real and stays in the report, including the quarantine-without-judging rule for a draft whose mark does not match its current name. `negative_eval` stands with its anchor re-verified. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`33aec61dcd28076848bfdfa9dfdf5902300fe109`](https://github.com/lna-lab/distill-kura/commit/33aec61dcd28076848bfdfa9dfdf5902300fe109) — first reading, at a commit dated 6 September 2026. Screened before opening: no auto-run surface, no build-time execution, nothing inside the cooldown, one unpinned surface, and `AGENTS.md` read as data. Nothing was installed, built or run.
