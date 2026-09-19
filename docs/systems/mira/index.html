@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="One conversation thread that never
+ends, whose older turns collapse into first-person memories scored by a
+thirteen-step SQL formula counting the user's active days rather than
+the calendar, with row-level security on eleven tables and a boot probe
+that plants a canary row and refuses to start if another user can read
+it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MIRA — Agent Memory Atlas">
+    <meta property="og:description" content="One conversation thread
+that never ends, whose older turns collapse into first-person memories
+scored by a thirteen-step SQL formula counting the user's active days
+rather than the calendar, with row-level security on eleven tables and a
+boot probe that plants a canary row and refuses to start if another user
+can read it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MIRA — Agent Memory Atlas">
+    <meta name="twitter:description" content="One conversation thread
+that never ends, whose older turns collapse into first-person memories
+scored by a thirteen-step SQL formula counting the user's active days
+rather than the calendar, with row-level security on eleven tables and a
+boot probe that plants a canary row and refuses to start if another user
+can read it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MIRA — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MIRA",
+      "description": "One conversation thread that never ends, whose older turns collapse into first-person memories scored by a thirteen-step SQL formula counting the user's active days rather than the calendar, with row-level security on eleven tables and a boot probe that plants a canary row and refuses to start if another user can read it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Continuous personal assistant</p>
+          <h1>MIRA</h1>
+          <p class="document-deck">One conversation thread that never
+ends, whose older turns collapse into first-person memories scored by a
+thirteen-step SQL formula counting the user's active days rather than
+the calendar, with row-level security on eleven tables and a boot probe
+that plants a canary row and refuses to start if another user can read
+it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/taylorsatula/mira">
+              <span>Source</span>
+              <strong>taylorsatula/mira</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/taylorsatula/mira/commit/e401d59bde9b6d9811d05b7abee1438907f99394" title="e401d59bde9b6d9811d05b7abee1438907f99394">
+              <span>Analyzed revision</span>
+              <code>e401d59b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/taylorsatula--mira" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>taylorsatula--mira</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MIRA is one person's attempt at a continuous digital entity, and it
+says so: <em>"This is my TempleOS."</em> The design constraint that
+produces everything else is that there is one conversation thread
+forever and no way to start a new chat. Older material has to go
+somewhere, so it collapses — a segment reaching an inactivity threshold
+is distilled into first-person memories, and the conversation carries a
+rolling continuation brief when it grows too large before that
+happens.</p>
+<p>Three mechanisms make it worth reading. The <strong>scoring
+formula</strong> is a thirteen-step calculation kept in
+<code>lt_memory/scoring_formula.sql</code> and described there as the
+single source of truth, with every constant named and explained. Its
+best idea is two clocks: decay counts the user's <em>activity days</em>,
+so a fortnight offline does not degrade the store, while
+<code>happens_at</code> and <code>expires_at</code> count calendar days
+<em>"since real-world deadlines don't pause"</em>.</p>
+<p>The <strong>curator</strong> is an agent that links, merges, archives
+and salvages — and cannot create. Its docstring says why the tool schema
+excludes <code>create_memory</code>: <em>preventing manufactured
+silt</em>. A process that prunes must not be able to mint.</p>
+<p>The <strong>isolation</strong> is Postgres row-level security on
+eleven tables, and it is not left as a schema claim. A pre-server probe
+plants a canary row, opens two RLS-scoped connections, and asserts that
+the owner can see it and another user cannot — before Hypercorn binds a
+socket.</p>
+<p>The report awards <code>scope_enforced</code>, <code>tombstone</code>
+and <code>negative_eval</code>. It withholds <code>bitemporal</code>,
+<code>audit_log</code>, <code>trust_state</code> and
+<code>human_review</code>, and section 9 gives the reason for each. The
+counterweight to all of the above is in section 10: a <code>find</code>
+for test files across the whole tree returns two, both about HTTP and
+URL safety. Nothing committed exercises the memory system.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A single thread, three states for the material in it.</p>
+<p><strong>Live</strong> is the active conversation, kept while it is
+relevant. <strong>Collapsed</strong> is what happens when a segment goes
+quiet: <code>status</code> on a message moves from <code>active</code>
+to <code>collapsed</code>, and the segment is distilled into memories
+written in the first person. <strong>Archived</strong> is what happens
+to a memory the curator decides is not earning its place — the row
+stays, and every read stops returning it.</p>
+<p>The scoring formula is the pressure that drives the third transition.
+New memories start around 0.5 and, in the formula's own phrase, have to
+"earn their keep": importance rises with access rate, inbound links,
+entity links and explicit LLM mentions, and decays without
+reinforcement, all passed through a sigmoid centred so that an average
+memory lands near 0.5.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one conversation thread whose quiet segments collapse into first-person memories; entity extraction, hub discovery and a curating agent that may link, merge, archive or salvage but never create then tend the graph; retrieval unions a row-level-security-scoped personal leg with a global table outside it and ranks by a thirteen-step SQL importance formula whose decay counts the user's activity days while its deadline terms count calendar days; and a pre-server probe re-verifies the isolation contract against the live catalogue on every boot</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one conversation thread whose quiet segments collapse into first-person memories; entity extraction, hub discovery and a curating agent that may link, merge, archive or salvage but never create then tend the graph; retrieval unions a row-level-security-scoped personal leg with a global table outside it and ranks by a thirteen-step SQL importance formula whose decay counts the user&#39;s activity days while its deadline terms count calendar days; and a pre-server probe re-verifies the isolation contract against the live catalogue on every boot
+flowchart TD
+    subgraph Thread[&quot;One thread, forever&quot;]
+        LIVE[&quot;active messages&quot;]
+        BRIEF[&quot;rolling continuation brief&lt;br/&gt;when the window grows&quot;]
+        COLL[&quot;segment collapse&lt;br/&gt;on inactivity&quot;]
+    end
+
+    subgraph Distil[&quot;Extraction&quot;]
+        MEM[&quot;first-person memories&quot;]
+        ENT[&quot;entity extraction&quot;]
+        LINK[&quot;deterministic link discovery&lt;br/&gt;typeless hints&quot;]
+    end
+
+    subgraph Curate[&quot;MemoryCuratorAgent&quot;]
+        INT[&quot;integration mode&lt;br/&gt;link / merge / stand-alone&quot;]
+        FLOOR[&quot;floor mode&lt;br/&gt;archive / salvage&quot;]
+        NOCREATE[&quot;create_memory excluded&lt;br/&gt;from the tool schema&quot;]
+    end
+
+    subgraph Store[&quot;Postgres + pgvector&quot;]
+        PM[&quot;memories&lt;br/&gt;RLS: memories_user_policy&quot;]
+        GM[&quot;global_memories&lt;br/&gt;outside RLS&quot;]
+        ENTT[&quot;entities&quot;]
+        SCORE[&quot;scoring_formula.sql&lt;br/&gt;13 steps, activity days&quot;]
+    end
+
+    subgraph Read[&quot;Retrieval&quot;]
+        HS[&quot;hybrid search&lt;br/&gt;vector + lexical&quot;]
+        UNION[&quot;UNION, tagged&lt;br/&gt;source=personal | global&quot;]
+        ARCH[&quot;is_archived = FALSE&lt;br/&gt;15 sites&quot;]
+    end
+
+    POST[&quot;power-on self test&lt;br/&gt;RLS canary, both directions&quot;]
+
+    LIVE --&gt; BRIEF
+    LIVE --&gt; COLL --&gt; MEM
+    MEM --&gt; ENT --&gt; ENTT
+    MEM --&gt; LINK --&gt; INT
+    INT --&gt; PM
+    FLOOR --&gt; PM
+    NOCREATE -.-&gt; INT
+    NOCREATE -.-&gt; FLOOR
+    PM --&gt; HS
+    GM --&gt; HS
+    HS --&gt; ARCH --&gt; UNION
+    SCORE --&gt; HS
+    POST -.-&gt;|verifies before bind| PM</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Domain types:</strong> <code>lt_memory/models.py</code> —
+the <code>Memory</code> row and its link entries.</li>
+<li><strong>Data access and the archived predicate:</strong>
+<code>lt_memory/db_access.py</code>.</li>
+<li><strong>Retrieval:</strong> <code>lt_memory/hybrid_search.py</code>,
+<code>lt_memory/vector_ops.py</code>.</li>
+<li><strong>Ranking:</strong>
+<code>lt_memory/scoring_formula.sql</code>.</li>
+<li><strong>Graph tending:</strong>
+<code>agents/implementations/memory_curator_agent.py</code>,
+<code>lt_memory/linking.py</code>,
+<code>lt_memory/entity_merge.py</code>,
+<code>lt_memory/hub_discovery.py</code>.</li>
+<li><strong>Collapse:</strong> <code>cns/core/message.py</code>,
+<code>cns/core/events.py</code>.</li>
+<li><strong>Isolation contract:</strong>
+<code>deploy/mira_service_schema.sql</code>,
+<code>utils/power_on_self_test.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The row carries more instrumentation than most, and the unusual
+fields are the interesting ones:</p>
+<ul>
+<li><strong><code>mention_count</code></strong> — explicit LLM
+references, annotated in the model as the strongest importance signal,
+and scored separately from <code>access_count</code>.</li>
+<li><strong><code>activity_days_at_creation</code> /
+<code>activity_days_at_last_access</code></strong> — snapshots of the
+user's activity-day counter, so decay can be computed against engagement
+rather than wall-clock time.</li>
+<li><strong><code>last_tended_at</code></strong> — when the curator last
+linked, merged, archived or salvaged this memory, <code>NULL</code>
+meaning never tended; the floor trigger samples on it.</li>
+<li><strong><code>happens_at</code></strong> — when the thing the memory
+is about occurs, distinct from when the memory was created.</li>
+<li><strong><code>inbound_links</code>, <code>outbound_links</code>,
+<code>entity_links</code></strong> — the graph the hub terms of the
+scoring formula are computed over.</li>
+<li><strong><code>annotations</code></strong> — contextual notes with a
+source, kept beside the text rather than edited into it.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid search runs a vector leg and a lexical leg and UNIONs a
+personal query against a global one, tagging each row
+<code>source='personal'</code> or <code>source='global'</code> so the
+caller can tell shared material from the user's own. Both legs carry
+<code>is_archived = FALSE</code>.</p>
+<p>Ranking is the SQL formula, and it repays reading in full because it
+states its own constants and the reasoning behind them. Value comes from
+an access <em>rate</em> rather than a raw count, with a seven-day floor
+on the denominator to stop new memories spiking. Hub position
+contributes with diminishing returns after ten inbound links, and entity
+links are weighted by entity type — a person counts for more than a
+product. Explicit mentions score separately and are called the strongest
+signal. A newness boost of 2.0 decays to zero over fifteen activity
+days, a grace period rather than a permanent advantage. The raw total is
+multiplied by a recency factor and a <code>happens_at</code> proximity
+multiplier, then squashed by a sigmoid centred at 2.0 so an average
+memory maps to about 0.5.</p>
+<p>The choice worth copying is which clock each term uses. Decay is in
+activity days, because a user who goes on holiday has not decided their
+memories matter less. Deadlines are in calendar days, because a date
+does not wait for someone to come back.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A segment collapses when an inactivity threshold fires, and the
+collapse hook spawns the curator in integration mode to tend each new
+memory — link it, merge it, or leave it standing — before the user's
+next conversation. That ordering matters: the graph is tended between
+sessions rather than during one.</p>
+<p>Floor mode is the opposite direction. A trigger samples memories not
+tended in a while and hands the curator a batch to triage as archive or
+salvage. The separation between the two modes is a single
+<code>mode</code> key on the work item, and the same agent serves
+both.</p>
+<p>The division of labour with the deterministic code is stated plainly:
+discovery emits typeless candidate hints, and the agent is the sole link
+typer — every typed relationship in the graph was written by it. And it
+cannot create memories at all.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no MCP server. MIRA is a service — FastAPI and Hypercorn,
+its own clients, its own agent framework, a web and mobile-facing API —
+built around the premise that the user talks to one assistant in one
+thread. Memory is internal plumbing rather than a surface other agents
+call.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope enforcement — awarded, in the database.</strong> RLS on
+eleven tables, a policy per table, an index the schema comments as
+essential for it, and a startup probe that checks the catalogue rather
+than trusting the migration. Shared material is a separate table outside
+RLS rather than a nullable column inside it, which means "global" cannot
+be reached by forgetting a predicate.</p>
+<p><strong>Tombstone — awarded.</strong> Archived rows stay, fifteen
+reads exclude them, and the writer is an agent structurally prevented
+from creating the replacements it might otherwise be tempted to
+write.</p>
+<p><strong>Negative eval — awarded, in an unusual place.</strong> The
+canary probe asserts both directions on the same row. It is in the boot
+path rather than a test file, which means it runs on every deployment
+and never in CI.</p>
+<p><strong>Bitemporal — withheld.</strong> The row carries
+<code>happens_at</code> alongside <code>created_at</code>, which is the
+second axis the mark looks for, and no read uses it as one:
+<code>happens_at</code> appears in the scoring formula as a proximity
+multiplier and in the select lists, and nothing answers "what was true
+at time T". The axis exists and feeds ranking.</p>
+<p><strong>Audit log — withheld.</strong> The schema declares twenty-two
+tables and none of them records what happened to a memory;
+<code>billing_transactions</code> and <code>stripe_webhook_events</code>
+are financial records, and <code>users_trash</code> is a soft-delete for
+accounts. Archival stamps <code>archived_at</code> on the row itself,
+which tells you a memory was archived but not by which pass or why.</p>
+<p><strong>Trust state — withheld.</strong> The epistemic axis here is
+<code>importance_score</code>, a number the SQL formula computes and the
+ranking consumes. The discrete state that withholds a memory is
+<code>is_archived</code>, and that is already carrying
+<code>tombstone</code>.</p>
+<p><strong>Human review — withheld.</strong> No approval state gates
+what a memory may be used for. The curator is an LLM agent, and its
+restraint is a tool-schema exclusion rather than a human in the
+loop.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> Searched the README and <code>docs/</code>
+for <code>arxiv</code>, <code>@article</code>, <code>@misc</code>,
+<code>doi.org</code> and a <code>CITATION.cff</code>: none.</p>
+<p><strong>No test of any memory behaviour.</strong>
+<code>find . -name "*test*"</code> across the tree returns four paths:
+the <code>tests/</code> directory itself,
+<code>utils/power_on_self_test.py</code>, and two test files —
+<code>tests/utils/test_pinned_http.py</code> and
+<code>tests/utils/test_url_safety.py</code>, both about outbound HTTP
+rather than memory. There is no pytest configuration in
+<code>pyproject.toml</code>. So the thirteen-step scoring formula, the
+collapse pipeline, the entity merge, the link typing and the archival
+triage have no committed case establishing that any of them does what it
+says.</p>
+<p>That is the honest counterweight to everything in sections 6 and 7,
+and it is worth stating precisely rather than as a complaint. The
+formula is a long SQL expression with eight constants and a sigmoid; a
+change to any term is unverifiable except by running the system and
+watching what surfaces. The one property that <em>is</em> checked
+mechanically — user isolation — is checked in the strongest available
+way, at every boot, against the live catalogue and with a live canary. A
+reader should take that contrast as the shape of the project: the author
+verified the thing that would be catastrophic to get wrong, and left the
+rest to use.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Pick a clock per term, not per system.</strong> Decay in
+activity days so a holiday does not degrade the store; deadlines in
+calendar days because they do not pause. Both live in the same formula
+here, each with the reason written beside it.</li>
+<li><strong>Forbid the pruner from creating.</strong> Excluding
+<code>create_memory</code> from the curator's tool schema is one line of
+configuration that removes a whole class of failure — the agent that
+decides what to discard cannot replace it with something it wrote.</li>
+<li><strong>Check the isolation contract at boot, not in CI.</strong> A
+probe that plants a canary and asserts both directions catches a dropped
+policy in the environment that actually matters, and it caught the
+subtler thing too: that the service pool has not inherited a session
+user id.</li>
+<li><strong>Separate shared material into its own table.</strong>
+<code>global_memories</code> outside RLS cannot be reached by forgetting
+a predicate, which a nullable <code>user_id</code> inside the RLS table
+could be.</li>
+<li><strong>Rate, not count.</strong> Value is access rate over a
+denominator floored at seven days, so a memory read twice on its first
+afternoon does not outrank one read steadily for a year.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Archival is one-way at this pin — no writer sets
+<code>is_archived</code> back to false. Is a restore intended, or is
+re-extraction the recovery path?</li>
+<li>The formula's header calls itself the single source of truth. Is it
+interpolated into more than one query, and what keeps a caller from
+computing importance a second way?</li>
+<li>With no test around the scoring formula, how is a constant change
+validated before it reaches a live store?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Domain types: <code>lt_memory/models.py</code></li>
+<li>Data access: <code>lt_memory/db_access.py</code></li>
+<li>Hybrid search: <code>lt_memory/hybrid_search.py</code>,
+<code>lt_memory/vector_ops.py</code></li>
+<li>Ranking: <code>lt_memory/scoring_formula.sql</code></li>
+<li>Graph: <code>lt_memory/linking.py</code>,
+<code>lt_memory/entity_merge.py</code>,
+<code>lt_memory/hub_discovery.py</code>,
+<code>lt_memory/entity_extraction.py</code></li>
+<li>Curator:
+<code>agents/implementations/memory_curator_agent.py</code>,
+<code>agents/triggers/memory_floor_trigger.py</code></li>
+<li>Conversation: <code>cns/core/message.py</code>,
+<code>cns/core/events.py</code></li>
+<li>Schema and isolation: <code>deploy/mira_service_schema.sql</code>,
+<code>utils/power_on_self_test.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/taylorsatula/mira/commit/e401d59bde9b6d9811d05b7abee1438907f99394"><code class="commit-id" title="e401d59bde9b6d9811d05b7abee1438907f99394">e401d59b…</code></a>
+— first reading, at the head of <code>main</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: no
+auto-run surface, no build-time execution, nothing inside the seven-day
+cooldown, one unpinned dependency surface with thirty-six requirements
+not pinned with <code>==</code>, and an <code>AGENTS.md</code> addressed
+to a reading agent which was read as data. Nothing was installed, built
+or run. Three marks. The reading covered the memory row and its
+instrumentation, the data-access layer and its archived predicate,
+hybrid search across the personal and global legs, the scoring formula
+in full, the curator agent and its two modes, the collapse path, and the
+schema's row-level security together with the startup probe that
+verifies it; the tool framework, the billing tables and the web surface
+were read as context rather than as subject. AGPL-3.0, licence text in
+the tree. Four marks are withheld with reasons in section 9, and the one
+worth repeating here is <code>audit_log</code>: twenty-two tables in the
+schema and none of them records what happened to a memory. The finding
+that most shapes how to read the rest is that a <code>find</code> for
+test files across the tree returns two, both about HTTP and URL safety —
+the memory system has no committed test, while the isolation contract is
+re-verified against the live catalogue on every boot.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

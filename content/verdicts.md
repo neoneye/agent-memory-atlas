@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 582 reports.**
+**This page covers all 583 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5117,3 +5117,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT with the upstream's copyright line retained and the fork relationship stated in the README; 53 MCP tools, a CLI, hooks and a web view; a substantial Python suite including a golden retrieval baseline and an OKF regression file; design documents under `docs/` that include studies of other memory systems.
 - Study when: you are bolting a knowledge base onto a tool that generates documents, or deciding what a retrieval system should do with a claim nobody has confirmed yet.
 - Do not copy when: you need per-user read isolation, or a review tier an author cannot assert about themselves.
+
+### [`MIRA`](../systems/mira/)
+- Best idea: **pick a clock per term rather than per system.** The importance formula's decay counts the user's *activity days*, so a fortnight offline does not degrade the store, while `happens_at` and `expires_at` count calendar days — the header says why, *"since real-world deadlines don't pause"*. Two clocks in one SQL expression, each with its reasoning written beside it.
+- Second idea: **forbid the pruner from creating.** The `MemoryCuratorAgent` links, merges, archives and salvages, and its docstring records the restriction that makes that safe: it *"can NEVER create memories (create_memory is excluded from its tool schema) -- preventing manufactured silt"*. One line of schema configuration removes a whole class of failure — the process that decides what to discard cannot replace it with something it wrote.
+- Third idea: **check the isolation contract at boot, against the live catalogue.** `_check_postgres_rls` confirms the service pool has not inherited `app.current_user_id`, confirms the admin role is the deliberate `BYPASSRLS` exception, queries `pg_class` and `pg_policy` for eleven named tables, and then plants a canary row and asserts that its owner can see it and another user cannot — before Hypercorn binds a socket.
+- Fourth idea: **put shared material in its own table.** `global_memories` lives outside RLS and is UNIONed in tagged `source='global'`, so "shared" cannot be reached by forgetting a predicate the way a nullable `user_id` inside the RLS table could be.
+- Biggest risk: **no committed test exercises any memory behaviour.** `find . -name "*test*"` across the tree returns four paths, two of them test files, both under `tests/utils/` and both about outbound HTTP and URL safety; there is no pytest configuration. A thirteen-step scoring formula with eight named constants and a sigmoid, an entity merge, a link typer and an archival triage rest on a startup probe and on use.
+- Second risk: the twenty-two-table schema has no audit or event table. `archived_at` records that a memory was archived and not by which pass or why, and nothing records a link, a merge or a salvage at all.
+- Third risk: archival is one-way at this pin — grepping for a writer setting `is_archived` back to false returns nothing, and *salvage* in this codebase means declining to archive rather than restoring something archived.
+- Most reusable component: `lt_memory/scoring_formula.sql` — a thirteen-step importance calculation kept as a single source of truth with every constant named and explained, including value as an access *rate* over a denominator floored at seven days so a memory read twice on its first afternoon cannot outrank one read steadily for a year.
+- Maturity impression: AGPL-3.0 with the licence text in the tree; Postgres with pgvector and RLS on eleven tables, Valkey, a vault, a FastAPI service and an agent framework of its own — one person's system, described by its author as "my TempleOS", with production-grade isolation and effectively no test suite.
+- Study when: you are designing decay for a store a human uses irregularly, or deciding what an LLM curator of a memory graph should be forbidden to do.
+- Do not copy when: you need to answer what a memory said before, or which pass changed it — there is no audit trail and no as-of read.
