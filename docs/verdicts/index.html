@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 610 reports.</strong></p>
+<p><strong>This page covers all 611 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24843,6 +24843,47 @@ what it provides and the stronger property it is not claiming —
 <em>"all-or-restored completion when the process can run recovery, not
 simultaneous visibility across independent paths"</em> — where most
 projects would write "atomic" and stop.</li>
+</ul>
+<h3 id="anolisa-agent-memory"><a
+href="../systems/anolisa-agent-memory/"><code>anolisa-agent-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>let the kernel enforce the sandbox, and name the
+attack in the module that stops it.</strong> <code>safe_fs</code> opens
+by spelling out the TOCTOU case — a validator approves
+<code>notes/x</code>, an attacker swaps it for a link to
+<code>~/.ssh/id_rsa</code>, and the model then reads it — and answers
+with <code>openat2(RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS)</code> against a
+root descriptor opened once at startup. A check and a later
+<code>open()</code> are two operations with a window between them; this
+is one, and the refusal belongs to the kernel. The coverage split is
+stated rather than implied: content tools route through it, and
+directory operations get a pre-syscall check the source itself calls
+<em>"best-effort but closes the common-case attack."</em></li>
+<li>Biggest risk: <strong>an injection-flagged search hit is annotated
+and still returned.</strong> The heuristic rejects a tainted candidate
+on the consolidation path and only labels one on the search path, so
+content already on disk reaches the model with a flag and the decision
+passes to whatever adapter reads it. A rejected consolidation candidate
+also leaves no durable record that it was rejected.</li>
+<li>Most reusable component:
+<code>src/agent-memory/src/audit/mod.rs</code> together with
+<code>tools/edit.rs</code>. The entry carries a timestamp, tool, path,
+ok flag, bytes, token estimate, error and a trace id, appended and never
+rewritten — and <code>edit.rs</code> emits eight of them, seven from
+failure branches each carrying its error. That is what makes a log
+answer "what went wrong" rather than only "what worked".</li>
+<li>Maturity impression: Apache 2.0 from Alibaba Cloud, one Rust
+component of a 5,758-file agentic OS, Linux-only and requiring a kernel
+new enough for <code>openat2</code>; 37 MCP tools, hybrid
+BM25-plus-vector search with RRF, git versioning and tar.gz snapshots.
+Two marks — <code>audit_log</code>, <code>negative_eval</code>.
+<code>scope_enforced</code> is withheld because a namespace is a mount
+with its own index rather than a key composed into a read, and two of
+the three declared namespace kinds are reserved and unused.</li>
+<li>Study when: you are writing a test for a sandbox escape. This one
+does not stop at <code>unwrap_err()</code> — it then asserts the file is
+absent from the directory the escape targeted, because an error proves
+the call complained and a partial write would satisfy that alone.</li>
 </ul>
         </article>
       </div>

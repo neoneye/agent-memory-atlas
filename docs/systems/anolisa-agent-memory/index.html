@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust filesystem memory served
+over MCP whose sandbox is enforced by the kernel through openat2
+RESOLVE_BENEATH, and whose escape tests assert the file did not appear
+outside the mount rather than that a call returned an error.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ANOLISA Agent
+Memory — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust filesystem memory
+served over MCP whose sandbox is enforced by the kernel through openat2
+RESOLVE_BENEATH, and whose escape tests assert the file did not appear
+outside the mount rather than that a call returned an error.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ANOLISA Agent
+Memory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust filesystem memory
+served over MCP whose sandbox is enforced by the kernel through openat2
+RESOLVE_BENEATH, and whose escape tests assert the file did not appear
+outside the mount rather than that a call returned an error.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ANOLISA Agent Memory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ANOLISA Agent Memory",
+      "description": "A Rust filesystem memory served over MCP whose sandbox is enforced by the kernel through openat2 RESOLVE_BENEATH, and whose escape tests assert the file did not appear outside the mount rather than that a call returned an error.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The escape test checks the filesystem, not
+the error</p>
+          <h1>ANOLISA Agent Memory</h1>
+          <p class="document-deck">A Rust filesystem memory served over
+MCP whose sandbox is enforced by the kernel through openat2
+RESOLVE_BENEATH, and whose escape tests assert the file did not appear
+outside the mount rather than that a call returned an error.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/agentic-os-org/ANOLISA">
+              <span>Source</span>
+              <strong>agentic-os-org/ANOLISA</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/agentic-os-org/ANOLISA/commit/b95908b9bd6d2adc52eb3d84ee39515fbfa001c2" title="b95908b9bd6d2adc52eb3d84ee39515fbfa001c2">
+              <span>Analyzed revision</span>
+              <code>b95908b9…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/agentic-os-org--ANOLISA" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>agentic-os-org--ANOLISA</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ANOLISA is an agentic operating system from Alibaba Cloud — Apache
+2.0, 5,758 files across a dozen components. This report covers one of
+them, <code>src/agent-memory</code>: a Rust crate serving
+filesystem-shaped memory to agents over MCP, with 37 tools, hybrid
+BM25-plus-vector search, git versioning, and consolidation of atomic
+facts out of its own audit log. Linux only, by design and by
+dependency.</p>
+<p><strong>Two marks: <code>audit_log</code> and
+<code>negative_eval</code>.</strong></p>
+<p>The safety work is the reason to read it.
+<code>src/safe_fs/mod.rs</code> opens by naming the attack it exists to
+stop, concretely:</p>
+<blockquote>
+<p><code>ns::paths::resolve_path</code> validates a string path is
+sandbox-safe AT CHECK TIME, but between the check and the subsequent
+<code>fs::*</code> call an attacker with write access to the mount tree
+could swap a component for a symlink and escape — e.g. swap
+<code>notes/x</code> for a link to <code>~/.ssh/id_rsa</code>, then have
+the model do <code>mem_read("notes/x")</code>.</p>
+</blockquote>
+<p>The answer is
+<code>openat2(RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS)</code> against a root
+descriptor opened once at startup, so the kernel refuses <code>..</code>
+and symlinks rather than a validator refusing them. And the module is
+candid about coverage: content-opening tools route through it, while
+<code>mkdir</code>, <code>remove</code> and list traversal get a
+pre-syscall check the docstring itself calls <em>"best-effort but closes
+the common-case attack."</em></p>
+<p>The tests match that seriousness. An escape attempt is not proved by
+the error it returns; it is proved by the file not being there —
+<code>assert!(!outside.path().join("victimdir/escape.md").exists())</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a file. Namespaces are mounts, one root descriptor each,
+and every path the model names is resolved beneath that descriptor by
+the kernel. Search runs over a per-mount index. Consolidation reads the
+audit log the tools wrote and extracts atomic facts from it, so the
+record of what happened is also the raw material for what is
+remembered.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — every model-supplied path is resolved by the kernel beneath a root descriptor opened once at startup with openat2 RESOLVE_BENEATH and RESOLVE_NO_SYMLINKS, so a symlink swapped in after a check cannot escape; tools that open file content route through that module while directory operations get a weaker pre-syscall check the source calls best-effort, every tool invocation appends a JSONL audit line recording failures as well as successes, and consolidation reads that same log to extract atomic facts, rejecting any whose title or content looks like a prompt injection</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: every model-supplied path is resolved by the kernel beneath a root descriptor opened once at startup with openat2 RESOLVE_BENEATH and RESOLVE_NO_SYMLINKS, so a symlink swapped in after a check cannot escape; tools that open file content route through that module while directory operations get a weaker pre-syscall check the source calls best-effort, every tool invocation appends a JSONL audit line recording failures as well as successes, and consolidation reads that same log to extract atomic facts, rejecting any whose title or content looks like a prompt injection
+flowchart TD
+    M((&quot;model&quot;)) --&gt; T[&quot;37 MCP tools&quot;]
+    T --&gt; TIERA[&quot;content tools&lt;br/&gt;read · write · edit&quot;]
+    T --&gt; TIERB[&quot;mkdir · remove · list traversal&quot;]
+
+    TIERA --&gt; SFS[&quot;safe_fs&lt;br/&gt;openat2(RESOLVE_BENEATH&lt;br/&gt;| RESOLVE_NO_SYMLINKS)&lt;br/&gt;against root_fd (O_PATH, once at startup)&quot;]
+    TIERB --&gt; ANS[&quot;assert_no_symlink_traversal&lt;br/&gt;pre-syscall check&lt;br/&gt;&#39;best-effort&#39;, per the source&quot;]
+
+    SFS --&gt; MNT[(&quot;namespace mount&lt;br/&gt;NsKind::User live&lt;br/&gt;Agent / Team reserved&quot;)]
+    ANS --&gt; MNT
+
+    T ==&gt; AUD[(&quot;&amp;lt;mount&amp;gt;/.anolisa/audit.log&lt;br/&gt;JSONL, opened .append(true)&lt;br/&gt;ts · tool · path · ok · bytes · tokens&lt;br/&gt;error · trace_id&quot;)]
+    AUD -.-&gt;|&quot;every failure branch too&quot;| AUD
+
+    AUD --&gt; CONS[&quot;consolidation&lt;br/&gt;extract atomic facts&quot;]
+    CONS --&gt; HEUR{&quot;looks_like_prompt_injection&lt;br/&gt;on title AND content&quot;}
+    HEUR --&gt;|&quot;matches&quot;| DROP[&quot;candidate rejected&quot;]
+    HEUR --&gt;|&quot;clean&quot;| FACT[&quot;atomic fact&quot;]
+    FACT --&gt; MNT
+
+    MNT --&gt; IDX[(&quot;per-mount index&lt;br/&gt;files · files_vec&lt;br/&gt;no namespace column&quot;)]
+    IDX --&gt; SEARCH[&quot;BM25 + vector, RRF&lt;br/&gt;time-decay ranking&quot;]
+    SEARCH --&gt; ANNOT[&quot;SearchHit annotated when&lt;br/&gt;the snippet looks injected —&lt;br/&gt;annotated, not dropped&quot;]
+    ANNOT --&gt; M
+
+    GIT[&quot;git auto-commit · tar.gz snapshots&quot;] --- MNT</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The sandbox</strong> — <code>src/safe_fs/mod.rs:1-19</code>.
+Kernel-enforced resolution beneath a root descriptor, requiring Linux ≥
+5.6 for <code>openat2</code>, which the docstring notes the platform
+ships. The two tiers are stated rather than implied, and the weaker one
+is labelled as such.</p>
+<p><strong>The audit line</strong> —
+<code>src/audit/mod.rs:14-39</code>. <code>AuditEntry</code> carries an
+RFC3339 timestamp, the tool name, the mount-relative path, an
+<code>ok</code> boolean, bytes, an estimated token count for retrieval
+tools, an error string, and a trace id <em>"for cross-tool
+correlation"</em>. The file is opened with <code>.append(true)</code> at
+<code>:108-110</code>. There is no truncate, rotate or
+<code>set_len</code> anywhere in the module.</p>
+<p><strong>The producers</strong> — and they are the reason the mark
+holds. <code>src/tools/edit.rs</code> alone emits eight entries, one per
+failure branch plus the success, each carrying the error it failed with.
+<code>remove.rs</code> has five, <code>mem_revert.rs</code> and
+<code>grep.rs</code> four each, <code>promote.rs</code> three, with more
+in snapshot, session history, export, observe and index. A failed write
+is a line in the log, not a silence.</p>
+<p><strong>The injection heuristics</strong> —
+<code>src/safety.rs:1-13</code>, credited in the source to <em>"the
+OpenClaw LanceDB extension's PROMPT_INJECTION_PATTERNS"</em>. What
+matters is where it is applied, and the two sites differ deliberately:
+<code>consolidation/heuristics.rs:104-105</code>
+<strong>rejects</strong> a candidate fact whose title or content
+matches, before it can become memory; <code>index/store.rs:475</code>
+and <code>:615</code> <strong>annotate</strong> a search hit <em>"so the
+adapter can decide whether to surface"</em> it. Filter on the way in,
+label on the way out.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Files under a namespace mount, with an index of <code>files</code>
+and <code>files_vec</code> beside them. <code>NsKind</code> is
+<code>User</code>, <code>Agent</code> or <code>Team</code>, and the enum
+carries its own status note: <em>"P0+P1 only uses <code>User</code>;
+<code>Agent</code> / <code>Team</code> are reserved for P2."</em> Two of
+three namespace kinds are declared and not yet in use.</p>
+<p>No status field on a memory, no supersession pointer, no validity
+window, and no occurrence of <code>tombstone</code> in the crate.
+Versioning is git; rollback is a commit or a tar.gz snapshot.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>BM25 and dense vectors fused with reciprocal rank fusion, with
+time-decay ranking. The index tables carry no namespace column: a
+namespace is a mount and therefore a separate index, so separation is
+physical rather than predicated.</p>
+<p>Auto-recall observes at the end of a conversation and injects
+relevant context before the next prompt, with the injection heuristics
+annotating what it surfaces.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes go through the sandbox and land as files, optionally
+auto-committed to git. Consolidation is the second writer: it reads the
+audit log, extracts atomic facts, and drops any candidate that trips the
+injection heuristics.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server with 37 tools, an adapter layer, cgroup limits, and a
+journald audit sink beside the JSONL one.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>audit_log</code>.</strong> Append-only JSONL with no
+rewrite path in the module, a wide set of producers across the tool
+surface, and — the part that decides it — failures recorded as entries
+with their error rather than dropped. The log is per-mount, so it
+inherits the namespace boundary.</p>
+<p><strong><code>negative_eval</code>.</strong> Escape attempts asserted
+by effect — section 10.</p>
+<p><strong><code>scope_enforced</code> is withheld.</strong> Namespaces
+are real and the isolation is strong, and it is a mount per namespace
+with its own index, not a stored key composed into a read. The mark
+measures the second thing. Worth stating beside it:
+<code>NsKind::Agent</code> and <code>NsKind::Team</code> are declared
+and unused, so per-agent separation is a reserved shape rather than a
+live one.</p>
+<p><strong><code>trust_state</code>, <code>tombstone</code>,
+<code>bitemporal</code> and <code>human_review</code> are
+withheld.</strong> A memory is a file with no status, nothing keys a
+rejection on content — the injection heuristic drops a
+<em>candidate</em> and records nothing durable about it — there is one
+clock, and nothing waits for a person.</p>
+<p><strong>One design decision belongs on the record.</strong> The
+injection heuristic filters on the consolidation path and only annotates
+on the search path. That is defensible — a search result the adapter can
+still choose to show is different from a fact written into memory — but
+it means tainted content already on disk reaches the model with a flag
+rather than being withheld, and the decision then belongs to whatever
+adapter reads the flag.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Twelve integration test files plus fixtures, covering file tools,
+safe_fs, mount strategy, Linux user namespaces, cgroups, git, journald
+audit, MCP integration and an end-to-end agent test. Nothing was
+installed and nothing was run here.</p>
+<p>The mark rests on how the escape cases are asserted.
+<code>tests/file_tools_test.rs</code> does not stop at the error:</p>
+<pre class="rust"><code>let err = svc.write(&quot;notes/escape.md&quot;, &quot;evil&quot;, false).unwrap_err();
+assert!(!outside.path().join(&quot;victimdir/escape.md&quot;).exists());</code></pre>
+<p>The second line is the one that matters. An error return proves the
+call complained; it does not prove nothing was written, and a partial
+write before the failure would satisfy the first assertion alone.
+Checking the target directory on disk proves the escape did not happen.
+The directory case at <code>:446</code> does the same, and
+<code>tests/safe_fs_tests.rs:313</code> and <code>:386</code> cover the
+read side and the weaker traversal check.</p>
+<p>No benchmark and no paper in this component.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Let the kernel enforce the sandbox.</strong> A validator and
+a subsequent <code>open()</code> are two operations with a window
+between them; <code>openat2(RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS)</code>
+against a long-lived root descriptor is one, and the refusal is not
+yours to get wrong.</li>
+<li><strong>Name the attack in the module that stops it.</strong> The
+symlink-swap example with <code>~/.ssh/id_rsa</code> in it is why the
+next maintainer will not simplify this away.</li>
+<li><strong>Label the weaker tier as weaker.</strong> <em>"best-effort
+but closes the common-case attack"</em> is worth more than silence about
+which tools are covered.</li>
+<li><strong>Assert the escape by checking the filesystem.</strong> The
+error is the symptom; the absent file is the property.</li>
+<li><strong>Log the failures.</strong> Eight audit sites in one tool
+file, seven of them error branches, is what makes a log answer "what
+went wrong" and not only "what worked".</li>
+<li><strong>Filter on the way in, annotate on the way out</strong> — and
+decide that split deliberately, as this does.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Declaring namespace kinds you do not use yet.</strong>
+<code>Agent</code> and <code>Team</code> read as capabilities to anyone
+who does not find the comment.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take <code>safe_fs</code> and the audit module if an agent writes
+files on your behalf; both are small, self-contained and Linux-specific.
+The wider component suits anyone already running the parent OS.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Injection-flagged search hits are annotated and returned. Which
+adapter decides, and what does the default do?</li>
+<li>The consolidation heuristic rejects a candidate fact silently. Would
+a durable record of the rejection be useful, or is the audit line
+enough?</li>
+<li><code>NsKind::Agent</code> and <code>Team</code> are reserved. Will
+per-agent separation be another mount, or the first namespace key
+composed into a query?</li>
+<li>Consolidation reads the audit log. What happens to extracted facts
+when the log is the only copy and a mount is rolled back to an earlier
+snapshot?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/agent-memory/src/safe_fs/mod.rs</code></td>
+<td>the TOCTOU statement, the <code>openat2</code> resolution and the
+two coverage tiers</td>
+</tr>
+<tr>
+<td><code>src/agent-memory/src/audit/mod.rs</code></td>
+<td><code>AuditEntry</code>, the append-only open, and the journald
+sibling</td>
+</tr>
+<tr>
+<td><code>src/agent-memory/src/tools/edit.rs</code></td>
+<td>eight audit sites, seven of them failure branches</td>
+</tr>
+<tr>
+<td><code>src/agent-memory/src/safety.rs</code></td>
+<td>the injection heuristics and their credited origin</td>
+</tr>
+<tr>
+<td><code>src/agent-memory/src/consolidation/heuristics.rs</code></td>
+<td>where a tainted candidate fact is rejected</td>
+</tr>
+<tr>
+<td><code>src/agent-memory/src/index/store.rs</code></td>
+<td>the <code>files</code> and <code>files_vec</code> tables, and where
+a hit is annotated</td>
+</tr>
+<tr>
+<td><code>src/agent-memory/src/ns/mod.rs</code></td>
+<td><code>NsKind</code>, with <code>Agent</code> and <code>Team</code>
+reserved</td>
+</tr>
+<tr>
+<td><code>src/agent-memory/tests/file_tools_test.rs</code></td>
+<td>the escape cases asserted by effect</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from <code>src/agent-memory</code> in the checkout at the pinned
+commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The audit log has no rewrite path</td>
+<td><code>grep -rn "truncate|rotate|set_len" --include='*.rs' src/audit</code></td>
+<td>Nothing; the only open is <code>.append(true)</code> at
+<code>mod.rs:108-110</code></td>
+</tr>
+<tr>
+<td>Failures are audited, not only successes</td>
+<td><code>grep -rn "AuditEntry::new" --include='*.rs' src</code></td>
+<td>8 sites in <code>tools/edit.rs</code>, 7 of them carrying
+<code>.error(...)</code>; 5 in <code>remove.rs</code>, 4 each in
+<code>mem_revert.rs</code> and <code>grep.rs</code>, and more across the
+tool surface</td>
+</tr>
+<tr>
+<td>The index carries no namespace column</td>
+<td><code>grep -rn "namespace|ns_id|CREATE TABLE" --include='*.rs' src/index</code></td>
+<td>Two <code>CREATE TABLE</code> statements, <code>files</code> and
+<code>files_vec</code>, neither mentioning a namespace</td>
+</tr>
+<tr>
+<td>The injection heuristic filters on one path and annotates on the
+other</td>
+<td><code>grep -rn "safety::" --include='*.rs' src</code></td>
+<td>Rejects at <code>consolidation/heuristics.rs:104-105</code>;
+annotates at <code>index/store.rs:475</code> and <code>:615</code></td>
+</tr>
+<tr>
+<td>No tombstone or validity vocabulary</td>
+<td><code>grep -rli "tombstone|valid_at" --include='*.rs' src</code></td>
+<td>Nothing for either</td>
+</tr>
+<tr>
+<td>Two namespace kinds are unused</td>
+<td>read <code>src/ns/mod.rs:12</code></td>
+<td><em>"P0+P1 only uses <code>User</code>; <code>Agent</code> /
+<code>Team</code> are reserved for P2."</em></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/agentic-os-org/ANOLISA/commit/b95908b9bd6d2adc52eb3d84ee39515fbfa001c2"><code class="commit-id" title="b95908b9bd6d2adc52eb3d84ee39515fbfa001c2">b95908b9…</code></a>
+— first reading. The repository is an agentic operating system of 5,758
+files from Alibaba Cloud under Apache 2.0 with a NOTICE naming derived
+works; this report covers one component, <code>src/agent-memory</code>,
+and the other twelve are out of its scope. Screened before reading: no
+auto-run surface, one build-time execution point, one unpinned surface
+and nothing inside the cooldown; nothing was installed, built or run,
+and the crate is Linux-only. Two marks, <code>audit_log</code> and
+<code>negative_eval</code>. <code>scope_enforced</code> is withheld
+because a namespace is a mount with its own index rather than a key
+composed into a read — the fifth system read this night whose isolation
+is physical rather than predicated.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 610 reports.**
+**This page covers all 611 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5453,4 +5453,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: the propose path's containment, about three hundred lines. `_open_contained_inbox` opens the inbox *"without following any symlink component"* through a directory handle and translates five distinct failures into five distinct refusals; `_reject_existing_note` refuses to overwrite; and both raise rather than degrade where the primitives are missing — *"vault containment checks are unavailable on this platform."* The same must-not-exist precondition is then enforced a second time as `expected_before=kernel.ABSENT` in the plan.
 - Maturity impression: MIT, Python, 2,214 files across work tracking, receipts, attestation, a skills subsystem and the memory vault. Two marks — `human_review`, `negative_eval`. `audit_log` is withheld over a genuinely extensive receipt subsystem, because those are per-operation artifacts with optional HMAC signing rather than an append-only ledger of memory mutations; `scope_enforced` because the boundary is a filesystem one rather than a stored scope key.
 - Study when: you are writing the guarantee paragraph for a transactional writer. `projection/kernel.py` opens by naming what it provides and the stronger property it is not claiming — *"all-or-restored completion when the process can run recovery, not simultaneous visibility across independent paths"* — where most projects would write "atomic" and stop.
+
+### [`anolisa-agent-memory`](../systems/anolisa-agent-memory/)
+
+- Best idea: **let the kernel enforce the sandbox, and name the attack in the module that stops it.** `safe_fs` opens by spelling out the TOCTOU case — a validator approves `notes/x`, an attacker swaps it for a link to `~/.ssh/id_rsa`, and the model then reads it — and answers with `openat2(RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS)` against a root descriptor opened once at startup. A check and a later `open()` are two operations with a window between them; this is one, and the refusal belongs to the kernel. The coverage split is stated rather than implied: content tools route through it, and directory operations get a pre-syscall check the source itself calls *"best-effort but closes the common-case attack."*
+- Biggest risk: **an injection-flagged search hit is annotated and still returned.** The heuristic rejects a tainted candidate on the consolidation path and only labels one on the search path, so content already on disk reaches the model with a flag and the decision passes to whatever adapter reads it. A rejected consolidation candidate also leaves no durable record that it was rejected.
+- Most reusable component: `src/agent-memory/src/audit/mod.rs` together with `tools/edit.rs`. The entry carries a timestamp, tool, path, ok flag, bytes, token estimate, error and a trace id, appended and never rewritten — and `edit.rs` emits eight of them, seven from failure branches each carrying its error. That is what makes a log answer "what went wrong" rather than only "what worked".
+- Maturity impression: Apache 2.0 from Alibaba Cloud, one Rust component of a 5,758-file agentic OS, Linux-only and requiring a kernel new enough for `openat2`; 37 MCP tools, hybrid BM25-plus-vector search with RRF, git versioning and tar.gz snapshots. Two marks — `audit_log`, `negative_eval`. `scope_enforced` is withheld because a namespace is a mount with its own index rather than a key composed into a read, and two of the three declared namespace kinds are reserved and unused.
+- Study when: you are writing a test for a sandbox escape. This one does not stop at `unwrap_err()` — it then asserts the file is absent from the directory the escape targeted, because an error proves the call complained and a partial write would satisfy that alone.
 
