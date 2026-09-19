@@ -7,12 +7,11 @@ page_kind: system
 source_name: "tpsdev-ai/flair"
 source_url: https://github.com/tpsdev-ai/flair
 archive_name: "tpsdev-ai--flair"
-revision: 02512aae1e859bcfa75d494f34b7a535a8caf0b5
-revision_url: https://github.com/tpsdev-ai/flair/commit/02512aae1e859bcfa75d494f34b7a535a8caf0b5
-analyzed_at: 2026-09-16
-capabilities: "trust_state, scope_enforced, negative_eval"
+revision: 6fadb74fe5f7adefb49c3cdc18e34cfd417bcc39
+revision_url: https://github.com/tpsdev-ai/flair/commit/6fadb74fe5f7adefb49c3cdc18e34cfd417bcc39
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, negative_eval"
 capability_evidence:
-  trust_state: "a stored visibility whose `private` value withholds a record from every reader but its owner, excluded by a `not_equal` predicate chosen so a legacy row missing the field is not retroactively privatised | resources/memory-read-scope.ts:18-46, resources/memory-visibility.ts, schemas/memory.graphql:268-276 | \"`Memory.visibility` is writer intent: 'private' is the ONLY owner-only exception; anything else (`shared`, null/absent) is org-open.\" The exclusion is `visibility != 'private'` rather than `visibility == 'shared'` under a stated invariant — `not_equal` \"INCLUDES records missing the field entirely\", while `equals` \"would EXCLUDE them and silently retroactively privatize every legacy row\". The promotion path inverts the default in the other direction: `decidePromotedVisibility` re-verifies a scope tag, a ruling and a rationale and \"defaults 'private' otherwise — default-private-unless … a shared promoted row must always trace to a recorded justification, never to a default\" | test/data-scoping.test.ts:96-118"
   scope_enforced: "the owner key is bound from the authenticated agent and applied by one resolver that every cross-agent read path imports — no caller argument reaches it | resources/memory-read-scope.ts:4-32, resources/Memory.ts:68-95 | `resolveReadScope` is \"[t]he SINGLE source every cross-agent Memory read path resolves its scope through\" — `Memory.search()`/`get()`, `SemanticSearch`, `MemoryBootstrap` and the by-id GET guard in `auth-middleware.ts` — composed through `makeReadScope` from a record-type registry, with a drift tripwire test introspecting the composed resolver's mode and owner field against that registry. A reader gets all of its own records at any visibility plus every other agent's non-private record. Read the scope carefully before relying on it: this is deliberately open-within-org, so the owner key separates a reader's own private rows from everyone else's rather than partitioning agents from one another, and the project says so — \"within an instance, there is no per-owner grant gate on READS anymore\". The remaining hard boundary is the federation push filter, which \"already excludes `private` rows from ever leaving this instance\" | test/integration/mcp-connector-principal-mapping.test.ts:256-283"
   negative_eval: "an end-to-end test searching through the MCP tool asserts another agent's private row never appears, with the non-private row's visibility asserted in the same test | test/integration/mcp-connector-principal-mapping.test.ts:256-283 | The test is titled \"(a) search as the connector: A's org-non-private row IS visible; A's private row NEVER is\", and carries both halves: the shared row is found, then `memory_search` for the private marker is asserted not to contain the private row by id and `expect(JSON.stringify(privateHits)).not.toContain(PRIVATE_MARKER)` by content. A sibling asserts \"A's private content must never appear in B's bootstrap\". The unit-level predicate tests carry the matching no-oracle assertion — a denial message for another agent's private row must not contain that agent's name | test/integration/bootstrap-self-describing-1182.test.ts:218-219"
 stack_storage: "delegated"
@@ -27,7 +26,7 @@ matrix:
   scoping: "One read-scope resolver every cross-agent path imports, binding the authenticated agent as the owner key; open-within-org for everything not marked private"
   integration: "A stdio MCP adapter written into each detected client, a built-in MCP surface off by default, an HTTP API, and adapter packages for a dozen runtimes"
   background: "Federation sync, presence, promotion of continuity candidates, and reflection over stored memories"
-  trust: "Ed25519 per-agent keypairs for external identity, a visibility with one owner-only value, and a recorded justification required before a promoted memory is shared"
+  trust: "Ed25519 per-agent keypairs for external identity, a server-attested provenance status surfaced on recall and deliberately barred from every decision, and a recorded justification required before a promoted memory is shared"
   strengths: "The comments record what went wrong and what the code now guarantees, which makes this one of the most auditable trees in the corpus. The read-scope module exists because the rule used to be scattered: `SemanticSearch` had \"its OWN inline grant-resolution + a `visibility === \\\"office\\\"` global OR-clause that leaked ANY authenticated agent's read of ANY other agent's memories\" — so now there is one helper, composed from a record-type registry, with a test that trips on drift. The migration invariant is argued rather than asserted: `not_equal 'private'` is chosen over `equals 'shared'` precisely because the latter would \"silently retroactively privatize every legacy row\". The dedup gate is labelled NEVER SUPPRESSES A WRITE and explains the bug that earned the label — two topically close but distinct findings, where \"the SECOND was silently dropped because the old client-side gate returned the existing record instead of writing\". Promotion defaults to private unless a scope tag, a ruling and a rationale all survive re-verification. And the README volunteers what most projects bury: that the match percentage \"is not a probability that the memory answers your question correctly\", that a root-owned install makes semantic search \"silently degrade to keyword-only\", that the built-in MCP surface is off by default with \"[n]o documented client setup uses it today\", and that the install pulls roughly 130 MB of tooling it never uses, with the upstream issue linked"
   risks: "Read the scope model before deploying it, because it is not what an identity substrate usually implies: within one instance every verified agent reads every other agent's non-private memory, deliberately — \"there is no per-owner grant gate on READS anymore\", grants remain inspectable but no longer gate anything, and `private` is \"the ONLY owner-only exception\". For a personal instance that is the intended knowledge-refinement model; for a shared one it means a single compromised or careless agent registration reads the lot, and the hard boundary is the federation push filter rather than anything between agents. The identity is likewise narrower than it sounds: the Ed25519 key proves an agent to the HTTP surface and, per the docs, \"[m]emories are not encrypted with it\", so losing the key costs the identity and not the data — nothing signs a memory's content, and `attribution` on a usage row is explicitly \"OPAQUE — never parsed, never fed to an LLM\" and to be trusted as \"nothing more than a label\". At version 0.54.2 the tree carries a large surface — 250,467 lines, thirteen adapter packages, an upgrade planner that coordinates three published packages — for a substrate whose own quick start is five commands"
 ---
@@ -88,11 +87,34 @@ route-directionality, one about DDL/schema replication — and the SECOND was
 silently dropped". Now the server computes a match signal, attaches it to the
 response, and writes anyway.
 
-Three marks follow from the above: a stored visibility that withholds, an owner
-key bound from the authenticated agent and applied by one resolver, and an
-end-to-end test — "(a) search as the connector: A's org-non-private row IS
-visible; A's private row NEVER is" — that asserts both halves through the actual
-MCP search tool, checking the private row's absence by id and by content marker.
+Two marks follow from the above: an owner key bound from the authenticated agent
+and applied by one resolver, and an end-to-end test — "(a) search as the
+connector: A's org-non-private row IS visible; A's private row NEVER is" — that
+asserts both halves through the actual MCP search tool, checking the private
+row's absence by id and by content marker.
+
+**`trust_state` is withheld, and the reason is the design rather than an
+omission.** `visibility` is the field that filters, and the module that applies
+it says what it is: writer intent, resolved inside `resolveReadScope` — the same
+single resolver, and the same predicate, that earns `scope_enforced`. Counting
+it twice would count one mechanism twice. The field that *is* epistemic is
+`provenanceStatus` on the trust block, `verified` when the record carries a
+server-attested `verified.agentId` and `unattributed` otherwise, with a
+self-reported `claimed` sub-object surfaced as a boolean and never as content —
+and `resources/trust-block.ts` is explicit that it never decides anything:
+
+> "The trust block INFORMS THE READER ONLY. It is assembled AFTER read-scope
+> resolution, purely for the response, and MUST NEVER enter an authority /
+> scope / attribution / dedup decision anywhere."
+
+That is enforced structurally, by a source-scan tripwire asserting that the
+read-scope module, the dedup gates, the usage recorder, the MCP handler and the
+retrieval core never import it. A state that is recorded, surfaced at the point
+of decision and deliberately kept out of the decision is a considered position,
+not a gap — it puts the judgement in the reading agent. It is also, precisely,
+not what this atlas counts: the mark is for a state the store acts on. The
+candidate lifecycle (`pending | promoted | rejected`) governs promotion rather
+than recall, and a pending candidate is not yet a memory.
 
 **Now read the scope model before deploying it**, because it is not what
 "identity substrate" usually implies. Within one instance, every verified agent
@@ -273,4 +295,6 @@ the memory paths read here.
 
 ## History
 
-**2026-09-16** — [`02512aae1e859bcfa75d494f34b7a535a8caf0b5`](https://github.com/tpsdev-ai/flair/commit/02512aae1e859bcfa75d494f34b7a535a8caf0b5) — first reading, at a commit dated 15 September 2026. Screened before opening, from a shallow clone: thirty-five files scanned, no auto-run surfaces, twelve build-time execution points, five unpinned surfaces and sixteen dependency files inside the seven-day cooldown. Nothing was installed, built or run.
+**2026-09-19** — [`6fadb74fe5f7adefb49c3cdc18e34cfd417bcc39`](https://github.com/tpsdev-ai/flair/commit/6fadb74fe5f7adefb49c3cdc18e34cfd417bcc39) — **`trust_state` withdrawn.** Re-tested against the narrowed line — a state answers whether a memory may be acted on and gets used for filtering — and the field the record rested on is the wrong one. `visibility` does filter, and the module applying it says what it is: writer intent, resolved inside `resolveReadScope`, which is the same single resolver and the same predicate that earns `scope_enforced`. One mechanism was being counted twice. The field that is epistemic is `provenanceStatus` on the trust block — `verified` when the record carries a server-attested `verified.agentId`, `unattributed` otherwise, with the self-reported `claimed` sub-object surfaced as a boolean and never as content. `resources/trust-block.ts` is explicit that it decides nothing: the block *informs the reader only*, is assembled after read-scope resolution, and *must never enter an authority / scope / attribution / dedup decision anywhere* — enforced by a source-scan tripwire asserting that the read-scope module, the dedup gates, the usage recorder, the MCP handler and the retrieval core never import it. That is a considered position and not a gap, and it is precisely not the thing this mark counts. The candidate lifecycle (pending / promoted / rejected) governs promotion rather than recall, and a pending candidate is not yet a memory. `scope_enforced` and `negative_eval` are unaffected and stand. COVERAGE_FLOOR 1160 to 1159. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-16** — [`6fadb74fe5f7adefb49c3cdc18e34cfd417bcc39`](https://github.com/tpsdev-ai/flair/commit/6fadb74fe5f7adefb49c3cdc18e34cfd417bcc39) — first reading, at a commit dated 15 September 2026. Screened before opening, from a shallow clone: thirty-five files scanned, no auto-run surfaces, twelve build-time execution points, five unpinned surfaces and sixteen dependency files inside the seven-day cooldown. Nothing was installed, built or run.
