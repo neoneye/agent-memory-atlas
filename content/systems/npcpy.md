@@ -9,11 +9,10 @@ source_url: https://github.com/npc-worldwide/npcpy
 archive_name: "npc-worldwide--npcpy"
 revision: 26fc78b5c578b85d4552eabfb0f195cc806927e5
 revision_url: https://github.com/npc-worldwide/npcpy/commit/26fc78b5c578b85d4552eabfb0f195cc806927e5
-analyzed_at: 2026-09-16
-capabilities: "trust_state, human_review"
+analyzed_at: 2026-09-19
+capabilities: "trust_state"
 capability_evidence:
   trust_state: "the memory row's status, with exactly one value on the retrieval path | npcpy/memory/knowledge_store.py:108, :178, :547, npcpy/serve.py:1656, :2354 | `add` defaults `status` to `pending_approval`, and the four values a row can carry are `pending_approval`, `auto-extracted`, `human-approved` and `human-rejected`. It is a state rather than a score because it decides admission, not order: the context-assembly read is `get_memories(status=\"human-approved\", limit=max_memories)` at both the store and the server, so a pending, auto-extracted or rejected row reaches no prompt. The store genuinely separates having something on record from believing it | tests/test_memory_processor.py"
-  human_review: "adjudication before the memory takes effect, not a view of what already did | npcpy/memory/knowledge_store.py:178, npcpy/serve.py:5875, :5937 | `get_pending_approvals` is `get_memories(status=\"pending_approval\")`, the server exposes an `approve_memories` endpoint, and the queue read at `:5937` pulls every pending row with no limit. Because the retrieval path admits only `human-approved`, an extraction nobody has said yes to is inert rather than merely flagged — which is the strong form of this mark | tests/test_memory_processor.py"
 stack_storage: "files"
 stack_retrieval: "graph"
 stack_source: "seeded"
@@ -48,12 +47,22 @@ advisory: `build_context` calls
 `self.get_memories(status="human-approved", limit=max_memories)`, so a candidate
 nobody has said yes to reaches no prompt.
 
-That combination earns two of the atlas's rarer marks. `trust_state` is a stored
-field with four values — `pending_approval`, `auto-extracted`, `human-approved`,
-`human-rejected` — of which exactly one is retrievable, so the store genuinely
-distinguishes "we have this on record" from "we believe this". `human_review` is
-the strongest form of the column: adjudication *before* the memory takes effect,
-not a UI for inspecting what already did.
+That earns `trust_state`, and earns it well: a stored field with four values —
+`pending_approval`, `auto-extracted`, `human-approved`, `human-rejected` — of
+which exactly one is retrievable, so the store genuinely distinguishes "we have
+this on record" from "we believe this".
+
+It does not earn `human_review`, and the reason is one line in the HTTP server
+rather than anything wrong with the terminal loop. The loop itself is as good as
+this column gets: `memory_processor.py:128-190` prints each candidate, reads a
+keypress with `input()`, and writes `"decision": "human-approved"` only on an
+`a` or `A`; an `EOFError` breaks the review without approving anything, so a
+non-interactive caller cannot walk it. But `POST /api/memory/approve`
+(`npcpy/serve.py:5875-5886`) writes `status=approval['decision']` straight from
+the request body, with no validation of the string and no authentication
+anywhere in `serve.py`. A status the caller supplies as a pass-through JSON
+field is the shape the mark exists to exclude, and it sits beside the loop that
+would otherwise earn it.
 
 The gap is on the other side of the same mechanism. `human-rejected` is a status
 on a row, and no read path filters on it: the same sentence extracted again
@@ -258,6 +267,8 @@ becomes the user's whole experience of the product.
 | `npcpy/memory/knowledge_index.py` | 129 | The index |
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`26fc78b5c578b85d4552eabfb0f195cc806927e5`](https://github.com/npc-worldwide/npcpy/commit/26fc78b5c578b85d4552eabfb0f195cc806927e5); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, on the `approve_memories` endpoint the previous record cited as supporting evidence without reading its body. `npcpy/serve.py:5875-5886` is `@app.route("/api/memory/approve", methods=["POST"])` writing `status=approval['decision']` directly from the request JSON, with no validation of the string and no authentication decorator anywhere in the file — a status the caller supplies as a pass-through field, which the rubric excludes by name. The terminal loop is not the problem and keeps its description: `memory_processor.py:128-190` writes `human-approved` only on a keypress, and an `EOFError` breaks the review without approving, so a non-interactive caller cannot walk it. `trust_state` stands, and the retrieval filter that makes an unapproved extraction inert rather than merely flagged is where the design's real strength sits. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`26fc78b5c578b85d4552eabfb0f195cc806927e5`](https://github.com/npc-worldwide/npcpy/commit/26fc78b5c578b85d4552eabfb0f195cc806927e5) — re-pinned after 9 commits. `npcpy/memory/knowledge_store.py` and `tests/test_memory_processor.py` are byte-identical, so both marks rest on unchanged code; `serve.py` gained four net lines around line 4,980, in the streaming endpoint rather than the memory routes. The two anchored lines were checked directly and hold the same code — the `status="human-approved"` read at `:1656` and `approve_memories()`, which shifted to `:5875`. One correction independent of the drift: this report's diagram caption said a rejection stops extraction proposing the same memory again, which is the opposite of what section 1 establishes and of what the code does. The caption and the diagram's terminal label now say what the body says — the rejection is recorded on the row and nothing reads it back. Nothing was installed, built or run.
 
