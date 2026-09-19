@@ -9,10 +9,9 @@ source_url: https://github.com/riponcm/projectmem
 archive_name: "riponcm--projectmem"
 revision: e8d73137acde6f091ef6196f88ba5eccf6eb0e8a
 revision_url: https://github.com/riponcm/projectmem/commit/e8d73137acde6f091ef6196f88ba5eccf6eb0e8a
-analyzed_at: 2026-09-15
-capabilities: "human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  human_review: "staleness flags and the global store commands | src/projectmem/staleness.py:1-40, :125; src/projectmem/commands/brief.py:145; src/projectmem/commands/global_cmd.py:240-250 `pjm global remove`, `list`, `prune` | `pjm brief` and `pjm precheck` flag a decision, fix or note whose cited file has changed in three or more commits since it was logged, or no longer exists, and tell the person to confirm it or retire it with `pjm decision \"...\" --supersedes <id>`; `pjm global list` shows the machine-wide gotchas and `pjm global remove <id>` deletes one. `pjm visualize` renders the project's cases, failures and supersessions as a local dashboard | tests/test_v014_features.py:61 test_supersede_hides_old_decision_from_summary"
   negative_eval: "retired decisions stay out of agent context | tests/test_agent_guidance.py:137 test_get_context_drops_a_superseded_decision | writes a decision and a later decision that supersedes it, generates the context block an agent receives, and asserts the current decision (`TypeScript`) is present and the retired one (`http.server`) is not; `:148` asserts precheck warns only from the live event, and `tests/test_v014_features.py:61` asserts the summary drops the retired decision | tests/test_agent_guidance.py:137"
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -51,8 +50,11 @@ The log is put to work in three ways:
 - **Precheck** compares staged files with the log and warns before a commit
   that touches a file where an approach already failed.
 - **Staleness** flags a decision, fix or note whose cited file has changed in
-  three or more commits since, or has disappeared, for a person to confirm or
-  retire.
+  three or more commits since, or has disappeared, for a reader to confirm or
+  retire. The flag is advisory in the strict sense: nothing filters on it, the
+  flagged event keeps appearing in summaries and context blocks, and the reader
+  it reaches is as often the model as the person — `add_decision`'s `supersedes`
+  parameter is documented for precisely this case.
 - **Global promotion** copies a failed attempt, or a decision or note that opens
   with `gotcha:`, `lesson:`, `never` and similar, into a machine-wide store of
   library gotchas when it names a library the project uses. Projects with the
@@ -66,7 +68,16 @@ worded like the lesson it retires is dropped as a duplicate, and other projects
 go on inheriting the retired one. The MCP `search_events` tool, outside the
 pinned modules, returns retired events untagged.
 
-Two marks: `human_review`, `negative_eval`.
+One mark: `negative_eval`. `human_review` is withheld, and the staleness module
+is clear about why: the event is *"flagged as possibly stale and a human
+decides"*, and a flag is not a state that withholds anything — no read path in
+the package filters on staleness, and the module's first line is *"judgment, not
+decay… projectmem never deletes."* The retirement the flag asks for is
+`--supersedes`, which is also a parameter on the model's own `add_decision` MCP
+tool, and its description names exactly this situation: *"Use when precheck_file
+flags a decision as possibly stale and you are revising it."* So the producer
+receives the flag and retires the flagged memory itself. `pjm global remove` and
+`pjm global prune` delete entries already in use.
 
 ## 2. Mental Model
 
@@ -97,7 +108,7 @@ flowchart TB
     RETIRED --> VIEWS["summary.md, context, brief,<br/>precheck, export"]
     LOG --> MCPSEARCH["MCP search_events<br/>no retired filter"]
     LOG --> STALE["staleness: cited file changed<br/>3+ commits, or gone"]
-    STALE -->|"person confirms or retires"| APPEND
+    STALE -->|"a person or the model<br/>confirms or supersedes"| APPEND
     APPEND -->|"failed attempt, or gotcha: prefix,<br/>names a project library"| PROMOTE{"similar gotcha<br/>already stored?"}
     PROMOTE -->|"no"| GLOBAL[("~/.projectmem/global<br/>library_gotchas.jsonl")]
     PROMOTE -->|"yes, >60% shared words"| SKIP["not promoted"]
@@ -318,5 +329,7 @@ at this commit.
 - `grep -n "_write_jsonl" src/projectmem/global_memory.py` — `remove_entry` and `prune_entries`
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`e8d73137acde6f091ef6196f88ba5eccf6eb0e8a`](https://github.com/riponcm/projectmem/commit/e8d73137acde6f091ef6196f88ba5eccf6eb0e8a); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn** on two grounds that reinforce each other. A staleness flag withholds nothing — `staleness.py` opens with *"judgment, not decay… projectmem never deletes"*, and no read path in the package filters on it, so a flagged decision keeps appearing in summaries and in the context block an agent receives. And the retirement the flag asks for is reachable by the producer: `supersedes` is a parameter on the `add_decision` MCP tool, described to the model as *"Use when precheck_file flags a decision as possibly stale and you are revising it."* The remaining surfaces in the withdrawn record — `pjm global remove`, `list`, `prune` and the visualiser — are deletion and display over entries already in use. `negative_eval` stands on `test_get_context_drops_a_superseded_decision`. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`e8d73137acde6f091ef6196f88ba5eccf6eb0e8a`](https://github.com/riponcm/projectmem/commit/e8d73137acde6f091ef6196f88ba5eccf6eb0e8a) — first reading, at a commit dated 14 September 2026. Screened before opening: no auto-run surface, one build-time execution point, one unpinned surface, and one dependency file inside the cooldown. Nothing was installed, built or run.
