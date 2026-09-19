@@ -1,7 +1,7 @@
 ---
 title: "OpenMasq"
 eyebrow: "Real at rest, fake on the wire"
-description: "The cross-conversation memory of a redacting desktop chat client — one card per entity and a preferences profile, extracted by the same model from the pseudonymised transcript it already saw and un-redacted locally through the conversation's vault, admitted only when the entity appears verbatim in the real text, merged by attribute replacement with a three-deep restorable history, selected client-side on real values in three tiers plus one hop of cross-links under a character budget, re-redacted on every injection, searchable by the model through a lexical tier topped up by an on-device embedder, and reviewed in an inbox that empties by confirming; no state a card holds is ever withheld from a prompt, and the card's freshness is the only time it knows."
+description: "The cross-conversation memory of a redacting desktop chat client — one card per entity and a preferences profile, extracted by the same model from the pseudonymised transcript it already saw and un-redacted locally through the conversation's vault, admitted only when the entity appears verbatim in the real text, merged by attribute replacement with a three-deep restorable history, selected client-side on real values in three tiers plus one hop of cross-links under a character budget, re-redacted on every injection, searchable by the model through a lexical tier topped up by an on-device embedder, and listed in an inbox that empties by confirming but gates nothing; no state a card holds is ever withheld from a prompt, and the card's freshness is the only time it knows."
 root: ../..
 page_kind: system
 source_name: "openmasq/openmasq"
@@ -9,10 +9,9 @@ source_url: https://github.com/openmasq/openmasq
 archive_name: "openmasq--openmasq"
 revision: a8d9a9ee3214305bbe0f79e3679d848ae23a7af8
 revision_url: https://github.com/openmasq/openmasq/commit/a8d9a9ee3214305bbe0f79e3679d848ae23a7af8
-analyzed_at: 2026-09-16
-capabilities: "human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  human_review: "the « À revoir » inbox, the merge suggestions and the node panel | packages/ui/src/pages/Memory/useMemoryReview.ts, packages/ui/src/memory/memory.ts:219-233, packages/ui/src/memory/dedupe.ts:58-122, packages/ui/src/pages/Memory/MemoryNodePanel.tsx:155, packages/ui/src/state/memory/useMemory.ts:66-97 | a card the extraction created or rewrote within seven days sits in an inbox until a person clicks Confirmer, which stamps `reviewedAt`, or edits, merges or deletes it; a surface or semantic duplicate is a suggestion the person confirms or dismisses, never an automatic merge; each card's replaced sentences are listed with a Rétablir that swaps them back; a deleted card is restorable for six seconds | packages/ui/src/memory/dedupe.test.ts:21-83 (suggestions, one per pair, surface over semantic), packages/ui/src/memory/factCompaction.test.ts:119 (restore is symmetric), packages/ui/src/pages/Memory/MemoryView.newCard.test.tsx"
   negative_eval: "the injection, recall and budget cases | packages/ui/src/evals/memoryFlow.test.ts:64-72, packages/ui/src/memory/select.test.ts:68-72,94-99,146-158, packages/ui/src/evals/memoryScenarios.ts:209-240 | with a profile and two cards seeded, a greeting injects the profile and neither card's text; a generic token alone does not inject the card whose name contains it while the distinctive token does; a name that is also a noun does not inject its card while the full name does, and the non-recall is reported; forty unrelated cards grown into the store are absent from the wire while the named project's card is present and the injected lines stay under the budget | packages/ui/src/memory/select.linked.test.ts:32-60 (an unlinked card stays out, a weak match never seeds, one hop only), packages/ui/src/memory/pseudonymGuard.test.ts:17 (an unresolved pseudonym is refused rather than stored)"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
@@ -28,7 +27,7 @@ matrix:
   background: "No consolidation pass; `autoCleanMemory` runs on every store change as an idempotent fixpoint — migrating auto-written self-preferences into the profile, merging same-key cards and identical notes, recompacting a card that repeats itself — and the desktop re-embeds changed cards 800 ms after an edit"
   trust: "Provenance is one flag; the vault is the anti-hallucination filter, since an extracted entity must resolve to text the user or the assistant actually wrote; a pseudonym the vault cannot map back is refused; secret shapes are dropped; a real failure is shown as « réessayez » instead of a count of zero; no state ever keeps a card out of a prompt"
   strengths: "Egress-neutral extraction from the wire the model already saw; injection selected on real values and forced into the redaction vault so a remembered name cannot leak under the regex engine; attribute replacement with a restorable history; measured thresholds with the measurements written beside them; a scenario suite that runs the product's own pipeline over a growing memory"
-  risks: "Cards live in the clear on the machine and in plaintext `localStorage` wherever there is no host database; the inbox is the only review and nothing waits for it; a card's only time is its last update, injected as a date the model is asked to reason from; French-keyed attribute and glue lists; the per-entity card model has no place for a fact about two entities except as a mention link"
+  risks: "Cards live in the clear on the machine and in plaintext `localStorage` wherever there is no host database; the inbox is the only review and nothing waits for it, which is why no review mark is carried; a card's only time is its last update, injected as a date the model is asked to reason from; French-keyed attribute and glue lists; the per-entity card model has no place for a fact about two entities except as a mention link"
 ---
 
 ## 1. Executive Summary
@@ -83,7 +82,8 @@ had not hydrated stored the model's fake for *gouvernement français* as a
 card, with the real value as its alias. It is weakest as an epistemic
 system: a card has one provenance flag and one timestamp, the review inbox
 is advisory and nothing waits for it, and every card in scope reaches the
-prompt whatever its state. The product knows this — *"the product's most
+prompt whatever its state — which is why the one mark here is
+`negative_eval`. The product knows this — *"the product's most
 delicate feature where confidentiality is concerned"* — and the design
 spends its care on egress rather than on belief.
 
@@ -435,6 +435,24 @@ inbox is a to-do list, and a card that never gets confirmed is injected all
 the same. The near-miss for a trust state is exactly this: `reviewedAt`
 exists, the inbox reads it, and nothing on the read path does.
 
+**Why no review mark, on the re-read of 2026-09-19.** The first reading
+awarded `human_review` for the inbox, the merge suggestions and the node panel,
+and the paragraph above is the argument against its own mark. `reviewedAt` has
+two writers, both click handlers — `confirmCard` at
+`pages/Memory/useMemoryReview.ts:43` and the panel's patch at
+`pages/Memory/MemoryNodePanel.tsx:57` — and one reader, `freshCardIds`
+(`memory/memory.ts:219-233`), used only by the Memory page and its badge.
+`selectMemory` (`memory/select.ts`), the deterministic cascade that decides
+what is injected, never mentions `reviewedAt` or `source`. So a person opening
+a card and rewriting it is authoring after the write has landed, which is a
+real and useful affordance and the opposite of a gate; and the queue's state is
+consulted by no read path. Two of the rubric's named failing shapes, in one
+surface. The merge suggestions are the closest thing to a wait, and only for
+the uncertain tier: `autoCleanMemory` runs as a render effect on every change
+(`state/memory/useMemory.ts:45-48`) and merges same-category cards that share a
+key with nobody asked — *"never an automatic merge"* in the old record was true
+only of the near-duplicate suggestions above 0.95 similarity.
+
 **At rest.** Stored in the clear locally by design, since a fake is no longer
 stable across conversations; encrypted at rest through the desktop database
 only in packaged builds with a keychain, and in plaintext `localStorage` on
@@ -521,7 +539,8 @@ when both devices replaced the same attribute.
 
 - **An inbox that nothing waits for.** If review is the trust mechanism, at
   least one read path should treat an unreviewed card differently, or the
-  inbox is a badge.
+  inbox is a badge. This is why the report carries no review mark: the state
+  exists, one screen reads it, and the selection cascade does not.
 - **A card's timestamp as its only time.** Injecting `noté le` helps a model
   doubt a stale deadline; it does not say when the fact stopped being true.
 - **Deletion without a refusal record** in a system that re-extracts from
@@ -599,6 +618,8 @@ if you need a redacted product to remember.
   (the sync types and `useUserdataSync.ts` only).
 
 ## History
+
+**2026-09-19** — re-read at the same pin [`a8d9a9ee3214305bbe0f79e3679d848ae23a7af8`](https://github.com/openmasq/openmasq/commit/a8d9a9ee3214305bbe0f79e3679d848ae23a7af8), still the tip of `dev`. **`human_review` is withdrawn; one mark stands.** Nothing upstream moved, so this is a correction to the first reading — and the argument was already written into it: *"the inbox is a to-do list, and a card that never gets confirmed is injected all the same."* Under the producer test the mark needs a memory that waits, and nothing here does. `reviewedAt` has two writers, both click handlers, and one reader, `freshCardIds`, used only by the Memory page; `selectMemory`, the cascade that decides what reaches the prompt, never consults it or `source`. A person editing a stored card is authoring after the write has landed. Corrected with it: *"never an automatic merge"* holds only for the near-duplicate suggestions — `autoCleanMemory` runs as a render effect on every change and merges same-category cards sharing a key with nobody asked. `negative_eval` re-verified: the injection and recall cases still carry their positive control in the same case. The review surface keeps its description in sections 4 and 5, and the *"inbox that nothing waits for"* bullet in section 11 now says plainly why no mark follows from it. Screened again first: forty-four files, one auto-run surface, two build-time execution points, twenty-two dependency files inside the cooldown, eighteen unpinned surfaces. Nothing installed or run.
 
 **2026-09-16** — [`a8d9a9ee3214305bbe0f79e3679d848ae23a7af8`](https://github.com/openmasq/openmasq/commit/a8d9a9ee3214305bbe0f79e3679d848ae23a7af8) — re-read at a commit dated 2026-09-14, 71 commits past the previous pin. Each of the eight anchored files has the same blob at both commits, so every mark stands where it was tested and no line number moved. Screened before reading, from a full clone: one auto-run surface, two build-time execution points, 18 unpinned dependency surfaces and three dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
