@@ -9,12 +9,11 @@ source_url: https://github.com/camgitt/memoir
 archive_name: "camgitt--memoir"
 revision: 8de614336ec01582bf8ed97e3717714955653b37
 revision_url: https://github.com/camgitt/memoir/commit/8de614336ec01582bf8ed97e3717714955653b37
-analyzed_at: 2026-09-16
-capabilities: "tombstone, audit_log, human_review, negative_eval, scope_enforced"
+analyzed_at: 2026-09-19
+capabilities: "tombstone, audit_log, negative_eval, scope_enforced"
 capability_evidence:
   tombstone: "the decision list — an absolute tombstone keyed on the decision text and sticky across replicas | src/commands/forget.js | `memoir forget \"substring\" [--purge]` resolves the decision and calls `hideDecision`, setting `hidden` and `hidden_at`; hiding is monotonic by spec, `--purge` redacts the text while keeping a sha256 identity, and `capDecisions` gives tombstones a budget separate from visible entries so a tombstone is not pruned away with ordinary rows | tests/ — the merge and validator cases; the forget verb was read rather than run"
   audit_log: "the session state — every mutation carried in the committed state file | src/session/state.js | the union merge records what each replica held, and the validator refuses a `hidden: true` without a `hidden_at` (src/commands/validate.js:182) | tests/"
-  human_review: "the CLI — a person types the retraction and confirms it | src/commands/forget.js | the confirm step prints the decision and states that hiding cannot be undone before `hideDecision` runs | tests/"
   negative_eval: "merge, validation and retrieval ranking, as committed cases | test-decisions-hidden.mjs, test-recall.mjs | committed cases assert a tombstoned decision does not come back through the union merge, that a malformed tombstone is refused, and that a six-document fixture corpus ranks the expected file first for seven queries with a no-match query returning nothing | test-recall.mjs — read, not run; the suite needs an install this reading declined"
   scope_enforced: "the project identity on every recall and session view | src/memory/scope.js, src/memory/search.js:506-527, src/session/state.js:239, src/commands/recall.js:18 | `projectIdentity` hashes the git remote or the home-relative path into `git:`/`local:` id, `addGoal` and the other writers stamp it on each item, and `memoryVisibility` — the predicate `searchMemories` and every `sessionView` apply — drops an item whose project is neither the active one nor `shared` unless `allProjects` is passed, beside hidden, deleted, superseded and validity-window checks | test-retrieval-index.mjs:69-74 (a memory saved under a second project is absent from the first project's recall and present under its own, each result set of one)"
 stack_storage: "files"
@@ -455,17 +454,24 @@ every future session.
 
 ## 8. Agent Integration
 
-Fourteen MCP tools across three groups: retrieval and storage (`memoir_recall`,
+Fifteen MCP tools across four groups: retrieval and storage (`memoir_recall`,
 `memoir_remember`, `memoir_list`, `memoir_read`), working set (`memoir_set_goal`,
 `memoir_add_next`, `memoir_complete_next`, `memoir_note`, `memoir_ask`,
-`memoir_session`, `memoir_why`), and management (`memoir_consolidate`,
-`memoir_status`, `memoir_profiles`).
+`memoir_session`, `memoir_why`), management (`memoir_consolidate`,
+`memoir_status`, `memoir_profiles`), and retraction (`memoir_forget`).
 
 The model has substantial agency: it can write entries into any host tool's
-memory directory, add and complete actions, and record decisions. It cannot
-suppress one — there is no `memoir_forget` and no tool that sets `hidden`. The
-asymmetry is the whole finding of this report restated as an API surface: an
-agent can add to memory and cannot retract from it.
+memory directory, add and complete actions, record decisions — and, since 3.12,
+retract one. `memoir_forget` is registered at `src/mcp.js:583` and its own
+description is unambiguous about what it does: it *"permanently hides it from the
+pinned block, `memoir_why`, and every synced machine (an absolute tombstone;
+there is no un-forget)"*, with `purge=true` redacting the text in place. The
+asymmetry an earlier version of this report described — an agent that could add
+to memory and not retract from it — no longer holds, and with it goes
+`human_review`: the CLI's confirm prompt still prints the decision and states
+that hiding cannot be undone, but a confirmation is a permission step rather than
+a state a memory waits in, `--yes` satisfies it for scripts, and the model now
+has its own route to the same tombstone.
 
 Automatic injection is the second surface. The pinned block goes into four
 always-loaded files, which means the working set reaches the model whether or
@@ -735,6 +741,8 @@ adopting any of the rest.
 `test-capture-quality.mjs`, `test-schema-migration.mjs`, `test-session-lock.mjs`.
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`8de614336ec01582bf8ed97e3717714955653b37`](https://github.com/camgitt/memoir/commit/8de614336ec01582bf8ed97e3717714955653b37); nothing upstream moved, so both corrections are ours. Section 8 carried a negative existence claim that is false at this pin: *"there is no `memoir_forget` and no tool that sets `hidden`."* There is — `server.tool('memoir_forget', …)` at `src/mcp.js:583`, in `CLAUDE.md`'s own fifteen-tool list, exercised by `test-audit-reliability.mjs:192`, and reached for by the activate template. The tool count in that section was fourteen and is fifteen. `human_review` is **withdrawn** in consequence and on its own terms: the evidence was the CLI's confirm prompt, which is a permission step gating a deletion rather than a state a memory waits in, `--yes` satisfies it, and the model now holds the same tombstone verb. The absolute tombstone itself is untouched and keeps `tombstone`. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`8de614336ec01582bf8ed97e3717714955653b37`](https://github.com/camgitt/memoir/commit/8de614336ec01582bf8ed97e3717714955653b37) — re-read at a commit dated 9 September 2026, fifteen commits past the previous pin. All five marks re-tested and held, and the scope one is better defended than it was: `projectIdentity` used to hash `path.relative(home, absolute)`, which is the empty string when the working root *is* home, so everyone running the agent from `~` shared one degenerate `local:` id. Home is now named `'~'` explicitly, and `canonicalIdentity` aliases the old `sha256("")` id back to the real home identity so records written under the collision stay reachable. Screened before reading, from a full clone: one auto-run surface, one build-time execution point, one unpinned dependency surface and none inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
