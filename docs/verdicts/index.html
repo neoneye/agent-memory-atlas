@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 598 reports.</strong></p>
+<p><strong>This page covers all 599 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24258,6 +24258,81 @@ conflict detector that refuses to act on its own heuristic.</li>
 <li>Do not copy when: you need the rejection to survive — the
 fingerprint is the right key and the consult looks only at what is still
 alive.</li>
+</ul>
+<h3 id="throughline"><a
+href="../systems/throughline/"><code>throughline</code></a></h3>
+<ul>
+<li>Best idea: <strong>test the false-positive side of an exclusion
+filter as hard as the true side.</strong> The self-referential filter
+drops transcripts of Throughline's own tool calls — 459 of 3,423
+conversations on the author's machine, 13% of the corpus, sitting at the
+front of a newest-first queue because they are generated constantly. One
+parametrised test asserts each of the four tool prompts is recognised;
+another asserts a list of real work is not flagged, which is the control
+that stops the filter eating genuine memory.</li>
+<li>Second idea: <strong>anchor a matcher that runs over user
+content.</strong> The trap case has a docstring naming the stake — "A
+conversation that DISCUSSES the extractor must not be mistaken for it.
+This is the failure mode that would quietly delete real memory:
+debugging sessions about the prompt quote the prompt."</li>
+<li>Third idea: <strong>keep the markers for historical data
+append-only.</strong> The prompt openings live in the filter module
+rather than being imported from the scripts that use them, "because they
+must match what is already written in transcripts on disk — text from a
+past run, which no longer tracks the current source. If you change one
+of those prompts, add the new opening here; the old one must stay."</li>
+<li>Fourth idea: <strong>coalesce a nullable status before you filter on
+it, and raise on a filter value you do not recognise.</strong> The
+active case is written <code>COALESCE(status,'active') = 'active'</code>
+because the column is nullable with a default, and an unknown status
+filter raises rather than appending a predicate that matches nothing.
+Both turn a silent empty result into something somebody notices.</li>
+<li>Fifth idea: <strong>close the vocabulary, and say what it cost not
+to.</strong> The source-type column carries a check constraint added
+after "a status query once filtered on two spellings that had never been
+written, matched nothing, and reported 'no extraction yet' on a database
+full of it" — and adding a source type now means editing the list and
+writing a migration.</li>
+<li>Sixth idea: <strong>put all the tools' transcripts in one schema so
+contradictions become visible.</strong> Per-tool memory can never
+surface a disagreement between two tools because each sees only its own
+history; three detector classes exploit the fact that this one sees all
+nine, and the first is described with the right modesty — "We don't
+generate these; we surface what's already there."</li>
+<li>Biggest risk: <strong>excellent audit machinery, pointed one table
+to the left.</strong> A trigger diffs each row before and after,
+computes a changed-fields array and stamps an actor read from a
+transaction-local Postgres setting the web layer sets per request; a
+second trigger on the audit table raises "Audit records are append-only"
+on any update, delete or truncate. The loop that attaches it lists nine
+tables — access users, project names, AI purposes, roles, members,
+teams, projects, checkpoints and providers — and
+<code>memory_chunks</code> is not among them. The configuration is fully
+auditable and the memory is not.</li>
+<li>Second risk: <code>status</code> takes four values across the code
+and has no check constraint, while <code>source_type</code> beside it
+has one precisely because an unconstrained vocabulary produced a silent
+wrong answer. The same failure mode is open on the column that matters
+more.</li>
+<li>Third risk: the committed eval harness has never been run, which its
+own README states — thirty seed questions scored on expected substrings,
+with the honest note that they are seed material to tailor before
+drawing conclusions.</li>
+<li>Most reusable component:
+<code>throughline/self_referential.py</code> with its test file — a
+content filter for a system's own output, an anchored matcher, an
+append-only marker list for historical text, and a test suite that
+treats both error directions as equally serious.</li>
+<li>Maturity impression: MIT, beta, PostgreSQL 16 with pgvector across
+thirty-five tables, nine transcript adapters, a CLI, an MCP server, a
+web application, 108 test files, and deployment paths for Docker,
+systemd, launchd and Windows.</li>
+<li>Study when: your memory ingests from a source your own system also
+writes to, or you are filtering a status column that is nullable with a
+default.</li>
+<li>Do not copy when: you need the memory's own changes audited — the
+triggers here cover who may use the system and how it is configured, not
+what it remembers.</li>
 </ul>
         </article>
       </div>

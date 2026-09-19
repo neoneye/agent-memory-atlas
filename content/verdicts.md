@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 598 reports.**
+**This page covers all 599 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5344,3 +5344,18 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, seven source files and about 2,900 lines of Rust with an **empty dependency list** — JSON parsing and hashing are both implemented in the repository — plus a CLI, a TypeScript viewer, and two integration test files that verify the chain at three separate points rather than once at the end.
 - Study when: you want a small, readable worked example of an event-sourced memory store with tamper-evident integrity, or of a conflict detector that refuses to act on its own heuristic.
 - Do not copy when: you need the rejection to survive — the fingerprint is the right key and the consult looks only at what is still alive.
+
+### [`throughline`](../systems/throughline/)
+- Best idea: **test the false-positive side of an exclusion filter as hard as the true side.** The self-referential filter drops transcripts of Throughline's own tool calls — 459 of 3,423 conversations on the author's machine, 13% of the corpus, sitting at the front of a newest-first queue because they are generated constantly. One parametrised test asserts each of the four tool prompts is recognised; another asserts a list of real work is not flagged, which is the control that stops the filter eating genuine memory.
+- Second idea: **anchor a matcher that runs over user content.** The trap case has a docstring naming the stake — "A conversation that DISCUSSES the extractor must not be mistaken for it. This is the failure mode that would quietly delete real memory: debugging sessions about the prompt quote the prompt."
+- Third idea: **keep the markers for historical data append-only.** The prompt openings live in the filter module rather than being imported from the scripts that use them, "because they must match what is already written in transcripts on disk — text from a past run, which no longer tracks the current source. If you change one of those prompts, add the new opening here; the old one must stay."
+- Fourth idea: **coalesce a nullable status before you filter on it, and raise on a filter value you do not recognise.** The active case is written `COALESCE(status,'active') = 'active'` because the column is nullable with a default, and an unknown status filter raises rather than appending a predicate that matches nothing. Both turn a silent empty result into something somebody notices.
+- Fifth idea: **close the vocabulary, and say what it cost not to.** The source-type column carries a check constraint added after "a status query once filtered on two spellings that had never been written, matched nothing, and reported 'no extraction yet' on a database full of it" — and adding a source type now means editing the list and writing a migration.
+- Sixth idea: **put all the tools' transcripts in one schema so contradictions become visible.** Per-tool memory can never surface a disagreement between two tools because each sees only its own history; three detector classes exploit the fact that this one sees all nine, and the first is described with the right modesty — "We don't generate these; we surface what's already there."
+- Biggest risk: **excellent audit machinery, pointed one table to the left.** A trigger diffs each row before and after, computes a changed-fields array and stamps an actor read from a transaction-local Postgres setting the web layer sets per request; a second trigger on the audit table raises "Audit records are append-only" on any update, delete or truncate. The loop that attaches it lists nine tables — access users, project names, AI purposes, roles, members, teams, projects, checkpoints and providers — and `memory_chunks` is not among them. The configuration is fully auditable and the memory is not.
+- Second risk: `status` takes four values across the code and has no check constraint, while `source_type` beside it has one precisely because an unconstrained vocabulary produced a silent wrong answer. The same failure mode is open on the column that matters more.
+- Third risk: the committed eval harness has never been run, which its own README states — thirty seed questions scored on expected substrings, with the honest note that they are seed material to tailor before drawing conclusions.
+- Most reusable component: `throughline/self_referential.py` with its test file — a content filter for a system's own output, an anchored matcher, an append-only marker list for historical text, and a test suite that treats both error directions as equally serious.
+- Maturity impression: MIT, beta, PostgreSQL 16 with pgvector across thirty-five tables, nine transcript adapters, a CLI, an MCP server, a web application, 108 test files, and deployment paths for Docker, systemd, launchd and Windows.
+- Study when: your memory ingests from a source your own system also writes to, or you are filtering a status column that is nullable with a default.
+- Do not copy when: you need the memory's own changes audited — the triggers here cover who may use the system and how it is configured, not what it remembers.

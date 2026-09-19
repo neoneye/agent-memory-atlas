@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Postgres workspace that ingests
+transcripts from nine AI tools into one schema so it can surface
+contradictions no single tool can see — and that recognises its own
+generated transcripts before the next sweep takes them back in as the
+user's work.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Throughline — Agent Memory Atlas">
+    <meta property="og:description" content="A Postgres workspace that
+ingests transcripts from nine AI tools into one schema so it can surface
+contradictions no single tool can see — and that recognises its own
+generated transcripts before the next sweep takes them back in as the
+user's work.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Throughline — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Postgres workspace that
+ingests transcripts from nine AI tools into one schema so it can surface
+contradictions no single tool can see — and that recognises its own
+generated transcripts before the next sweep takes them back in as the
+user's work.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Throughline — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Throughline",
+      "description": "A Postgres workspace that ingests transcripts from nine AI tools into one schema so it can surface contradictions no single tool can see \u2014 and that recognises its own generated transcripts before the next sweep takes them back in as the user's work.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Cross-tool workspace</p>
+          <h1>Throughline</h1>
+          <p class="document-deck">A Postgres workspace that ingests
+transcripts from nine AI tools into one schema so it can surface
+contradictions no single tool can see — and that recognises its own
+generated transcripts before the next sweep takes them back in as the
+user's work.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mkupermann/throughline">
+              <span>Source</span>
+              <strong>mkupermann/throughline</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mkupermann/throughline/commit/01975e76aec3d91e0faca6b3d72d216bf11ff072" title="01975e76aec3d91e0faca6b3d72d216bf11ff072">
+              <span>Analyzed revision</span>
+              <code>01975e76…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mkupermann--throughline" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mkupermann--throughline</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Throughline is a self-hosted Postgres workspace that ingests
+conversation transcripts from nine AI coding tools into one schema. The
+memory layer sits on top: extraction produces chunks, a reflection pass
+supersedes and merges them, and a conflict detector looks across tool
+boundaries.</p>
+<p>Two marks, and the more interesting one is about what the system
+refuses to remember.</p>
+<p><strong>It recognises itself.</strong> Four of Throughline's own jobs
+shell out to a coding CLI, which records each call as a session
+transcript on disk, which the next ingest sweeps back in as if it were
+the user's work. On the author's machine that was <em>"459 of 3,423
+conversations — 13% of the corpus"</em>, and it compounds, because those
+sessions are generated constantly and sit at the front of a newest-first
+queue. The filter that catches them is tested in both directions with
+equal care, including the trap case whose docstring names the stake: a
+conversation <em>about</em> the extractor must not be mistaken for the
+extractor, <em>"the failure mode that would quietly delete real
+memory."</em></p>
+<p><strong>Every read filters to active, and the two usual mistakes are
+handled.</strong> A chunk carries active, superseded, merged or stale;
+the search builder coalesces a null status to active rather than
+dropping the row, and raises on a status filter it does not recognise
+rather than returning nothing.</p>
+<p>That second habit has a scar behind it. The source-type column
+carries a closed vocabulary added because <em>"a status query once
+filtered on two spellings that had never been written, matched nothing,
+and reported 'no extraction yet' on a database full of it."</em></p>
+<p>And the signature feature is one only a system in this position can
+have: per-tool memory cannot surface a contradiction between two tools,
+because each tool sees only its own transcripts. Throughline has all of
+them.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Transcripts in, chunks out, contradictions surfaced.</p>
+<p>Nine adapters normalise nine tools' session formats into
+<code>conversations</code> and <code>messages</code>. Extraction turns
+those into <code>memory_chunks</code> with a category, a confidence and
+a project. A reflection pass then curates: superseding a chunk when a
+later one replaces it, merging near-duplicates, marking others
+stale.</p>
+<p>Around that sits a second system — teams, roles, templates,
+assignments — that is project management rather than memory, and a third
+that is access control. Both matter to this report only because of where
+the audit machinery points, which is at them and not at the chunks.</p>
+<p>The conflict detector is the reason the ingest breadth exists. Three
+classes: a documented supersession whose two sides came from different
+tools, two near-duplicate chunks from different tools whose text carries
+contradiction markers, and a chunk from one tool that has gone stale
+because you switched to another and never went back. The first is
+described with the right modesty: <em>"We don't generate these; we
+surface what's already there."</em></p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — nine tool adapters normalise transcripts into one Postgres schema, with a self-referential filter dropping the sessions Throughline's own jobs generate before extraction sees them; extraction writes memory chunks carrying a status, a confidence and a project, and a reflection pass supersedes, merges and marks stale under guards that only an active row may transition; every read filters to active with a null coalesced rather than dropped, conflict detection compares chunks whose provenance crosses tool boundaries, and database triggers write an immutable audit of the access and configuration tables — not of the chunks</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: nine tool adapters normalise transcripts into one Postgres schema, with a self-referential filter dropping the sessions Throughline&#39;s own jobs generate before extraction sees them; extraction writes memory chunks carrying a status, a confidence and a project, and a reflection pass supersedes, merges and marks stale under guards that only an active row may transition; every read filters to active with a null coalesced rather than dropped, conflict detection compares chunks whose provenance crosses tool boundaries, and database triggers write an immutable audit of the access and configuration tables — not of the chunks
+flowchart TD
+    T1[&quot;Claude Code · Codex · Hermes&lt;br/&gt;Continue · Cline · Windsurf · …&quot;] --&gt; ADAPT[&quot;nine adapters&quot;]
+    ADAPT --&gt; SELF{&quot;self_referential_reason&lt;br/&gt;is this our own tool call?&quot;}
+    SELF --&gt;|&quot;matches a known prompt opening&lt;br/&gt;anchored, not substring&quot;| DROP[&quot;dropped before extraction&lt;br/&gt;13% of one real corpus&quot;]
+    SELF --&gt;|no| CONV[(&quot;conversations · messages&quot;)]
+
+    CONV --&gt; EXT[&quot;extraction · entities · titles&quot;]
+    EXT --&gt; MC[(&quot;memory_chunks&lt;br/&gt;category · confidence · project&lt;br/&gt;source_type (closed vocabulary)&lt;br/&gt;status · superseded_by · merged_from&quot;)]
+    MC --&gt; EMB[(&quot;embeddings — pgvector, HNSW&quot;)]
+
+    REF[&quot;reflection pass&quot;] --&gt; SUP[&quot;supersede: status, pointer,&lt;br/&gt;timestamp together&lt;br/&gt;guarded: only from active&quot;]
+    REF --&gt; STALE[&quot;mark stale&lt;br/&gt;same guard&quot;]
+    SUP --&gt; MC
+    STALE --&gt; MC
+
+    Q[&quot;search / status / conflicts&quot;] --&gt; FILT{&quot;COALESCE(status,&#39;active&#39;) = &#39;active&#39;&lt;br/&gt;unknown filter value raises&quot;}
+    MC --&gt; FILT
+    FILT --&gt; OUT[&quot;results&quot;]
+
+    CONF[&quot;cross-tool conflicts&quot;] --&gt; C1[&quot;documented supersession&lt;br/&gt;across tool boundaries&quot;]
+    CONF --&gt; C2[&quot;near-duplicate, opposite sentiment&quot;]
+    CONF --&gt; C3[&quot;stale-tool drift&quot;]
+    MC --&gt; CONF
+    C1 --&gt; SURF[&quot;surfaced, not resolved&quot;]
+    C2 --&gt; SURF
+    C3 --&gt; SURF
+
+    subgraph Audit[&quot;trigger-written audit — points here&quot;]
+        AT[(&quot;access_audit&lt;br/&gt;actor · action · changed_fields diff&quot;)]
+        IMM[&quot;second trigger:&lt;br/&gt;&#39;Audit records are append-only&#39;&quot;]
+        AT --- IMM
+        CFG[(&quot;access_users · project_names&lt;br/&gt;ai_purposes · pm_roles · pm_teams …&quot;)] --&gt; AT
+        CPC[(&quot;conversation_project_changes&lt;br/&gt;previous → assigned, with actor&quot;)]
+    end
+    API[&quot;web request sets&lt;br/&gt;throughline.actor in the transaction&quot;] -.-&gt; AT
+    MC -.-&gt;|&quot;not covered&quot;| AT</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Schema:</strong> <code>sql/schema.sql</code> — thirty-five
+tables, the triggers, the closed vocabularies.</li>
+<li><strong>Self-recognition:</strong>
+<code>throughline/self_referential.py</code>.</li>
+<li><strong>Search and its filters:</strong>
+<code>throughline/queries/memory.py</code>.</li>
+<li><strong>Reflection, supersession, merge:</strong>
+<code>throughline/jobs/reflect_memory.py</code>.</li>
+<li><strong>Cross-tool conflicts:</strong>
+<code>throughline/conflicts.py</code>.</li>
+<li><strong>Actor plumbing:</strong>
+<code>throughline/api/deps.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A chunk carries content, a category, tags, a confidence, a project
+name, an optional expiry, a source type, a status, both supersession
+fields and a merged-from array.</p>
+<p>Two columns model vocabularies and only one of them is enforced.
+<code>source_type</code> has a check constraint listing five values,
+with a comment explaining the incident that produced it: a query
+filtered on spellings that had never been written, matched nothing, and
+reported an empty extraction on a full database — so <em>"adding a
+source type means editing this list and writing a migration."</em>
+<code>status</code> takes four values across the code and has no
+constraint at all, which leaves the same failure mode open on the column
+that matters more.</p>
+<p><code>confidence</code> is a separate <code>numeric(3,2)</code> from
+the status, so the store can hold a chunk it does not believe without
+the number standing in for the state.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>pgvector with HNSW indexes for similarity, plus category, project and
+text filters. The status handling in the filter builder is the part to
+copy: the active case is written
+<code>COALESCE(status, 'active') = 'active'</code> because the column is
+nullable with a default, and any status the caller supplies that is not
+in the known set raises a <code>ValueError</code> naming the bad value
+rather than appending a predicate that matches nothing.</p>
+<p>Those two lines are the same lesson the source-type comment records,
+applied where it was learned.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingest runs the self-referential check before extraction. The
+module's design note is worth reading twice, because it is a rule most
+matchers get wrong: the prompt markers live in that module rather than
+being imported from the scripts that use them, <em>"because they must
+match what is already written in transcripts on disk — text from a past
+run, which no longer tracks the current source. If you change one of
+those prompts, add the new opening here; the old one must stay, or
+previously-recorded sessions stop being recognised."</em> A matcher over
+historical data is append-only, not refactorable.</p>
+<p>The reflection pass supersedes by setting status, pointer and
+timestamp in one statement guarded by <code>AND status='active'</code>,
+so two concurrent passes cannot both retire the same chunk, and marks
+stale under the same guard.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, an MCP server, a web application with users and sessions, a
+skill, and adapters for nine tools' transcript formats. Deployment as
+Docker Compose, a systemd unit, a launchd plist and a Windows path.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded</strong>, on the four-value status, the
+single writer, and the filter that every read shares.</p>
+<p><strong>Negative eval — awarded</strong>, on the self-recognition
+suite, which tests the false-positive direction as thoroughly as the
+true-positive one.</p>
+<p><strong>Audit log — withheld, and the reason is where the machinery
+points rather than how good it is.</strong>
+<code>record_access_change</code> is a trigger that diffs the row before
+and after, computes a changed-fields array, and stamps an actor read
+from a transaction-local Postgres setting that the web layer sets per
+request — so the actor is the authenticated user rather than a value a
+caller can put in a payload. A second trigger on the audit table itself
+raises <em>"Audit records are append-only"</em> on any update, delete or
+truncate. That is the strongest audit shape available in Postgres, and
+the loop that attaches it covers nine tables: access users, project
+names, AI purposes, roles, members, teams, projects, checkpoints and
+providers. <code>memory_chunks</code> is not among them. A chunk's
+supersession leaves a pointer and a timestamp on the row and nothing
+else, so the configuration is fully auditable and the memory is not.
+<code>conversation_project_changes</code> is the one memory-adjacent
+exception: its own trigger records every re-assignment of a conversation
+to a project, with the previous value, the new one and the actor.</p>
+<p><strong>Tombstone — withheld.</strong> Supersession is keyed on the
+row. The nearest value-keyed mechanism is the self-referential filter,
+which matches on content and drops before ingest — but its markers are a
+list in source rather than a durable record of something rejected, so
+re-ingesting content a person deleted is not caught.</p>
+<p><strong>Scope enforced — withheld.</strong> <code>project_name</code>
+is a filter the caller may pass and the default is every project; the
+access tables govern who may reach the web application rather than which
+chunks a request may see. This is a single-workspace tool and reads that
+way.</p>
+<p><strong>Human review — withheld</strong>, though the conflict
+detector is built to feed one. It surfaces three classes and resolves
+none, which is the right boundary for a heuristic — but nothing records
+a person's adjudication of a surfaced conflict, and the resolution verbs
+are the same ones the reflection pass uses.</p>
+<p><strong>Bi-temporal — withheld.</strong> <code>created_at</code>,
+<code>superseded_at</code> and <code>expires_at</code> are record time
+and a lease. Nothing tracks when a chunk's content was true.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong> and no <code>CITATION.cff</code>.</p>
+<p>108 test files. The self-recognition suite carries the mark; what is
+worth adding is that it pins the <em>superseded</em> prompt wordings as
+well as the current ones, so the filter keeps working on transcripts
+recorded before a prompt was edited.</p>
+<p>The <code>evals/</code> directory contains thirty seed questions with
+expected substrings, a runner that compares answers with and without
+retrieved memory, and a README that states plainly: <em>"The harness is
+scaffolded but not yet run."</em> It also explains why it is
+deliberately not an LLM-judge eval. A committed harness with no
+committed result and an honest label is a better position than a number
+with no harness, and it means there is no retrieval-quality claim here
+to check.</p>
+<p>The conflict detectors describe their own limits in the same register
+— a <em>"high-precision heuristic; tunable threshold"</em> for the
+sentiment class, and for the drift class, <em>"not technically a
+contradiction, but worth seeing."</em></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Test the false-positive direction of an exclusion filter as
+hard as the true-positive one.</strong> A filter that drops the system's
+own noise will also drop real memory if it is loose, and the test that
+catches that is the one asserting real work is <em>not</em>
+flagged.</li>
+<li><strong>Anchor a matcher that runs over user content.</strong> A
+debugging session quotes the thing it is debugging; substring matching
+on a prompt opening will eat it.</li>
+<li><strong>Keep the markers for historical data append-only.</strong>
+When a matcher must recognise text written by an older version of your
+own code, importing the current constant is the bug — the old spelling
+has to stay.</li>
+<li><strong>Coalesce a nullable status before you filter on it</strong>,
+and raise on a filter value you do not recognise. Both of those turn a
+silent empty result into something someone notices.</li>
+<li><strong>Give your status column the constraint you gave the one
+beside it.</strong> The incident that produced the closed source-type
+vocabulary applies verbatim to the status.</li>
+<li><strong>Point the audit at the thing you are auditing.</strong> A
+trigger-written, field-diffing, immutability-enforced audit over the
+configuration tables is excellent machinery aimed one table to the left
+of the memory.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The audit trigger loop names nine tables. Is adding
+<code>memory_chunks</code> to that array as cheap as it looks, or does
+the volume of chunk writes make a row-level audit impractical — and if
+so, is a coarser record of supersessions the intended answer?</li>
+<li><code>source_type</code> has a closed vocabulary because an
+unconstrained one caused an outage-shaped bug. What is keeping
+<code>status</code> open?</li>
+<li>The eval harness is committed and unrun. Is there a plan to publish
+a result, and would the thirty seed questions be replaced by the
+reader's own history first, as the README suggests?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Schema, triggers, vocabularies: <code>sql/schema.sql</code></li>
+<li>Self-recognition: <code>throughline/self_referential.py</code>,
+<code>tests/test_self_referential.py</code></li>
+<li>Search and filters: <code>throughline/queries/memory.py</code>,
+<code>throughline/queries/curate.py</code></li>
+<li>Reflection, supersession, merge:
+<code>throughline/jobs/reflect_memory.py</code></li>
+<li>Cross-tool conflicts: <code>throughline/conflicts.py</code></li>
+<li>Actor plumbing: <code>throughline/api/deps.py</code></li>
+<li>Redaction: <code>throughline/pii.py</code></li>
+<li>Evals: <code>evals/README.md</code>,
+<code>evals/questions.jsonl</code>, <code>evals/run_eval.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/mkupermann/throughline/commit/01975e76aec3d91e0faca6b3d72d216bf11ff072"><code class="commit-id" title="01975e76aec3d91e0faca6b3d72d216bf11ff072">01975e76…</code></a>
+— first reading, at the head of <code>main</code>, status beta. Screened
+with <code>scripts/screen_repo.py</code> before anything was read: one
+build-time execution surface in a Makefile whose default target was
+checked, two pytest conftest files, three unpinned dependency surfaces
+and twenty-two floating ranges in the web package with a lockfile beside
+it; no instruction file addressed to a reading agent. Nothing was
+installed, built or run. MIT. Two marks. The project was renamed — the
+changelog records the default database moving from
+<code>claude_memory</code> to <code>throughline</code> with three
+documented upgrade paths and no data moved — and neither name appears
+elsewhere in this corpus; the two <code>claude-mem</code> reports here
+are different projects by different authors. The reading covered the
+chunk table and its two vocabularies, the search filter builder, the
+reflection pass's supersession and stale writers, the self-referential
+filter and its test suite, the cross-tool conflict detectors, the audit
+triggers and the tables they cover, and the eval harness; the
+project-management tables, the nine ingest adapters and the web
+application were read as context rather than as subject. Five marks are
+withheld with reasons in section 9, and the one worth repeating is
+<code>audit_log</code>: the trigger machinery is the strongest shape
+Postgres offers — a computed field diff, an actor from a
+transaction-local setting, and immutability enforced by a second trigger
+— and the loop that attaches it lists nine configuration tables and not
+<code>memory_chunks</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
