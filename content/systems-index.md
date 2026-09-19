@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **593 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **594 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -469,6 +469,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/neuralmind/"><span class="az-id">NeuralMind</span><span class="az-what">A test that every performance ratio on the website is reproducible</span><code class="az-repo">dfrostar/neuralmind</code><span class="az-caps"><span class="az-cap">Mutation audit</span></span></a></li>
 <li><a class="az-row" href="../systems/neuroca/"><span class="az-id">NeuroCA</span><span class="az-what">A memory system mid-refactor</span><code class="az-repo">Modern-Prometheus-AI/Neuroca</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/neuron/"><span class="az-id">Neuron</span><span class="az-what">A schema the agent&#x27;s prompt cannot override</span><code class="az-repo">kovartravis/neuron</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/neurostack/"><span class="az-id">NeuroStack</span><span class="az-what">Vault retrieval layer</span><code class="az-repo">raphasouthall/neurostack</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/nexusmem/"><span class="az-id">NexusMem</span><span class="az-what">Shell history as memory</span><code class="az-repo">yaminbkk/NexusMem</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/nocturne-memory/"><span class="az-id">Nocturne Memory</span><span class="az-what">The model retypes your text and the match fails</span><code class="az-repo">dataojitori/nocturne_memory</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/nodedb/"><span class="az-id">NodeDB</span><span class="az-what">The security predicate is exhaustive over every engine&#x27;s plan</span><code class="az-repo">NodeDB-Lab/nodedb</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>

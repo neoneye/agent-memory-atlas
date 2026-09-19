@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 593 reports.**
+**This page covers all 594 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5269,3 +5269,18 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0 pre-release v0.1.0 — fifteen crates and 242,000 lines of Rust, 2,729 test functions, three protocol fuzz targets, fault-injection suites named for bit flips, IO faults, random kills and recovery chaos, and a 148-file normative specification that runs ahead of the tree in places and says which decisions are still open.
 - Study when: you need a worked reference for bi-temporal statements, or for enforcing a tenant boundary structurally rather than by remembering a predicate.
 - Do not copy when: you need a rejection that survives re-ingestion — forgetting here is keyed on the row, and the same content arriving again is simply a new memory.
+
+### [`neurostack`](../systems/neurostack/)
+- Best idea: **make invisibility structural.** Four delete paths — an explicit forget, losing a merge, a TTL expiry and a prune — all go through one helper that copies the row into `memories_archive` and then deletes it, and the comment states the guarantee in the form that matters: archived rows are invisible to search, full-text and drift "by construction — this table has no FTS index and no embedding — but stay greppable and restorable forever". A `WHERE archived = 0` can be omitted; a table with no index cannot be accidentally searched.
+- Second idea: **enforce a TTL by relocating the row, not by a clause.** `search_memories` archives everything past its expiry before it searches, with reason `expire`. A clause is a thing every caller has to remember.
+- Third idea: **assert the absence against the index, not the answer.** The forget test saves a memory with a unique token, forgets it, and asserts a full-text MATCH on that token returns an empty list. A search result can be empty for a dozen reasons; an empty MATCH on the index cannot.
+- Fourth idea: **redact machine-generated writes and leave deliberate ones alone.** Harvest and synthesize run their text through the redactor; `save_memory` does not, because agent-written memories are deliberate and "silently rewriting them would corrupt intentional content". The patterns match the shape of a value rather than a mention, so "the api key is wrong" survives and a real key does not, with the AWS documentation example allowlisted and asserted to come back byte-identical — "false positives here silently damage stored knowledge, so precision beats recall".
+- Fifth idea: **turn off your learning loop when you measure it.** The ablation harness passes `record=False` on every search so a sweep "never mutates usage, hotness, co-occurrence weights, or the prediction-error log between configs". A system that learns from its own retrievals has to disable that learning to measure itself.
+- Sixth idea: **count the obeys, not only the ignores.** `trigger_log.followed` is null for pending, 1 for followed and 0 for ignored, so a fired trigger has a denominator — which is what makes "three ignores suggests retire" a rate rather than a tally.
+- Biggest risk: the archive is keyed on the row. Nothing consults it on a write, so re-saving the same sentence after a forget stores it again as a new memory, and the near-duplicate check looks only at live rows — and reports rather than refuses, after the insert has already happened.
+- Second risk: nothing filters a read on belief. Drift against the notes a memory cites is detected and recorded, ignored triggers are counted, and both feed a promotion worklist for an agent to act on; no read path changes.
+- Third risk: workspace is an optional argument with no default, so an omitted one reads every workspace. That suits a personal vault and would not suit a shared one.
+- Most reusable component: `_archive_memories` with its target table — the pattern of one reason-carrying helper behind every removal, writing to a table built so retrieval physically cannot reach it.
+- Maturity impression: Apache-2.0 at 0.19.0 on both PyPI and npm, twenty-four MCP tools with a setup command for six clients, 1,109 test functions across fifty-four files, a per-signal ablation harness that runs offline in CI, and a `test_no_answering.py` suite whose job is to stop the design promise — evidence in, reasoning elsewhere — from eroding.
+- Study when: you want a worked example of deletion as relocation, or of a redaction pass that knows which writes it has no business touching.
+- Do not copy when: you need a memory that can be marked untrue. Drift here produces a worklist entry, not a filter.
