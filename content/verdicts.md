@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 605 reports.**
+**This page covers all 606 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5413,4 +5413,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `src/erasure-receipt.ts`, for the account in its header as much as the code. The rule — only `ENOENT` is idempotent success, and an `unlink` is believed only once the entry is re-statted absent — had been applied to one loop and not to *"the erasers delegated one line below it"*, five more families all feeding the same `removed` boolean. The leaf exists so a new eraser inherits the rule by construction, and an invariant test fails CI on a receipt-path function that unlinks without it.
 - Maturity impression: MIT, TypeScript, 391 files with 149 test files, a large share of them named `*-invariant` and several checking properties of the source rather than of a run. One mark, `negative_eval`. `scope_enforced` is withheld structurally rather than critically — one vault, one user, no stored scope key to filter on; what exists is filesystem confinement, and it is applied to the resolved physical path so a visible symlink cannot launder a hidden directory into the public surface.
 - Study when: you are writing a privacy suite. Its first case is a guard asserting the fixtures can be built — *"CI GUARD — symlink creation works so privacy-escape tests actually run"* — without which a platform that cannot create symlinks reports a green run.
+
+### [`sugar`](../systems/sugar/)
+
+- Best idea: **make the boundary a second file.** Project memories live in `.sugar/memory.db` and cross-project guidelines in `~/.sugar/memory.db`, and a manager routes each write to one of them. A query cannot span projects because there is no shared table for one to span — and when the project store is missing it refuses, *"Not in a Sugar project. Use scope=global or run `sugar init`"*, rather than quietly filing a project memory where every project can read it.
+- Biggest risk: **corrections are `INSERT OR REPLACE`.** The prior content is gone and nothing records that a replacement happened, so a wrong memory that gets overwritten leaves no evidence it was ever believed. Underneath that, `importance` is a float applied as a floor filter and set once at write time, so a memory the agent learns to distrust cannot be kept and marked — only deleted or left to mislead.
+- Most reusable component: `sugar/memory/store.py` for two small habits — three FTS triggers covering insert, update *and* delete, so the lexical index cannot return rows that are gone; and an expiry clause driven by a query flag that defaults closed and is forwarded to both stores rather than re-derived in each, so the two arms cannot drift.
+- Maturity impression: dual licensed AGPL-3.0 or commercial with a CLA, Python over SQLite at 288 files, reaching agents through an MCP server, a CLI, a skills directory, a GitHub Action and a Hermes plugin. One mark, `negative_eval`. `scope_enforced` is withheld on a distinction rather than a fault: the isolation is a second database file rather than a predicate, and the `scope` attribute is stamped on results after they load.
+- Study when: you want the smallest honest version of per-project agent memory, or a worked example of why physical separation and a scope predicate are not the same claim even when they produce the same outcome.
 

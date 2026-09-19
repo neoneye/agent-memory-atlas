@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first memory layer for
+coding agents that keeps project memories and cross-project guidelines
+in two separate SQLite files, so a query cannot span projects because
+there is no shared table for one to span.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Sugar — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first memory layer
+for coding agents that keeps project memories and cross-project
+guidelines in two separate SQLite files, so a query cannot span projects
+because there is no shared table for one to span.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Sugar — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first memory layer
+for coding agents that keeps project memories and cross-project
+guidelines in two separate SQLite files, so a query cannot span projects
+because there is no shared table for one to span.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Sugar — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Sugar",
+      "description": "A local-first memory layer for coding agents that keeps project memories and cross-project guidelines in two separate SQLite files, so a query cannot span projects because there is no shared table for one to span.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The boundary is the file, not a
+predicate</p>
+          <h1>Sugar</h1>
+          <p class="document-deck">A local-first memory layer for coding
+agents that keeps project memories and cross-project guidelines in two
+separate SQLite files, so a query cannot span projects because there is
+no shared table for one to span.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/roboticforce/sugar">
+              <span>Source</span>
+              <strong>roboticforce/sugar</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/roboticforce/sugar/commit/eade16940789bc1f927af090f8a3b475e537eddd" title="eade16940789bc1f927af090f8a3b475e537eddd">
+              <span>Analyzed revision</span>
+              <code>eade1694…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/roboticforce--sugar" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>roboticforce--sugar</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Sugar is a local-first memory layer for AI coding agents, in Python
+over SQLite, reaching agents through an MCP server, a CLI and a skills
+directory. Dual licensed: AGPL-3.0, or a commercial licence. The pitch
+is the one this corpus hears most often — <em>"Your AI agent starts
+every session with amnesia"</em> — and the implementation is unusually
+small for it.</p>
+<p><strong>One mark: <code>negative_eval</code>.</strong> A memory here
+is content plus a type, an importance float, an access count and an
+optional expiry. There is no status field, no supersession, no
+correction, and no second time axis; the word <code>tombstone</code>
+does not appear in the package, nor does <code>supersede</code> or
+<code>retract</code>. What a memory can become is expired, and that is
+enforced at read time rather than by a sweeper.</p>
+<p>The design decision worth naming is the boundary. Project memories
+live in <code>.sugar/memory.db</code> and cross-project guidelines in
+<code>~/.sugar/memory.db</code>, two separate files, and a manager
+routes a write to one of them. <strong>A query cannot span projects
+because there is no shared table for one to span.</strong> That is
+stronger isolation than a predicate and it is also why there is no
+cross-project recall to speak of: the only material that crosses is what
+the user deliberately filed as global.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Seven memory types — decision, preference, file context, error
+pattern, research, outcome, guideline — and the type is the closest
+thing to a policy. <code>PREFERENCE</code> is commented as permanent;
+<code>GUIDELINE</code> is the type that belongs in the global store.
+Nothing else about a row says how much to believe it.</p>
+<p>Retrieval is a filtered search over one store, or over both when the
+global manager is in play, with the results labelled by where they came
+from.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write is routed by scope to one of two SQLite files, the project store or the global one, so there is no shared table a query could span; each store keeps an FTS5 shadow table synchronised by triggers on insert, update and delete, and a vector table when the sqlite-vec extension is present; retrieval filters by type, by a minimum importance and by an expiry clause that defaults closed and is forwarded identically to both stores, after which each result is stamped with the scope it came from for labelling rather than filtering</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write is routed by scope to one of two SQLite files, the project store or the global one, so there is no shared table a query could span; each store keeps an FTS5 shadow table synchronised by triggers on insert, update and delete, and a vector table when the sqlite-vec extension is present; retrieval filters by type, by a minimum importance and by an expiry clause that defaults closed and is forwarded identically to both stores, after which each result is stamped with the scope it came from for labelling rather than filtering
+flowchart TD
+    W[&quot;store(entry, scope)&quot;] --&gt; ROUTE{&quot;MemoryScope&quot;}
+    ROUTE --&gt;|PROJECT| PDB[(&quot;.sugar/memory.db&quot;)]
+    ROUTE --&gt;|GLOBAL| GDB[(&quot;~/.sugar/memory.db&quot;)]
+    ROUTE -.-&gt;|&quot;PROJECT with no project store&quot;| ERR[&quot;RuntimeError:&lt;br/&gt;&#39;Not in a Sugar project.&lt;br/&gt;Use scope=global or run sugar init&#39;&quot;]
+
+    PDB --&gt; FTS1[(&quot;memory_fts&lt;br/&gt;triggers on INSERT/UPDATE/DELETE&quot;)]
+    PDB --&gt; VEC[(&quot;memory_vectors&lt;br/&gt;only when sqlite-vec loads&quot;)]
+    GDB --&gt; FTS2[(&quot;memory_fts&quot;)]
+
+    Q[&quot;MemoryQuery&quot;] --&gt; F[&quot;WHERE clauses:&lt;br/&gt;memory_type IN (...)&lt;br/&gt;importance &gt;= min&lt;br/&gt;expires_at IS NULL OR &gt; now&quot;]
+    F --&gt; PDB
+    F --&gt; GDB
+    Q -.-&gt;|&quot;include_expired: bool = False&quot;| F
+
+    PDB --&gt; R1[&quot;results&quot;]
+    GDB --&gt; R2[&quot;results&quot;]
+    R1 --&gt; STAMP[&quot;r.scope = &#39;project&#39; | &#39;global&#39;&lt;br/&gt;set after loading, for labelling&quot;]
+    R2 --&gt; STAMP
+    STAMP --&gt; CTX[&quot;assembled context&quot;]
+    CTX --&gt; AGENT((&quot;coding agent&quot;))
+
+    TEST -.-&gt;|asserted| CTX
+    TEST[&quot;a plain project store&lt;br/&gt;must not include guidelines&quot;]</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The routing</strong> —
+<code>sugar/memory/global_store.py:44-65</code>.
+<code>GlobalMemoryManager</code> takes a scope and picks a store, and
+refuses rather than guessing when the project store is missing: <em>"Not
+in a Sugar project. Use scope=global or run 'sugar init'."</em>
+Declining to fall back to the global file is the right refusal — a
+silent fallback would file a project's memory where every project can
+read it.</p>
+<p><strong>The expiry</strong> — <code>sugar/memory/types.py:126</code>
+and <code>sugar/memory/store.py:352</code>, <code>:416</code>.
+<code>MemoryQuery.include_expired</code> defaults to <code>False</code>,
+and both query paths append
+<code>(e.expires_at IS NULL OR e.expires_at &gt; datetime('now'))</code>
+when it is unset. <code>global_store.py:120</code> forwards the same
+flag rather than re-deriving it, so the two arms cannot disagree. An
+expired memory is never deleted; it stops being returned.</p>
+<p><strong>The label</strong> — <code>global_store.py:109</code>. After
+loading, each row is stamped
+<code>r.scope = MemoryScope.PROJECT.value</code>. The scope is an
+attribute of the result, not a column the query filtered on; the
+filtering already happened by choosing the file.</p>
+<p><strong>The index</strong> — <code>store.py:161-181</code>. Three
+triggers keep an FTS5 shadow table in step on insert, update and delete,
+so lexical search cannot drift from the table it indexes. The vector
+table is created only when the <code>sqlite-vec</code> extension loads
+(<code>_check_sqlite_vec</code>), and search degrades to lexical when it
+does not.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One <code>memory_entries</code> table: <code>id</code>,
+<code>memory_type</code>, <code>content</code>, <code>summary</code>,
+<code>source_id</code> pointing at a work item, a metadata blob,
+<code>importance</code>, <code>created_at</code>,
+<code>last_accessed_at</code>, <code>access_count</code> and
+<code>expires_at</code>. Embeddings live in a sibling table, serialized
+as bytes.</p>
+<p><code>importance</code> is a float and it is the only thing
+resembling a judgement about a memory. It filters as a floor
+(<code>e.importance &gt;= ?</code>) rather than ranking a belief, which
+keeps it honest about what it is — but it means a memory the agent has
+learned to distrust has no way to say so.</p>
+<p>Writes are <code>INSERT OR REPLACE</code> keyed on <code>id</code>.
+There is no version, no prior value kept, and nothing that records that
+a replacement happened.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Filter by memory type, by an importance floor, by tags and file
+paths, then search — vector where <code>sqlite-vec</code> is available,
+FTS5 otherwise. <code>access_count</code> and
+<code>last_accessed_at</code> are maintained on the row.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The CLI parses a <code>--ttl</code> into an <code>expires_at</code>
+and reports it back to the user
+(<code>sugar/main.py:4010, :4030, :4040</code>). Everything else about a
+write is the caller's choice of type and importance.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, a CLI, a <code>skills/</code> directory, a GitHub
+Action and a Hermes plugin. A <code>marketplace.json</code> and
+<code>MARKETPLACE.md</code> describe distribution.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>negative_eval</code></strong> — section 10.</p>
+<p><strong><code>scope_enforced</code> is withheld, and the reason is a
+distinction rather than a fault.</strong> The mark asks for a stored
+scope key applied as a filter on the read path. Sugar has no such key:
+isolation comes from opening a different file, and the
+<code>scope</code> attribute is written onto results <em>after</em>
+loading, for labelling. The outcome is at least as strong — a project
+query has no physical access to another project's rows — but it is not
+the mechanism the mark measures, and saying it is would make the mark's
+count describe two different things.</p>
+<p><strong><code>trust_state</code> is withheld.</strong>
+<code>importance</code> is a float used as a floor, which the rubric
+names as the thing a state is not; a memory cannot be marked unreliable
+while being kept.</p>
+<p><strong><code>tombstone</code>, <code>bitemporal</code>,
+<code>audit_log</code> and <code>human_review</code> are
+withheld.</strong> <code>INSERT OR REPLACE</code> keeps no prior value
+and records nothing about the replacement; <code>created_at</code> and
+<code>last_accessed_at</code> are both record time and
+<code>expires_at</code> is a retention bound, not a validity one; no
+append-only log of mutations exists; and nothing holds a memory in a
+state until a person resolves it.</p>
+<p><strong>Dual licensing is worth knowing before reuse.</strong>
+AGPL-3.0 or a commercial licence, with a CLA and a terms document in the
+tree. The Anthropic references in <code>TERMS.md</code> are a trademark
+disclaimer — the project states it is <em>"not affiliated with, endorsed
+by, sponsored by, or associated with Anthropic, Inc."</em> — and not a
+restriction on who may read the code.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A pytest suite with <code>pytest.ini</code> and a
+<code>conftest.py</code>. Nothing was installed and nothing was run:
+three manifests sit inside the seven-day cooldown.</p>
+<p>The mark rests on <code>tests/test_global_memory.py</code>, which
+asserts the boundary from the side that matters — what must <em>not</em>
+appear:</p>
+<ul>
+<li><em>"Plain MemoryStore (not GlobalMemoryManager) must not include
+guidelines"</em> at <code>:1014</code>, checked as
+<code>assert "guidelines" not in context</code>. A store opened without
+the global manager assembles a context with no cross-project material in
+it at all.</li>
+<li><em>"Project-scoped results must not carry a <code>[Global]</code>
+label"</em> at <code>:982</code>, which guards the labelling rather than
+the retrieval — a project row mislabelled global would tell an agent the
+wrong thing about where a memory applies.</li>
+</ul>
+<p>Both are assertions about the assembled context rather than about a
+query result, which is the honest reading of them.</p>
+<p>No benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Refuse rather than fall back when a scope cannot be
+resolved.</strong> <em>"Not in a Sugar project. Use scope=global or run
+<code>sugar init</code>"</em> is the right error; the wrong one is
+writing a project memory into the shared file because the project store
+was missing.</li>
+<li><strong>Forward the filter flag instead of re-deriving it.</strong>
+One <code>include_expired</code> travelling from the query into both
+stores is why the two arms cannot drift; two copies of the same default
+is how they do.</li>
+<li><strong>Keep the FTS index honest with triggers on all three
+verbs.</strong> Insert, update <em>and</em> delete — a missing delete
+trigger is how a lexical index starts returning rows that are gone.</li>
+<li><strong>Assert the label as well as the result.</strong> A row that
+is retrieved correctly and labelled wrongly is a memory applied to the
+wrong project.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An importance float standing in for belief.</strong> A floor
+filter cannot express "keep this but do not act on it", so a memory the
+agent should stop trusting has to be deleted or left to mislead.</li>
+<li><strong><code>INSERT OR REPLACE</code> as the correction
+path.</strong> The prior content is gone and nothing records that a
+replacement happened, so a wrong memory that gets overwritten leaves no
+evidence it was ever believed.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take it if you want per-project agent memory on your own machine with
+a small surface and are content for corrections to be overwrites. The
+two-file boundary is the idea worth copying, and it is worth copying
+precisely because it does not need a predicate to be right.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Corrections are <code>INSERT OR REPLACE</code>. Is a superseded
+memory meant to be recoverable, and if not, what tells a user a fact
+they relied on last week has been replaced?</li>
+<li><code>importance</code> is set at write time by the caller. Is
+anything meant to move it afterwards — an outcome, a failed recall — or
+is it fixed for the life of the row?</li>
+<li>Expired rows are filtered but never removed. Is a sweeper intended,
+or is the history deliberate?</li>
+<li>The global store holds guidelines shared across every project on the
+machine. What stops a guideline learned in one client's repository from
+surfacing in another's?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sugar/memory/types.py</code></td>
+<td><code>MemoryScope</code>, <code>MemoryType</code>,
+<code>MemoryEntry</code>, <code>MemoryQuery</code> and its defaults</td>
+</tr>
+<tr>
+<td><code>sugar/memory/store.py</code></td>
+<td>the schema, the three FTS triggers, the expiry clause and the vector
+fallback</td>
+</tr>
+<tr>
+<td><code>sugar/memory/global_store.py</code></td>
+<td>scope routing, the refusal, and the post-load scope stamp</td>
+</tr>
+<tr>
+<td><code>sugar/memory/retriever.py</code></td>
+<td>assembling a context from one store or both</td>
+</tr>
+<tr>
+<td><code>sugar/main.py</code></td>
+<td>the CLI, including <code>--ttl</code> parsing into
+<code>expires_at</code></td>
+</tr>
+<tr>
+<td><code>tests/test_global_memory.py</code></td>
+<td>the two must-not assertions the mark rests on</td>
+</tr>
+<tr>
+<td><code>LICENSE</code>, <code>TERMS.md</code>,
+<code>CLA.md</code></td>
+<td>the dual AGPL/commercial grant and the trademark disclaimer</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No supersession or tombstone vocabulary exists</td>
+<td><code>grep -rli "tombstone|supersede|retract" --include='*.py' sugar</code></td>
+<td>Nothing for any of the three</td>
+</tr>
+<tr>
+<td>Scope is not a filtered column</td>
+<td><code>grep -n "scope" sugar/memory/global_store.py</code></td>
+<td>Routing at <code>:44-65</code> and a post-load stamp at
+<code>:109</code>; no <code>WHERE</code> clause names it</td>
+</tr>
+<tr>
+<td>The expiry filter defaults closed and is shared</td>
+<td><code>grep -rn "include_expired" sugar</code></td>
+<td>Declared <code>False</code> at <code>types.py:126</code>, applied at
+<code>store.py:352</code> and <code>:416</code>, forwarded at
+<code>global_store.py:120</code></td>
+</tr>
+<tr>
+<td><code>expires_at</code> has a producer</td>
+<td><code>grep -rn "expires_at" sugar/main.py</code></td>
+<td>Parsed from <code>--ttl</code> at <code>:4010</code>, set at
+<code>:4030</code>, echoed to the user at <code>:4040</code></td>
+</tr>
+<tr>
+<td>No sweeper removes expired rows</td>
+<td><code>grep -rn "DELETE FROM memory_entries" --include='*.py' sugar</code></td>
+<td>Nothing scheduled against expiry; the rows stay and the read filters
+them</td>
+</tr>
+<tr>
+<td>The licence rider is a trademark disclaimer, not a restriction</td>
+<td><code>grep -n -i 'anthropic' TERMS.md</code></td>
+<td>Three lines disclaiming affiliation and directing bug reports to the
+Sugar maintainers</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/roboticforce/sugar/commit/eade16940789bc1f927af090f8a3b475e537eddd"><code class="commit-id" title="eade16940789bc1f927af090f8a3b475e537eddd">eade1694…</code></a>
+— first reading, at 288 files. Screened before reading: three manifests
+inside the seven-day cooldown among the findings, so nothing was
+installed and nothing was run. Dual licensed AGPL-3.0 or commercial,
+with a CLA; <code>TERMS.md</code> names Anthropic only to disclaim
+affiliation, which is a trademark notice rather than a rider, and the
+reading proceeded on that basis. One mark, <code>negative_eval</code>.
+<code>scope_enforced</code> is withheld on a distinction rather than a
+fault — the isolation is a second database file rather than a predicate,
+and the <code>scope</code> attribute is stamped on results after they
+load. The repository's MCP name is <code>io.github.cdnsteve/sugar</code>
+while the remote is <code>roboticforce/sugar</code>; the atlas had no
+report under either name before this one.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

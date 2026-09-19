@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 605 reports.</strong></p>
+<p><strong>This page covers all 606 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24643,6 +24643,41 @@ launder a hidden directory into the public surface.</li>
 guard asserting the fixtures can be built — <em>"CI GUARD — symlink
 creation works so privacy-escape tests actually run"</em> — without
 which a platform that cannot create symlinks reports a green run.</li>
+</ul>
+<h3 id="sugar"><a href="../systems/sugar/"><code>sugar</code></a></h3>
+<ul>
+<li>Best idea: <strong>make the boundary a second file.</strong> Project
+memories live in <code>.sugar/memory.db</code> and cross-project
+guidelines in <code>~/.sugar/memory.db</code>, and a manager routes each
+write to one of them. A query cannot span projects because there is no
+shared table for one to span — and when the project store is missing it
+refuses, <em>"Not in a Sugar project. Use scope=global or run
+<code>sugar init</code>"</em>, rather than quietly filing a project
+memory where every project can read it.</li>
+<li>Biggest risk: <strong>corrections are
+<code>INSERT OR REPLACE</code>.</strong> The prior content is gone and
+nothing records that a replacement happened, so a wrong memory that gets
+overwritten leaves no evidence it was ever believed. Underneath that,
+<code>importance</code> is a float applied as a floor filter and set
+once at write time, so a memory the agent learns to distrust cannot be
+kept and marked — only deleted or left to mislead.</li>
+<li>Most reusable component: <code>sugar/memory/store.py</code> for two
+small habits — three FTS triggers covering insert, update <em>and</em>
+delete, so the lexical index cannot return rows that are gone; and an
+expiry clause driven by a query flag that defaults closed and is
+forwarded to both stores rather than re-derived in each, so the two arms
+cannot drift.</li>
+<li>Maturity impression: dual licensed AGPL-3.0 or commercial with a
+CLA, Python over SQLite at 288 files, reaching agents through an MCP
+server, a CLI, a skills directory, a GitHub Action and a Hermes plugin.
+One mark, <code>negative_eval</code>. <code>scope_enforced</code> is
+withheld on a distinction rather than a fault: the isolation is a second
+database file rather than a predicate, and the <code>scope</code>
+attribute is stamped on results after they load.</li>
+<li>Study when: you want the smallest honest version of per-project
+agent memory, or a worked example of why physical separation and a scope
+predicate are not the same claim even when they produce the same
+outcome.</li>
 </ul>
         </article>
       </div>
