@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 584 reports.**
+**This page covers all 585 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5142,3 +5142,17 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, a Rust workspace with desktop, web, CLI, sync and plugin-runtime crates, 148 test functions in the memo-file module alone and further suites across search, secrets, derivation, file IO and the CLI; the agent surface is a small DeepSeek Harness bundle that proxies to a locally spawned binary and returns an actionable error when it is absent.
 - Study when: you are building keyword search over user-authored Markdown, especially with CJK content, or deciding how a desktop notebook should expose itself to an agent without adding a service.
 - Do not copy when: you need a memory that can be held back, corrected without losing what it said, or accounted for afterwards — none of those exist here.
+
+### [`agent-context-os`](../systems/agent-context-os/)
+- Best idea: **make the baseline information-equivalent.** The continuity benchmark compares three profiles, and the `handoff` one is a single note containing all four answers the questions ask for. A context layer that beats an agent knowing nothing has proved nothing; this one has to beat a baseline that already has the facts.
+- Second idea: **make the harder profile harder.** The `contextos` profile is given an older session holding superseded ideas, so the layer must surface the current decision over the stale one rather than merely having more text available.
+- Third idea: **score the quote, not the answer.** A response counts only when the value matches, the source matches, the expected sentence is inside the quote given, and that quote actually occurs in that source — four lines that turn a trivia check into a grounding check.
+- Fourth idea: **test the scorer.** `test_each_wrong_decision_or_invented_certainty_fails` mutates each answer in turn, including asserting a launch date is confirmed when the truth is unconfirmed, and requires the score to drop by exactly one; `test_correct_guess_without_support_fails` keeps the right value with an unsupported quote and requires it to fail; `test_prompt_does_not_leak_answer_key_or_unselected_sources` requires the prompt to carry neither the expected block nor the other profile's sources. Every result object also carries a `scope` field saying what the number is not.
+- Fifth idea: **refuse to create the log you append to.** The kernel raises `decision log does not exist` rather than writing a fresh `decisions.md`, so a decision cannot be recorded into a history that has quietly restarted; the update log's missing heading is an error for the same reason.
+- Biggest risk: freshness is computed from a self-reported `**Last Updated:**` line, so a file edited without touching that line reads as fresh, and the five-value status is derived rather than stored — reported as a diagnostic, never withholding anything.
+- Second risk: the decisions table is append-only in the kernel's writer, and an agent with a text editor is not obliged to use the kernel. Git history is the real control, and the log itself records no actor — the row carries a date and a decision, not who proposed it.
+- Third risk: no benchmark result is committed. The harness prepares three prompts and the doc asks the reader to run them against their own model with tools disabled, so this is a reproducible method with no reproduced number in the tree.
+- Most reusable component: `scripts/continuity-benchmark.py` with its scenario fixture and the four tests around it — a small, offline, model-agnostic way to ask whether a context layer changes what an agent decides, rather than whether it produces more text.
+- Maturity impression: MIT, thirty Python test files plus shell suites for hooks and portability, adapters for seven coding agents with four marked first-class, installable bundles with a lockfile, and a script that exercises the repository's own single-source-of-truth locators in disposable copies rather than in the working tree.
+- Study when: you are evaluating whether a context convention earns its keep, or designing the state files a coding agent reads at the start of every session.
+- Do not copy when: you need a memory that can be held back or marked retired — a superseded decision here is a later row, and nothing filters a read by anything.

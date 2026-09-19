@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 584 reports.</strong></p>
+<p><strong>This page covers all 585 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -23260,6 +23260,68 @@ notebook should expose itself to an agent without adding a service.</li>
 <li>Do not copy when: you need a memory that can be held back, corrected
 without losing what it said, or accounted for afterwards — none of those
 exist here.</li>
+</ul>
+<h3 id="agent-context-os"><a
+href="../systems/agent-context-os/"><code>agent-context-os</code></a></h3>
+<ul>
+<li>Best idea: <strong>make the baseline
+information-equivalent.</strong> The continuity benchmark compares three
+profiles, and the <code>handoff</code> one is a single note containing
+all four answers the questions ask for. A context layer that beats an
+agent knowing nothing has proved nothing; this one has to beat a
+baseline that already has the facts.</li>
+<li>Second idea: <strong>make the harder profile harder.</strong> The
+<code>contextos</code> profile is given an older session holding
+superseded ideas, so the layer must surface the current decision over
+the stale one rather than merely having more text available.</li>
+<li>Third idea: <strong>score the quote, not the answer.</strong> A
+response counts only when the value matches, the source matches, the
+expected sentence is inside the quote given, and that quote actually
+occurs in that source — four lines that turn a trivia check into a
+grounding check.</li>
+<li>Fourth idea: <strong>test the scorer.</strong>
+<code>test_each_wrong_decision_or_invented_certainty_fails</code>
+mutates each answer in turn, including asserting a launch date is
+confirmed when the truth is unconfirmed, and requires the score to drop
+by exactly one; <code>test_correct_guess_without_support_fails</code>
+keeps the right value with an unsupported quote and requires it to fail;
+<code>test_prompt_does_not_leak_answer_key_or_unselected_sources</code>
+requires the prompt to carry neither the expected block nor the other
+profile's sources. Every result object also carries a <code>scope</code>
+field saying what the number is not.</li>
+<li>Fifth idea: <strong>refuse to create the log you append to.</strong>
+The kernel raises <code>decision log does not exist</code> rather than
+writing a fresh <code>decisions.md</code>, so a decision cannot be
+recorded into a history that has quietly restarted; the update log's
+missing heading is an error for the same reason.</li>
+<li>Biggest risk: freshness is computed from a self-reported
+<code>**Last Updated:**</code> line, so a file edited without touching
+that line reads as fresh, and the five-value status is derived rather
+than stored — reported as a diagnostic, never withholding anything.</li>
+<li>Second risk: the decisions table is append-only in the kernel's
+writer, and an agent with a text editor is not obliged to use the
+kernel. Git history is the real control, and the log itself records no
+actor — the row carries a date and a decision, not who proposed it.</li>
+<li>Third risk: no benchmark result is committed. The harness prepares
+three prompts and the doc asks the reader to run them against their own
+model with tools disabled, so this is a reproducible method with no
+reproduced number in the tree.</li>
+<li>Most reusable component:
+<code>scripts/continuity-benchmark.py</code> with its scenario fixture
+and the four tests around it — a small, offline, model-agnostic way to
+ask whether a context layer changes what an agent decides, rather than
+whether it produces more text.</li>
+<li>Maturity impression: MIT, thirty Python test files plus shell suites
+for hooks and portability, adapters for seven coding agents with four
+marked first-class, installable bundles with a lockfile, and a script
+that exercises the repository's own single-source-of-truth locators in
+disposable copies rather than in the working tree.</li>
+<li>Study when: you are evaluating whether a context convention earns
+its keep, or designing the state files a coding agent reads at the start
+of every session.</li>
+<li>Do not copy when: you need a memory that can be held back or marked
+retired — a superseded decision here is a later row, and nothing filters
+a read by anything.</li>
 </ul>
         </article>
       </div>

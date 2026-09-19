@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A file convention for coding
+agents with a Python kernel behind it: state files whose updates are
+applied as one atomic transaction, a decisions table only ever appended
+to, and a continuity benchmark whose scorer is guarded by its own
+negative controls.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Context OS — Agent Memory Atlas">
+    <meta property="og:description" content="A file convention for
+coding agents with a Python kernel behind it: state files whose updates
+are applied as one atomic transaction, a decisions table only ever
+appended to, and a continuity benchmark whose scorer is guarded by its
+own negative controls.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Context
+OS — Agent Memory Atlas">
+    <meta name="twitter:description" content="A file convention for
+coding agents with a Python kernel behind it: state files whose updates
+are applied as one atomic transaction, a decisions table only ever
+appended to, and a continuity benchmark whose scorer is guarded by its
+own negative controls.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Context OS — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Context OS",
+      "description": "A file convention for coding agents with a Python kernel behind it: state files whose updates are applied as one atomic transaction, a decisions table only ever appended to, and a continuity benchmark whose scorer is guarded by its own negative controls.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Git-backed context layer</p>
+          <h1>Context OS</h1>
+          <p class="document-deck">A file convention for coding agents
+with a Python kernel behind it: state files whose updates are applied as
+one atomic transaction, a decisions table only ever appended to, and a
+continuity benchmark whose scorer is guarded by its own negative
+controls.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/conorbronsdon/agent-context-os">
+              <span>Source</span>
+              <strong>conorbronsdon/agent-context-os</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/conorbronsdon/agent-context-os/commit/15b5acace6830e4cac58e56cf1a102ea6557e762" title="15b5acace6830e4cac58e56cf1a102ea6557e762">
+              <span>Analyzed revision</span>
+              <code>15b5acac…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/conorbronsdon--agent-context-os" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>conorbronsdon--agent-context-os</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Context OS is a convention with a kernel under it. The convention is
+a set of Markdown files in known places — <code>state/current.md</code>
+for what is happening now, <code>state/decisions.md</code> for what was
+decided and what was rejected, <code>state/blockers.md</code>,
+<code>sessions/</code> for per-day notes, <code>projects/</code> and
+<code>references/</code> for the rest — plus a <code>ROUTING.md</code>
+that tells an agent which of them to read for which kind of task. The
+kernel is a Python package, <code>contextos</code>, that reads and
+rewrites those files, validates a proposal before applying it, and
+applies every changed file together.</p>
+<p>It earns two marks. <code>audit_log</code>, because two of those
+files are genuinely append-only in code rather than by instruction: the
+decisions table gains a row and loses nothing, and the update log gains
+a date at the top when <code>current.md</code> rolls over.
+<code>negative_eval</code>, because of the continuity benchmark, whose
+design is the reason to read this repository at all.</p>
+<p>That benchmark is the thing to take away. It scores four questions
+about a synthetic project across three context profiles, and the
+comparison is constructed to be hard on the system under test. The
+<code>handoff</code> baseline is <strong>information-equivalent</strong>
+— a single note containing all four answers. The <code>contextos</code>
+profile is made <em>harder</em>, not easier, by including an older
+session full of superseded ideas. An answer scores only if the quote it
+cites actually occurs in the file it cites. And the scorer has its own
+negative controls: a right answer with an unsupported quote must fail,
+each wrong answer must cost exactly one point, and the prompt must not
+leak the key.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Think of three layers that happen to be the same directory.</p>
+<p><strong>The files</strong> are what an agent reads: state, sessions,
+projects, references, skills. They are Markdown with a
+<code>**Last Updated:**</code> line, and they are templates in the
+shipped repository — <code>state/current.md</code> arrives with
+<code>[Most important thing right now]</code> in it.</p>
+<p><strong>The kernel</strong> is what keeps them honest. It parses the
+dates, computes a freshness status, guards the paths it will touch,
+validates a proposed change, and applies all of the resulting file
+writes as one transaction with rollback.</p>
+<p><strong>The harness adapters</strong> are how an agent reaches both.
+Hooks in shell, PowerShell and Python; bundles with a lockfile;
+first-class support for four coding agents and experimental adapters for
+three more.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an agent reads a routing table that maps a task kind to the files to load, and works against Markdown state under a Git checkout; the contextos kernel parses each file's Last Updated line into a five-value freshness status, guards the paths it will touch, validates a proposed change, and applies every resulting write as one atomic transaction — appending a row to the decisions table and pushing the previous date onto a newest-first update log — while a continuity benchmark scores four grounded questions across an instructions baseline, an information-equivalent handoff note, and the full layer with superseded material in it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an agent reads a routing table that maps a task kind to the files to load, and works against Markdown state under a Git checkout; the contextos kernel parses each file&#39;s Last Updated line into a five-value freshness status, guards the paths it will touch, validates a proposed change, and applies every resulting write as one atomic transaction — appending a row to the decisions table and pushing the previous date onto a newest-first update log — while a continuity benchmark scores four grounded questions across an instructions baseline, an information-equivalent handoff note, and the full layer with superseded material in it
+flowchart TD
+    subgraph Agent
+        ROUTE[&quot;ROUTING.md&lt;br/&gt;task kind -&gt; files to load&quot;]
+        CMD[&quot;/start · /update · /end&lt;br/&gt;slash commands and hooks&quot;]
+    end
+
+    subgraph Files[&quot;Git checkout&quot;]
+        CUR[&quot;state/current.md&quot;]
+        DEC[&quot;state/decisions.md&lt;br/&gt;append-only table&quot;]
+        LOG[&quot;state/current-log.md&lt;br/&gt;newest-first dates&quot;]
+        BLK[&quot;state/blockers.md&quot;]
+        SES[&quot;sessions/YYYY-MM-DD.md&quot;]
+        PRJ[&quot;projects/ · references/ · skills/&quot;]
+    end
+
+    subgraph Kernel[&quot;contextos&quot;]
+        FRESH[&quot;freshness&lt;br/&gt;missing · unknown · future · stale · fresh&quot;]
+        GUARD[&quot;path guards&lt;br/&gt;local-state access&quot;]
+        VAL[&quot;validate proposal&quot;]
+        TX[&quot;pending map&lt;br/&gt;atomic replacement + rollback&quot;]
+        CLAIM[&quot;claims with leases&lt;br/&gt;stale claims lose their place&quot;]
+    end
+
+    subgraph Eval[&quot;continuity benchmark&quot;]
+        P1[&quot;instructions&lt;br/&gt;no project facts&quot;]
+        P2[&quot;handoff&lt;br/&gt;all four facts&quot;]
+        P3[&quot;contextos&lt;br/&gt;+ superseded session&quot;]
+        SCORE[&quot;grounded_correct&lt;br/&gt;quote must occur in the cited source&quot;]
+    end
+
+    ROUTE --&gt; Files
+    CMD --&gt; VAL --&gt; TX
+    TX --&gt; CUR
+    TX --&gt; DEC
+    TX --&gt; LOG
+    CUR --&gt; FRESH
+    BLK --&gt; FRESH
+    GUARD --&gt; Files
+    CLAIM --&gt; PRJ
+    Files --&gt; P3
+    P1 --&gt; SCORE
+    P2 --&gt; SCORE
+    P3 --&gt; SCORE</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Kernel:</strong> <code>contextos/kernel.py</code> —
+freshness, path guards, proposal validation, the pending-write
+transaction, the decisions and log writers.</li>
+<li><strong>Continuity views:</strong>
+<code>contextos/continuity.py</code> — read-only, source-attributed
+views over the state files.</li>
+<li><strong>Coordination:</strong>
+<code>contextos/coordination.py</code> — claims, leases, and the
+ordering that drops stale ones.</li>
+<li><strong>Benchmark:</strong>
+<code>scripts/continuity-benchmark.py</code>,
+<code>tests/fixtures/continuity/scenario.json</code>,
+<code>tests/test_continuity_benchmark.py</code>,
+<code>docs/continuity-benchmark.md</code>.</li>
+<li><strong>Conventions:</strong> <code>state/</code>,
+<code>sessions/README.md</code>, <code>ROUTING.md</code>.</li>
+<li><strong>Adapters and hooks:</strong> <code>adapters/</code>,
+<code>scripts/context-os-hook.{sh,ps1,py}</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There is no record type — the unit is a file in a known place, and
+the schema is a heading convention. Two of them carry structure worth
+naming.</p>
+<p><code>state/decisions.md</code> is a table with four columns — Date,
+Decision, Context / rationale, Rejected alternatives — and its header
+states both the append rule and when to fill the fourth column:
+<em>"when there was a real branch point — what else was considered and
+why it lost; leave it blank when there was one obvious option."</em>
+That is a store that keeps the road not taken, which most decision logs
+do not.</p>
+<p><code>state/current-log.md</code> holds dates under a required
+heading, newest first. It does not hold the old content — only the date
+<code>current.md</code> last changed before the one it now carries.</p>
+<p>Every state file is expected to carry a
+<code>**Last Updated:**</code> line, and that line is the only input to
+the freshness status.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is a routing table plus a convention.
+<code>ROUTING.md</code> maps a kind of task to the files to load —
+writing tasks read a writing skill, project tasks read that project's
+folder — and the session loop gives the agent a starting point:
+<code>/start</code> looks for a file matching today's date and resumes
+it, or reads the most recent one for continuity.</p>
+<p>The kernel's contribution is <code>continuity.py</code>, described in
+its own first line as <em>"read-only, source-attributed continuity views
+over existing kernel evidence"</em> — the views carry where each fact
+came from, which is what the benchmark then scores against.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A change is a proposal. The kernel validates it, then assembles every
+file it will touch into a <code>pending</code> map and applies them
+together; the capability list names
+<code>atomic-replacement-and-rollback</code>, and
+<code>test_agent_lifecycle_transactions.py</code> covers the
+lifecycle.</p>
+<p>Two writes in that map are append-only by construction:</p>
+<ul>
+<li><strong>Decisions.</strong> The kernel reads the existing file,
+strips its trailing newline, and concatenates a new row. If the file
+does not exist it raises — <em>decision log does not exist</em> — rather
+than creating one, so a decision cannot be appended into a log that has
+lost its history.</li>
+<li><strong>The update log.</strong> When <code>current.md</code> is
+advanced and its previous date is neither today nor the newest date
+already recorded, that date is spliced in directly beneath the required
+heading. A missing heading is an error, not something to recreate.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Claude Code, Codex, OpenClaw and OpenCode are first-class; Cursor,
+Devin and Hermes adapters are marked experimental in the README. Hooks
+ship in three languages so the same layer attaches to a POSIX shell,
+PowerShell or a Python harness. Bundles are installable with a lockfile
+and a component manifest, and the repository carries a script that
+exercises its own single-source-of-truth locators in disposable copies
+rather than in the working tree.</p>
+<p>Coordination for multiple agents is a claim with a lease:
+<code>_claim_order</code> groups live claims by task and drops the ones
+whose lease has expired, so a stale holder loses its place rather than
+blocking the queue forever.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Audit log — awarded.</strong> Two append-only records, both
+with writers in the kernel, both applied inside the transaction, and one
+of them refusing to create the file it appends to. What they do not
+record is an actor: the row carries a date and a decision, not who
+proposed it. In a Git-backed layer that answer lives in the commit,
+which is a reasonable division — but a reader should know the log alone
+does not carry it.</p>
+<p><strong>Negative eval — awarded</strong>, and the evidence record
+quotes the four tests. The design decision that earns it is the
+information-equivalent baseline: the <code>handoff</code> profile is a
+note containing all four answers, so the benchmark cannot be won by
+comparing the layer against an agent that simply does not know
+anything.</p>
+<p><strong>Trust state — withheld.</strong> The freshness status is five
+values — <code>missing</code>, <code>unknown</code>,
+<code>future</code>, <code>stale</code>, <code>fresh</code> — and every
+one of them is <em>derived</em> at read time from a
+<code>Last Updated</code> line rather than stored, which the atlas does
+not award. Its only gate admits both <code>fresh</code> and
+<code>stale</code>, and the docstring explains why: requiring a real
+date on <code>weekly-priorities.md</code> and <code>blockers.md</code>
+as well <em>"would report an initialized workspace as needing setup
+forever"</em>, because users legitimately leave those at the template.
+That is a sensible narrowing of a diagnostic, and it is not a state that
+withholds a memory.</p>
+<p><strong>Tombstone — withheld.</strong> A superseded decision stays as
+a row and the replacement is a later row; nothing marks the first as
+retired, and the benchmark scenario shows the intended reading is prose
+— <em>"The CSV export replaces the earlier PDF export plan."</em></p>
+<p><strong>Scope enforced — withheld.</strong> Directories partition
+content and the kernel guards the paths it will write, but nothing
+filters a read by a scope key; the claim leases are about two agents not
+taking the same task, not about what either may see.</p>
+<p><strong>Bitemporal, human review — withheld.</strong> One date per
+file, and no approval state.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> Searched the README and <code>docs/</code>
+for <code>arxiv</code>, <code>@article</code>, <code>@misc</code>,
+<code>doi.org</code> and <code>CITATION.cff</code>: none.</p>
+<p>Thirty Python test files, plus shell suites for hooks and
+portability. The ones that matter here are the benchmark's, and section
+9's evidence record quotes them; what belongs in this section is the
+benchmark's own honesty about its limits.</p>
+<p>The doc states the method plainly: <em>"It tests observable answers
+with supporting sentences, rather than asking another model for a
+subjective grade."</em> Every result object carries a <code>scope</code>
+field saying what the number is not — <em>"Four constrained decisions
+with exact supporting sentences; not a general semantic-quality or live
+handoff score"</em> — and a <code>context_characters</code> count, so
+the cost of each profile sits beside its score.</p>
+<p><strong>No result is committed.</strong> The harness prepares three
+prompts and the doc asks the reader to submit each to a fresh session of
+the same model with tools disabled, keeping the answer key out of the
+transcript. So this is a reproducible method with no reproduced number
+in the tree, which is the honest state for an offline benchmark that
+needs a model the repository cannot ship — and the doc also notes that
+selected release bundles omit the script and fixtures, so the benchmark
+is a source-checkout activity.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Make your baseline information-equivalent.</strong> A
+context layer that beats an agent with no facts has proved nothing. Give
+the baseline all the answers in one note and see whether the structure
+still helps.</li>
+<li><strong>Make the harder profile harder.</strong> Putting a
+superseded idea in the full profile tests the thing that actually breaks
+in production — picking the current decision over the stale one.</li>
+<li><strong>Score the quote, not the answer.</strong> Requiring the
+cited sentence to occur in the cited file turns a benchmark from a
+trivia check into a grounding check, and it is four lines of code.</li>
+<li><strong>Test your scorer.</strong> Mutate each answer and require
+the score to drop by exactly one; keep a right answer with a wrong quote
+and require it to fail. A grader nobody grades is the same failure as a
+test that cannot fail.</li>
+<li><strong>Refuse to create the log you append to.</strong> Raising
+when <code>decisions.md</code> is missing, instead of writing a fresh
+one, is the difference between a gap you notice and a history that
+quietly restarts.</li>
+<li><strong>Narrow a nag to what it can justify.</strong> Gating
+readiness on one file, with the reason recorded, beats three files'
+worth of false positives.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Freshness reads a self-reported <code>Last Updated</code> line. Is
+there a check that the line matches the file's actual last change, or is
+a stale line indistinguishable from a fresh file?</li>
+<li>The decisions table is append-only in the kernel's writer, and an
+agent with a text editor is not obliged to use it. Does any check
+compare the working tree against the Git history for rewritten
+rows?</li>
+<li>The continuity benchmark asks a reader to run three prompts by hand.
+Is there a recorded run anywhere — a blog post, a release note — whose
+numbers a reader could compare their own against?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Kernel: <code>contextos/kernel.py</code></li>
+<li>Continuity views: <code>contextos/continuity.py</code></li>
+<li>Coordination and claims: <code>contextos/coordination.py</code></li>
+<li>CLI: <code>contextos/cli.py</code>,
+<code>contextos/__main__.py</code></li>
+<li>Benchmark: <code>scripts/continuity-benchmark.py</code>,
+<code>docs/continuity-benchmark.md</code>,
+<code>tests/fixtures/continuity/scenario.json</code></li>
+<li>Conventions: <code>ROUTING.md</code>, <code>state/</code>,
+<code>sessions/README.md</code></li>
+<li>Checks: <code>scripts/check-ssot-controls.py</code>,
+<code>scripts/check-doc-reachability.sh</code>,
+<code>scripts/check-links.sh</code>,
+<code>scripts/component-manifests.py</code></li>
+<li>Adapters and hooks: <code>adapters/</code>,
+<code>scripts/context-os-hook.{sh,ps1,py}</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/conorbronsdon/agent-context-os/commit/15b5acace6830e4cac58e56cf1a102ea6557e762"><code class="commit-id" title="15b5acace6830e4cac58e56cf1a102ea6557e762">15b5acac…</code></a>
+— first reading, at the head of <code>main</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: three
+auto-run surfaces and an instruction file addressed to a reading agent,
+which was read as data; nothing was installed, built or run. Two marks.
+The reading covered the state-file conventions and their templates, the
+kernel's freshness computation and path guards, the proposal validation
+and the pending-write transaction, the decisions and update-log writers,
+the claim-and-lease coordination, the routing table and session loop,
+and the continuity benchmark together with the tests that guard its
+scorer; the bundle, component-manifest and adapter machinery was read as
+context rather than as subject. MIT. Four marks are withheld with
+reasons in section 9 — the freshness status is derived rather than
+stored, a superseded decision is a later row rather than a marked one,
+directories partition without a read predicate, and there is no approval
+state. The benchmark is the reason to read this repository: an
+information-equivalent baseline, a harder full profile seeded with
+superseded material, scoring that requires the cited quote to occur in
+the cited file, and four tests that keep the scorer honest.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
