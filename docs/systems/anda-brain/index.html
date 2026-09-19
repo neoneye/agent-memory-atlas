@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust cognitive layer over the
+KIP 2.0 graph, whose recall path is budgeted and pinned by must-not
+tests, and whose settlement response reports in words that no skill
+evaluation was performed rather than returning zeros as if measured.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Anda Brain — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust cognitive layer over
+the KIP 2.0 graph, whose recall path is budgeted and pinned by must-not
+tests, and whose settlement response reports in words that no skill
+evaluation was performed rather than returning zeros as if measured.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Anda
+Brain — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust cognitive layer
+over the KIP 2.0 graph, whose recall path is budgeted and pinned by
+must-not tests, and whose settlement response reports in words that no
+skill evaluation was performed rather than returning zeros as if
+measured.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Anda Brain — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Anda Brain",
+      "description": "A Rust cognitive layer over the KIP 2.0 graph, whose recall path is budgeted and pinned by must-not tests, and whose settlement response reports in words that no skill evaluation was performed rather than returning zeros as if measured.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The code discloses what the deployment
+cannot do</p>
+          <h1>Anda Brain</h1>
+          <p class="document-deck">A Rust cognitive layer over the KIP
+2.0 graph, whose recall path is budgeted and pinned by must-not tests,
+and whose settlement response reports in words that no skill evaluation
+was performed rather than returning zeros as if measured.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ldclabs/anda-brain">
+              <span>Source</span>
+              <strong>ldclabs/anda-brain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ldclabs/anda-brain/commit/3b176ca0c724a1da33f0d3eb15924b08e923ce11" title="3b176ca0c724a1da33f0d3eb15924b08e923ce11">
+              <span>Analyzed revision</span>
+              <code>3b176ca0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ldclabs--anda-brain" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ldclabs--anda-brain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Anda Brain is a Rust service that puts a cognitive layer over a
+knowledge graph it does not implement. The graph, its epistemic
+vocabulary and its two time axes belong to KIP 2.0 and the Cognitive
+Nexus, which ship in <a
+href="../anda-db/"><code>ldclabs/anda-db</code></a> and have their own
+report here. Brain supplies what sits above: Spaces, an authorization
+prelude shared by the HTTP and MCP channels, a budgeted recall agent
+that assembles a memory packet for a model, and a settlement pass that
+runs maintenance on a cycle.</p>
+<p><strong>Two marks</strong>, both on Brain's own code:
+<code>scope_enforced</code> and <code>negative_eval</code>. The
+epistemic marks a reader might expect — a rejected-value record, an
+explicit belief state, world-time validity — are real and are not this
+repository's. <code>Stance</code> is support, reject or uncertain;
+<code>BeliefStatus</code> is accepted, rejected, contested, uncertain or
+unknown; <code>AssertionStatus</code> distinguishes retracted from
+superseded from an expired that is <em>"computed, never stored"</em>.
+All of it is declared in <code>anda_kip</code>, pinned here at exactly
+<code>=0.13.0</code>, and all of it is credited in the <a
+href="../anda-db/">anda-db</a> report rather than counted twice.</p>
+<p>What makes this repository worth its own page is a habit rather than
+a mechanism: <strong>the code keeps saying what it cannot do.</strong>
+The settlement response does not report zero skill evaluations; it
+returns a sentence saying
+<code>memory_learning requires configured independent observers, frozen trials and replayable evaluations</code>.
+<code>Cargo.toml</code> says <code>default = []</code> and comments that
+compilation <em>"installs no production scheduler."</em> A field comment
+records that two extensions <em>"predate any reader."</em> The atlas
+usually has to establish that a declared mechanism has no producer. Here
+the source says so first.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A Space is the unit of tenancy and of policy. Everything a caller can
+reach is reached through one, and every space-scoped endpoint runs the
+same four-step prelude before any handler logic: shard check, CWT
+verification, space load, space-token verification.</p>
+<p>Memory itself is not Brain's. Brain issues deterministic KIP commands
+into the Nexus and reads the results back. Its own state — learning
+journals, settlement bookkeeping — is deliberately kept apart from that
+graph, and the module that holds it opens by saying so: <em>"Private
+orchestration state, not a learning-score database. Every update is
+conditional and read back before dispatch. Native facts remain in
+Nexus."</em></p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — one authorization prelude serves both the HTTP and MCP channels because a launch review found the two had diverged, and it resolves a shared audit actor so both trails name the same subject; memory itself is delegated to KIP 2.0 and the Cognitive Nexus in a separate repository, while Brain keeps its own orchestration state in a versioned object store with compare-and-swap; the recall agent assembles a budgeted memory packet whose committed tests assert what must not reach the model, and the settlement pass returns a sentence naming why no skill evaluation was performed instead of reporting zero</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: one authorization prelude serves both the HTTP and MCP channels because a launch review found the two had diverged, and it resolves a shared audit actor so both trails name the same subject; memory itself is delegated to KIP 2.0 and the Cognitive Nexus in a separate repository, while Brain keeps its own orchestration state in a versioned object store with compare-and-swap; the recall agent assembles a budgeted memory packet whose committed tests assert what must not reach the model, and the settlement pass returns a sentence naming why no skill evaluation was performed instead of reporting zero
+flowchart TD
+    subgraph CH[&quot;two channels, one prelude&quot;]
+        H[&quot;HTTP handlers&lt;br/&gt;read_public · read_lenient&lt;br/&gt;credentialed · cwt_only&quot;]
+        M[&quot;MCP channel&lt;br/&gt;calls authorize directly&quot;]
+    end
+    H --&gt; AZ
+    M --&gt; AZ
+    AZ[&quot;authz::authorize&lt;br/&gt;1 shard check&lt;br/&gt;2 CWT verification&lt;br/&gt;3 space load&lt;br/&gt;4 space-token verification&quot;]
+
+    AZ --&gt; ACT[&quot;audit actor&lt;br/&gt;CWT user, else st:name,&lt;br/&gt;else anonymous&quot;]
+    AZ --&gt; SP[(&quot;Space&lt;br/&gt;tenancy and policy&quot;)]
+
+    SP --&gt; REC[&quot;budgeted recall agent&quot;]
+    REC --&gt; PKT[&quot;MemoryPacket&lt;br/&gt;items · coverage · status&quot;]
+    PKT --&gt; MODEL((&quot;model context&quot;))
+
+    REC -.-&gt;|&quot;asserted must-not&quot;| NEG[&quot;a model-invented id is not admitted&lt;br/&gt;a denied read is a warning, never an empty success&lt;br/&gt;tool injection cannot execute a native write&lt;br/&gt;a malformed budget does not become prose&quot;]
+
+    SP --&gt; KIP[&quot;deterministic KIP commands&quot;]
+    KIP --&gt; NEX[(&quot;Cognitive Nexus + anda_kip =0.13.0&lt;br/&gt;Proposition · Assertion · stance&lt;br/&gt;BeliefStatus · valid_time&lt;br/&gt;reported under anda-db&quot;)]
+
+    SP --&gt; SET[&quot;settlement pass&lt;br/&gt;maintenance on a cycle&quot;]
+    SET --&gt; SKL[&quot;skill_settlement()&lt;br/&gt;unsupported_reason:&lt;br/&gt;&#39;requires configured independent observers,&lt;br/&gt;frozen trials and replayable evaluations&#39;&quot;]
+    SET --&gt; JRN[(&quot;Journal&lt;br/&gt;object store · UpdateVersion CAS&lt;br/&gt;orchestration state, not facts&quot;)]
+
+    FEAT{{&quot;default = []&lt;br/&gt;wiki · learning · experiments all opt-in&quot;}} -.-&gt;|gates| ACT</code></pre></details></figure>
+<p>Three crates: <code>anda_brain</code> (the service),
+<code>anda-brain-worker</code> (a TypeScript Cloudflare Worker carrying
+the prompt assets), and the KIP reference. Apache 2.0, read in full for
+a rider and carrying none.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The prelude</strong> —
+<code>anda_brain/src/authz.rs:318-330</code>. <code>authorize</code>
+takes the token scope and the admission mode as separate arguments and
+runs shard check, CWT verification, space load and space-token
+verification in order. The module header says why it exists: both
+channels <em>"must resolve the caller's audit actor and wiki ACL view
+identically (the wiki launch review's P0-1 was exactly such a
+divergence). This module is the single source for that logic."</em></p>
+<p><strong>The named admission modes</strong> — <code>:39-60</code>.
+Spelling out scope and mode at each call site <em>"made that pairing a
+convention every new endpoint had to know rather than a name it could
+pick,"</em> so HTTP handlers call <code>read_public</code>,
+<code>read_lenient</code>, <code>credentialed</code> or
+<code>cwt_only</code>. <code>PublicRead</code> verifies a supplied space
+token even on a public space <em>"so a labeled token keeps its granted
+labels instead of silently widening to the anonymous view."</em></p>
+<p><strong>The audit actor</strong> — <code>:374-388</code>. The
+authenticated CWT user, else a stable <code>st:&lt;name&gt;</code> token
+identity, else <code>anonymous</code>, because <em>"public-space readers
+with no credential must not be recorded as the space's own
+identity."</em> Shared by both channels so the two trails name identical
+subjects.</p>
+<p><strong>The disclosure</strong> —
+<code>anda_brain/src/settlement/mod.rs:467-473</code>.
+<code>skill_settlement()</code> returns a <code>SkillSettlement</code>
+whose only non-default field is the reason string, under a comment
+reading <em>"No learning scheduler is configured by this deployment.
+Preserve counters for response compatibility, but disclose that no
+evaluation was performed."</em></p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Not Brain's. Propositions carry no stance; an Assertion is immutable,
+names its <code>asserted_by</code> actor, and carries one of three
+stances. <code>BeliefStatus</code> is derived over the eligible
+assertions. <code>valid_time</code> is world time, documented in the
+dependency as independent of storage lifecycle. See <a
+href="../anda-db/">anda-db</a>, which reads these at the same
+<code>anda_kip</code> source.</p>
+<p>Brain's own persisted state is the <code>Journal</code>: an object
+store keyed by prefix, every write an optimistic compare-and-swap on
+<code>UpdateVersion</code>, capped at 8 MiB. It holds orchestration, not
+claims.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A budgeted recall agent plans over channels and returns a
+<code>MemoryPacket</code> with <code>items</code>, a
+<code>coverage</code> record and a <code>status</code>. A budget too
+small to work in does not produce a degraded answer: the packet comes
+back <code>budget_insufficient</code> with empty items, and the provider
+is not called at all.</p>
+<p>The coverage record is the part worth copying. A denied read is not
+dropped and not silently absent from the results — it lands in
+<code>coverage.partial</code> as an explicit host warning, and the
+planner may then select the warning. An absence with a reason is a
+different object from an absence.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are deterministic KIP commands built in code rather than text
+a model composed. <code>kip.rs</code> keeps two distinctions it
+<em>"deliberately preserve[s] rather than flatten[s]"</em>: an
+operation-level failure is not an envelope failure, and
+<code>TopLevelStatus::OutcomeUnknown</code> is not a failure at all —
+<em>"A write may have committed, so <code>succeeded</code> answers
+<code>false</code> without licensing a caller to redo the work: the
+settlement passes recover by re-running an idempotent write, never by
+treating the memory as unwritten."</em></p>
+<p>Weekly disuse decay touches <code>memory_strength</code> only. The
+comment above it is one line and is the whole design: <em>"Weekly disuse
+changes accessibility only, never Assertion confidence."</em> The policy
+field carrying the multiplier still accepts its KIP 1.x name,
+<code>confidence_decay_factor</code>, when reading a stored policy, and
+records that 2.0 <em>"forbids decaying an epistemic stance over time, so
+the same knob now paces accessibility instead."</em></p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An HTTP API and an MCP channel over the same prelude, plus a
+Cloudflare Worker holding the prompt assets — Formation, Maintenance,
+Recall, and the KIP syntax reference. The Maintenance prompt states a
+safety thesis and then lists forbidden shortcuts as text: <em>"time
+passed → lower Assertion confidence; contradiction → delete one side;
+suspected duplicate → destructive merge."</em></p>
+<p>Those are instructions to a model, not invariants in code. The one
+that is enforced in Rust is the first — the decay knob reaches
+<code>memory_strength</code> and cannot reach a stance.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>scope_enforced</code>.</strong> One prelude, two
+channels, unconditional in a default build — only five of the eighteen
+functions in <code>authz.rs</code> are feature-gated, and those are the
+wiki ACL helpers. The mode vocabulary names what each endpoint admits
+instead of leaving the pairing to each call site, and a label-restricted
+token is kept off the surfaces that span all labels.</p>
+<p><strong><code>negative_eval</code>.</strong> The recall tests are
+written as invariants and assert what must not happen — see section
+10.</p>
+<p><strong><code>audit_log</code> is withheld.</strong> Brain resolves
+an audit actor, but <code>wiki_actor</code> and the audit event log it
+feeds are <code>#[cfg(feature = "wiki")]</code>, and
+<code>Cargo.toml</code> declares <code>default = []</code>. The
+append-only record that does exist is the Nexus version log, which
+belongs to <a href="../anda-db/">anda-db</a>.</p>
+<p><strong><code>trust_state</code>, <code>tombstone</code> and
+<code>bitemporal</code> are withheld here and credited there.</strong>
+Every mechanism that would earn them is declared in
+<code>anda_kip</code> and the Cognitive Nexus. Brain consumes them; it
+does not define them, and counting them twice would make the corpus say
+two systems implement one mechanism.</p>
+<p><strong><code>human_review</code> is withheld.</strong> The
+Maintenance policy says authority <em>"comes from Governance grants to
+its authenticated Principal, never the name <code>$system</code>"</em>,
+which is the right rule. It is prompt text in a markdown asset. No Rust
+path holds a memory in a state until a person resolves it.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Rust tests beside the modules, a Worker suite in TypeScript, and
+<code>.github/workflows/test.yml</code>. Nothing was installed and
+nothing was run: five manifests are inside the seven-day cooldown.</p>
+<p><code>anda_brain/src/agents/recall/budgeted/tests.rs</code> names its
+cases as invariants, and the names carry the assertion —
+<code>references_are_budgeted_planning_context_never_memory_or_coverage</code>,
+<code>query_limits_never_raise_literal_or_parameter_bounds_and_expired_flags_are_removed</code>,
+<code>tiny_output_or_context_budget_never_calls_provider_or_returns_side_channels</code>,
+<code>model_tool_injection_and_too_many_calls_cannot_execute_a_native_write</code>.</p>
+<p>The sharpest single assertion is at <code>:378-383</code>. The
+admitted set is checked item by item under the message <em>"model cannot
+synthesize or promote an item"</em>, and then
+<code>assert!(!output.content.contains("model-invented-verified-id"))</code>
+— a citation the model made up must not come back carrying the mark of a
+verified one. Beside it, <code>:516</code> pins that a denied read
+<em>"becomes an explicit host warning, never an empty successful
+retrieval."</em></p>
+<p>Two committed cases assert the disclosure itself:
+<code>settlement/mod.rs:842</code> and <code>space/tests.rs:1363</code>
+both require <code>unsupported_reason</code> to be present. The project
+tests that it is still admitting what it has not done.</p>
+<p>No benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give the admission rule a name.</strong>
+<code>read_public</code>, <code>read_lenient</code>,
+<code>credentialed</code>, <code>cwt_only</code> — four names instead of
+a scope-and-mode pair every new endpoint has to get right, with the
+reasoning recorded where they are declared.</li>
+<li><strong>Run one prelude for every channel.</strong> The comment
+naming the review that found HTTP and MCP diverging is worth more than
+the code; it is why the module exists.</li>
+<li><strong>Return a reason, not a zero.</strong> A settlement that
+reports no evaluations is indistinguishable from one that evaluated and
+found nothing. A sentence saying which preconditions are unconfigured is
+not.</li>
+<li><strong>Make a denied read an object.</strong>
+<code>coverage.partial</code> plus a host warning lets a planner see
+that something was refused; an empty list does not.</li>
+<li><strong>Separate accessibility from belief, and enforce it where the
+knob is.</strong> Decay reaches <code>memory_strength</code> and has no
+path to a stance.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Policy that lives only in the prompt.</strong> The
+forbidden-shortcuts list is the best statement of memory hygiene in this
+repository and nothing in Rust enforces any of it except the decay
+separation.</li>
+<li><strong>Shipping extensions that predate their readers.</strong> A
+field comment saying so is honest; the field still costs a write on
+every settlement.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take the authorization module's shape if you expose one store over
+two protocols. Take Brain whole only if you are adopting KIP and the
+Cognitive Nexus, because without them this repository has no memory in
+it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>default = []</code> and no production scheduler. Which feature
+set does the hosted deployment build, and is the wiki audit log in
+it?</li>
+<li>The Maintenance forbidden-shortcuts list is prompt text. Is any of
+it intended to become a Nexus-side constraint, or is the model meant to
+remain the only thing that honours it?</li>
+<li><code>skill_settlement()</code> is a constant. What would configure
+the observers and frozen trials it names — a feature, a deployment
+binding, or code not yet written?</li>
+<li>Two extensions are documented as predating any reader. What is meant
+to read <code>audit_schema</code>?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>anda_brain/src/authz.rs</code></td>
+<td>the shared prelude, the four named admission modes, the audit
+actor</td>
+</tr>
+<tr>
+<td><code>anda_brain/src/settlement/mod.rs</code></td>
+<td>the settlement pass and <code>skill_settlement()</code>'s
+disclosure</td>
+</tr>
+<tr>
+<td><code>anda_brain/src/agents/recall/budgeted.rs</code></td>
+<td>the budgeted recall agent and the memory packet</td>
+</tr>
+<tr>
+<td><code>anda_brain/src/agents/recall/budgeted/tests.rs</code></td>
+<td>the must-not cases, named as invariants</td>
+</tr>
+<tr>
+<td><code>anda_brain/src/learning/journal.rs</code></td>
+<td>compare-and-swap orchestration state, explicitly not facts</td>
+</tr>
+<tr>
+<td><code>anda_brain/src/kip.rs</code></td>
+<td>the KIP envelope seam and the <code>OutcomeUnknown</code>
+distinction</td>
+</tr>
+<tr>
+<td><code>anda-brain-worker/assets/BrainMaintenance.md</code></td>
+<td>the safety thesis and the forbidden-shortcuts list</td>
+</tr>
+<tr>
+<td><code>anda_brain/Cargo.toml</code></td>
+<td><code>default = []</code>, and the comment that compilation installs
+no scheduler</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The epistemic vocabulary is not in this repository</td>
+<td><code>grep -rn '"support"|"reject"|"uncertain"' --include='*.rs' anda_brain/src</code></td>
+<td>One hit, a KIP example inside a doc comment at
+<code>kip.rs:742</code>. <code>Stance</code>, <code>BeliefStatus</code>
+and <code>AssertionStatus</code> are declared in <code>anda_kip</code>,
+pinned <code>=0.13.0</code></td>
+</tr>
+<tr>
+<td>No feature is on by default</td>
+<td>read <code>anda_brain/Cargo.toml:23-31</code></td>
+<td><code>default = []</code>; <code>wiki</code>, <code>learning</code>
+and <code>experiments</code> are each opt-in, and the
+<code>learning</code> comment says compilation installs no production
+scheduler</td>
+</tr>
+<tr>
+<td>The audit actor is wiki-gated</td>
+<td><code>grep -n 'cfg(feature' anda_brain/src/authz.rs</code></td>
+<td>Five of eighteen functions, including <code>wiki_actor</code> and
+<code>label_restricted</code>. <code>authorize</code> itself is
+unconditional</td>
+</tr>
+<tr>
+<td>The skills disclosure is a constant</td>
+<td><code>grep -rn 'unsupported_reason' --include='*.rs' anda_brain/src</code></td>
+<td>Set in one place, <code>settlement/mod.rs:472</code>, and asserted
+present by two tests</td>
+</tr>
+<tr>
+<td>Nothing decays a stance</td>
+<td><code>grep -rn 'confidence_decay_factor|memory_strength_decay' --include='*.rs' anda_brain/src</code></td>
+<td>The knob is <code>memory_strength_decay_factor</code>, reading the
+1.x name as an alias; the comment records that 2.0 forbids decaying a
+stance</td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>grep -c . LICENSE</code>;
+<code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>169 lines of stock Apache 2.0; the only match is the standard
+compliance clause</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/ldclabs/anda-brain/commit/3b176ca0c724a1da33f0d3eb15924b08e923ce11"><code class="commit-id" title="3b176ca0c724a1da33f0d3eb15924b08e923ce11">3b176ca0…</code></a>
+— first reading, at 210 files. Screened before reading: no auto-run
+surface, one build-time execution point, one unpinned surface and five
+manifests inside the seven-day cooldown, so nothing was installed and
+nothing was run. Apache 2.0, read in full for a rider and carrying none.
+Two marks, <code>scope_enforced</code> and <code>negative_eval</code>,
+both on Brain's own code. The reading opened <code>anda_kip</code> at
+the version this repository pins, <code>=0.13.0</code>, rather than
+describing the graph from Brain's call sites: <code>Stance</code>,
+<code>BeliefStatus</code>, <code>AssertionStatus</code> and
+<code>valid_time</code> are declared there, and are credited in the <a
+href="../anda-db/">anda-db</a> report, which reads the same source.
+<code>tombstone</code>, <code>trust_state</code> and
+<code>bitemporal</code> are therefore withheld here — the mechanisms are
+real and belong to the dependency. <code>audit_log</code> is withheld
+because the audit event log is behind a feature and
+<code>default = []</code>. <code>human_review</code> is withheld because
+the Governance rule that would earn it is prompt text in a markdown
+asset.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

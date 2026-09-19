@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 601 reports.**
+**This page covers all 602 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5381,4 +5381,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `kleos-lib/tests/store_dedup.rs`, which pairs `same_space_near_duplicate_collapses` with `different_space_is_not_deduped`. A dedup test with a scope-boundary counterpart is what stops the predicate widening silently, and it is four assertions long.
 - Maturity impression: Elastic License 2.0, 984 files across 25 Rust workspace crates shipping as one binary with an HTTP API, an MCP server, a CLI, a terminal approval UI and a desktop GUI; SQLite throughout, no Python anywhere, and a CI workflow beside a clippy workflow. Four marks — `trust_state`, `scope_enforced`, `audit_log`, `negative_eval`. `human_review` is withheld despite the review gate being the best-built mechanism here, for the dispatch reason above. `tombstone` is withheld twice over: a rejection is a status on a row, and `reconsolidations`, the table that does hold the superseded text, has two writers and no reader.
 - Study when: you are building a review gate and want to see one done carefully at the write and left open at the transport — the gap between `registry()` and `dispatch()` in `kleos-mcp/src/tools.rs` is fifteen lines apart and worth reading together.
+
+### [`anda-brain`](../systems/anda-brain/)
+
+- Best idea: **return a reason, not a zero.** `skill_settlement()` does not report that zero skill evaluations ran; it returns the sentence `memory_learning requires configured independent observers, frozen trials and replayable evaluations`, under a comment saying to preserve the counters for compatibility but *"disclose that no evaluation was performed."* Two committed tests assert the disclosure is still there. A settlement reporting zero is indistinguishable from one that evaluated and found nothing; a settlement naming its unconfigured preconditions is not.
+- Biggest risk: **the memory hygiene this project states best is prompt text.** The Maintenance asset forbids exactly the shortcuts this atlas criticises elsewhere — *"time passed → lower Assertion confidence; contradiction → delete one side; suspected duplicate → destructive merge"* — and it is a markdown document handed to a model. Only the first is enforced in Rust, where the disuse knob reaches `memory_strength` and has no path to a stance. Separately, `default = []`: the audit event log, the learning runtime and the experiment controls are all off unless a deployment opts in.
+- Most reusable component: `anda_brain/src/authz.rs`. One prelude — shard check, CWT verification, space load, space-token verification — reached identically by the HTTP and MCP channels, with the admission rule given a name (`read_public`, `read_lenient`, `credentialed`, `cwt_only`) instead of left as a scope-and-mode pairing every new endpoint has to know. The header records the launch review that found the two channels diverged, which is why the module exists.
+- Maturity impression: Apache 2.0, 210 files over a Rust service, a TypeScript Cloudflare Worker holding the prompt assets, and a KIP reference; CI at `.github/workflows/test.yml`. Two marks, `scope_enforced` and `negative_eval`, both on Brain's own code. The epistemic marks a reader might expect are real and are not this repository's: `Stance`, `BeliefStatus`, `AssertionStatus` and `valid_time` are declared in `anda_kip`, pinned here at exactly `=0.13.0`, and are credited in the [anda-db](../systems/anda-db/) report rather than counted twice.
+- Study when: you expose one store over two protocols and want to see the prelude written once; or when you are deciding what an API should say about a capability it has not configured.
 

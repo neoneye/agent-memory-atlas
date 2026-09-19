@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 601 reports.</strong></p>
+<p><strong>This page covers all 602 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24465,6 +24465,51 @@ carefully at the write and left open at the transport — the gap between
 <code>registry()</code> and <code>dispatch()</code> in
 <code>kleos-mcp/src/tools.rs</code> is fifteen lines apart and worth
 reading together.</li>
+</ul>
+<h3 id="anda-brain"><a
+href="../systems/anda-brain/"><code>anda-brain</code></a></h3>
+<ul>
+<li>Best idea: <strong>return a reason, not a zero.</strong>
+<code>skill_settlement()</code> does not report that zero skill
+evaluations ran; it returns the sentence
+<code>memory_learning requires configured independent observers, frozen trials and replayable evaluations</code>,
+under a comment saying to preserve the counters for compatibility but
+<em>"disclose that no evaluation was performed."</em> Two committed
+tests assert the disclosure is still there. A settlement reporting zero
+is indistinguishable from one that evaluated and found nothing; a
+settlement naming its unconfigured preconditions is not.</li>
+<li>Biggest risk: <strong>the memory hygiene this project states best is
+prompt text.</strong> The Maintenance asset forbids exactly the
+shortcuts this atlas criticises elsewhere — <em>"time passed → lower
+Assertion confidence; contradiction → delete one side; suspected
+duplicate → destructive merge"</em> — and it is a markdown document
+handed to a model. Only the first is enforced in Rust, where the disuse
+knob reaches <code>memory_strength</code> and has no path to a stance.
+Separately, <code>default = []</code>: the audit event log, the learning
+runtime and the experiment controls are all off unless a deployment opts
+in.</li>
+<li>Most reusable component: <code>anda_brain/src/authz.rs</code>. One
+prelude — shard check, CWT verification, space load, space-token
+verification — reached identically by the HTTP and MCP channels, with
+the admission rule given a name (<code>read_public</code>,
+<code>read_lenient</code>, <code>credentialed</code>,
+<code>cwt_only</code>) instead of left as a scope-and-mode pairing every
+new endpoint has to know. The header records the launch review that
+found the two channels diverged, which is why the module exists.</li>
+<li>Maturity impression: Apache 2.0, 210 files over a Rust service, a
+TypeScript Cloudflare Worker holding the prompt assets, and a KIP
+reference; CI at <code>.github/workflows/test.yml</code>. Two marks,
+<code>scope_enforced</code> and <code>negative_eval</code>, both on
+Brain's own code. The epistemic marks a reader might expect are real and
+are not this repository's: <code>Stance</code>,
+<code>BeliefStatus</code>, <code>AssertionStatus</code> and
+<code>valid_time</code> are declared in <code>anda_kip</code>, pinned
+here at exactly <code>=0.13.0</code>, and are credited in the <a
+href="../systems/anda-db/">anda-db</a> report rather than counted
+twice.</li>
+<li>Study when: you expose one store over two protocols and want to see
+the prelude written once; or when you are deciding what an API should
+say about a capability it has not configured.</li>
 </ul>
         </article>
       </div>
