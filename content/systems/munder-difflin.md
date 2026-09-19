@@ -7,12 +7,13 @@ page_kind: system
 source_name: "chaitanyagiri/munder-difflin"
 source_url: https://github.com/chaitanyagiri/munder-difflin
 archive_name: "chaitanyagiri--munder-difflin"
-revision: bdf524ecfb319b4f10cebde0c3539a1c75aeea9a
-revision_url: https://github.com/chaitanyagiri/munder-difflin/commit/bdf524ecfb319b4f10cebde0c3539a1c75aeea9a
-analyzed_at: 2026-09-15
-capabilities: "audit_log"
+revision: c7c8921f4491104d342861e32fa214e486442304
+revision_url: https://github.com/chaitanyagiri/munder-difflin/commit/c7c8921f4491104d342861e32fa214e486442304
+analyzed_at: 2026-09-19
+capabilities: "audit_log, negative_eval"
 capability_evidence:
-  audit_log: "the hive event log | src/main/hive.ts:10, src/main/reflect.ts:246 and :255 | log.jsonl is described in the source as an append-only event log and carries memory mutations — condense with oldBytes/newBytes/evicted/kept/hoisted and the backup path, condense-abort with a named reason, plus compact, archive and drop — alongside the messaging events | none"
+  audit_log: "the hive event log | src/main/hive.ts:10, src/main/reflect.ts:246 and :255 | log.jsonl is described in the source as an append-only event log and carries memory mutations — condense with oldBytes/newBytes/evicted/kept/hoisted and the backup path, condense-abort with a named reason, plus compact, archive and drop — alongside the messaging events | test/agent-exit-record.test.cjs:74-96 pins two properties of the file itself: a clean agent exit writes no row at all, and a placeholder API key placed in provider output must not appear in it — `assert.ok(!raw.includes(secret), 'log.jsonl must never carry raw provider output')` — with the raw tail written to a gitignored crashes/ dump the row only points at. test/hive-unknown-recipient.test.cjs:57-66 pins that a message nobody received must not read as delivered. Nothing exercises the condense and condense-abort rows, which are the memory mutations the mark rests on"
+  negative_eval: "the hive log and the palace reaper | test/agent-exit-record.test.cjs:84-96, test/hive-unknown-recipient.test.cjs:57-66, test/palace-reap.test.cjs:26-58, :71-84 | committed cases assert that material must not appear or must not be acted on: raw provider output carrying a secret must not reach log.jsonl, a message nobody received must not read as delivered, and the reaper must never treat a live collection directory, a palace file such as chroma.sqlite3, or a near-miss suffix as a quarantine candidate. The reaper cases run against real directory names taken from an affected palace, including a Finder-style duplicate, under a comment naming the stake — 'The whole risk of this feature is deleting something that is not ours' | subsystem: none of these is a negative retrieval assertion under the strict reading. They guard a write decision, what may enter the log, and a destruction decision, what may be deleted — not what a query returns. The condenser's own gate carries no case at all, and nothing runs the suite on the way in: ci.yml never invokes it"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -27,7 +28,7 @@ matrix:
   background: "An in-process timer condensing oversized memory files, and a miner re-indexing changed files into MemPalace. Both live in the Electron main process because launchd-spawned shells are denied the folder grant on macOS"
   trust: "None. A pinned region is protected from condensation, which is a retention property rather than an epistemic one; nothing withholds a memory from being read"
   strengths: "A verification gate over a model-written rewrite that names six failure modes, requires the kept sections to round-trip byte-for-byte, treats a no-op condense as a failure, and leaves the original untouched whenever any check fails"
-  risks: "The gate is exported and testable and the repository contains no tests at all; semantic recall belongs to a separate project and vanishes silently when it is not installed; and nothing records a correction, so a wrong line survives until a model summarises it away"
+  risks: "The condensation gate is exported, pure and unexercised — 110 test files sit in `test/` and none of them loads `reflect.ts`, and nothing runs the suite on the way in because CI typechecks and builds without it; semantic recall belongs to a separate project and vanishes silently when it is not installed; and nothing records a correction, so a wrong line survives until a model summarises it away"
 ---
 
 ## 1. Executive Summary
@@ -75,8 +76,9 @@ backup path, `condense-abort` with a named reason, plus `compact`, `archive` and
 `drop`. Withheld and worth naming: scope is *deliberately* absent between agents,
 because the hive is meant to share; nothing records a rejected value or a
 correction; the pinned region is a retention rule rather than an epistemic state;
-and **the repository contains no tests at all**, which lands hardest on the one
-mechanism most worth testing.
+and **the one mechanism most worth testing is the one the suite does not
+reach**: 110 test files sit under `test/`, three of them on the memory
+subsystem, and none of them loads the condenser.
 
 ## 2. Mental Model
 
@@ -156,8 +158,8 @@ processes — query it instead of guessing."*
 markdown holds what an agent observed and wrote; this holds documents somebody
 handed the organisation. Nothing an agent learns is written back — the ingestion
 surface is in-app over IPC, and the agent's CLI is search, list and get. So the
-system now has a belief store it maintains and a corpus index it only reads, kept
-in separate stores with separate access paths, which is a cleaner separation than
+system keeps a belief store it maintains apart from a corpus index it only reads —
+separate stores with separate access paths, which is a cleaner separation than
 several systems in this atlas manage with one collection and a `type` column.
 
 **It is not a graph.** The name promises structure the implementation does not
@@ -220,11 +222,14 @@ Each failure returns a named reason — `structure-missing-region`,
 the log. The combination of a lossless backup taken first and a rejection that
 changes nothing means the worst case of a bad model pass is a log line.
 
-Against that: **there are no tests.** `verify()` is exported, pure, and takes a
-plain argument object — it is the easiest function in the repository to test, and
-nothing does. The same holds for `parseMemory`. A gate whose whole purpose is to
-catch a non-deterministic component is a gate that should be pinned by cases, and
-the repository has none of any kind.
+Against that: **nothing exercises it.** `verify()` is exported, pure, and takes
+a plain argument object — it is the easiest function in the repository to test,
+and no test file loads it. The same holds for `parseMemory`. This is not a
+project without a test habit: 110 files under `test/` cover the message bus, the
+agent lifecycle and the palace reaper, several of them with the kind of must-not
+case a gate like this one calls for. A gate whose whole purpose is to catch a
+non-deterministic component is a gate that should be pinned by cases, and this
+one is reached only by running the app.
 
 The other risk is quieter. Condensation is lossy by design and recursive: a
 summary of summaries drifts, and nothing measures the drift. Pinning is the only
@@ -232,14 +237,46 @@ defence, and it is manual.
 
 ## 10. Tests, Evals, and Benchmarks
 
-None. No test file, no eval, no benchmark, no paper. Six blog posts under
-`docs/blog/` and `blog/src/posts/` discuss agent memory — *"markdown-first agent
-memory"*, *"compressing agent memory"*, *"keep agent semantic memory clean"* —
-and they are marketing prose about the design rather than evidence about it.
+**110 test files** under `test/`, run by `npm run test:focused` —
+`node --test test/*.test.cjs`. Three reach the memory subsystem:
+`memory-rearm.test.cjs` loads `src/main/memory.ts`, `palace-reap.test.cjs` loads
+`src/main/palaceReap.ts`, and sixteen files load `src/main/hive.ts`, which owns
+the log.
 
-For a project whose memory story rests on an LLM rewriting a file in place, the
-distance between the care in `verify()` and the absence of a single case
-exercising it is the widest gap in the tree.
+They are careful tests, and they lead with what must *not* happen.
+`palace-reap.test.cjs` opens on the live collection directory, `chroma.sqlite3`
+and a near-miss suffix, each asserted never to be a reaping candidate, against
+real directory names from an affected palace — including a Finder-style
+duplicate, because *"' 2' duplicates DO occur"* — under a comment naming the
+stake: *"The whole risk of this feature is deleting something that is not
+ours."* `agent-exit-record.test.cjs` puts a placeholder API key in provider
+output and asserts it never reaches `log.jsonl`, which the hive commits.
+
+**And none of them touches the condenser.** `verify()` and `parseMemory` live in
+`src/main/reflect.ts`; no test file in the repository loads that module. The six
+checks in section 9 — including the byte-for-byte round-trip, the one most worth
+pinning — are exercised only by running the app.
+
+**Nor does anything run the suite on the way in.** `.github/workflows/ci.yml`
+has two jobs: `typecheck`, which runs `npm run typecheck` and a release-link
+check, and `build`, which is marked `continue-on-error: true` and so cannot
+block. Neither invokes `test:focused`. The suite is held up by convention
+instead — a line in `CONTRIBUTING.md` and an unticked box in the pull-request
+template reading `npm run test:focused` passes.
+
+Read that against `pr-evidence.yml`, which exists to make precisely this kind of
+convention mechanical. It fails a pull request within seconds when the
+description carries no before-and-after evidence, comments to say what is
+missing, and keeps the waiver behind a maintainer-applied label because
+*"a contributor CANNOT grant themselves this."* Its header is explicit that the
+point is *"what makes that a rule rather than a request."* This project knows how
+to turn a rule into a merge gate. The rule it chose to gate is about
+screenshots.
+
+No eval, no benchmark, no paper. Six blog posts under `docs/blog/` and
+`blog/src/posts/` discuss agent memory — *"markdown-first agent memory"*,
+*"compressing agent memory"*, *"keep agent semantic memory clean"* — and they
+are marketing prose about the design rather than evidence about it.
 
 ## 11. For Your Own Build
 
@@ -265,7 +302,12 @@ exercising it is the widest gap in the tree.
 
 - **Shipping an unexercised gate.** The care in `verify()` is real and nothing
   proves it still works; a checker with no negative control looks identical to a
-  clean one.
+  clean one. The lesson is sharper here than in a project with no tests at all:
+  the must-not cases this gate needs already exist a directory away, written for
+  the reaper.
+- **Gating the convention you can see over the one that can break you.** A
+  merge-blocking check for before-and-after screenshots beside a test suite no
+  workflow runs is a defensible order of work exactly once.
 - **A dependency that disappears quietly.** Semantic recall degrading to a no-op
   when a binary is missing means the difference between "the team can recall by
   meaning" and "it cannot" is invisible at runtime.
@@ -286,7 +328,11 @@ machine and nothing where one agent's material must stay away from another's.
 
 ## 12. Open Questions
 
-- `verify()` is pure and exported. What has to happen for it to get a test?
+- `verify()` is pure and exported, in a repository with 110 test files. What
+  has to happen for it to get one?
+- `test:focused` is named in `CONTRIBUTING.md` and the PR template but in no
+  workflow. Is that deliberate — a macOS-runner cost, a flake budget — or has
+  nobody noticed the suite is unenforced?
 - Condensation is recursive. What does a summary of summaries look like after
   fifty cycles, and does anything sample it?
 - Semantic recall vanishes silently without the MemPalace binary. Should the UI
@@ -310,7 +356,29 @@ machine and nothing where one agent's material must stay away from another's.
 - `docs/blog/`, `blog/src/posts/` — six posts about agent memory, prose rather
   than evidence
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit. This table did not exist
+for the first three readings of this repository, and its absence is why a false
+claim about the test suite survived all three.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| ~~The repository contains no tests at all~~ — **false, corrected 2026-09-19** | `ls test/*.test.cjs \| wc -l` | **110**, and `git rev-parse <first-pin>:test` matches this pin, so they were there at every reading that denied them. The claim carried no command in this table for three readings |
+| Nothing loads the condenser | `grep -rln "reflect" test/` | Nothing. `verify()` and `parseMemory` are in `src/main/reflect.ts`; the two files matching `verify` elsewhere in `test/` are a comment and a variable named `verifyAt` about an installer digest |
+| Which memory modules the suite does load | `grep -rho "loadTs('[^']*')" test/ \| sort \| uniq -c \| sort -rn` | `src/main/hive.ts` in 16 files, `src/main/palaceReap.ts` in 2, `src/main/memory.ts` in 2 |
+| No workflow runs the suite | `grep -rn "test:focused" .github/` | Nothing in `.github/workflows/`; the only hits are `CONTRIBUTING.md`, `PULL_REQUEST_TEMPLATE.md` and `CHANGELOG.md` |
+| The build job cannot block | read `.github/workflows/ci.yml` | `build` is `continue-on-error: true`; `typecheck` runs `npm run typecheck` and `npm run check:links` and nothing else |
+| The memory subsystem did not move since the previous pin | `git diff --stat <prev-pin>..HEAD -- src/main/reflect.ts src/main/memory.ts src/main/hive.ts test/` | Empty across 20 commits; `src/main` and `test` tree hashes are identical at both |
+| Nothing records a correction | `grep -rn "correct\|retract\|supersede" src/main/reflect.ts src/main/memory.ts` | Nothing. Condensation is the only rewrite |
+
 ## History
+
+**2026-09-19** — [`c7c8921f4491104d342861e32fa214e486442304`](https://github.com/chaitanyagiri/munder-difflin/commit/c7c8921f4491104d342861e32fa214e486442304) — re-pinned 20 commits on. Screened again: no auto-run surface, one build-time execution point, three unpinned surfaces and nothing inside the cooldown; nothing was installed and nothing was run. `src/main` and `test/` are byte-identical to the previous pin by tree hash, so nothing about this system changed — **the reading did.** Three previous readings of this repository stated that it contains no tests. It contains 110, in a top-level `test/` directory, at every one of those pins. The claim was load-bearing: it stood in the executive summary, in the risks field, in section 9 as the counterweight to the condensation gate, and as the whole of section 10.
+
+What replaces it is narrower and checkable. The suite does not load `reflect.ts`, so the finding about the gate being unexercised survives intact — and lands harder, because the must-not cases such a gate needs are already written a directory away for the palace reaper. `negative_eval` is **added** on those cases and on two assertions about the log itself: a placeholder API key in provider output must never reach `log.jsonl`, and a message nobody received must not read as delivered. `audit_log`'s evidence gains the tests that pin the file, and keeps the gap that nothing exercises its condense rows. Also new to the reading: `test:focused` appears in `CONTRIBUTING.md` and the pull-request template but in no workflow, while `pr-evidence.yml` blocks a merge over missing screenshots — the project gates the convention it can see.
+
+This report now carries a Recorded Searches appendix. It had none, which is how a claim nobody could re-run survived three readings.
 
 **2026-09-15** — [`bdf524ecfb319b4f10cebde0c3539a1c75aeea9a`](https://github.com/chaitanyagiri/munder-difflin/commit/bdf524ecfb319b4f10cebde0c3539a1c75aeea9a) — 285 commits on, 2026-09-14, at v0.4.6; most are blog posts and a wave of merged contributor fixes on 6 September. Screened before reading: no auto-run surface, one build-time execution point, three unpinned surfaces and nothing inside the cooldown; nothing was installed or run. `src/main/memory.ts`, `reflect.ts` and `knowledge.ts` are byte-identical to the previous pin, so the condensation gate, the event log and the document store stand as described. The memory-adjacent changes are operational: malformed outbox JSON lines recovered in the hive, a stale head lock cleared, abnormal agent exits recorded to `log.jsonl` as code, signal and a path to a gitignored crash tail, and transcript usage parsed once per file rather than once per querying agent. `audit_log` unchanged.
 
