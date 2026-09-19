@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **590 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **591 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -38,6 +38,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/agentic-graphrag-blueprint/"><span class="az-id">Agentic GraphRAG Blueprint</span><span class="az-what">One delete, four leaks</span><code class="az-repo">sebastianbrzustowicz/Agentic-GraphRAG-Blueprint</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/agentictrading/"><span class="az-id">AgenticTrading</span><span class="az-what">A memory graph nothing scopes</span><code class="az-repo">Open-Finance-Lab/AgenticTrading</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/agentmemory/"><span class="az-id">agentmemory</span><span class="az-what">Hook-native coding-agent memory</span><code class="az-repo">rohitg00/agentmemory</code><span class="az-caps"><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/agent-memory-dotnet/"><span class="az-id">AgentMemory for .NET</span><span class="az-what">Neo4j memory library</span><code class="az-repo">joslat/agent-memory-dotnet</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/agentmemory-v4/"><span class="az-id">agentmemory V4</span><span class="az-what">The run log names a different dataset from the claim</span><code class="az-repo">jordanmccann/agentmemory</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/agentos-framerslab/"><span class="az-id">AgentOS</span><span class="az-what">Ten mechanisms from the psychology, one from the rubric</span><code class="az-repo">framerslab/agentos</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/tanglies-agentos/"><span class="az-id">AgentOS (Tanglies)</span><span class="az-what">A global keyword memory the model writes and every session reads</span><code class="az-repo">Tanglies/AgentOS</code><span class="az-caps"></span></a></li>

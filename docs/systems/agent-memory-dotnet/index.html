@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A .NET agent-memory library over
+Neo4j whose point-in-time recall carries two independent clocks in one
+query, whose facts merge on a canonical triple key computed in C#
+because the database's own lowercase function disagrees with it, and
+which clears an invalidation when the world asserts the same fact
+again.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AgentMemory for
+.NET — Agent Memory Atlas">
+    <meta property="og:description" content="A .NET agent-memory library
+over Neo4j whose point-in-time recall carries two independent clocks in
+one query, whose facts merge on a canonical triple key computed in C#
+because the database's own lowercase function disagrees with it, and
+which clears an invalidation when the world asserts the same fact
+again.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AgentMemory for
+.NET — Agent Memory Atlas">
+    <meta name="twitter:description" content="A .NET agent-memory
+library over Neo4j whose point-in-time recall carries two independent
+clocks in one query, whose facts merge on a canonical triple key
+computed in C# because the database's own lowercase function disagrees
+with it, and which clears an invalidation when the world asserts the
+same fact again.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AgentMemory for .NET — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AgentMemory for .NET",
+      "description": "A .NET agent-memory library over Neo4j whose point-in-time recall carries two independent clocks in one query, whose facts merge on a canonical triple key computed in C# because the database's own lowercase function disagrees with it, and which clears an invalidation when the world asserts the same fact again.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Neo4j memory library</p>
+          <h1>AgentMemory for .NET</h1>
+          <p class="document-deck">A .NET agent-memory library over
+Neo4j whose point-in-time recall carries two independent clocks in one
+query, whose facts merge on a canonical triple key computed in C#
+because the database's own lowercase function disagrees with it, and
+which clears an invalidation when the world asserts the same fact
+again.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/joslat/agent-memory-dotnet">
+              <span>Source</span>
+              <strong>joslat/agent-memory-dotnet</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/joslat/agent-memory-dotnet/commit/1fe5105ce9347ccc629d72a1f8560538a250fceb" title="1fe5105ce9347ccc629d72a1f8560538a250fceb">
+              <span>Analyzed revision</span>
+              <code>1fe5105c…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/joslat--agent-memory-dotnet" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>joslat--agent-memory-dotnet</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>This is a .NET library — sixteen projects, a NuGet meta-package, an
+MCP server, Semantic Kernel and Agent Framework adapters — storing agent
+memory as a Neo4j graph of entities, subject-predicate-object facts and
+preferences.</p>
+<p>Four marks, and the through-line is that the interesting decisions
+are all written down at the point they were made.</p>
+<p><strong>Two clocks, in one query.</strong> The point-in-time fact
+search binds a system clock against
+<code>created_at</code>/<code>invalidated_at</code> and a valid-time
+clock against <code>valid_from</code>/<code>valid_until</code>, applies
+both, and splices the owner clause in beside them. Entities take only
+the transaction clock because they have no validity window, and the
+docstring says so. The separation reaches the rendered answer: a
+superseded fact comes back as its own small record carrying both closing
+clocks, and rendering prefers the valid-time date, because <em>"a reader
+asking 'since when?' means the world, not the database."</em></p>
+<p><strong>Facts merge on a canonical key computed outside the
+database.</strong> Subject, predicate, object and owner are each
+canonicalised in C# — lowercased <em>and</em> whitespace-collapsed — and
+the write path merges on those four columns. The lookup used to ask a
+different question, matching <code>toLower(f.subject)</code>, and the
+comment explains why that was a correctness bug rather than a
+performance one: the two disagree outright on U+0130, so the lookup
+<em>"could find a different fact than a MERGE would collapse
+onto."</em></p>
+<p><strong>Salience counts assertions, not retrievals.</strong>
+<code>mention_count</code> increments once per ingestion that re-states
+a triple, and the comment names what it refuses to be: ranking on the
+system's own retrievals <em>"is a rich-get-richer loop that reinforces
+whatever already ranks highly and calls it learning."</em></p>
+<p><strong>The isolation tests assert all four outcomes in a
+row.</strong> Two owners and a shared row; each owner finds their own
+and the shared one, and nothing of the other's.</p>
+<p>What is not here is a rejection that survives. Re-asserting an
+invalidated fact sets <code>invalidated_at</code> back to null,
+deliberately — <em>"a present-time positive assertion restores live
+recall."</em></p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory is a graph of three node families, and almost every mechanism
+is a property on those nodes rather than a separate table.</p>
+<p>A fact's identity is its canonical triple plus its owner. Everything
+else follows from that: re-extraction collapses rather than duplicating,
+confidence is earned by corroboration rather than overwritten by
+whichever extraction ran last, and the mention count is a record of how
+often the world said the thing.</p>
+<p>Time is two properties and two more: when the row was created and
+when the system stopped believing it, alongside when the fact started
+and stopped holding. A read either asks the live question — similarity,
+invalidation, owner — or the as-of question, which is where both clocks
+come in.</p>
+<p>Deletion is not part of the model. Consolidation, supersession and
+the destructive decay mode all stamp <code>invalidated_at</code>;
+history reads can ask for those rows back.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — extraction canonicalises each triple in C# and merges facts on subject, predicate, object and owner keys, so a re-extracted triple collapses onto the existing node, increments a mention count that counts assertions rather than retrievals, earns confidence by corroboration, and clears any invalidation stamp; live recall filters on similarity, invalidation and owner while the point-in-time path binds a transaction clock and a valid-time clock as separate parameters in the same query; consolidation, preference supersession and destructive decay stamp an invalidation rather than deleting, and a history read decides with a flag whether those rows come back</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: extraction canonicalises each triple in C# and merges facts on subject, predicate, object and owner keys, so a re-extracted triple collapses onto the existing node, increments a mention count that counts assertions rather than retrievals, earns confidence by corroboration, and clears any invalidation stamp; live recall filters on similarity, invalidation and owner while the point-in-time path binds a transaction clock and a valid-time clock as separate parameters in the same query; consolidation, preference supersession and destructive decay stamp an invalidation rather than deleting, and a history read decides with a flag whether those rows come back
+flowchart TD
+    CONV[&quot;conversation&quot;] --&gt; EXT[&quot;extraction&lt;br/&gt;LLM or Azure Language&quot;]
+    EXT --&gt; CANON[&quot;MemoryTripleCanonicalizer&lt;br/&gt;lowercase + collapse whitespace&lt;br/&gt;in C#, never in Cypher&quot;]
+    CANON --&gt; MERGE{&quot;MERGE on&lt;br/&gt;subject_key · predicate_key&lt;br/&gt;object_key · owner_key&quot;}
+    MERGE --&gt;|ON CREATE| NEW[&quot;mention_count = 1&quot;]
+    MERGE --&gt;|ON MATCH| UPD[&quot;confidence earns by corroboration&lt;br/&gt;mention_count + 1&lt;br/&gt;invalidated_at = null&quot;]
+
+    G[(&quot;Neo4j&lt;br/&gt;Entity · Fact · Preference&lt;br/&gt;owner_id · valid_from/valid_until&lt;br/&gt;created_at · invalidated_at&quot;)]
+    NEW --&gt; G
+    UPD --&gt; G
+
+    subgraph Reads
+        LIVE[&quot;live recall&lt;br/&gt;similarity + invalidated_at IS NULL&lt;br/&gt;+ owner clause&quot;]
+        ASOF[&quot;point-in-time recall&lt;br/&gt;$systemAsOf binds created/invalidated&lt;br/&gt;$validAsOf binds valid_from/valid_until&quot;]
+        HIST[&quot;history read&lt;br/&gt;IncludeInvalidated decides&quot;]
+    end
+    G --&gt; LIVE
+    G --&gt; ASOF
+    G --&gt; HIST
+    LIVE --&gt; PREV[&quot;SupersededFact&lt;br/&gt;both clocks, renders the valid-time date&quot;]
+
+    subgraph Background
+        CONS[&quot;consolidation&lt;br/&gt;duplicate loser invalidated&quot;]
+        DEC[&quot;decay&lt;br/&gt;non-destructive by default&quot;]
+        SUP[&quot;preference supersession&lt;br/&gt;loser invalidated&quot;]
+    end
+    CONS --&gt; G
+    DEC --&gt; G
+    SUP --&gt; G
+
+    ISO{&quot;IMemoryIsolationPolicy&lt;br/&gt;StrictMultiTenant&quot;} --&gt;|no owner scope| THROW[&quot;MemoryOwnerScopeRequiredException&lt;br/&gt;named operation&quot;]
+    ISO --&gt; LIVE
+    ISO --&gt; ASOF</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Scope and isolation:</strong>
+<code>src/AgentMemory.Abstractions/Options/MemoryScope.cs</code>,
+<code>Options/MemoryIsolationMode.cs</code>,
+<code>Exceptions/MemoryOwnerScopeRequiredException.cs</code>.</li>
+<li><strong>Time:</strong>
+<code>src/AgentMemory.Neo4j/Queries/TemporalQueries.cs</code>,
+<code>Abstractions/Options/ValidTimeMode.cs</code>,
+<code>Abstractions/Options/TemporalValidityMode.cs</code>.</li>
+<li><strong>Fact identity and upsert:</strong>
+<code>src/AgentMemory.Neo4j/Queries/FactQueries.cs</code>.</li>
+<li><strong>Lifecycle:</strong>
+<code>src/AgentMemory.Abstractions/Domain/History/MemoryHistory.cs</code>,
+<code>Domain/LongTerm/SupersededFact.cs</code>,
+<code>Neo4j/Queries/ConsolidationQueries.cs</code>,
+<code>Queries/DecayQueries.cs</code>.</li>
+<li><strong>Surfaces:</strong> <code>src/AgentMemory.McpServer/</code>,
+<code>src/AgentMemory.SemanticKernel/</code>,
+<code>src/AgentMemory.AgentFramework/</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Three node families share a shape: an embedding, a confidence, an
+owner id, a created stamp, an updated stamp and a nullable invalidation
+stamp. Facts add the canonical keys, a validity window, source message
+ids and the mention count.</p>
+<p>The canonical keys are the part worth copying. They exist because the
+canonicaliser and Cypher's <code>toLower</code> are different functions,
+and the difference is not theoretical — the comment names U+0130 and
+notes that the C# form also collapses whitespace runs. Keeping the
+computation on one side of the wire means the read and the write cannot
+drift apart, and the unit test asserts exactly that: the lookup must
+filter the same four columns the merge uses, and <code>toLower</code>
+must not appear in either shape.</p>
+<p>The composite index wants every column, not a prefix, which is why
+the owner clause in that one query filters <code>owner_key</code> rather
+than <code>owner_id</code> — and why an unscoped lookup is documented as
+still planning a scan, <em>"deliberately so: with no owner there is no
+fourth column to filter."</em></p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Live recall is vector similarity per family with an owner clause and
+an invalidation clause. Point-in-time recall adds the second clock.
+GraphRAG context assembly walks the graph and is covered by its own
+isolation test.</p>
+<p>The honest gap is documented in the enum that exists to close it:
+live recall does <em>not</em> filter on valid time by default, so a fact
+valid from six months hence is returned today and a fact whose
+<code>valid_until</code> has passed is returned <em>"forever"</em>. The
+remarks explain why that was inert until recently — no extractor wrote
+validity bounds, so the clauses would have matched nothing — and why
+shipping the writer made the defect reachable from configuration. Both
+new modes default to off, and the reason given is that prompt bytes are
+a measured variable fingerprinted into evaluation runs, so a default
+that shifted them <em>"would invalidate sealed bases silently."</em></p>
+<p>That reasoning also produces the sharpest risk statement in the tree:
+because live recall filters on these columns, a fabricated
+<code>valid_until</code> does not add noise, it <em>"silently removes a
+memory from every future answer"</em> — which is why the extraction
+instruction tells the model to omit validity rather than guess it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Extraction canonicalises, then merges. On create the mention count
+starts at one; on match, confidence is increased by a configurable
+corroboration alpha rather than replaced, validity bounds are coalesced
+so re-extraction never clears a supersession window, the mention count
+increments, and <code>invalidated_at</code> is reset.</p>
+<p>The batch path merges on the same four keys as the single path, and
+the docstring records why: it used to merge on <code>id</code>,
+<em>"which let a re-extracted triple with a fresh id create a second
+node."</em></p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server exposing tools, resources and prompts; adapters for
+Semantic Kernel and the Microsoft Agent Framework; a CLI; connectors;
+sample projects and a package-consumer test matrix. MIT, version
+1.5.0.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded</strong>, on a narrow but real
+mechanism: a stored invalidation stamp, surfaced as a two-value status,
+with a history read whose flag decides whether invalidated rows are
+returned. The limit is vocabulary — two states, and nothing
+distinguishing a dedup loser from a retraction.</p>
+<p><strong>Bi-temporal — awarded.</strong> Two clocks as separate
+parameters in one query, and a predecessor type that keeps both and
+knows which one to render.</p>
+<p><strong>Scope enforced — awarded</strong>, with the opt-in caveat in
+the evidence. The strict mode is the part worth naming: a missing owner
+scope becomes a dedicated exception carrying the operation name, so the
+failure is visible at the call rather than as a quietly broader result
+set.</p>
+<p><strong>Negative eval — awarded</strong>, on integration cases
+against a real Neo4j with their positive controls in the same block.</p>
+<p><strong>Tombstone — withheld, and the code makes the call for
+me.</strong> Fact identity <em>is</em> value-keyed — the canonical
+triple plus owner — and the lookup carries no liveness filter, so a
+re-extracted triple does find the invalidated node rather than creating
+a new one. Everything a tombstone needs is in place except the refusal:
+<code>ON MATCH SET</code> includes <code>f.invalidated_at = null</code>,
+and the batch path's docstring states the intent plainly —
+<em>"invalidated_at is reset on re-assert (a present-time positive
+assertion restores live recall)."</em> So a retraction lasts exactly
+until the next extraction that says the same thing. That is a defensible
+product decision for a store whose invalidations mostly come from
+deduplication, and it is the opposite of what this mark asks for.</p>
+<p><strong>Audit log — withheld</strong>, and the rubric's exclusion is
+the one that applies: logs of retrieval do not count. The trail here is
+<code>:MemoryReadAudit</code>, one row per surfacing, and the codebase
+is explicit that it is deliberately <em>not</em> the salience signal. No
+append-only record of mutations exists; history is derived from the
+nodes' own stamps and supersession edges.</p>
+<p><strong>Human review — withheld.</strong> There is a
+<code>memory-review</code> MCP prompt, and its text is a numbered
+procedure addressed to the agent: call search, call list-sessions,
+compile a summary, flag contradictions. No person adjudicates anything,
+and nothing gates a write on approval.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong> and no <code>CITATION.cff</code>.</p>
+<p>Five test projects. The unit suite is large and much of it asserts
+the <em>text</em> of emitted Cypher — that a clause is present, that
+<code>toLower</code> is absent, that all four index columns are
+filtered. That is a reasonable way to pin a query builder and a weak way
+to pin behaviour, which is why the marks rest on the integration suite
+instead.</p>
+<p>The evaluation apparatus is the unusual part. A dedicated LongMemEval
+harness sits under <code>tools/</code>, with its own unit project of
+over a hundred files covering ablations, answer-presence gates, prompt
+byte-identity, seed wiring, voting and quote forcing, and abstention
+accuracy. That last one carries the most careful distinction in the
+repository: the sufficiency metric's absent-count is a ground-truth
+<em>input</em>, identical across arms by construction, while abstention
+accuracy is an <em>outcome</em>, and reporting only the first
+<em>"invites reading a class balance as a result."</em> It also records
+that across fifty-two runs before typed sampling shipped, no abstention
+question had ever been drawn.</p>
+<p>No benchmark result is committed, and the architecture document marks
+several tiers <strong>BUILT and WIRED but not MEASURED</strong>, naming
+working memory as having had no LongMemEval run at all. A repository
+that labels its own unmeasured surfaces is doing something most do
+not.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Make the read ask the question the write answers.</strong>
+Canonicalise on one side of the wire and filter the canonical columns; a
+lookup that lowercases in the database and a merge that canonicalises in
+the application are two different notions of the same key.</li>
+<li><strong>Count assertions, not retrievals.</strong> A salience signal
+fed by your own recall reinforces whatever already ranks, which is a
+loop rather than learning.</li>
+<li><strong>Let corroboration increase confidence rather than replace
+it</strong>, so the latest extraction's number is not automatically the
+stored one.</li>
+<li><strong>Turn a missing scope into a named exception.</strong>
+Catching <code>OwnerScopeRequired</code> at the call is worth more than
+noticing a broad read later.</li>
+<li><strong>Say which clock you render.</strong> A user asking "since
+when?" wants valid time; the transaction clock is the fallback, not the
+answer.</li>
+<li><strong>Decide explicitly whether a retraction survives
+re-assertion</strong>, and put the decision in the query rather than
+leaving it to whichever branch the merge happens to take.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Clearing <code>invalidated_at</code> on re-assert is right for a
+dedup loser and questionable for a user retraction, and both share the
+field. Would a reason on the invalidation — retracted versus
+deduplicated — let the merge treat them differently?</li>
+<li>Live recall ignores valid time unless the flag is set, and the
+writer for those columns now exists. What is the migration story for a
+store that enabled extraction before enabling the read gate?</li>
+<li>The architecture document marks several tiers as unmeasured. Which
+of them does the next LongMemEval run cover, and does the abstention
+sampling change the baseline enough that earlier numbers are not
+comparable?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Scope, isolation and exceptions:
+<code>src/AgentMemory.Abstractions/Options/MemoryScope.cs</code>,
+<code>Options/MemoryIsolationMode.cs</code>,
+<code>Options/MemoryIsolationOptions.cs</code>,
+<code>Exceptions/MemoryOwnerScopeRequiredException.cs</code></li>
+<li>Time: <code>src/AgentMemory.Neo4j/Queries/TemporalQueries.cs</code>,
+<code>src/AgentMemory.Abstractions/Options/ValidTimeMode.cs</code>,
+<code>Options/TemporalValidityMode.cs</code>,
+<code>Options/TemporalQueryClocks.cs</code></li>
+<li>Fact identity and upsert:
+<code>src/AgentMemory.Neo4j/Queries/FactQueries.cs</code></li>
+<li>Lifecycle and history:
+<code>src/AgentMemory.Abstractions/Domain/History/MemoryHistory.cs</code>,
+<code>Domain/LongTerm/SupersededFact.cs</code>,
+<code>src/AgentMemory.Neo4j/Queries/ConsolidationQueries.cs</code>,
+<code>Queries/DecayQueries.cs</code>,
+<code>Queries/PreferenceQueries.cs</code>,
+<code>Queries/HistoryQueries.cs</code></li>
+<li>Surfaces: <code>src/AgentMemory.McpServer/</code>,
+<code>src/AgentMemory.SemanticKernel/</code>,
+<code>src/AgentMemory.AgentFramework/</code></li>
+<li>Tests:
+<code>tests/AgentMemory.Tests.Integration/ShakedownEndToEndTests.cs</code>,
+<code>Integration/Compatibility/TckMirroredBehaviorTests.cs</code>,
+<code>Integration/GraphRag/GraphRagAdapterIntegrationTests.cs</code>,
+<code>tests/AgentMemory.Tests.Unit/Queries/FindByTripleMergeKeyTests.cs</code>,
+<code>tests/AgentMemory.Tests.Unit.LongMemEval/</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/joslat/agent-memory-dotnet/commit/1fe5105ce9347ccc629d72a1f8560538a250fceb"><code class="commit-id" title="1fe5105ce9347ccc629d72a1f8560538a250fceb">1fe5105c…</code></a>
+— first reading, at the head of <code>main</code>, version 1.5.0.
+Screened with <code>scripts/screen_repo.py</code> before anything was
+read: three auto-run surfaces (a Copilot instructions file and two VS
+Code settings files), four unpinned MSBuild reference surfaces in the
+package-consumer projects, no build-time execution path, and an
+<code>AGENTS.md</code> addressed to a reading agent — read as data
+throughout. Nothing was installed, built or run. MIT. Four marks. The
+reading covered the node model and its canonical keys, the upsert's
+create and match branches, the point-in-time queries and both clocks,
+the scope record and the isolation policy, the history surface and its
+invalidation flag, the consolidation, decay and preference supersession
+writers, and the integration tests the marks rest on; the connectors,
+analytics, enrichment and NAMS trees were read as context rather than as
+subject. Three marks are withheld with reasons in section 9, and the one
+to read is <code>tombstone</code>: fact identity is genuinely
+value-keyed and the lookup carries no liveness filter, so everything the
+mark asks for is present except the refusal — the merge's match branch
+sets the invalidation stamp back to null, with the intent stated in the
+batch path's own docstring. Two reports in this corpus already carry the
+name <code>agentmemory</code>; both are different projects by different
+authors and neither is this one.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
