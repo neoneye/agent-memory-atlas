@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 587 reports.</strong></p>
+<p><strong>This page covers all 588 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -23454,6 +23454,84 @@ philosophy is explicit that the graph supplies evidence and the agent's
 prompt decides what weight to give it. Nor is the decay flag a
 tombstone: it is keyed on the row and no write path consults it, so the
 same sentence extracted again simply becomes a new node.</li>
+</ul>
+<h3 id="orbital"><a
+href="../systems/orbital/"><code>orbital</code></a></h3>
+<ul>
+<li>Best idea: <strong>never let the writer self-report who
+acted.</strong> A close the agent writes into ASKS.md is stamped
+<code>by:agent</code> and today's date even when the agent typed
+<code>by:user</code> and a past date, and a close arriving with no actor
+at all is folded as <code>agent</code> on the stated ground that it came
+from outside Orbital and should stay undoable. One line of code, and it
+is what makes every other guarantee about who closed something mean
+anything.</li>
+<li>Second idea: <strong>refuse the re-add in the write path, not in the
+prompt.</strong> An open whose normalised text matches an ask the user
+dropped is not appended — the agent gets back the id, the date of the
+drop and the one legitimate route, which is a <code>reopen</code>
+carrying the user's words. The test asserts the file comes back
+byte-identical. Orbital ships the prompt-level version too, a "Dropped
+by the user — never re-propose" block injected each turn; the point is
+that it ships both and the refusal is the one that binds.</li>
+<li>Third idea: <strong>make the automated editor quote the
+user.</strong> The LLM memory pass may propose closing an ask but cannot
+perform it: each proposal names an ask, a session and a phrase, and the
+close lands only when that phrase occurs verbatim in a message of that
+session whose role and source are both the user. Assistant turns and
+injected rows are excluded by the reader that gathers them, and a
+rejected close leaves the ask open.</li>
+<li>Fourth idea: <strong>protect the entry that has no id.</strong> The
+size backstop demotes coldest-<code>touched</code> first and refuses to
+move an entry carrying no id at all, because an unaddressable entry
+could not be recalled afterwards — alongside protecting the oldest three
+and anything tagged pinned, writing the archive before shrinking the
+live file, and leaving the live file intact when the archive write
+fails.</li>
+<li>Fifth idea: <strong>aim consolidation below the threshold rather
+than at it.</strong> A pass that lands exactly on the soft budget
+re-trips the hygiene flag as soon as the next entry is appended, "which
+is how a project ends up checkpointing continuously without ever getting
+quieter". The headroom is what makes a pass last.</li>
+<li>Biggest risk: <strong>the successor is weaker than what it
+replaced.</strong> <code>retractions.py</code> is a complete value-keyed
+rejection store with a fuzzy title matcher at a 0.75 threshold, built to
+catch a retracted item reappearing under a rephrased title. Its
+docstring says the write chokepoint calls that matcher and that the
+store is injected every turn; at this pin <code>reconcile_flags</code>
+deletes the parameter on its first line as "accepted for call-site
+compatibility and ignored", <code>render_constraints</code> has no
+caller at all, and the only live reader is the first-run migration that
+converts each retraction into an open-then-dropped pair. The mechanism
+that took over matches exact normalised text.</li>
+<li>Second risk: a close the agent writes without quoting anyone is
+warned about and still appended. The editor path rejects exactly that
+case, so the leniency is a gradient between two paths rather than a
+rule.</li>
+<li>Third risk: the budget floors are measured against one named model
+with a million-token window, scaled proportionally only below roughly
+eighty thousand. A project whose files grew under the large window meets
+the scale-down, not a migration.</li>
+<li>Most reusable component:
+<code>agent_os/agent/memory_entries.py</code> — machine ids in invisible
+one-line comments, a code-owned format contract normalised on every
+write, and a demotion that leaves a dated, id-bearing pointer in the
+live file. Liftable wherever an agent rewrites prose you cannot afford
+to lose.</li>
+<li>Maturity impression: GPL-3.0 with a matching NOTICE and no rider,
+installers for Windows and macOS, a daemon, a web Workbench, transports
+for Claude Code, Codex and Cursor, 616 test files, and a code base whose
+comments name the incident behind each rule — including the date a
+missing archive mapping deleted 22 lines of a real project's
+briefing.</li>
+<li>Study when: an agent rewrites your memory in prose and you need
+identity, budgets and forgetting to survive the rewrite — or when you
+want to see a rejection enforced at the write path rather than requested
+in a system prompt.</li>
+<li>Do not copy when: you need to know whether a stored thing is still
+true. Nothing here carries an epistemic status; the ask lifecycle is a
+task state, and the instruction to supersede contradictions is a
+sentence addressed to the model.</li>
 </ul>
         </article>
       </div>

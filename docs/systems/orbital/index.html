@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A desktop project agent whose
+memory is four budgeted markdown files plus an append-only asks log — an
+oversize file demotes its coldest entries to an archive and leaves an
+addressable pointer behind, and a commitment the user dropped is refused
+if the agent writes it again.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Orbital — Agent Memory Atlas">
+    <meta property="og:description" content="A desktop project agent
+whose memory is four budgeted markdown files plus an append-only asks
+log — an oversize file demotes its coldest entries to an archive and
+leaves an addressable pointer behind, and a commitment the user dropped
+is refused if the agent writes it again.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Orbital — Agent Memory Atlas">
+    <meta name="twitter:description" content="A desktop project agent
+whose memory is four budgeted markdown files plus an append-only asks
+log — an oversize file demotes its coldest entries to an archive and
+leaves an addressable pointer behind, and a commitment the user dropped
+is refused if the agent writes it again.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Orbital — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Orbital",
+      "description": "A desktop project agent whose memory is four budgeted markdown files plus an append-only asks log \u2014 an oversize file demotes its coldest entries to an archive and leaves an addressable pointer behind, and a commitment the user dropped is refused if the agent writes it again.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Project agent</p>
+          <h1>Orbital</h1>
+          <p class="document-deck">A desktop project agent whose memory
+is four budgeted markdown files plus an append-only asks log — an
+oversize file demotes its coldest entries to an archive and leaves an
+addressable pointer behind, and a commitment the user dropped is refused
+if the agent writes it again.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/zqiren/Orbital">
+              <span>Source</span>
+              <strong>zqiren/Orbital</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/zqiren/Orbital/commit/6b4999444392a512c31b6219926e785dd7e30cea" title="6b4999444392a512c31b6219926e785dd7e30cea">
+              <span>Analyzed revision</span>
+              <code>6b499944…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/zqiren--Orbital" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>zqiren--Orbital</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Orbital is a desktop project agent: it owns the folder, and Claude
+Code, Codex and Cursor are interchangeable workers it delegates to. The
+README's pitch is about that swap — a usage limit hit mid-task, another
+agent picking up the same conversation — and the memory design follows
+from it. If the context has to survive the agent, it has to live in
+files a person can open.</p>
+<p>So memory here is four markdown files in <code>orbital/</code>, plus
+a fifth that is not like the others.</p>
+<p><strong>The four are budgeted, and going over budget moves entries
+rather than dropping them.</strong> DECISIONS and LESSONS demote their
+coldest entries into an archive file and leave a pointer line in their
+place — dated, carrying the entry's id, naming the archive — so the live
+file still says what left and where it went. PROJECT_STATE will only
+move lines older than a fourteen-day probation window, and when
+everything left is recent it simply stays over budget: <em>"over budget
+beats losing current work."</em></p>
+<p><strong>The fifth is ASKS.md, and it is an event log.</strong> An ask
+is something waiting on the user that must outlive the conversation it
+came up in. One event per line, and an ask's state is its last event.
+That shape carries three of this report's four marks.</p>
+<p><strong>A commitment the user dropped cannot be written
+again.</strong> The agent's write path keys each new ask on its own
+normalised text, finds the dropped one, and refuses the line outright —
+the test asserts the file comes back byte-identical. That is the
+corpus's usual failure mode solved: a rejection that survives the agent
+forgetting it happened.</p>
+<p><strong>And the agent cannot claim to be the user.</strong> A close
+it writes is stamped <code>by:agent</code> even when it typed
+<code>by:user</code>, which is precisely what keeps that close undoable
+from the Workbench. The automated memory editor is held to a harder rule
+still: it may close an ask only by quoting the user verbatim, and the
+quote is checked against user-role messages in the session it names.</p>
+<p>What is missing is any notion of belief. No entry anywhere carries a
+status saying whether it is still true.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two different things are called memory here and they behave
+differently.</p>
+<p><strong>Durable prose</strong> — decisions, lessons, current state,
+an index — is a file the agent reads and rewrites. Orbital's job is to
+keep that rewriting from destroying anything: it stamps machine ids so
+entries survive being reworded, re-applies a format contract the agent
+cannot delete, and when the file grows past its budget it moves the
+coldest entries out rather than letting a consolidation pass decide what
+to delete.</p>
+<p><strong>Asks</strong> are the opposite: nobody rewrites them. Every
+change is a new line, identity is an id nobody may alter, and the
+current picture is computed by folding the log. The module says why the
+design changed: the old <code>[user]</code> bullets inside PROJECT_STATE
+were reworded constantly, so every consumer had to reconstruct an item's
+identity with a fuzzy title matcher, and <em>"in practice nothing ever
+recorded 'done'."</em></p>
+<p>The lesson generalises past this repository. When the representation
+is prose an agent rewrites, identity has to be something the rewrite
+cannot touch.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the agent's write and edit tools route through one per-file chokepoint that stamps machine ids, re-applies the format contract and enforces append-only on the asks log — refusing an open whose normalised text matches an ask the user dropped; injection each turn is capped per file by a budget derived from the active model's context window, and at session end a deterministic backstop demotes the coldest entries into an archive, writing the archive before the live file shrinks, before an LLM editor proposes merges and ask closes it can only apply by quoting the user</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the agent&#39;s write and edit tools route through one per-file chokepoint that stamps machine ids, re-applies the format contract and enforces append-only on the asks log — refusing an open whose normalised text matches an ask the user dropped; injection each turn is capped per file by a budget derived from the active model&#39;s context window, and at session end a deterministic backstop demotes the coldest entries into an archive, writing the archive before the live file shrinks, before an LLM editor proposes merges and ask closes it can only apply by quoting the user
+flowchart TD
+    AG[&quot;worker agent&lt;br/&gt;Claude Code · Codex · Cursor&quot;] --&gt; TOOLS[&quot;write / edit tools&quot;]
+    TOOLS --&gt; CHK{&quot;process_on_write&lt;br/&gt;path resolved under orbital/&quot;}
+
+    CHK --&gt;|decisions · lessons| STAMP[&quot;stamp id · created · touched&lt;br/&gt;renumber by id, not position&quot;]
+    CHK --&gt;|state| FLAG[&quot;flag chokepoint&lt;br/&gt;carry ids across a reworded rewrite&quot;]
+    CHK --&gt;|ASKS.md| APPEND{&quot;append-only&lt;br/&gt;restore removed lines&quot;}
+
+    APPEND --&gt;|&quot;open, text matches a dropped ask&quot;| REFUSE[&quot;refused&lt;br/&gt;file unchanged&quot;]
+    APPEND --&gt;|&quot;close written by the agent&quot;| FORCE[&quot;stamped by:agent&lt;br/&gt;stays undoable&quot;]
+
+    STAMP --&gt; L1[(&quot;DECISIONS · LESSONS&lt;br/&gt;PROJECT_STATE · INDEX&quot;)]
+    FLAG --&gt; L1
+    APPEND --&gt; ASKS[(&quot;ASKS.md&lt;br/&gt;state = last event&quot;)]
+
+    L1 --&gt; INJ[&quot;inject_view&lt;br/&gt;newest within budget + oldest 3&quot;]
+    ASKS --&gt; INJ
+    INJ --&gt; CTX[&quot;context this turn&quot;]
+
+    L1 --&gt; BACK[&quot;session end: size backstop&lt;br/&gt;coldest touched first&lt;br/&gt;never the oldest 3 or a pinned one&lt;br/&gt;never an entry with no id&quot;]
+    BACK --&gt; ARCH[(&quot;*_ARCHIVE.md&lt;br/&gt;written before the live file shrinks&quot;)]
+    BACK --&gt; PTR[&quot;pointer left in place&lt;br/&gt;archived DATE id:X → ARCHIVE&quot;]
+
+    BACK --&gt; ED[&quot;memory editor (LLM)&lt;br/&gt;backup first, or no edit&quot;]
+    ED --&gt; QUOTE{&quot;close an ask?&lt;br/&gt;quote verbatim in a USER message&quot;}
+    QUOTE --&gt;|no| STAY[&quot;rejected, ask stays open&quot;]
+    QUOTE --&gt;|yes| ASKS
+
+    WB[&quot;Workbench&lt;br/&gt;a person, over HTTP&quot;] --&gt; ASKS</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Layer-1 spine:</strong>
+<code>agent_os/agent/memory_entries.py</code> — budgets, stamping,
+injection view, demotion, the write-path entry point.</li>
+<li><strong>Asks:</strong> <code>agent_os/agent/asks.py</code> — the
+grammar, the fold, the append-only write path and the dropped
+refusal.</li>
+<li><strong>Session-end backstop:</strong>
+<code>agent_os/agent/workspace_files.py</code>,
+<code>_apply_hard_caps</code>.</li>
+<li><strong>LLM editor:</strong>
+<code>agent_os/agent/memory_editor.py</code> — backup, prompt, choices,
+and the quote-checked ask closes.</li>
+<li><strong>Person's surface:</strong>
+<code>agent_os/api/routes/workbench.py</code>.</li>
+<li><strong>Legacy store:</strong>
+<code>agent_os/agent/retractions.py</code> — read once, by the
+migration.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Each durable entry carries a one-line HTML comment holding
+<code>id</code>, <code>created</code>, <code>touched</code> and
+sometimes <code>tag</code>. The comment is invisible in rendered
+markdown, sits where the trim will not reach it, and is re-applied at
+both write chokepoints when the agent strips it. Entries are keyed by id
+rather than by position, which is what lets LESSONS be renumbered
+contiguously after the on-disk numbering drifts.</p>
+<p>Every file also carries a <code>&lt;!--format ...--&gt;</code>
+contract on line 1 describing the grammar the agent must write in. It is
+normalised rather than preserved on each write, and the comment
+explaining that change is worth reading, because the bug it fixes is a
+common one: the contract used only ever to be <em>prepended when
+missing</em>, so every project that already had a header was pinned to
+whatever contract shipped the day its file was created, and every rule
+added afterwards silently never applied to it.</p>
+<p>The contract is also excluded from the file's own budget, and the
+note says why in numbers: PROJECT_STATE's header had reached 498 tokens,
+46% of that file's consolidation target, <em>"putting a real project
+permanently over budget with no route down."</em></p>
+<p>An ask is not a record at all. It is whatever the log's last event
+for its id says, which is why nobody can rewrite one into meaning
+something else.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no query. Each turn the four files are injected whole, up to
+a budget derived from the active model's context window rather than
+hardcoded, and when a file is over the cap the view shows the newest
+entries that fit plus the oldest three — foundational entries cluster at
+the head and are always kept — with a note saying what was omitted. Asks
+ride along as their own block: the open ones, then a short list headed
+<em>"Dropped by the user — never re-propose."</em></p>
+<p>The budget floors are the measured sizes of a healthy project with
+headroom, deliberately set <em>above</em> the full clean set so a normal
+project injects everything and only a runaway overflows. Consolidation
+aims a thousand tokens below the soft budget rather than at it, and that
+comment is the one to steal: a pass that lands exactly on the threshold
+re-trips the flag as soon as the next entry is appended, <em>"which is
+how a project ends up checkpointing continuously without ever getting
+quieter."</em></p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Everything the agent writes to a memory file passes
+<code>process_on_write</code>, which resolves the path, requires its
+parent to be the project's own <code>orbital</code> directory, and
+dispatches by basename. The routing detail worth noting is that the hard
+cap is deliberately <em>not</em> applied here — the write path stays
+cheap and never demotes mid-edit; demotion happens at session end.</p>
+<p>The session-end backstop is deterministic and never calls a model. It
+fires only on a file over its soft budget, demotes
+coldest-<code>touched</code> first, and protects three classes of entry:
+the oldest three, anything tagged pinned, and anything with no id — that
+last one on the stated ground that an unaddressable entry could not be
+recalled, so moving it would be losing it. It also skips a move whose
+pointer would be longer than the entry it replaces.</p>
+<p>The ordering is explicit and correct: the archive is appended
+<strong>before</strong> the live file is shrunk, and an
+<code>OSError</code> on either step leaves the live file intact, logged
+as <em>"over budget beats losing entries."</em></p>
+<p>Then the LLM editor runs, and it cannot start without a backup — if
+copying the four live files fails, the run returns <code>failed</code>
+and edits nothing.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Installers for Windows and macOS, a daemon, a web Workbench, a
+calendar hub that reads dated lines out of PROJECT_STATE, and transports
+for Claude Code, Codex and Cursor. Sub-agents get a prompt block built
+from the same dropped-asks list the main loop uses.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Tombstone — awarded</strong>, on the refusal in the asks
+write path rather than on anything in the four files. The value is the
+ask's own text, normalised; the record is the drop event in an
+append-only log; the consumer is the agent's own write path, which
+declines to append and hands back the id, the date and the only
+legitimate route — a <code>reopen</code> carrying the user's words. Two
+limits belong on the record. The match is exact-normalised, so a
+rephrasing gets through. And the fuzzy matcher built for exactly that
+case, at a 0.75 threshold, is sitting unused in
+<code>retractions.py</code> — see section 12.</p>
+<p><strong>Audit log — awarded.</strong> ASKS.md is a named append-only
+event record and it is the store, not a sidecar. The enforcement is on
+the agent's write path, which restores every line the agent removed or
+altered, in order. The actor is not self-reported: an agent-written
+close is re-stamped <code>by:agent</code> regardless of what it claimed,
+and a close with no actor at all is folded as <code>agent</code> so it
+stays undoable. The limit is coverage: the four budgeted files have no
+equivalent log. Their history is five backups deep plus dated sections
+in the archives.</p>
+<p><strong>Human review — awarded</strong>, on three things that have to
+hold together. The person's surface is a set of HTTP routes the
+Workbench drives, and nothing in the agent's tool registry reaches asks.
+The automated editor — the thing most likely to be mistaken for a person
+— is held to a verified quote: it names an ask, a session and a phrase,
+and the close lands only if that phrase occurs in a message of that
+session whose role <em>and</em> source are the user, which excludes
+assistant turns and injected rows. And the agent's own close is
+attributed honestly rather than trusted, which is what leaves the person
+an undo. The weak spot is that same path: a close the agent writes
+without quoting anyone is warned about and still appended.</p>
+<p><strong>Negative eval — awarded.</strong> See the evidence record;
+the quote-from-the- assistant row is the one that makes the table more
+than a shape check.</p>
+<p><strong>Trust state — withheld.</strong> Nothing here records whether
+a stored thing is still true. The ask lifecycle is the closest candidate
+and is a task state, not an epistemic one: <code>done</code> means
+handled and <code>dropped</code> means the user said no, neither of
+which says a claim is unreliable. On the durable side there is only a
+<code>pinned</code> tag and a <code>touched</code> date; DECISIONS
+carries the instruction to supersede contradictions in its format
+contract, which is a sentence addressed to the model rather than a field
+anything filters on.</p>
+<p><strong>Bi-temporal — withheld.</strong> Entries carry
+<code>created</code> and <code>touched</code>, and an ask may carry a
+<code>due</code>. Those are record times and a deadline; no read answers
+what the project state was as of a past date.</p>
+<p><strong>Scope enforced — withheld.</strong> The boundary is the
+project folder, and the memory-file router does resolve symlinks before
+requiring the parent to be that project's own <code>orbital</code>
+directory — a real containment check, and the session name in an editor
+close is pattern-matched against path escape, with a test for it. But
+containment is not a stored scope key applied on a read path, and no
+query here carries one.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> Searched the README, both translations and
+<code>docs/</code> for <code>arxiv</code>, <code>@article</code>,
+<code>@misc</code> and <code>doi.org</code>, and looked for a
+<code>CITATION.cff</code>: the only hits are a screenshot caption
+showing the agent browsing arxiv.org.</p>
+<p>616 test files with a <code>pytest.ini</code>, organised into unit,
+integration, e2e, platform, regression and smoke. The three that carry
+the marks are in section 9, and the pattern they share is asserting
+refusal by <em>equality</em> — <code>out == prev</code> — rather than by
+the absence of a substring. An equality assertion cannot pass because
+the appended line was spelled differently than the test expected.</p>
+<p>The editor's rejection table deserves the last word. Its fixture
+writes a session in which the assistant says <em>"English it is, and I
+will ship it today"</em> — plausible, on topic, and exactly what a model
+summarising the conversation would reach for. The table asserts that a
+close quoting it is rejected and the ask stays open. Most negative tests
+are built from material that is obviously wrong; this one is built from
+material that is wrong in the way the system would actually fail.</p>
+<p>No retrieval benchmark is committed and none is claimed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Refuse the re-add, do not just warn about it.</strong> The
+dropped-ask check declines to append and says which ask and when. A
+prompt line asking the model not to re-propose something is not the same
+mechanism, and this repository ships both — one in the write path, one
+in the injected block.</li>
+<li><strong>Never let the writer self-report the actor.</strong>
+Overwriting the agent's <code>by:user</code> with <code>by:agent</code>
+costs one line and is what makes every other guarantee about who closed
+something mean anything.</li>
+<li><strong>Protect the unaddressable entry.</strong> Refusing to
+archive an entry with no id, because it could not be recalled
+afterwards, is the kind of rule you only write after losing
+something.</li>
+<li><strong>Write the archive before you shrink the source</strong>, and
+leave the source intact when the archive write fails.</li>
+<li><strong>Aim consolidation below the threshold, not at it</strong>,
+or the flag re-trips on the next append and the project checkpoints
+forever.</li>
+<li><strong>Normalise a code-owned format contract instead of preserving
+it</strong>, or every project silently keeps whichever version of the
+rules shipped the day its file was created.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>retractions.py</code> is a complete value-keyed rejection
+store — append-only, with a fuzzy title matcher at a 0.75 threshold
+built to catch a retracted item reappearing under a rephrased title. Its
+own docstring says the write chokepoint calls that matcher and that the
+store is injected as a constraint block every turn. At this pin neither
+is true: <code>reconcile_flags</code> takes the retraction list as a
+parameter and deletes it on the first line as <em>accepted for call-site
+compatibility and ignored</em>, <code>render_constraints</code> has no
+caller at all, and <code>list_retractions</code> has exactly one, in the
+first-run migration that converts each retraction into an
+open-then-dropped pair in ASKS.md. The successor mechanism is real and
+tested — but it matches on exact normalised text, so the migration
+traded a fuzzy matcher for an exact one. Is that deliberate, and is the
+module now dead code that should go?</li>
+<li>The budgets are floored at sizes measured against one named model
+with a million-token window, with a proportional scale-down below
+roughly eighty thousand. What happens to a project whose files were
+grown under the large window when the active model is switched to a
+small one?</li>
+<li>A close the agent writes without a quote is warned about and kept.
+Given the editor path rejects exactly that, is the agent path's leniency
+a deliberate gradient, or the older rule?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Budgets, stamping, injection, demotion:
+<code>agent_os/agent/memory_entries.py</code></li>
+<li>Asks grammar, fold, write path:
+<code>agent_os/agent/asks.py</code></li>
+<li>PROJECT_STATE bullets: <code>agent_os/agent/state_blocks.py</code>,
+<code>agent_os/agent/flag_chokepoint.py</code></li>
+<li>Session-end backstop:
+<code>agent_os/agent/workspace_files.py</code></li>
+<li>LLM editor and quote-checked closes:
+<code>agent_os/agent/memory_editor.py</code></li>
+<li>Person's surface: <code>agent_os/api/routes/workbench.py</code></li>
+<li>Legacy rejection store:
+<code>agent_os/agent/retractions.py</code></li>
+<li>Tests: <code>tests/unit/test_asks.py</code>,
+<code>tests/unit/test_memory_editor_asks.py</code>,
+<code>tests/unit/test_memory_floor.py</code>,
+<code>tests/unit/test_layer1_lifecycle.py</code>,
+<code>tests/unit/test_retractions.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/zqiren/Orbital/commit/6b4999444392a512c31b6219926e785dd7e30cea"><code class="commit-id" title="6b4999444392a512c31b6219926e785dd7e30cea">6b499944…</code></a>
+— first reading, at the head of <code>main</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: eight
+manifests inside the seven-day cooldown, an artefact of a
+<code>--depth 1</code> clone; a Windows <code>setup.py</code> and four
+<code>conftest.py</code> files that execute at install or collection
+time; non-registry and floating dependency sources in the web and demo
+packages; and an <code>AGENTS.md</code> and a <code>CLAUDE.md</code>
+addressed to a reading agent, read as data throughout. Nothing was
+installed, built or run. GPL-3.0 with a matching <code>NOTICE</code> and
+no rider. Four marks. The reading covered the Layer-1 budget spine, the
+demotion and floor paths and their protections, the session-end backstop
+and its ordering, the asks grammar and fold, the append-only write path
+and its refusals, the LLM editor's backup and quote-checked closes, the
+Workbench routes, and the tests the marks rest on; the transports, the
+calendar hub, the budget ledger and the desktop and installer trees were
+read as context rather than as subject. Three marks are withheld with
+reasons in section 9. The finding worth carrying forward is in section
+12: the repository contains a complete, tested, fuzzy-matched rejection
+store whose two documented consumers have both been removed, and whose
+successor matches on exact text — a case where the mark is earned by the
+newer mechanism and the older one is strictly stronger.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
