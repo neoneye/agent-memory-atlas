@@ -7,12 +7,11 @@ page_kind: system
 source_name: "tinyhumansai/openhuman"
 source_url: https://github.com/tinyhumansai/openhuman
 archive_name: "tinyhumansai--openhuman"
-revision: c833323a5b4c1e40dd4e1e958c71018244186c95
-revision_url: https://github.com/tinyhumansai/openhuman/commit/c833323a5b4c1e40dd4e1e958c71018244186c95
-analyzed_at: 2026-09-15
-capabilities: "human_review, negative_eval"
+revision: 97eb92524bb77a74d5d476bf57a7b290056132e9
+revision_url: https://github.com/tinyhumansai/openhuman/commit/97eb92524bb77a74d5d476bf57a7b290056132e9
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  human_review: "the goals panel | app/src/components/intelligence/GoalsPanel.tsx:56 add, :111 delete, :131 reflect; crates/openhuman-core/src/memory/goals/ops.rs:103, :123, :141 | the goals document is written by the agent's goals tool and by a reflection agent the archivist spawns when a conversation is summarised (crates/openhuman-core/src/agent/harness/archivist/lifecycle.rs:561); the Intelligence tab lists every goal and lets a person add one, edit one inline, delete one or re-run reflection, each through the goals RPC. Notes, chunks and events have no per-item review surface — only whole-tree wipe and reset | app/src/components/intelligence/GoalsPanel.test.tsx:48 deletes a goal, :90 edits a goal inline"
   negative_eval: "the memory RPC round-trip suite | tests/memory_roundtrip_e2e.rs:264 | `clear_namespace_removes_canary_from_recall` seeds a canary document, asserts recall returns it (:281), clears the namespace, and asserts neither the canary's content nor its key surfaces in the next recall (:303, :307); the pinned tinymemory conformance suite adds `assert_recall_respects_limit_and_namespace` (crates/tinymemory-conformance/src/suite/mod.rs:499 in tinymemory at 74f2a52), which requires two hits from one namespace and none from a sibling namespace holding the same needle | tests/memory_roundtrip_e2e.rs:264"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
@@ -409,7 +408,14 @@ A person's surfaces are in the Intelligence tab: a memory graph, heatmap,
 navigator and chunk detail that display; source registration and sync
 settings, with a sync audit panel of when syncs ran and what they cost; a
 whole-tree wipe and a tree reset behind a confirm dialog; and a goals panel that
-edits what the agent wrote.
+edits what the agent wrote. That last one is the closest this system comes to a
+review surface and it is not one: `add`, `edit`, `delete` and `reflect_now`
+(`crates/openhuman-core/src/memory/goals/ops.rs:103`, `:123`, `:141`, `:167`)
+all act on a goals document the reflection agent has already written and the
+model already reads. Notes, chunks and events have no per-item surface at all —
+only the whole-tree wipe. Nothing in `crates/openhuman-core/src/memory/` holds a
+memory in a state pending anyone's decision; every `pending` in that tree is a
+background job counter.
 
 The diff ledger remains an integration idea worth noting: an agent can diff a
 source against a checkpoint and acknowledge what it has seen, and read markers
@@ -585,6 +591,8 @@ refusal.
 - `benchmarks/README.md`
 
 ## History
+
+**2026-09-19** — re-pinned to [`97eb92524bb77a74d5d476bf57a7b290056132e9`](https://github.com/tinyhumansai/openhuman/commit/97eb92524bb77a74d5d476bf57a7b290056132e9), 399 commits on. `human_review` is **withdrawn**. The record described the goals panel as a place a person "edits and deletes goals the reflection agent wrote", and that is authoring over a document already in use rather than a state a memory waits in. The large drift was taken as a reason to look for a gate that might have arrived rather than to assume none had: at this pin `crates/openhuman-core/src/memory/` carries no `pending`, `proposed`, `approve` or `awaiting_review` state on a memory, and every `pending` in it counts background jobs. The goals RPC verbs were re-verified at their new lines. `negative_eval` stands on `clear_namespace_removes_canary_from_recall`, whose positive control is the recall assertion before the clear. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`c833323a5b4c1e40dd4e1e958c71018244186c95`](https://github.com/tinyhumansai/openhuman/commit/c833323a5b4c1e40dd4e1e958c71018244186c95) — second reading, 16,387 commits on, with the two engine submodules checked out at the commits the host pins: tinymemory [`74f2a529cef2f168ed53fde8a4ab7ca06b67dc4e`](https://github.com/tinyhumansai/tinymemory/commit/74f2a529cef2f168ed53fde8a4ab7ca06b67dc4e) and tinycortex [`79131f275cf98f06421fefd9dc812c5a63a5a182`](https://github.com/tinyhumansai/tinycortex/commit/79131f275cf98f06421fefd9dc812c5a63a5a182). Screened at the new pin before reading: three auto-run surfaces, 14 dependency surfaces inside the cooldown, 7 build-time execution points, 3 unpinned surfaces, and two agent-instruction files read as data; nothing was installed or run. The body is rewritten. The twelve `src/openhuman/memory_*` modules became a host layer in `crates/openhuman-core/src/memory/` over an engine extracted into tinymemory and tinycortex, both now read rather than taken on seam tests. The subconscious module that consumed `MemoryTaint` — putting a turn with external memory in context under `SubconsciousTainted`, which the approval gate refused external-effect tools for — was removed in `9d18b93` on 2026-08-22, and nothing constructs that origin at this commit; the headline changes accordingly. New since the first pin: the `MemoryGuard` policy decorator with its bypass ratchet, source allowlists intersected rather than replaced, the ordered write gate, a collapsed `memory` tool, and auto-recall.
 
