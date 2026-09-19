@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 581 reports.**
+**This page covers all 582 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5104,3 +5104,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0 with the licence text in the tree, a Go service with two storage backends behind one conformance suite, ten named maintenance passes each with its own test, an OpenAPI-generated REST layer, nine MCP tools, and documentation that explains its own defaults rather than advertising them.
 - Study when: you are building a memory service several agents share, or deciding how a retrieval cascade should be bounded, or looking for a worked example of a ranking composite whose unused terms are left at zero and admitted to.
 - Do not copy when: you need a discrete state that withholds a memory from being believed — corroboration here is a number that feeds ranking, and the only state that withholds is the supersession pointer.
+
+### [`CodeWiki-Plus`](../systems/codewiki-plus/)
+- Best idea: **three responses to an uncertain claim, applied to three values of one field.** In `handle_query_wiki` a `deprecated` note hits `continue` and leaves the result set, a `draft` note is returned with its title rewritten to `[unconfirmed] <title>`, and everything else is multiplied by an authority factor folding note type, status, confidence level and source into a number clamped to 0.7–1.3. Excluded, labelled, weighted — most systems pick one and apply it to everything retired.
+- Second idea: **record the third telemetry event.** The vocabulary is `hit` (I saw it), `adopted` (I cited it) and `outcome` (after using it, did the work succeed?), per-user append-only JSONL, with the outcome carrying the adoption key so a citation and its result are linkable. Retrieval logs usually stop at the first of those.
+- Third idea: **feed the failures back into the prompt that writes the next memory.** Recent failure notes become `negative_examples` — last 30 days, capped at five, newest first — injected into the distillation and consolidation payloads with an avoidance hint.
+- Fourth idea: **exempt the dedup recall from the authority weighting.** The distillation's near-duplicate search runs with `apply_authority=False`, and the comment says why: a migration that dropped old notes to `shadow` would otherwise blind conflict detection at the moment it mattered.
+- Biggest risk: **the outcome verdict is self-assessed.** The tool's own header argues that the agent should report at the natural end of its task because that is "the only moment it can honestly judge the result" — a fair answer to *when* that leaves the grader and the graded the same party. The binary vocabulary (`result must be 'success' or 'failure' (binary, no grading)`) limits the damage.
+- Second risk: `_trust_tier` derives `unverified` / `machine-confirmed` / `human-reviewed` from a `verified` block, and `human-reviewed` is earned when an entry's `by` field starts with the string `human:` — supplied by the writer. The tier is also not consumed: `note_query.py` computes it onto the result and `knowledge_loop.py` imports the helper without calling it. `human_review` is withheld on both grounds.
+- Third risk: per-user memory files are described by the project as *git-level conflict isolation*, and loading is layered rather than partitioned — another user's file contributes its summary and a couple of recent entries. That is deliberate, and it is not per-user visibility.
+- Most reusable component: the supersession marker — a `> [superseded 2026-09-18 by #a3f2]` blockquote written into the entry itself, carrying the date and the successor, readable in a diff or outside the tool, with five readers partitioning live from retired on it.
+- Maturity impression: MIT with the upstream's copyright line retained and the fork relationship stated in the README; 53 MCP tools, a CLI, hooks and a web view; a substantial Python suite including a golden retrieval baseline and an OKF regression file; design documents under `docs/` that include studies of other memory systems.
+- Study when: you are bolting a knowledge base onto a tool that generates documents, or deciding what a retrieval system should do with a claim nobody has confirmed yet.
+- Do not copy when: you need per-user read isolation, or a review tier an author cannot assert about themselves.

@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A documentation generator that
+grew a memory layer: markdown notes and per-user task memories under one
+file-backed store, where a deprecated note is dropped from a query
+outright, a draft one is returned with an [unconfirmed] prefix, and
+everything else is weighted by an authority multiplier.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="CodeWiki-Plus — Agent Memory Atlas">
+    <meta property="og:description" content="A documentation generator
+that grew a memory layer: markdown notes and per-user task memories
+under one file-backed store, where a deprecated note is dropped from a
+query outright, a draft one is returned with an [unconfirmed] prefix,
+and everything else is weighted by an authority multiplier.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CodeWiki-Plus — Agent Memory Atlas">
+    <meta name="twitter:description" content="A documentation generator
+that grew a memory layer: markdown notes and per-user task memories
+under one file-backed store, where a deprecated note is dropped from a
+query outright, a draft one is returned with an [unconfirmed] prefix,
+and everything else is weighted by an authority multiplier.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>CodeWiki-Plus — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "CodeWiki-Plus",
+      "description": "A documentation generator that grew a memory layer: markdown notes and per-user task memories under one file-backed store, where a deprecated note is dropped from a query outright, a draft one is returned with an [unconfirmed] prefix, and everything else is weighted by an authority multiplier.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Repository knowledge base</p>
+          <h1>CodeWiki-Plus</h1>
+          <p class="document-deck">A documentation generator that grew a
+memory layer: markdown notes and per-user task memories under one
+file-backed store, where a deprecated note is dropped from a query
+outright, a draft one is returned with an [unconfirmed] prefix, and
+everything else is weighted by an authority multiplier.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mambo-wang/CodeWiki-Plus">
+              <span>Source</span>
+              <strong>mambo-wang/CodeWiki-Plus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mambo-wang/CodeWiki-Plus/commit/4b826918d6fd4d954064190683a9455bb40805ff" title="4b826918d6fd4d954064190683a9455bb40805ff">
+              <span>Analyzed revision</span>
+              <code>4b826918…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mambo-wang--CodeWiki-Plus" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mambo-wang--CodeWiki-Plus</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>CodeWiki-Plus began as a fork of FSoft-AI4Code's CodeWiki and kept
+its toolchain — Tree-sitter parsing, dependency graphs, topological
+sort, Mermaid validation — while growing into something the upstream is
+not. The README's own comparison table is the clearest statement of
+that: against <em>Knowledge management</em>, <em>Knowledge trust</em>,
+<em>Task memory</em> and <em>Search</em>, the upstream column reads
+"None" four times. Every mechanism this report is about is this
+project's own addition to a documentation generator.</p>
+<p>What it added is a file-backed knowledge base with two memory kinds.
+<strong>Notes</strong> are markdown files with frontmatter, entering as
+<code>draft</code> and reaching <code>stable</code> through a
+<code>confirm_note</code> gate. <strong>Task memories</strong> are
+timestamped entries inside a per-user file, written directly with no
+gate — and the project explains the asymmetry rather than leaving it to
+be noticed: task-scoped progress knowledge carries bounded,
+task-lifetime noise cost, while notes enter the shared,
+retrieval-indexed base and keep the quality gate.</p>
+<p>The mechanism worth the reader's time is how one read path treats
+three statuses three different ways. In <code>handle_query_wiki</code>,
+a <code>deprecated</code> note hits <code>continue</code> and leaves the
+result set entirely. A <code>draft</code> note is returned, with its
+title rewritten to <code>[unconfirmed] &lt;title&gt;</code>. Everything
+else is weighted by an authority multiplier that folds status,
+confidence level, note type and source into a number clamped to 0.7–1.3.
+Excluded, labelled, or weighted — the three responses a memory system
+can have to a claim it is unsure of, all three present and applied to
+different values of the same field.</p>
+<p>Beside it is a telemetry chain that reaches further than most:
+<code>hit</code> (I saw it), <code>adopted</code> (I cited it),
+<code>outcome</code> (after using it, did the work succeed?). The
+failures that chain records become <code>negative_examples</code>
+injected into the prompt that writes the next note. The report awards
+<code>trust_state</code>, <code>tombstone</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>, and section 9 says why
+<code>human_review</code> is withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Think of it as two stores with different admission rules, sharing one
+root.</p>
+<p>The <strong>note store</strong> is the shared, indexed, retrievable
+one. A note is proposed by distillation, lands as <code>draft</code>, is
+returned by queries with an <code>[unconfirmed]</code> badge, and
+becomes ordinary material when someone confirms it. Retiring it is
+<code>deprecated</code>, and that value is the one the query path
+drops.</p>
+<p>The <strong>task-memory store</strong> is per-user, append-only, and
+bounded by the task's own lifetime. An entry is a timestamped markdown
+block with a short persistent id. Correcting one does not edit it: a
+<code>&gt; [superseded 2026-09-18 by #a3f2]</code> line is inserted
+above it, and the readers that assemble context partition on that line
+while a person reading the file still sees both.</p>
+<p>Around both sits a usage record that is unusually complete. Most
+systems can tell you a memory was retrieved. This one records that it
+was retrieved, that the agent actually cited it, and — at the end of the
+task — whether the work succeeded, then feeds the recent failures back
+into the prompt that writes the next batch.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — distillation proposes notes that enter as draft and reach stable only through confirm_note, while task memories are written straight into a per-user append-only file; a query fuses BM25 over notes and wiki pages, drops deprecated notes outright, prefixes draft ones as unconfirmed and weights the rest by an authority multiplier folding status, confidence level, type and source; and a three-event telemetry chain records that a document was seen, cited, and whether the work it informed succeeded, with recent failures fed back into the prompts that write the next notes</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: distillation proposes notes that enter as draft and reach stable only through confirm_note, while task memories are written straight into a per-user append-only file; a query fuses BM25 over notes and wiki pages, drops deprecated notes outright, prefixes draft ones as unconfirmed and weights the rest by an authority multiplier folding status, confidence level, type and source; and a three-event telemetry chain records that a document was seen, cited, and whether the work it informed succeeded, with recent failures fed back into the prompts that write the next notes
+flowchart TD
+    subgraph Capture
+        CAP[&quot;capture_conversation&lt;br/&gt;raw, task_id stamped&quot;]
+        DIST[&quot;distill_conversation&lt;br/&gt;proposes notes&quot;]
+        CONS[&quot;consolidate&lt;br/&gt;merges candidates&quot;]
+    end
+
+    subgraph Gate[&quot;Admission&quot;]
+        DRAFT[&quot;note: status=draft&quot;]
+        CONF[&quot;confirm_note / reject_note&quot;]
+        STABLE[&quot;status=stable&quot;]
+        TM[&quot;task memory&lt;br/&gt;no confirm gate (ADR-0002)&quot;]
+    end
+
+    subgraph Store[&quot;KnowledgeStore over repowiki/&quot;]
+        NOTES[&quot;notes/&quot;]
+        TASKS[&quot;tasks/&amp;lt;id&amp;gt;/memories/&amp;lt;user&amp;gt;.md&lt;br/&gt;append-only&quot;]
+        ARCH[&quot;memories-archive/&amp;lt;user&amp;gt;.md&lt;br/&gt;compacted originals&quot;]
+        META[&quot;.meta/ telemetry jsonl&lt;br/&gt;per user&quot;]
+    end
+
+    subgraph Read[&quot;query_wiki&quot;]
+        BM[&quot;BM25 + wikilink hops&quot;]
+        DEP[&quot;deprecated -&gt; dropped&quot;]
+        DR[&quot;draft -&gt; [unconfirmed] prefix&quot;]
+        AUTH[&quot;authority multiplier&lt;br/&gt;status · confidence · type · source&quot;]
+        TASKF[&quot;task_id predicate&lt;br/&gt;notes only&quot;]
+    end
+
+    subgraph Loop[&quot;Feedback&quot;]
+        HIT[&quot;hit: I saw it&quot;]
+        ADO[&quot;adopted: I cited it&quot;]
+        OUT[&quot;outcome: did the work succeed?&quot;]
+        NEG[&quot;negative_examples&lt;br/&gt;recent failures, cap 5&quot;]
+    end
+
+    CAP --&gt; DIST --&gt; CONS --&gt; DRAFT
+    DRAFT --&gt; CONF --&gt; STABLE
+    DIST --&gt; TM
+    DRAFT --&gt; NOTES
+    STABLE --&gt; NOTES
+    TM --&gt; TASKS
+    TASKS --&gt;|compaction| ARCH
+    NOTES --&gt; BM --&gt; DEP --&gt; DR --&gt; AUTH --&gt; TASKF
+    TASKF --&gt; HIT --&gt; ADO --&gt; OUT
+    OUT --&gt; META
+    HIT --&gt; META
+    ADO --&gt; META
+    META --&gt; NEG
+    NEG --&gt; DIST
+    NEG --&gt; CONS</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Store facade and entry format:</strong>
+<code>codewiki/src/store.py</code> — <code>KnowledgeStore</code>,
+<code>format_memory_entry</code>, <code>new_entry_id</code>,
+<code>entry_is_superseded</code>, <code>supersede_memory</code>, and the
+atomic-write and locking helpers above them.</li>
+<li><strong>Query and status handling:</strong>
+<code>codewiki/mcp/tools/note_query.py</code> —
+<code>handle_query_wiki</code>, the deprecated <code>continue</code>,
+the <code>[unconfirmed]</code> prefix, the <code>task_id</code>
+predicate.</li>
+<li><strong>Ranking:</strong> <code>codewiki/src/retrieval.py</code> —
+<code>bm25_score</code> and <code>_doc_authority</code> with its status,
+confidence, type and source offsets.</li>
+<li><strong>Task memory:</strong>
+<code>codewiki/mcp/tools/task_manager.py</code> — the layout contract in
+the module docstring, the live/superseded partitions, compaction.</li>
+<li><strong>Telemetry and feedback:</strong>
+<code>codewiki/mcp/tools/telemetry.py</code>,
+<code>outcome_report.py</code>, and the <code>negative_examples</code>
+payloads in <code>distill_conversation.py</code> and
+<code>note_consolidation.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <strong>note</strong> is a markdown file whose frontmatter carries
+the axes this report turns on: an OKF <code>status</code>
+(<code>draft</code> / <code>stable</code> / <code>deprecated</code>,
+with legacy vocabularies normalised on read), a
+<code>confidence_level</code> (<code>strong</code> / <code>weak</code> /
+<code>shadow</code>), a <code>verified</code> block, an optional
+<code>task_id</code>, and a note type that also feeds the authority
+multiplier (decision above pitfall above lesson and architecture above
+workaround).</p>
+<p>A <strong>task memory</strong> is an entry inside
+<code>tasks/&lt;task_id&gt;/memories/&lt;user_id&gt;.md</code>:</p>
+<pre><code>### 2026-09-18 14:30 #a3f2
+
+&lt;content&gt;</code></pre>
+<p>The id is four base36 characters minted with
+<code>secrets.choice</code> and checked against the ids already in the
+file, falling back to eight characters rather than looping. The
+heading's timestamp is not necessarily the append time — a distilled
+conversation stamps its <code>captured_at</code>, the dialogue's own
+time, so the entry is dated when it happened rather than when it was
+written down.</p>
+<p>Retirement is a line, not a field:
+<code>&gt; [superseded 2026-09-18 by #a3f2]</code> inserted above the
+entry, carrying both halves of the correction.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>handle_query_wiki</code> scores notes and wiki pages with BM25
+over a shared retrieval kernel, expands through wikilinks, and
+multiplies each document's score by an authority factor. That factor is
+pure arithmetic over frontmatter: note type, OKF status, the confidence
+dimension, and a source penalty for <code>raw/sources/</code> material,
+clamped to 0.7–1.3 so no single axis can dominate.</p>
+<p>Three things about this are worth separating, because the project
+separates them:</p>
+<ol type="1">
+<li>The <strong>exclusion</strong> is one line:
+<code>if note_st == "deprecated": continue</code>. Only that value
+leaves the result set.</li>
+<li>The <strong>label</strong> is the draft case, which rewrites the
+title rather than hiding the note.</li>
+<li>The <strong>weight</strong> is everything else, and the code calls
+the status component a gate while implementing it as an offset — a
+distinction a reader should keep, because a deprecated note is dropped
+by the <code>continue</code> above, not by its −0.35.</li>
+</ol>
+<p>One exemption is documented and is the kind of thing that is usually
+discovered late: the deduplication recall that distillation uses to find
+near-identical existing notes runs with
+<code>apply_authority=False</code>, so similarity is never polluted by
+confidence. Without it, a migration that dropped old notes to
+<code>shadow</code> would blind conflict detection at exactly the moment
+it mattered.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Notes arrive through capture and distillation, land as
+<code>draft</code>, and the ingest path returns the caller an
+instruction rather than assuming: the response carries the
+<code>[unconfirmed]</code> prefix and says to call
+<code>confirm_note</code> after review. <code>reject_note</code> and a
+batch status setter complete the lifecycle, and the batch tool refuses a
+transition whose current value is not what the caller asked for,
+recording <code>"reason": "not draft"</code> per skipped file.</p>
+<p>Task memories skip that gate, and ADR-0002's reasoning is recorded
+where the asymmetry lives: task-scoped progress knowledge has bounded,
+task-lifetime noise cost, while notes enter the shared retrieval-indexed
+base.</p>
+<p>The file discipline underneath is stated as a set of constraints that
+must hold: per-user files are append-only and each user writes only
+their own; concurrent writers are serialised by an atomic temp-file
+replace; compaction is author-exclusive, and <em>"nobody ever rewrites
+another user's file"</em>; <code>task_id</code> is derived from the
+title, immutable, and there is no rename tool.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Fifty-three MCP tools, driven by the IDE's own model rather than a
+configured API key — the README's first difference from upstream is
+"zero-config, IDE model driven". A CLI and hooks sit beside them, and
+session bindings under
+<code>.meta/task_bindings/&lt;session_id&gt;.json</code> let a capture
+know which task it belongs to, with the binding consumed on a successful
+write.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded, on the exclusion.</strong>
+<code>deprecated</code> is dropped from a query outright. That is the
+state that withholds, and the mark rests on it rather than on the
+authority multiplier, which is the ranking axis. The draft case is the
+interesting middle: the note is returned and badged, which is a third
+answer to "am I sure about this" that most implementations do not
+offer.</p>
+<p><strong>Tombstone — awarded.</strong> One writer, five readers, a
+marker carrying the date and the successor, and a compaction path that
+archives originals rather than dropping them.</p>
+<p><strong>Scope enforcement — awarded on the task axis, with the user
+axis named for what it is.</strong> The <code>task_id</code> predicate
+is real and tested both ways. Per-user files are described by the
+project as <em>git-level conflict isolation</em>, and loading is layered
+rather than partitioned: another user's memories reach the caller as a
+summary and a couple of recent entries. That is a deliberate design, not
+a leak, but a reader should not mistake per-user files for per-user
+visibility.</p>
+<p><strong>Audit log — awarded.</strong> Three event kinds, per-user
+append-only JSONL, a verdict validated at the tool boundary, and an
+aggregation that folds every user's stream into per-document usage.</p>
+<p><strong>Human review — withheld, twice over.</strong> The
+<code>trust_tier</code> helper derives <code>unverified</code> /
+<code>machine-confirmed</code> / <code>human-reviewed</code> from a
+<code>verified</code> block, and <code>human-reviewed</code> is earned
+when an entry's <code>by</code> field starts with the string
+<code>human:</code> — a value the writer supplies, so the tier records a
+claim about who reviewed rather than establishing it. And the tier is
+not consumed: <code>note_query.py</code> computes it onto the result
+entry, and <code>knowledge_loop.py</code> imports
+<code>_trust_tier</code> without calling it. The label reaches a reader;
+nothing in the tree acts on it.</p>
+<p><strong>The outcome signal is self-assessed.</strong>
+<code>report_outcome</code>'s own header says collection timing is
+caller-owned — the agent reports at the natural end of a task, <em>"the
+only moment it can honestly judge the result"</em>. That is a fair
+argument for when to ask, and it leaves the grader and the graded as the
+same party. The binary vocabulary helps:
+<code>result must be 'success' or 'failure' (binary, no grading)</code>.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> Searched the README and <code>docs/</code>
+for <code>arxiv</code>, <code>@article</code>, <code>@misc</code>,
+<code>doi.org</code> and a <code>CITATION.cff</code>: none. The design
+documents under <code>docs/</code> are the project's own, several of
+them studies of other systems — including an OKF adaptation plan, a
+framework this atlas covers separately.</p>
+<p>The Python suite is substantial and the two cases this report leans
+on are built correctly, each pairing an absence with the presence it is
+measured against (section 9's <code>negative_eval</code> record quotes
+both). <code>tests/</code> also carries a golden retrieval baseline, an
+OKF regression file and an MCP smoke test.</p>
+<p>Two cautions for a reader counting coverage.
+<code>tests/conftest.py</code> executes on pytest collection, which the
+screening pass flags and which matters only if you run the suite. And
+the authority tests exercise the multiplier — that deprecated clamps
+low, that ordering follows authority, that a status change refreshes it
+— rather than the <code>continue</code> that actually removes a
+deprecated note from a query; that behaviour is covered instead by the
+end-to-end note flow, which matches on the <code>[unconfirmed]</code>
+substring.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Give yourself three responses, not two.</strong> Excluded,
+labelled, weighted. Most systems pick one and apply it to every retired
+value; here <code>deprecated</code> is dropped, <code>draft</code> is
+returned with a badge, and the rest is a multiplier.</li>
+<li><strong>Put the retirement marker in the document.</strong> A
+blockquote line naming the date and the successor survives being read by
+a person, copied into a diff, or opened outside the tool.</li>
+<li><strong>Record the third event.</strong> Retrieval logs stop at
+"this was returned". The chain that matters is seen, cited, and did the
+work succeed — and the third one is the only one that can be fed back as
+a negative example.</li>
+<li><strong>Exempt the dedup recall from your authority
+weighting.</strong> Similarity used for conflict detection must not
+inherit a confidence penalty, or a migration that downgrades old notes
+will blind exactly the check that catches contradictions.</li>
+<li><strong>Say what per-user files buy.</strong> Conflict isolation and
+read isolation are different properties, and a layout that delivers the
+first is easy to describe as if it delivered the second.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>_trust_tier</code> is imported into
+<code>knowledge_loop.py</code> and never called there. Was a consumer
+planned, or is the tier meant only as a label on a query result?</li>
+<li>The authority multiplier calls the status component a gate. Is the
+<code>continue</code> on <code>deprecated</code> intended as the gate
+and the offsets as ranking, or did the offset predate the
+exclusion?</li>
+<li>Other users' task memories reach a caller as a summary. Is there a
+deployment where that is the wrong default, and is there a way to turn
+it off?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Store, entry format, supersession:
+<code>codewiki/src/store.py</code></li>
+<li>Retrieval kernel and authority:
+<code>codewiki/src/retrieval.py</code></li>
+<li>Query path and status handling:
+<code>codewiki/mcp/tools/note_query.py</code></li>
+<li>Note lifecycle: <code>codewiki/mcp/tools/note_lifecycle.py</code>,
+<code>note_ingest.py</code>, <code>note_consolidation.py</code></li>
+<li>Task memory: <code>codewiki/mcp/tools/task_manager.py</code></li>
+<li>Telemetry and feedback:
+<code>codewiki/mcp/tools/telemetry.py</code>,
+<code>outcome_report.py</code>,
+<code>distill_conversation.py</code></li>
+<li>Tests: <code>tests/test_task_manager.py</code>,
+<code>tests/test_authority_p0.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/mambo-wang/CodeWiki-Plus/commit/4b826918d6fd4d954064190683a9455bb40805ff"><code class="commit-id" title="4b826918d6fd4d954064190683a9455bb40805ff">4b826918…</code></a>
+— first reading, at the head of <code>main</code>, version 5.10.1 on
+PyPI. Screened with <code>scripts/screen_repo.py</code> before anything
+was read: no auto-run surface, one build-time execution path
+(<code>tests/conftest.py</code> at pytest collection), two dependency
+manifests inside the seven-day cooldown, and an <code>AGENTS.md</code>
+addressed to a reading agent which was read as data. Nothing was
+installed, built or run. Five marks. The reading covered the store
+facade and its entry format, the note lifecycle and its confirm gate,
+the query path's three-way treatment of status, the authority
+multiplier, the task-memory layout and its supersession marker, the
+telemetry chain and the negative-example feedback, and the two test
+cases the <code>negative_eval</code> mark rests on; the documentation
+generator the project grew out of — the Tree-sitter toolchain it
+inherited from upstream CodeWiki — was read as context rather than as
+subject. MIT, with the upstream's copyright line retained and the fork
+relationship stated in the README. Two findings worth carrying:
+<code>_trust_tier</code> is imported by <code>knowledge_loop.py</code>
+and never called there, so the OKF trust tier is a label on a query
+result rather than an input to anything; and the
+<code>human-reviewed</code> tier is earned by a <code>verified</code>
+entry whose <code>by</code> field begins with the string
+<code>human:</code>, which the writer supplies, so
+<code>human_review</code> is withheld on both grounds.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
