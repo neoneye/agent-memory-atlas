@@ -7,13 +7,12 @@ page_kind: system
 source_name: mateaix/mateclaw
 source_url: https://github.com/mateaix/mateclaw
 archive_name: "mateaix--mateclaw"
-revision: a09eb06f653b951c8370e300cc44947df53e1087
-revision_url: https://github.com/mateaix/mateclaw/commit/a09eb06f653b951c8370e300cc44947df53e1087
-analyzed_at: 2026-09-16
-capabilities: "scope_enforced, human_review, negative_eval"
+revision: 5c67af85fc85060a8518fa25ca66a7c19f1e11ab
+revision_url: https://github.com/mateaix/mateclaw/commit/5c67af85fc85060a8518fa25ca66a7c19f1e11ab
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "the fact recall query and the workspace-file read, over one relational store | mateclaw-server/src/main/java/vip/mate/memory/fact/query/FactQueryService.java:78-88, service/MemoryRecallService.java:62-90, :123-155 | `recallRelevant` filters `scope IN (TEAM, GLOBAL) OR (scope = PERSONAL AND owner_key = ?)` and degrades to shared-only when no owner is resolved; the SPI carries `ownerKey` on `prefetch` and `syncTurn` overloads. The recall ledger beside it binds the same identity from the other direction: a personal-scope write with no resolved owner returns without recording, shared rows take a canonical empty owner key rather than `NULL`, and both the increment and the query-hash merge carry `.eq(getOwnerKey, ownerKey)` | mateclaw-server/src/test/java/vip/mate/memory/service/MemoryRecallOwnerIsolationTest.java, fact/FactProjectionOwnerScopeTest.java"
-  human_review: "the fact contradiction queue, over the same fact store | mateclaw-server/src/main/java/vip/mate/memory/fact/controller/FactController.java:168-203 | a `GET` lists contradictions whose `resolution IS NULL`, and a `POST /contradictions/{id}/resolve` gated by `@RequireWorkspaceRole(\"member\")` validates the verdict against `KEEP_A | KEEP_B | MERGE | IGNORE` and stores it with `resolvedAt` and a `resolvedBy` taken from the Spring `Authentication`; surfaced in `mateclaw-ui/src/views/Memory/components/FactList.vue` | none"
   negative_eval: "session search and recall tracking, both on the read path | mateclaw-server/src/main/java/vip/mate/memory/search, service/MemoryRecallTracker.java | committed cases assert a populated result excludes named material: `listRecentExcludesRunningAndCurrent` and `searchExcludesRunningAndCurrent` insert four conversations and assert the completed one is present while the still-running sibling and the caller's own are not; `trackerPropagatesOnlyVisibleOwnerIdentity` seeds a shared file and two owners' files and verifies the second owner's is never recorded | mateclaw-server/src/test/java/vip/mate/memory/search/SessionSearchIsolationTest.java:77-98, service/MemoryRecallOwnerIsolationTest.java:44-61"
 stack_storage: "postgres"
 stack_retrieval: "lexical"
@@ -70,7 +69,14 @@ What the verdict does not do is act on the facts. `KEEP_A`, `KEEP_B` and `MERGE`
 appear in the validation list, the entity's comment and nothing else: no code
 path reads `getResolution` to retire, merge or down-trust a `FactEntity`.
 Resolving a contradiction removes it from the queue and changes nothing about
-what recall returns. Beside that, the SPI has **no deletion hook** — no
+what recall returns — `FactQueryService` filters on `agentId` and `deleted = 0`
+and on nothing else, so both contradicting facts keep being returned before the
+verdict and after it. That is why this report does not carry `human_review`: the
+actor half is as good as this atlas sees — the role gate is
+`@RequireWorkspaceRole("member")`, `resolvedBy` comes from the Spring
+`Authentication` rather than from the request body, and the agent's two fact
+tools, `fact_probe` and `fact_list_contradictions`, are both reads — but a gate
+needs something held behind it, and nothing here is. Beside that, the SPI has **no deletion hook** — no
 `delete`, `forget`, `remove` or `purge` method on `MemoryProvider`; `evict` is
 documented as dropping "cached internal state … on agent deactivation or memory
 pressure" — so MateClaw closes half the provider gap and leaves the other half
@@ -320,6 +326,8 @@ Do not copy:
 - **A fact has no status column.** `grep -n "private" mateclaw-server/src/main/java/vip/mate/memory/fact/model/FactEntity.java` — `confidence` and `trust` are floats; there is no enum, no state, and no tombstone table.
 
 ## History
+
+**2026-09-19** — re-pinned to [`5c67af85fc85060a8518fa25ca66a7c19f1e11ab`](https://github.com/mateaix/mateclaw/commit/5c67af85fc85060a8518fa25ca66a7c19f1e11ab). `human_review` is **withdrawn**, and section 1 already contained the sentence that settles it: *"Resolving a contradiction removes it from the queue and changes nothing about what recall returns."* `FactQueryService` was re-read to confirm it — the fact query filters on `agentId` and `deleted = 0` and nothing else — so both sides of a contradiction are returned before the verdict and after it. The actor half is among the strongest in this corpus and keeps its credit: the resolve route is gated on `@RequireWorkspaceRole("member")`, `resolvedBy` is read from the Spring `Authentication` rather than the body, and the agent's two fact tools are both reads. A verdict nobody's memory waits on is a record, not a gate. `scope_enforced` and `negative_eval` stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`a09eb06f653b951c8370e300cc44947df53e1087`](https://github.com/mateaix/mateclaw/commit/a09eb06f653b951c8370e300cc44947df53e1087) — re-read after 102 commits. `FactQueryService.java`, which carries the scope predicate the mark principally rests on, is byte-identical at both commits, as are `FactController.java` behind the contradiction queue and `SessionSearchIsolationTest.java`. All three marks hold. The one substantive move is that `MemoryRecallService.applyOwnerIdentity` — the helper the evidence record cited at `:407-412` — no longer exists. The identity is still bound, from the other side: `recordRecall` refuses a personal-scope write with no resolved owner, gives shared rows a canonical empty owner key instead of `NULL`, and both the atomic increment and the query-hash merge carry an owner equality. The evidence record is rewritten to describe what is there rather than a helper that was removed, and its anchors updated. A helper disappearing without the predicate disappearing is the good case, and it is only visible by re-deriving rather than re-reading the old line. Nothing was installed, built or run.
 
