@@ -9,10 +9,10 @@ source_url: https://github.com/Shweta-Mishra-ai/tokenmizer
 archive_name: "Shweta-Mishra-ai--tokenmizer"
 revision: 028fc8cc3f6bd6412c40464297ad65caadf57a3e
 revision_url: https://github.com/Shweta-Mishra-ai/tokenmizer/commit/028fc8cc3f6bd6412c40464297ad65caadf57a3e
-analyzed_at: 2026-09-15
+analyzed_at: 2026-09-19
 capabilities: "trust_state, scope_enforced, audit_log, negative_eval"
 capability_evidence:
-  trust_state: "the decision graph — a nine-value status on decision nodes with the excluded set named as one constant | tokenmizer/graph_memory/types.py | `NodeStatus` and `INACTIVE_STATUSES`, a frozenset of SUPERSEDED, MODIFIED (its backward-compatible alias), INVALIDATED and ARCHIVED; `decision_tracker.py` supersedes on clear evidence and writes CONTESTED on both sides when the evidence is ambiguous, and CONTESTED stays retrievable on purpose | tests/unit/test_contested_decisions.py"
+  trust_state: "the decision graph — a nine-value status whose excluded set is one named constant, consulted at three read paths | tokenmizer/graph_memory/types.py:33-52 (`NodeStatus`), :68-73 (`INACTIVE_STATUSES`), tokenmizer/graph_memory/graph.py:385 and :444-445 (the writers), :969-974 (search), tokenmizer/agents/__init__.py:210-218, tokenmizer/checkpoints/manager.py:287-297, tokenmizer/graph_memory/context_block.py:123-135 | `INACTIVE_STATUSES` is a frozenset of SUPERSEDED, MODIFIED (its backward-compatible alias), INVALIDATED and ARCHIVED, and three reads consult it: graph search skips those nodes as historical noise, the agent listing by type skips them before sorting by importance, and the checkpoint resume builder skips them unless the caller names an explicit status set. CONTESTED is deliberately absent from the set, and a comment says why — two decisions sharing a topic without enough context to call one a replacement are both flagged and surfaced together rather than one being guessed into SUPERSEDED, with the resume path stating the principle: resuming with confidently-wrong context is worse than resuming with none. The context block renders contested pairs by walking the CONFLICTS_WITH edges between them. Importance is the separate number and it orders what the status has already admitted | tests/unit/test_contested_decisions.py"
   scope_enforced: "the HTTP read path — a principal derived from the credential, claimed per session and checked before any session-scoped route answers | tokenmizer/security/ownership.py | `principal_for_key` and `OwnershipStore.check_access`, reached through the `verify_session_access` dependency at tokenmizer/api/routes_graph.py:47, which claims only on write methods, fails closed to 503 when no principal was established, and answers 404 rather than 403 so the route cannot be used as a session-name oracle; opt-in cross-session recall reads only the sessions `OwnershipStore.sessions_for` returns for that principal (`SELECT session_id FROM session_owners WHERE owner=?`, tokenmizer/security/ownership.py:161) | tests/unit/test_audit_fixes.py::test_cross_principal_access_is_denied_over_http"
   audit_log: "the graph store — every decision status transition appended beside the node it moved | tokenmizer/graph_memory/persistence.py | `persist_transition` writes the transition row and pruning is written to keep transitions alive past the node | tests/unit/test_graph_persistence.py"
   negative_eval: "extraction and the supersession matcher — committed cases that particular material must not reach the graph | tests/unit/test_graph.py | `test_secrets_redacted_in_nodes` puts an Anthropic-shaped key through the real `extract_from_messages` path and asserts `sk-ant` appears in no node's label or summary, and `test_contested_decisions.py` asserts a decision about a different purpose in the same topic bucket is not returned as a contradiction | tests/unit/test_graph.py, tests/unit/test_contested_decisions.py"
@@ -255,6 +255,20 @@ one of which (`INVALIDATED`) means "known wrong, kept as a warning", and one of
 which (`CONTESTED`) exists specifically to avoid asserting something the evidence
 does not support.
 
+The frozenset is consulted at three reads, which is what makes it a boundary
+rather than a label: graph search skips those nodes as historical noise
+(`graph_memory/graph.py:969-974`), the agent listing by type skips them before
+sorting by importance (`agents/__init__.py:210-218`), and the checkpoint resume
+builder skips them unless the caller names an explicit status set
+(`checkpoints/manager.py:287-297`) — under a docstring giving the reason in one
+line: *"Resuming with confidently-wrong context is worse than resuming with
+none."* Importance is the separate number and it orders what the status has
+already admitted. The statuses are written in the graph itself — `SUPERSEDED` at
+`graph.py:385`, both sides of a `CONTESTED` pair at `:444-445` — with
+`decision_tracker.py` supplying the matching heuristics rather than the
+assignment, and pruning ages a `SUPERSEDED` node into `ARCHIVED`
+(`pruning.py:61`).
+
 **`audit_log` is earned on `decision_transitions`** — a named, separately-stored
 record of every supersession carrying its trigger, its reason, its evidence and a
 confidence, written by `persist_transition`, deliberately outside the node and
@@ -399,6 +413,8 @@ session history.
 | `benchmarks/eval/` | — | Fourteen labelled sessions; precision, recall, F1 and label quality |
 
 ## History
+
+**2026-09-19** — [`028fc8cc3f6bd6412c40464297ad65caadf57a3e`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/028fc8cc3f6bd6412c40464297ad65caadf57a3e) — `trust_state` re-tested at an unchanged pin against the narrowed line. The mark holds and the record now carries anchors, which it had none of. `INACTIVE_STATUSES` (`tokenmizer/graph_memory/types.py:68-73`) is consulted at three reads rather than asserted once: graph search skips those nodes as historical noise (`graph.py:969-974`), the agent listing by type skips them before sorting by importance (`agents/__init__.py:210-218`), and the checkpoint resume builder skips them unless the caller names an explicit status set (`checkpoints/manager.py:287-297`). The separation the line asks for is clean: the status admits, importance orders what it admitted. One correction — the statuses are written in `graph.py` (`SUPERSEDED` at `:385`, both sides of a `CONTESTED` pair at `:444-445`), not in `decision_tracker.py`, which supplies the matching heuristics and the reasoning comments but makes no assignment; `pruning.py:61` ages a superseded node into archived and the HTTP route at `api/routes_graph.py:480` writes `INVALIDATED`. CONTESTED remains deliberately outside the excluded set, and the context block renders contested pairs by walking the `CONFLICTS_WITH` edges between them (`context_block.py:123-135`). Re-read from a fresh clone; nothing was installed and no suite was run.
 
 **2026-09-15** — [`028fc8cc3f6bd6412c40464297ad65caadf57a3e`](https://github.com/Shweta-Mishra-ai/tokenmizer/commit/028fc8cc3f6bd6412c40464297ad65caadf57a3e) — 37 commits on, 2026-09-14. Screened before reading: three auto-run manifests, one build-time execution point, one unpinned range and one dependency surface inside the cooldown; nothing was installed and no test was run. The graph memory grew to seventeen modules: opt-in cross-session recall that reads only the sessions the ownership store lists for the caller's principal, community detection for the graph page, checkpoints that accept a transcript, LangChain and LangGraph adapters, and LLM extraction on the configured chat model. Section 6 now describes cross-session recall and its missing cross-principal case, section 10 the `benchmarks/eval` precision harness that was already present, and every cited line was re-checked (`graph.py:1013` and `:386`, `routes_graph.py:47-96`). The status model, transition table, retention thresholds and the two exclusion cases are unchanged. Four marks kept.
 

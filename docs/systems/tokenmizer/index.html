@@ -121,7 +121,7 @@ recovers.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-15</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Shweta-Mishra-ai--tokenmizer" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -387,6 +387,22 @@ retrieval, one of which (<code>INVALIDATED</code>) means "known wrong,
 kept as a warning", and one of which (<code>CONTESTED</code>) exists
 specifically to avoid asserting something the evidence does not
 support.</p>
+<p>The frozenset is consulted at three reads, which is what makes it a
+boundary rather than a label: graph search skips those nodes as
+historical noise (<code>graph_memory/graph.py:969-974</code>), the agent
+listing by type skips them before sorting by importance
+(<code>agents/__init__.py:210-218</code>), and the checkpoint resume
+builder skips them unless the caller names an explicit status set
+(<code>checkpoints/manager.py:287-297</code>) — under a docstring giving
+the reason in one line: <em>"Resuming with confidently-wrong context is
+worse than resuming with none."</em> Importance is the separate number
+and it orders what the status has already admitted. The statuses are
+written in the graph itself — <code>SUPERSEDED</code> at
+<code>graph.py:385</code>, both sides of a <code>CONTESTED</code> pair
+at <code>:444-445</code> — with <code>decision_tracker.py</code>
+supplying the matching heuristics rather than the assignment, and
+pruning ages a <code>SUPERSEDED</code> node into <code>ARCHIVED</code>
+(<code>pruning.py:61</code>).</p>
 <p><strong><code>audit_log</code> is earned on
 <code>decision_transitions</code></strong> — a named, separately-stored
 record of every supersession carrying its trigger, its reason, its
@@ -614,6 +630,31 @@ quality</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/Shweta-Mishra-ai/tokenmizer/commit/028fc8cc3f6bd6412c40464297ad65caadf57a3e"><code class="commit-id" title="028fc8cc3f6bd6412c40464297ad65caadf57a3e">028fc8cc…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin against the
+narrowed line. The mark holds and the record now carries anchors, which
+it had none of. <code>INACTIVE_STATUSES</code>
+(<code>tokenmizer/graph_memory/types.py:68-73</code>) is consulted at
+three reads rather than asserted once: graph search skips those nodes as
+historical noise (<code>graph.py:969-974</code>), the agent listing by
+type skips them before sorting by importance
+(<code>agents/__init__.py:210-218</code>), and the checkpoint resume
+builder skips them unless the caller names an explicit status set
+(<code>checkpoints/manager.py:287-297</code>). The separation the line
+asks for is clean: the status admits, importance orders what it
+admitted. One correction — the statuses are written in
+<code>graph.py</code> (<code>SUPERSEDED</code> at <code>:385</code>,
+both sides of a <code>CONTESTED</code> pair at <code>:444-445</code>),
+not in <code>decision_tracker.py</code>, which supplies the matching
+heuristics and the reasoning comments but makes no assignment;
+<code>pruning.py:61</code> ages a superseded node into archived and the
+HTTP route at <code>api/routes_graph.py:480</code> writes
+<code>INVALIDATED</code>. CONTESTED remains deliberately outside the
+excluded set, and the context block renders contested pairs by walking
+the <code>CONFLICTS_WITH</code> edges between them
+(<code>context_block.py:123-135</code>). Re-read from a fresh clone;
+nothing was installed and no suite was run.</p>
 <p><strong>2026-09-15</strong> — <a
 href="https://github.com/Shweta-Mishra-ai/tokenmizer/commit/028fc8cc3f6bd6412c40464297ad65caadf57a3e"><code class="commit-id" title="028fc8cc3f6bd6412c40464297ad65caadf57a3e">028fc8cc…</code></a>
 — 37 commits on, 2026-09-14. Screened before reading: three auto-run

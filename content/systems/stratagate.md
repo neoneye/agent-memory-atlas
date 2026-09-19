@@ -7,12 +7,12 @@ page_kind: system
 source_name: "diqierjia/StrataGate-AgentMemory"
 source_url: https://github.com/diqierjia/StrataGate-AgentMemory
 archive_name: "diqierjia--StrataGate-AgentMemory"
-revision: a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7
-revision_url: https://github.com/diqierjia/StrataGate-AgentMemory/commit/a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7
-analyzed_at: 2026-09-15
+revision: f79e986af6530ec1b14fb9bdecf5f454111ba8cf
+revision_url: https://github.com/diqierjia/StrataGate-AgentMemory/commit/f79e986af6530ec1b14fb9bdecf5f454111ba8cf
+analyzed_at: 2026-09-19
 capabilities: "trust_state, scope_enforced, negative_eval"
 capability_evidence:
-  trust_state: "graph fact and node status | packages/core/src/graph.ts:78, :93-105; src/runtime.ts:2132-2139 renderActivatedMemory; src/llm.ts:165, :176 | the graph projector's schema lets the model mark a node or edge `active`, `superseded`, `disputed` or `archived`; a node's facts take its status (`graph.ts:99`), a new active fact for the same key supersedes the old one and closes its `validTo`, `currentState` is rendered from active facts only (`:105`), and the memory injected into every turn lists only active facts, so a disputed or superseded fact is stored and expandable but not presented as current | packages/core/tests/graph.test.ts:7 covers projection and supersession by key; no test marks a fact disputed"
+  trust_state: "graph node and fact status — filtered at two levels, and coerced open when the model supplies a value the set does not contain | packages/core/src/graph.ts:13 (`STATUSES`), :78 and :118 (the coercion), :93-97 (supersession), :99 (inheritance), :105 (`currentState`), packages/core/src/store.ts:1807 (`searchGraphNodes`), src/runtime.ts:2104 and :2139 (`renderActivatedMemory`), src/llm.ts:165 and :176 (the schema) | the graph projector schema lets the model mark a node or edge active, superseded, disputed or archived, and the store honours it twice: `searchGraphNodes` considers only active and disputed nodes, so a superseded or archived node is not a candidate at all, and the memory injected into every turn renders only facts whose status is active. `currentState` is built from active facts alone, and a new active fact for a key closes the old one and stamps its validTo. Three details qualify it. A fact is born with its node status rather than its own (`status: node.status`), so marking a node disputed makes every fact written under it disputed. The supersession sweep matches only active facts for the key, so a disputed fact is never closed and keeps an open validTo. And an unrecognised status is coerced to active at both the node and the edge site, so a malformed value from the model fails toward the most permissive state | packages/core/tests/graph.test.ts:7 covers projection and supersession by key; no test marks a fact disputed and none pins the coercion"
   scope_enforced: "namespace on every load | packages/core/src/sqlite.ts:529, :551, :602, :773 (21 queries `WHERE namespace = ?`); src/runtime.ts namespaceFor | every table is keyed by namespace and a StrataGate instance loads only its own rows; the DeepSeek Harness runtime derives the namespace from the session's working directory by default (`project` mode), or from the session id, or a configured global name — never from a tool argument — and `getBlockContext` documents that omitting a thread returns every thread in the namespace and never another namespace | no test opens two namespaces against one database; packages/core/tests/persistence.test.ts:458 reopens a namespace by name"
   negative_eval: "search refuses what it should not return | packages/core/tests/store.test.ts:70 keeps forgotten events out of search without deleting their provenance; packages/core/tests/elements.test.ts:116-119 | the store test forgets every event and asserts `searchEvents('concise')` returns nothing while the events' source message links survive; the elements test asserts an unrelated query (`watermelon`) returns no events and no element facts beside a participant query and an SQLite query that return the stored ones | packages/core/tests/elements.test.ts:116"
 stack_storage: "sqlite"
@@ -27,9 +27,9 @@ matrix:
   scoping: "A namespace per project directory by default, or per session, or global; threads inside a namespace"
   integration: "A DeepSeek Harness plugin with memory tools and an admin Memory UI, a WorkBuddy integration, and the `@stratagate/core` library"
   background: "Retrying jobs for block summaries, event extraction and graph projection; block layers decay toward shallower views as later blocks become ready"
-  trust: "Source-bound events, an evidence assessment step before relying on a batch, use-only reinforcement from receipts, graph statuses including disputed, and decay capping for superseded events"
+  trust: "Source-bound events, an evidence assessment step before relying on a batch, use-only reinforcement from receipts, graph statuses including disputed that filter search at the node level and injection at the fact level, and decay capping for superseded events"
   strengths: "Verbatim sources sealed before any model call; events that separate when something was said from when it happened; reinforcement only from evidence the answer used; a committed LoCoMo comparison with per-question results and artifact hashes"
-  risks: "Superseded events remain eligible for automatic injection and are rendered without their status; the as-of read exists only on legacy element cards; forget and restore have no surface in the plugin"
+  risks: "Superseded events remain eligible for automatic injection and are rendered without their status; a graph status the model supplies outside the four-name set is coerced to active rather than refused; the as-of read exists only on legacy element cards; forget and restore have no surface in the plugin"
 ---
 
 ## 1. Executive Summary
@@ -61,7 +61,24 @@ On top of the blocks:
 
 The graph's `disputed` and `superseded` facts are kept out of the current state
 and out of the memory injected each turn, and every read is confined to a
-namespace derived from the project directory.
+namespace derived from the project directory. The filter runs at two levels:
+`searchGraphNodes` considers only `active` and `disputed` *nodes*
+(`packages/core/src/store.ts:1807`), so a superseded or archived node is never a
+candidate, and `renderActivatedMemory` then renders only `active` *facts* of the
+nodes that survived (`src/runtime.ts:2139`). A disputed node therefore reaches
+the prompt with its name and `currentState` and an empty fact list, which is a
+defensible answer and an easy one to miss.
+
+Three details qualify the mechanism, all in the projector
+(`packages/core/src/graph.ts`). A fact is created with `status: node.status`
+(`:99`) rather than its own, so marking a *node* disputed makes every fact
+written under it disputed. The supersession sweep matches only facts that are
+`active` for the key (`:93`), so a disputed fact is never closed and keeps an
+open `validTo` while later active facts accumulate beside it. And an
+unrecognised status is coerced to `active` — at the node (`:78`) and at the edge
+(`:118`) alike — so a value the model supplies outside the four-name set fails
+toward the most permissive state rather than the most conservative one. Nothing
+in the committed tests pins that coercion.
 
 Events are handled less carefully. A superseded event stays a candidate for the
 memory injected on every turn. Its weight is capped rather than excluded, and
@@ -340,4 +357,6 @@ never be injected as context, activation needs to filter or label it first.
 
 ## History
 
-**2026-09-15** — [`a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7`](https://github.com/diqierjia/StrataGate-AgentMemory/commit/a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7) — first reading, at a commit dated 15 September 2026. Screened before opening: no auto-run surface, four build-time execution points, four unpinned surfaces, and five dependency files inside the cooldown. Nothing was installed, built or run.
+**2026-09-19** — [`f79e986af6530ec1b14fb9bdecf5f454111ba8cf`](https://github.com/diqierjia/StrataGate-AgentMemory/commit/f79e986af6530ec1b14fb9bdecf5f454111ba8cf) — `trust_state` re-tested against the narrowed line — whether the field answers may this be acted on and gets used for filtering, or how sure and gets used for ranking. It filters, at two levels, and the record named only one. `searchGraphNodes` (`packages/core/src/store.ts:1807`) considers only `active` and `disputed` nodes, so a superseded or archived node is never a candidate; `renderActivatedMemory` then renders only `active` facts of the survivors (`src/runtime.ts:2139`, the function at `:2104` rather than the `:2132-2139` the record cited). Confidence sits beside the status as a separate number and does not substitute for it. Three details in the projector qualify the mechanism and are new to the record. A fact is created with `status: node.status` (`packages/core/src/graph.ts:99`) rather than its own, so marking a node disputed makes every fact written under it disputed. The supersession sweep matches only facts already `active` for the key (`:93`), so a disputed fact is never closed and keeps an open `validTo` while later active facts accumulate beside it. And an unrecognised status is coerced to `active` at both the node (`:78`) and the edge (`:118`) — a value the model supplies outside the four-name set fails toward the most permissive state, and no committed test pins that. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-15** — [`f79e986af6530ec1b14fb9bdecf5f454111ba8cf`](https://github.com/diqierjia/StrataGate-AgentMemory/commit/f79e986af6530ec1b14fb9bdecf5f454111ba8cf) — first reading, at a commit dated 15 September 2026. Screened before opening: no auto-run surface, four build-time execution points, four unpinned surfaces, and five dependency files inside the cooldown. Nothing was installed, built or run.

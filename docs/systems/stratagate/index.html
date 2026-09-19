@@ -118,14 +118,14 @@ retrieved evidence suffices before relying on it.</p>
               <strong>diqierjia/StrataGate-AgentMemory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/diqierjia/StrataGate-AgentMemory/commit/a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7" title="a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7">
+            <a class="meta-pill revision-pill" href="https://github.com/diqierjia/StrataGate-AgentMemory/commit/f79e986af6530ec1b14fb9bdecf5f454111ba8cf" title="f79e986af6530ec1b14fb9bdecf5f454111ba8cf">
               <span>Analyzed revision</span>
-              <code>a30ffedd…</code>
+              <code>f79e986a…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-15</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/diqierjia--StrataGate-AgentMemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -178,7 +178,28 @@ itself.</li>
 <p>The graph's <code>disputed</code> and <code>superseded</code> facts
 are kept out of the current state and out of the memory injected each
 turn, and every read is confined to a namespace derived from the project
-directory.</p>
+directory. The filter runs at two levels: <code>searchGraphNodes</code>
+considers only <code>active</code> and <code>disputed</code>
+<em>nodes</em> (<code>packages/core/src/store.ts:1807</code>), so a
+superseded or archived node is never a candidate, and
+<code>renderActivatedMemory</code> then renders only <code>active</code>
+<em>facts</em> of the nodes that survived
+(<code>src/runtime.ts:2139</code>). A disputed node therefore reaches
+the prompt with its name and <code>currentState</code> and an empty fact
+list, which is a defensible answer and an easy one to miss.</p>
+<p>Three details qualify the mechanism, all in the projector
+(<code>packages/core/src/graph.ts</code>). A fact is created with
+<code>status: node.status</code> (<code>:99</code>) rather than its own,
+so marking a <em>node</em> disputed makes every fact written under it
+disputed. The supersession sweep matches only facts that are
+<code>active</code> for the key (<code>:93</code>), so a disputed fact
+is never closed and keeps an open <code>validTo</code> while later
+active facts accumulate beside it. And an unrecognised status is coerced
+to <code>active</code> — at the node (<code>:78</code>) and at the edge
+(<code>:118</code>) alike — so a value the model supplies outside the
+four-name set fails toward the most permissive state rather than the
+most conservative one. Nothing in the committed tests pins that
+coercion.</p>
 <p>Events are handled less carefully. A superseded event stays a
 candidate for the memory injected on every turn. Its weight is capped
 rather than excluded, and pinned or safety-critical events are added
@@ -509,8 +530,33 @@ the plugin</li>
 routes are read-only</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/diqierjia/StrataGate-AgentMemory/commit/f79e986af6530ec1b14fb9bdecf5f454111ba8cf"><code class="commit-id" title="f79e986af6530ec1b14fb9bdecf5f454111ba8cf">f79e986a…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line — whether
+the field answers may this be acted on and gets used for filtering, or
+how sure and gets used for ranking. It filters, at two levels, and the
+record named only one. <code>searchGraphNodes</code>
+(<code>packages/core/src/store.ts:1807</code>) considers only
+<code>active</code> and <code>disputed</code> nodes, so a superseded or
+archived node is never a candidate; <code>renderActivatedMemory</code>
+then renders only <code>active</code> facts of the survivors
+(<code>src/runtime.ts:2139</code>, the function at <code>:2104</code>
+rather than the <code>:2132-2139</code> the record cited). Confidence
+sits beside the status as a separate number and does not substitute for
+it. Three details in the projector qualify the mechanism and are new to
+the record. A fact is created with <code>status: node.status</code>
+(<code>packages/core/src/graph.ts:99</code>) rather than its own, so
+marking a node disputed makes every fact written under it disputed. The
+supersession sweep matches only facts already <code>active</code> for
+the key (<code>:93</code>), so a disputed fact is never closed and keeps
+an open <code>validTo</code> while later active facts accumulate beside
+it. And an unrecognised status is coerced to <code>active</code> at both
+the node (<code>:78</code>) and the edge (<code>:118</code>) — a value
+the model supplies outside the four-name set fails toward the most
+permissive state, and no committed test pins that. Screened again first;
+nothing was installed and no suite was run.</p>
 <p><strong>2026-09-15</strong> — <a
-href="https://github.com/diqierjia/StrataGate-AgentMemory/commit/a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7"><code class="commit-id" title="a30ffeddcc8ff8516f6dbebe3a4c6149b0ba1ec7">a30ffedd…</code></a>
+href="https://github.com/diqierjia/StrataGate-AgentMemory/commit/f79e986af6530ec1b14fb9bdecf5f454111ba8cf"><code class="commit-id" title="f79e986af6530ec1b14fb9bdecf5f454111ba8cf">f79e986a…</code></a>
 — first reading, at a commit dated 15 September 2026. Screened before
 opening: no auto-run surface, four build-time execution points, four
 unpinned surfaces, and five dependency files inside the cooldown.
