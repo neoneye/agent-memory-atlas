@@ -19814,7 +19814,20 @@ writing to a <code>hidden</code> key updates it without bringing it back
 back to 'visible' — F1 sanitation, 2026-09-12". That one line is the
 difference between a quarantine and a suggestion, and most suppression
 flags in this corpus do not survive the next write.</li>
-<li>Biggest risk: <strong>the ledger and the interval chain are both
+<li>Biggest risk: <strong>the visibility predicate is written per query,
+and one query does not have it.</strong> <code>search</code>, the key
+lookup and the pinned-injection read each carry
+<code>visibility NOT IN ('private','hidden')</code> in SQL;
+<code>get_all</code> carries nothing, orders by importance and returns
+the row whatever its visibility. One caller adds the test in Python and
+five do not — including the compaction block twenty lines from the one
+that does — so a private or hidden fact above the importance threshold
+is rendered as <code>key=value</code> into an injected block, a
+smart-context candidate list, a recall string or a
+<code>CONTEXT.md</code> snapshot. The comment two files away says it
+cannot: <em>"C8: private facts never leave the store via recall."</em>
+It is true of the query it is written beside.</li>
+<li>Also risky: <strong>the ledger and the interval chain are both
 advisory, and neither counts what it drops.</strong>
 <code>_record_history</code> "[d]egrades to a warning so memory writes
 never fail on history"; <code>_record_temporal</code> is "advisory,

@@ -1,18 +1,18 @@
 ---
 title: "a-memory"
 eyebrow: "Hidden survives a rewrite, because a re-save reads the old flag first"
-description: "A four-tier local memory in plain SQLite whose facts carry a visibility that the search and lookup reads exclude, whose every read binds the layer and user from the handle rather than an argument, and whose saves and deletes each append a before-and-after ledger row — all three degrading to a warning rather than failing the write."
+description: "A four-tier local memory in plain SQLite whose facts carry a visibility that three of its four L4 reads exclude, whose every read binds the layer and user from the handle rather than an argument, and whose saves and deletes each append a before-and-after ledger row — all three degrading to a warning rather than failing the write."
 root: ../..
 page_kind: system
 source_name: "Cipher208/a-memory"
 source_url: https://github.com/Cipher208/a-memory
 archive_name: "Cipher208--a-memory"
-revision: 6a9f466353912f8ce0d485cb957949a523074c8e
-revision_url: https://github.com/Cipher208/a-memory/commit/6a9f466353912f8ce0d485cb957949a523074c8e
-analyzed_at: 2026-09-16
+revision: 32edbb91da0f54ad25b157e13bf6867c0a409526
+revision_url: https://github.com/Cipher208/a-memory/commit/32edbb91da0f54ad25b157e13bf6867c0a409526
+analyzed_at: 2026-09-19
 capabilities: "trust_state, scope_enforced, audit_log"
 capability_evidence:
-  trust_state: "a four-value visibility that the search and key-lookup reads exclude, and which a re-save preserves so a quarantined key cannot be un-hidden by writing to it again | core/__init__.py:63-72, core/memory.py:98, :110-118, :348, :407, :450 | `visibility` is `visible | pinned | private | hidden`, validated on write; `search` selects `WHERE layer=? AND user_id=? AND visibility NOT IN ('private','hidden')` and the key lookup does the same, while the pinned-injection read selects `visibility='pinned'` — with the invariant named in a comment: \"C8: private facts never leave the store via recall (the inject pinned block does not read them).\" Passing `visibility=None` on a re-save re-reads the stored flag before updating, under a dated comment recording the bug it fixes: \"a 'hidden' row re-saved with the same canonical key would otherwise be back to 'visible' — F1 sanitation, 2026-09-12\". The API docstring states the consequence: \"'hidden' works as a key quarantine: future writes update the row but never un-hide it\" | tests/"
+  trust_state: "a four-value visibility that three SQL reads exclude, and which a re-save preserves so a quarantined key cannot be un-hidden by writing to it again — with a fourth read that carries no predicate at all | core/__init__.py:63 and :66-74, core/memory.py:98, :107-116, :328-334 (`get_all`), :348, :406-407, :450, features/inject.py:222, features/recall.py:62-64, features/smart_context.py:51-56 | `visibility` is visible / pinned / private / hidden, validated on write. `search` selects `WHERE layer=? AND user_id=? AND visibility NOT IN (private, hidden)`, the key lookup does the same, and the pinned-injection read selects `visibility=pinned`, with the invariant named in a comment: C8: private facts never leave the store via recall. Passing `visibility=None` on a re-save re-reads the stored flag before updating, so a hidden key stays hidden however often it is written — the comment dates the bug that produced the fix. That is a discrete state used for filtering, which earns the mark. The limit is `get_all`, which orders by importance and takes no visibility predicate: `features/inject.py:222` adds the test in Python, and five sibling callers do not — including `features/inject.py:165`, twenty lines from the one that does | tests/"
   scope_enforced: "layer and user are properties of the handle a caller is given, bound into every core-memory read rather than passed per query | core/__init__.py:38-53, :122-132, core/memory.py:348, :407, :450, core/episodic.py:37, :46-47 | `MemoryManager.get_layer(layer_type, user_id)` returns a `MemoryLayer` that stores both and constructs `EpisodicMemory(layer=layer_type)` and `CoreMemory` beneath it; `user_memory()` and `agent_memory()` are the named accessors. Every `core_memory` read begins `WHERE layer=? AND user_id=?`, and `episodes` carries a `layer` column with two indexes on `(layer, user_id)` — a predicate on a shared table, not a file per layer. A caller holding a user-layer handle has no argument that reaches the agent layer, which is what the README means by \"[u]ser facts and agent identity never share a namespace\" | tests/"
   audit_log: "every save and every delete appends a ledger row carrying the full before and after row as JSON plus what triggered it | core/memory.py:217-231, :120, :128, :363 | `_record_history` is documented as \"[a]ppend one A2.2 ledger row with full before/after row JSON\" and is called from all three mutation paths — the update branch with the old row and the new, the insert branch with `None` as the old, and delete with the row as old and `None` as new, attributed `triggered_by or \"delete\"`. Alongside it `_record_temporal` maintains an interval chain in `core_memory_temporal`, closing the open interval and opening a new one on each write and closing it on delete | core/memory.py:265-300"
 stack_storage: "sqlite"
@@ -28,8 +28,8 @@ matrix:
   integration: "An MCP server, hooks, a FastAPI-shaped OpenAPI surface, and a PyPI package with an optional embeddings extra"
   background: "An hourly consolidation sweep promoting episodes into long-term facts, TTL expiry, and per-layer cleanup"
   trust: "A visibility quarantine that survives rewriting, a source provenance contract, a before-and-after ledger, and an interval chain per key"
-  strengths: "The `hidden` flag is a quarantine with the right stickiness: a re-save that passes no visibility re-reads the stored value first, so writing to a hidden key updates it without bringing it back — and the comment records the bug and the date that produced the fix (\"F1 sanitation, 2026-09-12\"). `private` and `hidden` are excluded from both read paths under a named invariant, C8, that says the pinned-injection block does not read private facts either. Scope is a property of the handle rather than an argument: `user_memory()` and `agent_memory()` hand back objects carrying their own layer and user, so no caller has a parameter that crosses the boundary. And the ledger is complete across the mutation paths — update, insert and delete each append a row with the full before and after image and an attribution"
-  risks: "All three supporting mechanisms are best-effort by design. `_record_history` \"[d]egrades to a warning so memory writes never fail on history\" and `_record_temporal` is \"advisory, never fails a save\", both wrapped in a bare exception handler — so a disk or serialisation failure leaves a gap in the ledger and a broken interval chain while the write itself succeeds, and nothing counts the gaps. The interval chain is not a second time axis: `valid_from` is the write instant, the same clock as `updated_at`, so the point-in-time query answers what the store held at a past moment and not when anything was true in the world. `visibility` is caller-supplied and defaults to visible, so quarantine is an act somebody has to take. At 66,891 lines with 281 test files the tree is large for a project whose README leads with \"plain SQLite files\""
+  strengths: "The `hidden` flag is a quarantine with the right stickiness: a re-save that passes no visibility re-reads the stored value first, so writing to a hidden key updates it without bringing it back — and the comment records the bug and the date that produced the fix (\"F1 sanitation, 2026-09-12\"). `private` and `hidden` are excluded from the three L4 queries that carry the predicate in SQL, under a named invariant, C8 — though `get_all` carries no predicate and five of its callers add none, so the invariant holds for the query it is written beside and not for recall as a whole. Scope is a property of the handle rather than an argument: `user_memory()` and `agent_memory()` hand back objects carrying their own layer and user, so no caller has a parameter that crosses the boundary. And the ledger is complete across the mutation paths — update, insert and delete each append a row with the full before and after image and an attribution"
+  risks: "All three supporting mechanisms are best-effort by design. `_record_history` \"[d]egrades to a warning so memory writes never fail on history\" and `_record_temporal` is \"advisory, never fails a save\", both wrapped in a bare exception handler — so a disk or serialisation failure leaves a gap in the ledger and a broken interval chain while the write itself succeeds, and nothing counts the gaps. The interval chain is not a second time axis: `valid_from` is the write instant, the same clock as `updated_at`, so the point-in-time query answers what the store held at a past moment and not when anything was true in the world. `visibility` is caller-supplied and defaults to visible, so quarantine is an act somebody has to take — and `get_all` takes no visibility predicate, so a private or hidden fact reaches a prompt through `features/recall.py`, `features/smart_context.py`, the compaction block in `features/inject.py`, `core/__init__.py`'s summary helper or the `CONTEXT.md` snapshot in `mcp_server/tools/ops.py`, each of which renders `key=value`. At 66,891 lines with 281 test files the tree is large for a project whose README leads with \"plain SQLite files\""
 ---
 
 ## 1. Executive Summary
@@ -60,7 +60,44 @@ that records both the bug and its date:
 So, as the API docstring puts it, "'hidden' works as a key quarantine: future
 writes update the row but never un-hide it." A memory suppressed once cannot be
 resurrected by writing to it again, which is the failure most systems with a
-suppression flag have.
+suppression flag have. The quarantine is also asymmetric in the useful
+direction: `visibility` is an argument on the MCP write tool
+(`mcp_server/tools/memory.py:37`, `:78`), so the agent can hide a key for
+itself — and the re-save rule means it cannot unhide one.
+
+**The predicate is in three queries and not in the fourth.** `search`
+(`core/memory.py:407`), the key lookup (`:450`) and the pinned-injection read
+(`:348`) each carry the visibility clause in SQL. `get_all` (`:328-334`) does
+not: it selects every row for the layer and user, orders by importance and takes
+a limit. One caller adds the missing test in Python —
+`features/inject.py:222` keeps only `visibility == 'visible'` — and five
+production callers do not:
+
+- `features/inject.py:165-170`, the compaction block, twenty lines from the one
+  that does, emits every fact at or above the importance threshold
+- `features/smart_context.py:51-56`, same threshold, into the important-candidate
+  list
+- `features/recall.py:62-64`, which emits facts whose key begins `dream_` or
+  whose importance is at least 0.95
+- `core/__init__.py:106-108`, the `summary()` helper, which emits all ten
+- `mcp_server/tools/ops.py:93-94`, which writes the facts string into a
+  `CONTEXT.md` snapshot
+
+Each renders `key=value`, so a `private` or `hidden` fact with high importance
+reaches a prompt — or a file — through any of them. That is the same sentence
+the store disproves two files away: *"C8: private facts never leave the store
+via recall."* The invariant is true of the query it is written beside and of no
+other read. The distiller is the one deliberate exception and says so: hidden
+rows stay in its novelty-gate select (`lifecycle/distiller.py:244-250`) because
+a paraphrase aimed at a quarantined key has to be suppressed too — it compares
+against the value without emitting it.
+
+The search that finds this is one line: list the callers of `get_all` and check
+each for a `visibility` test.
+
+```bash
+grep -rn "get_all(" --include=*.py . | grep -v tests
+```
 
 **Scope is a property of the handle.** `MemoryManager.get_layer(layer_type,
 user_id)` returns a `MemoryLayer` that carries both and builds its episodic and
@@ -193,8 +230,18 @@ layer through any argument it accepts.
 
 ## 9. Reliability, Safety, and Trust
 
-The three mechanisms above are the trust story and the caveat is uniform: two of
-them degrade rather than fail.
+The three mechanisms above are the trust story, and each has a caveat: two
+degrade rather than fail, and the third holds in the queries that carry it and
+not in the read that does not.
+
+**The visibility predicate is written per query, not once.** Three L4 reads
+carry it in SQL and `get_all` does not, so whether a `private` fact reaches a
+prompt depends on which helper a caller happened to use — and five callers
+render `key=value` with no test. The structural fix is the one
+[MuninnDB](../muninndb/) reaches for: put the predicate in an admission
+function every read path constructs, so a path that forgets it also forgets
+lifecycle, scope and expiry and fails visibly. Here the same decision lives in
+four places, three agree and the fourth is the default.
 
 A ledger that "never fails a write" is the correct policy and a silent `except`
 is the wrong implementation of it, for the same reason it was wrong in the other
@@ -241,8 +288,11 @@ found.
 What the F1, C8 and A2.2 labels index. They read as review findings, and
 `AUDIT_REPORT_20260629.md` exists; the relationship was not traced.
 
-Whether `hidden` is reachable from the agent-facing tools. It is a parameter on
-`remember`; which surfaces expose it was not established.
+Whether the unfiltered `get_all` callers are an oversight or a decision. One
+sibling block in the same file adds the visibility test and the other does not,
+which reads as an oversight; but the distiller's unfiltered select is
+deliberate and says why, so the pattern is not uniform. Nothing in the tree
+states which reads are meant to honour `private`.
 
 ## Appendix: File Index
 
@@ -256,4 +306,6 @@ Whether `hidden` is reachable from the agent-facing tools. It is a parameter on
 
 ## History
 
-**2026-09-16** — [`6a9f466353912f8ce0d485cb957949a523074c8e`](https://github.com/Cipher208/a-memory/commit/6a9f466353912f8ce0d485cb957949a523074c8e) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: eight files scanned, two auto-run surfaces, one build-time execution point, no unpinned surfaces and two dependency files inside the seven-day cooldown. Nothing was installed, built or run.
+**2026-09-19** — [`32edbb91da0f54ad25b157e13bf6867c0a409526`](https://github.com/Cipher208/a-memory/commit/32edbb91da0f54ad25b157e13bf6867c0a409526) — `trust_state` re-tested against the narrowed line. `core/memory.py` and `core/__init__.py` are byte-identical to the previous pin, so what follows is a correction to this report rather than drift. The mark stands: `visibility` is a validated four-value state, three L4 queries carry it in SQL — `search` (`:407`), the key lookup (`:450`) and the pinned-injection read (`:348`) — and a re-save with no visibility re-reads the stored flag, so a hidden key stays hidden. The report said private and hidden are excluded from *both* read paths. There are more than two, and the predicate is written per query rather than once. `get_all` (`:328-334`) selects every row for the layer and user ordered by importance and takes no visibility clause. `features/inject.py:222` adds the test in Python; five production callers do not — `features/inject.py:165-170` (the compaction block, twenty lines from the one that does), `features/smart_context.py:51-56`, `features/recall.py:62-64`, `core/__init__.py:106-108` and `mcp_server/tools/ops.py:93-94`, which writes the facts string into a `CONTEXT.md` snapshot. Each renders `key=value`, so a private or hidden fact above the importance threshold reaches a prompt or a file through any of them — which the comment at `core/memory.py:406` says cannot happen: *C8: private facts never leave the store via recall.* It is true of the query it is written beside. The distiller is the one deliberate exception and says so: hidden rows stay in its novelty-gate select (`lifecycle/distiller.py:244-250`) so a paraphrase aimed at a quarantined key is suppressed too, and it compares against the value without emitting it. One open question is now answered: `hidden` is reachable from the agent-facing tools — `visibility` is an argument on the MCP write tool (`mcp_server/tools/memory.py:37`, `:78`), which makes the quarantine asymmetric in the useful direction, since the re-save rule means the agent can hide a key and not unhide it. Section 1, section 9, the matrix rows and the open questions were rewritten. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-16** — [`32edbb91da0f54ad25b157e13bf6867c0a409526`](https://github.com/Cipher208/a-memory/commit/32edbb91da0f54ad25b157e13bf6867c0a409526) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: eight files scanned, two auto-run surfaces, one build-time execution point, no unpinned surfaces and two dependency files inside the seven-day cooldown. Nothing was installed, built or run.

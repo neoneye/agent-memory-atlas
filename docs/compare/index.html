@@ -10146,9 +10146,11 @@ stickiness: a re-save that passes no visibility re-reads the stored
 value first, so writing to a hidden key updates it without bringing it
 back — and the comment records the bug and the date that produced the
 fix ("F1 sanitation, 2026-09-12"). <code>private</code> and
-<code>hidden</code> are excluded from both read paths under a named
-invariant, C8, that says the pinned-injection block does not read
-private facts either. Scope is a property of the handle rather than an
+<code>hidden</code> are excluded from the three L4 queries that carry
+the predicate in SQL, under a named invariant, C8 — though
+<code>get_all</code> carries no predicate and five of its callers add
+none, so the invariant holds for the query it is written beside and not
+for recall as a whole. Scope is a property of the handle rather than an
 argument: <code>user_memory()</code> and <code>agent_memory()</code>
 hand back objects carrying their own layer and user, so no caller has a
 parameter that crosses the boundary. And the ledger is complete across
@@ -10165,9 +10167,15 @@ gaps. The interval chain is not a second time axis:
 <code>updated_at</code>, so the point-in-time query answers what the
 store held at a past moment and not when anything was true in the world.
 <code>visibility</code> is caller-supplied and defaults to visible, so
-quarantine is an act somebody has to take. At 66,891 lines with 281 test
-files the tree is large for a project whose README leads with "plain
-SQLite files"</td>
+quarantine is an act somebody has to take — and <code>get_all</code>
+takes no visibility predicate, so a private or hidden fact reaches a
+prompt through <code>features/recall.py</code>,
+<code>features/smart_context.py</code>, the compaction block in
+<code>features/inject.py</code>, <code>core/__init__.py</code>'s summary
+helper or the <code>CONTEXT.md</code> snapshot in
+<code>mcp_server/tools/ops.py</code>, each of which renders
+<code>key=value</code>. At 66,891 lines with 281 test files the tree is
+large for a project whose README leads with "plain SQLite files"</td>
 </tr>
 <tr>
 <td><code>acontext</code></td>
@@ -43574,7 +43582,7 @@ was installed, built or run</li>
 <li><a
 href="https://github.com/Cipher208/a-memory">Cipher208/a-memory</a> at
 <a
-href="https://github.com/Cipher208/a-memory/commit/6a9f466353912f8ce0d485cb957949a523074c8e"><code class="commit-id" title="6a9f466353912f8ce0d485cb957949a523074c8e">6a9f4663…</code></a>
+href="https://github.com/Cipher208/a-memory/commit/32edbb91da0f54ad25b157e13bf6867c0a409526"><code class="commit-id" title="32edbb91da0f54ad25b157e13bf6867c0a409526">32edbb91…</code></a>
 — read only, from a shallow clone; eight files scanned, two auto-run
 surfaces, one build-time execution point, no unpinned surfaces and two
 dependency files inside the seven-day cooldown. Nothing was installed,

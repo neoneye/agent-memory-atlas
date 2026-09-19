@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="A four-tier local memory in plain
-SQLite whose facts carry a visibility that the search and lookup reads
+SQLite whose facts carry a visibility that three of its four L4 reads
 exclude, whose every read binds the layer and user from the handle
 rather than an argument, and whose saves and deletes each append a
 before-and-after ledger row — all three degrading to a warning rather
@@ -15,7 +15,7 @@ than failing the write.">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="a-memory — Agent Memory Atlas">
     <meta property="og:description" content="A four-tier local memory in
-plain SQLite whose facts carry a visibility that the search and lookup
+plain SQLite whose facts carry a visibility that three of its four L4
 reads exclude, whose every read binds the layer and user from the handle
 rather than an argument, and whose saves and deletes each append a
 before-and-after ledger row — all three degrading to a warning rather
@@ -24,10 +24,10 @@ than failing the write.">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="a-memory — Agent Memory Atlas">
     <meta name="twitter:description" content="A four-tier local memory
-in plain SQLite whose facts carry a visibility that the search and
-lookup reads exclude, whose every read binds the layer and user from the
-handle rather than an argument, and whose saves and deletes each append
-a before-and-after ledger row — all three degrading to a warning rather
+in plain SQLite whose facts carry a visibility that three of its four L4
+reads exclude, whose every read binds the layer and user from the handle
+rather than an argument, and whose saves and deletes each append a
+before-and-after ledger row — all three degrading to a warning rather
 than failing the write.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>a-memory — Agent Memory Atlas</title>
@@ -50,7 +50,7 @@ than failing the write.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "a-memory",
-      "description": "A four-tier local memory in plain SQLite whose facts carry a visibility that the search and lookup reads exclude, whose every read binds the layer and user from the handle rather than an argument, and whose saves and deletes each append a before-and-after ledger row \u2014 all three degrading to a warning rather than failing the write.",
+      "description": "A four-tier local memory in plain SQLite whose facts carry a visibility that three of its four L4 reads exclude, whose every read binds the layer and user from the handle rather than an argument, and whose saves and deletes each append a before-and-after ledger row \u2014 all three degrading to a warning rather than failing the write.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -108,7 +108,7 @@ than failing the write.">
 re-save reads the old flag first</p>
           <h1>a-memory</h1>
           <p class="document-deck">A four-tier local memory in plain
-SQLite whose facts carry a visibility that the search and lookup reads
+SQLite whose facts carry a visibility that three of its four L4 reads
 exclude, whose every read binds the layer and user from the handle
 rather than an argument, and whose saves and deletes each append a
 before-and-after ledger row — all three degrading to a warning rather
@@ -119,14 +119,14 @@ than failing the write.</p>
               <strong>Cipher208/a-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Cipher208/a-memory/commit/6a9f466353912f8ce0d485cb957949a523074c8e" title="6a9f466353912f8ce0d485cb957949a523074c8e">
+            <a class="meta-pill revision-pill" href="https://github.com/Cipher208/a-memory/commit/32edbb91da0f54ad25b157e13bf6867c0a409526" title="32edbb91da0f54ad25b157e13bf6867c0a409526">
               <span>Analyzed revision</span>
-              <code>6a9f4663…</code>
+              <code>32edbb91…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Cipher208--a-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -177,7 +177,49 @@ be back to 'visible' — F1 sanitation, 2026-09-12"</p>
 <p>So, as the API docstring puts it, "'hidden' works as a key
 quarantine: future writes update the row but never un-hide it." A memory
 suppressed once cannot be resurrected by writing to it again, which is
-the failure most systems with a suppression flag have.</p>
+the failure most systems with a suppression flag have. The quarantine is
+also asymmetric in the useful direction: <code>visibility</code> is an
+argument on the MCP write tool
+(<code>mcp_server/tools/memory.py:37</code>, <code>:78</code>), so the
+agent can hide a key for itself — and the re-save rule means it cannot
+unhide one.</p>
+<p><strong>The predicate is in three queries and not in the
+fourth.</strong> <code>search</code> (<code>core/memory.py:407</code>),
+the key lookup (<code>:450</code>) and the pinned-injection read
+(<code>:348</code>) each carry the visibility clause in SQL.
+<code>get_all</code> (<code>:328-334</code>) does not: it selects every
+row for the layer and user, orders by importance and takes a limit. One
+caller adds the missing test in Python —
+<code>features/inject.py:222</code> keeps only
+<code>visibility == 'visible'</code> — and five production callers do
+not:</p>
+<ul>
+<li><code>features/inject.py:165-170</code>, the compaction block,
+twenty lines from the one that does, emits every fact at or above the
+importance threshold</li>
+<li><code>features/smart_context.py:51-56</code>, same threshold, into
+the important-candidate list</li>
+<li><code>features/recall.py:62-64</code>, which emits facts whose key
+begins <code>dream_</code> or whose importance is at least 0.95</li>
+<li><code>core/__init__.py:106-108</code>, the <code>summary()</code>
+helper, which emits all ten</li>
+<li><code>mcp_server/tools/ops.py:93-94</code>, which writes the facts
+string into a <code>CONTEXT.md</code> snapshot</li>
+</ul>
+<p>Each renders <code>key=value</code>, so a <code>private</code> or
+<code>hidden</code> fact with high importance reaches a prompt — or a
+file — through any of them. That is the same sentence the store
+disproves two files away: <em>"C8: private facts never leave the store
+via recall."</em> The invariant is true of the query it is written
+beside and of no other read. The distiller is the one deliberate
+exception and says so: hidden rows stay in its novelty-gate select
+(<code>lifecycle/distiller.py:244-250</code>) because a paraphrase aimed
+at a quarantined key has to be suppressed too — it compares against the
+value without emitting it.</p>
+<p>The search that finds this is one line: list the callers of
+<code>get_all</code> and check each for a <code>visibility</code>
+test.</p>
+<pre class="bash"><code>grep -rn &quot;get_all(&quot; --include=*.py . | grep -v tests</code></pre>
 <p><strong>Scope is a property of the handle.</strong>
 <code>MemoryManager.get_layer(layer_type, user_id)</code> returns a
 <code>MemoryLayer</code> that carries both and builds its episodic and
@@ -332,8 +374,19 @@ accessors as the integration seam: an agent tool bound to
 argument it accepts.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
-<p>The three mechanisms above are the trust story and the caveat is
-uniform: two of them degrade rather than fail.</p>
+<p>The three mechanisms above are the trust story, and each has a
+caveat: two degrade rather than fail, and the third holds in the queries
+that carry it and not in the read that does not.</p>
+<p><strong>The visibility predicate is written per query, not
+once.</strong> Three L4 reads carry it in SQL and <code>get_all</code>
+does not, so whether a <code>private</code> fact reaches a prompt
+depends on which helper a caller happened to use — and five callers
+render <code>key=value</code> with no test. The structural fix is the
+one <a href="../muninndb/">MuninnDB</a> reaches for: put the predicate
+in an admission function every read path constructs, so a path that
+forgets it also forgets lifecycle, scope and expiry and fails visibly.
+Here the same decision lives in four places, three agree and the fourth
+is the default.</p>
 <p>A ledger that "never fails a write" is the correct policy and a
 silent <code>except</code> is the wrong implementation of it, for the
 same reason it was wrong in the other systems this atlas has found doing
@@ -375,9 +428,12 @@ an advisory handler, and no repair pass was found.</p>
 <p>What the F1, C8 and A2.2 labels index. They read as review findings,
 and <code>AUDIT_REPORT_20260629.md</code> exists; the relationship was
 not traced.</p>
-<p>Whether <code>hidden</code> is reachable from the agent-facing tools.
-It is a parameter on <code>remember</code>; which surfaces expose it was
-not established.</p>
+<p>Whether the unfiltered <code>get_all</code> callers are an oversight
+or a decision. One sibling block in the same file adds the visibility
+test and the other does not, which reads as an oversight; but the
+distiller's unfiltered select is deliberate and says why, so the pattern
+is not uniform. Nothing in the tree states which reads are meant to
+honour <code>private</code>.</p>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -410,8 +466,47 @@ not established.</p>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/Cipher208/a-memory/commit/32edbb91da0f54ad25b157e13bf6867c0a409526"><code class="commit-id" title="32edbb91da0f54ad25b157e13bf6867c0a409526">32edbb91…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line.
+<code>core/memory.py</code> and <code>core/__init__.py</code> are
+byte-identical to the previous pin, so what follows is a correction to
+this report rather than drift. The mark stands: <code>visibility</code>
+is a validated four-value state, three L4 queries carry it in SQL —
+<code>search</code> (<code>:407</code>), the key lookup
+(<code>:450</code>) and the pinned-injection read (<code>:348</code>) —
+and a re-save with no visibility re-reads the stored flag, so a hidden
+key stays hidden. The report said private and hidden are excluded from
+<em>both</em> read paths. There are more than two, and the predicate is
+written per query rather than once. <code>get_all</code>
+(<code>:328-334</code>) selects every row for the layer and user ordered
+by importance and takes no visibility clause.
+<code>features/inject.py:222</code> adds the test in Python; five
+production callers do not — <code>features/inject.py:165-170</code> (the
+compaction block, twenty lines from the one that does),
+<code>features/smart_context.py:51-56</code>,
+<code>features/recall.py:62-64</code>,
+<code>core/__init__.py:106-108</code> and
+<code>mcp_server/tools/ops.py:93-94</code>, which writes the facts
+string into a <code>CONTEXT.md</code> snapshot. Each renders
+<code>key=value</code>, so a private or hidden fact above the importance
+threshold reaches a prompt or a file through any of them — which the
+comment at <code>core/memory.py:406</code> says cannot happen: <em>C8:
+private facts never leave the store via recall.</em> It is true of the
+query it is written beside. The distiller is the one deliberate
+exception and says so: hidden rows stay in its novelty-gate select
+(<code>lifecycle/distiller.py:244-250</code>) so a paraphrase aimed at a
+quarantined key is suppressed too, and it compares against the value
+without emitting it. One open question is now answered:
+<code>hidden</code> is reachable from the agent-facing tools —
+<code>visibility</code> is an argument on the MCP write tool
+(<code>mcp_server/tools/memory.py:37</code>, <code>:78</code>), which
+makes the quarantine asymmetric in the useful direction, since the
+re-save rule means the agent can hide a key and not unhide it. Section
+1, section 9, the matrix rows and the open questions were rewritten.
+Screened again first; nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/Cipher208/a-memory/commit/6a9f466353912f8ce0d485cb957949a523074c8e"><code class="commit-id" title="6a9f466353912f8ce0d485cb957949a523074c8e">6a9f4663…</code></a>
+href="https://github.com/Cipher208/a-memory/commit/32edbb91da0f54ad25b157e13bf6867c0a409526"><code class="commit-id" title="32edbb91da0f54ad25b157e13bf6867c0a409526">32edbb91…</code></a>
 — first reading, at a commit dated 16 September 2026. Screened before
 opening, from a shallow clone: eight files scanned, two auto-run
 surfaces, one build-time execution point, no unpinned surfaces and two
