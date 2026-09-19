@@ -7,12 +7,11 @@ page_kind: system
 source_name: "juggler-ai/juggler"
 source_url: https://github.com/juggler-ai/juggler
 archive_name: "juggler-ai--juggler"
-revision: 7d8a860df9e8f5815108869f8868eaa961061e38
-revision_url: https://github.com/juggler-ai/juggler/commit/7d8a860df9e8f5815108869f8868eaa961061e38
-analyzed_at: 2026-09-17
-capabilities: "human_review"
-capability_evidence:
-  human_review: "the memory pin | web/extensions/juggler-core/pins/memory-pin.js:172-190 | a per-entry delete control that calls `removeEntry` on an exact date-and-text match, re-reading the file before each write so a concurrent change is preserved | web/extensions/juggler-core/_tests/memory-pin-test.js"
+revision: 4908d8d0098f1aebacdf060ab11404b8a2fbe457
+revision_url: https://github.com/juggler-ai/juggler/commit/4908d8d0098f1aebacdf060ab11404b8a2fbe457
+analyzed_at: 2026-09-19
+capabilities: ""
+capability_evidence: {}
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -60,10 +59,11 @@ shape the next time it writes."* A hand-editable file that a machine
 re-normalises is a real design commitment, and the 185-line `memory-format-test.js`
 is where it is defended.
 
-`human_review` is earned three ways over: the file is plain Markdown the user
+Three affordances put the file in front of the person: it is plain Markdown they
 can open, the Memory context item renders each fact on a dated row **with a
 delete button**, and every `remember` and `forget` appears in the conversation
-transcript as it happens.
+transcript as it happens. None of them is a gate, and the report carries no
+capability mark — see section 9.
 
 ## 2. Mental Model
 
@@ -173,8 +173,19 @@ mechanism: the user does not have to open the file to know it changed.
 
 ## 9. Reliability, Safety, and Trust
 
-`human_review` is earned, in its post-hoc form: a person inspects and deletes
-rather than approves in advance.
+**`human_review` was withdrawn on the 2026-09-19 re-read**, and the previous
+reading had already described why in the same breath as awarding it: the review
+is *"in its post-hoc form: a person inspects and deletes rather than approves in
+advance."* When the rubric narrowed on 2026-09-18 to require that a memory wait
+in a state until an actor the producing agent cannot be resolves it, that
+sentence became the verdict. The delete control is real — the pin re-reads the
+file, calls `removeEntry` on an exact date-and-text match and writes back, so a
+concurrent change survives (`web/extensions/juggler-core/pins/memory-pin.js:170-192`)
+— and what it removes is a fact the assistant wrote and has already been serving.
+The transcript visibility is the same shape: a person watches a write land, not a
+write wait. For a per-project notebook whose only writer is the assistant in
+conversation in front of the user, that is a reasonable design; it is not this
+mark.
 
 **No tombstone.** A forgotten fact leaves no trace, and the assistant is free to
 re-record it next session having been told the same thing again. For a per-project
@@ -271,6 +282,8 @@ Run from the root of the checkout at the pinned commit.
 | Nothing else records a deletion | `grep -rn "removed" --include="*.js" web/extensions/juggler-core \| grep -v _tests` | The tool return value only; no durable log |
 
 ## History
+
+**2026-09-19** — re-pinned to [`4908d8d0098f1aebacdf060ab11404b8a2fbe457`](https://github.com/juggler-ai/juggler/commit/4908d8d0098f1aebacdf060ab11404b8a2fbe457). **`human_review` is withdrawn, and the report now carries no capability mark.** The first reading was made on 2026-09-17, a day before the rubric narrowed, and it named the finding while awarding the mark — *"in its post-hoc form: a person inspects and deletes rather than approves in advance."* The delete control is unchanged and still careful: it re-reads the file, removes one entry on an exact date-and-text match and writes back, so a concurrent edit is preserved. What it acts on is a fact already in the file and already being served. The three affordances in section 1 are re-described as what they are — the file is open, the row has a button, the write is visible in the transcript — none of which holds a memory pending a decision. Screened again first; nothing installed or run.
 
 **2026-09-17** — [`7d8a860df9e8f5815108869f8868eaa961061e38`](https://github.com/juggler-ai/juggler/commit/7d8a860df9e8f5815108869f8868eaa961061e38) — re-read after 48 commits. `memory-pin.js` is byte-identical, so the mark rests on unchanged code — the per-entry delete control still calls `removeEntry` on an exact match at `:182`. Only its test file moved. Nothing was installed, built or run.
 

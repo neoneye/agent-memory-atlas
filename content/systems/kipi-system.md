@@ -6,14 +6,13 @@ root: ../..
 page_kind: system
 source_name: "assafkip/kipi-system"
 source_url: https://github.com/assafkip/kipi-system
-revision: 30b51f1f11e76352c90b12ea198d037688105f45
-revision_url: https://github.com/assafkip/kipi-system/commit/30b51f1f11e76352c90b12ea198d037688105f45
-analyzed_at: 2026-09-17
+revision: fb098216a6cba5d58c82a6b6c08b535bb068efdd
+revision_url: https://github.com/assafkip/kipi-system/commit/fb098216a6cba5d58c82a6b6c08b535bb068efdd
+analyzed_at: 2026-09-19
 archive_name: "assafkip--kipi-system"
-capabilities: "trust_state, human_review, negative_eval"
+capabilities: "trust_state, negative_eval"
 capability_evidence:
   trust_state: "`status: superseded` in a source's leading block withholds it from the digest an agent reads, and the withholding is recorded rather than silent | plugins/kipi-core/kipi-mcp/src/kipi_mcp/morning_init.py:188-197, :439-441, :492-498, q-system/.q-system/scripts/memory_conventions.py:26-46, q-system/.q-system/scripts/memory-confidence-validator.py:1-60 | `STATUS_VALUES = (\"current\", \"superseded\")` lives in one module imported by both the write-side hook and the sweep, beside the rule it encodes: a memory that turns out to be WRONG is superseded, not deleted, and deletion stays reserved for a memory that was NEVER true, `where there is no successor to point at and nothing to learn from the correction`. On the read side `_retirement` scans only the first fifteen lines, because scanning the whole body `would let a canonical file that DISCUSSES a retirement retire itself`, and matches either the frontmatter status or an uppercase SUPERSEDED banner — `uppercase: a banner, not prose`. A retired source is skipped so its content never enters the digest, and its retirement is written to `digest[\"retired_sources\"]` with the deciding reference `so a consumer can tell empty-because-retired from empty-because-none`. A separate `provenance` enum of six values and a bounded `confidence` are enforced at write time by a PostToolUse hook that exits 2 to block | plugins/kipi-core/kipi-mcp/tests/test_morning_init.py:257-274 and :284-300; the absent-status default is `current` on purpose, because a convention that invalidated the hundred existing files would be `a gate unsatisfiable for its own population -- which is how a gate gets switched off and then protects nothing`"
-  human_review: "the decision log records the operator's disposition of every assistant suggestion, and a deterministic harness computes how often that disposition was simple approval | q-system/.q-system/sycophancy-harness.py:1-60, q-system/canonical/decisions.md:9, .claude/rules/sycophancy-core.md:28-30 | each decision carries an origin tag — `[USER-DIRECTED]`, `[SYSTEM-INFERRED]`, or `[CLAUDE-RECOMMENDED -> APPROVED | MODIFIED | REJECTED]`, defined in the rule file as assistant suggested and operator approved, changed, or declined. The producer of the disposition is the operator, writing into the canonical decision log; the consumer is `sycophancy-harness.py`, which parses those tags and computes the approval ratio. It exists because the reviewing agent cannot review itself: the harness runs *after* the audit agent and re-runs the checks deterministically `because the agent itself is sycophantic`, alerting at a ratio of 0.7 or higher across at least five tagged decisions | the standalone mode was extracted on 2026-07-01 for a stated reason: the check `only ever ran behind /q-morning's bus file while an instance sat at pi~=0.88 with nothing able to notice`"
   negative_eval: "a retired source's body must not reach the digest, with a live source in the same case asserted to parse | plugins/kipi-core/kipi-mcp/tests/test_morning_init.py:257-274 | `test_superseded_source_is_recorded_not_parsed` writes a file whose frontmatter says `status: superseded` and whose body describes the retirement, plus a second file marked in the test as `not retired, must still parse`. It then asserts four things: the retirement is recorded as `{\"decision\": \"ASK-510\"}`, the retired source's parsed result is exactly `{}`, the live source parsed to one entry, and no warning mentions it — because empty-because-retired must not look like a missing file. The live file is the positive control inside the same case, so an empty fixture fails the third assertion rather than satisfying the second. The docstring names the incident: three sources were retired to pointer docs, `their bodies describe the retirement; parsing them shipped retired content as live content` | :284-300 asserts that with those sources retired the digest can reach `valid: True` honestly from what still lives"
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -45,11 +44,10 @@ It is also, in part, the author's actual business memory: relationships, a
 founder profile, market intelligence. This report describes the machinery and not
 its contents.
 
-Three marks, and the middle one is the reason to read the repository. Most
-systems in this corpus that earn `human_review` have a place where a person
-approves something. This one has that — every decision carries an origin tag, and
-an assistant-proposed decision records what the operator did with it: approved,
-modified, or rejected. Then it does something the corpus has not shown before: it
+Two marks. The reason to read the repository is not one of them, and it is worth
+describing before the withdrawal that follows. Every decision carries an origin
+tag, and an assistant-proposed decision records what the operator did with it:
+approved, modified, or rejected. Then the system does something unusual — it
 computes how often the answer was *approved*, and treats a high number as a
 defect.
 
@@ -69,6 +67,20 @@ notice."*
 An oversight mechanism that measures whether the oversight is real, finds its own
 rate at 0.88, and publishes the number, is a different kind of artifact from a
 review queue.
+
+**And it is not `human_review`, which the 2026-09-19 re-read withdrew.** The
+origin tag is the state the mark would rest on, and the assistant writes it. The
+decision log is markdown, the format is a template in
+`q-system/canonical/decisions.md:5-14`, and the rules that govern who writes what
+are `.claude/rules/sycophancy-core.md` and `auto-detection.md` — instructions to
+the agent, which is the rubric's *"a status the producer can write"* beside its
+*"prose"* shape. Nothing verifies that a row tagged
+`[CLAUDE-RECOMMENDED -> APPROVED]` was approved by anyone; the harness parses the
+tags and computes their ratio, which audits the *distribution* of what the
+assistant recorded rather than the authorship of any row. That is a real and
+uncommon check and it is measuring a different thing. The honest reading is that
+this system instruments its own sycophancy well and has no gate a memory waits
+behind.
 
 ## 2. Mental Model
 
@@ -423,6 +435,8 @@ grep -c "|| true" .claude/settings.json                          # eight of elev
 ```
 
 ## History
+
+**2026-09-19** — re-pinned to [`fb098216a6cba5d58c82a6b6c08b535bb068efdd`](https://github.com/assafkip/kipi-system/commit/fb098216a6cba5d58c82a6b6c08b535bb068efdd). **`human_review` is withdrawn; two marks stand.** The first reading was made on 2026-09-17, a day before the rubric narrowed, and it awarded the mark for the origin tag plus the harness that audits it. Re-tested: the origin tag is written by the assistant. The decision log is markdown with a template at `q-system/canonical/decisions.md:5-14`, and what governs its writing is `.claude/rules/sycophancy-core.md` and `auto-detection.md` — rule files addressed to the agent. So the row that says `[CLAUDE-RECOMMENDED -> APPROVED]` is the producer's own claim about a person, which is the rubric's *"status the producer can write"* on top of its *"prose"* shape, and nothing in the tree verifies it. `sycophancy-harness.py` keeps its description: it runs after the audit agent *"because the agent itself is sycophantic"*, alerts at an approval ratio of 0.7 across five or more tagged decisions, and was extracted standalone on 2026-07-01 after an instance sat at 0.88 with nothing able to notice. It audits the distribution of what was recorded, not who recorded it. `trust_state` and `negative_eval` re-verified. Screened again first; nothing installed or run.
 
 **2026-09-17** — [`30b51f1f11e76352c90b12ea198d037688105f45`](https://github.com/assafkip/kipi-system/commit/30b51f1f11e76352c90b12ea198d037688105f45)
 — first reading, at the head of `main`, 1,222 commits in. Screened with
