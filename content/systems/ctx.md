@@ -9,11 +9,11 @@ source_url: https://github.com/ActiveMemory/ctx
 archive_name: "ActiveMemory--ctx"
 revision: 955749b409be80636881303ef50891c4c366a645
 revision_url: https://github.com/ActiveMemory/ctx/commit/955749b409be80636881303ef50891c4c366a645
-analyzed_at: 2026-09-17
+analyzed_at: 2026-09-19
 capabilities: "audit_log, human_review"
 capability_evidence:
   audit_log: "the dream ledger | internal/dream/ledger.go:104 and internal/dream/apply.go:33,:64,:92 | `AppendLedger` appends one JSON disposition per line to `dreams/ledger.md`, never rewriting, under a docstring calling the trail tamper-evident | internal/dream/ledger_test.go"
-  human_review: "proposal disposition | internal/cli/dream/core/dispose/dispose.go:30,:55,:82 | `accept`, `reject` and `amend` each take a proposal id and an optional human note, and `amend` substitutes an action the reviewer chooses for the one the model recommended; nothing reaches the tree unless a person disposes of it | internal/dream/apply_test.go"
+  human_review: "proposal disposition, on a surface the agent's fifteen MCP tools do not carry | internal/cli/dream/core/dispose/dispose.go:30, :55, :82, internal/mcp/server, internal/dream/apply_test.go | `accept`, `reject` and `amend` each take a proposal id and an optional human note, and `amend` substitutes an action the reviewer chooses for the one the model recommended; nothing reaches the tree unless a person disposes of it. What answers the producer test is where those verbs live: they are cobra commands under `internal/cli`, while the MCP server registers fifteen tools — `ctx_add`, `ctx_search`, `ctx_next`, `ctx_status`, `ctx_drift`, `ctx_compact`, `ctx_complete`, `ctx_remind`, `ctx_session_start`, `ctx_session_end`, `ctx_sessionevent`, `ctx_checktaskcompletion`, `ctx_journal_source`, `ctx_steering_get` and `ctx_watch_update` — and none of them disposes of a proposal. A committed case pins that a rejection changes no files and records the outcome in the ledger | internal/dream/apply_test.go, including TestRejectRecordsNoMutation and TestAmendAppliesDifferentAction"
 stack_storage: "files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -434,6 +434,8 @@ Run from the root of the checkout at the pinned commit.
 | Tree and suite size | `find . -name "*.go" \| xargs wc -l \| tail -1`; `grep -rh "^func Test" --include="*_test.go" . \| wc -l` | 209,370 lines; 1,932 test functions across 428 files |
 
 ## History
+
+**2026-09-19** — re-read at the same pin [`955749b409be80636881303ef50891c4c366a645`](https://github.com/ActiveMemory/ctx/commit/955749b409be80636881303ef50891c4c366a645), still the tip. **Both marks hold.** The first reading was made on 2026-09-17, a day before the rubric narrowed, so `human_review` was re-tested against the current wording and the record now cites what settles it rather than the verbs alone. `Accept`, `Reject` and `Amend` are cobra commands under `internal/cli/dream/core/dispose`, and the MCP server registers fifteen tools — none of which disposes of a proposal, and none of which mentions dreams at all. So a proposal waits, and the side that produced it has no verb that resolves it. `TestRejectRecordsNoMutation` still pins that a rejection changes no files and records the outcome, and `TestAmendAppliesDifferentAction` that an amendment applies the reviewer's action rather than the model's. Screened again first; nothing installed, built or run.
 
 **2026-09-17** — [`955749b409be80636881303ef50891c4c366a645`](https://github.com/ActiveMemory/ctx/commit/955749b409be80636881303ef50891c4c366a645) — re-pinned after 66 commits and roughly 17,000 added lines across 194 files. The whole of `internal/dream/` has the identical tree hash at both commits, which settles both marks in one command: the apply path, the ledger, and both cited test files are byte-identical, as is the CLI dispose command behind `human_review`. The churn is elsewhere — typecheck tooling, packaging and documentation — and the commit subjects are uninformative, so the tree comparison is the evidence rather than the log. Every anchor and quotation here is exact at the new pin. Nothing was installed, built or run.
 

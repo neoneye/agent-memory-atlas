@@ -7,13 +7,11 @@ page_kind: system
 source_name: "SyntheticAutonomicMind/CLIO"
 source_url: https://github.com/SyntheticAutonomicMind/CLIO
 archive_name: "SyntheticAutonomicMind--CLIO"
-revision: e0a9574e76a2582334aed5ceed6f32a3a4a8a267
-revision_url: https://github.com/SyntheticAutonomicMind/CLIO/commit/e0a9574e76a2582334aed5ceed6f32a3a4a8a267
-analyzed_at: 2026-09-17
-capabilities: "trust_state, human_review"
-capability_evidence:
-  trust_state: "long-term memory | lib/CLIO/Memory/LongTerm.pm:943-952 and :1092-1110 | `tier` of `unverified`/`trusted` cutting the injection score to 0.3x, badging the rendered line, doubling confidence decay and shortening the age-out from 90 days to 30 | tests/unit/test_ltm_corroboration.pl"
-  human_review: "the memory command surface | lib/CLIO/UI/Commands/Memory.pm:465 (`_promote_entry`) and the `corroborate` verb | a person runs `/memory promote <text>` to lift an entry to trusted outright, or `/memory corroborate` to add one independent source toward the threshold | unknown"
+revision: 1d9acc7d2ddbf68960baedd6cf6e8ba047abead6
+revision_url: https://github.com/SyntheticAutonomicMind/CLIO/commit/1d9acc7d2ddbf68960baedd6cf6e8ba047abead6
+analyzed_at: 2026-09-19
+capabilities: ""
+capability_evidence: {}
 stack_storage: "kv, files"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -432,10 +430,33 @@ are deduplicated."* Very few systems in this atlas name an adversary at all.
 penalty, prompt badge and differential decay are all implemented and all
 reachable, and the corroboration counter that drives them is fed by identifiers
 the two shipped entry points assign at startup. What remains is the strength of
-the boundary rather than its existence: an `agent:session` pair where a restart
-mints a new session means a single agent can supply both votes across two runs,
-so the sybil resistance holds against a second voice in the same session and not
-against the same voice twice.
+the boundary rather than its existence, and the 2026-09-19 re-read found it
+weaker than a restart. `add_corroboration` is a declared operation of the
+`memory` tool (`lib/CLIO/Tools/MemoryOperations.pm:54-58`, schema at `:177-184`),
+and two of its parameters are `source_agent` and `source_session`, described as
+optional with the environment variables as defaults. The handler passes them
+straight through (`:1188`, `:1208-1217`), and `add_corroboration` builds the sybil
+key as `"$source_agent:$source_session"` from exactly those values
+(`lib/CLIO/Memory/LongTerm.pm:516`), deduplicating by string comparison against
+the stored list. So a model does not need two runs: two calls naming two
+different sources reach the threshold, and the tool's own description tells it
+the consequence — *"When an entry receives >=2 corroborations from distinct
+agent:session pairs, it auto-promotes from [UNVERIFIED] to [TRUSTED] tier."*
+
+**Both marks are withdrawn on that re-read, and the tier still deserves its
+description.** `human_review` rested on `/memory promote`, which is genuinely a
+person's channel — `Chat.pm:513` routes only a line the user typed beginning with
+`/` into the command handler, and the model's output never passes through it.
+That would pass on its own. It does not survive the tool beside it: the same
+outcome, promotion to `[TRUSTED]`, is reachable from the producer's own surface
+by supplying two names. `trust_state` is withdrawn for a different reason, and
+one this atlas applies elsewhere: the tier is used for ranking, not for
+withholding. `unverified` multiplies the injection score by `0.3`
+(`LongTerm.pm:943-952`) and shortens the age-out to 30 days with a higher
+confidence floor (`:1092-1110`); nothing filters on it. The rubric draws the line
+there — *"a confidence number answers 'how sure' and gets used for ranking; a
+state answers 'may this be acted on' and gets used for filtering"* — and a
+0.3-weighted entry still reaches the prompt.
 
 **The guidance to the model is unusually good.** Agents are instructed to *"trust
 but verify"* — to validate `[UNVERIFIED]` procedural patterns before acting on
@@ -650,6 +671,8 @@ Run from the root of the checkout at the pinned commit.
 | Tree and suite size | `find . -name "*.pm" -o -name "*.pl" \| xargs wc -l \| tail -1`; `ls tests/unit/*.pl \| wc -l` | 180,634 lines; 292 unit test scripts |
 
 ## History
+
+**2026-09-19** — re-pinned to [`1d9acc7d2ddbf68960baedd6cf6e8ba047abead6`](https://github.com/SyntheticAutonomicMind/CLIO/commit/1d9acc7d2ddbf68960baedd6cf6e8ba047abead6). **Both marks are withdrawn; the report now carries none.** The first reading was made on 2026-09-17, a day before the rubric's `human_review` wording narrowed, and re-testing it turned up a second finding beside it. `human_review` rested on `/memory promote`, and that half holds: `Chat.pm:513` routes only a line the user typed beginning with `/` into the command handler, so the slash command is the user's channel and the model's output never enters it. What defeats the mark is the tool next to it — `add_corroboration` is a declared operation of the `memory` tool whose schema exposes `source_agent` and `source_session` as optional strings, the handler passes them through, and `LongTerm.pm:516` builds the sybil key from exactly those values, so two calls naming two sources promote an entry to `[TRUSTED]` without a person. The tool's own description states the consequence. The report's existing risk line said *"one agent restarted twice can self-corroborate"*; the tool makes the restart unnecessary. `trust_state` is withdrawn separately: the tier multiplies the injection score by `0.3` and shortens the age-out, and nothing filters on it, which is the ranking-versus-withholding line the rubric draws. Both mechanisms keep their description in sections 1, 5 and 9 — the differential decay in particular is still worth copying. Screened again first; nothing installed or run.
 
 **2026-09-17** — [`e0a9574e76a2582334aed5ceed6f32a3a4a8a267`](https://github.com/SyntheticAutonomicMind/CLIO/commit/e0a9574e76a2582334aed5ceed6f32a3a4a8a267) — re-pinned after 34 commits. The command surface behind `human_review` and the corroboration test are byte-identical; `LongTerm.pm` gained 21 net lines below the anchored regions, and both cited spans were checked line by line and hold the same code — the 0.3 tier weight for uncorroborated entries at `:947` and the thirty-day unverified age cutoff at `:1092`, with `:1102` still keeping a row that is either inside the window or at 0.7 confidence. Both marks stand on unchanged behaviour. Nothing was installed, built or run.
 
