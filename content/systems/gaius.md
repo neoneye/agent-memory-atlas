@@ -9,11 +9,10 @@ source_url: https://github.com/jkubo/gaius
 archive_name: "jkubo--gaius"
 revision: b720bdb6ba0f8d2b8e76f7e843493affad9cd329
 revision_url: https://github.com/jkubo/gaius/commit/b720bdb6ba0f8d2b8e76f7e843493affad9cd329
-analyzed_at: 2026-09-16
-capabilities: "trust_state, human_review"
+analyzed_at: 2026-09-19
+capabilities: "trust_state"
 capability_evidence:
   trust_state: "a three-value review state where one value withholds and another only demotes, changed by a pass that is forbidden from doing anything worse | gaius/facts.py:443, gaius/corpus_audit.py:24, :53, :59-62, :72-73, :105 | `review_state` carries `auto`, `pending` and `rejected`, and the two lower values do different jobs: a read filters with `review_state != 'rejected'`, so a rejected fact stays in the table and leaves the corpus, while `pending` survives retrieval under \"the ranker's 0.6x pending\" penalty. What makes it more than a column is the pass that sets it. `corpus_audit` reclassifies flagged facts from `auto` to `pending` and is bounded three ways in its own header — \"**DEMOTE-ONLY** — never tombstones, never DELETEs\", \"[t]ouches ONLY `review_state` — `confidence_source` is left untouched\", and \"[r]eversible — an operator flips `review_state` back to `auto` to undo\". An enforcement sweep that cannot destroy and cannot touch the field that records why a fact was believed is one an operator can run without reading the diff first | the same queries pair the state with `tombstoned_at IS NULL`, so the dedup marker and the epistemic state are separate conditions rather than one overloaded column"
-  human_review: "an operator surface over the same states the automated pass writes, in a system that is candid about not requiring it | gaius/corpus_audit.py:62, gaius/_core.py:964-968, :1119, README.md | the audit pass is explicitly reversible by a person — \"an operator flips `review_state` back to `auto` to undo\" — and the command table names the human-in-the-loop verb directly, with `baton` kept as a tombstone entry pointing at it: \"tombstone (2026-08-18) — HITL verb is spin\". So a person can inspect what the sweep demoted and put it back, over the same three states the machine writes, and the retired verb was left in place as a signpost rather than deleted. The honest qualification belongs in the mark rather than beside it: the project's stated posture is that it \"[r]uns unattended — extract → promote → inject with no human in the hot path; correction is optional\", so this is a surface a person may use and not one the pipeline waits for | the demote-only bound is what makes the surface usable — because the sweep never deletes, everything it touched is still there for the operator who disagrees with it"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -62,6 +61,23 @@ The three values then do different work. A read filters `review_state !=
 fact stays retrievable under "the ranker's 0.6x pending" penalty. Withholding and
 demotion are separate outcomes rather than one slider, which is the distinction
 this atlas most often finds collapsed.
+
+That same sentence is why this report does not carry `human_review`. A fact
+enters as `auto`, or as `pending` when its confidence is under 0.5 or it
+conflicts with another (`gaius/facts.py:540-548`), and both are retrievable —
+only `rejected` leaves the corpus, and only a person's later act writes it. So
+nothing is held back waiting for anyone, which the project says plainly of
+itself: it *"[r]uns unattended — extract → promote → inject with no human in the
+hot path; correction is optional."*
+
+The review surface is nonetheless better built than most in this corpus, and
+deserves recording for what it is. `gaius/review.py:78` refuses outright off a
+terminal — *"gaius {action} requires a tty. Use `--report` for a read-only
+summary"* — so the adjudicating UI cannot be driven by a pipeline; the
+cluster-level flow promotes staged events with an explicit outcome (`confirmed`,
+`refuted`, `open_question`, or none) rather than a bare yes; and an individual
+confirmation writes `confidence_source='human'` (`:623`) so the origin of the
+number is recoverable afterwards.
 
 **The gates prevent rather than advise.** "[H]ard gates `exit:2` on force-push,
 unconfirmed live-trade, prod-delete" — a non-zero exit rather than a warning in a
@@ -213,5 +229,7 @@ protects the corpus once rather than standing.
 | `gaius/maturity.py:407` | The scope clause that became optional |
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`b720bdb6ba0f8d2b8e76f7e843493affad9cd329`](https://github.com/jkubo/gaius/commit/b720bdb6ba0f8d2b8e76f7e843493affad9cd329); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, and section 2 already contained the fact that settles it: the read filters `review_state != 'rejected'`, so a `pending` fact stays retrievable under a ranking penalty. Nothing waits. The withdrawn record's own qualification said the same thing from the other side — the surface is one *"a person may use and not one the pipeline waits for"* — and the project's stated posture is that it runs unattended with correction optional. This reading also turned up `gaius/review.py`, which the previous record did not cite and which is worth more than the mark it cannot earn: the review command exits 2 off a terminal, promotion from staging takes an explicit outcome rather than a bare yes, and a human confirmation stamps `confidence_source='human'`. All three are now in section 2. `trust_state` stands on the same filter — `rejected` is the state that withholds. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`b720bdb6ba0f8d2b8e76f7e843493affad9cd329`](https://github.com/jkubo/gaius/commit/b720bdb6ba0f8d2b8e76f7e843493affad9cd329) — first reading, at a commit dated 15 September 2026. Screened before opening, from a shallow clone: four auto-run surfaces, one build-time execution point, no unpinned dependency surfaces and two dependency files inside the seven-day cooldown. Nothing was installed, built or run, and no session transcript was extracted.

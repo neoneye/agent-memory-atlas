@@ -118,7 +118,7 @@ on force-push and prod-delete.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jkubo--gaius" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -126,7 +126,7 @@ on force-push and prod-delete.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (43%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -174,6 +174,26 @@ row and leaves the corpus; a <code>pending</code> fact stays retrievable
 under "the ranker's 0.6x pending" penalty. Withholding and demotion are
 separate outcomes rather than one slider, which is the distinction this
 atlas most often finds collapsed.</p>
+<p>That same sentence is why this report does not carry
+<code>human_review</code>. A fact enters as <code>auto</code>, or as
+<code>pending</code> when its confidence is under 0.5 or it conflicts
+with another (<code>gaius/facts.py:540-548</code>), and both are
+retrievable — only <code>rejected</code> leaves the corpus, and only a
+person's later act writes it. So nothing is held back waiting for
+anyone, which the project says plainly of itself: it <em>"[r]uns
+unattended — extract → promote → inject with no human in the hot path;
+correction is optional."</em></p>
+<p>The review surface is nonetheless better built than most in this
+corpus, and deserves recording for what it is.
+<code>gaius/review.py:78</code> refuses outright off a terminal —
+<em>"gaius {action} requires a tty. Use <code>--report</code> for a
+read-only summary"</em> — so the adjudicating UI cannot be driven by a
+pipeline; the cluster-level flow promotes staged events with an explicit
+outcome (<code>confirmed</code>, <code>refuted</code>,
+<code>open_question</code>, or none) rather than a bare yes; and an
+individual confirmation writes <code>confidence_source='human'</code>
+(<code>:623</code>) so the origin of the number is recoverable
+afterwards.</p>
 <p><strong>The gates prevent rather than advise.</strong> "[H]ard gates
 <code>exit:2</code> on force-push, unconfirmed live-trade, prod-delete"
 — a non-zero exit rather than a warning in a log.</p>
@@ -345,6 +365,25 @@ standing.</p>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — audited at the unchanged pin <a
+href="https://github.com/jkubo/gaius/commit/b720bdb6ba0f8d2b8e76f7e843493affad9cd329"><code class="commit-id" title="b720bdb6ba0f8d2b8e76f7e843493affad9cd329">b720bdb6…</code></a>;
+nothing upstream moved, so the correction is ours.
+<code>human_review</code> is <strong>withdrawn</strong>, and section 2
+already contained the fact that settles it: the read filters
+<code>review_state != 'rejected'</code>, so a <code>pending</code> fact
+stays retrievable under a ranking penalty. Nothing waits. The withdrawn
+record's own qualification said the same thing from the other side — the
+surface is one <em>"a person may use and not one the pipeline waits
+for"</em> — and the project's stated posture is that it runs unattended
+with correction optional. This reading also turned up
+<code>gaius/review.py</code>, which the previous record did not cite and
+which is worth more than the mark it cannot earn: the review command
+exits 2 off a terminal, promotion from staging takes an explicit outcome
+rather than a bare yes, and a human confirmation stamps
+<code>confidence_source='human'</code>. All three are now in section 2.
+<code>trust_state</code> stands on the same filter —
+<code>rejected</code> is the state that withholds. Screened again first;
+nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/jkubo/gaius/commit/b720bdb6ba0f8d2b8e76f7e843493affad9cd329"><code class="commit-id" title="b720bdb6ba0f8d2b8e76f7e843493affad9cd329">b720bdb6…</code></a>
 — first reading, at a commit dated 15 September 2026. Screened before

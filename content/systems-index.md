@@ -215,7 +215,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## G
 
 <ul class="az">
-<li><a class="az-row" href="../systems/gaius/"><span class="az-id">gaius</span><span class="az-what">The enforcement pass can only demote, never tombstone and never delete</span><code class="az-repo">jkubo/gaius</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/gaius/"><span class="az-id">gaius</span><span class="az-what">The enforcement pass can only demote, never tombstone and never delete</span><code class="az-repo">jkubo/gaius</code><span class="az-caps"><span class="az-cap">Trust state</span></span></a></li>
 <li><a class="az-row" href="../systems/gbrain/"><span class="az-id">GBrain</span><span class="az-what">Claims graded, holders scored</span><code class="az-repo">garrytan/gbrain</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/generative-agents/"><span class="az-id">Generative Agents</span><span class="az-what">Observation-reflection ancestor</span><code class="az-repo">joonspk-research/generative_agents</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/genericagent/"><span class="az-id">GenericAgent</span><span class="az-what">Memory as written policy</span><code class="az-repo">lsdefine/GenericAgent</code><span class="az-caps"></span></a></li>
