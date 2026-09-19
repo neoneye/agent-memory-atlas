@@ -9,7 +9,7 @@ source_url: https://github.com/causewayai/hivemind
 archive_name: "causewayai--hivemind"
 revision: 1c93254066af4df39a7f12c2787f1de401137cec
 revision_url: https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec
-analyzed_at: 2026-09-18
+analyzed_at: 2026-09-20
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "the memory_query read path | internal/mcpserver/query.go:37-46, internal/store/memory.go:250-257 | every entry stores a `scope` of `session` or `user` — a `CHECK` constrains it — and a `session_id`; `memory_query` queries the caller's own session with `scope = ? AND session_id = ?` and then the `user` scope, and the structured listing applies the same predicates. The session id is supplied by the caller and nothing authenticates it, and nothing in the tree writes a `user`-scope entry — deliberately: `internal/mcpserver/write.go:38` sets `Scope: \"session\"` beneath the comment *\"there is no Scope field to override that\"*, while `list_scopes` returns both names, so the second scope is advertised, queried and unreachable | internal/mcpserver/query_test.go:11-69"
@@ -98,9 +98,11 @@ MCP over HTTP with three tools — `memory_write`, `memory_query`, `list_scopes`
 
 ## 10. Tests, Evals, and Benchmarks
 
-Thirteen test functions in nine files. I did not run them; there is no CI configuration in the tree, and the manifests are inside the seven-day cooldown.
+Thirteen test functions in nine files, and they run on every pull request and every push to `main`. `.github/workflows/ci.yml` is a four-platform matrix — `macos-15`, `macos-15-intel`, `ubuntu-latest` and `windows-latest`, the last configuring MinGW GCC because the build is cgo — and each leg runs `make check`, which the `Makefile` defines as `lint test`, where `test` is `go test ./...`. Nothing here was run locally: the manifests are inside the seven-day cooldown, so what follows is read from the committed cases rather than from a run.
 
 `TestMemoryQuery_SessionIsolation` is the case both marks rest on, and it is well built: three entries written with the same vector, so distance cannot decide inclusion, and three assertions — own entry present, shared entry present, other session's entry absent. The test's own comment explains that it pins explicit vectors because the hash embedder is non-semantic, which is correct and is also why no test in the tree exercises retrieval by anything other than an identical vector: `TestQuery_HybridSemanticAndTagFilter` uses vectors *"designed for that purpose"*, and `TestDaemon_WriteThenQuery`, the one end-to-end test, writes *the build is broken on main* through the real daemon and queries *build* — which, by the distances above, returns nothing — and asserts only that neither call errored. No test writes with a caller-supplied vector and queries by text, which is the path the README recommends.
+
+What the matrix does not cover is the gap below: the suite pins retrieval by identical vector, and CI runs that pinning on four operating systems. Breadth of platform is not breadth of case.
 
 No benchmark and no paper.
 
@@ -142,7 +144,24 @@ rg -n "Provider interface|NewHashProvider" --type go .              # one Provid
 rg -n "func .*Delete|func .*Update" internal/store internal/mcpserver   # 0: no update or delete
 ```
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| ~~There is no CI configuration in the tree~~ — **false, corrected 2026-09-20** | `ls .github/workflows/` | `ci.yml` and `release.yml`. `ci.yml` is a four-platform matrix running `make check` on every pull request and every push to `main`. The claim carried no command, and it was the stated reason for not verifying whether the suite passes |
+| `make check` runs the tests | `grep -A2 '^check:\|^test:' Makefile` | `check: lint test` and `test: go test ./...` |
+| The pin is still the tip | `GET /repos/causewayai/hivemind/commits?sha=main&per_page=1` | The same sha, dated 2026-09-06, so nothing upstream has moved since this reading |
+| No test queries by text against a caller-supplied vector | `grep -rn "Query" internal/mcpserver/*_test.go` | Every case supplies explicit vectors; the one end-to-end test asserts only that neither call errored |
+
 ## History
+
+**2026-09-20** — [`1c93254066af4df39a7f12c2787f1de401137cec`](https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec) — audited at the unchanged pin, which is still the tip of `main`. Section 10 said there is no CI configuration in the tree. There is: `.github/workflows/ci.yml` runs `make check` — `lint` plus `go test ./...` — across macOS ARM, macOS Intel, Linux and Windows on every pull request and every push to `main`, and `release.yml` sits beside it.
+
+The claim mattered because of what it was doing in the sentence: it was the stated reason for not establishing whether the thirteen committed tests pass. A reader was told the suite was unverified when the project verifies it on four operating systems. Both marks stand on the same evidence and neither moves; the finding the section exists for — that no case queries by text against a caller-supplied vector, which is the path the README recommends — is untouched and lands harder, because a four-platform matrix runs the narrow pinning on every change and still nobody covers the recommended path.
+
+The report now carries a Recorded Searches appendix. It had none, which is why a claim nobody could re-run reached the site.
 
 **2026-09-18** — [`1c93254066af4df39a7f12c2787f1de401137cec`](https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec) — re-read at the same commit; `main` has not moved since 6 September 2026 and nothing needed correcting. Both marks re-verified: `memory_query` still runs the session predicate and then the user scope, `TestMemoryQuery_SessionIsolation` still seeds three identically-embedded entries and asserts session B's absent with A's and the shared one present, and the repository still carries no licence file, none in `go.mod` and none in the README. The retrieval finding re-tested too — `HashProvider` is still the only implementation of `embedding.Provider` in the tree and `cmd/hivemindd/main.go:61` still wires it unconditionally. One detail added: the unwritable `user` scope is a decision rather than an oversight. `write.go:38` sets `Scope: "session"` under the comment *"there is no Scope field to override that"*, and `list_scopes` still returns `["session", "user"]`, so the shared tier is advertised to the model, read on every query, and closed to every write.
 

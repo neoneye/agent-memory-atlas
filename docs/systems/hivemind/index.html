@@ -122,7 +122,7 @@ text.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-20</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/causewayai--hivemind" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -277,9 +277,17 @@ happens only by one harness passing another's session id.</p>
 delete tool, and no CLI or UI.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>Thirteen test functions in nine files. I did not run them; there is
-no CI configuration in the tree, and the manifests are inside the
-seven-day cooldown.</p>
+<p>Thirteen test functions in nine files, and they run on every pull
+request and every push to <code>main</code>.
+<code>.github/workflows/ci.yml</code> is a four-platform matrix —
+<code>macos-15</code>, <code>macos-15-intel</code>,
+<code>ubuntu-latest</code> and <code>windows-latest</code>, the last
+configuring MinGW GCC because the build is cgo — and each leg runs
+<code>make check</code>, which the <code>Makefile</code> defines as
+<code>lint test</code>, where <code>test</code> is
+<code>go test ./...</code>. Nothing here was run locally: the manifests
+are inside the seven-day cooldown, so what follows is read from the
+committed cases rather than from a run.</p>
 <p><code>TestMemoryQuery_SessionIsolation</code> is the case both marks
 rest on, and it is well built: three entries written with the same
 vector, so distance cannot decide inclusion, and three assertions — own
@@ -295,6 +303,9 @@ vector: <code>TestQuery_HybridSemanticAndTagFilter</code> uses vectors
 asserts only that neither call errored. No test writes with a
 caller-supplied vector and queries by text, which is the path the README
 recommends.</p>
+<p>What the matrix does not cover is the gap below: the suite pins
+retrieval by identical vector, and CI runs that pinning on four
+operating systems. Breadth of platform is not breadth of case.</p>
 <p>No benchmark and no paper.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
@@ -350,7 +361,68 @@ caller vector; either closes the gap described above.</li>
 rg -n &quot;Embedding&quot; internal/mcpserver/query.go                      # the query builds its own hash vector; MemoryQueryInput has no Embedding field
 rg -n &quot;Provider interface|NewHashProvider&quot; --type go .              # one Provider implementation, constructed unconditionally in main.go
 rg -n &quot;func .*Delete|func .*Update&quot; internal/store internal/mcpserver   # 0: no update or delete</code></pre>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><del>There is no CI configuration in the tree</del> — <strong>false,
+corrected 2026-09-20</strong></td>
+<td><code>ls .github/workflows/</code></td>
+<td><code>ci.yml</code> and <code>release.yml</code>.
+<code>ci.yml</code> is a four-platform matrix running
+<code>make check</code> on every pull request and every push to
+<code>main</code>. The claim carried no command, and it was the stated
+reason for not verifying whether the suite passes</td>
+</tr>
+<tr>
+<td><code>make check</code> runs the tests</td>
+<td><code>grep -A2 '^check:|^test:' Makefile</code></td>
+<td><code>check: lint test</code> and
+<code>test: go test ./...</code></td>
+</tr>
+<tr>
+<td>The pin is still the tip</td>
+<td><code>GET /repos/causewayai/hivemind/commits?sha=main&amp;per_page=1</code></td>
+<td>The same sha, dated 2026-09-06, so nothing upstream has moved since
+this reading</td>
+</tr>
+<tr>
+<td>No test queries by text against a caller-supplied vector</td>
+<td><code>grep -rn "Query" internal/mcpserver/*_test.go</code></td>
+<td>Every case supplies explicit vectors; the one end-to-end test
+asserts only that neither call errored</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec"><code class="commit-id" title="1c93254066af4df39a7f12c2787f1de401137cec">1c932540…</code></a>
+— audited at the unchanged pin, which is still the tip of
+<code>main</code>. Section 10 said there is no CI configuration in the
+tree. There is: <code>.github/workflows/ci.yml</code> runs
+<code>make check</code> — <code>lint</code> plus
+<code>go test ./...</code> — across macOS ARM, macOS Intel, Linux and
+Windows on every pull request and every push to <code>main</code>, and
+<code>release.yml</code> sits beside it.</p>
+<p>The claim mattered because of what it was doing in the sentence: it
+was the stated reason for not establishing whether the thirteen
+committed tests pass. A reader was told the suite was unverified when
+the project verifies it on four operating systems. Both marks stand on
+the same evidence and neither moves; the finding the section exists for
+— that no case queries by text against a caller-supplied vector, which
+is the path the README recommends — is untouched and lands harder,
+because a four-platform matrix runs the narrow pinning on every change
+and still nobody covers the recommended path.</p>
+<p>The report now carries a Recorded Searches appendix. It had none,
+which is why a claim nobody could re-run reached the site.</p>
 <p><strong>2026-09-18</strong> — <a
 href="https://github.com/causewayai/hivemind/commit/1c93254066af4df39a7f12c2787f1de401137cec"><code class="commit-id" title="1c93254066af4df39a7f12c2787f1de401137cec">1c932540…</code></a>
 — re-read at the same commit; <code>main</code> has not moved since 6
