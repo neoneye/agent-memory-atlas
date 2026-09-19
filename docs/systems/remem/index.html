@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first Rust memory server
+for coding agents whose truth projection returns no claim at all when
+two surviving claims refute each other, and whose review queue is
+reachable from a terminal command the agent's own tool surface does not
+carry.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="remem — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first Rust memory
+server for coding agents whose truth projection returns no claim at all
+when two surviving claims refute each other, and whose review queue is
+reachable from a terminal command the agent's own tool surface does not
+carry.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="remem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first Rust memory
+server for coding agents whose truth projection returns no claim at all
+when two surviving claims refute each other, and whose review queue is
+reachable from a terminal command the agent's own tool surface does not
+carry.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>remem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "remem",
+      "description": "A local-first Rust memory server for coding agents whose truth projection returns no claim at all when two surviving claims refute each other, and whose review queue is reachable from a terminal command the agent's own tool surface does not carry.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Never silently pick a side</p>
+          <h1>remem</h1>
+          <p class="document-deck">A local-first Rust memory server for
+coding agents whose truth projection returns no claim at all when two
+surviving claims refute each other, and whose review queue is reachable
+from a terminal command the agent's own tool surface does not carry.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/majiayu000/remem">
+              <span>Source</span>
+              <strong>majiayu000/remem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/majiayu000/remem/commit/335bb29440e829b233e2ae0302ca6f9710300e4c" title="335bb29440e829b233e2ae0302ca6f9710300e4c">
+              <span>Analyzed revision</span>
+              <code>335bb294…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/majiayu000--remem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>majiayu000--remem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>remem is a local-first memory server for Claude Code and the OpenAI
+Codex CLI, written in Rust over SQLite, reaching agents through hooks,
+MCP, a CLI and a localhost REST API. MIT, and the tree is large — about
+2,400 files.</p>
+<p><strong>Five marks:</strong> <code>trust_state</code>,
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>human_review</code> and <code>negative_eval</code>.</p>
+<p>The centre of the design is a read-side projection called
+CurrentTruth, and its header states the question it exists to answer:
+<em>"as of a given time, within a given scope, which claims does the
+system currently consider true, which conflict, and what evidence
+supports each conclusion?"</em> It is deterministic, it never writes,
+and it <em>"never lets model-generated enrichment or stored confidence
+numbers decide truth."</em></p>
+<p>What it does when it cannot decide is the thing worth carrying away.
+Two surviving claims joined by a refutes relation do not get ranked; the
+projection returns <code>claim: None</code> with
+<code>validity: Contradicted</code> and
+<code>selected_reason: UnresolvedConflict</code>, listing both claims as
+evidence, under a comment that is the whole policy in nine words:
+<em>"never silently pick a side."</em> That projection is rendered into
+the context bundle the agent receives.</p>
+<p>Two mechanisms are withheld, both over real machinery. The per-write
+<code>memory_operation_log</code> records the actor, the planner
+version, the reason, and the ids it superseded and conflicted with — and
+two paths <code>UPDATE</code> it after the fact, so it is not
+append-only.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Nothing an agent produces becomes memory directly. Captured events
+become candidates; candidates carry <code>review_status</code>,
+defaulting to <code>pending_review</code>; promotion is a planner
+decision that writes a row in an operation log saying why it was an add,
+an update, a noop or a defer. Reading is a separate question again: the
+projection answers what is currently true over whatever survived, and
+declines when the evidence does not settle it.</p>
+<p>Storage posture and epistemic posture are two different axes and the
+code says so — <code>RetentionState</code> carries the comment
+<em>"<code>Archived</code> does not mean false."</em></p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — captured events become candidates that default to a pending_review status, and the routing decision writes a row in an operation log naming the actor, the planner version, the reason and the ids it superseded or conflicted with; a background pass and a graph bridge write conflicts edges between memories, which the read-side projection maps to refutes relations, and when two surviving claims refute each other the projection returns no claim at all rather than ranking them; the review queue is drained by a terminal command, and the MCP tool surface carries no verb that reaches it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: captured events become candidates that default to a pending_review status, and the routing decision writes a row in an operation log naming the actor, the planner version, the reason and the ids it superseded or conflicted with; a background pass and a graph bridge write conflicts edges between memories, which the read-side projection maps to refutes relations, and when two surviving claims refute each other the projection returns no claim at all rather than ranking them; the review queue is drained by a terminal command, and the MCP tool surface carries no verb that reaches it
+flowchart TD
+    EV[(&quot;captured_events&lt;br/&gt;immutable evidence ledger&quot;)] --&gt; CAND[&quot;candidates&lt;br/&gt;review_status DEFAULT &#39;pending_review&#39;&quot;]
+
+    CAND --&gt; ROUTE{&quot;planner: add · update&lt;br/&gt;noop · defer&quot;}
+    ROUTE --&gt; OPLOG[(&quot;memory_operation_log&lt;br/&gt;actor · planner_version · reason&lt;br/&gt;superseded_ids · conflicting_ids&quot;)]
+    ROUTE --&gt; MEM[(&quot;memories&lt;br/&gt;owner_scope · state_key&quot;)]
+
+    CAND -.-&gt;|held| RQ[&quot;review_status IN&lt;br/&gt;(&#39;pending_review&#39;,&#39;quarantined&#39;)&quot;]
+    RQ --&gt; CLI[&quot;remem review &amp;lt;action&amp;gt;&lt;br/&gt;a person at a terminal&quot;]
+    MCPX[&quot;MCP tool surface&quot;] -.-&gt;|&quot;no verb reaches the queue&quot;| RQ
+
+    DREAM[&quot;dream/conflict.rs&quot;] --&gt; CE[&quot;insert_pairwise_conflict_edges&lt;br/&gt;evidence ids · reason · confidence&quot;]
+    BRIDGE[&quot;graph_candidate/conflict_bridge.rs&quot;] --&gt; CE
+    CE --&gt; EDGES[(&quot;memory_edges: &#39;conflicts&#39;&quot;)]
+
+    MEM --&gt; PROJ
+    EDGES --&gt; PROJ
+    FACTS[(&quot;memory_facts&lt;br/&gt;valid_from_epoch · valid_to_epoch&lt;br/&gt;CHECK valid_to &gt;= valid_from&quot;)] --&gt; PROJ
+
+    PROJ[&quot;CurrentTruth projection&lt;br/&gt;read-only · deterministic&quot;]
+    PROJ --&gt; LADDER{&quot;resolution ladder&quot;}
+    LADDER --&gt; R1[&quot;OnlySurvivingClaim&quot;]
+    LADDER --&gt; R2[&quot;ExplicitSupersedes&quot;]
+    LADDER --&gt; R3[&quot;VerifiedEvidencePreferred&quot;]
+    LADDER --&gt; R4[&quot;MostRecent&quot;]
+    LADDER --&gt; R5[&quot;UnresolvedConflict&lt;br/&gt;claim = None&lt;br/&gt;validity = Contradicted&quot;]
+
+    R1 --&gt; BUNDLE
+    R5 --&gt; BUNDLE
+    BUNDLE[&quot;context bundle&lt;br/&gt;rendered at SessionStart&quot;] --&gt; AGENT((&quot;agent context&quot;))
+    BUNDLE --&gt; CBA[(&quot;context_bundle_audits&lt;br/&gt;append-only, payload-free&lt;br/&gt;plan_hash · audit_hash · dropped_count&quot;)]</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The refusal</strong> —
+<code>src/truth/projection.rs:256-285</code>. A refutes relation between
+two survivors returns a <code>CurrentTruthView</code> with
+<code>claim: None</code>,
+<code>validity: ValidityState::Contradicted</code>, both claims under
+<code>conflicting_claims</code>, and
+<code>selected_reason: TruthSelectionReason::UnresolvedConflict</code>.</p>
+<p><strong>The ladder</strong> —
+<code>src/truth/types.rs:149-159</code>. Five reasons in order:
+<code>OnlySurvivingClaim</code>, <code>ExplicitSupersedes</code>,
+<code>VerifiedEvidencePreferred</code>, <code>MostRecent</code>,
+<code>UnresolvedConflict</code>. Every projection carries the one that
+applied, so the choice is inspectable rather than implied.</p>
+<p><strong>The conflict producers</strong> —
+<code>src/dream/conflict.rs:60</code> and
+<code>src/graph_candidate/conflict_bridge.rs:48</code> both call
+<code>insert_pairwise_conflict_edges</code>, which writes
+<code>MemoryEdgeType::Conflicts</code> rows carrying evidence event ids,
+a source operation id, a confidence and a reason.
+<code>src/truth/adapter.rs:502</code> maps the stored
+<code>"conflicts"</code> edge type to
+<code>ClaimRelationKind::Refutes</code>.</p>
+<p><strong>The review default</strong> —
+<code>src/memory/types.rs:413</code>,
+<code>review_status TEXT NOT NULL DEFAULT 'pending_review'</code>, with
+the same default in the migrations for graph candidates, user-context
+candidates and user-context claims.
+<code>src/memory_candidate/review.rs:204</code> reads
+<code>WHERE c.review_status IN ('pending_review', 'quarantined')</code>.</p>
+<p><strong>The validity read</strong> —
+<code>src/context/hybrid_context.rs:497</code>,
+<code>AND f.valid_from_epoch &lt;= ?2</code>, with the same shape at
+<code>src/memory/facts.rs:242</code> and <code>:299</code>.
+<code>src/memory/current_state.rs:327</code> composes
+<code>COALESCE(valid_from_epoch, created_at_epoch) &lt;= ?2</code>,
+which is the honest fallback: when a fact carries no world time, record
+time stands in.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>memories</code> carry an <code>owner_scope</code> and a
+<code>state_key</code>. <code>memory_facts</code> are
+subject/predicate/object with <code>valid_from_epoch</code> and
+<code>valid_to_epoch</code> under a CHECK requiring
+<code>valid_to_epoch &gt;= valid_from_epoch</code>, indexed as
+<code>(project, subject, predicate, valid_from_epoch, valid_to_epoch)</code>.
+<code>captured_events</code> is the evidence ledger the projection
+cites, and the claim types name it as <em>"Immutable row in the
+<code>captured_events</code> ledger."</em></p>
+<p>Relations between claims are five kinds — <code>Supports</code>,
+<code>Refutes</code>, <code>Supersedes</code>, <code>DerivedFrom</code>,
+<code>AppliesTo</code> — projected from <code>memory_edges</code>,
+trusted <code>graph_edges</code>, and
+<code>user_context_claims.supersedes_claim_id</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A retrieval router over lexical and vector arms, assembled into a
+context bundle at SessionStart. The CurrentTruth projection is rendered
+into that bundle (<code>src/context/render.rs:497-506</code>), so the
+contradiction state reaches the model rather than staying in a
+diagnostic.</p>
+<p>Scope is <code>owner_scope</code> plus a resolved project set,
+composed into the projection's own query
+(<code>src/truth/adapter.rs:60-75</code>).</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The planner decides add, update, noop or defer, and records the
+decision in <code>memory_operation_log</code> with the actor, the
+planner version, the source, the owning scope, the candidate id, the
+resulting memory id, the superseded ids, the conflicting ids, and a
+reason for a noop or a defer. The table's own header is careful about
+its standing: <em>"an explanation layer, not the source of truth for
+memory contents."</em></p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Hooks for Claude Code and Codex, an MCP server, a CLI, and a
+localhost REST API. The CLI carries <code>Commands::Review</code> and
+<code>Commands::GraphReview</code>
+(<code>src/cli/dispatch.rs:118-119</code>) with approve, edit and inbox
+actions.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>trust_state</code>.</strong> <code>ValidityState</code>
+is <code>Current</code>, <code>Superseded</code>,
+<code>Contradicted</code>, <code>Stale</code>, <code>Expired</code>,
+<code>Unknown</code> — a discrete field, not a score, and
+<code>Contradicted</code> withholds the claim by returning none. The
+separation is deliberate: the projection refuses to let stored
+confidence decide, and <code>RetentionState</code> is a second enum
+whose comment says archival is not falsity.</p>
+<p><strong><code>bitemporal</code>.</strong>
+<code>valid_from_epoch</code>/<code>valid_to_epoch</code> against
+<code>created_at_epoch</code>, constrained, indexed, and read on the
+retrieval path rather than only declared.</p>
+<p><strong><code>scope_enforced</code>.</strong>
+<code>owner_scope</code> and the resolved project set compose into the
+projection query and the fact reads.</p>
+<p><strong><code>human_review</code>.</strong> Candidates default to
+<code>pending_review</code> and a person drains the queue with
+<code>remem review</code>. The mark rests on reach: the MCP tool surface
+carries no review or approve verb, so the agent that produced a
+candidate has no path to promote it.</p>
+<p><strong><code>negative_eval</code>.</strong> Committed must-not cases
+— section 10.</p>
+<p><strong><code>audit_log</code> is withheld.</strong>
+<code>memory_operation_log</code> is the right content — one row per
+write decision, with the actor and the reason — and two paths
+<code>UPDATE</code> it afterwards to attach an activation id and a
+receipt (<code>src/memory/scope_cleanup/plan.rs:285</code>,
+<code>receipt.rs:15</code>), so the table is not append-only. The table
+that <em>is</em> append-only, <code>context_bundle_audits</code>, audits
+injections rather than mutations and is deliberately payload-free: it
+stores a <code>plan_hash</code>, an <code>audit_hash</code>, the
+degraded mode and the counts, not the memories.</p>
+<p><strong><code>tombstone</code> is withheld.</strong> A conflicts edge
+is keyed on a pair of memory ids and a supersedes relation on another
+pair. Nothing is keyed on the value, so the same claim arriving again is
+a new candidate that the projection will weigh afresh rather than a
+re-assertion something refuses.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A large Rust suite beside the modules plus <code>tests/</code> at the
+root — <code>e2e_eval.rs</code>, <code>benchmark.rs</code>,
+<code>api_public.rs</code>, <code>rate_limit.rs</code> — and CI at
+<code>.github/workflows/ci.yml</code>. Nothing was installed and nothing
+was run: three manifests sit inside the seven-day cooldown.</p>
+<p>The must-not cases are about material reaching the agent, which is
+the right place for this design.
+<code>src/context/tests/render_poisoning.rs:75</code> fails with
+<em>"quarantined observations must not reach candidate generation"</em>
+— a negative assertion on the extraction path, defended by a panic
+rather than a soft comparison.
+<code>src/context/tests/current_truth_activation.rs</code> drives the
+projection through a seeded <code>("conflicts", 75, 76)</code> edge and
+checks the contradiction surfaces in the rendered bundle.</p>
+<p>There is also an <code>eval/</code> directory and a committed
+benchmark harness, neither of which was run here.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Return no answer when two survivors refute each
+other.</strong> Ranking a contradiction produces a confident wrong
+answer; <code>claim: None</code> with both claims attached produces a
+question the agent can act on.</li>
+<li><strong>Name the reason the winner won.</strong> A projection that
+carries <code>ExplicitSupersedes</code> versus <code>MostRecent</code>
+can be argued with; one that returns only the winner cannot.</li>
+<li><strong>Keep retention and truth on separate enums, and say why in
+the type.</strong> <em>"<code>Archived</code> does not mean false"</em>
+is four words that stop a whole class of bug.</li>
+<li><strong>Default the candidate status to <code>pending_review</code>
+in the schema.</strong> A default in the column is harder to forget than
+a call to a gate.</li>
+<li><strong>Make the audit payload-free.</strong>
+<code>context_bundle_audits</code> stores hashes and counts, so the
+record of what was injected does not duplicate the corpus.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Updating rows in your audit table.</strong>
+<code>memory_operation_log</code> has exactly the content an audit wants
+and two <code>UPDATE</code> paths, which is the difference between a log
+and a record.</li>
+<li><strong>Leaving the same status vocabulary in four
+migrations.</strong> <code>pending_review</code> is defaulted
+independently for memories, graph candidates, user-context candidates
+and user-context claims; a fifth surface will have to remember.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take it if you want per-project agent memory on one machine and are
+willing to work a review queue. The contradiction policy is the part
+worth reading even if you take nothing else.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>memory_operation_log</code> is updated to attach an activation
+id. Could the receipt be a second row instead, and the table left
+append-only?</li>
+<li>The MCP surface has no review verb today. Is that a decision or an
+absence waiting to be filled by a convenience tool?</li>
+<li><code>COALESCE(valid_from_epoch, created_at_epoch)</code> means an
+unsupplied world time silently becomes record time. Which extraction
+paths supply it?</li>
+<li><code>context_bundle_audits</code> records
+<code>dropped_count</code> but not what was dropped. What would a reader
+do with a suspicious drop count?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/truth.rs</code></td>
+<td>the projection's contract, stated in its module header</td>
+</tr>
+<tr>
+<td><code>src/truth/projection.rs</code></td>
+<td>the resolution ladder and the refusal to pick a side</td>
+</tr>
+<tr>
+<td><code>src/truth/types.rs</code></td>
+<td><code>ValidityState</code>, <code>RetentionState</code>,
+<code>ClaimRelationKind</code>, <code>TruthSelectionReason</code></td>
+</tr>
+<tr>
+<td><code>src/truth/adapter.rs</code></td>
+<td>the scope-composed query and the <code>conflicts</code> →
+<code>Refutes</code> mapping</td>
+</tr>
+<tr>
+<td><code>src/memory/edge.rs</code></td>
+<td><code>insert_pairwise_conflict_edges</code> and the edge write
+context</td>
+</tr>
+<tr>
+<td><code>src/dream/conflict.rs</code></td>
+<td>the background pass that writes conflict edges</td>
+</tr>
+<tr>
+<td><code>src/memory/types.rs</code></td>
+<td><code>review_status</code> defaulting to
+<code>pending_review</code></td>
+</tr>
+<tr>
+<td><code>src/cli/dispatch.rs</code></td>
+<td>the <code>Review</code> and <code>GraphReview</code> commands a
+person runs</td>
+</tr>
+<tr>
+<td><code>src/migrations/v024_memory_operation_log.sql</code></td>
+<td>the per-write explanation layer</td>
+</tr>
+<tr>
+<td><code>src/migrations/v081_context_bundle_audits.sql</code></td>
+<td>the append-only, payload-free injection audit</td>
+</tr>
+<tr>
+<td><code>src/migrations/v013_memory_temporal_facts.sql</code></td>
+<td>the validity columns, their CHECK and their index</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The MCP surface has no review or approve verb</td>
+<td><code>grep -rn "review|approve" --include='*.rs' src/mcp</code></td>
+<td>Nothing naming a tool; the review commands live in
+<code>src/cli/dispatch.rs:118-119</code></td>
+</tr>
+<tr>
+<td>Conflict edges have live producers</td>
+<td><code>grep -rn "insert_pairwise_conflict_edges" --include='*.rs' src | grep -v tests</code></td>
+<td><code>src/dream/conflict.rs:60</code> and
+<code>src/graph_candidate/conflict_bridge.rs:48</code></td>
+</tr>
+<tr>
+<td>The projection reaches the agent, not only the doctor</td>
+<td><code>grep -rn "current_truth_projection" --include='*.rs' src/context</code></td>
+<td>Rendered at <code>src/context/render.rs:497-506</code> and in
+<code>render_bundle.rs</code></td>
+</tr>
+<tr>
+<td>The operation log is updated in place</td>
+<td><code>grep -rn "memory_operation_log" --include='*.rs' src | grep -iE "insert|update"</code></td>
+<td>Three <code>INSERT</code>s and two <code>UPDATE</code>s, at
+<code>scope_cleanup/plan.rs:285</code> and
+<code>scope_cleanup/receipt.rs:15</code></td>
+</tr>
+<tr>
+<td><code>captured_events</code> is not mutated outside tests</td>
+<td><code>grep -rn "UPDATE captured_events|DELETE FROM captured_events" --include='*.rs' src</code></td>
+<td>Four hits, all in test modules seeding or ageing fixtures</td>
+</tr>
+<tr>
+<td>The validity window is read, not only declared</td>
+<td><code>grep -rn "valid_from_epoch" --include='*.rs' src | grep -iE "where|&lt;=|&gt;="</code></td>
+<td><code>context/hybrid_context.rs:497</code>,
+<code>memory/facts.rs:242</code> and <code>:299</code>,
+<code>memory/current_state.rs:327</code></td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>head -3 LICENSE</code>;
+<code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>Stock MIT, no match</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/majiayu000/remem/commit/335bb29440e829b233e2ae0302ca6f9710300e4c"><code class="commit-id" title="335bb29440e829b233e2ae0302ca6f9710300e4c">335bb294…</code></a>
+— first reading, at roughly 2,400 files. Screened before reading: one
+auto-run surface, two build-time execution points, three manifests
+inside the seven-day cooldown and no unpinned surface; nothing was
+installed and nothing was run, so the committed <code>eval/</code>
+harness and benchmark were read rather than executed. MIT. Five marks:
+<code>trust_state</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>human_review</code> and
+<code>negative_eval</code>. <code>human_review</code> rests on reach
+rather than on a gate — candidates default to
+<code>pending_review</code> in the schema and the only surface that
+drains the queue is a terminal command the MCP tool list does not carry.
+<code>audit_log</code> is withheld over a per-write log with the right
+content and two in-place <code>UPDATE</code> paths, and
+<code>tombstone</code> over relations keyed on record pairs rather than
+on the value; each withholding rests on a search recorded in the
+appendix.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

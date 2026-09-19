@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 603 reports.</strong></p>
+<p><strong>This page covers all 604 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24559,6 +24559,50 @@ lying"</em> that retracts a published nDCG@10 of 0.894 down to 0.50
 [0.44–0.56] and withdraws the two conclusions resting on it, including
 one about a reranker that turned out never to have run. <em>"The system
 did not get worse. It was never 0.894."</em></li>
+</ul>
+<h3 id="remem"><a href="../systems/remem/"><code>remem</code></a></h3>
+<ul>
+<li>Best idea: <strong>never silently pick a side.</strong> The
+CurrentTruth projection ranks claims down a stated ladder — only
+survivor, explicit supersedes, better evidence tier, most recent — and
+when two survivors are joined by a refutes relation it stops:
+<code>claim: None</code>, <code>validity: Contradicted</code>, both
+claims returned as <code>conflicting_claims</code>,
+<code>selected_reason: UnresolvedConflict</code>. The comment above it
+is the whole policy in nine words. Every projection carries the reason
+its winner won, so the choice can be argued with rather than
+inferred.</li>
+<li>Biggest risk: <strong>the per-write log has exactly the content an
+audit wants and two paths that rewrite it.</strong>
+<code>memory_operation_log</code> records the actor, the planner
+version, the reason a write became add/update/noop/defer, and the ids it
+superseded and conflicted with — and <code>scope_cleanup/plan.rs</code>
+and <code>receipt.rs</code> both <code>UPDATE</code> rows after the fact
+to attach an activation id and a receipt. The table that is append-only,
+<code>context_bundle_audits</code>, audits injections rather than
+mutations.</li>
+<li>Most reusable component: <code>src/truth/types.rs</code>. Four small
+enums that carry the design — <code>ValidityState</code>,
+<code>RetentionState</code> (whose comment reads
+<em>"<code>Archived</code> does not mean false"</em>),
+<code>ClaimRelationKind</code> with <code>Refutes</code> beside
+<code>Supersedes</code>, and <code>TruthSelectionReason</code>. Most of
+the value here is in keeping retention and truth on separate axes and
+writing the distinction into the type.</li>
+<li>Maturity impression: MIT, Rust over SQLite at roughly 2,400 files,
+reaching agents through Claude Code and Codex hooks, MCP, a CLI and a
+localhost REST API; CI, a committed <code>eval/</code> harness and a
+benchmark, neither run for this reading. Five marks —
+<code>trust_state</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>human_review</code>,
+<code>negative_eval</code>. <code>human_review</code> rests on reach:
+candidates default to <code>pending_review</code> in the column, the
+queue is drained by <code>remem review</code>, and a grep of the MCP
+surface for a review or approve verb returns nothing.</li>
+<li>Study when: you are deciding what a memory system should return when
+its evidence does not settle the question — or when you want a worked
+example of a review status defaulted in the schema rather than at a call
+site.</li>
 </ul>
         </article>
       </div>

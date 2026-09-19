@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 603 reports.**
+**This page covers all 604 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5397,4 +5397,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `rust/migrations/0016_audit_log.up.sql` and `0029_bitemporal_check.up.sql`, read together. The first is a correct hash chain with its bypass named and justified (`cuba_admin`, for GDPR deletion); the second adds two constraints and explains in the comment which illegal states the schema had permitted and how many existing rows violated them.
 - Maturity impression: Apache 2.0, Rust over PostgreSQL 18 and pgvector, 31 MCP tools and 23 CLI commands, published to PyPI, npm and the MCP registry; formerly cuba-memorys, and the `cuba_*` tool names still carry that. Three marks — `trust_state`, `scope_enforced`, `negative_eval`. `human_review` is withheld because `promote` is one value of an action enum on the tool the writing agent already holds.
 - Study when: you are about to publish a retrieval number. Its README carries a section headed *"Measured — and the benchmark that was lying"* that retracts a published nDCG@10 of 0.894 down to 0.50 [0.44–0.56] and withdraws the two conclusions resting on it, including one about a reranker that turned out never to have run. *"The system did not get worse. It was never 0.894."*
+
+### [`remem`](../systems/remem/)
+
+- Best idea: **never silently pick a side.** The CurrentTruth projection ranks claims down a stated ladder — only survivor, explicit supersedes, better evidence tier, most recent — and when two survivors are joined by a refutes relation it stops: `claim: None`, `validity: Contradicted`, both claims returned as `conflicting_claims`, `selected_reason: UnresolvedConflict`. The comment above it is the whole policy in nine words. Every projection carries the reason its winner won, so the choice can be argued with rather than inferred.
+- Biggest risk: **the per-write log has exactly the content an audit wants and two paths that rewrite it.** `memory_operation_log` records the actor, the planner version, the reason a write became add/update/noop/defer, and the ids it superseded and conflicted with — and `scope_cleanup/plan.rs` and `receipt.rs` both `UPDATE` rows after the fact to attach an activation id and a receipt. The table that is append-only, `context_bundle_audits`, audits injections rather than mutations.
+- Most reusable component: `src/truth/types.rs`. Four small enums that carry the design — `ValidityState`, `RetentionState` (whose comment reads *"`Archived` does not mean false"*), `ClaimRelationKind` with `Refutes` beside `Supersedes`, and `TruthSelectionReason`. Most of the value here is in keeping retention and truth on separate axes and writing the distinction into the type.
+- Maturity impression: MIT, Rust over SQLite at roughly 2,400 files, reaching agents through Claude Code and Codex hooks, MCP, a CLI and a localhost REST API; CI, a committed `eval/` harness and a benchmark, neither run for this reading. Five marks — `trust_state`, `bitemporal`, `scope_enforced`, `human_review`, `negative_eval`. `human_review` rests on reach: candidates default to `pending_review` in the column, the queue is drained by `remem review`, and a grep of the MCP surface for a review or approve verb returns nothing.
+- Study when: you are deciding what a memory system should return when its evidence does not settle the question — or when you want a worked example of a review status defaulted in the schema rather than at a call site.
 
