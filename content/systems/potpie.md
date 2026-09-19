@@ -7,10 +7,10 @@ page_kind: system
 source_name: "potpie-ai/potpie"
 source_url: https://github.com/potpie-ai/potpie
 archive_name: "potpie-ai--potpie"
-revision: 0b18cea8dcd984bd70d9d7d85cd340ceab87dd94
-revision_url: https://github.com/potpie-ai/potpie/commit/0b18cea8dcd984bd70d9d7d85cd340ceab87dd94
-analyzed_at: 2026-09-15
-capabilities: "trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+revision: 7726221dc95c3549a26d83dad9a4b9a0b6aa5ccb
+revision_url: https://github.com/potpie-ai/potpie/commit/7726221dc95c3549a26d83dad9a4b9a0b6aa5ccb
+analyzed_at: 2026-09-19
+capabilities: "trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
 stack_storage: "graph"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -20,7 +20,6 @@ capability_evidence:
   scope_enforced: "every graph read — a required pot key, not an optional filter | potpie/context-engine/src/potpie_context_engine/core/graph_query.py | `pot_id: str` is a required positional on the query functions (:64, :114, :151) and on `ClaimQuery` itself, so a caller cannot omit the scope rather than merely being expected to pass it | potpie/context-engine/tests/conformance/test_public_graph_runtime.py"
   audit_log: "the mutation layer — provenance on every fact, and an append-only event verb in the vocabulary | potpie/context-engine/src/potpie_context_engine/core/graph_mutations.py | `ProvenanceRef` stamps pot, source event, mutation id, source system and kind on every entity, edge and invalidation; `SemanticMutationOp.append_event` is a first-class verb the validator refuses without a verb class (semantic_mutation_validator.py:425) | potpie/context-engine/tests/core/test_semantic_mutations.py"
   negative_eval: "recall after invalidation, as a committed conformance case | potpie/context-engine/tests/conformance/test_internal_graph_runtime.py | after a retraction the default `find_claims` returns `== []` (:328), and only `include_invalidated=True` surfaces the row, which then carries a non-null `invalid_at` (:330-334) — a must-not-appear assertion rather than a recall check | potpie/context-engine/tests/conformance/test_internal_graph_runtime.py:319"
-  human_review: "the workbench commit path — a named approver before a medium- or high-risk plan applies | potpie/context-engine/src/potpie_context_engine/core/workbench_service.py:291 commit, :3358 _approval_error; core/mutation_policy.py:14; core/semantic_mutation_validator.py:743 _op_risk | `require_approval_for_review` defaults to true, and a plan in `review_required` status or at medium or high risk — retractions, supersessions, merges, entity patches, state transitions and user-decision claims — refuses to commit until `approved_by` is given, which is stamped with a time on the plan record; operations in `REVIEW_REQUIRED_OPS` would be refused outright, and that set is empty at this pin. The approver is an unauthenticated caller string, and the reconciliation agent's plans apply through `apply_mutation_batch` without this gate | potpie/context-engine/tests/unit/test_graph_workbench_plans.py:636 (blocked without approval, committed with `user:alice`, approval recorded)"
 matrix:
   memory_unit: "A typed context record — fix, bug pattern, preference, policy, decision, verification, or free-form — lowered into claims and edges in a per-pot context graph"
   storage: "A graph behind a port: FalkorDB by default with an embedded `falkordblite` option, Neo4j as an extra, and NetworkX in-process; claims, edges and invalidations all carry provenance columns"
@@ -32,7 +31,7 @@ matrix:
   background: "Reconciliation over ingested events, an LLM-planned mutation path validated before it is applied, and quality-issue creation as a typed mutation"
   trust: "A `verification_status` on a fix that starts `unverified` and can become `failed`, a separate verification record carrying worked / didnt_work / partial against an existing fix, a confidence on the provenance, and an invalidation state that withholds on read"
   strengths: "Every mutation carries provenance answering where a fact came from, when it was observed, when it was written and who produced it; an invalidation cannot be recorded without a reason; and a conformance test asserts the invalidated claim is absent by default"
-  risks: "Invalidation is keyed on the entity or edge, not on the value, so re-extraction of the same claim under a new key is not refused; the approval gate guards the workbench commit path only, the reconciliation agent's plans apply without it, and the approver is an unauthenticated string"
+  risks: "Invalidation is keyed on the entity or edge, not on the value, so re-extraction of the same claim under a new key is not refused; the approval gate guards the workbench commit path only, the reconciliation agent's plans apply through apply_mutation_batch without it, and approved_by is a caller-supplied string nothing verifies"
 ---
 
 ## 1. Executive Summary
@@ -222,11 +221,18 @@ medium- or high-risk plan refuses until `--approved-by <user-ref>` is passed,
 whereupon a `GraphMutationApproval` with the approver and time is written to the
 plan record. `test_medium_risk_plan_requires_approval_before_commit` asserts
 the refusal, the commit with `user:alice`, and the recorded approval. Two
-limits: `approved_by` is whatever string the caller supplies, so an agent can
-name itself, and the reconciliation agent does not use this path — its plans go
-through `apply_mutation_batch`
-(`adapters/outbound/graph/apply_plan.py:103`) once they pass the shape
-validator.
+limits, and together they are why this report does not carry `human_review`.
+`approved_by` is whatever string the caller supplies — the parameter is
+`approved_by: str | None` at `core/workbench_service.py:296` and nothing verifies
+it — so an agent can name itself. And the reconciliation agent does not use this
+path at all: its plans go through `apply_mutation_batch`
+(`adapters/outbound/graph/apply_plan.py:103`), whose signature takes a writer, a
+plan, a pot id, a provenance context, a definition and a reconciliation config,
+and no approver or policy of any kind. A gate one producer can satisfy by
+writing its own name, and another can walk around, is a shape check rather than
+an actor check. What remains is still worth copying — the risk grading is
+per-operation and checkable, and the refusal is tested — but it grades the
+*change*, not the *changer*.
 
 ## 8. Agent Integration
 
@@ -320,6 +326,8 @@ results were found for it, and none is claimed. I did not run the suite.
 | `potpie/context-engine/tests/core/test_library_isolation.py` | The core imports only the engine package, stdlib and pydantic |
 
 ## History
+
+**2026-09-19** — re-pinned to [`7726221dc95c3549a26d83dad9a4b9a0b6aa5ccb`](https://github.com/potpie-ai/potpie/commit/7726221dc95c3549a26d83dad9a4b9a0b6aa5ccb), 2 commits on and none of the eighteen changed files under `potpie/context-engine/`, so the five remaining marks keep their anchors untouched. `human_review` is **withdrawn**, on the two limits the previous record already stated beside it rather than on anything new: `approved_by` is declared `str | None` and nothing verifies it, so the producer can name itself; and `apply_mutation_batch`, the path the reconciliation agent's plans take, has no approver or policy parameter at all. A gate one producer satisfies by writing its own name and another walks around grades the change rather than the changer. The per-operation risk grading and its tested refusal keep their credit in section 7. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`0b18cea8dcd984bd70d9d7d85cd340ceab87dd94`](https://github.com/potpie-ai/potpie/commit/0b18cea8dcd984bd70d9d7d85cd340ceab87dd94) — ten commits on, 2026-09-15. Screened before reading: no auto-run surface, six build-time execution points (a `Makefile` and five `conftest.py` files that run on test collection), three unpinned surfaces and six dependency surfaces inside the cooldown. Nothing was installed and no test was run. #1057 (28 August) absorbed `context-core` into `context-engine` as its `core` subpackage and renamed the public-runtime conformance file; the invalidation, provenance, claim query, required `pot_id` and verification mechanics are unchanged in substance, and the evidence records point at the new paths. `results.md` is no longer at the root. `human_review` added: the workbench commit path, present at the first reading, refuses medium- and high-risk plans until a named approver is given and records the approval, with a committed test; the approver is unauthenticated and the reconciliation agent's plans bypass the gate, which the report now says in section 7. Six marks.
 
