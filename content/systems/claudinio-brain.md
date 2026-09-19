@@ -9,12 +9,11 @@ source_url: https://github.com/claudin-io/claudinio-brain
 archive_name: "claudin-io--claudinio-brain"
 revision: 6b6e57413aa38bb7cba24183c21bb41510d2d72c
 revision_url: https://github.com/claudin-io/claudinio-brain/commit/6b6e57413aa38bb7cba24183c21bb41510d2d72c
-analyzed_at: 2026-09-16
-capabilities: "bitemporal, trust_state, human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "bitemporal, trust_state, negative_eval"
 capability_evidence:
   bitemporal: "two clocks, one of them the caller's, and a single read arm for both now and then | src/store/schema.sql:71-76, src/brain/mod.rs:711-733, src/recall.rs:1214-1224, src/cli.rs:184-186 | the schema labels the axes in its own comments — \"Valid time: when this was true in the world\" against \"Transaction time: when the brain learned it\" — and the insert binds them from different sources: `micros(w.valid_from)`, which comes from the caller's `--at` (\"When this became true. Defaults to now\"), and `micros(w.now)`, which comes from the clock. A backdated write is therefore an ordinary write, and the README's opening example asserts a January value and a June value in either order and reads the January one back with `--as-of 2026-03-01`. The read is the part worth copying: `for_when` builds one predicate for every temporal mode, and `Now` is not a separate branch but `AsOf(now)` — \"the two cannot drift apart because there is only one arm\", so a bug in the as-of filter cannot hide behind a working current-value query | tests/step3_bitemporal.rs and tests/step15_expiry.rs, with evals/temporal.jsonl carrying \"current value after N changes, value at a past instant, full history, backdated writes, corrections, retractions\" as a scored suite"
   trust_state: "retraction as a stored field meaning never-true, kept apart from the supersession columns that mean no-longer-true | src/store/schema.sql:73-78, src/brain/mod.rs:1444-1467, src/recall.rs:1215, src/brain/types.rs:227-236 | `retracted_at` is annotated \"set when we learn it was NEVER true\", and it is a different column from `valid_to` and `superseded_by`, so the store does not collapse a value that expired into a value that was wrong. It withholds rather than decorates: `for_when` opens every temporal predicate with `AND f.retracted_at IS NULL` and the comment above it says the exclusion holds \"in every mode, including History\" — a retracted claim leaves even the audit view, because \"a retracted claim was never true, so replaying it would be a lie\". The distinction reaches the caller as well: a write returns one of `created`, `reasserted`, `superseded` or `corrected`, and `Corrected { retracted, created }` is documented as \"a correction at the same instant: the previous claim was never true\" | tests/step3_invariants.rs and tests/step17_find.rs exercise the retracted-fact exclusions, and evals/temporal.jsonl scores corrections and retractions as separate case families"
-  human_review: "the studio, a loopback web surface that writes | src/studio/server.rs:129-136, src/studio/assets/studio.js:11-12 | the studio serves a snapshot of the brain over a loopback socket behind a constant-time token check, and four of its seven routes mutate: `POST /api/remember`, `/api/link`, `/api/retract` and `/api/alias`, beside `/api/recall` and `/api/why` for reading. A person opens the graph, follows a fact to the `recorded_at` of whatever closed it, and retracts what is wrong — inspection and correction on the same surface, against the same file the agent reads. `brain lint` is the other half and is deliberately not this half: it \"reports and suggests; repairing is a separate, explicit decision\" | tests/step9_studio.rs covers the routes and the escaping, including that no raw `<` survives into the page"
   negative_eval: "a committed scope-exclusion suite that asserts its own premise before asserting the absence | tests/step16_scope.rs:67-145 | `the_churn_crowds_out_the_answer_until_it_is_excluded` first asserts that the noise does reach the answer — \"the premise of this test is gone\" is the failure message — then asserts that with the namespace excluded no `task_` statement answers, then asserts exactly which single statement is left. The positive control is inside the same test rather than beside it, so the must-not assertion cannot pass on an empty result. `an_unscoped_fact_survives_an_exclusion` guards the SQL trap that would make it pass for the wrong reason, since `scope <> 'todo'` is NULL for an unscoped fact and a plain inequality \"would drop every unscoped fact in the brain\", and `every_channel_honours_the_exclusion` repeats the assertion for the lexical, name and semantic channels in turn, because the semantic one filters after the search rather than inside it | the suite runs in the committed `cargo test` set, and evals/graph.jsonl and evals/kin.jsonl score retrieval quality separately against a holdout \"nothing is tuned against\""
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -185,6 +184,16 @@ Codex, Cursor, Gemini, Cline, OpenCode and others, registered through a plugin
 manifest. The Stop and SessionEnd hooks record what a session did "from the
 harness's own transcript, with no model involved."
 
+The studio is worth reading as the person's surface and worth being exact about:
+four of its seven routes mutate — `POST /api/remember`, `/api/link`,
+`/api/retract` and `/api/alias` — against the same file the agent reads, so a
+person can follow a fact to the `recorded_at` of whatever closed it and retract
+what is wrong. That is inspection and correction on one surface, which is a good
+shape and not a review gate: nothing is withheld while it waits for anyone.
+`src/` carries no pending, staged or approval state on a fact, and `brain lint`
+is deliberately the same way — it *"reports and suggests; repairing is a
+separate, explicit decision"*. So this report does not carry `human_review`.
+
 ## 9. Reliability, Safety, and Trust
 
 The strong parts are the temporal invariants, the retraction semantics, and the
@@ -239,5 +248,7 @@ withdrawn exists only inside a concatenated `source` string.
 | `tests/step16_scope.rs:67-88` | A must-not assertion that proves its own premise first |
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`6b6e57413aa38bb7cba24183c21bb41510d2d72c`](https://github.com/claudin-io/claudinio-brain/commit/6b6e57413aa38bb7cba24183c21bb41510d2d72c); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, and the record's own summary is the reason: the studio is *"inspection and correction on the same surface, against the same file the agent reads."* Correction after the fact is not a state a memory waits in, and `src/` was searched at this pin for one — there is no pending, staged, proposed or approval state on a fact anywhere in it. The studio keeps its credit in section 8, including the part the record noticed that most reports miss: `brain lint` deliberately does not repair, because *"repairing is a separate, explicit decision."* The other three marks stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`6b6e57413aa38bb7cba24183c21bb41510d2d72c`](https://github.com/claudin-io/claudinio-brain/commit/6b6e57413aa38bb7cba24183c21bb41510d2d72c) — first reading, at a commit dated 1 September 2026. Screened before opening, from a shallow clone: nine files scanned, three auto-run surfaces (a Claude Code plugin manifest and two hook directories registering SessionStart, Stop and UserPromptSubmit), no build-time execution points, one unpinned dependency surface and none inside the seven-day cooldown. `Cargo.lock` is present and unchanged for fourteen days. Nothing was installed, built or run.
