@@ -115,14 +115,14 @@ are not the same thing.</p>
               <strong>zzet/gortex</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/zzet/gortex/commit/a4b5c4df50ff3256243990f5fe571eb190d05b22" title="a4b5c4df50ff3256243990f5fe571eb190d05b22">
+            <a class="meta-pill revision-pill" href="https://github.com/zzet/gortex/commit/2b5480bfd0387c6057c415684bcb5af09e34c356" title="2b5480bfd0387c6057c415684bcb5af09e34c356">
               <span>Analyzed revision</span>
-              <code>a4b5c4df…</code>
+              <code>2b5480bf…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-15</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/zzet--gortex" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -252,15 +252,55 @@ no dependency chain — a real distribution decision with a visible cost
 in query surface.</p>
 <h2 id="4-essential-implementation-paths">4. Essential Implementation
 Paths</h2>
-<p><code>internal/graph/edge.go</code> is the file. Five constants
-define the ladder; <code>OriginRank</code> orders it;
-<code>MeetsMinTier</code> turns it into a query filter with the explicit
-note that an empty filter always passes and an empty origin fails any
-non-empty filter; <code>ResolvedBy</code> collapses it for display;
-<code>EdgeTierScore</code> maps it to confidence; the
-<code>ProvenanceWeight*</code> constants map it, differently, to
-centrality; and <code>EffectiveOrigin</code> is the accessor everything
-is supposed to use.</p>
+<p><code>internal/graph/edge.go</code> is the file. Six constants define
+the ladder (<code>:695-706</code>); <code>OriginRank</code> orders it
+(<code>:761-777</code>); <code>MeetsMinTier</code> turns it into a query
+filter with the explicit note that an empty filter always passes and an
+empty origin fails any non-empty filter; <code>ResolvedBy</code>
+collapses it for display; <code>EdgeTierScore</code> maps it to
+confidence; <code>ProvenanceWeight</code> maps it, differently, to
+centrality (<code>:959-974</code>); and <code>EffectiveOrigin</code> is
+the accessor everything is supposed to use — though nine call sites
+re-implement its backfill inline instead
+(<code>internal/query/engine.go:337-340</code>, <code>:391-394</code>,
+<code>:1572-1574</code>, <code>internal/query/subgraph.go:456-460</code>
+and five more), so the accessor is a convention rather than a choke
+point.</p>
+<p>Two places the ladder does not hold together, both visible by reading
+the switches side by side.</p>
+<p><strong>A speculative edge weights above a text-matched one in
+centrality.</strong> <code>OriginRank</code> places
+<code>speculative</code> at 1 and <code>text_matched</code> at 2, and
+the constant's own comment says speculative <em>"ranks strictly below
+text_matched"</em>. <code>ProvenanceWeight</code> has cases for the lsp
+tiers, <code>ast_resolved</code>, <code>ast_inferred</code> and
+<code>text_matched</code> — and none for <code>speculative</code>, so it
+falls through to the <code>provWeightASTInferred</code> default of
+<strong>0.8</strong>, while <code>text_matched</code> returns
+<code>ProvenanceWeightMin</code>, <strong>0.5</strong>. For exactly one
+tier the centrality ladder inverts the rank ladder, and nothing catches
+it: the docstring promises a result in
+<code>[ProvenanceWeightMin, ProvenanceWeightMax]</code>, which 0.8
+satisfies.</p>
+<p><strong>Three tools advertise <code>include_speculative</code> and
+cannot honour it.</strong> The parameter is declared on eight tools
+(<code>internal/mcp/tools_core.go:1256</code>–<code>:1393</code>) and
+<code>FilterSpeculative</code> is called from five handlers
+(<code>:2696</code>, <code>:2727</code>, <code>:2760</code>,
+<code>:2802</code>, <code>:3097</code>). The three that do not call it —
+<code>find_implementations</code>, <code>find_overrides</code> and
+<code>get_class_hierarchy</code> — return nodes, not edges, and
+<code>FilterSpeculative</code> drops edges. <code>find_overrides</code>
+is the pointed case, because speculative edges are largely <em>made</em>
+by the override-dispatch resolvers
+(<code>internal/resolver/java_override_dispatch.go:88</code>,
+<code>internal/resolver/csharp_receiver_gate.go:223</code>):
+<code>FindOverridesMinTier</code>
+(<code>internal/query/engine.go:329-349</code>) walks
+<code>EdgeOverrides</code> edges and applies the tier floor only when
+<code>min_tier</code> is set, so at the default a speculative override
+contributes its node and the parameter offered for that case is
+inert.</p>
 <p>The docstring on <code>EffectiveOrigin</code> is the best piece of
 hazard documentation in this reading. It states the bug
 (<code>e.Origin</code> raw is almost always wrong), gives the magnitude
@@ -443,6 +483,13 @@ dominant.</li>
 the LSP tiers against a 1.0 AST baseline is a strong claim about how
 much framework wiring distorts authority, and nothing in the repository
 measures the rebalancing it produces.</li>
+<li>Is the speculative tier's centrality weight the intended one?
+<code>ProvenanceWeight</code> has no case for it, so it takes the 0.8
+<code>ast_inferred</code> default while <code>text_matched</code> — the
+tier <code>OriginRank</code> puts <em>above</em> it — takes 0.5. A
+switch with a default that quietly promotes its weakest member is hard
+to distinguish from a deliberate choice, and no test asserts either
+reading.</li>
 <li>Does a lifted edge keep its history?
 <code>EdgeProvenanceUpdate</code> revises provenance in place, so an
 edge promoted from <code>ast_inferred</code> to
@@ -507,8 +554,40 @@ caveat</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/zzet/gortex/commit/2b5480bfd0387c6057c415684bcb5af09e34c356"><code class="commit-id" title="2b5480bfd0387c6057c415684bcb5af09e34c356">2b5480bf…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line: does the
+field answer whether an edge may be acted on and get used for filtering,
+or how confident and get used for ranking. Here it does both by design,
+one ladder read two ways, and the mark holds on the filtering half. The
+previous record rested that half on a doc comment — <em>MetaSpeculative
+is the single source of truth for default-exclusion</em> — which is the
+thing the producer test says not to read. The code behind it is real:
+<code>FilterSpeculative</code>
+(<code>internal/query/subgraph.go:517-532</code>) rebuilds the edge
+slice without speculative edges and five MCP handlers call it with the
+default false (<code>internal/mcp/tools_core.go:2696</code>,
+<code>:2727</code>, <code>:2760</code>, <code>:2802</code>,
+<code>:3097</code>). Reading the switches side by side turned up two
+gaps. <code>include_speculative</code> is declared on eight tools and
+applied by five; the three that skip it —
+<code>find_implementations</code>, <code>find_overrides</code> and
+<code>get_class_hierarchy</code> — return nodes rather than edges, so
+the parameter they advertise cannot do anything, and
+<code>find_overrides</code> is where the override-dispatch resolvers
+make speculative edges in the first place. And
+<code>ProvenanceWeight</code>
+(<code>internal/graph/edge.go:959-974</code>) has no case for
+<code>speculative</code>, so it falls to the <code>ast_inferred</code>
+default of 0.8 while <code>text_matched</code> — the tier
+<code>OriginRank</code> puts strictly above it — returns 0.5. For one
+tier the centrality ladder inverts the rank ladder, and the docstring's
+promise of a result within the min and max bounds is satisfied either
+way, so nothing flags it. Section 4, the matrix row and the open
+questions were rewritten. Screened again first; nothing was installed
+and no suite was run.</p>
 <p><strong>2026-09-15</strong> — <a
-href="https://github.com/zzet/gortex/commit/a4b5c4df50ff3256243990f5fe571eb190d05b22"><code class="commit-id" title="a4b5c4df50ff3256243990f5fe571eb190d05b22">a4b5c4df…</code></a>
+href="https://github.com/zzet/gortex/commit/2b5480bfd0387c6057c415684bcb5af09e34c356"><code class="commit-id" title="2b5480bfd0387c6057c415684bcb5af09e34c356">2b5480bf…</code></a>
 — second reading, 813 commits on. Screened again: no auto-run surface,
 one build-time execution point, two dependency surfaces inside the
 cooldown; nothing was installed and nothing was run. All three marks

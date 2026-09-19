@@ -7,12 +7,12 @@ page_kind: system
 source_name: "zzet/gortex"
 source_url: https://github.com/zzet/gortex
 archive_name: "zzet--gortex"
-revision: a4b5c4df50ff3256243990f5fe571eb190d05b22
-revision_url: https://github.com/zzet/gortex/commit/a4b5c4df50ff3256243990f5fe571eb190d05b22
-analyzed_at: 2026-09-15
+revision: 2b5480bfd0387c6057c415684bcb5af09e34c356
+revision_url: https://github.com/zzet/gortex/commit/2b5480bfd0387c6057c415684bcb5af09e34c356
+analyzed_at: 2026-09-19
 capabilities: "trust_state, scope_enforced, negative_eval"
 capability_evidence:
-  trust_state: "the graph edge — a six-tier provenance label recording how the edge was resolved, distinct from its numeric confidence, whose lowest tier is withheld from queries by default | internal/graph/edge.go:695-712 | `Origin` is one of `lsp_resolved`, `lsp_dispatch`, `ast_resolved`, `ast_inferred`, `text_matched` or `speculative`. The last *ranks strictly below text_matched*, always carries `Meta[MetaSpeculative]=true`, and `MetaSpeculative` is documented as *the single source of truth for default-exclusion: any edge-returning surface drops these unless the caller opts in* — a discrete status used as a read filter; `EdgeTierScore` is the single shared tier→confidence mapping so a path score means the same thing across `flow_between`, `taint_paths` and `trace_path`, `MeetsMinTier` lets a caller refuse anything below a floor, and `ResolvedBy` collapses the tiers to lsp / ast / heuristic for display | internal/graph/extraction_gap_provenance_test.go"
+  trust_state: "the graph edge — a six-tier provenance label recording how the edge was resolved, distinct from its numeric confidence, whose lowest tier is dropped from edge-returning queries by default | internal/graph/edge.go:695-706 (the ladder), :761-777 (`OriginRank`), :781-787 (`IsSpeculative`), :959-974 (`ProvenanceWeight`), internal/query/subgraph.go:517-532 (`FilterSpeculative`), internal/mcp/tools_core.go:2696, :2727, :2760, :2802, :3097 (the five callers) | `Origin` is one of lsp_resolved, lsp_dispatch, ast_resolved, ast_inferred, text_matched or speculative, and `OriginRank` puts speculative at 1, strictly below text_matched at 2. The exclusion is real and not merely documented: `FilterSpeculative` rebuilds the edge slice without speculative edges, and five MCP handlers call it with `GetBool(include_speculative, false)`, so the default on get_dependencies, get_dependents, get_call_chain, get_callers and find_usages is to drop them. That is a discrete status used as a read filter, which is the mark. Two limits on how far it reaches. `include_speculative` is declared on eight tools but applied by five — find_implementations, find_overrides and get_class_hierarchy return nodes rather than edges, so the parameter they advertise does nothing, and find_overrides is the surface where speculative override edges are made. And `ProvenanceWeight` has no case for speculative, so it falls to the ast_inferred default of 0.8 while text_matched, the tier above it, weights 0.5 — the centrality ladder inverts the rank ladder for that one tier | internal/graph/extraction_gap_provenance_test.go"
   scope_enforced: "the knowledge graph — a repository prefix threaded through the store API and applied in the query | internal/graph/store.go | `repoPrefix` appears in 78 places in the store interface and reaches the read path in the node, edge, churn, coverage and blame projections; separately `internal/pathguard` confines file reads to the one root that owns the file, re-checked at every content sink rather than only at indexing | internal/graph/empty_prefix_wildcard_test.go"
   negative_eval: "file admission and content serving — committed cases that out-of-repository bytes must not be returned | internal/pathguard/pathguard.go | `TestSymlinkEscapes` builds a symlink pointing at a file outside the root and asserts it is refused, at admission and again at read time, on the stated reasoning that a link committed as `pwn.go -> /home/user/.ssh/id_rsa` would otherwise be indexed like ordinary source and served verbatim; `TestEmptyPrefixIsExactForContentNodes` asserts the empty scope returns one node rather than every node | internal/pathguard/pathguard_test.go, internal/graph/empty_prefix_wildcard_test.go"
 stack_storage: "sqlite"
@@ -27,7 +27,7 @@ matrix:
   scoping: "A `repoPrefix` string threaded through the store API, plus filesystem confinement to the one root owning each file, re-checked at every content sink. Multi-repository by default; the empty prefix means every repository in one family of calls and exactly the unprefixed repository in another"
   integration: "An MCP server with 175 configurable tools, a CLI, and a web UI; installation configures every one of 19 supported coding agents detected on the machine"
   background: "A watcher and a daemon; incremental reindex on change, with published p50/p95/p99 latencies through the production dispatch path"
-  trust: "Provenance as a six-tier ladder from compiler-grade through text-matched to speculative, the last hidden by default, mapped to confidence by one shared function — and mapped a *second* way, deliberately differently, for graph centrality"
+  trust: "Provenance as a six-tier ladder from compiler-grade through text-matched to speculative, the last dropped from edge-returning queries by default, mapped to confidence by one shared function — and mapped a second way, deliberately differently, for graph centrality, where the speculative tier has no case and falls to the ast_inferred weight"
   strengths: "A provenance model that survives being read: `EffectiveOrigin` backfills unstamped edges rather than letting them sort below the weakest tier, and the same backfill is what the agent is shown, so a gating decision matches the displayed evidence"
   risks: "The populated benchmarks are self-curated — ten queries whose ground truth is hand-written against Gortex's own repository, timed on one operator's machine — and the externally graded surface, SWE-bench, ships as a template whose result table is still `TBD`"
 ---
@@ -136,12 +136,42 @@ distribution decision with a visible cost in query surface.
 
 ## 4. Essential Implementation Paths
 
-`internal/graph/edge.go` is the file. Five constants define the ladder;
-`OriginRank` orders it; `MeetsMinTier` turns it into a query filter with the
-explicit note that an empty filter always passes and an empty origin fails any
-non-empty filter; `ResolvedBy` collapses it for display; `EdgeTierScore` maps it
-to confidence; the `ProvenanceWeight*` constants map it, differently, to
-centrality; and `EffectiveOrigin` is the accessor everything is supposed to use.
+`internal/graph/edge.go` is the file. Six constants define the ladder
+(`:695-706`); `OriginRank` orders it (`:761-777`); `MeetsMinTier` turns it into a
+query filter with the explicit note that an empty filter always passes and an
+empty origin fails any non-empty filter; `ResolvedBy` collapses it for display;
+`EdgeTierScore` maps it to confidence; `ProvenanceWeight` maps it, differently,
+to centrality (`:959-974`); and `EffectiveOrigin` is the accessor everything is
+supposed to use — though nine call sites re-implement its backfill inline instead
+(`internal/query/engine.go:337-340`, `:391-394`, `:1572-1574`,
+`internal/query/subgraph.go:456-460` and five more), so the accessor is a
+convention rather than a choke point.
+
+Two places the ladder does not hold together, both visible by reading the
+switches side by side.
+
+**A speculative edge weights above a text-matched one in centrality.**
+`OriginRank` places `speculative` at 1 and `text_matched` at 2, and the constant's
+own comment says speculative *"ranks strictly below text_matched"*.
+`ProvenanceWeight` has cases for the lsp tiers, `ast_resolved`, `ast_inferred`
+and `text_matched` — and none for `speculative`, so it falls through to the
+`provWeightASTInferred` default of **0.8**, while `text_matched` returns
+`ProvenanceWeightMin`, **0.5**. For exactly one tier the centrality ladder
+inverts the rank ladder, and nothing catches it: the docstring promises a result
+in `[ProvenanceWeightMin, ProvenanceWeightMax]`, which 0.8 satisfies.
+
+**Three tools advertise `include_speculative` and cannot honour it.** The
+parameter is declared on eight tools (`internal/mcp/tools_core.go:1256`–`:1393`)
+and `FilterSpeculative` is called from five handlers (`:2696`, `:2727`, `:2760`,
+`:2802`, `:3097`). The three that do not call it — `find_implementations`,
+`find_overrides` and `get_class_hierarchy` — return nodes, not edges, and
+`FilterSpeculative` drops edges. `find_overrides` is the pointed case, because
+speculative edges are largely *made* by the override-dispatch resolvers
+(`internal/resolver/java_override_dispatch.go:88`,
+`internal/resolver/csharp_receiver_gate.go:223`): `FindOverridesMinTier`
+(`internal/query/engine.go:329-349`) walks `EdgeOverrides` edges and applies the
+tier floor only when `min_tier` is set, so at the default a speculative override
+contributes its node and the parameter offered for that case is inert.
 
 The docstring on `EffectiveOrigin` is the best piece of hazard documentation in
 this reading. It states the bug (`e.Origin` raw is almost always wrong), gives
@@ -325,6 +355,11 @@ confusion, so the next reader's tidy-up fails loudly.
   tiers against a 1.0 AST baseline is a strong claim about how much framework
   wiring distorts authority, and nothing in the repository measures the
   rebalancing it produces.
+- Is the speculative tier's centrality weight the intended one? `ProvenanceWeight`
+  has no case for it, so it takes the 0.8 `ast_inferred` default while
+  `text_matched` — the tier `OriginRank` puts *above* it — takes 0.5. A switch
+  with a default that quietly promotes its weakest member is hard to distinguish
+  from a deliberate choice, and no test asserts either reading.
 - Does a lifted edge keep its history? `EdgeProvenanceUpdate` revises provenance
   in place, so an edge promoted from `ast_inferred` to `lsp_resolved` appears to
   lose the record that it was once a guess — which matters for a cached answer
@@ -349,7 +384,9 @@ confusion, so the next reader's tidy-up fails loudly.
 
 ## History
 
-**2026-09-15** — [`a4b5c4df50ff3256243990f5fe571eb190d05b22`](https://github.com/zzet/gortex/commit/a4b5c4df50ff3256243990f5fe571eb190d05b22) — second reading, 813 commits on. Screened again: no auto-run surface, one build-time execution point, two dependency surfaces inside the cooldown; nothing was installed and nothing was run. All three marks were re-tested against the paths their records cite, all present, and all hold. The scope files moved by 51 lines. The empty-prefix overloading the report describes is unchanged and deliberate: `empty_prefix_wildcard_test.go`, present at the previous pin, names the two meanings — wildcard as an argument convention, exact as a node property — and exists so that collapsing one into the other fails a test instead of silently emptying a global pass. Additions: `ConfidenceLabelRank`, which orders exactly the three labels `ConfidenceLabelFor` produces and sits beside it so a renamed label cannot silently rank low; a `LowWaterID` bounding a pass to its own graph generation; and eviction split into a current-generation interface and an all-generations one reserved *only when the repository is being forgotten*. The `trust_state` record is corrected from five tiers to six: `speculative`, below `text_matched`, was present at the previous pin and is the tier excluded from every edge-returning surface unless a caller opts in, which is the strongest part of the mark and was missing from its record.
+**2026-09-19** — [`2b5480bfd0387c6057c415684bcb5af09e34c356`](https://github.com/zzet/gortex/commit/2b5480bfd0387c6057c415684bcb5af09e34c356) — `trust_state` re-tested against the narrowed line: does the field answer whether an edge may be acted on and get used for filtering, or how confident and get used for ranking. Here it does both by design, one ladder read two ways, and the mark holds on the filtering half. The previous record rested that half on a doc comment — *MetaSpeculative is the single source of truth for default-exclusion* — which is the thing the producer test says not to read. The code behind it is real: `FilterSpeculative` (`internal/query/subgraph.go:517-532`) rebuilds the edge slice without speculative edges and five MCP handlers call it with the default false (`internal/mcp/tools_core.go:2696`, `:2727`, `:2760`, `:2802`, `:3097`). Reading the switches side by side turned up two gaps. `include_speculative` is declared on eight tools and applied by five; the three that skip it — `find_implementations`, `find_overrides` and `get_class_hierarchy` — return nodes rather than edges, so the parameter they advertise cannot do anything, and `find_overrides` is where the override-dispatch resolvers make speculative edges in the first place. And `ProvenanceWeight` (`internal/graph/edge.go:959-974`) has no case for `speculative`, so it falls to the `ast_inferred` default of 0.8 while `text_matched` — the tier `OriginRank` puts strictly above it — returns 0.5. For one tier the centrality ladder inverts the rank ladder, and the docstring's promise of a result within the min and max bounds is satisfied either way, so nothing flags it. Section 4, the matrix row and the open questions were rewritten. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-15** — [`2b5480bfd0387c6057c415684bcb5af09e34c356`](https://github.com/zzet/gortex/commit/2b5480bfd0387c6057c415684bcb5af09e34c356) — second reading, 813 commits on. Screened again: no auto-run surface, one build-time execution point, two dependency surfaces inside the cooldown; nothing was installed and nothing was run. All three marks were re-tested against the paths their records cite, all present, and all hold. The scope files moved by 51 lines. The empty-prefix overloading the report describes is unchanged and deliberate: `empty_prefix_wildcard_test.go`, present at the previous pin, names the two meanings — wildcard as an argument convention, exact as a node property — and exists so that collapsing one into the other fails a test instead of silently emptying a global pass. Additions: `ConfidenceLabelRank`, which orders exactly the three labels `ConfidenceLabelFor` produces and sits beside it so a renamed label cannot silently rank low; a `LowWaterID` bounding a pass to its own graph generation; and eviction split into a current-generation interface and an all-generations one reserved *only when the repository is being forgotten*. The `trust_state` record is corrected from five tiers to six: `speculative`, below `text_matched`, was present at the previous pin and is the tier excluded from every edge-returning surface unless a caller opts in, which is the strongest part of the mark and was missing from its record.
 
 **2026-08-19** — [`1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36`](https://github.com/zzet/gortex/commit/1145b9f36f84efe8bcda3aa82ecd3aae5a5d2a36)
 — first reading. Screened before reading: no auto-run surface, a build-time
