@@ -7,14 +7,13 @@ page_kind: system
 source_name: "imran31415/kube-coder"
 source_url: https://github.com/imran31415/kube-coder
 archive_name: "imran31415--kube-coder"
-revision: a28896c936cf5adea2d1548a4d4a83d858120e00
-revision_url: https://github.com/imran31415/kube-coder/commit/a28896c936cf5adea2d1548a4d4a83d858120e00
-analyzed_at: 2026-09-16
-capabilities: "scope_enforced, audit_log, human_review, negative_eval"
+revision: 6707237fc961c9f878bc1d7789c980c49b92d39f
+revision_url: https://github.com/imran31415/kube-coder/commit/6707237fc961c9f878bc1d7789c980c49b92d39f
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, audit_log, negative_eval"
 capability_evidence:
   scope_enforced: "the memory store, every retrieval arm | charts/workspace/memory/manager.py | search applies the namespaces allow-list and namespace_scope root to the FTS pass, the LIKE degradation and the ids loaded by _fetch_by_ids, so an out-of-scope hit cannot be fused back in | charts/workspace/tests/memory_scope_test.py"
   audit_log: "the memory store | charts/workspace/memory/manager.py | memory_history takes a row carrying version, op and updated_by from upsert, update_partial and soft_delete, capped at HISTORY_CAP_PER_MEMORY = 100 per memory by _prune_history | charts/workspace/tests/memory_lifecycle_test.py"
-  human_review: "the dashboard Memory tab | charts/workspace/web/src/routes/memory/index.tsx | a create/edit form over the same rows the agent reads, plus per-relation unlink scoped to the source memory | charts/workspace/web/src/routes/memory/index.newDefault.test.tsx"
   negative_eval: "the memory read path | charts/workspace/tests/memory_scope_test.py | test_scope_excludes_prefix_sharing_sibling, test_sibling_project_is_still_out_of_scope and test_scoped_injection_excludes_other_projects, with the LIKE degradation and vector-only arms asserted separately | charts/workspace/tests/memory_scope_test.py"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -187,8 +186,13 @@ entrypoint alongside `playwright` and `sequential-thinking`. The dashboard's
 Memory tab is the human surface: a create/edit form over the same rows, a
 relation graph, per-relation unlink scoped to the source, and an import drawer.
 That is an editing surface rather than an approval queue — nothing is held
-pending a decision — and it earns `human_review` on the "adjudicates after it
-takes effect" half of the definition.
+pending a decision — and that sentence is now the reason the mark is withheld
+rather than a qualification on it. The definition no longer has an "adjudicates
+after it takes effect" half: it asks whether a memory waits in a state until an
+actor the producing agent cannot be resolves it, and here the rows the form
+edits are the rows the `memory_*` MCP tools already read. Nothing in the tree
+holds one back — the only `pending` values are devcontainer build states and
+board task states.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -347,6 +351,8 @@ library you would vendor on its own.
   `memory_pending_queue_test.py`, `memory_rollback_compat_test.py` and four more
 
 ## History
+
+**2026-09-19** — re-pinned to [`6707237fc961c9f878bc1d7789c980c49b92d39f`](https://github.com/imran31415/kube-coder/commit/6707237fc961c9f878bc1d7789c980c49b92d39f). `human_review` is **withdrawn**. Section 8 already said what settles it — *"an editing surface rather than an approval queue — nothing is held pending a decision"* — and carried the mark anyway, on a clause of the definition that no longer exists. Adjudicating after the fact is not the test; waiting is. The tree was searched at this pin for any admission state and has none: the only `pending` values are devcontainer build states and board task states. The Memory tab keeps its credit as a correction surface. The other three marks stand. Screened again first; nothing was installed, built or run.
 
 **2026-09-16** — [`a28896c936cf5adea2d1548a4d4a83d858120e00`](https://github.com/imran31415/kube-coder/commit/a28896c936cf5adea2d1548a4d4a83d858120e00) — re-read after 18 commits, v1.62.0. Every anchored file is byte-identical at both commits — `charts/workspace/memory/manager.py`, both Python test files, and both files under `charts/workspace/web/src/routes/memory/` — and no file whose path contains `memory` or `embed` changed at all, so all four marks stand on unchanged code and the report's deletion finding is unaffected. The eighteen commits are a chat-surface consolidation, a mobile build fix and a dependency sweep, with one exception that belongs in a memory report and is written up in section 9: the workspace home volume, which is where `memory.db` lives, gained a backup and restore path and a documented drill, having previously had neither. Re-screened at this commit: one build-time execution path, two floating versions, two manifests inside the cooldown. Nothing was installed, built or run.
 
