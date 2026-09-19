@@ -5,27 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="The system formerly called
-OpenMemory, rewritten as a TypeScript engine whose strict recall is one
-SQL query that asks what was true at a given moment — excluding
-superseded facts, unresolved contradictions and ungrounded claims — with
-no committed test anywhere in the tree.">
+OpenMemory, rewritten as a TypeScript engine that publishes its recall
+contract as named SQL and then enforces a second copy of it in code —
+the published query is never executed, and the copy that runs admits two
+of the five statuses it refuses.">
     <meta name="theme-color" content="#101b2a">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Agent Memory Atlas">
     <meta property="og:title" content="LongMemory — Agent Memory Atlas">
     <meta property="og:description" content="The system formerly called
-OpenMemory, rewritten as a TypeScript engine whose strict recall is one
-SQL query that asks what was true at a given moment — excluding
-superseded facts, unresolved contradictions and ungrounded claims — with
-no committed test anywhere in the tree.">
+OpenMemory, rewritten as a TypeScript engine that publishes its recall
+contract as named SQL and then enforces a second copy of it in code —
+the published query is never executed, and the copy that runs admits two
+of the five statuses it refuses.">
     <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="LongMemory — Agent Memory Atlas">
     <meta name="twitter:description" content="The system formerly called
-OpenMemory, rewritten as a TypeScript engine whose strict recall is one
-SQL query that asks what was true at a given moment — excluding
-superseded facts, unresolved contradictions and ungrounded claims — with
-no committed test anywhere in the tree.">
+OpenMemory, rewritten as a TypeScript engine that publishes its recall
+contract as named SQL and then enforces a second copy of it in code —
+the published query is never executed, and the copy that runs admits two
+of the five statuses it refuses.">
     <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
     <title>LongMemory — Agent Memory Atlas</title>
     <!-- Schema.org, so an assistant summarising this page can tell a technical
@@ -47,7 +47,7 @@ no committed test anywhere in the tree.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "LongMemory",
-      "description": "The system formerly called OpenMemory, rewritten as a TypeScript engine whose strict recall is one SQL query that asks what was true at a given moment \u2014 excluding superseded facts, unresolved contradictions and ungrounded claims \u2014 with no committed test anywhere in the tree.",
+      "description": "The system formerly called OpenMemory, rewritten as a TypeScript engine that publishes its recall contract as named SQL and then enforces a second copy of it in code \u2014 the published query is never executed, and the copy that runs admits two of the five statuses it refuses.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -104,10 +104,10 @@ no committed test anywhere in the tree.">
           <p class="eyebrow">Truth as of a time</p>
           <h1>LongMemory</h1>
           <p class="document-deck">The system formerly called
-OpenMemory, rewritten as a TypeScript engine whose strict recall is one
-SQL query that asks what was true at a given moment — excluding
-superseded facts, unresolved contradictions and ungrounded claims — with
-no committed test anywhere in the tree.</p>
+OpenMemory, rewritten as a TypeScript engine that publishes its recall
+contract as named SQL and then enforces a second copy of it in code —
+the published query is never executed, and the copy that runs admits two
+of the five statuses it refuses.</p>
                     <div class="document-meta">
             <a class="meta-pill" href="https://github.com/CaviraOSS/LongMemory">
               <span>Source</span>
@@ -121,7 +121,7 @@ no committed test anywhere in the tree.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-15</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/CaviraOSS--LongMemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -163,10 +163,12 @@ interdependence matrix at the centre of that reading survives only as a
 mapping inside <code>src/core/migration/legacy_cleaner.ts</code>. The
 new engine's own invariant list rejects the old shape in so many words —
 <em>"worlds are recursive containers, not flat sectors"</em>.</p>
-<p>What replaced it is worth the report. <strong>Strict recall is a
-single SQL query that asks what was true at a given moment</strong>, and
-the conditions it applies cover most of what this atlas asks a read path
-to refuse:</p>
+<p>What replaced it is worth the report, and what decides its central
+claim is not in the file the design points you at. The store publishes
+its recall contract as named SQL strings, and
+<code>strict_candidates</code> reads like the whole answer — the
+conditions it applies cover most of what this atlas asks a read path to
+refuse:</p>
 <pre class="sql"><code>WHERE n.tenant_id = @tenant_id AND n.user_id = @user_id
   AND n.valid_from &lt;= @at AND (n.valid_to IS NULL OR n.valid_to &gt; @at)
   AND (n.superseded_at IS NULL OR n.superseded_at &gt; @at)
@@ -181,8 +183,50 @@ evaluated as of the same instant; a discrete status; a per-fact validity
 contract; grounding and source requirements; and — the rare one —
 <strong>a fact under an unresolved contradiction is withheld from
 reasoning</strong> rather than ranked beneath its rival.</p>
-<p><strong>The defect is that none of it is tested.</strong> There is no
-test file anywhere in the repository and no <code>test</code> script in
+<p><strong>That query never runs.</strong>
+<code>query_strict_candidates</code> is declared on the store interface
+(<code>src/stores/index.ts:46</code>) and implemented over the string
+(<code>src/stores/sqlite/sqlite_store.ts:324-325</code>), and nothing
+calls it — nor <code>query_current_truth</code>, nor
+<code>query_historical_truth</code>. All four recall modes retrieve from
+an in-memory index instead
+(<code>src/core/recall/strict_recall.ts:52</code> and the same line in
+<code>associative_recall.ts</code>, <code>historical_recall.ts</code>
+and <code>grounded_recall.ts</code>), whose <code>active_nodes</code>
+filters by world and, despite the name, not by status
+(<code>src/core/recall/candidate_selection.ts:43-48</code>). The index
+is hydrated once from <code>store.load_nodes()</code> when the engine is
+constructed (<code>src/core/create_memory.ts:261-277</code>), which is
+where the tenant and user predicate is actually applied — so scoping
+holds, it just happens at startup rather than per query.</p>
+<p>The eligibility decision lives in TypeScript, one node at a time:
+<code>can_use_in_strict_recall</code>
+(<code>src/core/recall/mode_gates.ts:86-113</code>). It is a good gate.
+It refuses a superseded or contradicted node, an unresolved
+contradiction, confidence under the threshold, a contract with
+<code>use_for_reasoning: false</code>, an ungrounded node that required
+grounding, an expired one, a missing required source and a denied source
+permission — and it returns the <em>reasons</em>, which
+<code>strict_recall</code> records in an explain trace beside each
+rejected candidate (<code>:69-80</code>) rather than dropping it
+silently. The mark rests on that.</p>
+<p><strong>The two copies of the policy disagree.</strong> The SQL
+requires <code>status = 'active'</code>. The gate tests only two values:
+<code>is_superseded</code> and <code>is_contradicted</code>
+(<code>mode_gates.ts:30-36</code>). <code>NodeStatus</code> declares
+five — <code>active</code>, <code>superseded</code>,
+<code>contradicted</code>, <code>expired</code>, <code>draft</code>
+(<code>src/core/types/node_state.ts:16-21</code>). So a node whose
+status is <code>draft</code> is not refused by status in the path that
+runs, and one marked <code>expired</code> is refused only if its
+<code>valid_to</code> or <code>max_valid_duration</code> independently
+says so. The consolidation pass reads <code>status === 'expired'</code>
+as a live case (<code>src/core/memory/consolidation.ts:104-110</code>),
+so the value is not vestigial. A predicate written twice is a predicate
+that will differ; here the copy a reader is invited to check is the one
+that cannot be wrong, because it is not executed.</p>
+<p><strong>Nor is any of it tested.</strong> There is no test file
+anywhere in the repository and no <code>test</code> script in
 <code>package.json</code>. The previous reading's
 <code>negative_eval</code> rested on
 <code>packages/openmemory-js/tests/test_project_isolation.ts</code>,
@@ -227,7 +271,7 @@ the time it was learned.</p>
 <tr>
 <td><code>status</code>, <code>use_for_reasoning</code>,
 <code>confidence</code></td>
-<td>whether strict recall may use it</td>
+<td>whether the strict gate may use it</td>
 </tr>
 <tr>
 <td><code>world_id</code>, facet</td>
@@ -260,7 +304,7 @@ flowchart TD
 
     N --&gt; CUR[&quot;current_truth&lt;br/&gt;active · unsuperseded · valid at @at&quot;]
     N --&gt; HIS[&quot;historical_truth&lt;br/&gt;valid at @at, superseded or not&quot;]
-    N --&gt; STR[&quot;strict_candidates&lt;br/&gt;+ confidence · contract · grounding · source&quot;]
+    N --&gt; STR[&quot;can_use_in_strict_recall over the in-memory index&lt;br/&gt;+ confidence · contract · grounding · source&lt;br/&gt;(strict_candidates SQL is never executed)&quot;]
     C -.-&gt;|&quot;NOT EXISTS unresolved&quot;| STR
     STR --&gt; CTX[&quot;bounded context&quot;]
     CUR --&gt; CTX</code></pre></details></figure>
@@ -298,14 +342,16 @@ packages; application identifiers keep no runtime aliases.</p>
 Paths</h2>
 <h3 id="the-query-table">The query table</h3>
 <p><code>src/stores/sqlite/queries.ts</code> holds the recall SQL as
-named strings, which is the most legible way to publish a retrieval
-contract: <code>load_node</code>, <code>load_edge</code>,
+named strings, which is a legible way to publish a retrieval contract:
+<code>load_node</code>, <code>load_edge</code>,
 <code>current_truth</code>, <code>historical_truth</code>,
 <code>strict_candidates</code>, <code>aliases_for_entity</code>,
 <code>canonical_alias</code>. Every one opens on <code>tenant_id</code>
 and <code>user_id</code>. <code>world_id</code> is the only optional
-key, written
-<code>(@world_id IS NULL OR world_id = @world_id)</code>.</p>
+key, written <code>(@world_id IS NULL OR world_id = @world_id)</code>.
+Three of the seven — the three recall queries — have store methods no
+caller invokes; the ones that run are the loaders and the alias
+lookups.</p>
 <h3 id="supersession-without-overwrite">Supersession without
 overwrite</h3>
 <p><code>temporal/mvcc.ts</code> closes a node's transaction by stamping
@@ -319,8 +365,8 @@ that makes the historical query honest.</p>
 <h3 id="connector-deletion-which-is-not-a-tombstone">Connector deletion,
 which is not a tombstone</h3>
 <p>When an imported source item is deleted upstream,
-<code>create_memory.ts:661-690</code> ingests a marker node — text
-<em>"Source item deleted: …"</em>,
+<code>src/core/create_memory.ts:661-690</code> ingests a marker node —
+text <em>"Source item deleted: …"</em>,
 <code>use_for_reasoning: false</code>,
 <code>metadata.source_deleted: true</code> — and a
 <code>supersedes</code> edge from it to the node it replaces. That is
@@ -330,11 +376,15 @@ keys on the content to stop it being ingested again from another
 source.</p>
 <h3 id="contradictions-as-a-gate">Contradictions as a gate</h3>
 <p><code>contradictions</code> rows carry <code>node_a</code>,
-<code>node_b</code> and <code>resolved</code>.
-<code>strict_candidates</code> excludes any node on either side of an
-unresolved row. The consequence is conservative in the right direction:
-two sources disagreeing about a deployment target produce an answer that
-uses neither, rather than one that silently picks the more
+<code>node_b</code> and <code>resolved</code>. The strict gate refuses
+any node the caller reports as carrying an unresolved contradiction
+(<code>mode_gates.ts:92</code>, fed by
+<code>deps.unresolved_contradiction</code> at
+<code>strict_recall.ts:65</code>); the unused
+<code>strict_candidates</code> SQL expresses the same rule as a
+<code>NOT EXISTS</code>. The consequence is conservative in the right
+direction: two sources disagreeing about a deployment target produce an
+answer that uses neither, rather than one that silently picks the more
 confident.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p><code>HydroNode</code> (<code>src/core/types/hydro_node.ts</code>) is
@@ -343,9 +393,10 @@ serialised node in <code>node_json</code> with the filterable fields
 lifted into columns. A node's <strong>contract</strong> carries
 <code>use_for_reasoning</code>, <code>use_for_personalization</code>,
 <code>expires_if_unconfirmed</code> and an optional
-<code>max_valid_duration</code>, and strict recall reads the duration
-straight out of the JSON: a fact can declare that it is only good for a
-period, and the query enforces it.</p>
+<code>max_valid_duration</code>, and the strict gate reads the duration
+off the node: a fact can declare that it is only good for a period, and
+<code>is_expired</code> enforces it (<code>mode_gates.ts:38-42</code>,
+applied at <code>:101-106</code>).</p>
 <p>Provenance travels in <code>node_json</code> as
 <code>provenance.source_trace</code>, and <code>source_required</code>
 nodes are excluded from strict recall unless they carry a grounding
@@ -354,9 +405,10 @@ reference or a non-empty trace.</p>
 <p>Lexical, vector and graph arms feed the recall modes, and results are
 returned within a token bound — <em>"Recall is read-only and token
 bounded"</em>. The distinguishing work is not in ranking but in
-eligibility: <code>strict_candidates</code> decides what may be reasoned
-from before anything is scored, and orders the survivors by confidence,
-then grounding, then recency.</p>
+eligibility: <code>can_use_in_strict_recall</code> decides what may be
+reasoned from before anything is scored, and the survivors are ordered
+afterwards. The SQL that expresses the same order — confidence, then
+grounding, then recency — is not what produces it.</p>
 <p><code>world_id</code> scopes recall inside a user to a recursive
 context; omitting it reads across the user's worlds, which is a design
 choice rather than a leak, since tenant and user still bound the
@@ -386,7 +438,7 @@ instant.</li>
 <li><strong>An unresolved contradiction withholds both sides from
 reasoning.</strong></li>
 <li><strong>Facts carry their own validity contract</strong>, and the
-query enforces it.</li>
+read-time gate enforces it.</li>
 <li><strong>Grounding and source requirements gate reasoning</strong>,
 not only ranking.</li>
 <li><strong>Nodes are immutable and supersession closes rather than
@@ -429,20 +481,23 @@ provider passes only if the leakage rate is at or below
 <code>stale_leakage_max</code>. That is the right metric for a system
 whose central claim is not using superseded facts. It is also a
 measurement of a model's answers over external datasets, requiring a
-provider to run, rather than a committed case that fails when
-<code>strict_candidates</code> loses its <code>superseded_at</code>
-clause — so it does not carry <code>negative_eval</code>, and the
-invariant <em>"benchmarks define correctness"</em> is doing work a
-four-line fixture test would do more cheaply.</p>
+provider to run, rather than a committed case that fails when the strict
+gate loses its supersession test — so it does not carry
+<code>negative_eval</code>, and the invariant <em>"benchmarks define
+correctness"</em> is doing work a four-line fixture test would do more
+cheaply.</p>
 <p><strong>No paper, arXiv reference or citation file exists in this
 repository.</strong></p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <ul>
-<li><strong>Publish recall as a named query table.</strong>
-<code>current_truth</code>, <code>historical_truth</code> and
-<code>strict_candidates</code> side by side make the difference between
-modes reviewable in one file.</li>
+<li><strong>Publish recall as a named query table</strong> — and then
+make the engine read it. <code>current_truth</code>,
+<code>historical_truth</code> and <code>strict_candidates</code> side by
+side make the difference between modes reviewable in one file, which is
+the appeal; here the engine enforces a second copy in TypeScript and the
+published table drifted from it unnoticed. A contract worth publishing
+is worth being the only one.</li>
 <li><strong>Evaluate supersession as of the same instant as
 validity.</strong> <code>superseded_at &gt; @at</code> is what lets a
 historical read return what was believed then.</li>
@@ -477,8 +532,11 @@ with identity derived from your authentication rather than from
 configuration.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <ul>
-<li>Will the invariants become assertions, and will
-<code>strict_candidates</code> get fixture tests for each clause?</li>
+<li>Will the invariants become assertions, and will the strict gate get
+a fixture test per clause?</li>
+<li>Are the three unused recall queries intended to become the
+implementation, or documentation of it? They are the clearer statement
+of the policy, and they are stricter than the code that runs.</li>
 <li>How is a contradiction resolved, and by whom — and does resolution
 record which side won?</li>
 <li>Should identity for recall be derived from the authenticated request
@@ -530,6 +588,56 @@ grep -rn &#39;appendFileSync&#39; --include=&#39;*.ts&#39; src/
 # the only sector code left is the legacy migration
 grep -rniE &#39;sectoral|interdependence|SECTOR&#39; --include=&#39;*.ts&#39; src/</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/CaviraOSS/LongMemory/commit/4da4986d0069dbaa59d9209a84e2267749a67b3f"><code class="commit-id" title="4da4986d0069dbaa59d9209a84e2267749a67b3f">4da4986d…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin, and the mark
+holds on a different mechanism than the one recorded. The previous
+reading rested it — and most of this report — on
+<code>strict_candidates</code>, the named SQL in
+<code>src/stores/sqlite/queries.ts</code>. That query is never executed.
+<code>query_strict_candidates</code> is declared on the store interface
+(<code>src/stores/index.ts:46</code>), implemented
+(<code>src/stores/sqlite/sqlite_store.ts:324-325</code>) and called from
+nowhere, and the same is true of <code>query_current_truth</code> and
+<code>query_historical_truth</code>. All four recall modes retrieve from
+an in-memory index
+(<code>src/core/recall/candidate_selection.ts:43-48</code>) whose
+<code>active_nodes</code> filters by world and, despite the name, not by
+status; the index is hydrated once from <code>store.load_nodes()</code>
+at engine construction (<code>src/core/create_memory.ts:261-277</code>),
+which is where the tenant and user predicate is applied — so
+<code>scope_enforced</code> is unaffected, it just binds at startup
+rather than per query. The gate that does run is
+<code>can_use_in_strict_recall</code>
+(<code>src/core/recall/mode_gates.ts:86-113</code>), and it is a good
+one: it refuses a superseded or contradicted node, an unresolved
+contradiction, low confidence, a contract forbidding reasoning, an
+ungrounded node that required grounding, an expired one, a missing
+required source and a denied source permission, and returns the reasons
+so <code>strict_recall</code> can record each rejection in an explain
+trace (<code>:69-80</code>) instead of dropping it silently. The two
+copies of the policy disagree, and the live one is the looser. The SQL
+requires <code>status = 'active'</code>; the gate tests only
+<code>is_superseded</code> and <code>is_contradicted</code>
+(<code>:30-36</code>) while <code>NodeStatus</code> declares five values
+— active, superseded, contradicted, expired, draft
+(<code>src/core/types/node_state.ts:16-21</code>). A node marked
+<code>draft</code> passes, and one marked <code>expired</code> passes
+unless its <code>valid_to</code> or <code>max_valid_duration</code>
+independently refuses it; the consolidation pass reads
+<code>status === 'expired'</code> as a live case
+(<code>src/core/memory/consolidation.ts:104-110</code>), so the value is
+not vestigial. <code>bitemporal</code> is re-anchored the same way: the
+as-of test that runs is <code>is_valid_at</code> /
+<code>is_recorded_at</code>
+(<code>src/core/temporal/bitemporal.ts:19-25</code>) applied in
+<code>can_use_in_historical_recall</code>, not the
+<code>historical_truth</code> SQL. Section 1, the diagram, sections 5
+through 8, the reusable-ideas list and the open questions were
+rewritten. Two path anchors corrected: <code>create_memory.ts</code> is
+<code>src/core/create_memory.ts</code>, and the connector deletion
+marker is at <code>:682</code>. Re-read from a fresh clone; nothing was
+installed and no suite was run.</p>
 <p><strong>2026-09-15</strong> — <a
 href="https://github.com/CaviraOSS/LongMemory/commit/4da4986d0069dbaa59d9209a84e2267749a67b3f"><code class="commit-id" title="4da4986d0069dbaa59d9209a84e2267749a67b3f">4da4986d…</code></a>
 — second reading, 31 commits on, and a different system at the same
