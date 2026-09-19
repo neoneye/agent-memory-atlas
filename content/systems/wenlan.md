@@ -7,14 +7,13 @@ page_kind: system
 source_name: "7xuanlu/wenlan"
 source_url: https://github.com/7xuanlu/wenlan
 archive_name: "7xuanlu--wenlan"
-revision: 413e18a2f81d2b9dfe2ba7d6653038bff775b91d
-revision_url: https://github.com/7xuanlu/wenlan/commit/413e18a2f81d2b9dfe2ba7d6653038bff775b91d
-analyzed_at: 2026-09-16
-capabilities: "tombstone, scope_enforced, human_review, negative_eval"
+revision: 47971618cf9559aab57cfd5b79a9c9636cbfa64d
+revision_url: https://github.com/7xuanlu/wenlan/commit/47971618cf9559aab57cfd5b79a9c9636cbfa64d
+analyzed_at: 2026-09-19
+capabilities: "tombstone, scope_enforced, negative_eval"
 capability_evidence:
   tombstone: "a dismissed map node keeps its row so its fingerprint stays occupied, and every insert is a no-op against it | crates/wenlan-core/src/db.rs:9314, crates/wenlan-core/src/db/page_map.rs:113, :895, crates/wenlan-core/src/page_map_improve.rs:11, :115-116 | A page-map node carries a `fingerprint` derived from what it points at and where it hangs, under `CREATE UNIQUE INDEX idx_pmn_fp ON page_map_nodes(page_id, fingerprint)`. Dismissing sets `status = dismissed` and keeps the row, so the key stays taken, and every insert is `ON CONFLICT(page_id, fingerprint) DO NOTHING` — the comment states the guarantee, that a fresh uuid cannot bypass it. The conflicting row is then read back to separate a live `Duplicate` from a `Tombstoned`, which is a named outcome the caller handles rather than a silent no-op, and the suggestion pass is insert-only so it *can never modify, resurrect, or overwrite a pinned/active/dismissed row*. What it protects is graph placement rather than the truth of a claim | crates/wenlan-core/src/db/page_map.rs tests"
   scope_enforced: "a read scope that reaches the SQL and a resolver that refuses ambiguity rather than defaulting | crates/wenlan-core/src/db.rs:232, :27302, :27685, crates/wenlan-mcp/tests/space_roundtrip_e2e.rs | `ReadScope` selects the statement rather than trimming its result — `matches!(scope, ReadScope::Global)` branches the SQL itself — and the space a caller names travels to the wire, which the round-trip test verifies by inspecting the recorded request. The resolver refuses an ambiguous scope instead of picking a default, so a caller who names nothing gets an error rather than a silent widening | crates/wenlan-core/tests/space_scoping_e2e.rs, crates/wenlan-mcp/tests/space_roundtrip_e2e.rs"
-  human_review: "a refinement queue with an awaiting-review status, a partial index over exactly the open states, and three MCP tools plus a CLI that move a row out of it | crates/wenlan-core/src/synthesis/refinement_queue.rs, crates/wenlan-core/src/maintenance.rs:500, :551, :623, crates/wenlan-core/src/repair.rs:4274, :4383 | The queue holds proposed changes at `pending` or `awaiting_review` under a partial index over exactly those two, with a `resolved_at` stamp, and `resolve_refinement_if_open` is the transition a person's action causes. The epistemic state lives on the proposed change rather than on the claim, which is why `trust_state` is withheld and this is not | crates/wenlan-core/src/synthesis/refinement_queue.rs tests"
   negative_eval: "committed cases asserting that another space's content must not come back from a populated result, with the in-scope control asserted first | crates/wenlan-mcp/tests/space_roundtrip_e2e.rs:184-195, crates/wenlan-core/tests/space_scoping_e2e.rs:106, crates/wenlan-core/src/synthesis/refinement_queue.rs:3227-3271 | The MCP round trip seeds two spaces, recalls with `space = alpha`, asserts *alpha result must appear in recall output*, then asserts `!text.contains(\"beta fact two\")` under the message *beta result must not appear when space=alpha* — the positive control precedes the exclusion on the same result, and the comment names the failure it guards: the daemon filtered it out and *the MCP layer must not re-add it*. Beside it, a core test pins that an alpha-tagged memory must not appear under the uncategorized filter, and four assertions pin that unconfirmed folder-document chunks are excluded from both synthesis pools by the `confirmed != 1` predicate, in the direct and the refinement-queue path | 5,819 test attributes across the crates"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical, vector"
@@ -76,9 +75,25 @@ for identity and preference, where "supersede requires human confirmation";
 unconfirmed"; `Ephemeral` for everything else, where it "auto-applies silently".
 Unlike [YesMem](../yesmem/), which builds the same gate and leaves the
 confirmation unimplemented, Wenlan ships the queue: `refinement_queue` rows move
-through `awaiting_review`, there is a `curate` CLI command, and
-`list_pending_revisions`, `accept_pending_revision` and
-`dismiss_pending_revision` are MCP tools.
+through `awaiting_review`, there is a `curate` CLI command, and a partial index
+covers exactly the two open states.
+
+**The queue is real and the agent empties it, which is why no review mark
+follows.** `accept_refinement`, `reject_refinement`, `confirm_memory`,
+`accept_revision` and `dismiss_revision` are all declared MCP tools
+(`crates/wenlan-mcp/src/tools.rs`), and `accept_refinement_impl` (`:2103-2130`)
+refuses on one condition only — *"Review proposal operations are not available
+over remote connections. Use local MCP on the machine running Wenlan to accept
+proposals"* — which is a transport restriction, and local MCP is precisely how
+the producing agent connects. Behind it, `handle_accept_refinement`
+(`crates/wenlan-server/src/refinery_routes.rs:35-37`) posts through with no
+trust, actor or principal check of any kind. The capture-time gate is the better
+half and keeps its description above: when the user has set the agent's trust
+below full, a capture carrying `supersedes` is staged rather than applied, the
+response says `gated: true`, and the tool text tells the model that *"the memory
+you meant to replace keeps answering searches until a human accepts your
+change"*. That gate is set by the user and it is the right shape — but the same
+agent holds the accept verb, so what is staged does not stay staged.
 
 ## 2. Mental Model
 
@@ -444,6 +459,8 @@ atlas, and the reason it works is a database constraint rather than a policy.
 `rank_overlap.rs`, `goldens/`), `docs/eval/`
 
 ## History
+
+**2026-09-19** — re-pinned to [`47971618cf9559aab57cfd5b79a9c9636cbfa64d`](https://github.com/7xuanlu/wenlan/commit/47971618cf9559aab57cfd5b79a9c9636cbfa64d), ten commits and 99 files on. **`human_review` is withdrawn; three marks stand.** The previous record already named the finding in its own first clause — *"three MCP tools plus a CLI that move a row out of it"* — and the surface has if anything widened: `accept_refinement`, `reject_refinement`, `confirm_memory`, `accept_revision` and `dismiss_revision` are all declared tools. `accept_refinement_impl` refuses only over HTTP transport, telling the caller to use local MCP instead, which is how an agent connects; the server handler behind it applies no trust, actor or principal check. The capture-time trust gate is genuinely good and is now described in section 1 on its own terms: with the agent's trust set below full by the user, a capture carrying `supersedes` is staged, the response says `gated: true`, and the tool text tells the model the superseded memory keeps answering searches until a human accepts. A gate whose queue the gated party can empty is the shape this sweep keeps finding. `tombstone`, `scope_enforced` and `negative_eval` re-verified. Screened again first; nothing installed, built or run.
 
 **2026-09-16** — [`413e18a2f81d2b9dfe2ba7d6653038bff775b91d`](https://github.com/7xuanlu/wenlan/commit/413e18a2f81d2b9dfe2ba7d6653038bff775b91d) — re-read after 29 commits, through 0.18.8. Six of the eight anchored files are byte-identical at both commits, including the page-map module behind the tombstone, the refinement queue behind human review, and both scoping end-to-end tests. All four marks hold. `db.rs` and `repair.rs` moved substantially and were re-derived: the `idx_pmn_fp` unique index and the `ON CONFLICT DO NOTHING` insert are intact, and the read scope still selects the statement rather than trimming the result, at more call sites than before. The work in this window is the repair operation's lifecycle — persisted preparation status, safe cancellation, authenticated resumption after a cold start, and per-operation validators that re-check a review row's action, status and expected source ids before applying, so a card built against a row that has since drifted refuses with `repair_target_stale` rather than applying to whatever is there now. The durability detail worth borrowing sits in `pending_verification_manifest_ids`: startup restores the daemon-owned writer fence from the durable artifacts on disk, and a corrupt or mismatched artifact fails closed instead of letting background maintenance resume over a half-applied repair. Anchors in both moved files are updated. Nothing was installed, built or run.
 

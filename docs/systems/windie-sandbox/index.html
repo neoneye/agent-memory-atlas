@@ -119,7 +119,7 @@ original is the half that does not edit.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/buiilding--Windie-Sandbox" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -127,7 +127,7 @@ original is the half that does not edit.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -471,6 +471,24 @@ is a concurrency property most memory stores in this atlas do not
 attempt. It is also narrow by construction: sessions that are not
 <code>Running</code> or <code>WaitingForApproval</code> are skipped, so
 the guard protects live reads and not durability of anything else.</p>
+<p><strong>Why this report carries no review mark, from the 2026-09-19
+re-read.</strong> The previous record put the finding in its own last
+sentence: <em>"A person rewrites what the agent will read next, rather
+than approving a queue."</em> That is exactly right and it is what the
+rubric separates from this mark by name — a person who opens the stored
+history and rewrites it is authoring, and the write has already landed.
+<code>ensure_message_mutation_allowed</code> is a concurrency guard, not
+an actor check: it asks whether a live session depends on the message,
+never who is asking. The system does have a real human gate,
+<code>SessionStatus::WaitingForApproval</code> with
+<code>ApproveTool</code> and <code>DenyTool</code>
+(<code>src/operation/session.rs:240-260</code>), and it gates
+<strong>tool calls</strong> rather than memory content — the same
+reading this atlas gave OpenExecutive's approval ledger and ThoughtDAG's
+<code>pendingApprovals</code>. The editing surface keeps its description
+in sections 4 and 7, where the interesting property is the one the
+report already leads with: an edit to a shared ancestor rewrites the
+context of every branch below it.</p>
 <p><strong>Transactional discipline throughout.</strong> Edit, delete
 and truncate each take a transaction covering the message, its parts,
 the compactions they invalidate and the conversation timestamp. Session
@@ -661,6 +679,23 @@ argument, including the rejected alternative</li>
 <li><code>src/perf/scenarios.rs</code>, <code>benches/</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — re-read at the same pin <a
+href="https://github.com/buiilding/Windie-Sandbox/commit/bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d"><code class="commit-id" title="bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d">bd0dcd8f…</code></a>,
+still the tip. <strong><code>human_review</code> is withdrawn;
+<code>negative_eval</code> stands alone.</strong> Nothing upstream
+moved, so this is a correction, and the previous record's closing
+sentence is the reason: <em>"A person rewrites what the agent will read
+next, rather than approving a queue."</em> Under the mark as written
+that is authoring after the fact, not a state a memory waits in.
+<code>ensure_message_mutation_allowed</code> guards against mutating a
+message a <code>Running</code> or <code>WaitingForApproval</code>
+session depends on — a concurrency property worth keeping in section 9,
+and one that never asks who the caller is. The genuine human gate in the
+tree, <code>WaitingForApproval</code> with <code>ApproveTool</code> /
+<code>DenyTool</code>, gates tool calls rather than memory content,
+which is the same call made for OpenExecutive and ThoughtDAG.
+<code>negative_eval</code> re-verified on the path-to-message
+assertions. Screened again first; nothing installed, built or run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/buiilding/Windie-Sandbox/commit/bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d"><code class="commit-id" title="bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d">bd0dcd8f…</code></a>
 — re-pinned after 7 commits. None of the anchored files changed:

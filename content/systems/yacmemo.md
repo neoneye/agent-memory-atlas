@@ -7,12 +7,12 @@ page_kind: system
 source_name: "yachen4ever/yacmemo"
 source_url: https://github.com/yachen4ever/yacmemo
 archive_name: "yachen4ever--yacmemo"
-revision: 2440aa563e1474d5a07b16d052373c28ed8a4a7c
-revision_url: https://github.com/yachen4ever/yacmemo/commit/2440aa563e1474d5a07b16d052373c28ed8a4a7c
-analyzed_at: 2026-09-16
+revision: 9b68276dbee9df61a57e515bfca3b58f419a07f7
+revision_url: https://github.com/yachen4ever/yacmemo/commit/9b68276dbee9df61a57e515bfca3b58f419a07f7
+analyzed_at: 2026-09-19
 capabilities: "human_review"
 capability_evidence:
-  human_review: "a person marks a detected collision resolved or dismissed in the web console, and every later search of that note stops carrying its warning | yacmemo/index_db.py:255-261, yacmemo/webui/app.py:254-265, :423, yacmemo/search.py:107-119 | `resolve_collision(collision_id, status)` validates against `(\"open\", \"resolved\", \"dismissed\")` and is documented as a \"human decision via WebUI/audit\". Its only caller in the repository is the `POST /api/{user}/collision` route — no scheduler, detector or agent path reaches it. `Search._warnings_for` calls `self.db.collisions_for(path)`, whose `status` parameter defaults to `\"open\"`, so the ⚠ line naming the colliding note disappears from every subsequent hit once a person has judged it. The detector proposes; the person disposes; the retrieval path reads the person's verdict | tests/test_index_db.py:84"
+  human_review: "a person marks a detected collision resolved or dismissed in the web console, the agent's tool surface has no verb that does it, and every later search of that note stops carrying its warning | yacmemo/index_db.py:275-280, :299, yacmemo/store.py:1059-1098, yacmemo/webui/app.py:318, :350, yacmemo/search.py:121-133, yacmemo/tools.py | `resolve_collision(collision_id, status)` validates against `(\"open\", \"resolved\", \"dismissed\")` and is documented as a human decision made through the WebUI. Its two callers are the console POST route and `Store.record_audit_action`, whose own docstring calls it the record of a human's disposition and whose only caller is the console as well — no scheduler, detector or agent path reaches either. The twenty-one tools `register_tools` declares include `memory_audit`, which *reports* collisions, and no resolve or dismiss verb, so the producing agent can see the queue and cannot empty it. The state is read on every search rather than only in the console: `Search._warnings_for` calls `collisions_for(path)`, whose `status` parameter defaults to `\"open\"`, so a disposition made in the console silently stops the warning appearing beside that note | the collision and search suites"
 stack_storage: "files, sqlite, lancedb"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -266,5 +266,7 @@ covers was not established.
 | `yacmemo/usage.py:1-34` | What the call log does and does not cover |
 
 ## History
+
+**2026-09-19** — re-pinned to [`9b68276dbee9df61a57e515bfca3b58f419a07f7`](https://github.com/yachen4ever/yacmemo/commit/9b68276dbee9df61a57e515bfca3b58f419a07f7), 30 commits and 59 files on. **The mark holds**, and the record is re-anchored because `resolve_collision` gained a second caller in the range. It is not a weakening: `Store.record_audit_action` (`yacmemo/store.py:1059-1098`) writes a human's disposition into the audit snapshot and then syncs the collision row, and its own only caller is the console route at `yacmemo/webui/app.py:318`. So both paths to a disposition still originate in the web console, and no scheduler, detector or agent path reaches either. Checked on the other side too, which the previous record did not: `register_tools` declares twenty-one tools including `memory_audit`, which reports collisions, and no resolve or dismiss verb — the agent sees the queue and has nothing that empties it. The consumption end is unchanged: `Search._warnings_for` reads `collisions_for(path)` with `status` defaulting to `"open"`, so a disposition stops the warning appearing beside that note on every later search. One detail worth keeping from the range: a comment at the sync site records that the disposition table has no delete interface, measured on 2026-09-18, which is why the snapshot is written before the status is changed. Screened again first; nothing installed or run.
 
 **2026-09-16** — [`2440aa563e1474d5a07b16d052373c28ed8a4a7c`](https://github.com/yachen4ever/yacmemo/commit/2440aa563e1474d5a07b16d052373c28ed8a4a7c) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: ten files scanned, no auto-run surfaces, two build-time execution points, two unpinned surfaces and five dependency files inside the seven-day cooldown. Nothing was installed, built or run.

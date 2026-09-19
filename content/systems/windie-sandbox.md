@@ -9,13 +9,12 @@ source_url: https://github.com/buiilding/Windie-Sandbox
 archive_name: "buiilding--Windie-Sandbox"
 revision: bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d
 revision_url: https://github.com/buiilding/Windie-Sandbox/commit/bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d
-analyzed_at: 2026-09-16
-capabilities: "human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 stack_storage: "sqlite"
 stack_retrieval: ""
 stack_source: "reviewed"
 capability_evidence:
-  human_review: "the message tree, as first-class user operations | src/store/message.rs:599,651,788, src/operation/message.rs:81, src/store/session.rs:115 | `replace_message`, `remove_message` and `truncate_after_message` are store operations a person invokes against persisted history — the edit entry point is `src/operation/message.rs`, the implementations are in the store layer — and every one is guarded by `ensure_message_mutation_allowed`. A person rewrites what the agent will read next, rather than approving a queue | src/store/tests.rs:991 replacing_message_text_preserves_metadata, with the splice-delete cases at :1732, :1775 and :1989"
   negative_eval: "selected-head path resolution, read path | src/store/tests.rs:732,764 | `loads_path_to_message` builds two sibling branches off one root, resolves the path to the first, and asserts with `assert_ne!` that the second branch's id is not in the returned path — a populated tree with a specific record that must not appear, not an empty result | same test; the fork case at :2861 asserts the same shape across a forked conversation"
 matrix:
   memory_unit: "One message row — id, conversation id, parent message id, role, content, metadata, created_at — with ordered `message_parts` beneath it for text and image content"
@@ -328,6 +327,21 @@ memory stores in this atlas do not attempt. It is also narrow by construction:
 sessions that are not `Running` or `WaitingForApproval` are skipped, so the guard
 protects live reads and not durability of anything else.
 
+**Why this report carries no review mark, from the 2026-09-19 re-read.** The
+previous record put the finding in its own last sentence: *"A person rewrites
+what the agent will read next, rather than approving a queue."* That is exactly
+right and it is what the rubric separates from this mark by name — a person who
+opens the stored history and rewrites it is authoring, and the write has already
+landed. `ensure_message_mutation_allowed` is a concurrency guard, not an actor
+check: it asks whether a live session depends on the message, never who is
+asking. The system does have a real human gate, `SessionStatus::WaitingForApproval`
+with `ApproveTool` and `DenyTool` (`src/operation/session.rs:240-260`), and it
+gates **tool calls** rather than memory content — the same reading this atlas
+gave OpenExecutive's approval ledger and ThoughtDAG's `pendingApprovals`. The
+editing surface keeps its description in sections 4 and 7, where the interesting
+property is the one the report already leads with: an edit to a shared ancestor
+rewrites the context of every branch below it.
+
 **Transactional discipline throughout.** Edit, delete and truncate each take a
 transaction covering the message, its parts, the compactions they invalidate and
 the conversation timestamp. Session repair after deletion happens inside the same
@@ -506,6 +520,8 @@ point of view, gone.
 - `src/perf/scenarios.rs`, `benches/`
 
 ## History
+
+**2026-09-19** — re-read at the same pin [`bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d`](https://github.com/buiilding/Windie-Sandbox/commit/bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d), still the tip. **`human_review` is withdrawn; `negative_eval` stands alone.** Nothing upstream moved, so this is a correction, and the previous record's closing sentence is the reason: *"A person rewrites what the agent will read next, rather than approving a queue."* Under the mark as written that is authoring after the fact, not a state a memory waits in. `ensure_message_mutation_allowed` guards against mutating a message a `Running` or `WaitingForApproval` session depends on — a concurrency property worth keeping in section 9, and one that never asks who the caller is. The genuine human gate in the tree, `WaitingForApproval` with `ApproveTool` / `DenyTool`, gates tool calls rather than memory content, which is the same call made for OpenExecutive and ThoughtDAG. `negative_eval` re-verified on the path-to-message assertions. Screened again first; nothing installed, built or run.
 
 **2026-09-16** — [`bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d`](https://github.com/buiilding/Windie-Sandbox/commit/bd0dcd8fc0a83568a8c9d528c8de656c5e8b7f4d) — re-pinned after 7 commits. None of the anchored files changed: `src/operation/message.rs`, `src/store/message.rs`, `src/store/session.rs` and `src/store/tests.rs` are all byte-identical, so both marks rest on unchanged code and every line number here is exact. The window touches the HTTP API and its runtime-access module, the CLI, config, dev and tray-notification paths, terminal output, seven package icons, the architecture documentation and a vendored inspector. Nothing was installed, built or run.
 

@@ -7,14 +7,13 @@ page_kind: system
 source_name: "aureliocpr-ctrl/verimem"
 source_url: https://github.com/aureliocpr-ctrl/verimem
 archive_name: "aureliocpr-ctrl--verimem"
-revision: ef7de72459c9d12a1f4a22af4362a1b4a47c8fa8
-revision_url: https://github.com/aureliocpr-ctrl/verimem/commit/ef7de72459c9d12a1f4a22af4362a1b4a47c8fa8
-analyzed_at: 2026-09-16
-capabilities: "trust_state, audit_log, human_review"
+revision: 068baf45bcbe3c578ad530ed8c02287de3c60b77
+revision_url: https://github.com/aureliocpr-ctrl/verimem/commit/068baf45bcbe3c578ad530ed8c02287de3c60b77
+analyzed_at: 2026-09-19
+capabilities: "trust_state, audit_log"
 capability_evidence:
   trust_state: "a stored status vocabulary that the ranking SQL drops, with every exception opt-in | verimem/admission_gate.py:85, :276-280, verimem/bm25_rank.py:26, :42, verimem/semantic.py:4016-4026 | the gate classifies a write into a closed set of statuses including `user_belief`, `quarantined`, `orphaned`, `legacy_unverified`, `provisional` and `model_claim`, and the retrieval SQL withholds three of them outright: the BM25 rank clause is `status NOT IN ('orphaned', 'quarantined', 'user_belief')`, present both as an appended predicate and as a standalone filter string. `recall` then makes every widening an opt-in keyword — `include_superseded`, `include_orphaned`, `include_beliefs`, `include_conversational`, `min_status` — all defaulting to the withholding behaviour, so a caller sees the guarded view unless it asks otherwise. That is the direction the mark is about: a stored discrete state that keeps a fact out of what an agent is handed, rather than a score that ranks it lower | 284 of the committed test files exercise the quarantine path, and `verimem/semantic.py:5695-5701` documents the reverse as deliberately narrow — only quarantined rows are restorable, so a restore \"never silently un-orphans/un-supersedes\""
   audit_log: "a hash-chained mutation table written in the mutation's own transaction, and deliberately holding no content | verimem/mutation_audit.py:1-25 | \"[e]very destructive operation on the facts store (delete / purge / forget / supersede / reset) appends one row to `audit_mutations` INSIDE THE SAME TRANSACTION as the mutation itself\", recording principal, action, resource id, timestamp and outcome, chained so that \"any edit, interior deletion or reorder of past rows is detectable by `verify()`\". Two design decisions are argued rather than assumed. It is action-only, never content, because \"storing WHAT was deleted — even as a hash, brute-forceable on short text — inside an immutable chain makes GDPR Art.17 erasure a logical contradiction\"; the chain proves \"THAT/WHO/WHEN/WHICH-RECORD, not what the record said\", and free text \"must never reach this table\". And it is fail-closed: `record_mutation` \"never swallows\", running after the mutation's SQL on the same connection so a failure propagates rather than leaving an unrecorded deletion | the module states both decisions were \"forged against two independent adversarial reviews (GLM-5.2 + deepseek, convergent findings)\", naming the failure ids each one answers"
-  human_review: "an operator command that re-admits quarantined facts, dry-run by default, and a restore that refuses to widen | verimem/cli.py:4921-4947, verimem/semantic.py:5695-5701, verimem/review_queue.py:1-16 | `verimem facts requalify-quarantined` is run by a person and applies nothing unless `--apply` is passed, so the default is a report of what would be re-admitted. Underneath, `restore_fact` flips a quarantined fact back to a named status with a reason and returns whether a quarantined row actually existed, making \"the Tier-2 triage genuinely REVERSIBLE (a wrongly-declassed fact, or one corroborated by later evidence, returns to the live view)\" while refusing to touch orphaned or superseded rows. The queue that feeds it is measured on purpose: \"A queue nobody measures is a queue nobody drains, and 'held for review' quietly turns into 'silently dropped' — the fact was neither admitted nor honestly refused, which is the one outcome a memory sold on honest abstention cannot afford\" | the same module publishes its own gap under a DECLARED LIMIT heading: with no persisted per-fact quarantine reason, the reported depth \"counts the WHOLE quarantined backlog rather than the L4-review class alone\""
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -66,6 +65,29 @@ the withheld material is an explicitly named opt-in on `recall`:
 `include_superseded`, `include_orphaned`, `include_beliefs`, `min_status`. The
 atlas has read two systems this week whose epistemic vocabulary only sorted the
 results; this one drops them.
+
+**The route back out of quarantine is one the agent holds, which is why no
+review mark follows.** The re-admission machinery is careful and it is worth
+describing on its own terms: `restore_fact` flips a quarantined fact back to a
+named status with a reason and reports whether a quarantined row actually
+existed, it refuses orphaned and superseded rows, and `verimem facts
+requalify-quarantined` reports what it would re-admit unless `--apply` is
+passed. The queue behind it is measured deliberately, under a comment that names
+the failure this atlas keeps finding elsewhere — *"A queue nobody measures is a
+queue nobody drains, and 'held for review' quietly turns into 'silently
+dropped'"* — and the module publishes its own shortfall under a DECLARED LIMIT
+heading.
+
+None of that is an actor check. `hippo_quarantine_restore` is a declared MCP
+tool (`verimem/mcp_server.py:3615-3635`, handled at `:15046-15089`) whose
+description is *"Rescue a wrongly-blocked fact: un-quarantine `fact_id` back
+into live recall"*, so the producing agent can lift its own quarantine. The
+guards it does apply are content guards, not actor guards: a superseded fact is
+refused, and the proposition and topic are re-screened for prompt injection so an
+exfiltration payload stays quarantined even when its id is passed — good, and
+orthogonal to who is asking. On the CLI side, `--apply` is the caller's boolean
+and `--principal` defaults to `$VERIMEM_ACTOR`, an environment string nothing
+verifies. Two marks, then: `trust_state` and `audit_log`.
 
 **The project corrects its own documentation in public.** The README's first
 box used to say the gate was off until a warmup command was run. It now carries
@@ -230,5 +252,7 @@ record time, which cannot answer what was true last quarter.
 | `verimem/scope.py:1-14` | Multi-tenancy as a string convention, with its collision declared |
 
 ## History
+
+**2026-09-19** — re-pinned to [`068baf45bcbe3c578ad530ed8c02287de3c60b77`](https://github.com/aureliocpr-ctrl/verimem/commit/068baf45bcbe3c578ad530ed8c02287de3c60b77), 20 commits and 135 files on. **`human_review` is withdrawn; two marks stand.** The re-admission path is unchanged and is still described in section 1, because the thinking behind it is good — a reversible quarantine, a restore that refuses orphaned and superseded rows, a dry-run default on the requalify command, and a queue whose depth is measured under a comment naming exactly the failure mode this atlas keeps finding: *"A queue nobody measures is a queue nobody drains."* What the mark needs is that the producer cannot clear it, and here it can. `hippo_quarantine_restore` is one of the declared MCP tools and its own description is *"Rescue a wrongly-blocked fact: un-quarantine `fact_id` back into live recall"*. Its guards are content guards — superseded refused, proposition and topic re-screened for injection — which are worth having and say nothing about who is asking. The CLI path adds two more of the shapes the rubric names: `--apply` is a caller boolean, and `--principal` defaults to `$VERIMEM_ACTOR`, an environment string nothing verifies. `trust_state` and `audit_log` re-verified. Screened again first; nothing installed or run.
 
 **2026-09-16** — [`ef7de72459c9d12a1f4a22af4362a1b4a47c8fa8`](https://github.com/aureliocpr-ctrl/verimem/commit/ef7de72459c9d12a1f4a22af4362a1b4a47c8fa8) — first reading, at a commit dated 13 September 2026. Screened before opening, from a shallow clone: five auto-run surfaces, two build-time execution points, two unpinned dependency surfaces and two dependency files inside the seven-day cooldown. `CLAUDE.md` is addressed to a reading agent and was recorded as data. Dual-licensed AGPL-3.0 with a paid commercial option; the licensing file carries no rider restricting who may read or analyse the code. Nothing was installed, built or run, no judge model was fetched, and none of the benchmark figures quoted here were reproduced — they are the project's own measurements, read from its documentation.

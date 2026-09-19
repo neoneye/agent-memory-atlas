@@ -115,14 +115,14 @@ appearing on every later hit.</p>
               <strong>yachen4ever/yacmemo</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/yachen4ever/yacmemo/commit/2440aa563e1474d5a07b16d052373c28ed8a4a7c" title="2440aa563e1474d5a07b16d052373c28ed8a4a7c">
+            <a class="meta-pill revision-pill" href="https://github.com/yachen4ever/yacmemo/commit/9b68276dbee9df61a57e515bfca3b58f419a07f7" title="9b68276dbee9df61a57e515bfca3b58f419a07f7">
               <span>Analyzed revision</span>
-              <code>2440aa56…</code>
+              <code>9b68276d…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/yachen4ever--yacmemo" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -422,6 +422,30 @@ of a note's body it covers was not established.</p>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — re-pinned to <a
+href="https://github.com/yachen4ever/yacmemo/commit/9b68276dbee9df61a57e515bfca3b58f419a07f7"><code class="commit-id" title="9b68276dbee9df61a57e515bfca3b58f419a07f7">9b68276d…</code></a>,
+30 commits and 59 files on. <strong>The mark holds</strong>, and the
+record is re-anchored because <code>resolve_collision</code> gained a
+second caller in the range. It is not a weakening:
+<code>Store.record_audit_action</code>
+(<code>yacmemo/store.py:1059-1098</code>) writes a human's disposition
+into the audit snapshot and then syncs the collision row, and its own
+only caller is the console route at
+<code>yacmemo/webui/app.py:318</code>. So both paths to a disposition
+still originate in the web console, and no scheduler, detector or agent
+path reaches either. Checked on the other side too, which the previous
+record did not: <code>register_tools</code> declares twenty-one tools
+including <code>memory_audit</code>, which reports collisions, and no
+resolve or dismiss verb — the agent sees the queue and has nothing that
+empties it. The consumption end is unchanged:
+<code>Search._warnings_for</code> reads
+<code>collisions_for(path)</code> with <code>status</code> defaulting to
+<code>"open"</code>, so a disposition stops the warning appearing beside
+that note on every later search. One detail worth keeping from the
+range: a comment at the sync site records that the disposition table has
+no delete interface, measured on 2026-09-18, which is why the snapshot
+is written before the status is changed. Screened again first; nothing
+installed or run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/yachen4ever/yacmemo/commit/2440aa563e1474d5a07b16d052373c28ed8a4a7c"><code class="commit-id" title="2440aa563e1474d5a07b16d052373c28ed8a4a7c">2440aa56…</code></a>
 — first reading, at a commit dated 16 September 2026. Screened before
