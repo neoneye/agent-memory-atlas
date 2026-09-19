@@ -7,14 +7,13 @@ page_kind: system
 source_name: "Abhigyan-Shekhar/Waggle-mcp"
 source_url: https://github.com/Abhigyan-Shekhar/Waggle-mcp
 archive_name: "Abhigyan-Shekhar--Waggle-mcp"
-revision: 27e9dea866ef1988f8c3b79a7c1c65ad89a8fa92
-revision_url: https://github.com/Abhigyan-Shekhar/Waggle-mcp/commit/27e9dea866ef1988f8c3b79a7c1c65ad89a8fa92
-analyzed_at: 2026-09-15
-capabilities: "bitemporal, scope_enforced, human_review, negative_eval"
+revision: 4d49f2f66dd80b62b434241b380c52213a858f9a
+revision_url: https://github.com/Abhigyan-Shekhar/Waggle-mcp/commit/4d49f2f66dd80b62b434241b380c52213a858f9a
+analyzed_at: 2026-09-19
+capabilities: "bitemporal, scope_enforced, negative_eval"
 capability_evidence:
   bitemporal: "validity windows beside record time, read as of a date | src/waggle/graph/base.py:396-429 _filter_valid_nodes; src/waggle/tools/dispatcher.py:1392-1421 as_of on aggregate_graph and query_graph; src/waggle/graph/mutation.py:450-455 | `nodes` carries `valid_from` and `valid_to` apart from `created_at` and `updated_at`; extraction stamps `valid_from` with the turn's observation time (`graph/transcript.py:128`), a Markdown vault import takes both from frontmatter, resolving a conflict with a winner closes the loser's `valid_to`, and applying an approved proposal closes the target's. Reads drop expired nodes by default and, given `as_of`, return nodes whose window contains that instant. The filter applies to graph results only: in `hybrid` mode, the `query_graph` default, the text returned to the agent is not filtered (section 6) | tests/test_valid_to.py:174 test_as_of_returns_node_valid_at_that_time, :199 test_as_of_excludes_node_not_yet_valid"
   scope_enforced: "tenant key on every read | src/waggle/retrieval/hybrid.py:337, :419, :516, :546, :627; src/waggle/graph/traversal.py:767, :989, :1089; src/waggle/protocol/mcp/http.py:126-133 | every SQLite read seeds its filter list with `tenant_id = ?` from the graph instance, and Neo4j reads match `n.tenant_id = $tenant_id`; on the HTTP MCP route the tenant comes from the API key and a request without one is refused. Project, agent and session narrow within a tenant only when passed. On the REST routes under `/api/graph` and `/api/admin`, a request without a key selects its tenant from a query parameter (section 9) | tests/test_server.py:182 test_handle_tool_call_keeps_tenant_graph_request_local"
-  human_review: "the proposal review queue and Graph Studio | apps/mcp/graph-ui/src/Workspace.jsx:424 review, :456 human-apply; src/waggle/server/routes.py:519-541 webmcp_review_proposal; src/waggle/webmcp/workspace.py:600-735 apply; src/waggle/server/routes.py:1442-1447 node and edge edit and delete routes | a browser agent's `propose_memory_change` stores a pending proposal with the target's current content and version; a person approves or rejects it in the workspace's Proposals view, may edit the approved text, and the apply step writes exactly that text as a new node with an `updates` edge, closes the old node's validity and records `proposal.applied` and `memory.superseded` audit events, or marks the proposal stale if the target changed. Graph Studio edits and deletes nodes and edges through PATCH and DELETE routes | tests/test_webmcp_project_brief.py:1108 test_apply_rejects_cross_project_scope_and_content_override"
   negative_eval: "expired nodes stay out, with controls | tests/test_valid_to.py:83 test_default_query_excludes_expired_node | stores a node whose `valid_to` has passed and asserts a default query does not return it; `:126` asserts the same node returns with `include_invalidated`, `:174` returns it as of an instant inside its window, and `:440` returns a node with no `valid_to`. All run in `graph` retrieval mode | tests/test_valid_to.py:83"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -65,7 +64,16 @@ remote deployment the MCP route requires an API key. The REST routes Graph
 Studio uses do not: without a key they take the tenant from the query string and
 read, edit or delete that tenant's memory.
 
-Four marks: `bitemporal`, `scope_enforced`, `human_review`, `negative_eval`.
+Three marks: `bitemporal`, `scope_enforced`, `negative_eval`. `human_review` is
+withheld on the scope table rather than on the queue: `/api/webmcp/proposals`
+(POST), `/api/webmcp/proposals/{id}/review` and `/api/webmcp/proposals/{id}/apply`
+all call `_require_http_scope(request, "graph:write")`
+(`server/routes.py:492`, `:531`, `:553`), so any principal that can propose can
+also review and apply its own proposal. Nothing compares the proposer to the
+reviewer, and `proposed_by_type` is a parameter with the default `"agent"`
+(`webmcp/workspace.py:372-373`) — the caller says who proposed. The queue, the
+version check and the exact-text apply are all real; what is missing is an actor
+the producer cannot be.
 
 ## 2. Mental Model
 
@@ -103,7 +111,7 @@ flowchart TB
     CONF -->|"yes"| CE["contradicts edge<br/>list_conflicts"]
     CE -->|"resolve_conflict(winner)"| CLOSE["loser: valid_to = now<br/>superseded_by metadata"]
     PROP["WebMCP propose_memory_change"] --> PEND[("proposal: pending")]
-    PEND -->|"person approves exact text"| APPLY["apply: new node + updates edge<br/>target valid_to closed<br/>audit events"]
+    PEND -->|"approve exact text — any<br/>graph:write principal, including<br/>the one that proposed"| APPLY["apply: new node + updates edge<br/>target valid_to closed<br/>audit events"]
     Q["query_graph"] --> MODE{"retrieval_mode"}
     MODE -->|"graph"| GRES["nodes filtered by valid_to / as_of"]
     MODE -->|"hybrid (default)"| HHITS["hybrid_hits printed<br/>no validity filter"]
@@ -192,6 +200,9 @@ version, the proposed and approved content, reason, evidence ids, proposer,
 reviewer and a status of pending, approved, rejected, stale or applied. A
 unique index blocks duplicate *pending* proposals. A rejected proposal is not
 consulted when the same change is proposed again, so `tombstone` is withheld.
+The proposer and reviewer columns are recorded and never compared, and the three
+routes that write them share one scope, which is why `human_review` is withheld
+too.
 
 ## 6. Retrieval Mechanics
 
@@ -387,5 +398,7 @@ authentication changed first.
 - `grep -rn "prune_retention" src` — called from `server/cli.py` and `server/routes.py:1359`; no loop
 
 ## History
+
+**2026-09-19** — re-pinned to [`4d49f2f66dd80b62b434241b380c52213a858f9a`](https://github.com/Abhigyan-Shekhar/Waggle-mcp/commit/4d49f2f66dd80b62b434241b380c52213a858f9a), 2 commits on and the only changed file a test. `human_review` is **withdrawn** on a check the previous reading did not make: the three proposal routes were compared for the scope each demands, and propose, review and apply all call `_require_http_scope(request, "graph:write")`. A browser agent holding a token that lets it propose therefore holds one that lets it review and apply, nothing in the apply path compares `proposed_by_id` to the reviewer, and `proposed_by_type` is a parameter defaulting to `"agent"` — the caller states who proposed. The queue itself, the version check and the exact-text apply are not in question and keep their credit in sections 4 and 5. The other three marks stand untouched at this pin. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`27e9dea866ef1988f8c3b79a7c1c65ad89a8fa92`](https://github.com/Abhigyan-Shekhar/Waggle-mcp/commit/27e9dea866ef1988f8c3b79a7c1c65ad89a8fa92) — first reading, at a commit dated 31 August 2026. Screened before opening: three auto-run surfaces (MCP manifests), one build-time execution point, five unpinned surfaces, nothing inside the cooldown, and `AGENTS.md` read as data. Nothing was installed, built or run.
