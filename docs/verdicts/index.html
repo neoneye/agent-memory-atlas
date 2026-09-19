@@ -18330,11 +18330,12 @@ opt-in"</em>; a fact defaults to <code>PERSONAL</code>, so a record
 marked <code>SENSITIVE</code> or <code>RESTRICTED</code> is absent from
 a timeline or upcoming-reminder read until a caller asks for it. Imports
 match that posture: a staged batch is <em>"durable review state"</em>,
-and commit takes the ids a person named, where <em>"only ids the batch
-actually staged are selectable, and a typo refuses the whole selection
-rather than silently committing the part that happened to parse."</em>
-Three marks: <code>scope_enforced</code>, <code>human_review</code>,
-<code>negative_eval</code>.</li>
+and commit takes named ids, where <em>"one unknown member refuses the
+whole selection rather than silently committing the part that happened
+to parse."</em> Two marks: <code>scope_enforced</code> and
+<code>negative_eval</code> — the staging table is the right shape, but
+<code>commit_import</code> is one of the agent's own MCP tools, so the
+producer can accept the batch it staged.</li>
 <li>Biggest risk: <strong>it stores personal data about people who never
 consented, and no mechanism resolves that.</strong> The project reduces
 accidental disclosure carefully — a default sensitivity of
@@ -18356,7 +18357,11 @@ shape.</li>
 2026, 33,465 lines of Python against 52,271 lines of tests, one local
 SQLite file with no network call, an MCP server and a <code>pctx</code>
 CLI, an Obsidian plugin, an OpenClaw plugin, and a committed eval suite
-with a fixture world and weighted rubrics.</li>
+with a fixture world and weighted rubrics. Two of seven capability
+marks; <code>human_review</code> was withdrawn on the 2026-09-19
+re-read, because <code>commit_import</code> is one of the agent's own
+MCP tools and the staging table's accepted ids can be named by the same
+agent that staged them.</li>
 <li>Study when: you want an agent to hold relationship context locally
 with disclosure bounded by default.</li>
 <li>Do not copy when: you need multi-principal scoping, or point-in-time
