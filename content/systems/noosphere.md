@@ -9,12 +9,11 @@ source_url: https://github.com/sweetsophia/noosphere
 archive_name: "sweetsophia--noosphere"
 revision: 6406d867add59299947197b30bb8070a0e82a406
 revision_url: https://github.com/sweetsophia/noosphere/commit/6406d867add59299947197b30bb8070a0e82a406
-analyzed_at: 2026-09-16
-capabilities: "tombstone, scope_enforced, human_review, audit_log"
+analyzed_at: 2026-09-19
+capabilities: "tombstone, scope_enforced, audit_log"
 capability_evidence:
   tombstone: "the capture write path | src/lib/memory/capture/repository.ts:244-254, src/lib/memory/capture/crypto.ts, src/lib/memory/capture/lifecycle.ts:398-412 | inside a serializable transaction, after the lineage rows are locked, `memoryTombstone.findFirst` is queried on `kind: CAPTURE` and the whole set of HMAC digests `digestWithAllKeys` computed under every retained key version, and a hit throws `MemoryCaptureError(\"Capture was previously revoked\", 409)`; the tombstone is upserted on `(lineageStateId, generation)` with the key version, a reason code and a ninety-day `expiresAt`, so the refusal survives key rotation and lapses by design after the TTL | src/__tests__/memory/capture-race-integration.test.ts asserts a capture racing a principal revocation fails once the revocation wins serialization, that no capture row exists and that exactly one PRINCIPAL tombstone does; no committed case asserts the 409 on a plain re-capture of a revoked value"
   scope_enforced: "every candidate, capture and admin read | prisma/schema.prisma:231,:339-360, src/lib/memory/capture/admin-list.ts:35-45 | `privateScopeTag` sits on the principal and on every derived row and leads the composite index `(agentPrincipalId, privateScopeTag, status, expiresAt)`; `RestrictedScope` is a table with its own revocation reason; the admin lists resolve an API key's `allowedScopes` into the exact private scopes it may inspect and an empty list authorises no rows | src/__tests__/memory/capture-race-integration.test.ts `scope deletion cannot be undone by a queued unbound key create` and `…queued key scope update`"
-  human_review: "revocations that touch an article | src/lib/memory/capture/lifecycle.ts:378-396, prisma/schema.prisma:560, src/app/api/memory/privacy-reviews/route.ts | every revocation upserts a `MemoryPrivacyReview` row with `status: OPEN`, a reason code and `resolvedBy`/`resolvedAt`, unique on `(articleId, lineageStateId, generation)`, listed through an admin route that requires `Permissions.ADMIN` and filters by the key's allowed scopes; nothing forces resolution | src/__tests__/memory/capture-integration.test.ts"
   audit_log: "revocation and cleanup, in the system's own tables | prisma/schema.prisma:507,:527, src/lib/memory/capture/lifecycle.ts:398-425 | `MemoryTombstone` is written by upsert on a unique `(lineageStateId, generation)` and carries `reasonCode`, `hmacKeyVersion` and `createdAt`, so each revocation of a lineage is its own row; `MemoryDurableJob` records every cleanup attempt under the idempotency key `memory-cleanup:{lineage}:{generation}`; no path updates or deletes either record outside TTL expiry | src/__tests__/memory/capture-race-integration.test.ts counts tombstone rows; src/__tests__/memory/backfill.test.ts covers the durable job"
 stack_storage: "postgres"
 stack_retrieval: "lexical, vector"
@@ -285,9 +284,17 @@ days", not "never again".
 row, `RestrictedScope` as a table with its own revocation reason, and a
 composite index whose leading columns are principal and scope.
 
-**Human review — awarded.** `MemoryPrivacyReview` is a row with an `OPEN`
+**Human review — withheld.** `MemoryPrivacyReview` is a row with an `OPEN`
 status, a `resolvedBy` and a `resolvedAt`, opened automatically on any
-revocation touching an article and exposed through an admin API.
+revocation touching an article and exposed through an admin API that requires
+`Permissions.ADMIN` and narrows to the key's allowed scopes — a good actor
+boundary attached to nothing. The revocation has already happened when the row
+is written (`lifecycle.ts:378-396` upserts the review inside the same
+transaction that revokes), and the table has exactly two readers in `src/`,
+the `findMany` and the `count` in `privacy-reviews/route.ts:25` and `:32`. No
+read path consults a review's status to withhold anything, and as the withdrawn
+record put it, *"nothing forces resolution"*. It is a worklist over completed
+revocations, which is a useful thing and not a gate.
 
 **Audit log — awarded.** The tombstone table is itself an append-only record of
 revocations with reason codes and generations, and `MemoryDurableJob` records
@@ -445,6 +452,8 @@ rg -n -i 'arxiv|bibtex|citation|doi' README.md docs                  # no paper
 `capture-race-integration.test.ts`
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`6406d867add59299947197b30bb8070a0e82a406`](https://github.com/sweetsophia/noosphere/commit/6406d867add59299947197b30bb8070a0e82a406); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, and the record's own last clause was the answer: *"nothing forces resolution."* Two facts settle it. The revocation is already done when the review row is written — `lifecycle.ts:378-396` upserts it inside the same transaction — and `memoryPrivacyReview` has exactly two readers in `src/`, the `findMany` and `count` in the admin listing route, so no read path consults a review's status to withhold anything. The admin route's `Permissions.ADMIN` check and scope narrowing are a real actor boundary with nothing behind them. The tombstone and the job ledger keep their credit under `tombstone` and `audit_log`, which is where this design's strength has always been. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`6406d867add59299947197b30bb8070a0e82a406`](https://github.com/sweetsophia/noosphere/commit/6406d867add59299947197b30bb8070a0e82a406) — re-read at a commit dated 14 September 2026, 26 commits past the previous pin. The anchored files are untouched: a commit comparison across the range lists fifty-four changed files and none of them is an anchor, so every mark stands where it was tested. Spot-checking the tombstone producer confirms the shape the report describes — the capture transaction looks up `memoryTombstone` by `subjectHash` against the incoming dedupe digests and throws *"Capture was previously revoked"*, so the key is the content rather than the row, with `expiresAt` bounding how long the refusal lasts. All marks hold. Screened before reading, from a full clone: one auto-run surface, no build-time execution point, eight unpinned dependency surfaces and twelve dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
