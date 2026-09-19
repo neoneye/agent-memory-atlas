@@ -7,13 +7,12 @@ page_kind: system
 source_name: "AgentSwarms-fyi/agentswarms"
 source_url: https://github.com/AgentSwarms-fyi/agentswarms
 archive_name: "AgentSwarms-fyi--agentswarms"
-revision: 52c9d731e270ada95bf56525192bfb699f360aed
-revision_url: https://github.com/AgentSwarms-fyi/agentswarms/commit/52c9d731e270ada95bf56525192bfb699f360aed
-analyzed_at: 2026-09-17
-capabilities: "scope_enforced, human_review"
+revision: 28b656ad8ff196ace68766520f7665df1aef9750
+revision_url: https://github.com/AgentSwarms-fyi/agentswarms/commit/28b656ad8ff196ace68766520f7665df1aef9750
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "long-term memory recall | src/utils/memory/recall.server.ts:84-85 | `.eq(\"user_id\", userId).eq(\"agent_id\", agentId)` on the query, with row-level security enforcing the same at the database | unknown"
-  human_review: "the memory settings surface | src/utils/memory/tools.server.ts:119 (`memory_forget`) and the per-item bin in the UI | a person inspects stored items and deletes any of them outright | unknown"
 stack_storage: "postgres"
 stack_retrieval: "lexical"
 stack_source: "seeded"
@@ -123,8 +122,17 @@ Three exits, all destructive, none recorded.
 comes from a prior `memory_recall`.
 
 *A person deletes it.* The agent settings page lists up to 200 items with a bin
-on each and a "clear all" behind a confirm. This is the atlas's `human_review`
-mark: a surface where a person inspects memory content and removes it.
+on each and a "clear all" behind a confirm. The 2026-09-19 re-read **withdrew
+`human_review` on this surface**: it is inspection plus deletion, and the mark
+asks for a memory that waits in a state until a person resolves it. An extracted
+item is live from the moment it is written and the bin removes it afterwards,
+which the rubric separates from review by name. The same verb sits on the agent's
+side anyway — `memory_forget` is a declared tool
+(`src/utils/memory/tools.server.ts:115-130`, registered at
+`src/utils/tools/registry.server.ts:1867-1868`) described to the model as *"Delete
+a single long-term memory item by id. Use when the user says something is no
+longer true"* — so the producer holds the same removal the person does, and
+neither of them leaves a record.
 
 *Eviction.* On every extraction the `prune_agent_memory_items` RPC keeps the top
 `ltm_max_items` rows ordered by `score DESC, COALESCE(last_used_at, created_at)
@@ -556,6 +564,8 @@ Run from the root of the checkout at the pinned commit.
 | The memory subsystem barely moved | `git diff --stat <prev-pin>..HEAD -- '*memor*'` | 76 insertions across four files, most of it list reformatting |
 
 ## History
+
+**2026-09-19** — re-pinned to [`28b656ad8ff196ace68766520f7665df1aef9750`](https://github.com/AgentSwarms-fyi/agentswarms/commit/28b656ad8ff196ace68766520f7665df1aef9750), 15 commits and 82 files on. **`human_review` is withdrawn; `scope_enforced` stands alone.** The first reading was made on 2026-09-17, the day before the rubric narrowed to require that a memory wait in a state until an actor the producing agent cannot be resolves it, and the settings page does not meet that: an extracted item is live when written and the per-item bin removes it afterwards, which is inspection plus deletion rather than adjudication. The agent holds the same verb — `memory_forget` is a declared tool, registered behind an `allows("memory_forget")` check, and its description tells the model to use it when the user says something is no longer true. Nothing records either removal. The surface keeps its description in section 5 among the three destructive exits. Screened again first; nothing installed or run.
 
 **2026-09-17** — [`52c9d731e270ada95bf56525192bfb699f360aed`](https://github.com/AgentSwarms-fyi/agentswarms/commit/52c9d731e270ada95bf56525192bfb699f360aed) — re-pinned after 59 commits. Both anchored files — the recall path behind `scope_enforced` and the memory toolset behind `human_review` — are byte-identical at both commits, so both marks stand on unchanged code and every line number and quotation here is exact at the new pin. Nothing was installed, built or run.
 

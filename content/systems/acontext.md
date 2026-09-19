@@ -9,11 +9,10 @@ source_url: https://github.com/memodb-io/Acontext
 archive_name: "memodb-io--Acontext"
 revision: 259d73bfdebeed35ec2d4211ddc060a2d4126bc6
 revision_url: https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc060a2d4126bc6
-analyzed_at: 2026-09-17
-capabilities: "scope_enforced, human_review"
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "the client-facing skill read | src/server/core/acontext_core/service/data/agent_skill.py:93-100, :77-87 | `get_agent_skill` is `select(AgentSkill).where(AgentSkill.id == skill_id, AgentSkill.project_id == project_id)`, and `touch_skill_updated_at` carries the same pair, so a skill id from one project cannot be read or touched through another. Disk, user and project foreign keys cascade beneath it | no cross-project retrieval case is committed. The read path that does *not* carry the predicate is named in section 9: the learning-space chain — `get_learning_space`, `get_learning_space_skill_ids` and `get_skills_info` — keys on ids alone, and is reached only from the MQ consumer with an id the pipeline itself produced, so it is trusted-input rather than client-input"
-  human_review: "the dashboard's agent-skills pages, where a person reads what was learned file by file and can remove it | dashboard/app/project/[id]/agent-skills/page.tsx, agent-skills-page-client.tsx:219, actions.ts:39-60, [skillId]/agent-skill-detail-client.tsx | the list page renders every distilled skill; the detail client renders the skill's file tree and fetches each file's contents through `getAgentSkillFile`; `deleteAgentSkill(project.id, skillToDelete.id)` runs behind a confirmation dialog. A person can therefore inspect the memory's actual text and delete it | no committed case drives the dashboard. This is the weak form of the capability and the report says so: delete-only, after the fact, with no approve-before-effect step and no record of the removal"
 stack_storage: "postgres"
 stack_retrieval: ""
 stack_source: "reviewed"
@@ -309,18 +308,25 @@ worth something even though it earns no capability mark: an operator asking "why
 does the agent think this" can at least reach the session and task that caused the
 skill to be written, through the pipeline's events.
 
-The human review surface is real and this report grants the mark on it, so the
-reasoning should be checkable. `dashboard/app/project/[id]/agent-skills/page.tsx`
-lists skills; `[skillId]/agent-skill-detail-client.tsx` renders the skill's file
-tree, fetches file contents through `getAgentSkillFile`, and offers
-`deleteAgentSkill` behind a confirmation dialog. A person can therefore read what
-was learned, file by file, and remove it. Under the rubric — a place a person
-inspects or adjudicates memory content, as opposed to a UI that only displays —
-that qualifies. It is the weak form of the capability: delete-only, after the
-fact, with no approve-before-effect step and no record of the removal. Compare
-[MIRIX](../mirix/), whose dashboard renders six memory types and wires no mutation
-at all, and [MineContext](../minecontext/), whose server implements a delete
-endpoint the UI never calls.
+The human review surface is real and it no longer carries the mark, which the
+first reading's own sentence had already decided.
+`dashboard/app/project/[id]/agent-skills/page.tsx` lists skills;
+`[skillId]/agent-skill-detail-client.tsx` renders the skill's file tree, fetches
+file contents through `getAgentSkillFile`, and offers `deleteAgentSkill` behind a
+confirmation dialog. A person can therefore read what was learned, file by file,
+and remove it — which is worth having, and is reading plus deleting rather than
+adjudicating. The report described it at the time as *"the weak form of the
+capability: delete-only, after the fact, with no approve-before-effect step and
+no record of the removal"*, and when the rubric narrowed on 2026-09-18 to require
+that a memory wait in a state until an actor the producing agent cannot be
+resolves it, that description became the withdrawal. Nothing waits here: a
+distilled skill is in effect from the moment it is written, and the dashboard
+offers no state between written and deleted. It still sits above
+[MIRIX](../mirix/), whose dashboard renders six memory types and wires no
+mutation at all, and [MineContext](../minecontext/), whose server implements a
+delete endpoint the UI never calls — none of the three carries the mark, and the
+three of them make a useful ladder of how far a memory UI can go without becoming
+a gate.
 
 **One read path does not carry the project predicate, and naming it is the point.**
 `get_agent_skill` filters on `id` *and* `project_id`, and so does
@@ -487,6 +493,8 @@ Postgres for nothing.
 `src/server/tests/e2e/`
 
 ## History
+
+**2026-09-19** — re-read at the same pin [`259d73bfdebeed35ec2d4211ddc060a2d4126bc6`](https://github.com/memodb-io/Acontext/commit/259d73bfdebeed35ec2d4211ddc060a2d4126bc6), still the tip. **`human_review` is withdrawn; `scope_enforced` stands alone.** Nothing upstream moved. The first reading was made on 2026-09-17, a day before the rubric's wording narrowed to *"a memory waits in a state until an actor the producing agent cannot be resolves it"*, and it had already written the sentence that the narrowing turns into a withdrawal: *"the weak form of the capability: delete-only, after the fact, with no approve-before-effect step and no record of the removal."* A distilled skill takes effect when it is written, and the dashboard offers no state between written and deleted, so the surface is inspection plus removal rather than adjudication. It keeps its description in section 9, where it now anchors a three-step comparison with MIRIX and MineContext of how far a memory UI can go without becoming a gate. Screened again first; nothing installed or run.
 
 **2026-09-17** — re-read at the same commit, confirmed still the tip by `git ls-remote` before a `--depth 1` clone. Nothing could have moved, so this reading audited the first one. Screened again: one auto-run surface (`.claude-plugin/`, a plugin marketplace manifest), nine build-time execution paths including four pytest `conftest.py` collection hooks, nine unpinned manifests, nothing inside the cooldown; `AGENTS.md` and `CLAUDE.md` were read as data. Nothing was installed, built or run.
 
