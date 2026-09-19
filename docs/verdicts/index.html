@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 606 reports.</strong></p>
+<p><strong>This page covers all 607 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24678,6 +24678,46 @@ attribute is stamped on results after they load.</li>
 agent memory, or a worked example of why physical separation and a scope
 predicate are not the same claim even when they produce the same
 outcome.</li>
+</ul>
+<h3 id="lerim"><a href="../systems/lerim/"><code>lerim</code></a></h3>
+<ul>
+<li>Best idea: <strong>distinguish "no scope given" from "an empty
+scope".</strong> The record filter compiles a list of projects to
+<code>project_id IN (...)</code>, <code>None</code> to no clause at all,
+and an <strong>empty list to <code>0=1</code></strong> — the case that
+otherwise turns a filter into a pass-through, silently and totally. The
+write path raises <code>record_out_of_scope</code> on the same input,
+and the test is named for the behaviour rather than the code:
+<code>test_empty_project_ids_fail_closed</code>.</li>
+<li>Biggest risk: <strong>the reasoning is prose no query can act
+on.</strong> <code>decision</code>, <code>why</code>,
+<code>alternatives</code> and <code>consequences</code> are what this
+system exists to preserve, and a brief handed two records that disagree
+has nothing to prefer one by — there is no confidence, no status beyond
+<code>active</code>/<code>archived</code>, and nothing derived from
+those columns. Separately, <code>valid_from</code> falls back to
+creation time whenever no caller supplies one, so the two time axes
+collapse on any record whose world time was never set.</li>
+<li>Most reusable component: the filter builder in
+<code>src/lerim/context/store.py</code>. Besides the scope tri-state, it
+resolves the as-of moment and the status filter together in one helper,
+which is why an as-of read can correctly <em>ignore</em>
+<code>include_archived</code> instead of inheriting it — asking what was
+true in February must return a record archived in April.</li>
+<li>Maturity impression: Apache 2.0, Python over SQLite at 653 files
+with 157 test files, an MCP server, an HTTP API, a Next.js dashboard and
+a <code>benchmarks/</code> tree. Four marks — <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>human_review</code>,
+<code>negative_eval</code>. <code>human_review</code> covers skill
+patches rather than the records: a proposal is saved
+<code>pending_review</code>, <code>update_mode</code> defaults to
+<code>review</code> in both the table and the schema, auto-apply needs
+four conditions and records <code>applied_by</code> when it fires, and
+the MCP surface carries no apply verb.</li>
+<li>Study when: you are writing the tests for a bitemporal store. The
+pair here — archived rows must stay out of an ordinary read, and must
+come back in an as-of read — is what stops a filter that is always on or
+always off from passing.</li>
 </ul>
         </article>
       </div>

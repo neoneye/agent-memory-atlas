@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 606 reports.**
+**This page covers all 607 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5421,4 +5421,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `sugar/memory/store.py` for two small habits — three FTS triggers covering insert, update *and* delete, so the lexical index cannot return rows that are gone; and an expiry clause driven by a query flag that defaults closed and is forwarded to both stores rather than re-derived in each, so the two arms cannot drift.
 - Maturity impression: dual licensed AGPL-3.0 or commercial with a CLA, Python over SQLite at 288 files, reaching agents through an MCP server, a CLI, a skills directory, a GitHub Action and a Hermes plugin. One mark, `negative_eval`. `scope_enforced` is withheld on a distinction rather than a fault: the isolation is a second database file rather than a predicate, and the `scope` attribute is stamped on results after they load.
 - Study when: you want the smallest honest version of per-project agent memory, or a worked example of why physical separation and a scope predicate are not the same claim even when they produce the same outcome.
+
+### [`lerim`](../systems/lerim/)
+
+- Best idea: **distinguish "no scope given" from "an empty scope".** The record filter compiles a list of projects to `project_id IN (...)`, `None` to no clause at all, and an **empty list to `0=1`** — the case that otherwise turns a filter into a pass-through, silently and totally. The write path raises `record_out_of_scope` on the same input, and the test is named for the behaviour rather than the code: `test_empty_project_ids_fail_closed`.
+- Biggest risk: **the reasoning is prose no query can act on.** `decision`, `why`, `alternatives` and `consequences` are what this system exists to preserve, and a brief handed two records that disagree has nothing to prefer one by — there is no confidence, no status beyond `active`/`archived`, and nothing derived from those columns. Separately, `valid_from` falls back to creation time whenever no caller supplies one, so the two time axes collapse on any record whose world time was never set.
+- Most reusable component: the filter builder in `src/lerim/context/store.py`. Besides the scope tri-state, it resolves the as-of moment and the status filter together in one helper, which is why an as-of read can correctly *ignore* `include_archived` instead of inheriting it — asking what was true in February must return a record archived in April.
+- Maturity impression: Apache 2.0, Python over SQLite at 653 files with 157 test files, an MCP server, an HTTP API, a Next.js dashboard and a `benchmarks/` tree. Four marks — `bitemporal`, `scope_enforced`, `human_review`, `negative_eval`. `human_review` covers skill patches rather than the records: a proposal is saved `pending_review`, `update_mode` defaults to `review` in both the table and the schema, auto-apply needs four conditions and records `applied_by` when it fires, and the MCP surface carries no apply verb.
+- Study when: you are writing the tests for a bitemporal store. The pair here — archived rows must stay out of an ordinary read, and must come back in an as-of read — is what stops a filter that is always on or always off from passing.
 

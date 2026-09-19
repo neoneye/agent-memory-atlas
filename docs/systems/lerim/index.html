@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Python context compiler that
+turns finished agent traces into cited records with a world-validity
+window, where an as-of query deliberately returns rows that were
+archived afterwards and an empty project list fails closed rather than
+open.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Lerim — Agent Memory Atlas">
+    <meta property="og:description" content="A Python context compiler
+that turns finished agent traces into cited records with a
+world-validity window, where an as-of query deliberately returns rows
+that were archived afterwards and an empty project list fails closed
+rather than open.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Lerim — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Python context compiler
+that turns finished agent traces into cited records with a
+world-validity window, where an as-of query deliberately returns rows
+that were archived afterwards and an empty project list fails closed
+rather than open.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Lerim — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Lerim",
+      "description": "A Python context compiler that turns finished agent traces into cited records with a world-validity window, where an as-of query deliberately returns rows that were archived afterwards and an empty project list fails closed rather than open.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">An empty scope returns nothing, and the
+test says so</p>
+          <h1>Lerim</h1>
+          <p class="document-deck">A Python context compiler that turns
+finished agent traces into cited records with a world-validity window,
+where an as-of query deliberately returns rows that were archived
+afterwards and an empty project list fails closed rather than open.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/kargarisaac/lerim">
+              <span>Source</span>
+              <strong>kargarisaac/lerim</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/kargarisaac/lerim/commit/5fed45a55e587d2844e3c408e937ee3e5fd178ba" title="5fed45a55e587d2844e3c408e937ee3e5fd178ba">
+              <span>Analyzed revision</span>
+              <code>5fed45a5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kargarisaac--lerim" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>kargarisaac--lerim</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Lerim sits above finished agent traces and compiles them into records
+a later agent can read before starting work — decisions with their
+alternatives and consequences, episodes with what happened and what came
+of it, each carrying the session and the events it was derived from.
+Python, SQLite, Apache 2.0, with an MCP server, an HTTP API and a
+dashboard.</p>
+<p><strong>Four marks:</strong> <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>human_review</code> and
+<code>negative_eval</code>.</p>
+<p>Two of them rest on the same habit, which is worth stating before the
+mechanisms: <strong>this codebase tests the case where being wrong is
+quiet.</strong> An empty project list could reasonably filter nothing
+and return everything; here it compiles to <code>0=1</code> and the test
+that proves it is named <code>test_empty_project_ids_fail_closed</code>.
+An as-of query could reasonably drop rows that have since been archived;
+here it keeps them, because a record archived today was live at the date
+being asked about, and that test is named
+<code>test_valid_at_includes_archived_rows_without_include_archived</code>.</p>
+<p><code>trust_state</code> is withheld, and the reason is the sharpest
+thing in the report. A record's <code>status</code> is
+<code>active</code> or <code>archived</code> — a lifecycle pair, not an
+epistemic one. There is no state meaning <em>recorded but not
+believed</em>. What judgement exists lives in <code>decision</code> and
+<code>why</code>, prose columns a model wrote and nothing reads back as
+a condition.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A trace is ingested into episodes. A curator agent turns episodes
+into records, choosing each record's status, its validity window and
+whether it supersedes another. A record is then retrievable by project,
+by kind, by role, and as of a moment in world time.</p>
+<p>Two clocks. <code>created_at</code> and <code>updated_at</code> say
+when the store learned something; <code>valid_from</code> and
+<code>valid_until</code> say when it was true. The read path composes
+both.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — completed traces are ingested as episodes and compiled by a curator into records that carry a status, a world-validity window, a supersession pointer and the session and events they were derived from; the record query composes a project filter that fails closed on an empty list rather than matching everything, a status filter defaulting to active, and a validity window that deliberately admits rows archived after the asked-about moment; skill proposals are saved pending review and applied only when four separate conditions all hold, and the apply verb exists on the HTTP API and not on the MCP surface</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: completed traces are ingested as episodes and compiled by a curator into records that carry a status, a world-validity window, a supersession pointer and the session and events they were derived from; the record query composes a project filter that fails closed on an empty list rather than matching everything, a status filter defaulting to active, and a validity window that deliberately admits rows archived after the asked-about moment; skill proposals are saved pending review and applied only when four separate conditions all hold, and the apply verb exists on the HTTP API and not on the MCP surface
+flowchart TD
+    TR[&quot;completed agent traces&quot;] --&gt; ING[&quot;trace ingestion&quot;]
+    ING --&gt; EP[(&quot;episodes&quot;)]
+    EP --&gt; CUR[&quot;context curator&lt;br/&gt;chooses status · valid_from · valid_until&lt;br/&gt;superseded_by_record_id&quot;]
+    CUR --&gt; REC[(&quot;records&lt;br/&gt;project_id · scope_type · scope_id&lt;br/&gt;status · decision · why&lt;br/&gt;evidence_refs · source_event_refs&quot;)]
+    REC --&gt; VER[(&quot;record_versions&quot;)]
+
+    Q[&quot;record query&quot;] --&gt; P1{&quot;project_ids&quot;}
+    P1 --&gt;|&quot;non-empty&quot;| F1[&quot;project_id IN (...)&quot;]
+    P1 --&gt;|&quot;empty list&quot;| F0[&quot;0=1 — matches nothing&quot;]
+    P1 --&gt;|&quot;None&quot;| FN[&quot;no project clause&quot;]
+    Q --&gt; P2[&quot;statuses given? status IN (...)&lt;br/&gt;else status = &#39;active&#39;&quot;]
+    Q --&gt; P3[&quot;valid_from &lt;= valid_at&lt;br/&gt;AND (valid_until IS NULL OR valid_until &gt;= valid_at)&quot;]
+
+    F1 --&gt; SEL[(&quot;selected records&quot;)]
+    P2 --&gt; SEL
+    P3 --&gt; SEL
+    SEL --&gt; BRIEF[&quot;context brief · cited&quot;]
+    BRIEF --&gt; AGENT((&quot;next agent&quot;))
+
+    subgraph SK[&quot;skill stewardship&quot;]
+        DR[&quot;draft + guard + validation&quot;] --&gt; PR[(&quot;proposal&lt;br/&gt;status = &#39;pending_review&#39;&lt;br/&gt;or &#39;failed_validation&#39;&quot;)]
+        PR --&gt; AUTO{&quot;update_mode == &#39;auto_apply&#39;&lt;br/&gt;AND policy.enabled&lt;br/&gt;AND proposal.auto_apply_eligible&lt;br/&gt;AND validation ok&quot;}
+        AUTO --&gt;|&quot;all four&quot;| AP[&quot;apply_proposal&lt;br/&gt;applied_by = &#39;auto_apply&#39;&quot;]
+        AUTO --&gt;|&quot;default: update_mode = &#39;review&#39;&quot;| WAIT[&quot;waits&quot;]
+    end
+    HTTP[&quot;HTTP skill API&quot;] --&gt; AP
+    MCPX[&quot;MCP surface&quot;] -.-&gt;|&quot;carries no apply verb&quot;| WAIT</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The scope tri-state</strong> —
+<code>src/lerim/context/store.py:3265-3270</code>.</p>
+<pre class="python"><code>if project_ids:
+    clauses.append(f&quot;{prefix}project_id IN ({placeholders})&quot;)
+elif project_ids is not None:
+    clauses.append(&quot;0=1&quot;)</code></pre>
+<p>Three cases, deliberately distinguished: a list of projects filters
+to them, <code>None</code> means no project clause at all, and an
+<strong>empty list matches nothing</strong>. The third is the one that
+usually goes wrong, because an empty <code>IN</code> list and an absent
+filter are easy to conflate and the failure is silent and total.</p>
+<p><strong>The status default</strong> — <code>:3279-3284</code>.
+Explicit statuses become <code>status IN (...)</code>; otherwise, unless
+<code>include_archived</code>, the clause is
+<code>status = 'active'</code>. An allow-list rather than a
+<code>!=</code>, so a status added later is hidden rather than
+surfaced.</p>
+<p><strong>The validity window</strong> — <code>:3306-3307</code> and
+<code>:3366-3367</code>, <code>valid_from &lt;= ?</code> and
+<code>(valid_until IS NULL OR valid_until &gt;= ?)</code>, with the
+effective moment resolved once by
+<code>_effective_current_valid_at(valid_at, include_archived, statuses)</code>
+so the time and the status filters are decided together rather than
+separately.</p>
+<p><strong>The proposal gate</strong> —
+<code>src/lerim/skill_stewardship/pipeline.py:105-122</code> and
+<code>:405-413</code>. A validated draft is saved with
+<code>status = "pending_review"</code>; an invalid one with
+<code>"failed_validation"</code>. Auto-apply requires all four of
+<code>update_mode == "auto_apply"</code>, <code>policy.enabled</code>,
+<code>proposal.auto_apply_eligible</code>, and validation passing unless
+the policy waives it. <code>update_mode</code> defaults to
+<code>'review'</code> in the table definition and again in the
+schema.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One <code>records</code> table holding the compiled unit:
+<code>kind</code>, <code>record_role</code>, a title and body under
+<code>CHECK (length(trim(...)) &gt; 0)</code>, the status, the two time
+pairs, <code>superseded_by_record_id</code> as a self-referencing
+foreign key, and the derivation — <code>source_session_id</code>,
+<code>source_event_refs</code>, <code>evidence_refs</code>. Beside the
+mechanical fields sit the reasoning ones: <code>decision</code>,
+<code>why</code>, <code>alternatives</code>, <code>consequences</code>,
+<code>user_intent</code>, <code>what_happened</code>,
+<code>outcomes</code>.</p>
+<p><code>record_versions</code> keeps prior versions.
+<code>scope_type</code> and <code>scope_id</code> reference a
+<code>scopes</code> table.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Filters compose over kind, role, status, source profile, source
+session, project and the validity window, feeding a context brief that
+cites what it drew on.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The curator supplies a payload and <code>operations.py:233-242</code>
+normalizes it: <code>status</code> defaults to <code>active</code> when
+absent, and <code>valid_from</code>, <code>valid_until</code> and
+<code>superseded_by_record_id</code> are carried through only when
+non-empty. So supersession, archival and the validity window are three
+independent decisions a model makes per record, rather than one implying
+the others.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, an HTTP server with a skill API, a Next.js dashboard,
+and adapters for several agent runtimes.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>bitemporal</code>.</strong> Two axes, both written and
+both read. The as-of path is not a decoration:
+<code>test_valid_at_includes_archived_rows_without_include_archived</code>
+pins the semantic that makes it worth having — asking what was true in
+February must return a record archived in April, because archival is a
+fact about now and the question was about then.</p>
+<p><strong><code>scope_enforced</code>.</strong> <code>project_id</code>
+composes into the record filter, and the empty case fails closed on the
+write path too, raising <code>record_out_of_scope</code>. Worth
+recording: <code>scope_type</code> and <code>scope_id</code> are columns
+with a foreign key and the general record filter does not compose them —
+the scope that is enforced on retrieval is the project.</p>
+<p><strong><code>human_review</code>.</strong> A skill proposal is saved
+<code>pending_review</code> and waits. <code>update_mode</code> defaults
+to <code>'review'</code> in both the schema and the table, auto-apply
+needs four conditions, and the application is attributed —
+<code>applied_by="auto_apply"</code> when the policy fires. The mark
+rests partly on reach: <code>apply_proposal</code> is reachable from the
+pipeline and the HTTP skill API, and the MCP tool surface carries no
+verb for it.</p>
+<p><strong><code>negative_eval</code></strong> — section 10.</p>
+<p><strong><code>trust_state</code> is withheld.</strong>
+<code>active</code> and <code>archived</code> are a retention pair.
+Nothing expresses <em>recorded but not believed</em>: a record is live
+or it is not, and the epistemic content — <code>decision</code>,
+<code>why</code>, <code>alternatives</code> — is prose a model wrote,
+which no query reads as a condition. A record the curator half-doubts
+has the same standing in a brief as one it is certain of.</p>
+<p><strong><code>tombstone</code> is withheld.</strong>
+<code>superseded_by_record_id</code> points at a replacement and is
+keyed on the record. Nothing is keyed on the value, so the same claim
+arriving from a later trace is compiled afresh.</p>
+<p><strong><code>audit_log</code> is withheld.</strong>
+<code>record_versions</code> keeps prior versions of a record, which is
+history rather than an append-only log of mutations with their actor;
+the proposal table records <code>applied_by</code>, but only for skill
+patches.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>157 test files across unit, integration, smoke and e2e directories,
+with a <code>benchmarks/</code> tree beside them. Nothing was installed
+and nothing was run.</p>
+<p>The mark rests on assertions that name the failure they prevent:</p>
+<ul>
+<li><code>tests/unit/context/test_store.py:1284-1297</code>,
+<code>test_empty_project_ids_fail_closed</code> — an empty project list
+raises <code>record_out_of_scope</code> on a write, and the record is
+then re-fetched to assert it was not modified. The name is the
+specification.</li>
+<li><code>tests/unit/test_run_clinic.py:102</code> —
+<code>assert archived["record_id"] not in {record["record_id"] for record in data.records}</code>,
+an archived record must not come back in a result set.</li>
+<li><code>tests/unit/context/test_store.py:1902</code>,
+<code>test_valid_at_includes_archived_rows_without_include_archived</code>
+— the converse, and the harder one: an as-of read must <em>not</em>
+apply the archived filter, because the two questions are about different
+moments.</li>
+</ul>
+<p>That pair is what makes the bitemporal implementation credible. One
+test alone could be satisfied by a filter that is always on or always
+off; together they pin the condition.</p>
+<p>No paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Distinguish "no scope given" from "an empty scope".</strong>
+<code>None</code> and <code>[]</code> are different questions, and
+conflating them turns a filter into a pass-through. Compile the empty
+case to <code>0=1</code> and name the test after the behaviour.</li>
+<li><strong>Decide the as-of moment and the status filter
+together.</strong> One helper resolving both is why an as-of read can
+correctly ignore <code>include_archived</code> instead of accidentally
+inheriting it.</li>
+<li><strong>Keep supersession, archival and validity as three
+fields.</strong> A model that supersedes a record has not necessarily
+said the old one was never true, and three columns let it say which it
+meant.</li>
+<li><strong>Attribute the application.</strong>
+<code>applied_by="auto_apply"</code> is one string, and it is the
+difference between knowing a patch was reviewed and assuming it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Reasoning stored only as prose.</strong>
+<code>decision</code>, <code>why</code>, <code>alternatives</code> and
+<code>consequences</code> carry the reasoning this system exists to
+preserve, and no query can act on them; a confidence or a status derived
+from them would let a brief say which of two conflicting records to
+prefer.</li>
+<li><strong>Two scope columns where one is enforced.</strong>
+<code>scope_type</code>/<code>scope_id</code> exist, are foreign-keyed,
+and are not in the general record filter — which invites a later reader
+to assume they are.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take it if you have finished agent traces and want the next agent to
+start from compiled, cited context rather than a transcript. Take the
+store's filter builder whatever else you do.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>scope_type</code> and <code>scope_id</code> are foreign-keyed
+and absent from the record filter. Are they a labelling dimension, or a
+retrieval boundary not yet wired?</li>
+<li>The curator sets <code>status</code>, <code>valid_until</code> and
+<code>superseded_by_record_id</code> independently. What reconciles a
+record superseded but left <code>active</code>?</li>
+<li><code>decision</code> and <code>why</code> are prose. Is a derived
+confidence intended, and what would a brief do with two records that
+disagree?</li>
+<li>Auto-apply is off by default and attributed when it fires. Is there
+a deployment where the reviewing principal is verified rather than
+assumed?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/lerim/context/store.py</code></td>
+<td>the schema, the filter builder, the scope tri-state and the validity
+clauses</td>
+</tr>
+<tr>
+<td><code>src/lerim/context/retrieval.py</code></td>
+<td>the read surface that passes <code>project_ids</code> down</td>
+</tr>
+<tr>
+<td><code>src/lerim/agents/context_curator/operations.py</code></td>
+<td>payload normalization and the three independent lifecycle
+fields</td>
+</tr>
+<tr>
+<td><code>src/lerim/agents/trace_ingestion/persistence.py</code></td>
+<td>where an ingested episode may carry its own
+<code>valid_from</code></td>
+</tr>
+<tr>
+<td><code>src/lerim/skill_stewardship/pipeline.py</code></td>
+<td>the proposal status, and the four-condition auto-apply</td>
+</tr>
+<tr>
+<td><code>src/lerim/skill_stewardship/patching.py</code></td>
+<td><code>apply_proposal</code> and the <code>applied_by</code>
+attribution</td>
+</tr>
+<tr>
+<td><code>tests/unit/context/test_store.py</code></td>
+<td>the fail-closed and as-of cases</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The empty scope fails closed</td>
+<td>read <code>src/lerim/context/store.py:3265-3270</code></td>
+<td><code>if project_ids:</code> filters,
+<code>elif project_ids is not None:</code> appends <code>0=1</code></td>
+</tr>
+<tr>
+<td><code>scope_type</code>/<code>scope_id</code> are not in the record
+filter</td>
+<td><code>grep -n "scope_id|scope_type|project_id" src/lerim/context/store.py | grep -iE "clauses|WHERE"</code></td>
+<td><code>project_id IN (...)</code> at <code>:2667</code>,
+<code>:3267</code>, <code>:3332</code>;
+<code>scope_type</code>/<code>scope_id</code> appear only in one
+episode-lookup at <code>:2830</code></td>
+</tr>
+<tr>
+<td>Validity is read, not only stored</td>
+<td>same grep for <code>valid_from</code>/<code>valid_until</code></td>
+<td><code>:3306-3307</code> and <code>:3366-3367</code> compose the
+window</td>
+</tr>
+<tr>
+<td><code>valid_from</code> has a producer other than creation time</td>
+<td><code>grep -rn "valid_from" --include='*.py' src | grep -v context/store.py</code></td>
+<td>An ingested episode may carry one
+(<code>agents/trace_ingestion/persistence.py:364</code>) and the curator
+may set one (<code>context_curator/schemas.py:28</code>); otherwise it
+falls back to <code>effective_created_at</code> at
+<code>store.py:1757</code></td>
+</tr>
+<tr>
+<td>Review is the default</td>
+<td><code>grep -rn "update_mode" src/lerim/skill_stewardship</code></td>
+<td><code>DEFAULT 'review'</code> in the table
+(<code>repository.py:62</code>) and <code>= "review"</code> in the
+schema (<code>schemas.py:103</code>)</td>
+</tr>
+<tr>
+<td>The MCP surface has no apply verb</td>
+<td><code>grep -rn "proposal" src/lerim/mcp_server.py</code></td>
+<td>Nothing; <code>apply_proposal</code> is reached from the pipeline
+and <code>server/skill_api.py:163</code></td>
+</tr>
+<tr>
+<td>No tombstone vocabulary</td>
+<td><code>grep -rli "tombstone|retract" --include='*.py' src</code></td>
+<td>Nothing for either</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/kargarisaac/lerim/commit/5fed45a55e587d2844e3c408e937ee3e5fd178ba"><code class="commit-id" title="5fed45a55e587d2844e3c408e937ee3e5fd178ba">5fed45a5…</code></a>
+— first reading, at 653 files. Screened before reading; nothing was
+installed and nothing was run, so the <code>benchmarks/</code> tree was
+read rather than executed. Apache 2.0. Four marks:
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>human_review</code>, <code>negative_eval</code>.
+<code>trust_state</code> is withheld because
+<code>active</code>/<code>archived</code> is a retention pair and the
+reasoning fields are prose no query reads as a condition;
+<code>tombstone</code> because supersession is keyed on the record;
+<code>audit_log</code> because <code>record_versions</code> is version
+history rather than a mutation log with an actor. Each withholding rests
+on a search recorded in the appendix.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
