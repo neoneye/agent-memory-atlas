@@ -140,7 +140,7 @@ or a reviewed answers file, with no agent surface at all.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/siimvene--memspec" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -830,6 +830,26 @@ grep -rn &#39;verified_with&#39; src --include=&#39;*.ts&#39; | grep -i &#39;fil
 grep -rn -i &#39;audit\|journal\|append.only&#39; src --include=&#39;*.ts&#39;    # ext.edge_removals and the usage log; no general mutation journal
 grep -rn -i &#39;arxiv\|bibtex\|CITATION&#39; README.md SPEC.md BENCHMARK.md  # nothing: no paper</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/siimvene/memspec/commit/7c0a47f36d75585db0701b9828592433a0fa1c7b"><code class="commit-id" title="7c0a47f36d75585db0701b9828592433a0fa1c7b">7c0a47f3…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin; the mark
+holds and the three-way distinction deserves more room than the record
+gave it. The index-time filter is exact: <code>search</code> builds the
+FTS index from <code>loadActive()</code>, so a non-active record is
+absent from the structure a query searches rather than dropped from its
+results. What the record left implicit is that <code>superseded</code>
+and <code>retired</code> are withheld <em>differently</em>, on purpose.
+<code>--include-superseded</code> puts superseded records into the
+graph-walk pool as targets only — the code says seeds stay active-only —
+while <code>retired</code> is kept out even of that, with the reason in
+the comment: <em>"a retraction is a deletion of intent, not a target the
+walker should follow into."</em> Supersession says this was true and
+something replaced it, so a walker may reach it on request; retirement
+says this should not have been said, so nothing reaches it. And the four
+pre-0.3 state names are mapped forward on read (<code>decayed</code> and
+<code>archived</code> both to <code>retired</code>), so a record written
+by an older writer stays inside the state machine instead of falling out
+of it. Nothing was installed and no suite was run.</p>
 <p><strong>2026-09-18</strong> — <a
 href="https://github.com/siimvene/memspec/commit/7c0a47f36d75585db0701b9828592433a0fa1c7b"><code class="commit-id" title="7c0a47f36d75585db0701b9828592433a0fa1c7b">7c0a47f3…</code></a>
 — re-pinned from <code>c8f68a9</code> to the 0.11.0 release gate of 16

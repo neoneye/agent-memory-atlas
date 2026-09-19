@@ -9,11 +9,10 @@ source_url: https://github.com/WindSeries83/memsem
 archive_name: "WindSeries83--memsem"
 revision: 8332a23620d88dd9755dba2b9ac954d34598d67e
 revision_url: https://github.com/WindSeries83/memsem/commit/8332a23620d88dd9755dba2b9ac954d34598d67e
-analyzed_at: 2026-09-18
-capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "tombstone, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   tombstone: "memory_suppressions, consulted first in add | src/db.ts:494-540,:1653-1669 | `blockedBySuppression(subject, predicate, object, project)` is the first check of `add()` and returns a rejected result without a row; a suppression is written only when a person rejects a candidate and lifted only by `unsuppress` | src/test/governance-test.ts:66-97 (a rejected candidate is blocked on re-add, an explicit unsuppress lets it through)"
-  trust_state: "trust on the memory: inferred, verbatim, verified | src/db.ts:35-40,:1423,:2058 | `normalizeTrust` admits the three levels, the add tools' schemas refuse `verified`, and only `verify(id, evidence)` writes it with a non-empty evidence and an audit line | src/test/governance-test.ts:37-43,:96-97"
   bitemporal: "recorded_at beside valid_from and valid_until, read on every search | src/db.ts:877-881 (asOf and the validity predicate), src/db.ts:167-185 (the memories table) | `search` filters `valid_from`/`valid_until` against the effective instant and `asOf` reads the store as of a past instant separately from `recorded_at` | src/test/durability-test.ts"
   scope_enforced: "project on every read path | src/db.ts:881, src/index.ts (the tool schemas) | a search is limited to the caller's `project` unless `crossProject: true` is passed | src/test/client-test.ts:251"
   audit_log: "audit_log with reason, pass id and dry run | src/db.ts:235-256,:1710-1894 | every scoring and consolidation mutation, refused or simulated included, writes `{entity, entity_id, field, old_value, new_value, reason, pass_id, dry_run}`; `memory_audit` reads it and purge redacts the values rather than deleting the rows | src/test/governance-test.ts:101-125 (audit readable, purge redacts)"
@@ -734,6 +733,8 @@ corrections matter, which is the thing people are worst at.
   `client-test.ts`, `config-test.ts`, `regression-test.ts`, `governance-test.ts`.
 
 ## History
+
+**2026-09-19** — [`8332a23620d88dd9755dba2b9ac954d34598d67e`](https://github.com/WindSeries83/memsem/commit/8332a23620d88dd9755dba2b9ac954d34598d67e) — **`trust_state` is withdrawn**, at the unchanged pin, on the narrower reading. The record's evidence was producer-side from end to end — *"`normalizeTrust` admits the three levels, the add tools' schemas refuse `verified`, and only `verify(id, evidence)` writes it"* — and all of that is true and well built. `verified` is reachable only through the verify tool with non-empty evidence and an audit line, and `TRUST_RANK` gives the field a ratchet: re-adding an existing memory or resurrecting an archived one keeps the higher of the two levels, so trust never falls by accident. What is missing is a reader. Grepping the whole of `src/` for a predicate on `trust` finds one write and a row projection in every read — the value is carried out to the caller and nothing filters, orders or excludes by it, so an `inferred` memory is retrieved exactly like a `verified` one. The other axis the matrix field mentions is on a different table: `memory_candidates.status` is `pending`, `approved` or `rejected`, and approving one *creates* a memory rather than changing a memory's state, which makes it an ingestion queue rather than a state on a stored memory. Its rejection path is the part worth keeping in view, and it belongs to a mark this report already carries: a rejection writes a `memory_suppressions` row keyed on subject, predicate, object and project, and a later add of the same fact is refused with *"candidat bloqué par une suppression active"*. `tombstone`, `bitemporal`, `scope_enforced`, `audit_log` and `negative_eval` are untouched. Nothing was installed and no suite was run.
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved.
 **`human_review` is withdrawn.** The mark rested on candidates sitting `pending`
