@@ -7,13 +7,12 @@ page_kind: system
 source_name: "bytechefhq/bytechef"
 source_url: https://github.com/bytechefhq/bytechef
 archive_name: "bytechefhq--bytechef"
-revision: 60423c26055931084e30a5d0bdb504a0ae877983
-revision_url: https://github.com/bytechefhq/bytechef/commit/60423c26055931084e30a5d0bdb504a0ae877983
-analyzed_at: 2026-09-17
-capabilities: "scope_enforced, human_review"
+revision: dc28f0b7ba0962c67f9627df2d89e85e267e6db7
+revision_url: https://github.com/bytechefhq/bytechef/commit/dc28f0b7ba0962c67f9627df2d89e85e267e6db7
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "the knowledge base, the vector read path | server/libs/modules/components/ai/vectorstore/knowledgebase/src/main/java/com/bytechef/component/ai/vectorstore/knowledgebase/util/KnowledgeBaseVectorStoreWrapper.java | `similaritySearch` builds `eq(knowledge_base_id, id)` and AND-s any caller filter onto it, so a workflow-supplied expression can narrow the set and cannot widen it; `KnowledgeBaseFacadeImpl.buildFilterExpression` does the same for the platform search, and `delete(Filter.Expression)` is scoped the same way | none — the wrapper has no test file, and no test writes two knowledge bases and asserts a search of one misses the other"
-  human_review: "the knowledge base, chunk level | server/libs/platform/platform-knowledge-base/platform-knowledge-base-service/src/main/java/com/bytechef/platform/knowledgebase/facade/KnowledgeBaseDocumentChunkFacadeImpl.java | `updateKnowledgeBaseDocumentChunk` replaces the stored chunk text a person read in the UI and publishes `KnowledgeBaseDocumentChunkEvent`, which the worker consumes to re-embed; `deleteKnowledgeBaseDocumentChunk` removes one chunk from the vector store, the file store and the row | KnowledgeBaseDocumentChunkFacadeIntTest, 7 cases against a Testcontainers Postgres"
 stack_storage: "postgres, files, delegated"
 stack_retrieval: "vector"
 stack_source: "reviewed"
@@ -313,10 +312,23 @@ The model's agency over memory is nil on the knowledge-base side — it cannot
 write a document or edit a chunk — and indirect on the chat side, where the
 advisor writes the turn automatically. There is no `remember` tool.
 
-Human review is a real surface rather than a viewer: the document view lists the
-chunks a file was split into, a chunk's text can be edited and is re-embedded, and
-a chunk can be deleted on its own. That is a person adjudicating what the agent
-will retrieve, with effect, which is what the mark asks for.
+The chunk editor is a real surface rather than a viewer: the document view lists
+the chunks a file was split into, a chunk's text can be edited and is re-embedded,
+and a chunk can be deleted on its own. **It carries no review mark, and the reason
+is worth stating because this system has the rarer half of what the mark needs.**
+The producing side genuinely cannot reach the knowledge base — no tool writes a
+document or edits a chunk — which is the condition that makes a withheld state
+trustworthy elsewhere in this corpus. What is missing is the withheld state. A
+chunk is ingested, embedded and retrievable before anyone opens the document view;
+`updateKnowledgeBaseDocumentChunk(long id, String content)` replaces text that was
+already answering queries and publishes an event to re-embed it, and
+`deleteKnowledgeBaseDocumentChunk(long id)` removes one that was already in the
+search set. The only status on the document, `UPLOADED / PROCESSING / READY /
+ERROR`, is a pipeline stage no read path consults. So a person edits what the
+agent retrieves rather than deciding whether it may retrieve it, which the rubric
+separates from review by name. Compare [WeKnora](../weknora/), which has both
+halves: the same absence of reach, over a `pending` state that both read paths
+filter out.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -536,6 +548,8 @@ and a live environment.
   `CheckForViolationsAdvisorTest`, `AbstractAiAgentChatActionTest`
 
 ## History
+
+**2026-09-19** — re-pinned to [`dc28f0b7ba0962c67f9627df2d89e85e267e6db7`](https://github.com/bytechefhq/bytechef/commit/dc28f0b7ba0962c67f9627df2d89e85e267e6db7), 29 commits and 87 files on, read through a sparse checkout of `server/libs/platform/platform-knowledge-base`. **`human_review` is withdrawn; `scope_enforced` stands alone.** The first reading was made on 2026-09-17, the day before the rubric narrowed to require a memory that waits in a state until an actor the producing agent cannot be resolves it. bytechef has the half that is usually missing — the model cannot write a document or edit a chunk, so the producer has no reach — and lacks the half this mark is named for. `updateKnowledgeBaseDocumentChunk(long id, String content)` replaces text that is already embedded and answering queries and publishes a re-embed event; `deleteKnowledgeBaseDocumentChunk(long id)` removes a chunk already in the search set; and the only status on the document is a pipeline stage no read path consults. The surface keeps its description in section 8, now set against WeKnora, which has both halves. Screened again first: no auto-run, build-time execution or unpinned surface in the sparse path. Nothing installed, built or run.
 
 **2026-09-17** — [`60423c26055931084e30a5d0bdb504a0ae877983`](https://github.com/bytechefhq/bytechef/commit/60423c26055931084e30a5d0bdb504a0ae877983) — re-pinned after 48 commits. Both anchored files are byte-identical at both commits: the knowledge-base vector store wrapper that carries the scope filter, and the document-chunk facade behind `human_review`. In a monorepo this size the commit count says nothing about the memory subsystem, and the two blob hashes settle it — both marks stand on unchanged code and every line number here is exact at the new pin. Nothing was installed, built or run.
 

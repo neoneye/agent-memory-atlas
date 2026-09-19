@@ -9,10 +9,9 @@ source_url: https://github.com/gupsammy/claudest
 archive_name: "gupsammy--claudest"
 revision: 9088bf8d355551cd2d86a3a06d7f2bd46c712a87
 revision_url: https://github.com/gupsammy/claudest/commit/9088bf8d355551cd2d86a3a06d7f2bd46c712a87
-analyzed_at: 2026-09-17
-capabilities: "human_review"
+analyzed_at: 2026-09-19
+capabilities: ""
 capability_evidence:
-  human_review: "the consolidation protocol — the approval gate before any memory-file edit | plugins/claude-memory/skills/extract-learnings/SKILL.md:6-18, :111, :115-118, :121, :133 | `AskUserQuestion: Approve all / Approve selectively / Reject` stands between the auditor's findings and any write to the user's `CLAUDE.md`, `MEMORY.md` or topic files. `Approve selectively` is what makes it a review rather than a confirmation dialog — a person can take three removals and decline the fourth. Two further guards sit with it and are independent of it: `trash` is in the allowed-tools list where `rm` is not, so an approved mistake is recoverable, and a `Glob memory/**/*.md` after REMOVE/MERGE makes the completion condition a verified absence rather than a claim. The gate is prose an LLM is asked to follow, not code that refuses | none — no committed case drives the protocol; `grep -rli consolidat tests/` returns one file and what it tests is config writing, so nothing fails if the model skips the gate"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
 stack_source: "seeded"
@@ -69,8 +68,11 @@ That is an agent instructed not to trust its own report of its own action, with
 the failure mode it is guarding written next to the check. It is the same
 discipline this atlas applies to the systems it reads.
 
-**And none of it lands without approval** — `AskUserQuestion: Approve all /
-Approve selectively / Reject`.
+**And the protocol says none of it lands without approval** —
+`AskUserQuestion: Approve all / Approve selectively / Reject`. That line, and
+every other step of the consolidation, is markdown in a `SKILL.md` addressed to
+the model. It is careful markdown, and it is a request rather than a constraint;
+see section 9.
 
 ## 2. Mental Model
 
@@ -195,10 +197,22 @@ which is a pointer off-repository — the design reasoning that matters most is 
 
 ## 9. Reliability, Safety, and Trust
 
-**One mark: human review.** `AskUserQuestion: Approve all / Approve selectively /
-Reject` gates every consolidation edit, and "Approve selectively" is the option
-that makes it a real review rather than a confirmation dialog — a person can take
-three removals and decline the fourth.
+**No marks, and the one that was awarded fails on a shape the rubric names
+outright.** `AskUserQuestion: Approve all / Approve selectively / Reject`
+appears at step 9 of Phase 3 in
+`plugins/claude-memory/skills/extract-learnings/SKILL.md`, and "Approve
+selectively" is genuinely the option that would make it a review rather than a
+confirmation dialog — a person could take three removals and decline the fourth.
+The whole protocol, though, is prose an LLM is asked to follow: Phase 4 tells the
+model to apply the approved edits with `Bash: trash`, to verify with `Glob`, and
+to write the consolidation marker, and nothing in the repository refuses if it
+skips to Phase 4. The `human_review` mark was withdrawn on the 2026-09-19
+re-read on exactly that ground — the rubric's *"a tool description asking the
+model to show the user first is a request to the model, not a constraint on
+it"* — and the previous evidence record had already said so in its own last
+two fields: *"The gate is prose an LLM is asked to follow, not code that
+refuses"*, with the test field reading *"none — ... nothing fails if the model
+skips the gate."*
 
 **Trust state, tombstone, bitemporal, audit log, scope, negative eval — no.**
 `summary_version = -1` is a processing state, not an epistemic one.
@@ -331,6 +345,8 @@ selection algorithms and the fallthrough `:1-16`), `hooks/clear-handoff.py`,
 `token_import_log` `:200`)
 
 ## History
+
+**2026-09-19** — re-read at the same pin [`9088bf8d355551cd2d86a3a06d7f2bd46c712a87`](https://github.com/gupsammy/claudest/commit/9088bf8d355551cd2d86a3a06d7f2bd46c712a87), still the tip. **`human_review` is withdrawn, and the report now carries no capability mark.** Nothing upstream moved; the first reading was made on 2026-09-17, a day before the rubric's wording narrowed, and its own evidence record already contained the verdict — *"The gate is prose an LLM is asked to follow, not code that refuses"*, beside a test field reading *"none — no committed case drives the protocol ... nothing fails if the model skips the gate."* The consolidation protocol is markdown in a `SKILL.md` from end to end: the approval question is step 9 of Phase 3, and Phase 4 tells the model to apply the edits, verify with `Glob` and write the marker. That is the rubric's prose shape. The three-guard deletion design — approval, `trash` rather than `rm`, and verification by a glob — keeps its description in section 9; two of its three guards are real constraints on what the tools can do, and the first is not. Screened again first; nothing installed or run.
 
 **2026-09-17** — [`9088bf8d355551cd2d86a3a06d7f2bd46c712a87`](https://github.com/gupsammy/claudest/commit/9088bf8d355551cd2d86a3a06d7f2bd46c712a87) — re-read two commits past the previous pin, both memory-scoping fixes. `SKILL.md`, `memory-auditor.md`, `backfill_summaries.py` and `memory-context.py` are byte-identical by blob sha, so the approval gate, the three deletion guards and the injection paths are unchanged and `human_review` stands. What moved is project identity. The INSERT branch of `import_project` had used `ON CONFLICT(path) DO UPDATE SET key`, so — in the commit's own words — *"a brand-new directory whose lossy fallback path matched an existing project silently stole that project's row"*; it now pre-checks the path and falls back to the encoded directory key before a plain INSERT. Four committed cases arrived with it, and one pairs its negative with a control: `test_new_project_fallback_collision_does_not_rekey_other_project` asserts the existing row's path is unchanged while the new project lands under its own key, and `test_trusted_cwd_renames_existing_project` asserts a rename still happens when the cwd is trusted, so the guard cannot pass by refusing everything. These assert about a write decision rather than a retrieval, so they do not move `negative_eval`. The companion commit cut `BACKUP_RETENTION` from 10 to 3 and added `BACKUP_MIN_INTERVAL_HOURS = 24`. One anchor moved, `import_conversations.py` `:391`→`:410`, and was re-verified at the new pin. One published claim is corrected in two places: this report said “two test files”, and the repository carried twenty test files and 499 test functions at the previous pin, 505 at this one — seventeen files and 420 functions of them under `tests/claude-memory/`, counted over tracked `.py` at each commit. The criticism's substance survives the correction and sharpens: `grep -rli consolidat tests/` returns exactly one path, and what it tests is config writing, so the consolidation protocol remains the part of this system that nothing exercises. Screened again before reading: one auto-run surface, two build-time execution surfaces, one unpinned surface; `CLAUDE.md` is addressed to a reading agent and was treated as data. Nothing was installed and nothing was run.
 

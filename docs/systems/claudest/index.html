@@ -117,7 +117,7 @@ a removable entry, and verifies each deletion actually happened.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/gupsammy--claudest" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -125,7 +125,7 @@ a removable entry, and verifies each deletion actually happened.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -181,8 +181,12 @@ happen is the exact failure this guards against.</strong>"</p>
 action, with the failure mode it is guarding written next to the check.
 It is the same discipline this atlas applies to the systems it
 reads.</p>
-<p><strong>And none of it lands without approval</strong> —
-<code>AskUserQuestion: Approve all / Approve selectively / Reject</code>.</p>
+<p><strong>And the protocol says none of it lands without
+approval</strong> —
+<code>AskUserQuestion: Approve all / Approve selectively / Reject</code>.
+That line, and every other step of the consolidation, is markdown in a
+<code>SKILL.md</code> addressed to the model. It is careful markdown,
+and it is a request rather than a constraint; see section 9.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>Two layers. Sessions accumulate automatically in SQLite and are
 searchable. Durable learnings are promoted out of them into markdown, by
@@ -301,11 +305,25 @@ architecture", which is a pointer off-repository — the design reasoning
 that matters most is in <code>SKILL.md</code> and is in the tree.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
-<p><strong>One mark: human review.</strong>
+<p><strong>No marks, and the one that was awarded fails on a shape the
+rubric names outright.</strong>
 <code>AskUserQuestion: Approve all / Approve selectively / Reject</code>
-gates every consolidation edit, and "Approve selectively" is the option
-that makes it a real review rather than a confirmation dialog — a person
-can take three removals and decline the fourth.</p>
+appears at step 9 of Phase 3 in
+<code>plugins/claude-memory/skills/extract-learnings/SKILL.md</code>,
+and "Approve selectively" is genuinely the option that would make it a
+review rather than a confirmation dialog — a person could take three
+removals and decline the fourth. The whole protocol, though, is prose an
+LLM is asked to follow: Phase 4 tells the model to apply the approved
+edits with <code>Bash: trash</code>, to verify with <code>Glob</code>,
+and to write the consolidation marker, and nothing in the repository
+refuses if it skips to Phase 4. The <code>human_review</code> mark was
+withdrawn on the 2026-09-19 re-read on exactly that ground — the
+rubric's <em>"a tool description asking the model to show the user first
+is a request to the model, not a constraint on it"</em> — and the
+previous evidence record had already said so in its own last two fields:
+<em>"The gate is prose an LLM is asked to follow, not code that
+refuses"</em>, with the test field reading <em>"none — ... nothing fails
+if the model skips the gate."</em></p>
 <p><strong>Trust state, tombstone, bitemporal, audit log, scope,
 negative eval — no.</strong> <code>summary_version = -1</code> is a
 processing state, not an epistemic one.</p>
@@ -454,6 +472,24 @@ selection algorithms and the fallthrough <code>:1-16</code>),
 <code>hook_executions</code> <code>:190</code>,
 <code>token_import_log</code> <code>:200</code>)</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — re-read at the same pin <a
+href="https://github.com/gupsammy/claudest/commit/9088bf8d355551cd2d86a3a06d7f2bd46c712a87"><code class="commit-id" title="9088bf8d355551cd2d86a3a06d7f2bd46c712a87">9088bf8d…</code></a>,
+still the tip. <strong><code>human_review</code> is withdrawn, and the
+report now carries no capability mark.</strong> Nothing upstream moved;
+the first reading was made on 2026-09-17, a day before the rubric's
+wording narrowed, and its own evidence record already contained the
+verdict — <em>"The gate is prose an LLM is asked to follow, not code
+that refuses"</em>, beside a test field reading <em>"none — no committed
+case drives the protocol ... nothing fails if the model skips the
+gate."</em> The consolidation protocol is markdown in a
+<code>SKILL.md</code> from end to end: the approval question is step 9
+of Phase 3, and Phase 4 tells the model to apply the edits, verify with
+<code>Glob</code> and write the marker. That is the rubric's prose
+shape. The three-guard deletion design — approval, <code>trash</code>
+rather than <code>rm</code>, and verification by a glob — keeps its
+description in section 9; two of its three guards are real constraints
+on what the tools can do, and the first is not. Screened again first;
+nothing installed or run.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/gupsammy/claudest/commit/9088bf8d355551cd2d86a3a06d7f2bd46c712a87"><code class="commit-id" title="9088bf8d355551cd2d86a3a06d7f2bd46c712a87">9088bf8d…</code></a>
 — re-read two commits past the previous pin, both memory-scoping fixes.
