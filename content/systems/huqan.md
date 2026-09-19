@@ -7,9 +7,9 @@ page_kind: system
 source_name: "ali-ulu/huqan"
 source_url: https://github.com/ali-ulu/huqan
 archive_name: "ali-ulu--huqan"
-revision: 6f11b01476f019149cf5d56e961b5cb0b5d7a92e
-revision_url: https://github.com/ali-ulu/huqan/commit/6f11b01476f019149cf5d56e961b5cb0b5d7a92e
-analyzed_at: 2026-09-16
+revision: 844be5964f3fb5467c7df19beca82431e39e8d8d
+revision_url: https://github.com/ali-ulu/huqan/commit/844be5964f3fb5467c7df19beca82431e39e8d8d
+analyzed_at: 2026-09-19
 capabilities: "trust_state, scope_enforced, audit_log, human_review"
 capability_evidence:
   human_review: "the approver is resolved from an authenticated context, never read out of the decision that claims it | lib/human-oversight-approval-runtime.js:10-15, :63, :78, :301, :348-354, :368-389 | this is the failure mode the atlas withholds this mark for, closed: \"The runtime never accepts an approver identity from the decision body. The receiver/operator supplies an authenticated context and the injected identity resolver turns that context into a receiver-owned identity result.\" `decide()` takes an `approverContext` rather than an approver id, `resolveIdentity` is a required injected function and the runtime refuses to construct without it, and \"[m]issing or ambiguous identity, stale state, scope drift, unavailable durability, and firewall disagreement all fail closed.\" Separation of duties is then enforced on the resolved identity rather than on a label: the approver is compared against the requester by both `identityRef` and `identityHash` and rejected with `SELF_APPROVAL_REJECTED` unless the policy explicitly allows it, an `override` is authorised only when the policy permits it *and* the firewall actually said block, and above the policy's critical risk score the runtime gathers prior decisions and keys them into a set so the same person cannot count twice toward a multi-approver requirement | escalation is a person's move and not a gate outcome — a reviewer may raise a case instead of deciding it, \"and nothing executes until the authority it was raised to answers\", which the README notes \"requires a second approver, so it is simply absent in a single-user install\""
@@ -235,5 +235,7 @@ size that gap first.
 | `lib/cross-workspace-access-gate.js:3-14` | The isolation question a storage key does not answer |
 
 ## History
+
+**2026-09-19** — re-pinned to [`844be5964f3fb5467c7df19beca82431e39e8d8d`](https://github.com/ali-ulu/huqan/commit/844be5964f3fb5467c7df19beca82431e39e8d8d), 136 commits on, and every anchor behind all four marks still resolves to the same line. `human-oversight-approval-runtime.js` is unmoved where it matters: the docstring at `:11`, the required `resolveIdentity` at `:63` and its refusal at `:78`, `decide({ …, approverContext, … })` at `:301`, the requester comparison and `SELF_APPROVAL_REJECTED` at `:348-354`, and the multi-approver dedup keyed on `identityRef:identityHash` at `:375-378`. `memory-admission-gate.js:5-21` still freezes the four-value vocabulary and `cross-workspace-access-gate.js` still opens on the crossing it exists for. This report's `human_review` record was already a producer test rather than an assertion — it names the failure mode the mark exists to catch and shows it closed — and it needed no rewriting in a sweep that has withdrawn the mark from two dozen other reports. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`6f11b01476f019149cf5d56e961b5cb0b5d7a92e`](https://github.com/ali-ulu/huqan/commit/6f11b01476f019149cf5d56e961b5cb0b5d7a92e) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: no auto-run surfaces, one build-time execution point, one unpinned dependency surface and six dependency files inside the seven-day cooldown. `AGENTS.md` is addressed to a reading agent and was recorded as data. Nothing was installed, built or run, and the quickstart was not executed, so the gate described here is read from source rather than observed.
