@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 602 reports.</strong></p>
+<p><strong>This page covers all 603 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24510,6 +24510,55 @@ twice.</li>
 <li>Study when: you expose one store over two protocols and want to see
 the prelude written once; or when you are deciding what an API should
 say about a capability it has not configured.</li>
+</ul>
+<h3 id="memory-industry"><a
+href="../systems/memory-industry/"><code>memory-industry</code></a></h3>
+<ul>
+<li>Best idea: <strong>write the trust predicate as an allow-list, and
+pair every must-not with its control.</strong> Search admits rows with
+<code>AND trust = 'trusted'</code> rather than excluding the quarantined
+ones, so a tier added later is hidden instead of exposed; and
+<code>v016_quarantine.rs</code> asserts in one file both that a
+quarantined memory must not surface and that <em>"an ordinary agent
+write must stay retrievable — the gate must not change default
+behaviour."</em> The second half is what a filter excluding everything
+would fail. A sibling case states its own purpose: <em>"a quarantined
+episode must not come back from <code>cuba_faro</code>, or the
+quarantine is a column."</em></li>
+<li>Biggest risk: <strong>the tamper-evident audit log has no writer on
+any memory path.</strong> <code>brain_audit_log</code> is a sha256 chain
+with <code>BEFORE UPDATE</code> and <code>BEFORE DELETE</code> triggers,
+appended under <code>SERIALIZABLE</code> with an advisory lock to keep
+the chain linear — and its only <code>INSERT</code> sits in the
+<code>append</code> action of <code>cuba_archivo</code>, which takes the
+action string and the payload from its caller. A memory can be written,
+promoted or superseded with no row appearing. Separately,
+<code>brain_facts</code> carries <code>valid_from</code>,
+<code>valid_to</code> and <code>observed_at</code> behind two CHECK
+constraints, every write stamps both window ends from record time, and
+<code>was_valid_at</code> — the one function that would ask a validity
+question — has no caller outside its own tests.</li>
+<li>Most reusable component:
+<code>rust/migrations/0016_audit_log.up.sql</code> and
+<code>0029_bitemporal_check.up.sql</code>, read together. The first is a
+correct hash chain with its bypass named and justified
+(<code>cuba_admin</code>, for GDPR deletion); the second adds two
+constraints and explains in the comment which illegal states the schema
+had permitted and how many existing rows violated them.</li>
+<li>Maturity impression: Apache 2.0, Rust over PostgreSQL 18 and
+pgvector, 31 MCP tools and 23 CLI commands, published to PyPI, npm and
+the MCP registry; formerly cuba-memorys, and the <code>cuba_*</code>
+tool names still carry that. Three marks — <code>trust_state</code>,
+<code>scope_enforced</code>, <code>negative_eval</code>.
+<code>human_review</code> is withheld because <code>promote</code> is
+one value of an action enum on the tool the writing agent already
+holds.</li>
+<li>Study when: you are about to publish a retrieval number. Its README
+carries a section headed <em>"Measured — and the benchmark that was
+lying"</em> that retracts a published nDCG@10 of 0.894 down to 0.50
+[0.44–0.56] and withdraws the two conclusions resting on it, including
+one about a reranker that turned out never to have run. <em>"The system
+did not get worse. It was never 0.894."</em></li>
 </ul>
         </article>
       </div>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 602 reports.**
+**This page covers all 603 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5389,4 +5389,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `anda_brain/src/authz.rs`. One prelude — shard check, CWT verification, space load, space-token verification — reached identically by the HTTP and MCP channels, with the admission rule given a name (`read_public`, `read_lenient`, `credentialed`, `cwt_only`) instead of left as a scope-and-mode pairing every new endpoint has to know. The header records the launch review that found the two channels diverged, which is why the module exists.
 - Maturity impression: Apache 2.0, 210 files over a Rust service, a TypeScript Cloudflare Worker holding the prompt assets, and a KIP reference; CI at `.github/workflows/test.yml`. Two marks, `scope_enforced` and `negative_eval`, both on Brain's own code. The epistemic marks a reader might expect are real and are not this repository's: `Stance`, `BeliefStatus`, `AssertionStatus` and `valid_time` are declared in `anda_kip`, pinned here at exactly `=0.13.0`, and are credited in the [anda-db](../systems/anda-db/) report rather than counted twice.
 - Study when: you expose one store over two protocols and want to see the prelude written once; or when you are deciding what an API should say about a capability it has not configured.
+
+### [`memory-industry`](../systems/memory-industry/)
+
+- Best idea: **write the trust predicate as an allow-list, and pair every must-not with its control.** Search admits rows with `AND trust = 'trusted'` rather than excluding the quarantined ones, so a tier added later is hidden instead of exposed; and `v016_quarantine.rs` asserts in one file both that a quarantined memory must not surface and that *"an ordinary agent write must stay retrievable — the gate must not change default behaviour."* The second half is what a filter excluding everything would fail. A sibling case states its own purpose: *"a quarantined episode must not come back from `cuba_faro`, or the quarantine is a column."*
+- Biggest risk: **the tamper-evident audit log has no writer on any memory path.** `brain_audit_log` is a sha256 chain with `BEFORE UPDATE` and `BEFORE DELETE` triggers, appended under `SERIALIZABLE` with an advisory lock to keep the chain linear — and its only `INSERT` sits in the `append` action of `cuba_archivo`, which takes the action string and the payload from its caller. A memory can be written, promoted or superseded with no row appearing. Separately, `brain_facts` carries `valid_from`, `valid_to` and `observed_at` behind two CHECK constraints, every write stamps both window ends from record time, and `was_valid_at` — the one function that would ask a validity question — has no caller outside its own tests.
+- Most reusable component: `rust/migrations/0016_audit_log.up.sql` and `0029_bitemporal_check.up.sql`, read together. The first is a correct hash chain with its bypass named and justified (`cuba_admin`, for GDPR deletion); the second adds two constraints and explains in the comment which illegal states the schema had permitted and how many existing rows violated them.
+- Maturity impression: Apache 2.0, Rust over PostgreSQL 18 and pgvector, 31 MCP tools and 23 CLI commands, published to PyPI, npm and the MCP registry; formerly cuba-memorys, and the `cuba_*` tool names still carry that. Three marks — `trust_state`, `scope_enforced`, `negative_eval`. `human_review` is withheld because `promote` is one value of an action enum on the tool the writing agent already holds.
+- Study when: you are about to publish a retrieval number. Its README carries a section headed *"Measured — and the benchmark that was lying"* that retracts a published nDCG@10 of 0.894 down to 0.50 [0.44–0.56] and withdraws the two conclusions resting on it, including one about a reranker that turned out never to have run. *"The system did not get worse. It was never 0.894."*
 

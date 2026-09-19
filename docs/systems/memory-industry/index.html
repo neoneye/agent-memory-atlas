@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust MCP memory server over
+PostgreSQL whose quarantine tier is enforced by an allow-list on the
+search path and pinned by tests that pair each must-not with its
+control, and whose README retracts its own headline retrieval number and
+the two conclusions drawn from it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MemoryIndustry — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust MCP memory server
+over PostgreSQL whose quarantine tier is enforced by an allow-list on
+the search path and pinned by tests that pair each must-not with its
+control, and whose README retracts its own headline retrieval number and
+the two conclusions drawn from it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MemoryIndustry — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust MCP memory server
+over PostgreSQL whose quarantine tier is enforced by an allow-list on
+the search path and pinned by tests that pair each must-not with its
+control, and whose README retracts its own headline retrieval number and
+the two conclusions drawn from it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MemoryIndustry — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MemoryIndustry",
+      "description": "A Rust MCP memory server over PostgreSQL whose quarantine tier is enforced by an allow-list on the search path and pinned by tests that pair each must-not with its control, and whose README retracts its own headline retrieval number and the two conclusions drawn from it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">It published the benchmark that was
+lying</p>
+          <h1>MemoryIndustry</h1>
+          <p class="document-deck">A Rust MCP memory server over
+PostgreSQL whose quarantine tier is enforced by an allow-list on the
+search path and pinned by tests that pair each must-not with its
+control, and whose README retracts its own headline retrieval number and
+the two conclusions drawn from it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/LeandroPG19/Memorys">
+              <span>Source</span>
+              <strong>LeandroPG19/Memorys</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/LeandroPG19/Memorys/commit/2f45dcb729426b4b5bfca45981d52a39d3f09d0b" title="2f45dcb729426b4b5bfca45981d52a39d3f09d0b">
+              <span>Analyzed revision</span>
+              <code>2f45dcb7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/LeandroPG19--Memorys" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>LeandroPG19--Memorys</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MemoryIndustry is an MCP server in Rust over PostgreSQL and pgvector,
+giving a coding agent a searchable knowledge graph across sessions.
+Thirty-one MCP tools, twenty-three CLI commands, Apache 2.0. It was
+called cuba-memorys until recently, and the <code>cuba_*</code> tool
+names are unchanged.</p>
+<p><strong>Three marks:</strong> <code>trust_state</code>,
+<code>scope_enforced</code>, <code>negative_eval</code>. The quarantine
+tier is the spine of all three. Text the agent did not vouch for is
+stored with <code>trust = 'quarantined'</code>, every search path admits
+rows with <code>AND trust = 'trusted'</code> — an allow-list, not an
+exclusion — and the tests pin both directions: a quarantined memory must
+not surface, <em>and</em> an ordinary write must stay retrievable, so a
+filter that excluded everything could not pass.</p>
+<p>Two mechanisms that look like marks are withheld, and the reasons are
+the interesting part of this page. The <code>brain_audit_log</code> is a
+hash-chained, trigger-enforced append-only table maintained under
+<code>SERIALIZABLE</code> with an advisory lock to keep the chain linear
+— and <strong>no memory mutation writes to it.</strong> Its only writer
+is the <code>append</code> action of a tool, which takes the action
+string and the payload from its caller. Separately,
+<code>brain_facts</code> carries <code>valid_from</code>,
+<code>valid_to</code> and <code>observed_at</code> behind database CHECK
+constraints, and every write sets validity from record time while no
+query asks a validity question.</p>
+<p>What distinguishes the project is section 10. Its README carries a
+heading reading <em>"Measured — and the benchmark that was lying"</em>,
+retracts its own published retrieval score, and withdraws the two
+conclusions that rested on it.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Everything written is trusted unless something says otherwise, and
+"otherwise" has two sources: a caller that marks the text untrusted, and
+a policy that quarantines LLM inference. A quarantined row is stored,
+listable and invisible to search until a promotion moves it. Retrieval
+is hybrid — BM25 and vectors — and both branches carry the same two
+predicates: the trust tier and the project.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — text arrives from a tool call carrying an untrusted flag, and the trust tier is resolved from the source, the caller's explicit value and a policy that quarantines LLM inference only when an environment variable turns it on; both search branches admit rows with an allow-list trust predicate and a project predicate that also matches globally-scoped rows, and PostgreSQL row-level security is forced underneath; the audit chain is hash-linked and append-only by trigger but has no writer on any memory path, and the fact table carries a validity window whose ends are both stamped from record time and which no query reads</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: text arrives from a tool call carrying an untrusted flag, and the trust tier is resolved from the source, the caller&#39;s explicit value and a policy that quarantines LLM inference only when an environment variable turns it on; both search branches admit rows with an allow-list trust predicate and a project predicate that also matches globally-scoped rows, and PostgreSQL row-level security is forced underneath; the audit chain is hash-linked and append-only by trigger but has no writer on any memory path, and the fact table carries a validity window whose ends are both stamped from record time and which no query reads
+flowchart TD
+    W[&quot;cuba_cronica write&lt;br/&gt;untrusted flag optional&quot;] --&gt; RES[&quot;core::trust::resolve&lt;br/&gt;explicit value wins if valid&lt;br/&gt;else source == inference&lt;br/&gt;AND policy on → quarantined&lt;br/&gt;else trusted&quot;]
+    RES --&gt; ROW[(&quot;brain_observations · brain_episodes · brain_errors&lt;br/&gt;trust · project_id&quot;)]
+
+    ROW --&gt; S1[&quot;BM25 branch&quot;]
+    ROW --&gt; S2[&quot;vector branch&quot;]
+    S1 --&gt; P[&quot;AND trust = &#39;trusted&#39;&lt;br/&gt;AND (project = $3 OR project IS NULL)&quot;]
+    S2 --&gt; P
+    P --&gt; OUT[&quot;cuba_faro results&quot;]
+
+    ROW -.-&gt;|withheld| Q[&quot;cuba_eco action=pending&lt;br/&gt;lists what is quarantined&quot;]
+    Q --&gt; PROM[&quot;action=promote&lt;br/&gt;an enum value on the&lt;br/&gt;agent&#39;s own tool&quot;]
+    PROM --&gt; ROW
+
+    RLS{{&quot;RLS: FORCE ROW LEVEL SECURITY&lt;br/&gt;policy tenant_isolation&quot;}} -.-&gt;|underneath| ROW
+
+    F[(&quot;brain_facts&lt;br/&gt;valid_from · valid_to · observed_at&lt;br/&gt;CHECK valid_from &lt;= valid_to&lt;br/&gt;CHECK NOT is_current OR valid_to IS NULL&quot;)]
+    F --&gt; SUP[&quot;supersede:&lt;br/&gt;is_current = FALSE&lt;br/&gt;valid_to = observed_at of the newer fact&quot;]
+    F -.-&gt;|&quot;no query filters on the window&quot;| NOREAD[&quot;was_valid_at: no caller&lt;br/&gt;outside its own tests&quot;]
+
+    A[(&quot;brain_audit_log&lt;br/&gt;sha256 chain · BEFORE UPDATE/DELETE trigger&lt;br/&gt;SERIALIZABLE + advisory lock&quot;)]
+    TOOL[&quot;cuba_archivo action=append&lt;br/&gt;caller supplies action and payload&quot;] --&gt; A
+    ROW -.-&gt;|&quot;no path writes here&quot;| A</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The tier</strong> —
+<code>rust/src/core/trust.rs:11-21</code>.
+<code>resolve(source, explicit, policy_quarantines_inference)</code>
+returns the caller's <code>explicit</code> value when it is one of the
+two legal strings, else <code>QUARANTINED</code> when the source is
+<code>inference</code> <em>and</em> the policy is on, else
+<code>TRUSTED</code>. The policy is
+<code>CUBA_QUARANTINE_INFERENCE</code>, unset by default, so out of the
+box nothing is quarantined automatically.</p>
+<p><strong>The read predicate</strong> —
+<code>rust/src/search/bm25.rs:23-24</code>, repeated at
+<code>:59</code>, and <code>rust/src/search/calibrate.rs:64, :91</code>.
+<code>AND o.trust = 'trusted'</code> beside
+<code>AND ($3::uuid IS NULL OR o.project_id = $3 OR o.project_id IS NULL)</code>.
+The trust clause names the state it admits; adding a third tier later
+would hide those rows rather than expose them.</p>
+<p><strong>The untrusted door</strong> —
+<code>rust/src/constants.rs:375</code>, the tool schema. <em>"Set when
+the text came from somewhere you do not control (a fetched page, a
+pasted document, a third party). Everything extracted lands quarantined
+— stored and inspectable via <code>cuba_eco action=pending</code>, but
+withheld from <code>cuba_faro</code> until promoted."</em></p>
+<p><strong>The chain</strong> —
+<code>rust/src/handlers/archivo.rs:145-173</code>. Each append opens a
+transaction at <code>SERIALIZABLE</code> <em>"to keep the hash chain
+linear"</em>, takes <code>pg_advisory_xact_lock</code> on a fixed key,
+reads the newest <code>current_hash</code>, and inserts
+<code>sha256(prev_hash || action || payload || created_at_iso)</code>,
+retrying up to five times. Migration <code>0016_audit_log.up.sql</code>
+puts <code>BEFORE UPDATE</code> and <code>BEFORE DELETE</code> triggers
+on the table that raise unless the role is <code>cuba_admin</code>, kept
+<em>"for legal data deletion under GDPR"</em>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Three content tables — observations, episodes, errors — each with
+<code>trust</code> and <code>project_id</code>. Facts live apart in
+<code>brain_facts</code> as subject/predicate/object with
+<code>valid_from</code>, <code>valid_to</code>,
+<code>observed_at</code>, <code>confidence</code> and
+<code>is_current</code>.</p>
+<p>Migration <code>0029_bitemporal_check.up.sql</code> is worth reading
+for its candour. It adds two CHECK constraints and explains that the
+original schema <em>"allowed states that contradict its own model:
+<code>valid_from &gt; valid_to</code> (a fact valid in negative time);
+<code>is_current = TRUE</code> together with a <code>valid_to</code>
+already in the past. Nothing prevented them."</em> It records that it
+checked the existing rows and found none violating either constraint,
+and says a future violation should make <em>"the migration fail loudly
+instead of corrupting silently — which is the point."</em></p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid: a BM25 branch and a pgvector branch, fused, with an optional
+cross-encoder reranker. Both branches carry the trust and project
+predicates. Row-level security sits underneath —
+<code>0017_rls_policies.up.sql</code> enables <em>and</em>
+<code>FORCE</code>s RLS on the listed tables and creates a
+<code>tenant_isolation</code> policy, and <code>0055</code> extends it
+to the content tables. <code>FORCE</code> is the part that matters: it
+applies to the table owner too.</p>
+<p>The project's own <code>doctor</code> names the limit rather than
+leaving it implied — a superuser ignores RLS and can alter the audit
+log, so project isolation and traceability both rest on nobody
+connecting as one.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write resolves its tier before the insert. Superseding a fact sets
+<code>is_current = FALSE</code> and <code>valid_to</code> together,
+which is exactly what the second CHECK constraint requires, so the
+invariant and the write path agree.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Thirty-one MCP tools under <code>cuba_*</code>. Promotion out of
+quarantine is <code>cuba_eco action=promote</code>, one value of an
+action enum that also carries <code>positive</code>,
+<code>negative</code>, <code>correct</code>, <code>quarantine</code> and
+<code>pending</code>.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>trust_state</code>.</strong> Two discrete states, and
+<code>quarantined</code> withholds a row from every search path. The
+tier is a field rather than a score, and the ranking signals —
+confidence, decay — are separate from it.</p>
+<p><strong><code>scope_enforced</code>.</strong> Two layers: the
+<code>project_id</code> predicate in both search branches, and forced
+row-level security with a <code>tenant_isolation</code> policy beneath.
+The predicate admits <code>project_id IS NULL</code> as well, which is
+how a globally-scoped memory reaches every project, so the isolation the
+mark describes is between projects and not from the global set.</p>
+<p><strong><code>negative_eval</code>.</strong> Read-path must-not
+assertions with their controls beside them — section 10.</p>
+<p><strong><code>audit_log</code> is withheld.</strong> The table is a
+well-built tamper-evident ledger and nothing on a memory path writes to
+it. Its sole <code>INSERT</code> is inside the <code>append</code>
+branch of <code>cuba_archivo</code>, which takes the action string and
+the payload from its caller, so a row exists only because an agent chose
+to write one and says whatever that agent chose. A mutation audit has to
+be written by the mutation.</p>
+<p><strong><code>bitemporal</code> is withheld.</strong> Both axes exist
+as columns and both are stamped from record time:
+<code>valid_from</code> is <code>Utc::now()</code> at construction in
+both builders, and supersession sets
+<code>valid_to = u.observed_at</code> of the superseding fact.
+<code>was_valid_at</code> is the only function that would ask a validity
+question and has no caller outside its own tests. The single query that
+touches the window is an integrity check in <code>doctor</code> looking
+for <code>valid_to &lt;= valid_from</code>.</p>
+<p><strong><code>human_review</code> is withheld.</strong> Quarantine
+holds a memory in a state until something resolves it, but
+<code>promote</code> is one value of the <code>action</code> enum on
+<code>cuba_eco</code>, a tool the writing agent already holds. The
+producer can clear its own queue.</p>
+<p><strong><code>tombstone</code> is withheld.</strong> Supersession
+flips <code>is_current</code> on a row and feedback records an outcome
+per memory; nothing keys a rejection on the value, so the same claim
+arriving again is a new row.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Test files are named for the version and the invariant they defend —
+<code>v016_quarantine.rs</code>,
+<code>v021_import_quarantine_all_kinds.rs</code>,
+<code>v033_untrusted_extraction_does_not_touch_the_graph.rs</code> — and
+the assertion messages carry the claim:</p>
+<ul>
+<li><em>"a quarantined memory must not surface in search"</em>
+(<code>v016_quarantine.rs:67</code>), paired at <code>:151</code> with
+<em>"an ordinary agent write must stay retrievable — the gate must not
+change default behaviour."</em> The control is the harder half: a
+predicate that excluded everything would satisfy the first assertion
+alone.</li>
+<li><em>"a quarantined episode must not come back from
+<code>cuba_faro</code>, or the quarantine is a column"</em>
+(<code>v021:174</code>) — the test states its own purpose, which is to
+prove the column is enforced rather than decorative.</li>
+</ul>
+<p>The NLI cases in <code>rust/tests/nli_entailment.rs</code> are
+<code>#[ignore]</code> because they need a downloaded model, and the
+helper refuses the usual escape: <em>"Soft-skip is forbidden."</em> They
+do not run in an ordinary CI pass.</p>
+<p><strong>The benchmark.</strong> The README's own section,
+<em>"Measured — and the benchmark that was lying"</em>, records that
+until v0.12 the file claimed every number was measured and every number
+was wrong, in three ways: ten queries, so <em>"the smallest effect it
+could detect was ~0.25 nDCG"</em>; relevance judged by substring match,
+which <em>"measures keyword presence, not retrieval, and it tilts the
+whole benchmark toward the lexical branch"</em>; and nDCG normalised
+against what was retrieved rather than what exists, so a system that
+missed 60% of the answer scored 1.0. An <code>R@10 = 3.125</code> had
+shipped — <em>"Recall is a proportion."</em></p>
+<p>The corrected figure is nDCG@10 = 0.50, 95% CI 0.44–0.56, over 221
+id-scored queries, against a published 0.894. The sentence that follows
+is the one worth quoting: <em>"The system did not get worse. It was
+never 0.894."</em></p>
+<p>Two conclusions were withdrawn with it. One held that the
+cross-encoder reranker earned nothing; it had never run — three bugs in
+series, an error dropped by <code>if let Ok(..)</code>,
+<code>token_type_ids</code> fed to a model that is XLM-RoBERTa and has
+none, and <code>f16</code> logits read as <code>f32</code>. The other
+held that associative retrieval degrades results, which a paired
+bootstrap on the new dataset confirms at [−0.051, −0.018] — <em>"The
+decision was right; the reasoning was not."</em></p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Write the trust predicate as an allow-list.</strong>
+<code>trust = 'trusted'</code> fails closed when a tier is added;
+<code>trust != 'quarantined'</code> fails open.</li>
+<li><strong>Pair every must-not with its control.</strong>
+<code>v016_quarantine.rs</code> asserts the quarantined row is absent
+and the ordinary row is present, in the same file.</li>
+<li><strong>Put the invariant in the database and say what it was
+protecting against.</strong> Migration 0029's comment names the two
+illegal states the schema had permitted and reports how many rows
+violated them.</li>
+<li><strong>Take a lock to keep a hash chain linear.</strong>
+<code>SERIALIZABLE</code> plus an advisory lock plus bounded retries is
+the honest way to append to a chain concurrently.</li>
+<li><strong>Retract your own number in the file that published
+it.</strong> The heading is <em>"the benchmark that was lying"</em>, not
+a changelog line.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A ledger with no producer.</strong> Hash chain, triggers,
+serializable appends — and a memory can be written, promoted or
+superseded without a row appearing.</li>
+<li><strong>Two time axes both stamped from the clock.</strong> A
+validity window whose ends come from record time answers the same
+question the record time does.</li>
+<li><strong>Promotion as a value on the writer's own tool.</strong> If
+the same agent can quarantine and promote, the tier records provenance
+rather than review.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take this if you want a Postgres-backed agent memory with a real
+quarantine tier and are willing to run the promotion step yourself. Read
+section 10 before taking any retrieval number from any project,
+including this one.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>CUBA_QUARANTINE_INFERENCE</code> is off by default, so nothing
+is quarantined automatically unless a caller sets
+<code>untrusted</code>. Is the default meant to change?</li>
+<li><code>brain_audit_log</code> has no writer on a memory path. Was it
+meant to be called from the write handlers, or is it a ledger for the
+agent's own use?</li>
+<li><code>was_valid_at</code> has no caller. Is a validity-filtered read
+planned, and would <code>valid_from</code> then become
+caller-supplied?</li>
+<li><code>promote</code> sits on <code>cuba_eco</code> beside the write
+actions. Is there a deployment where the promoting principal is not the
+writing one?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rust/src/core/trust.rs</code></td>
+<td>the two tiers and the resolution rule, with its own unit tests</td>
+</tr>
+<tr>
+<td><code>rust/src/search/bm25.rs</code></td>
+<td>the allow-list trust predicate and the project predicate, twice</td>
+</tr>
+<tr>
+<td><code>rust/src/constants.rs</code></td>
+<td>the tool schemas, including the <code>untrusted</code> flag and the
+<code>cuba_eco</code> action enum</td>
+</tr>
+<tr>
+<td><code>rust/src/handlers/archivo.rs</code></td>
+<td>the hash chain, the advisory lock, and the only audit insert</td>
+</tr>
+<tr>
+<td><code>rust/src/core/bitemporal.rs</code></td>
+<td>the <code>Fact</code> builder, the supersede write, and the uncalled
+<code>was_valid_at</code></td>
+</tr>
+<tr>
+<td><code>rust/migrations/0016_audit_log.up.sql</code></td>
+<td>the chain definition and the append-only triggers</td>
+</tr>
+<tr>
+<td><code>rust/migrations/0017_rls_policies.up.sql</code></td>
+<td><code>ENABLE</code> plus <code>FORCE ROW LEVEL SECURITY</code> and
+<code>tenant_isolation</code></td>
+</tr>
+<tr>
+<td><code>rust/migrations/0029_bitemporal_check.up.sql</code></td>
+<td>the two CHECK constraints and what they were added against</td>
+</tr>
+<tr>
+<td><code>rust/tests/v016_quarantine.rs</code></td>
+<td>the must-not and its control</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td>the retraction, the corrected figure and the two withdrawn
+conclusions</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nothing on a memory path writes the audit log</td>
+<td><code>grep -rn "brain_audit_log" --include='*.rs' rust/src | grep -i insert</code></td>
+<td>One hit, <code>handlers/archivo.rs:173</code>, inside the
+<code>append</code> action of <code>cuba_archivo</code></td>
+</tr>
+<tr>
+<td><code>was_valid_at</code> has no caller</td>
+<td><code>grep -rn "was_valid_at" --include='*.rs' rust/src</code></td>
+<td>Its definition and two assertions in its own test module</td>
+</tr>
+<tr>
+<td>No query filters on the validity window</td>
+<td><code>grep -rn "valid_from|valid_to" --include='*.rs' rust/src | grep -iE "select|where"</code></td>
+<td><code>doctor.rs:705</code> only, an integrity check for
+<code>valid_to &lt;= valid_from</code></td>
+</tr>
+<tr>
+<td><code>valid_from</code> is never caller-supplied</td>
+<td><code>grep -rn "valid_from" --include='*.rs' rust/src | grep -i "set |valid_from:"</code></td>
+<td><code>Utc::now()</code> in both builders,
+<code>core/bitemporal.rs:50</code> and
+<code>sync/chunk.rs:286</code></td>
+</tr>
+<tr>
+<td>The trust predicate is an allow-list on every search branch</td>
+<td><code>grep -rn "trust = 'trusted'" --include='*.rs' rust/src</code></td>
+<td><code>search/bm25.rs:23</code>, <code>search/calibrate.rs:64</code>
+and <code>:91</code></td>
+</tr>
+<tr>
+<td>Promotion is on the agent's own tool</td>
+<td>read <code>rust/src/constants.rs:161</code></td>
+<td><code>promote</code> and <code>quarantine</code> are values of the
+<code>action</code> enum on <code>cuba_eco</code></td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>Stock Apache 2.0; the only match is the standard compliance
+clause</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/LeandroPG19/Memorys/commit/2f45dcb729426b4b5bfca45981d52a39d3f09d0b"><code class="commit-id" title="2f45dcb729426b4b5bfca45981d52a39d3f09d0b">2f45dcb7…</code></a>
+— first reading, at 402 files. Screened before reading: one auto-run
+surface, one build-time execution point, one unpinned surface and
+nothing inside the seven-day cooldown; the screen also flagged an
+<code>AGENTS.md</code> carrying instructions addressed to a reading
+agent, which was treated as data. Nothing was installed and nothing was
+run, so the benchmark figures in section 10 are the project's own
+account of its own correction rather than a re-measurement. Apache 2.0.
+Three marks: <code>trust_state</code>, <code>scope_enforced</code>,
+<code>negative_eval</code>. <code>audit_log</code> and
+<code>bitemporal</code> are both withheld over well-built machinery with
+no live path into it, and each withholding rests on a search recorded in
+the appendix. The project was called cuba-memorys and the
+<code>cuba_*</code> tool names still carry that; the atlas had no report
+under either name before this one.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
