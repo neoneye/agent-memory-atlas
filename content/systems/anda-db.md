@@ -7,13 +7,13 @@ page_kind: system
 source_name: "ldclabs/anda-db"
 source_url: https://github.com/ldclabs/anda-db
 archive_name: "ldclabs--anda-db"
-revision: 450b48d0a2d6a74a42872d4a3a3f1ca3346513de
-revision_url: https://github.com/ldclabs/anda-db/commit/450b48d0a2d6a74a42872d4a3a3f1ca3346513de
-analyzed_at: 2026-09-16
+revision: e2a2c0517cabfd275caed450011271643decd752
+revision_url: https://github.com/ldclabs/anda-db/commit/e2a2c0517cabfd275caed450011271643decd752
+analyzed_at: 2026-09-19
 capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   tombstone: "erasing a source strips the content from every artifact derived from it, leaves the row keyed by content digest behind, and the publish path refuses to re-bind that digest | rs/anda_cognitive_nexus/src/tx/durable.rs:125-147, rs/anda_cognitive_nexus/src/control.rs:317-322, :86-93 | An artifact is stored under `artifact/kip:artifact:<content_digest>`. `artifact_erasure_replacements` walks every control row in the Space whose `source_refs` name an erased element, removes `content` and sets `state` to `\"erased\"` — a marker keyed by the value's own digest. Re-publishing the same bytes then finds an existing row whose value differs and fails with \"artifact identity already has a different material binding or erasure tombstone\", and every read through `artifact_value` refuses a row whose `state` is not `available` with \"artifact erased or unavailable\". The rejected value is consulted on both paths | rs/anda_cognitive_nexus/src/tx/durable.rs:196-220"
-  trust_state: "a stored lifecycle state that ordinary recall filters by default, and a stored assertion status that projection drops from eligibility | rs/anda_cognitive_nexus/src/kql/matching.rs:7-13, rs/anda_cognitive_nexus/src/meta/mod.rs:418, rs/anda_kip/src/types.rs:314-330 | Elements carry a `state` of `active | archived | quarantined | tombstoned | merged | purged`, and the query layer states the default: \"A pattern that does not mention `state` matches active elements only. That is what archiving *means* (§41.2) — the element still exists and every reference to it still resolves, but it is no longer recalled by default.\" A caller widens by writing `{state: \"archived\"}`; nothing lets a caller drop the predicate. Separately `AssertionStatus` is `active | retracted | superseded`, stored, with `expired` marked \"[c]omputed, never stored\" — and a superseded assertion is dropped \"for every `FOR TIME`\" because \"the claim was wrong for the time it covered\" | rs/anda_cognitive_nexus/tests/kql.rs:386-425"
+  trust_state: "two stored lifecycles gating two different reads — an element state that ordinary recall filters by default at two points, and an assertion status that projection rejects with a recorded reason | rs/anda_cognitive_nexus/src/kql/matching.rs:7-13 (the rule), :277-280 (the index filter), :299 (the check after load), :339-341 (the one documented escape), rs/anda_cognitive_nexus/src/projection/mod.rs:658-675, rs/anda_cognitive_nexus/src/projection/policy.rs:201-212, rs/anda_cognitive_nexus/src/meta/mod.rs:418, rs/anda_kip/src/types.rs:314-330 | Elements carry a `state` of active / archived / quarantined / tombstoned / merged / purged, and a pattern that does not mention `state` matches active elements only — applied twice, once as `eq_field(state, active)` pushed into the index filter and again against the loaded element in the same condition that checks its Space, so a path that skipped one would still meet the other. A caller widens by writing `{state: archived}`; the only way to drop the predicate is `matches_element_view`, documented as the UPSERT path. Separately `AssertionStatus` is active / retracted / superseded with `expired` marked computed, never stored: projection rejects retracted and superseded outright and carries the reason in an `Excluded` record, while an expired assertion with a stated window is passed to the temporal stage instead, because a lapsed claim is still the claim that applied then. The settings flag that would admit history is accepted and refused — `include_historical: true` returns an unsupported-capability error saying it would let a withdrawn claim decide a present belief, and points the caller at `FIND ... AS OF` | rs/anda_cognitive_nexus/tests/kql.rs:386-425"
   bitemporal: "two independent axes with a read on each — `AS OF SEQ` over an append-only version log for what the store held, `FOR TIME` over caller-supplied world validity for what was true | rs/anda_cognitive_nexus/src/store/history.rs:1-21, rs/anda_kip/src/types.rs:332-343, rs/anda_cognitive_nexus/src/kql/mod.rs:631, :680-695 | The history module opens by naming the distinction: \"`AS OF SEQ 41` asks what this Brain held then, which is a different question from `FOR TIME` — what was *true* then (§36.1).\" `ValidTime { from, until }` is documented as \"[t]he world-time window a claim applies to\" and \"[i]ndependent of `retention.expires_at`, which is storage lifecycle (§19.2)\", supplied per Assertion. The transaction axis is a Space sequence allocated per commit rather than a clock, \"because two commits in the same millisecond must still be ordered\", and a historical read resolves the schema environment and projection policy as of that sequence too | rs/anda_cognitive_nexus/tests/history.rs"
   scope_enforced: "the Space is bound into the query context when a session opens and emitted as an equality predicate on every pattern; the query language has no clause naming another one | rs/anda_cognitive_nexus/src/kql/mod.rs:57, :112-132, :374, :544, :597-598, rs/anda_cognitive_nexus/src/store/space.rs:1-21 | `Context` carries `space: String`, set once from the space the session was opened against, and every element match adds `eq_field(\"space\", Fv::Text(self.space.clone()))` — including the historical and change-feed paths. KQL's surface has no `IN SPACE` clause; a caller reaches another Space only by opening a session against it, where its Grants apply. The Space is also deliberately not a topic: \"A Space is **not** a Domain (§30). Semantic organization — 'work', 'health' — belongs in Concepts and predicates. Making it a Space would attach ownership and policy boundaries to a topic\" | rs/anda_cognitive_nexus/tests/governance.rs"
   audit_log: "one commit path pairs every element write with an append of the complete row to a version log, so no call site can write without recording what it wrote | rs/anda_cognitive_nexus/src/store/control.rs:114-138, rs/anda_cognitive_nexus/src/store/history.rs:34-45, rs/anda_cognitive_nexus/src/store/write.rs:1-18 | `apply_commit` iterates the plan's writes through a single `put!` macro that calls `self.put(row)` and `self.record_version(cx, id, version, op, row)` together, for all five element kinds — Concept, Proposition, Assertion, Evidence, Activity — with the version appended \"in the same commit as the row itself\". The write path is the only code that stamps `version`, `created_tx`, `updated_tx`, `state` and `space_seq`, which are \"non-malleable by construction (Spec §26) — not because a validator rejects them, but because the only code that writes them is this module.\" Purge is the sole eraser and is explicit that it must reach the log too: an element purged from its current row \"would still be fully readable through `AS OF`\" | rs/anda_cognitive_nexus/src/governance/purge.rs:10-30"
@@ -215,6 +215,28 @@ carries it". The distinction between a state somebody set and a state the clock
 implies is made at the type level, which is the sort of thing that stops a
 migration inventing history.
 
+Projection acts on it in a stage of its own (`projection/mod.rs:658-674`).
+`retracted` and `superseded` are rejected outright, and the rejection carries a
+reason into an `Excluded` record rather than vanishing. `expired` is not: an
+assertion whose own window is stated is handed to the temporal stage instead,
+under a comment giving the reason — otherwise `FOR TIME` in the past would
+silently lose every claim that has since lapsed, which is the one question that
+asks about them. The element `state` is then checked separately on the next line
+(`:675`), so an assertion's lifecycle and its element's lifecycle are two gates
+in sequence rather than one blended test.
+
+**The escape hatch is a refusal.** There is a settings flag that would admit
+history into a projection, and supplying it fails
+(`projection/policy.rs:201-212`): `include_historical: true` returns an
+unsupported-capability error whose text says admitting them "would let a
+withdrawn claim decide a present belief", and points the caller at
+`FIND ... AS OF`, "which answers at a coordinate where those claims still
+stood". This atlas finds the opposite shape far more often — an
+`override_rejection`, a `confirm: true`, a `force` — a flag that exists so the
+caller can have what the rule refuses. Accepting the flag and declining it is a
+better answer than not having it, because the error is where a caller looking
+for the override will actually read it.
+
 Evidence carries a class from a recommended-but-open list — `observation`,
 `user_statement`, `agent_statement`, `tool_result`, `measurement` — so the
 distinction between what a person said and what a model said survives into the
@@ -226,6 +248,16 @@ KQL patterns narrow with whatever indexes exist, load the survivors, and decide
 the rest against the rendered view. Two defaults are load-bearing: the Space
 predicate a caller cannot drop, and the active-only state filter a caller widens
 by naming the state.
+
+Both are applied twice, which is what makes them hold. A pattern that does not
+mention `state` gets `eq_field("state", "active")` pushed into the index filter
+before candidates are fetched (`kql/matching.rs:277-280`), and then every loaded
+element is checked again — `if element.space() != self.space || (!constrains_state
+&& !element.is_active())` (`:299`) — so the Space predicate and the state default
+fail together in one condition. A read path that lost the index filter would
+still meet the second test. The single way past it is `matches_element_view`,
+whose doc comment names both what it skips and who uses it: "without the ordinary
+query's implicit active-state restriction (used by UPSERT)" (`:339-341`).
 
 The reading discipline is stated where it matters: a raw pattern
 "report[s] that a tuple exists and that somebody claimed something; they never
@@ -325,4 +357,6 @@ migration guide in-tree and a `migrate` suite, and that path was not exercised.
 
 ## History
 
-**2026-09-16** — [`450b48d0a2d6a74a42872d4a3a3f1ca3346513de`](https://github.com/ldclabs/anda-db/commit/450b48d0a2d6a74a42872d4a3a3f1ca3346513de) — first reading, at a commit dated 16 September 2026, the day the 0.13.0 KIP 2.0 release landed. Screened before opening, from a shallow clone: twenty-nine files scanned, no auto-run surfaces, three build-time execution points, three unpinned surfaces and twenty-two dependency files inside the seven-day cooldown. Nothing was installed, built or run.
+**2026-09-19** — [`e2a2c0517cabfd275caed450011271643decd752`](https://github.com/ldclabs/anda-db/commit/e2a2c0517cabfd275caed450011271643decd752) — `trust_state` re-tested against the narrowed line. The mark holds and the record was resting on the documentation rather than the code: it quoted the module comment at `kql/matching.rs:7-13` for the active-by-default rule. The code is better than the comment. The default is applied twice — `eq_field(state, active)` pushed into the index filter when a pattern does not mention `state` (`:277-280`), and again against each loaded element in the same condition that checks its Space (`:299`), so the scope predicate and the state default fail together and a path that lost one would still meet the other. The single way past it is `matches_element_view`, whose doc comment names both what it skips and who uses it (`:339-341`). The assertion half is likewise stronger than recorded. Projection gives lifecycle its own stage (`projection/mod.rs:658-674`): retracted and superseded are rejected with the reason carried into an `Excluded` record, while an expired assertion with a stated window is handed to the temporal stage instead — the comment explains that rejecting it would make `FOR TIME` in the past lose every claim that has since lapsed, which is the one question that asks about them — and the element state is checked separately on the next line, so the two lifecycles are two gates in sequence. The find worth carrying to other reports is the escape hatch that refuses. `include_historical: true` is accepted by the settings parser and returns an unsupported-capability error whose text says it would let a withdrawn claim decide a present belief, pointing the caller at `FIND ... AS OF` (`projection/policy.rs:201-212`). This corpus is full of the opposite shape — an `override_rejection`, a `confirm: true`, a `force` — a flag that exists so a caller can have what the rule refuses. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-16** — [`e2a2c0517cabfd275caed450011271643decd752`](https://github.com/ldclabs/anda-db/commit/e2a2c0517cabfd275caed450011271643decd752) — first reading, at a commit dated 16 September 2026, the day the 0.13.0 KIP 2.0 release landed. Screened before opening, from a shallow clone: twenty-nine files scanned, no auto-run surfaces, three build-time execution points, three unpinned surfaces and twenty-two dependency files inside the seven-day cooldown. Nothing was installed, built or run.

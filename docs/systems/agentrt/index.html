@@ -123,14 +123,14 @@ every record it returns.</p>
               <strong>openairymax/agentrt</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/openairymax/agentrt/commit/a7d81abe20a1f4b0a97c054d135655d6fa3db464" title="a7d81abe20a1f4b0a97c054d135655d6fa3db464">
+            <a class="meta-pill revision-pill" href="https://github.com/openairymax/agentrt/commit/2682bfc6e45fed79195f11014b6ceebd8fb7976e" title="2682bfc6e45fed79195f11014b6ceebd8fb7976e">
               <span>Analyzed revision</span>
-              <code>a7d81abe…</code>
+              <code>2682bfc6…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/openairymax--agentrt" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -207,7 +207,21 @@ string <code>kb_id</code> inside a record's metadata JSON, re-parsed on
 every candidate during a filtered search.</p>
 <p>A <strong>ledger entry</strong> is the other kind of memory: one item
 of one session's context window, with a token cost and a status. Marking
-appends a record and also migrates the original's status.</p>
+appends a record and also migrates the original's status — and the
+comment sitting over the append says otherwise.
+<code>mem_ledger_mark</code> introduces the appended record with
+<em>"append-only: the original entry is not modified, a status-change
+record is appended"</em> (<code>ledger.c:421</code>), and thirty lines
+later, in the same loop body, writes <code>e-&gt;status = status;</code>
+(<code>:451</code>) with its own comment explaining the migration. Both
+halves are wanted: the appended record preserves the transition and the
+migration is what makes the window filter work. It is the first comment
+that is wrong, and it is the one a reader reaches first.</p>
+<p>Two smaller details in the same function are worth having. A mark to
+a status an entry already holds is skipped (<code>:419-420</code>), so a
+repeated compression cannot stack duplicate transition records; and the
+appended record carries <code>token_in = 0</code> (<code>:437</code>),
+so recording a transition never consumes session budget.</p>
 <p>The <strong>semantic cache</strong> is a third thing living in the
 same daemon — LLM responses reused across sessions, keyed on canonical
 text and model id.</p>
@@ -540,8 +554,40 @@ comment</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/openairymax/agentrt/commit/2682bfc6e45fed79195f11014b6ceebd8fb7976e"><code class="commit-id" title="2682bfc6e45fed79195f11014b6ceebd8fb7976e">2682bfc6…</code></a>
+— <code>trust_state</code> re-tested. The superproject moved and so did
+the <code>daemons</code> submodule it pins,
+<code class="commit-id" title="db4962addaa73e78cce79b8fd4723c34d5299eb3">db4962ad…</code> to
+<code class="commit-id" title="817d651602217fbb510441336c21f3ec32170586">817d6516…</code>, which is where
+the memory daemon actually lives — a shallow clone of the superproject
+leaves the directory empty, so the second sha is now recorded in the
+evidence beside the first. The mark stands and every mechanism
+re-checked in source at that sha: four statuses at
+<code>mem_d/include/ledger.h:46-49</code>, the window skip at
+<code>mem_d/src/engine/ledger.c:349-351</code>, the marking path at
+<code>:400-455</code>. Anchors shifted by roughly forty-five lines and
+are re-mapped. The re-read turned up a contradiction inside
+<code>mem_ledger_mark</code>. The comment introducing the appended
+record says <em>append-only: the original entry is not modified</em>
+(<code>:421</code>); thirty lines on, in the same loop body,
+<code>:451</code> writes <code>e-&gt;status = status;</code> under a
+comment describing the migration. Both halves are intended — the
+appended record preserves the transition, the migration is what makes
+the window filter work — so the defect is the first comment, which is
+the one a reader meets first. Two details are added beside it: a mark to
+a status the entry already holds is skipped (<code>:419-420</code>), so
+a repeated compression cannot stack duplicate transition records, and
+the appended record carries <code>token_in = 0</code>
+(<code>:437</code>), so recording a transition never consumes session
+budget. The negative half of the record was re-checked and holds:
+<code>mem_record_entry_t</code>
+(<code>mem_d/src/core/service.h:25-35</code>) carries record_id, data,
+metadata, score, created_at and the vectors and no status field, so
+<code>mem.search</code> has no equivalent gate. Screened again first;
+nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/openairymax/agentrt/commit/a7d81abe20a1f4b0a97c054d135655d6fa3db464"><code class="commit-id" title="a7d81abe20a1f4b0a97c054d135655d6fa3db464">a7d81abe…</code></a>
+href="https://github.com/openairymax/agentrt/commit/2682bfc6e45fed79195f11014b6ceebd8fb7976e"><code class="commit-id" title="2682bfc6e45fed79195f11014b6ceebd8fb7976e">2682bfc6…</code></a>
 — first reading, at a superproject commit dated 16 September 2026. The
 seven runtime directories are submodules with relative URLs and a
 shallow clone leaves them empty; recorded pins are

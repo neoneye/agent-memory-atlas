@@ -115,14 +115,14 @@ it and blocks the digest from being re-published.</p>
               <strong>ldclabs/anda-db</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/ldclabs/anda-db/commit/450b48d0a2d6a74a42872d4a3a3f1ca3346513de" title="450b48d0a2d6a74a42872d4a3a3f1ca3346513de">
+            <a class="meta-pill revision-pill" href="https://github.com/ldclabs/anda-db/commit/e2a2c0517cabfd275caed450011271643decd752" title="e2a2c0517cabfd275caed450011271643decd752">
               <span>Analyzed revision</span>
-              <code>450b48d0…</code>
+              <code>e2a2c051…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ldclabs--anda-db" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -355,6 +355,31 @@ produces it and no Change Envelope carries it". The distinction between
 a state somebody set and a state the clock implies is made at the type
 level, which is the sort of thing that stops a migration inventing
 history.</p>
+<p>Projection acts on it in a stage of its own
+(<code>projection/mod.rs:658-674</code>). <code>retracted</code> and
+<code>superseded</code> are rejected outright, and the rejection carries
+a reason into an <code>Excluded</code> record rather than vanishing.
+<code>expired</code> is not: an assertion whose own window is stated is
+handed to the temporal stage instead, under a comment giving the reason
+— otherwise <code>FOR TIME</code> in the past would silently lose every
+claim that has since lapsed, which is the one question that asks about
+them. The element <code>state</code> is then checked separately on the
+next line (<code>:675</code>), so an assertion's lifecycle and its
+element's lifecycle are two gates in sequence rather than one blended
+test.</p>
+<p><strong>The escape hatch is a refusal.</strong> There is a settings
+flag that would admit history into a projection, and supplying it fails
+(<code>projection/policy.rs:201-212</code>):
+<code>include_historical: true</code> returns an unsupported-capability
+error whose text says admitting them "would let a withdrawn claim decide
+a present belief", and points the caller at <code>FIND ... AS OF</code>,
+"which answers at a coordinate where those claims still stood". This
+atlas finds the opposite shape far more often — an
+<code>override_rejection</code>, a <code>confirm: true</code>, a
+<code>force</code> — a flag that exists so the caller can have what the
+rule refuses. Accepting the flag and declining it is a better answer
+than not having it, because the error is where a caller looking for the
+override will actually read it.</p>
 <p>Evidence carries a class from a recommended-but-open list —
 <code>observation</code>, <code>user_statement</code>,
 <code>agent_statement</code>, <code>tool_result</code>,
@@ -365,6 +390,18 @@ and what a model said survives into the projection's weighting.</p>
 and decide the rest against the rendered view. Two defaults are
 load-bearing: the Space predicate a caller cannot drop, and the
 active-only state filter a caller widens by naming the state.</p>
+<p>Both are applied twice, which is what makes them hold. A pattern that
+does not mention <code>state</code> gets
+<code>eq_field("state", "active")</code> pushed into the index filter
+before candidates are fetched (<code>kql/matching.rs:277-280</code>),
+and then every loaded element is checked again —
+<code>if element.space() != self.space || (!constrains_state &amp;&amp; !element.is_active())</code>
+(<code>:299</code>) — so the Space predicate and the state default fail
+together in one condition. A read path that lost the index filter would
+still meet the second test. The single way past it is
+<code>matches_element_view</code>, whose doc comment names both what it
+skips and who uses it: "without the ordinary query's implicit
+active-state restriction (used by UPSERT)" (<code>:339-341</code>).</p>
 <p>The reading discipline is stated where it matters: a raw pattern
 "report[s] that a tuple exists and that somebody claimed something; they
 never report that it is true. Belief is projected, and lives in
@@ -481,8 +518,40 @@ that path was not exercised.</p>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/ldclabs/anda-db/commit/e2a2c0517cabfd275caed450011271643decd752"><code class="commit-id" title="e2a2c0517cabfd275caed450011271643decd752">e2a2c051…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line. The mark
+holds and the record was resting on the documentation rather than the
+code: it quoted the module comment at <code>kql/matching.rs:7-13</code>
+for the active-by-default rule. The code is better than the comment. The
+default is applied twice — <code>eq_field(state, active)</code> pushed
+into the index filter when a pattern does not mention <code>state</code>
+(<code>:277-280</code>), and again against each loaded element in the
+same condition that checks its Space (<code>:299</code>), so the scope
+predicate and the state default fail together and a path that lost one
+would still meet the other. The single way past it is
+<code>matches_element_view</code>, whose doc comment names both what it
+skips and who uses it (<code>:339-341</code>). The assertion half is
+likewise stronger than recorded. Projection gives lifecycle its own
+stage (<code>projection/mod.rs:658-674</code>): retracted and superseded
+are rejected with the reason carried into an <code>Excluded</code>
+record, while an expired assertion with a stated window is handed to the
+temporal stage instead — the comment explains that rejecting it would
+make <code>FOR TIME</code> in the past lose every claim that has since
+lapsed, which is the one question that asks about them — and the element
+state is checked separately on the next line, so the two lifecycles are
+two gates in sequence. The find worth carrying to other reports is the
+escape hatch that refuses. <code>include_historical: true</code> is
+accepted by the settings parser and returns an unsupported-capability
+error whose text says it would let a withdrawn claim decide a present
+belief, pointing the caller at <code>FIND ... AS OF</code>
+(<code>projection/policy.rs:201-212</code>). This corpus is full of the
+opposite shape — an <code>override_rejection</code>, a
+<code>confirm: true</code>, a <code>force</code> — a flag that exists so
+a caller can have what the rule refuses. Screened again first; nothing
+was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/ldclabs/anda-db/commit/450b48d0a2d6a74a42872d4a3a3f1ca3346513de"><code class="commit-id" title="450b48d0a2d6a74a42872d4a3a3f1ca3346513de">450b48d0…</code></a>
+href="https://github.com/ldclabs/anda-db/commit/e2a2c0517cabfd275caed450011271643decd752"><code class="commit-id" title="e2a2c0517cabfd275caed450011271643decd752">e2a2c051…</code></a>
 — first reading, at a commit dated 16 September 2026, the day the 0.13.0
 KIP 2.0 release landed. Screened before opening, from a shallow clone:
 twenty-nine files scanned, no auto-run surfaces, three build-time

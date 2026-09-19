@@ -7,12 +7,12 @@ page_kind: system
 source_name: "openairymax/agentrt"
 source_url: https://github.com/openairymax/agentrt
 archive_name: "openairymax--agentrt"
-revision: a7d81abe20a1f4b0a97c054d135655d6fa3db464
-revision_url: https://github.com/openairymax/agentrt/commit/a7d81abe20a1f4b0a97c054d135655d6fa3db464
-analyzed_at: 2026-09-16
+revision: 2682bfc6e45fed79195f11014b6ceebd8fb7976e
+revision_url: https://github.com/openairymax/agentrt/commit/2682bfc6e45fed79195f11014b6ceebd8fb7976e
+analyzed_at: 2026-09-19
 capabilities: "trust_state, negative_eval"
 capability_evidence:
-  trust_state: "context-ledger entries carry a stored four-value status that the window read skips on, set by an in-repo producer | daemons/mem_d/include/ledger.h, daemons/mem_d/src/engine/ledger.c:372-428, :303-336, daemons/mem_d/src/handlers/ledger_handlers.c:155-190, :310-322 | an entry's `status` is one of ACTIVE / EVICTED / COMPRESSED / DEDUPED; `mem_ledger_window` walks the chain and does `if (e->status != LEDGER_STATUS_ACTIVE) continue;`, so a marked entry leaves the returned window; `mem_ledger_mark` validates the status range before applying it and is reached both from the `mem.ledger_mark` RPC and from the `compress` handler, which marks each compressed entry COMPRESSED or EVICTED. This filters the context window only — memory records carry no status field and `mem.search` has no equivalent gate | daemons/mem_d/tests/test_ledger.c:117-176, :281-320"
+  trust_state: "context-ledger entries carry a stored four-value status that the window read skips on, set by an in-repo producer — and the marking path appends a transition record beside the entry it marks | read in the `daemons` submodule at `817d651602217fbb510441336c21f3ec32170586`, the sha the superproject pins: mem_d/include/ledger.h:46-49, mem_d/src/engine/ledger.c:331-364 (`mem_ledger_window`), :400-455 (`mem_ledger_mark`), mem_d/src/handlers/ledger_handlers.c:155-190, mem_d/src/core/service.h:25-35 | an entry status is one of ACTIVE / EVICTED / COMPRESSED / DEDUPED. `mem_ledger_window` walks the chain and does `if (e->status != LEDGER_STATUS_ACTIVE) continue;`, so a marked entry leaves the returned window. `mem_ledger_mark` refuses a status outside the enumeration before applying it, skips an entry already in the target status so a repeat mark cannot stack, and then appends a fresh entry carrying a `ref_id` back to the original, a `seq`, a nanosecond stamp and `token_in = 0` so a transition costs no budget. It is reached from the `mem.ledger_mark` RPC and from the `compress` handler, which marks each compressed entry COMPRESSED or EVICTED. This filters the context window only: `mem_record_entry_t` has no status field — record_id, data, metadata, score, created_at and the vectors, nothing else — and `mem.search` has no equivalent gate | mem_d/tests/test_ledger.c:117-176, :281-320"
   negative_eval: "a committed must-not-retrieve assertion on knowledge-base isolation, each paired with a positive control on the same query | daemons/mem_d/tests/test_service.c:527-537, :567-575 | after ingesting a document into `kb-linux`, the test asserts `mem_service_kb_search(svc, \"kb-linux\", \"scheduling\", …)` yields `hit_count >= 1`, then asserts the same query against `kb-other` yields `hit_count == 0` and `hits == NULL` under the comment that two KBs must not contaminate each other; a second pair does the same after `kb_delete`, asserting the deleted KB returns nothing while the surviving KB still returns hits. The assertions run against `mem_service_t` itself, not a mocked filter | daemons/mem_d/tests/test_service.c"
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
@@ -88,7 +88,20 @@ record's metadata JSON, re-parsed on every candidate during a filtered search.
 
 A **ledger entry** is the other kind of memory: one item of one session's
 context window, with a token cost and a status. Marking appends a record and
-also migrates the original's status.
+also migrates the original's status — and the comment sitting over the append
+says otherwise. `mem_ledger_mark` introduces the appended record with
+*"append-only: the original entry is not modified, a status-change record is
+appended"* (`ledger.c:421`), and thirty lines later, in the same loop body,
+writes `e->status = status;` (`:451`) with its own comment explaining the
+migration. Both halves are wanted: the appended record preserves the transition
+and the migration is what makes the window filter work. It is the first comment
+that is wrong, and it is the one a reader reaches first.
+
+Two smaller details in the same function are worth having. A mark to a status an
+entry already holds is skipped (`:419-420`), so a repeated compression cannot
+stack duplicate transition records; and the appended record carries
+`token_in = 0` (`:437`), so recording a transition never consumes session
+budget.
 
 The **semantic cache** is a third thing living in the same daemon — LLM
 responses reused across sessions, keyed on canonical text and model id.
@@ -364,4 +377,6 @@ one ranking, and nothing backfills.
 
 ## History
 
-**2026-09-16** — [`a7d81abe20a1f4b0a97c054d135655d6fa3db464`](https://github.com/openairymax/agentrt/commit/a7d81abe20a1f4b0a97c054d135655d6fa3db464) — first reading, at a superproject commit dated 16 September 2026. The seven runtime directories are submodules with relative URLs and a shallow clone leaves them empty; recorded pins are `atoms 0ea4061d`, `commons e0ca18a3`, `cupolas ad068db2`, `daemons db4962ad`, `gateway 9b36d117`, `heapstore d3130dde`, `protocols 38689aff`. `daemons` and `heapstore` were fetched by full sha and checked out at those exact pins and are the basis of this reading; `openairymax/atoms` returned 404 on GitHub and atomgit.com returned 403 to a non-browser fetch. Screened before opening, from shallow clones. Nothing was installed, built or run.
+**2026-09-19** — [`2682bfc6e45fed79195f11014b6ceebd8fb7976e`](https://github.com/openairymax/agentrt/commit/2682bfc6e45fed79195f11014b6ceebd8fb7976e) — `trust_state` re-tested. The superproject moved and so did the `daemons` submodule it pins, `db4962addaa73e78cce79b8fd4723c34d5299eb3` to `817d651602217fbb510441336c21f3ec32170586`, which is where the memory daemon actually lives — a shallow clone of the superproject leaves the directory empty, so the second sha is now recorded in the evidence beside the first. The mark stands and every mechanism re-checked in source at that sha: four statuses at `mem_d/include/ledger.h:46-49`, the window skip at `mem_d/src/engine/ledger.c:349-351`, the marking path at `:400-455`. Anchors shifted by roughly forty-five lines and are re-mapped. The re-read turned up a contradiction inside `mem_ledger_mark`. The comment introducing the appended record says *append-only: the original entry is not modified* (`:421`); thirty lines on, in the same loop body, `:451` writes `e->status = status;` under a comment describing the migration. Both halves are intended — the appended record preserves the transition, the migration is what makes the window filter work — so the defect is the first comment, which is the one a reader meets first. Two details are added beside it: a mark to a status the entry already holds is skipped (`:419-420`), so a repeated compression cannot stack duplicate transition records, and the appended record carries `token_in = 0` (`:437`), so recording a transition never consumes session budget. The negative half of the record was re-checked and holds: `mem_record_entry_t` (`mem_d/src/core/service.h:25-35`) carries record_id, data, metadata, score, created_at and the vectors and no status field, so `mem.search` has no equivalent gate. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-16** — [`2682bfc6e45fed79195f11014b6ceebd8fb7976e`](https://github.com/openairymax/agentrt/commit/2682bfc6e45fed79195f11014b6ceebd8fb7976e) — first reading, at a superproject commit dated 16 September 2026. The seven runtime directories are submodules with relative URLs and a shallow clone leaves them empty; recorded pins are `atoms 0ea4061d`, `commons e0ca18a3`, `cupolas ad068db2`, `daemons db4962ad`, `gateway 9b36d117`, `heapstore d3130dde`, `protocols 38689aff`. `daemons` and `heapstore` were fetched by full sha and checked out at those exact pins and are the basis of this reading; `openairymax/atoms` returned 404 on GitHub and atomgit.com returned 403 to a non-browser fetch. Screened before opening, from shallow clones. Nothing was installed, built or run.
