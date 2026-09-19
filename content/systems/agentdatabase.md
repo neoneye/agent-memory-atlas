@@ -9,13 +9,12 @@ source_url: https://github.com/LinzeColin/AgentDatabase
 archive_name: "LinzeColin--AgentDatabase"
 revision: 8514923810b38b861aa308feca47f43df34f2a20
 revision_url: https://github.com/LinzeColin/AgentDatabase/commit/8514923810b38b861aa308feca47f43df34f2a20
-analyzed_at: 2026-09-16
-capabilities: "trust_state, bitemporal, audit_log, human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "trust_state, bitemporal, audit_log, negative_eval"
 capability_evidence:
   trust_state: "the record status, gating what the agent boots with | OpenAIDatabase/data/memory/records/records-0001.jsonl, OpenAIDatabase/config/memory-forgetting-policy.json, OpenAIDatabase/scripts/build_memory_atlas_data.py:723 | `status` is `active | candidate | disputed | retired` and the live shard is populated across three of them — 6 active, 108 candidate, 84 retired out of 198. It is not decorative: the forgetting policy sets `\"eligible_statuses\": [\"active\"]` with `\"inactive_default\": \"exclude\"`, the atlas builder maps `{active: 1, candidate: 0, disputed: 0, retired: 0}` to a retrieval weight, and `data/memory/agent-memory.json` — the file the agent reads at boot — carries an `active_index` of exactly the 6 active records | OpenAIDatabase/tests/test_memory_lifecycle.py"
   bitemporal: "validity and record time as independent query axes | OpenAIDatabase/scripts/memory_lifecycle.py (`project_record_at`, `projection_is_effective`), OpenAIDatabase/scripts/memory.py (`query --as-of`, `--recorded-as-of`) | every record carries `valid_time {from, to}` and `recorded_time {recorded_at, recorded_by}`, and the two are read separately: `project_record_at` walks the transition history backwards from a `recorded_as_of` to recover the status and `valid_to` as they stood at that record time, then `projection_is_effective` tests the validity interval against a `valid_as_of`. The CLI exposes both as distinct flags and the gold benchmark's `as_of` object carries both keys | OpenAIDatabase/tests/test_memory_lifecycle.py, and 20 `temporal` gold cases whose `as_of` names both axes"
   audit_log: "an append-only transition list inside each record | OpenAIDatabase/scripts/memory_lifecycle.py:360 (`append_transition`), OpenAIDatabase/scripts/memory_mutation.py:482,511,535 | every `update`, `retire` and `dispute` appends `{transaction_id, operation, recorded_at, recorded_by, from_status, to_status, valid_to_before, valid_to_after, reason}` to `recorded_time.transitions` before mutating the record, and `_validate_transition_history` guards the sequence. The producer sits on the `memory mutate` CLI subcommand, and the transaction id is what makes the operation idempotent. No live record carries a transition yet — all 198 came from a cutover import — which the report states in section 9 | OpenAIDatabase/tests/test_memory_mutation.py"
-  human_review: "a curation file whose overrides replace the model's text, and record the fact | OpenAIDatabase/data/memory/curation/core_profile_review.json, OpenAIDatabase/skills/openai-memory-analysis/scripts/openai_memory_analysis.py:1622 | a hand-written JSON of per-record `overrides` carrying a reviewed `statement`, `importance`, `validity`, `sensitivity` and a `status` such as `accepted_core_distilled`, alongside a stated `review_policy`. `apply_curation_override` replaces those fields on the row, stamps `curation_status` and `curation_reason`, and — the part worth copying — writes `original_statement_hash` whenever the human text differs from the machine text, so an edited memory is detectable as edited. The consumer is the analysis and profile pipeline rather than the canonical `memory.py` query path | OpenAIDatabase/tests/test_openai_memory_analysis.py, OpenAIDatabase/tests/test_memory_migration_profile.py"
   negative_eval: "160 committed cases carrying forbidden ids, hard negatives and required abstentions | OpenAIDatabase/data/derived/evaluation/memory_gold/benchmark_v1.jsonl, OpenAIDatabase/scripts/build_memory_gold_benchmark.py | every case names `expected_ids`, `forbidden_ids`, `hard_negative_ids`, `should_abstain`, `abstain_conditions` and `stale_or_retired_trap`; an `abstention` category of twenty is whose correct answer is UNKNOWN, and 20 are a `forgetting` category built from retired records and closed validity intervals. `_is_forbidden_stale` decides a trap fired by checking `record[\"status\"] == \"retired\" or (valid_to is not None and valid_to <= as_of)` | OpenAIDatabase/tests/test_memory_gold_evaluation.py, with committed run reports under data/derived/evaluation/memory_gold/reports/"
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -154,7 +153,8 @@ flowchart TD
 Nothing runs as a service. The store is files: `data/memory/records/records-0001.jsonl`
 plus a manifest, `data/memory/active/` as a rendered active view in both JSONL and
 Markdown, `data/memory/candidates/` as one file per extraction run,
-`data/memory/curation/core_profile_review.json` as the human layer, and
+`data/memory/curation/core_profile_review.json` as the human layer — read by the
+analysis and migration scripts and by nothing in `memory.py` — and
 `data/memory/agent-memory.json` as the boot index. `secret_refs/` holds
 references rather than secrets.
 
@@ -548,9 +548,14 @@ hundred records and nothing here addresses what happens three orders of magnitud
   are they permanently a grandfathered layer the rules do not describe?
 - What produces a `negative_trigger` record in practice? The kind is enumerated,
   the policy is written, the retrieval path handles it, and no instance exists.
-- The curation overrides are consumed by the analysis pipeline. Does the
-  canonical `memory query` path see them, or can the human-corrected statement
-  and the stored statement diverge for a reader who uses the CLI?
+- ~~Does the canonical `memory query` path see the curation overrides?~~
+  Answered at this pin: it does not. `OpenAIDatabase/scripts/memory.py` contains
+  the string `curation` zero times, and the only consumers are the analysis
+  skill, `build_memory_migration_profile.py` and `migrate_memory_records.py`
+  (which reads `curation_reason` at `:420-421`). So the hand-corrected statement
+  and the stored statement do diverge for a reader who uses the CLI, and that is
+  why `human_review` is withheld: an override replaces text on a row already in
+  the store, through a pipeline the query path does not run.
 
 ## 15. Appendix: File Index
 
@@ -571,6 +576,8 @@ hundred records and nothing here addresses what happens three orders of magnitud
 | `OpenAIDatabase/data/WHERE_IS_THE_DATA.md`, `MIRROR_STATUS.json` | The signpost for the next agent, and its machine-readable twin |
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`8514923810b38b861aa308feca47f43df34f2a20`](https://github.com/LinzeColin/AgentDatabase/commit/8514923810b38b861aa308feca47f43df34f2a20); nothing upstream moved. `human_review` is **withdrawn**, and the report's own third open question turned out to answer it. That question asked whether the canonical `memory query` path sees the curation overrides. It does not: `OpenAIDatabase/scripts/memory.py` contains the string `curation` zero times, and the only consumers are the analysis skill, `build_memory_migration_profile.py` and `migrate_memory_records.py`. So an override is a hand-written replacement of fields on a row already in the store, applied by a pipeline the query path never runs — authoring after the fact, on a surface most readers never see. The `original_statement_hash` written whenever the human text differs from the machine text remains the best idea in the file and keeps its credit. The other four marks stand. Screened again first; nothing was installed and no script was run.
 
 **2026-09-16** — [`8514923810b38b861aa308feca47f43df34f2a20`](https://github.com/LinzeColin/AgentDatabase/commit/8514923810b38b861aa308feca47f43df34f2a20) — re-read at a commit dated 15 September 2026, 14 commits past the previous pin. A commit comparison across the range lists no anchored file among the changed ones, so every mark stands where it was tested and no line number moved. Screened before reading, from a full clone: one auto-run surface, 28 build-time execution points, 90 unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
