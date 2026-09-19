@@ -113,14 +113,14 @@ answered whether a memory about a topic exists at all.</p>
               <strong>TRUE-BLUE-INDUSTRIES/hungry-hippa</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/TRUE-BLUE-INDUSTRIES/hungry-hippa/commit/e9254e8942bc7c04f15e40141588fc28907c5193" title="e9254e8942bc7c04f15e40141588fc28907c5193">
+            <a class="meta-pill revision-pill" href="https://github.com/TRUE-BLUE-INDUSTRIES/hungry-hippa/commit/3cddd2adcd85362fba6627dedb87ac431aa7e518" title="3cddd2adcd85362fba6627dedb87ac431aa7e518">
               <span>Analyzed revision</span>
-              <code>e9254e89…</code>
+              <code>3cddd2ad…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/TRUE-BLUE-INDUSTRIES--hungry-hippa" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -383,8 +383,32 @@ leaking; the fix path was not traced.</p>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/TRUE-BLUE-INDUSTRIES/hungry-hippa/commit/3cddd2adcd85362fba6627dedb87ac431aa7e518"><code class="commit-id" title="3cddd2adcd85362fba6627dedb87ac431aa7e518">3cddd2ad…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line, which
+this system answers more directly than anything else read in this sweep.
+Every anchor held at the same line numbers. Step six of the recall
+pipeline is a partition, not a predicate scattered through a query:
+<code>retrieval.py:323-338</code> sorts each collected item into
+<code>excluded</code> with its status as the reason or into
+<code>allowed</code>, and <code>:340</code> then calls
+<code>self._rank(allowed, terms)</code> — the state decides membership,
+the score decides order, and the two are consecutive lines. The comment
+above the stage says so in its own words. Two additions to the record.
+<code>may_read</code> (<code>policy.py:126-140</code>) resolves the
+caller through <code>is_owner</code> or <code>is_system_identity</code>
+under a comment stating the rule — identity decides, never a label — so
+the read policy keys on a resolved principal rather than a supplied
+string. And the two reads of <code>episodes</code> that carry no status
+clause are the correct ones: the forgetting sweep has to see every
+status, and the FTS backfill (<code>db.py:194-207</code>) indexes every
+row because the partition runs on whatever the index returns, so a
+non-active episode can be an index hit and is excluded with a reason
+rather than silently absent. Both are worth naming, because this sweep
+has found the same omission elsewhere where it was a defect. Screened
+again first; nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/TRUE-BLUE-INDUSTRIES/hungry-hippa/commit/e9254e8942bc7c04f15e40141588fc28907c5193"><code class="commit-id" title="e9254e8942bc7c04f15e40141588fc28907c5193">e9254e89…</code></a>
+href="https://github.com/TRUE-BLUE-INDUSTRIES/hungry-hippa/commit/3cddd2adcd85362fba6627dedb87ac431aa7e518"><code class="commit-id" title="3cddd2adcd85362fba6627dedb87ac431aa7e518">3cddd2ad…</code></a>
 — first reading, at a commit dated 15 September 2026. Screened before
 opening, from a shallow clone: two files scanned, no auto-run surfaces,
 no build-time execution points, one unpinned surface and one dependency

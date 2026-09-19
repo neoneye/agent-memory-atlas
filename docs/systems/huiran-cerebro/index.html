@@ -120,7 +120,7 @@ offers a dry run that returns the pairs before anything changes.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/qilunuojiang9-hue--Huiran-cerebro" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -169,11 +169,31 @@ creator as the information source; the later writer is merged into
 it.</em></p>
 </blockquote>
 <p><strong>It marks rather than deletes</strong>, so the duplicate stays
-inspectable and the merge is reversible — and because every recall path
-selects <code>WHERE status='active'</code>, the marked row leaves
-retrieval without leaving the store. That is the trust-state mark, and
-it is the whole of it: a stored discrete status, set by a real
-mechanism, read by the paths that matter.</p>
+inspectable and the merge is reversible — and because the recall,
+listing, summary and relation paths each select
+<code>WHERE status='active'</code> (<code>:708</code>,
+<code>:779</code>, <code>:807</code>, <code>:838</code>,
+<code>:1173</code>, and <code>list_fragments</code> through its default
+at <code>:640</code>), the marked row leaves retrieval without leaving
+the store. That is the trust-state mark: a stored discrete status, set
+by a real mechanism, read by the paths that matter.</p>
+<p>There is one read where it is not applied, and it is the one a
+session opens with. <code>daily_context</code> (<code>:1264-1339</code>)
+assembles the start-of-day block, and its three fragment queries carry
+no status predicate: the iron rules selected by
+<code>source_ref LIKE 'iron_rules%'</code> (<code>:1270</code>), the
+five most recent <code>decision</code> fragments (<code>:1326</code>),
+and five <code>importance='high'</code> fragments (<code>:1334</code>).
+Each is rendered straight into the block — <code>[铁律]</code>,
+<code>[提醒·最近决策]</code>, <code>[提醒·高价值知识]</code> — so a
+fragment the dedup pass marked <code>merged</code> comes back in all
+three, which is the one thing marking it was meant to prevent. The six
+filtered reads are the searches; the three unfiltered ones are the
+summary a person reads first. That asymmetry recurs across this corpus
+and is worth stating plainly: the search path is the one with a
+predicate because it is the one anyone thinks of as retrieval, and the
+context builder returns prose rather than rows, so nothing about it
+looks like a query.</p>
 <p><strong>And it keeps the earlier fragment</strong>, on the stated
 ground that the first writer is the information source. Last-write-wins
 is the default almost everywhere, and it is the wrong default when the
@@ -356,6 +376,30 @@ survive; no command to set the status back was found.</p>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/qilunuojiang9-hue/Huiran-cerebro/commit/08644a7edd1bff64ba46177d069287cb1daaad7a"><code class="commit-id" title="08644a7edd1bff64ba46177d069287cb1daaad7a">08644a7e…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin, and the
+record's universal claim did not survive it. Every anchor held: the
+column and its index, <code>dedupe_fragments</code> marking the later
+writer merged without deleting the text, and the filtered reads at
+<code>:708</code>, <code>:779</code>, <code>:807</code>,
+<code>:838</code> and <code>:1173</code>, with
+<code>list_fragments</code> defaulting to active at <code>:640</code>.
+Six reads filter. The seventh is <code>daily_context</code>
+(<code>:1264-1339</code>), which assembles the block a session opens
+with, and its three fragment queries carry no status predicate — iron
+rules by <code>source_ref</code> (<code>:1270</code>), the five most
+recent decisions (<code>:1326</code>) and five high-importance fragments
+(<code>:1334</code>), each rendered straight into the block. So a
+fragment marked merged is withheld from every search and returned in the
+summary a person reads first, which is the one thing marking it was
+meant to prevent. The mark stands on the six; the record now names the
+seventh beside it. This is the third system in one sweep where the
+missing predicate was in the session-start context builder rather than
+in a search path, which is worth saying out loud: the context builder
+returns prose rather than rows, so nothing about it looks like a query.
+Re-read from a fresh clone; nothing was installed and no suite was
+run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/qilunuojiang9-hue/Huiran-cerebro/commit/08644a7edd1bff64ba46177d069287cb1daaad7a"><code class="commit-id" title="08644a7edd1bff64ba46177d069287cb1daaad7a">08644a7e…</code></a>
 — first reading, at a commit dated 16 September 2026. Screened before

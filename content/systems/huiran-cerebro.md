@@ -9,10 +9,10 @@ source_url: https://github.com/qilunuojiang9-hue/Huiran-cerebro
 archive_name: "qilunuojiang9-hue--Huiran-cerebro"
 revision: 08644a7edd1bff64ba46177d069287cb1daaad7a
 revision_url: https://github.com/qilunuojiang9-hue/Huiran-cerebro/commit/08644a7edd1bff64ba46177d069287cb1daaad7a
-analyzed_at: 2026-09-16
+analyzed_at: 2026-09-19
 capabilities: "trust_state"
 capability_evidence:
-  trust_state: "a stored fragment status that every recall path filters on, set to `merged` by the dedup pass so the row survives while leaving retrieval | cyber_brain.py:189-206, :832-859, :708, :779, :807, :1173 | `memory_fragments.status` defaults to `active` with its own index, and the recall, listing, summary and relation paths all select `WHERE status='active'`. `dedupe_fragments` is documented as marking the later writer — \"重复碎片合并：内容 Jaccard >= threshold 的碎片，标记后写者 status='merged'（不删原文）\", that is, mark the later writer merged and do not delete the text — with the rule for which side survives stated beside it: keep the first creator as the information source. `list_fragments` defaults to `status=\"active\"` and a caller may ask for another status explicitly | cyber_brain.py:640"
+  trust_state: "a stored fragment status that the recall, listing, summary and relation paths filter on, set to `merged` by the dedup pass so the row survives while leaving retrieval — and absent from the three reads that build the start-of-day context | cyber_brain.py:189-206 (the column and its index), :640-641 (`list_fragments`), :708, :779, :807, :838, :1173 (the filtered reads), :832-859 (`dedupe_fragments`), :1264-1339 (`daily_context`, the exception) | `memory_fragments.status` defaults to `active` with its own index, and six reads select `WHERE status=active`. `dedupe_fragments` marks the later writer merged and keeps the text — 重复碎片合并：内容 Jaccard >= threshold 的碎片，标记后写者 status=merged（不删原文）— with the rule for which side survives stated beside it: keep the first creator as the information source. `list_fragments` defaults to active and a caller may name another status. The exception is `daily_context`, which assembles the block a session opens with: its three fragment reads — iron rules by `source_ref`, the five most recent decisions, five high-importance fragments — carry no status predicate, so a fragment marked merged is emitted into that block under 铁律, 最近决策 and 高价值知识 | cyber_brain.py:640"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -25,9 +25,9 @@ matrix:
   scoping: "A `namespace` column with a `default` value, passed as an optional argument — omitted, no predicate is emitted"
   integration: "An MCP server with a written guide for Doubao, a Flask-shaped web console, and Windows batch launchers"
   background: "Rolling summaries, a daily brief over unfinished work items, and the dedup pass when invoked"
-  trust: "A fragment status that withholds merged duplicates from recall, a retrieval-audit table recording what was asked, and an authorization reference on content items"
+  trust: "A fragment status that withholds merged duplicates from the search paths but not from the start-of-day context block, a retrieval-audit table recording what was asked, and an authorization reference on content items"
   strengths: "The dedup decision is the right one twice over. It marks rather than deletes — the docstring says 不删原文, do not delete the text — so a merge is reversible and the merged row stays inspectable, while every recall path's `status='active'` predicate keeps it out of results. And it keeps the *earlier* fragment as the surviving one, on the stated ground that the first writer is the information source, which is the opposite of the last-write-wins default and the right call when the later copy is a restatement. A `dry_run` flag returns the candidate pairs with their similarity scores and changes nothing, so the threshold can be tuned against real data before it is applied. Around that, the engineering is proportionate to its scale: one 1,734-line module holding the schema and the operations, FTS5 with trigram tokenisation because Chinese has no spaces to tokenise on, a version number with a single source of truth and a script that syncs the README badge to it, and a `doctor` command"
-  risks: "There are no tests anywhere in the repository — no test directory, no test file, and the two `tools/_*_smoke.py` scripts are smoke checks rather than assertions — for a store whose dedup pass rewrites rows in place. The dedup itself is a full pairwise scan of every active fragment with a Python Jaccard per pair, so its cost grows with the square of the store; and because the scan reads only `status='active'`, a merged fragment is never compared against again, so re-adding the same text creates a fresh active row that the next pass must merge once more — the mark records a decision, and nothing consults it at write time to refuse the repeat. `namespace` is an optional argument that emits no predicate when omitted, so it separates nothing by default. The delete helper is Windows-only, calling `SHFileOperationW` with `FOF_ALLOWUNDO` to move a directory to the recycle bin, which is a thoughtful default and unavailable everywhere else. And the README carries a section addressed to LLM readers alongside an `llms.txt`, which is worth knowing about when an agent summarises this project from its own documentation"
+  risks: "There are no tests anywhere in the repository — no test directory, no test file, and the two `tools/_*_smoke.py` scripts are smoke checks rather than assertions — for a store whose dedup pass rewrites rows in place. The dedup itself is a full pairwise scan of every active fragment with a Python Jaccard per pair, so its cost grows with the square of the store; and because the scan reads only `status='active'`, a merged fragment is never compared against again, so re-adding the same text creates a fresh active row that the next pass must merge once more — the mark records a decision, and nothing consults it at write time to refuse the repeat. `daily_context` reads fragments three times with no `status` predicate, so a merged duplicate is rendered into the start-of-day block under iron rules, recent decisions and high-value knowledge — the six search paths filter and the summary does not. `namespace` is an optional argument that emits no predicate when omitted, so it separates nothing by default. The delete helper is Windows-only, calling `SHFileOperationW` with `FOF_ALLOWUNDO` to move a directory to the recycle bin, which is a thoughtful default and unavailable everywhere else. And the README carries a section addressed to LLM readers alongside an `llms.txt`, which is worth knowing about when an agent summarises this project from its own documentation"
 ---
 
 ## 1. Executive Summary
@@ -57,10 +57,25 @@ decisions in one docstring:
 > merged into it.*
 
 **It marks rather than deletes**, so the duplicate stays inspectable and the
-merge is reversible — and because every recall path selects
-`WHERE status='active'`, the marked row leaves retrieval without leaving the
-store. That is the trust-state mark, and it is the whole of it: a stored discrete
-status, set by a real mechanism, read by the paths that matter.
+merge is reversible — and because the recall, listing, summary and relation
+paths each select `WHERE status='active'` (`:708`, `:779`, `:807`, `:838`,
+`:1173`, and `list_fragments` through its default at `:640`), the marked row
+leaves retrieval without leaving the store. That is the trust-state mark: a
+stored discrete status, set by a real mechanism, read by the paths that matter.
+
+There is one read where it is not applied, and it is the one a session opens
+with. `daily_context` (`:1264-1339`) assembles the start-of-day block, and its
+three fragment queries carry no status predicate: the iron rules selected by
+`source_ref LIKE 'iron_rules%'` (`:1270`), the five most recent `decision`
+fragments (`:1326`), and five `importance='high'` fragments (`:1334`). Each is
+rendered straight into the block — `[铁律]`, `[提醒·最近决策]`, `[提醒·高价值知识]` —
+so a fragment the dedup pass marked `merged` comes back in all three, which is
+the one thing marking it was meant to prevent. The six filtered reads are the
+searches; the three unfiltered ones are the summary a person reads first. That
+asymmetry recurs across this corpus and is worth stating plainly: the search
+path is the one with a predicate because it is the one anyone thinks of as
+retrieval, and the context builder returns prose rather than rows, so nothing
+about it looks like a query.
 
 **And it keeps the earlier fragment**, on the stated ground that the first writer
 is the information source. Last-write-wins is the default almost everywhere, and
@@ -222,5 +237,7 @@ command to set the status back was found.
 | `tools/recycle_delete.py` | A delete that lands in the recycle bin, on one platform |
 
 ## History
+
+**2026-09-19** — [`08644a7edd1bff64ba46177d069287cb1daaad7a`](https://github.com/qilunuojiang9-hue/Huiran-cerebro/commit/08644a7edd1bff64ba46177d069287cb1daaad7a) — `trust_state` re-tested at an unchanged pin, and the record's universal claim did not survive it. Every anchor held: the column and its index, `dedupe_fragments` marking the later writer merged without deleting the text, and the filtered reads at `:708`, `:779`, `:807`, `:838` and `:1173`, with `list_fragments` defaulting to active at `:640`. Six reads filter. The seventh is `daily_context` (`:1264-1339`), which assembles the block a session opens with, and its three fragment queries carry no status predicate — iron rules by `source_ref` (`:1270`), the five most recent decisions (`:1326`) and five high-importance fragments (`:1334`), each rendered straight into the block. So a fragment marked merged is withheld from every search and returned in the summary a person reads first, which is the one thing marking it was meant to prevent. The mark stands on the six; the record now names the seventh beside it. This is the third system in one sweep where the missing predicate was in the session-start context builder rather than in a search path, which is worth saying out loud: the context builder returns prose rather than rows, so nothing about it looks like a query. Re-read from a fresh clone; nothing was installed and no suite was run.
 
 **2026-09-16** — [`08644a7edd1bff64ba46177d069287cb1daaad7a`](https://github.com/qilunuojiang9-hue/Huiran-cerebro/commit/08644a7edd1bff64ba46177d069287cb1daaad7a) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: two files scanned, no auto-run surfaces, no build-time execution points, one unpinned surface and one dependency file inside the seven-day cooldown. Nothing was installed, built or run.
