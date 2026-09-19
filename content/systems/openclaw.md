@@ -7,16 +7,15 @@ page_kind: system
 source_name: openclaw/openclaw
 source_url: https://github.com/openclaw/openclaw
 archive_name: "openclaw--openclaw"
-revision: 5ed7eceb574fbb55e7c07d204db69def813a80f4
-revision_url: https://github.com/openclaw/openclaw/commit/5ed7eceb574fbb55e7c07d204db69def813a80f4
-analyzed_at: 2026-09-16
-capabilities: "scope_enforced, human_review"
+revision: 2e7e5ef6b1c1f98091588f48791da3d1ee8a96c0
+revision_url: https://github.com/openclaw/openclaw/commit/2e7e5ef6b1c1f98091588f48791da3d1ee8a96c0
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced"
 stack_storage: "files, sqlite, lancedb"
 stack_retrieval: "vector, lexical"
 stack_source: "seeded"
 capability_evidence:
   scope_enforced: "the agent id, composed into the predicate rather than applied beside it | extensions/memory-lancedb/lancedb-store.ts:109, extensions/memory-core/src/memory-entry-origins.ts:116-213 | `scopedPredicate(agentId, filter)` returns `(${scope}) AND (${filter})` as one string and every `query`, `list` and `delete` path builds its WHERE clause through it, under the comment *\"Scope and operator filter stay one predicate so scope cannot be lost\"* — an unscoped read is not expressible rather than merely discouraged, and `delete(agentId, id)` scopes the deletion too. In `memory-core` the same key is a physical boundary: `openOpenClawAgentDatabase({ agentId })` gives each agent its own SQLite file, so `listMemorySessionTombstones`, `listMemoryEntryOrigins` and the index tables are per-agent databases rather than a shared table with a column | no committed test exercises the predicate with a second agent — see section 10"
-  human_review: "the wiki import gate, which withholds a digest from durable-candidate generation until a person clears it | extensions/memory-wiki/src/chatgpt-import.ts:289-301,:500,:509-521, extensions/memory-wiki/src/markdown.ts:142,:501-534 | `inferRisk` classifies each imported conversation `high`, `medium` or `low` against six labelled rule sets — relationships, health, legal_tax, finance, drugs and work_career — and only `low` proceeds: `preferenceSignals: risk.level === \"low\" ? collectPreferenceSignals(userTexts) : []`. Anything else renders *\"Auto digest withheld from durable-candidate generation until reviewed\"* beside its risk reasons, and the page is written `status: \"draft\"`. The human's half of the page is structurally protected: `preserveHumanNotesBlock` carries the region between `<!-- openclaw:human:start -->` and its end marker across every machine regeneration, and `findNotesHumanBlock` **throws** rather than regenerate over notes whose markers are damaged — *\"restore the missing marker before updating or removing this page\"* | extensions/memory-wiki/src/chatgpt-import.test.ts"
 matrix:
   memory_unit: "A markdown section — `MEMORY.md` and wiki pages of record, chunked into snippets with a path and line span, indexed rather than stored as rows"
   storage: "Markdown files as the record, indexed into a per-agent SQLite database with an FTS table and a `sqlite-vec` vector table; LanceDB is one optional backend extension"
@@ -74,17 +73,22 @@ string under the comment *"Scope and operator filter stay one predicate so scope
 cannot be lost"* — and in the core it is stronger still, because each agent gets
 its own SQLite file rather than a shared table with a column.
 
-**Human review** is earned in the wiki importer, and it is the best-shaped
-version of that mark in this corpus for a reason worth copying: it protects the
-human's writing, not just the human's approval. `inferRisk` routes any imported
-conversation touching relationships, health, legal or tax matters, finance or
-drugs away from durable-candidate generation — *"Auto digest withheld from
-durable-candidate generation until reviewed"* — and `preserveHumanNotesBlock`
-carries the region between `<!-- openclaw:human:start -->` and its closing
-marker across every machine regeneration. If those markers are damaged, the code
-**throws rather than regenerate over them**: *"restore the missing marker before
-updating or removing this page"*. A memory system that would rather fail than
-overwrite a person's notes is rare here.
+**The wiki importer's two protections are the best-shaped in this corpus, and
+neither is `human_review`.** `inferRisk` routes any imported conversation
+touching relationships, health, legal or tax matters, finance or drugs away from
+durable-candidate generation — *"Auto digest withheld from durable-candidate
+generation until reviewed"* — and `preserveHumanNotesBlock` carries the region
+between `<!-- openclaw:human:start -->` and its closing marker across every
+machine regeneration. If those markers are damaged, the code **throws rather
+than regenerate over them**: *"restore the missing marker before updating or
+removing this page"*. A memory system that would rather fail than overwrite a
+person's notes is rare here, and it protects the human's writing rather than the
+human's approval — which is precisely why the mark does not follow. The second
+mechanism guards human-authored text from the machine. The first is a keyword
+classifier, not a reviewer: `preferenceSignals` is set once at
+`chatgpt-import.ts:500` and read only to render the page at `:515-516`, and
+nothing in the extension re-runs the gate or lifts the withholding. The rendered
+words *"until reviewed"* name a review the code does not implement.
 
 What it does not have is a way to reject a claim. `memory_session_tombstones`
 is a real durable table with a `reason` column, consulted by the dreaming sweep
@@ -545,6 +549,8 @@ designed, and write the evaluation it never got.
 - Optional vector backend and envelope sanitization: `extensions/memory-lancedb/lancedb-store.ts`, `memory-capture-sanitization.ts`.
 
 ## History
+
+**2026-09-19** — re-pinned to [`2e7e5ef6b1c1f98091588f48791da3d1ee8a96c0`](https://github.com/openclaw/openclaw/commit/2e7e5ef6b1c1f98091588f48791da3d1ee8a96c0). Read from a sparse checkout of `extensions/memory-wiki`, which is where `human_review` was anchored. The mark is **withdrawn**, and the reason is the sentence the previous reading wrote in its favour: the importer *"protects the human's writing, not just the human's approval."* That is exactly right and it is not this mark. `preserveHumanNotesBlock` guards human-authored text from the machine, which is the opposite direction. `inferRisk` does withhold — `preferenceSignals: risk.level === "low" ? … : []` at `chatgpt-import.ts:500` still holds — but it is a keyword classifier over six labelled rule sets, `preferenceSignals` is read only to render the page at `:515-516`, and nothing in the extension re-runs the gate or clears the withholding. The rendered words *"until reviewed"* name a review the code does not implement, which makes it a queue nothing drains rather than a state a person resolves. Both mechanisms keep their description in section 1, where they are worth more than the mark was. `scope_enforced` stands: its anchors in `extensions/memory-lancedb/lancedb-store.ts` and `extensions/memory-core/src/memory-entry-origins.ts` lie outside the sparse path, and both files carry byte-identical blobs at the old and new pins, so nothing there moved. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`5ed7eceb574fbb55e7c07d204db69def813a80f4`](https://github.com/openclaw/openclaw/commit/5ed7eceb574fbb55e7c07d204db69def813a80f4) — re-read at a commit dated 2026-09-16, roughly ten thousand commits past the previous pin. Both marks re-tested and held; the anchors were re-derived by name rather than by line, since three of the four files moved. `MemoryEntryOrigin` and its four origin classes now live in the plugin SDK rather than in the extension, and a `memory_session_tombstones` table records what a forget removed — keyed on the session and the agent, read back only by the forget tests, with no path consulting it before a memory is admitted. Screened before reading, from a clone deepened past the pin: two auto-run surfaces, four build-time execution points, one unpinned dependency surface and 203 dependency files inside the seven-day cooldown — the shape of a large monorepo under daily change rather than a finding about the memory code. Nothing was installed, built or run.
 
