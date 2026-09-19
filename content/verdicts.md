@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 609 reports.**
+**This page covers all 610 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5445,4 +5445,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `server/server/services/user_filter.py` — thirty lines holding the whole mechanism, including the decision that an empty device list is a predicate matching nothing rather than an absent filter.
 - Maturity impression: AGPL-3.0, Python and Next.js over Postgres with pgvector, 457 files across a server, CLI, desktop and mobile collectors and an embedding service. One mark, `scope_enforced`. `audit_log` is withheld because `AccessLog` records reads rather than mutations and its rows are deleted with their document, user or device — right for a personal-data store, not what append-only describes.
 - Study when: you want a worked example of a scope helper whose admin bypass is a return value rather than a condition repeated at every call site — and a reminder to write the two-user test while the helper is still thirty lines.
+
+### [`brigade`](../systems/brigade/)
+
+- Best idea: **give the agent a propose verb and no accept verb.** `memory_vault.py` indexes allowlisted roots, searches them, shows a cited note, and its only write is to *"deliver additive proposals into an allowlisted inbox."* It has `propose`, `_stage_proposal`, `_deliver_proposal` and `_reject_existing_note` — and no accept, anywhere in 2,214 files. The queue cannot be cleared by its producer because there is no function that clears it; the person resolves the file in their own editor. That is the strongest form this mark takes, and it is a subtraction rather than a feature.
+- Biggest risk: **nothing verifies who accepts.** Resolution happens in Obsidian, outside the program, so the separation is of surfaces rather than identities — and because a note carries no status, a proposal accepted in error is afterwards indistinguishable from one accepted deliberately.
+- Most reusable component: the propose path's containment, about three hundred lines. `_open_contained_inbox` opens the inbox *"without following any symlink component"* through a directory handle and translates five distinct failures into five distinct refusals; `_reject_existing_note` refuses to overwrite; and both raise rather than degrade where the primitives are missing — *"vault containment checks are unavailable on this platform."* The same must-not-exist precondition is then enforced a second time as `expected_before=kernel.ABSENT` in the plan.
+- Maturity impression: MIT, Python, 2,214 files across work tracking, receipts, attestation, a skills subsystem and the memory vault. Two marks — `human_review`, `negative_eval`. `audit_log` is withheld over a genuinely extensive receipt subsystem, because those are per-operation artifacts with optional HMAC signing rather than an append-only ledger of memory mutations; `scope_enforced` because the boundary is a filesystem one rather than a stored scope key.
+- Study when: you are writing the guarantee paragraph for a transactional writer. `projection/kernel.py` opens by naming what it provides and the stronger property it is not claiming — *"all-or-restored completion when the process can run recovery, not simultaneous visibility across independent paths"* — where most projects would write "atomic" and stop.
 

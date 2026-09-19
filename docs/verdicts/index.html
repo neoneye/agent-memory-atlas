@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 609 reports.</strong></p>
+<p><strong>This page covers all 610 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24801,6 +24801,48 @@ append-only describes.</li>
 bypass is a return value rather than a condition repeated at every call
 site — and a reminder to write the two-user test while the helper is
 still thirty lines.</li>
+</ul>
+<h3 id="brigade"><a
+href="../systems/brigade/"><code>brigade</code></a></h3>
+<ul>
+<li>Best idea: <strong>give the agent a propose verb and no accept
+verb.</strong> <code>memory_vault.py</code> indexes allowlisted roots,
+searches them, shows a cited note, and its only write is to <em>"deliver
+additive proposals into an allowlisted inbox."</em> It has
+<code>propose</code>, <code>_stage_proposal</code>,
+<code>_deliver_proposal</code> and <code>_reject_existing_note</code> —
+and no accept, anywhere in 2,214 files. The queue cannot be cleared by
+its producer because there is no function that clears it; the person
+resolves the file in their own editor. That is the strongest form this
+mark takes, and it is a subtraction rather than a feature.</li>
+<li>Biggest risk: <strong>nothing verifies who accepts.</strong>
+Resolution happens in Obsidian, outside the program, so the separation
+is of surfaces rather than identities — and because a note carries no
+status, a proposal accepted in error is afterwards indistinguishable
+from one accepted deliberately.</li>
+<li>Most reusable component: the propose path's containment, about three
+hundred lines. <code>_open_contained_inbox</code> opens the inbox
+<em>"without following any symlink component"</em> through a directory
+handle and translates five distinct failures into five distinct
+refusals; <code>_reject_existing_note</code> refuses to overwrite; and
+both raise rather than degrade where the primitives are missing —
+<em>"vault containment checks are unavailable on this platform."</em>
+The same must-not-exist precondition is then enforced a second time as
+<code>expected_before=kernel.ABSENT</code> in the plan.</li>
+<li>Maturity impression: MIT, Python, 2,214 files across work tracking,
+receipts, attestation, a skills subsystem and the memory vault. Two
+marks — <code>human_review</code>, <code>negative_eval</code>.
+<code>audit_log</code> is withheld over a genuinely extensive receipt
+subsystem, because those are per-operation artifacts with optional HMAC
+signing rather than an append-only ledger of memory mutations;
+<code>scope_enforced</code> because the boundary is a filesystem one
+rather than a stored scope key.</li>
+<li>Study when: you are writing the guarantee paragraph for a
+transactional writer. <code>projection/kernel.py</code> opens by naming
+what it provides and the stronger property it is not claiming —
+<em>"all-or-restored completion when the process can run recovery, not
+simultaneous visibility across independent paths"</em> — where most
+projects would write "atomic" and stop.</li>
 </ul>
         </article>
       </div>

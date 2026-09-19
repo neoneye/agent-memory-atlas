@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A coding-agent work tracker whose
+memory writer can only deliver additive proposals into an allowlisted
+Obsidian inbox, through symlink-free directory handles that refuse to
+run at all on a platform lacking the containment primitives.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Brigade — Agent Memory Atlas">
+    <meta property="og:description" content="A coding-agent work tracker
+whose memory writer can only deliver additive proposals into an
+allowlisted Obsidian inbox, through symlink-free directory handles that
+refuse to run at all on a platform lacking the containment primitives.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Brigade — Agent Memory Atlas">
+    <meta name="twitter:description" content="A coding-agent work
+tracker whose memory writer can only deliver additive proposals into an
+allowlisted Obsidian inbox, through symlink-free directory handles that
+refuse to run at all on a platform lacking the containment primitives.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Brigade — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Brigade",
+      "description": "A coding-agent work tracker whose memory writer can only deliver additive proposals into an allowlisted Obsidian inbox, through symlink-free directory handles that refuse to run at all on a platform lacking the containment primitives.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The agent may propose into the inbox and
+nothing more</p>
+          <h1>Brigade</h1>
+          <p class="document-deck">A coding-agent work tracker whose
+memory writer can only deliver additive proposals into an allowlisted
+Obsidian inbox, through symlink-free directory handles that refuse to
+run at all on a platform lacking the containment primitives.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/escoffier-labs/brigade">
+              <span>Source</span>
+              <strong>escoffier-labs/brigade</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/escoffier-labs/brigade/commit/f2b56bc0405027eecda11c48d303bf11e15a440f" title="f2b56bc0405027eecda11c48d303bf11e15a440f">
+              <span>Analyzed revision</span>
+              <code>f2b56bc0…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/escoffier-labs--brigade" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>escoffier-labs--brigade</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Brigade tracks coding-agent work across tools, repositories and
+sessions — tasks, receipts, synced tools, and a memory layer over an
+Obsidian vault the operator already keeps. MIT, Python, 2,214 files.</p>
+<p><strong>Two marks: <code>human_review</code> and
+<code>negative_eval</code>.</strong></p>
+<p>The memory writer is the reason for the first, and it earns the mark
+by <em>subtraction</em>. <code>memory_vault.py</code> indexes
+allowlisted roots, searches them, shows a cited note — and its only
+write is to <em>"deliver additive proposals into an allowlisted
+inbox."</em> There is no accept. The module has <code>propose</code>,
+<code>_stage_proposal</code>, <code>_deliver_proposal</code> and
+<code>_reject_existing_note</code>, and nothing anywhere in the tree
+accepts a vault proposal on the agent's behalf; the person resolves it
+by handling the file in their own vault, in Obsidian, outside this
+program.</p>
+<p>The containment underneath it is the part worth copying.
+<code>_open_contained_inbox</code> opens the inbox <em>"without
+following any symlink component"</em> using directory-relative handles,
+and <code>_reject_existing_note</code> refuses to overwrite. Both sit
+behind a guard that refuses to proceed at all where the primitives are
+missing — <em>"vault containment checks are unavailable on this
+platform"</em> is raised as an error rather than degraded into a plain
+<code>open()</code>.</p>
+<p><code>audit_log</code> and <code>scope_enforced</code> are withheld,
+and both for reasons about shape rather than care: receipts are per-run
+artifacts rather than one append-only ledger, and the boundary is a
+filesystem one rather than a stored scope key.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Brigade treats a memory write the way it treats any other side
+effect: as a planned operation with a captured pre-state, executed by a
+kernel that returns a receipt. Nothing is written by a function that
+also decided to write it.</p>
+<p>The vault is the operator's. Brigade indexes what it is allowed to
+see, cites what it returns, and posts proposals into one directory. What
+becomes memory is whatever the person keeps.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the agent's only write into the operator's vault is an additive proposal staged and then delivered through a directory handle opened without following any symlink component, refusing to overwrite an existing note and refusing to run at all where the containment primitives are unavailable; the delivery is a planned kernel mutation with an expected-before of ABSENT that returns a receipt whose terminal state is checked for committed, and a separate scenario-driven harness evaluates projections for named violations such as a removed card still live</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the agent&#39;s only write into the operator&#39;s vault is an additive proposal staged and then delivered through a directory handle opened without following any symlink component, refusing to overwrite an existing note and refusing to run at all where the containment primitives are unavailable; the delivery is a planned kernel mutation with an expected-before of ABSENT that returns a receipt whose terminal state is checked for committed, and a separate scenario-driven harness evaluates projections for named violations such as a removed card still live
+flowchart TD
+    AG((&quot;coding agent&quot;)) --&gt; IDX[&quot;index allowlisted roots&quot;]
+    AG --&gt; SRCH[&quot;search · show a cited note&quot;]
+    AG --&gt; PROP[&quot;propose(title, body)&quot;]
+
+    IDX --&gt; VAULT[(&quot;operator&#39;s Obsidian vault&lt;br/&gt;allowlisted roots only&quot;)]
+    SRCH --&gt; VAULT
+
+    PROP --&gt; STAGE[&quot;_stage_proposal&lt;br/&gt;staging under Brigade state dir&lt;br/&gt;owner-readable only&quot;]
+    STAGE --&gt; PLAN[&quot;kernel.build_plan&lt;br/&gt;mutation(expected_before = ABSENT)&quot;]
+    PLAN --&gt; OPEN[&quot;_open_contained_inbox&lt;br/&gt;no symlink component followed&quot;]
+    OPEN --&gt;|&quot;primitives missing&quot;| REFUSE1[&quot;raise: containment checks&lt;br/&gt;unavailable on this platform&quot;]
+    OPEN --&gt; REJ{&quot;_reject_existing_note&quot;}
+    REJ --&gt;|&quot;note exists&quot;| REFUSE2[&quot;raise: refusing to&lt;br/&gt;overwrite an existing note&quot;]
+    REJ --&gt;|&quot;absent&quot;| DELIV[&quot;_deliver_proposal&quot;]
+    DELIV --&gt; INBOX[(&quot;allowlisted inbox/&quot;)]
+
+    PLAN --&gt; KERN[&quot;projection kernel&lt;br/&gt;prepare · commit · restore&lt;br/&gt;all-or-restored when recovery can run&quot;]
+    KERN --&gt; RCPT[&quot;receipt · terminal_state&lt;br/&gt;checked == &#39;committed&#39;&quot;]
+    RCPT -.-&gt;|&quot;optional HMAC&quot;| SIGN[&quot;receipt_signing&lt;br/&gt;opt-in key file&quot;]
+
+    INBOX ==&gt;|&quot;a person, in Obsidian&quot;| KEPT((&quot;what becomes memory&quot;))
+    AG -.-&gt;|&quot;no accept verb anywhere in the tree&quot;| INBOX
+
+    EVAL[&quot;memory_retrieval_eval&lt;br/&gt;corpus · harness · metrics · quality&quot;] -.-&gt;|&quot;named violations&quot;| PROJ[&quot;projection scenarios&quot;]
+    PROJ --&gt; V1[&quot;removed card still live in projection&quot;]
+    PROJ --&gt; V2[&quot;expected canonical/projection hash divergence missing&quot;]
+    PROJ --&gt; V3[&quot;rename scenario missing prior_external_id&quot;]</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The containment</strong> —
+<code>src/brigade/memory_vault.py:1227-1242</code>.
+<code>_open_contained_inbox</code> delegates to a directory-relative
+open and translates each failure into a specific refusal: the platform
+lacks the primitives, the vault is unreadable, the vault <em>"must be a
+real directory"</em>, the path is unsafe, or the inbox <em>"escapes the
+vault"</em>. Five distinct errors, none of them a fallback.</p>
+<p><strong>The overwrite refusal</strong> — <code>:1244-1258</code>.
+<code>_reject_existing_note</code> opens the target name relative to the
+inbox handle; <code>FileNotFoundError</code> is the only success, and
+every other outcome raises <em>"refusing to overwrite an existing
+note."</em> Its first statement is the platform guard, so on a system
+without containment primitives the function refuses rather than
+proceeding unprotected.</p>
+<p><strong>The same rule at the kernel</strong> —
+<code>:1382-1391</code>. The delivery is a planned mutation with
+<code>expected_before=kernel.ABSENT</code>, so "this must not already
+exist" is enforced twice by different means: once by the file handle,
+once as a precondition of the transaction.</p>
+<p><strong>The guarantee, stated honestly</strong> —
+<code>src/brigade/projection/kernel.py:1-7</code>. <em>"A planned
+operation either publishes every destination mutation or restores every
+destination to its captured pre-operation state. The user-facing
+guarantee is all-or-restored completion when the process can run
+recovery, not simultaneous visibility across independent paths."</em>
+Most projects would write "atomic" and stop. This one names the
+guarantee, the condition it depends on, and the stronger property it is
+<em>not</em> claiming.</p>
+<p><strong>The receipt check</strong> —
+<code>memory_vault.py:1400-1402</code>. The receipt is attached to the
+payload and <code>terminal_state</code> is compared against
+<code>"committed"</code>, so a delivery that did not commit is not
+reported as one.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The vault's notes are the memory and they are markdown files the
+operator owns. Brigade keeps a derived index and proposal staging under
+its own state directory, <em>"owner-readable only"</em>, and a
+<code>brigade.vault-index.receipt.v1</code> schema for what it did.</p>
+<p>There is no status field on a note, no supersession pointer and no
+validity window. The word <code>tombstone</code> appears three times:
+twice in the GitHub work-item sync, where a 404 produces a
+stale-tombstone record — delete-sync, which the rubric names as <em>not
+this</em> — and once in the evaluation harness as an expected
+condition.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Index and search over allowlisted roots, returning cited notes. The
+interesting half is not the retriever but the harness that grades it —
+section 10.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Propose only, additively, into one directory, through the kernel. The
+staging directory and the delivery are separate steps so a partially
+written proposal never appears in the inbox.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI with a large command surface, receipts for runs and routes,
+attestation records, and a skills subsystem with its own inbox —
+<code>skills_cmd/inbox.py</code> carries an <code>inbox_accept</code>,
+which is for skill proposals rather than memory and is a terminal
+command.</p>
+<p>One guard worth naming from that subsystem: a co-owner <em>"cannot
+attest shared instruction rewrite"</em> when a receipt conflict exists,
+so two harnesses sharing an instruction file cannot both claim to have
+approved a change to it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>human_review</code>.</strong> The producing agent has
+no verb that turns a proposal into memory. The mark's strongest form is
+the absent one, and this is it: not a review state the agent can
+transition, not an approve flag it can set, but a directory it can add a
+file to and nothing more. The acceptance happens in the operator's own
+editor.</p>
+<p><strong><code>negative_eval</code></strong> — section 10.</p>
+<p><strong><code>scope_enforced</code> is withheld.</strong> The
+boundary is real, enforced and carefully built, and it is a filesystem
+boundary: allowlisted roots and symlink-free opens, not a stored scope
+key composed into a read. The mark measures the second thing, and saying
+otherwise would make its count describe two different mechanisms.</p>
+<p><strong><code>audit_log</code> is withheld.</strong> Receipts are
+extensive — run, route, causal, attestation — and they are per-operation
+artifacts written atomically rather than one append-only ledger of
+memory mutations. Signing is <em>"optional local HMAC"</em>, enabled by
+an env-configured key file, and at least one path unlinks an install
+receipt during skills sync history. The material is richer than most
+systems that do carry this mark; the shape is not the one it
+describes.</p>
+<p><strong><code>tombstone</code>, <code>trust_state</code> and
+<code>bitemporal</code> are withheld.</strong> A note has no status, no
+rejection record keyed on its content, and one clock.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A large pytest suite with committed fixtures under
+<code>tests/fixtures</code>, <code>tests/guard/fixtures</code> and
+<code>src/brigade/fixtures</code>. Nothing was installed and nothing was
+run.</p>
+<p>The mark rests on <code>src/brigade/memory_retrieval_eval/</code>, a
+scenario-driven harness with a corpus loader, a metrics module, a
+quality module and a reporter. Its projection evaluator returns a
+<em>named violation string</em> rather than a boolean, and the names are
+the assertions:</p>
+<ul>
+<li><code>"removed card still live in projection"</code> — raised when a
+scenario expects a card tombstoned and the projection reports it live
+(<code>projection.py:230</code>).</li>
+<li><code>"expected canonical/projection hash divergence missing"</code>,
+and its converse <code>"unexpected hash divergence"</code> — both
+directions, so a checker that always reported divergence would fail the
+second.</li>
+<li><code>"rename scenario missing prior_external_id"</code> and
+<code>"move scenario missing prior_path"</code> — an identity change
+must carry what it was before.</li>
+<li>A <code>live_count</code> expectation compared against the
+scenario's health block.</li>
+</ul>
+<p>Two things make this better than a pass/fail eval. The violation is a
+sentence, so a failing run says which invariant broke rather than which
+case number did. And the hash-divergence pair means the check cannot be
+satisfied by a constant in either direction — the same property that
+makes the archived-row pair elsewhere in this corpus worth having.</p>
+<p>No paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give the agent a propose verb and no accept verb.</strong>
+Not a status it can transition — no function at all. The queue then
+cannot be cleared by its producer, whatever a future caller
+intends.</li>
+<li><strong>Refuse on platforms that cannot enforce your guard.</strong>
+<em>"vault containment checks are unavailable on this platform"</em> is
+a better outcome than a plain <code>open()</code> and a comment.</li>
+<li><strong>Open the directory, then work relative to the
+handle.</strong> Resolving a path and then opening it is two operations
+and something can change in between; <code>dir_fd</code>-relative opens
+are one.</li>
+<li><strong>Enforce the same precondition twice by different
+means.</strong> The note must not exist, checked once by the file handle
+and once as <code>expected_before=ABSENT</code> in the plan.</li>
+<li><strong>Name the guarantee you actually provide.</strong>
+<em>"all-or-restored completion when the process can run recovery, not
+simultaneous visibility across independent paths"</em> tells a reader
+what to design around. "Atomic" does not.</li>
+<li><strong>Return a violation sentence, not a boolean.</strong> The
+eval's failure messages are the specification.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Calling a pile of receipts an audit log.</strong>
+Per-operation artifacts with optional signing answer "what did this run
+do", not "what has ever happened to this memory".</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take the vault propose path whole if an agent writes into a store a
+person owns — the containment, the double precondition and the missing
+accept verb are about three hundred lines and they are the design. Take
+the rest if you want the whole work-tracking product.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Receipt signing is optional and off unless a key file is configured.
+What would make it the default — and what verifies the chain if it
+is?</li>
+<li>The vault writer proposes and never accepts. Is an in-Brigade accept
+deliberately withheld, or waiting on a way to verify who is
+accepting?</li>
+<li>The retrieval eval names violations precisely. Is it wired into CI,
+and does a violation fail a build?</li>
+<li><code>tombstone</code> in the work-item sync is a 404 marker. Is a
+content-keyed rejection intended for vault notes, or is deletion the
+operator's business by design?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/brigade/memory_vault.py</code></td>
+<td>index, search, cited show, and the propose path with its containment
+and overwrite refusal</td>
+</tr>
+<tr>
+<td><code>src/brigade/projection/kernel.py</code></td>
+<td>prepare/commit/restore, the <code>ABSENT</code> precondition, and
+the guarantee statement</td>
+</tr>
+<tr>
+<td><code>src/brigade/memory_retrieval_eval/projection.py</code></td>
+<td>the named violations the mark rests on</td>
+</tr>
+<tr>
+<td><code>src/brigade/memory_retrieval_eval/corpus.py</code></td>
+<td>the card and query loaders behind the scenarios</td>
+</tr>
+<tr>
+<td><code>src/brigade/receipt_signing.py</code></td>
+<td>the optional local HMAC over receipt digests</td>
+</tr>
+<tr>
+<td><code>src/brigade/skills_cmd/inbox.py</code></td>
+<td><code>inbox_accept</code>, for skill proposals rather than
+memory</td>
+</tr>
+<tr>
+<td><code>src/brigade/harness_profile_cmd.py</code></td>
+<td>the co-owner attestation conflict on a shared instruction
+rewrite</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nothing accepts a vault proposal</td>
+<td><code>grep -rn "proposal" --include='*.py' src/brigade | grep -iE "def .*(accept|apply|merge|commit)"</code></td>
+<td>One hit, <code>skills_cmd/inbox.py:363</code>
+<code>inbox_accept</code>, which is the skills inbox;
+<code>memory_vault.py</code> has <code>propose</code>,
+<code>_stage_proposal</code>, <code>_deliver_proposal</code> and no
+accept</td>
+</tr>
+<tr>
+<td>The containment guard fails closed</td>
+<td>read <code>memory_vault.py:1227-1258</code></td>
+<td>Five distinct refusals, and <code>_reject_existing_note</code>
+raises when the primitives are unavailable before attempting
+anything</td>
+</tr>
+<tr>
+<td>The precondition is enforced twice</td>
+<td>read <code>memory_vault.py:1382-1391</code></td>
+<td><code>expected_before=kernel.ABSENT</code> in the plan, beside the
+handle-level existence check</td>
+</tr>
+<tr>
+<td><code>tombstone</code> is delete-sync, not a value record</td>
+<td><code>grep -rn "tombstone" --include='*.py' src</code></td>
+<td>Three files: two in <code>worklore_github_sync</code> for a 404
+marker, one in the eval harness as an expected condition</td>
+</tr>
+<tr>
+<td>Receipt signing is optional</td>
+<td>read <code>src/brigade/receipt_signing.py:1</code>,
+<code>:11-12</code></td>
+<td><em>"Optional local HMAC signing"</em>, keyed off
+<code>BRIGADE_RECEIPT_SIGNING_KEY_FILE</code></td>
+</tr>
+<tr>
+<td>No stored scope key on a memory read</td>
+<td><code>grep -rn "scope" --include='*.py' src/brigade/memory_vault.py</code></td>
+<td>Allowlisted roots and containment; no principal key composed into a
+query</td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>head -3 LICENSE</code>;
+<code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>Stock MIT, no match</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/escoffier-labs/brigade/commit/f2b56bc0405027eecda11c48d303bf11e15a440f"><code class="commit-id" title="f2b56bc0405027eecda11c48d303bf11e15a440f">f2b56bc0…</code></a>
+— first reading, at 2,214 files. Screened before reading; nothing was
+installed and nothing was run, so the committed eval harness and
+fixtures were read rather than executed. MIT. Two marks,
+<code>human_review</code> and <code>negative_eval</code>.
+<code>human_review</code> is the absent-verb form: the memory writer can
+propose into an allowlisted inbox and nothing in the tree accepts on the
+agent's behalf. <code>scope_enforced</code> is withheld because the
+boundary is a filesystem one rather than a stored scope key, and
+<code>audit_log</code> because the receipts are per-operation artifacts
+with optional signing rather than an append-only ledger of memory
+mutations — in both cases the engineering is stronger than the
+withholding suggests, and the reason is recorded in section 9 and in the
+appendix.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
