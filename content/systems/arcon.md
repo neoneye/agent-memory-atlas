@@ -7,13 +7,13 @@ page_kind: system
 source_name: "vmDeshpande/Arcon"
 source_url: https://github.com/vmDeshpande/Arcon
 archive_name: "vmDeshpande--Arcon"
-revision: 85de09cdcf2ff0cb67a0335c75105e3bd5384936
-revision_url: https://github.com/vmDeshpande/Arcon/commit/85de09cdcf2ff0cb67a0335c75105e3bd5384936
-analyzed_at: 2026-09-16
+revision: f04a5e493510a7b293f8ef986064f9c95afa427e
+revision_url: https://github.com/vmDeshpande/Arcon/commit/f04a5e493510a7b293f8ef986064f9c95afa427e
+analyzed_at: 2026-09-19
 capabilities: "trust_state, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   audit_log: "an append-only mutation log carrying the status transition, both sides of the content and who asked for it | packages/memory/src/personal-memory.ts:198-215, :396-422, :424-425 | `memory_audit_log` holds `action`, `previous_status`, `new_status`, `previous_content`, `new_content`, `reason`, `source` and `created_at`, indexed on the memory and on the action. `recordMutation` is its only writer and holds the sole `INSERT`; a search of the tree for a `DELETE`, `UPDATE` or `DROP` against the table returns nothing, so rows are never removed or rewritten. Seven call sites cover the whole lifecycle — `CREATE`, `SUPERSEDE`, `CONTRADICT`, `CONFIRM`, `REJECT` and `RESOLVE_CONTRADICTION` — and each row carries `source` as `user` or `system`, so a transition records whether a person or the machine caused it. Because both content columns are stored, the log holds what a memory said before it changed rather than only that it changed | packages/memory/tests/memory-audit.test.ts asserts a row is written for each of CREATE, UPDATE, SUPERSEDE, CONFIRM, REJECT and CONTRADICT, and that the query filters by action and by source"
-  trust_state: "the memory status column, applied on both read paths | packages/memory/src/personal-memory.ts (`MemoryStatus`, `archiveMemory`, the `SUPERSEDED` write), pipeline/memory-pipeline.ts:123,:143,:243,:265,:335-337, retrieval/memory-retriever.ts:15-21 | six CHECK-constrained statuses, and `EXCLUDED_FROM_NORMAL_RETRIEVAL` holds five of them — `ARCHIVED`, `OBSOLETE`, `CONTRADICTED`, `PENDING_CONFIRMATION`, `SUPERSEDED` — so the field decides admissibility rather than weight. Three of the five have writers: `archiveMemory` sets `ARCHIVED`, the pipeline's `CONFLICT` branch sets `PENDING_CONFIRMATION`, and the supersede path sets the predecessor to `SUPERSEDED` while writing `supersedesId` on the successor, which is a complete correction lineage. The gaps to state with the mark: `CONTRADICTED` is excluded by three separate lists and assigned by nothing, `OBSOLETE` likewise, and `MemorySourceType.USER_CONFIRMED` has no writer at all — so a `PENDING_CONFIRMATION` memory is withheld from retrieval with no path out of the state | packages/memory/tests/memory-retriever.test.ts, phase-c-retrieval.test.ts, memory-pipeline.test.ts:395 asserts `newMemory.supersedesId === oldMemory.id`"
+  trust_state: "the memory status column, applied on both read paths, with a guarded transition for every state and a mutation row for every transition | packages/memory/src/personal-memory.ts:17-22 (`MemoryStatus`), :149 (the CHECK), :286-300 (`markContradicted`), :314-339 (`confirmMemory`), :347-366 (`rejectMemory`), :368-394 (`resolveContradiction`), pipeline/memory-pipeline.ts:123, :143, :243, :265, :335-337, :386-393, retrieval/memory-retriever.ts:15-21 | six CHECK-constrained statuses, and `EXCLUDED_FROM_NORMAL_RETRIEVAL` holds five of them — ARCHIVED, OBSOLETE, CONTRADICTED, PENDING_CONFIRMATION, SUPERSEDED — so the field decides admissibility rather than weight. Every one has a writer, and each transition is guarded on the status the row is already in: `confirmMemory` moves only a PENDING_CONFIRMATION row to ACTIVE and stamps `sourceType = USER_CONFIRMED`, `rejectMemory` moves only that status to OBSOLETE, `markContradicted` writes CONTRADICTED, and `resolveContradiction` moves only a CONTRADICTED row to ACTIVE or OBSOLETE. Each writes a row to the mutation log carrying the previous status, the new one and a source of user or system. The limit is reach, not coverage: these are library methods on the repository and the pipeline, and nothing above the library calls them — `apps/server` constructs both and exposes no route, and there is no CLI, so a PENDING_CONFIRMATION memory is unresolvable from a running Arcon while being resolvable from the API | packages/memory/tests/memory-lifecycle.test.ts:135-205 walks the contradiction states end to end; memory-retriever.test.ts, phase-c-retrieval.test.ts; memory-pipeline.test.ts:395 asserts `newMemory.supersedesId === oldMemory.id`"
   scope_enforced: "the scope column, filtered before scoring | packages/memory/src/personal-memory.ts (`MemoryScope`, `scope: input.scope ?? MemoryScope.USER`), retrieval/memory-retriever.ts:51-59,:93,:158 | `scope` is a stored column with a five-value enum, and normal retrieval filters it twice — a hard restriction to `USER` or `ARCON` before scoring, so the companion's own beliefs and the human's are separable and neither can be reached by a query for the other, plus a `scope` parameter passed through to `listMemories`. Entity facts are fetched under `MemoryScope.ENTITY` on their own path. Two of the five values are not produced: `PROJECT` is queryable from the cognitive processor and never written, `CONVERSATION` appears nowhere outside the enum | packages/memory/tests/phase-c-retrieval.test.ts"
   negative_eval: "the retrieval suites | packages/memory/tests/memory-retriever.test.ts:157-212, tests/phase-c-retrieval.test.ts:80-110 | each negative case seeds a memory in an excluded status *and* a second memory matching the same query, then asserts both halves — `results.every((m) => m.status !== MemoryStatus.CONTRADICTED)` beside `results.some((m) => m.content === \"User likes tea\")`, and the same pair for `PENDING_CONFIRMATION`. The control is what makes the negative mean anything: `beforeEach` opens a fresh database per test, so an assertion over `every` alone would pass on an empty result | the tests are the mechanism"
 stack_storage: "sqlite"
@@ -28,9 +28,9 @@ matrix:
   scoping: "A `scope` column over five values, filtered before scoring — normal retrieval is restricted to `USER` or `ARCON`, so the human's beliefs and the companion's are separable; `PROJECT` is queryable and never written, `CONVERSATION` is unused"
   integration: "A chat app, a desktop app and a server over local Ollama, with a voice package and a LoRA inference service"
   background: "None on a schedule in the memory package; mood, emotion and interest engines update on interaction"
-  trust: "A six-value status and a four-value source type, CHECK-constrained in the schema. Five statuses are excluded from normal retrieval and three of those have writers; `CONTRADICTED` and `OBSOLETE` are filtered and never assigned, and `USER_CONFIRMED` has no writer anywhere"
+  trust: "A six-value status and a four-value source type, CHECK-constrained in the schema. Five statuses are excluded from normal retrieval and every one has a guarded writer that records its transition in a mutation log; no shipped surface calls those writers"
   strengths: "The write path decides CREATE, UPDATE, IGNORE or CONFLICT deterministically before touching the store; a supersession writes a lineage pointer and retires the predecessor; and every negative retrieval test seeds a matching control so it cannot pass on an empty result"
-  risks: "A `PENDING_CONFIRMATION` memory is withheld from retrieval and has no way out, because nothing writes `USER_CONFIRMED`, so it is invisible as well as unresolvable; the exclusion set is a denylist duplicated in two files; and `CONTRADICTED` is filtered by three lists and assigned by none"
+  risks: "A `PENDING_CONFIRMATION` memory is withheld from retrieval and no shipped surface can resolve it — the confirm, reject and contradiction transitions exist on the repository and the pipeline, and the server exposes no route for them and there is no CLI; and the exclusion set is a denylist duplicated in two files"
 ---
 
 ## 1. Executive Summary
@@ -74,20 +74,34 @@ The write side does not reach as far as the read side:
 | `ARCHIVED` | `archiveMemory` | excluded from retrieval |
 | `SUPERSEDED` | the supersede path | excluded from retrieval |
 | `PENDING_CONFIRMATION` | pipeline, on `CONFLICT` | excluded from retrieval |
-| `OBSOLETE` | **nothing** | excluded from retrieval |
-| `CONTRADICTED` | **nothing** | excluded by *three* lists |
-| `USER_CONFIRMED` (source type) | **nothing** | **nothing** |
+| `OBSOLETE` | `rejectMemory`, `resolveContradiction` | excluded from retrieval |
+| `CONTRADICTED` | `markContradicted` | excluded by *three* lists |
+| `USER_CONFIRMED` (source type) | `confirmMemory` | **nothing** |
 | `MemoryScope.PROJECT` | **nothing** | queried by the cognitive processor |
 | `MemoryScope.CONVERSATION` | **nothing** | **nothing** |
 
-**And one consequence is worth stating on its own, because the improvement
-caused it.** `PENDING_CONFIRMATION` is the status the pipeline assigns to a
-candidate that contradicts something already stored. It is excluded from every
-read — the right behaviour — while `MemorySourceType.USER_CONFIRMED`, the value
-that would record a person resolving it, is assigned by nothing.
-There is no confirm command and no review surface. So a conflicting memory is
-stored, withheld from every read, and permanently unresolvable: the state
-acquired its effect and kept its dead end.
+**And one consequence is worth stating on its own.**
+`PENDING_CONFIRMATION` is the status the pipeline assigns to a candidate that
+contradicts something already stored, and it is excluded from every read — the
+right behaviour. The way out of it exists and is well made:
+`confirmMemory` (`personal-memory.ts:314-339`) moves the row to `ACTIVE`, stamps
+`sourceType = USER_CONFIRMED`, increments `evidenceCount` and records a `CONFIRM`
+mutation with `source: "user"`; `rejectMemory` (`:347-366`) moves it to
+`OBSOLETE` with a `REJECT` row. Both refuse to act on a row in any other status,
+so a transition cannot be applied to the wrong state. The contradiction pair is
+the same shape: `markContradicted` (`:286-300`) and `resolveContradiction`
+(`:368-394`), which will only move a row that is currently `CONTRADICTED`, to
+`ACTIVE` or `OBSOLETE` by the caller's choice. `packages/memory/tests/memory-lifecycle.test.ts:135-205`
+walks them.
+
+The limit is reach, not coverage. All four are library methods, on the
+repository and mirrored on the pipeline (`memory-pipeline.ts:386-393`), and
+nothing above the library calls them: `apps/server` imports `MemoryRepository`
+and `MemoryPipeline` and exposes no route for any of them, and there is no CLI.
+So from a running Arcon a conflicting memory is stored, withheld from every
+read, and unresolvable — while from the API it is resolvable in one call. The
+dead end is in the surface, not in the state machine, which is the better
+problem to have and a different one from the one to fix.
 
 ## 2. Mental Model
 
@@ -463,7 +477,9 @@ this reading agrees with it for reasons the README does not list.
 
 ## History
 
-**2026-09-16** — [`85de09cdcf2ff0cb67a0335c75105e3bd5384936`](https://github.com/vmDeshpande/Arcon/commit/85de09cdcf2ff0cb67a0335c75105e3bd5384936) — re-read at a commit dated 2026-09-15, 10 commits past the previous pin. The three existing marks re-tested and held, and **`audit_log` is added**: `memory_audit_log` is an append-only table written by one function at seven call sites covering `CREATE`, `SUPERSEDE`, `CONTRADICT`, `CONFIRM`, `REJECT` and `RESOLVE_CONTRADICTION`, carrying the status on both sides, the content on both sides, a reason and a `source` of `user` or `system`. No `DELETE`, `UPDATE` or `DROP` against it exists in the tree, and `memory-audit.test.ts` pins a row for each action and the reader's filters. A `PENDING_CONFIRMATION` status joins the lifecycle, and `containsInstructionPattern` screens a candidate before it can become a memory, with a committed case asserting an ignore-all-instructions payload is refused. Screened before reading, from a full clone: no auto-run surface, no build-time execution point, nine unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
+**2026-09-19** — [`f04a5e493510a7b293f8ef986064f9c95afa427e`](https://github.com/vmDeshpande/Arcon/commit/f04a5e493510a7b293f8ef986064f9c95afa427e) — `trust_state` re-tested, and the record's negative half was wrong in four places, all of them wrong when it was written rather than changed since: `packages/memory/src/personal-memory.ts` is byte-for-byte at the same line numbers at the previous pin. It said `CONTRADICTED` is assigned by nothing, `OBSOLETE` likewise, `MemorySourceType.USER_CONFIRMED` has no writer anywhere, and a `PENDING_CONFIRMATION` memory has no path out of the state. Each of the four has a writer in that file, and the four together are a guarded state machine: `markContradicted` (`:286-300`), `confirmMemory` (`:314-339`), `rejectMemory` (`:347-366`) and `resolveContradiction` (`:368-394`). Every one refuses to act on a row that is not already in the status it transitions from, and every one writes a mutation row carrying the previous status, the new status and a source of user or system. `confirmMemory` is what stamps `USER_CONFIRMED` and increments `evidenceCount`. `packages/memory/tests/memory-lifecycle.test.ts:135-205` walks the contradiction states end to end. The effect the report described is real and the reason given was not. The four are library methods, mirrored on the pipeline (`memory-pipeline.ts:386-393`), and nothing above the library calls them: `apps/server` imports `MemoryRepository` and `MemoryPipeline` and exposes no route for any of them, and there is no CLI. So a pending memory is unresolvable from a running Arcon and resolvable from the API in one call — the dead end is in the surface, not in the state machine. The declared-versus-written table, section 1, the matrix rows and the verdict entry were corrected. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-16** — [`f04a5e493510a7b293f8ef986064f9c95afa427e`](https://github.com/vmDeshpande/Arcon/commit/f04a5e493510a7b293f8ef986064f9c95afa427e) — re-read at a commit dated 2026-09-15, 10 commits past the previous pin. The three existing marks re-tested and held, and **`audit_log` is added**: `memory_audit_log` is an append-only table written by one function at seven call sites covering `CREATE`, `SUPERSEDE`, `CONTRADICT`, `CONFIRM`, `REJECT` and `RESOLVE_CONTRADICTION`, carrying the status on both sides, the content on both sides, a reason and a `source` of `user` or `system`. No `DELETE`, `UPDATE` or `DROP` against it exists in the tree, and `memory-audit.test.ts` pins a row for each action and the reader's filters. A `PENDING_CONFIRMATION` status joins the lifecycle, and `containsInstructionPattern` screens a candidate before it can become a memory, with a committed case asserting an ignore-all-instructions payload is refused. Screened before reading, from a full clone: no auto-run surface, no build-time execution point, nine unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
 **2026-08-24** — [`ef74011fe6d74959d901a593d42696fe4929aa30`](https://github.com/vmDeshpande/Arcon/commit/ef74011fe6d74959d901a593d42696fe4929aa30) — second reading, three commits on, at v0.4.0. Screened again first: no auto-run surface, no build-time execution, nine unpinned surfaces and nine files inside the seven-day cooldown; nothing was installed and no test was run. Three marks where there were none. The status vocabulary gained a sixth value and an `EXCLUDED_FROM_NORMAL_RETRIEVAL` set covering five, so the field decides admissibility rather than weight; the supersede path writes `supersedesId` on the successor and retires the predecessor as `SUPERSEDED`, completing a correction lineage that was a column and three interface fields with no writer; `MemoryScope` arrived as a stored column filtered before scoring, restricting normal retrieval to the human's memories or the companion's own; and every negative retrieval test now seeds a matching control beside the excluded memory, so none of them can pass on an empty result. What did not move: `MemorySourceType.USER_CONFIRMED` still has no writer, and because `PENDING_CONFIRMATION` is now excluded from retrieval, a conflicting memory is withheld from every read and remains unresolvable. `CONTRADICTED` is named in three exclusion lists and assigned by nothing; `MemoryScope.PROJECT` is queried by the cognitive processor and written by nothing; `CONVERSATION` appears only in the enum. A reflection module and two phase test suites are new; the suite is 252 cases across 26 files.
 

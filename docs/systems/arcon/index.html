@@ -110,14 +110,14 @@ has exactly one value that is both written and read.</p>
               <strong>vmDeshpande/Arcon</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/vmDeshpande/Arcon/commit/85de09cdcf2ff0cb67a0335c75105e3bd5384936" title="85de09cdcf2ff0cb67a0335c75105e3bd5384936">
+            <a class="meta-pill revision-pill" href="https://github.com/vmDeshpande/Arcon/commit/f04a5e493510a7b293f8ef986064f9c95afa427e" title="f04a5e493510a7b293f8ef986064f9c95afa427e">
               <span>Analyzed revision</span>
-              <code>85de09cd…</code>
+              <code>f04a5e49…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/vmDeshpande--Arcon" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -205,17 +205,17 @@ which is the third.</p>
 </tr>
 <tr>
 <td><code>OBSOLETE</code></td>
-<td><strong>nothing</strong></td>
+<td><code>rejectMemory</code>, <code>resolveContradiction</code></td>
 <td>excluded from retrieval</td>
 </tr>
 <tr>
 <td><code>CONTRADICTED</code></td>
-<td><strong>nothing</strong></td>
+<td><code>markContradicted</code></td>
 <td>excluded by <em>three</em> lists</td>
 </tr>
 <tr>
 <td><code>USER_CONFIRMED</code> (source type)</td>
-<td><strong>nothing</strong></td>
+<td><code>confirmMemory</code></td>
 <td><strong>nothing</strong></td>
 </tr>
 <tr>
@@ -230,15 +230,35 @@ which is the third.</p>
 </tr>
 </tbody>
 </table></div>
-<p><strong>And one consequence is worth stating on its own, because the
-improvement caused it.</strong> <code>PENDING_CONFIRMATION</code> is the
-status the pipeline assigns to a candidate that contradicts something
-already stored. It is excluded from every read — the right behaviour —
-while <code>MemorySourceType.USER_CONFIRMED</code>, the value that would
-record a person resolving it, is assigned by nothing. There is no
-confirm command and no review surface. So a conflicting memory is
-stored, withheld from every read, and permanently unresolvable: the
-state acquired its effect and kept its dead end.</p>
+<p><strong>And one consequence is worth stating on its own.</strong>
+<code>PENDING_CONFIRMATION</code> is the status the pipeline assigns to
+a candidate that contradicts something already stored, and it is
+excluded from every read — the right behaviour. The way out of it exists
+and is well made: <code>confirmMemory</code>
+(<code>personal-memory.ts:314-339</code>) moves the row to
+<code>ACTIVE</code>, stamps <code>sourceType = USER_CONFIRMED</code>,
+increments <code>evidenceCount</code> and records a <code>CONFIRM</code>
+mutation with <code>source: "user"</code>; <code>rejectMemory</code>
+(<code>:347-366</code>) moves it to <code>OBSOLETE</code> with a
+<code>REJECT</code> row. Both refuse to act on a row in any other
+status, so a transition cannot be applied to the wrong state. The
+contradiction pair is the same shape: <code>markContradicted</code>
+(<code>:286-300</code>) and <code>resolveContradiction</code>
+(<code>:368-394</code>), which will only move a row that is currently
+<code>CONTRADICTED</code>, to <code>ACTIVE</code> or
+<code>OBSOLETE</code> by the caller's choice.
+<code>packages/memory/tests/memory-lifecycle.test.ts:135-205</code>
+walks them.</p>
+<p>The limit is reach, not coverage. All four are library methods, on
+the repository and mirrored on the pipeline
+(<code>memory-pipeline.ts:386-393</code>), and nothing above the library
+calls them: <code>apps/server</code> imports
+<code>MemoryRepository</code> and <code>MemoryPipeline</code> and
+exposes no route for any of them, and there is no CLI. So from a running
+Arcon a conflicting memory is stored, withheld from every read, and
+unresolvable — while from the API it is resolvable in one call. The dead
+end is in the surface, not in the state machine, which is the better
+problem to have and a different one from the one to fix.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <pre class="text"><code>turn ──► extractor (rules or LLM) ──► candidates
                                           │
@@ -650,8 +670,40 @@ weights), <code>retrieval/context-builder.ts</code></li>
 <code>packages/ai/tests/</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/vmDeshpande/Arcon/commit/f04a5e493510a7b293f8ef986064f9c95afa427e"><code class="commit-id" title="f04a5e493510a7b293f8ef986064f9c95afa427e">f04a5e49…</code></a>
+— <code>trust_state</code> re-tested, and the record's negative half was
+wrong in four places, all of them wrong when it was written rather than
+changed since: <code>packages/memory/src/personal-memory.ts</code> is
+byte-for-byte at the same line numbers at the previous pin. It said
+<code>CONTRADICTED</code> is assigned by nothing, <code>OBSOLETE</code>
+likewise, <code>MemorySourceType.USER_CONFIRMED</code> has no writer
+anywhere, and a <code>PENDING_CONFIRMATION</code> memory has no path out
+of the state. Each of the four has a writer in that file, and the four
+together are a guarded state machine: <code>markContradicted</code>
+(<code>:286-300</code>), <code>confirmMemory</code>
+(<code>:314-339</code>), <code>rejectMemory</code>
+(<code>:347-366</code>) and <code>resolveContradiction</code>
+(<code>:368-394</code>). Every one refuses to act on a row that is not
+already in the status it transitions from, and every one writes a
+mutation row carrying the previous status, the new status and a source
+of user or system. <code>confirmMemory</code> is what stamps
+<code>USER_CONFIRMED</code> and increments <code>evidenceCount</code>.
+<code>packages/memory/tests/memory-lifecycle.test.ts:135-205</code>
+walks the contradiction states end to end. The effect the report
+described is real and the reason given was not. The four are library
+methods, mirrored on the pipeline
+(<code>memory-pipeline.ts:386-393</code>), and nothing above the library
+calls them: <code>apps/server</code> imports
+<code>MemoryRepository</code> and <code>MemoryPipeline</code> and
+exposes no route for any of them, and there is no CLI. So a pending
+memory is unresolvable from a running Arcon and resolvable from the API
+in one call — the dead end is in the surface, not in the state machine.
+The declared-versus-written table, section 1, the matrix rows and the
+verdict entry were corrected. Screened again first; nothing was
+installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/vmDeshpande/Arcon/commit/85de09cdcf2ff0cb67a0335c75105e3bd5384936"><code class="commit-id" title="85de09cdcf2ff0cb67a0335c75105e3bd5384936">85de09cd…</code></a>
+href="https://github.com/vmDeshpande/Arcon/commit/f04a5e493510a7b293f8ef986064f9c95afa427e"><code class="commit-id" title="f04a5e493510a7b293f8ef986064f9c95afa427e">f04a5e49…</code></a>
 — re-read at a commit dated 2026-09-15, 10 commits past the previous
 pin. The three existing marks re-tested and held, and
 <strong><code>audit_log</code> is added</strong>:

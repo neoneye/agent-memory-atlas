@@ -1542,8 +1542,16 @@ four-way decision is a better shape and is reusable on its own.</li>
 <li>Second idea: <strong>a conflicting candidate becomes a row, not a
 merge and not a drop.</strong> The <code>CONFLICT</code> branch writes
 the new memory with <code>status: PENDING_CONFIRMATION</code>, keeping
-both values and deferring the judgement, which is the right instinct.
-And the schema puts the whole vocabulary in the database —
+both values and deferring the judgement, which is the right instinct —
+and the way out is well made: <code>confirmMemory</code> and
+<code>rejectMemory</code> each refuse to act on a row in any other
+status, stamp <code>USER_CONFIRMED</code> or <code>OBSOLETE</code>, and
+write a mutation row carrying the previous status, the new one and
+whether a user or the system caused it. The contradiction pair is the
+same shape. What is missing is the surface: all four are library methods
+the server exposes no route for, so from a running Arcon a pending
+memory is unresolvable and from the API it is one call. And the schema
+puts the whole vocabulary in the database —
 <code>CHECK(status IN (...))</code>, range checks on importance 1–10 and
 confidence 0–1 — so no migration can introduce a state the code has
 never seen.</li>
@@ -1558,7 +1566,10 @@ full table scan, no score floor, and an entity branch that suppresses
 the semantic store entirely when it hits. And
 <code>MemoryScope.PROJECT</code> is still queried by the cognitive
 processor with nothing assigning it, so that branch returns empty and
-reports nothing.</li>
+reports nothing. (An earlier version of this entry said the same of
+three memory statuses and of <code>USER_CONFIRMED</code>; that was wrong
+— each has a guarded writer in <code>personal-memory.ts</code>, and the
+gap is that nothing above the library calls them.)</li>
 <li>Maturity impression: ~15,900 lines of TypeScript, 34 commits, seven
 packages, 204 tests, local Ollama, and a README that says it is not
 production-ready. Four capability marks — <code>trust_state</code>,

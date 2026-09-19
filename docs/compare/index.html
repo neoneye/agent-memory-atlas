@@ -11932,20 +11932,18 @@ voice package and a LoRA inference service</td>
 engines update on interaction</td>
 <td>A six-value status and a four-value source type, CHECK-constrained
 in the schema. Five statuses are excluded from normal retrieval and
-three of those have writers; <code>CONTRADICTED</code> and
-<code>OBSOLETE</code> are filtered and never assigned, and
-<code>USER_CONFIRMED</code> has no writer anywhere</td>
+every one has a guarded writer that records its transition in a mutation
+log; no shipped surface calls those writers</td>
 <td>The write path decides CREATE, UPDATE, IGNORE or CONFLICT
 deterministically before touching the store; a supersession writes a
 lineage pointer and retires the predecessor; and every negative
 retrieval test seeds a matching control so it cannot pass on an empty
 result</td>
 <td>A <code>PENDING_CONFIRMATION</code> memory is withheld from
-retrieval and has no way out, because nothing writes
-<code>USER_CONFIRMED</code>, so it is invisible as well as unresolvable;
-the exclusion set is a denylist duplicated in two files; and
-<code>CONTRADICTED</code> is filtered by three lists and assigned by
-none</td>
+retrieval and no shipped surface can resolve it — the confirm, reject
+and contradiction transitions exist on the repository and the pipeline,
+and the server exposes no route for them and there is no CLI; and the
+exclusion set is a denylist duplicated in two files</td>
 </tr>
 <tr>
 <td><code>arcrift</code></td>
@@ -42414,7 +42412,7 @@ not read; the report covers the sidecar around it and says where its
 claims stop</li>
 <li><a href="https://github.com/vmDeshpande/Arcon">vmDeshpande/Arcon</a>
 at <a
-href="https://github.com/vmDeshpande/Arcon/commit/85de09cdcf2ff0cb67a0335c75105e3bd5384936"><code class="commit-id" title="85de09cdcf2ff0cb67a0335c75105e3bd5384936">85de09cd…</code></a>
+href="https://github.com/vmDeshpande/Arcon/commit/f04a5e493510a7b293f8ef986064f9c95afa427e"><code class="commit-id" title="f04a5e493510a7b293f8ef986064f9c95afa427e">f04a5e49…</code></a>
 — read only; no auto-run surface, no build-time execution, ten unpinned
 surfaces and nine files inside the seven-day cooldown. Nothing was
 installed and no test was run. The README's licence badge points at a
