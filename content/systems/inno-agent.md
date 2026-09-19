@@ -7,13 +7,12 @@ page_kind: system
 source_name: "hhyqhh/inno-agent"
 source_url: https://github.com/hhyqhh/inno-agent
 archive_name: "hhyqhh--inno-agent"
-revision: fdd95ccd44ac237444dd3bc12572f6b17ea132c7
-revision_url: https://github.com/hhyqhh/inno-agent/commit/fdd95ccd44ac237444dd3bc12572f6b17ea132c7
-analyzed_at: 2026-09-16
-capabilities: "trust_state, human_review, negative_eval"
+revision: 4fe5cc9fd4f4953347e7716d7e5006c0e6385b88
+revision_url: https://github.com/hhyqhh/inno-agent/commit/4fe5cc9fd4f4953347e7716d7e5006c0e6385b88
+analyzed_at: 2026-09-19
+capabilities: "trust_state, negative_eval"
 capability_evidence:
   trust_state: "a misconception carries a stored four-value status whose `active` value blocks two read paths, moved only by an explicitly linked repair check that clears four conditions | apps/inno-agent/src/memory/learner/types.ts, apps/inno-agent/src/memory/learner/state-engine.ts:250-281, :296-299, apps/inno-agent/src/memory/learner/context-pack.ts:71 | a `Misconception` stores `status` as `active`, `repairing`, `resolved` or `stale`; `applyEvidenceToLinkedMisconception` is documented as \"[a] misconception is not cleared merely because the same concept was used. Only an explicitly linked, reliable repair check moves it out of the active blocker state. A later linked failure reactivates it\", and enforces that — an `incorrect` or `partial` linked result sets `active`, while leaving `active` requires a `correct` result that is a retrieval kind, `hint_level <= 1`, `evaluator_confidence >= 0.7` and `evidenceWeight >= 0.25`. Only `active` misconceptions enter the context pack, and only they force `state_label = \"misconception\"` in the projected state | apps/inno-agent/src/memory/learner/state-engine.test.ts:216-254"
-  human_review: "the learner's own web panel edits the stored mastery, diagnosis and misconception status, and deletes goals, writing straight into the profile the next turn reads | apps/inno-agent/web/src/react/LearnerProfilePanel.tsx, apps/inno-agent/web/src/stores/learner-store.ts:96-120, apps/inno-agent/src/server/routes/learner.ts:136-180 | the panel calls `learnerStore.patchKnowledge` and `patchMisconception` alongside `addGoal`, `patchGoal` and `deleteGoal`; the server's `PATCH /api/learner/profile/knowledge/:conceptId` writes `mastery`, `confidence`, `stability`, `diagnosis` and `next_actions`, and `PATCH /api/learner/profile/misconceptions/:miscId` writes `status`, `severity` and `repair_strategy`, each followed by `saveProfile`. The edited knowledge state becomes the `base` that `projectKnowledgeState` builds the next projection on, so the person's edit is authoritative rather than advisory | apps/inno-agent/src/server.smoke.test.ts:325-348"
   negative_eval: "a committed must-not-retrieve assertion that the assistant's private reasoning never enters the session index, with a positive control and an exact chunk count in the same test | apps/inno-agent/src/memory/l3/l3.test.ts:155-178 | the test writes a session whose assistant turn carries both a `thinking` block reading \"内部推理不应进索引\" (internal reasoning must not enter the index) and a visible `text` block, plus a `toolResult` message, then asserts `indexSession` wrote 2 chunks, `searchLexical(\"机器学习\")` returns 1 hit — the positive control — and `searchLexical(\"内部推理\")` returns 0. The assertions run against the real SQLite FTS5 store, not a mocked filter | apps/inno-agent/src/memory/l3/indexer.ts:42, :101"
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical"
@@ -129,7 +128,7 @@ flowchart TB
     MIS["misconception.status<br/>active | repairing | resolved | stale"] --> ACT{"status === 'active'?"}
     ACT -->|"yes"| BLOCK["blocks teaching:<br/>enters the context pack,<br/>forces label = misconception"]
     ACT -->|"repairing / resolved / stale"| PASS["stops blocking —<br/>the ladder has four rungs,<br/>the filter tests one"]
-    HUMAN["learner's web panel:<br/>PATCH mastery, diagnosis,<br/>misconception status"] --> BASE
+    HUMAN["learner's web panel: PATCH mastery,<br/>diagnosis, misconception status —<br/>straight into the live profile"] --> BASE
     HUMAN -.->|"status cast with no<br/>enum validation"| MIS
     LABEL --> PACK["context pack → the prompt"]
     BLOCK --> PACK
@@ -237,7 +236,13 @@ then treats the asserted value as a prior and moves it by 35% of one weighted
 step per piece of real evidence, so a fabricated 0.95 survives several honest
 failures.
 
-The web panel writes through a second door with a different validation posture.
+The web panel is a correction surface and not a review one, which is why this
+report does not carry `human_review`: `PATCH /api/learner/profile/knowledge/:conceptId`
+(`learner.ts:136`) and `.../misconceptions/:miscId` (`:161`) write straight into
+the profile the next turn reads, and the edited knowledge state becomes the
+`base` the next projection builds on. Nothing is held anywhere pending a
+decision. The panel also writes through a second door with a different
+validation posture.
 The tool path declares `status` as a `StringEnum` of four values; the HTTP
 handler at `learner.ts:173` does `(body.status as Misconception["status"]) ??
 current.status` — a bare TypeScript cast, which erases at runtime. A PATCH
@@ -367,5 +372,7 @@ or as designed. It was not read here.
 | `apps/inno-agent/src/memory/l2/types.ts` | A page status nothing filters on |
 
 ## History
+
+**2026-09-19** — re-pinned to [`4fe5cc9fd4f4953347e7716d7e5006c0e6385b88`](https://github.com/hhyqhh/inno-agent/commit/4fe5cc9fd4f4953347e7716d7e5006c0e6385b88). `human_review` is **withdrawn**, and the withdrawn record described the disqualifying shape itself: the panel writes *"straight into the profile the next turn reads"*, and the edited state *"becomes the `base` that `projectKnowledgeState` builds the next projection on, so the person's edit is authoritative rather than advisory."* Authoritative editing is authoring, not a gate — nothing waits. The two PATCH routes were re-verified at `learner.ts:136` and `:161`, and the tree carries no pending, proposed or approval state on a memory at this pin. The panel keeps its credit in section 7, including the finding that matters more than the mark: its `status` handling is a bare TypeScript cast, so a PATCH carrying any string stores it and an unrecognised value silently stops a misconception from blocking. `trust_state` and `negative_eval` stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`fdd95ccd44ac237444dd3bc12572f6b17ea132c7`](https://github.com/hhyqhh/inno-agent/commit/fdd95ccd44ac237444dd3bc12572f6b17ea132c7) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: ten files scanned, no auto-run surfaces, five dependency files inside the seven-day cooldown, six unpinned surfaces including two `package.json` files with no lockfile beside them and a `xlsx` dependency from a vendored tarball, and the `CLAUDE.md` read as data. Nothing was installed, built or run.
