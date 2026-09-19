@@ -9,15 +9,14 @@ source_url: https://github.com/yaminbkk/NexusMem
 archive_name: "yaminbkk--NexusMem"
 revision: 0003e2432ba7dd9c0e7dc4558fffed56235dcf95
 revision_url: https://github.com/yaminbkk/NexusMem/commit/0003e2432ba7dd9c0e7dc4558fffed56235dcf95
-analyzed_at: 2026-09-16
-capabilities: "tombstone, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "tombstone, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   tombstone: "the deny list, consulted at every node-write seam | src/store/deny-list.ts, src/store/forget.ts, src/store/nodes.ts:89, src/store/reconcile.ts:93 | `nexusmem forget <value>` writes a `deny_list` row keyed on the value itself — literal or regex, with `ignore_case` and a free-text reason — and `upsertNodes` consults it per project before every insert, incrementing a `denied` counter and skipping the node, with `reconcile.ts` repeating the check on the project-id migration path so *\"a row denied here must never\"* re-enter. Over-broad patterns are refused up front: an empty literal, a regex that fails to compile, and a regex that matches the empty string. `--export`/`--import` carry the list between checkouts because the database is gitignored and never travels with a clone | tests/forget.test.ts:231 ingests a secret, confirms it is retrievable, forgets it, runs `sync --rebuild` over the untouched append-only hook log, then asserts the secret returns `[]` while a control command in the same log survives — and that `deny_list` still holds one row afterwards"
   audit_log: "removals, in the store's own tables | src/store/forget.ts:129, src/store/schema.ts (V5 `mutation_audit`, `tombstones`) | `forget` opens a `mutation_audit` row before the delete sweep — action, project, a JSON detail of the pattern, match type, case flag, reason and the project ids in scope, started and finished timestamps — and each removed node leaves a `tombstones` row carrying kind, source, ts, signal, body length and `body_sha256`/`title_sha256`, foreign-keyed to both the deny-list entry and the audit row. The schema states the reason for hashing: *\"this table exists to prove a value was removed, not to retain a second copy of it… so the record that something was forgotten never itself becomes something worth forgetting.\"* One audit row is written whether or not anything matched. The gap is coverage: `pruneSourceNodes`, the other destructive path, writes neither an audit row nor a tombstone | tests/forget.test.ts:231 asserts one `mutation_audit` row and at least one `tombstones` row survive `sync --rebuild`"
   scope_enforced: "the node store, every read arm | src/store/search.ts | search and vectorSearch both require n.project_id = ? as a WHERE predicate; the vector arm overfetches 8x because vec0 applies MATCH and k before the join filter, and the precheck arm repeats the predicate by hand because it runs its own SQL through store.raw | tests/cross-project.test.ts"
   negative_eval: "the node store, retrieval | tests/store.test.ts | 'does not leak nodes across projects' and 'does not let the generic word id pull in an unrelated node over a real match' assert a node that exists is absent from a result set; tests/vector.test.ts repeats it for the vector arm, and tests/precheck.test.ts for the pre-commit arm | the tests are the mechanism"
   bitemporal: "the node store — a record-time read beside the event time already on the row | src/store/schema.ts:26-36, src/store/search.ts:79 | a node carries `ts`/`ts_epoch`, *\"kept verbatim from the source event\"*, and a separate `created_at` for when the row was written; `--as-of` adds `AND (? IS NULL OR n.created_at <= ?)` to the lexical arm and its equivalent to the vector arm, so a query can ask what the store held at a past moment while the event's own time stays untouched. The commit that added it names it: *bi-temporal read over created_at* | tests/"
-  human_review: "one node at a time, from the CLI and over MCP | src/cli/commands/review.ts, src/cli/index.ts:283-297, src/cli/commands/stale.ts:48-56, src/mcp/tools.ts (listStaleSuggestions, resolveStaleSuggestion) | `nexusmem review <nodeId>` records a person's verdict on a node as `verified` or `rejected`, and `nexusmem stale --dismiss` silences a contradiction suggestion the reviewer disagreed with — the V9 migration says why it exists: without it the listing *\"re-prints every open YES verdict on every run forever, with mark-stale as the only way to make one stop, which only works when the suggestion was actually right\"* | tests/"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -470,11 +469,18 @@ passed) resolves the node, refuses an id belonging to another project, and write
 the person's verdict to `trust_state` through `store.setTrustState`. Beside it
 `nexusmem stale --dismiss <nodeId>` records the other kind of verdict — that a
 contradiction the local model proposed is wrong — by setting `dismissed = 1` on
-the memo row, which both open-suggestion queries filter on. Either way a human's
-judgement lands in the store as a row a later read consults, which is the
-distinction the mark draws. That none of it is reachable from the agent-facing
-surfaces is a fact about who the reviewer has to be, not about whether the review
-happens.
+the memo row, which both open-suggestion queries filter on. Either way a judgement lands in the store as a row a later read consults.
+
+Two things keep that from being `human_review`, and the second corrects a claim
+this section used to make. Neither verdict withholds anything: `verified` and
+`rejected` are worth a 0.3 ranking multiplier and nothing else, as the trust
+matrix row says — *"a score, not a gate"* — and a dismissed suggestion silences
+a listing rather than holding a node back. And the dismiss verdict *is* reachable
+from the agent-facing surface: `src/mcp/server.ts:140-158` registers
+`resolve_stale_suggestion` with `action: z.enum(['accept', 'dismiss'])`, and the
+dismiss branch calls the same `store.dismissContradictionSuggestion` the CLI
+does (`src/mcp/tools.ts:283-292`). The accept branch reuses `runMarkStale`. So
+the producing agent disposes of the queue it is shown.
 
 Two components run without being asked. The shell hook writes to its own JSONL
 rather than to the database. The git pre-commit hook reads.
@@ -996,6 +1002,8 @@ leaves no record that it happened.
   suggestion path and its memo
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`0003e2432ba7dd9c0e7dc4558fffed56235dcf95`](https://github.com/yaminbkk/NexusMem/commit/0003e2432ba7dd9c0e7dc4558fffed56235dcf95); nothing upstream moved, so both corrections are ours. `human_review` is **withdrawn** on two independent grounds, and section 9 carried a claim that contradicted the frontmatter. First, neither verdict withholds: `verified` and `rejected` buy a 0.3 ranking multiplier, which the trust matrix row already calls *"a score, not a gate"*, and a dismissal silences a listing. Second, section 9 said *"none of it is reachable from the agent-facing surfaces"* while the evidence record cited `resolveStaleSuggestion` in `src/mcp/tools.ts` and the 2026-09-07 entry recorded that addition as *extending* the evidence to MCP. Reading the server settles it: `src/mcp/server.ts:140-158` registers `resolve_stale_suggestion` with `action: z.enum(['accept', 'dismiss'])`, the dismiss branch calls the same `store.dismissContradictionSuggestion` the CLI does, and the accept branch reuses `runMarkStale`. The producing agent disposes of its own queue. The other five marks stand. Screened again first; nothing was installed, built or run.
 
 **2026-09-16** — [`0003e2432ba7dd9c0e7dc4558fffed56235dcf95`](https://github.com/yaminbkk/NexusMem/commit/0003e2432ba7dd9c0e7dc4558fffed56235dcf95) — re-read at a commit dated 12 September 2026, 55 commits past the previous pin. All six marks re-tested and held. Two additions are recorded above. Schema v13 puts `capture_mode` and `source_ts` on `nodes`, separating whether an event was witnessed from how good the evidence for it is, and making the timestamp nullable where an artifact has none worth trusting. And `scrub.ts` re-applies current redaction to rows written before the key/value rule and the shell `meta.command` fix, bounded so it can neither redact more than a fresh sync would nor disturb ids, links, trust state or reconcile keys. Screened before reading, from a full clone: one auto-run surface, one build-time execution point, two unpinned dependency surfaces and two dependency files inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
