@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 604 reports.**
+**This page covers all 605 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5405,4 +5405,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `src/truth/types.rs`. Four small enums that carry the design — `ValidityState`, `RetentionState` (whose comment reads *"`Archived` does not mean false"*), `ClaimRelationKind` with `Refutes` beside `Supersedes`, and `TruthSelectionReason`. Most of the value here is in keeping retention and truth on separate axes and writing the distinction into the type.
 - Maturity impression: MIT, Rust over SQLite at roughly 2,400 files, reaching agents through Claude Code and Codex hooks, MCP, a CLI and a localhost REST API; CI, a committed `eval/` harness and a benchmark, neither run for this reading. Five marks — `trust_state`, `bitemporal`, `scope_enforced`, `human_review`, `negative_eval`. `human_review` rests on reach: candidates default to `pending_review` in the column, the queue is drained by `remem review`, and a grep of the MCP surface for a review or approve verb returns nothing.
 - Study when: you are deciding what a memory system should return when its evidence does not settle the question — or when you want a worked example of a review status defaulted in the schema rather than at a call site.
+
+### [`enquire-mcp`](../systems/enquire-mcp/)
+
+- Best idea: **surface the age and leave the ranking alone.** Every recalled note comes back with `age_days` and a `stale` flag taken from the file's `mtime`, described in the module as *"metadata the agent can reason over ('this note is 2 years old — verify before relying on it')"*. The recency re-ranking built on the same signal is behind a flag and off by default *"so the ranking stays relevance-primary."* The system tells the model how old a fact is and declines to act on that itself.
+- Biggest risk: **there is no memory lifecycle at all.** Writes are possible and nothing afterwards distinguishes a note an agent wrote from one the user wrote; nothing records a correction; and staleness is computed from `mtime`, so a note a linter reformats is newly young. This is a retrieval surface over notes you own, not a place to put what an agent learned.
+- Most reusable component: `src/erasure-receipt.ts`, for the account in its header as much as the code. The rule — only `ENOENT` is idempotent success, and an `unlink` is believed only once the entry is re-statted absent — had been applied to one loop and not to *"the erasers delegated one line below it"*, five more families all feeding the same `removed` boolean. The leaf exists so a new eraser inherits the rule by construction, and an invariant test fails CI on a receipt-path function that unlinks without it.
+- Maturity impression: MIT, TypeScript, 391 files with 149 test files, a large share of them named `*-invariant` and several checking properties of the source rather than of a run. One mark, `negative_eval`. `scope_enforced` is withheld structurally rather than critically — one vault, one user, no stored scope key to filter on; what exists is filesystem confinement, and it is applied to the resolved physical path so a visible symlink cannot launder a hidden directory into the public surface.
+- Study when: you are writing a privacy suite. Its first case is a guard asserting the fixtures can be built — *"CI GUARD — symlink creation works so privacy-escape tests actually run"* — without which a platform that cannot create symlinks reports a green run.
 

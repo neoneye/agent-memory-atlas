@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 604 reports.</strong></p>
+<p><strong>This page covers all 605 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24603,6 +24603,46 @@ surface for a review or approve verb returns nothing.</li>
 its evidence does not settle the question — or when you want a worked
 example of a review status defaulted in the schema rather than at a call
 site.</li>
+</ul>
+<h3 id="enquire-mcp"><a
+href="../systems/enquire-mcp/"><code>enquire-mcp</code></a></h3>
+<ul>
+<li>Best idea: <strong>surface the age and leave the ranking
+alone.</strong> Every recalled note comes back with
+<code>age_days</code> and a <code>stale</code> flag taken from the
+file's <code>mtime</code>, described in the module as <em>"metadata the
+agent can reason over ('this note is 2 years old — verify before relying
+on it')"</em>. The recency re-ranking built on the same signal is behind
+a flag and off by default <em>"so the ranking stays
+relevance-primary."</em> The system tells the model how old a fact is
+and declines to act on that itself.</li>
+<li>Biggest risk: <strong>there is no memory lifecycle at all.</strong>
+Writes are possible and nothing afterwards distinguishes a note an agent
+wrote from one the user wrote; nothing records a correction; and
+staleness is computed from <code>mtime</code>, so a note a linter
+reformats is newly young. This is a retrieval surface over notes you
+own, not a place to put what an agent learned.</li>
+<li>Most reusable component: <code>src/erasure-receipt.ts</code>, for
+the account in its header as much as the code. The rule — only
+<code>ENOENT</code> is idempotent success, and an <code>unlink</code> is
+believed only once the entry is re-statted absent — had been applied to
+one loop and not to <em>"the erasers delegated one line below it"</em>,
+five more families all feeding the same <code>removed</code> boolean.
+The leaf exists so a new eraser inherits the rule by construction, and
+an invariant test fails CI on a receipt-path function that unlinks
+without it.</li>
+<li>Maturity impression: MIT, TypeScript, 391 files with 149 test files,
+a large share of them named <code>*-invariant</code> and several
+checking properties of the source rather than of a run. One mark,
+<code>negative_eval</code>. <code>scope_enforced</code> is withheld
+structurally rather than critically — one vault, one user, no stored
+scope key to filter on; what exists is filesystem confinement, and it is
+applied to the resolved physical path so a visible symlink cannot
+launder a hidden directory into the public surface.</li>
+<li>Study when: you are writing a privacy suite. Its first case is a
+guard asserting the fixtures can be built — <em>"CI GUARD — symlink
+creation works so privacy-escape tests actually run"</em> — without
+which a platform that cannot create symlinks reports a green run.</li>
 </ul>
         </article>
       </div>

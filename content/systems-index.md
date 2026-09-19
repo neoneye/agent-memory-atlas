@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **604 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **605 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -200,6 +200,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/engram-format/"><span class="az-id">Engram Format</span><span class="az-what">The open half of a closed memory</span><code class="az-repo">El-AI-Intelligence/engram-format</code><span class="az-caps"><span class="az-cap">Trust state</span></span></a></li>
 <li><a class="az-row" href="../systems/engram-provable/"><span class="az-id">Engram Provable</span><span class="az-what">Erase the content, keep the proof it existed</span><code class="az-repo">Harshitk-cp/engram</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span></span></a></li>
 <li><a class="az-row" href="../systems/engraphis/"><span class="az-id">Engraphis</span><span class="az-what">Approval a bearer token cannot grant</span><code class="az-repo">Coding-Dev-Tools/engraphis</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/enquire-mcp/"><span class="az-id">enquire-mcp</span><span class="az-what">It tells the agent how old a fact is, and declines to act on it</span><code class="az-repo">oomkapwn/enquire-mcp</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/everos/"><span class="az-id">EverOS</span><span class="az-what">Cases, skills and a cascade</span><code class="az-repo">EverMind-AI/EverOS</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/evox-genesis/"><span class="az-id">EvoX Genesis</span><span class="az-what">The directory is the memory unit</span><code class="az-repo">EMI-Group/genesis</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>
 </ul>
