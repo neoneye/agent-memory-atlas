@@ -7,16 +7,15 @@ page_kind: system
 source_name: "MythologIQ-Labs-LLC/agent-memory"
 source_url: https://github.com/MythologIQ-Labs-LLC/agent-memory
 archive_name: "MythologIQ-Labs-LLC--agent-memory"
-revision: 194b58ce3fd3f12c0060e71d3e6d20fce7e49bcf
-revision_url: https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/194b58ce3fd3f12c0060e71d3e6d20fce7e49bcf
-analyzed_at: 2026-09-16
-capabilities: "bitemporal, scope_enforced, audit_log, human_review, negative_eval, tombstone"
+revision: c80f068526562109490fba7a0f996078ae3d6d07
+revision_url: https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/c80f068526562109490fba7a0f996078ae3d6d07
+analyzed_at: 2026-09-19
+capabilities: "bitemporal, scope_enforced, audit_log, negative_eval, tombstone"
 capability_evidence:
   tombstone: "the reference adapter — a rejected-value registry consulted before admission | reference/agentmem_ref/runtime/adapter.py | `RejectedValueRegistry` in `core/readmission.py:149` with its `readmit` path for a deliberate reversal (:209), consulted by the adapter, which returns the refusal as `rejected_value_requires_reconciliation` (`runtime/adapter.py:324`) rather than a silent drop | reference/tests/"
   bitemporal: "the reference substrate — validity time separate from record time | reference/agentmem_ref/ | `valid_from` carried on the fact and exercised by the deletion-completeness and comparator runners | reference/tests/run_deletion_completeness.py, run_trace_cmcp_comparator.py"
   scope_enforced: "the governing adapter — domain, project and task refs checked on the read path | reference/agentmem_ref/runtime/adapter.py | `isolation_domain` applied as a filter, returning named refusals the substrate itself cannot produce | reference/tests/run_structural_mutation_governance.py"
   audit_log: "the evidence layer — every mutation a proposal with a receipt | reference/agentmem_ref/core/receipts.py | receipts written per mutation beside `portable_evidence.py`, so an evidence artifact travels with the claim it backs | reference/tests/"
-  human_review: "admission — PAMA evaluates every mutation into one of five authority outcomes before the substrate is touched, and a refused proposal parks | reference/agentmem_ref/core/policy.py, reference/agentmem_ref/memory/decision_overwrite.py:103-147 | the PAMA authority outcomes with estimator confidence barred from reaching a verdict; under ADR-037 `require_review` fails closed, a proposal that cannot discharge parks as `PENDING` in `DurableDecisionRegistry` with its unmet criteria and remediation route, a bound human confirmation discharges it, self-verification and unbound attestations are refused, and resumption re-evaluates against current policy | reference/tests/run_capability_behavior_contract.py, reference/tests/test_verified_discharge.py (12 cases), reference/tests/test_dashclaw_correction_parks.py"
   negative_eval: "deletion and residue, as committed runners | reference/tests/ | committed conformance runners assert that deleted material does not come back and that undeclared residue is a hard gate — the sweep re-derives residue rather than trusting the purge traversal | reference/tests/run_deletion_completeness.py, run_structural_mutation_governance.py"
 stack_storage: "files, delegated"
 stack_retrieval: "lexical"
@@ -70,6 +69,27 @@ residual   a basis source was tombstoned or purged → a governance problem only
 
 Nothing sets a `stale` bit, which is the point: *"a substrate that never self-invalidates is still governable."* And stale and residual are kept apart deliberately — collapsing them would lose the distinction the architecture exists to protect.
 
+`human_review` is withheld, and the reason is written in the repository rather
+than argued against it. ADR-037 closed the assertion route: `review_satisfied`
+plus arbitrary `approval_refs` now returns `REVIEW_REQUIRES_QUALIFIED_EVIDENCE`
+and the proposal parks (`core/policy.py:313-323`), a change the comment records
+as removing the last route "by which an unverifiable claim became an authority
+decision". What discharges instead is `evaluate_with_qualified_evidence`
+(`:478`), and at high or critical risk that needs "an attestation carrying
+`human_confirmation`" — an `ExternalVerification`, whose own docstring states
+the limit precisely (`:174-180`): *"this is still constructed by the caller, so
+an actor who can build a Proposal can build one… Making the attestation
+unforgeable means applying the RatificationRegistry pattern to attestations:
+written by the verifier, resolved rather than trusted. That is a further cycle
+and is not claimed here."* The verifier principal is compared to the actor, so
+the naive self-verification is caught; an actor that writes a different
+principal id is not, because nothing resolves that id. At low and medium risk
+the ladder is satisfied by `delegated_policy` — the repository's own name for
+non-human authority. The parking, the criteria report and the resumption
+re-evaluation are all real and keep their credit below; what is absent is an
+actor the producing agent cannot be, and the design names the exact mechanism
+that would supply one.
+
 Whether a memory may *change* is a separate axis entirely. Every mutation is a `Proposal` evaluated by PAMA into one of five outcomes ordered by strictness — `allow`, `allow_with_ledger`, `require_review`, `require_external_verification`, `block`. The load-bearing property is stated in `policy.py` and guarded by tests: *"Estimator confidence is an input to evidence quality only and has no path to the outcome."* A model that is very sure of itself cannot buy authority with confidence.
 
 ```mermaid
@@ -77,7 +97,7 @@ Whether a memory may *change* is a separate axis entirely. Every mutation is a `
 flowchart TD
   P["proposal to mutate"] --> PAMA{"PAMA evaluates:<br/>target class, risk,<br/>downstream authority"}
   PAMA -->|allow / allow_with_ledger| W["substrate write"]
-  PAMA -->|require_review| H["parked pending a person (ADR-037)"]
+  PAMA -->|require_review| H["parks — discharged by evidence<br/>plus a caller-built attestation"]
   PAMA -->|require_external_verification| V["withheld pending evidence"]
   PAMA -->|block| X["refused"]
   W --> R["receipt + audit event<br/>the substrate does not persist"]
@@ -293,6 +313,8 @@ Walk away if you want a store. The substrate is a dictionary, the retrieval is t
 - Validators: `scripts/validate_fixtures.py`, `validate_schemas.py`, `validate_doctrine_boundaries.py`.
 
 ## History
+
+**2026-09-19** — re-pinned to [`c80f068526562109490fba7a0f996078ae3d6d07`](https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/c80f068526562109490fba7a0f996078ae3d6d07), 20 commits on. `human_review` is **withdrawn**, on the repository's own statement of its limit rather than against it. The discharge path was traced end to end this time instead of from the ADR summary. Assertion is genuinely closed — `review_satisfied` with arbitrary `approval_refs` now parks with `REVIEW_REQUIRES_QUALIFIED_EVIDENCE` (`core/policy.py:313-323`) — and what replaced it is `evaluate_with_qualified_evidence`, which at high or critical risk requires an `ExternalVerification` attestation. That dataclass's docstring says what the mark needs to know: *"this is still constructed by the caller, so an actor who can build a Proposal can build one"*, and it names the fix it has not yet applied — *"applying the RatificationRegistry pattern to attestations: written by the verifier, resolved rather than trusted."* The comparison of verifier principal to actor catches the naive case and not an actor that writes someone else's id, since nothing resolves it; at low and medium risk the ladder is satisfied by `delegated_policy`, which the repository defines as non-human authority. The parking machinery, the criteria report and the resumption re-evaluation are not in question and keep their credit. The other five marks stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`194b58ce3fd3f12c0060e71d3e6d20fce7e49bcf`](https://github.com/MythologIQ-Labs-LLC/agent-memory/commit/194b58ce3fd3f12c0060e71d3e6d20fce7e49bcf) — re-read at a commit dated 12 September 2026, seven commits past the previous pin. All six marks re-tested and held. ADR-038 adds an `action_execution` row to the risk matrix, governing the exercise of authority already held as its own axis rather than as a memory mutation, and puts the active constraints on the decision itself — derived from the proposal so a discharge cannot remove them, and distinguishing a review obligation that came from a risk cell, which is dischargeable, from one that came from an authority floor, which is not. Screened before reading, from a full clone: one auto-run surface, one build-time execution point, three unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
