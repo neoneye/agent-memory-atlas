@@ -7,14 +7,13 @@ page_kind: system
 source_name: "richarvey/OmniMem"
 source_url: https://github.com/richarvey/OmniMem
 archive_name: "richarvey--OmniMem"
-revision: 6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29
-revision_url: https://github.com/richarvey/OmniMem/commit/6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29
-analyzed_at: 2026-09-16
-capabilities: "tombstone, scope_enforced, human_review, negative_eval"
+revision: 63685f8cb5cbbe11ffca829e6a0fcf0bc9c83d6f
+revision_url: https://github.com/richarvey/OmniMem/commit/63685f8cb5cbbe11ffca829e6a0fcf0bc9c83d6f
+analyzed_at: 2026-09-19
+capabilities: "tombstone, scope_enforced, negative_eval"
 capability_evidence:
   tombstone: "topic suppression, the suppressed form — a durable set consulted on every recall | mcp_server/memory/lifecycle.py:181-210, mcp_server/memory/recall.py:192,:216-221, mcp_server/tools/experience.py:97-108, mcp_server/tools/core.py:661-696 | `topics:suppressed` is a Valkey set of lowercased strings; `RecallPipeline.recall` fetches it once per call and drops any candidate whose content contains a suppressed string, before scoring. It is written by a person or an agent through `suppress_topic`, by the web UI's suppressions page, and automatically by `record_experience` when an approach is recorded as `abandoned` with effort 4 or 5 — the abandoned approach's name becomes the key. A re-remembered claim about a suppressed approach is stored and never surfaces, which is the read-path form; the key is a substring, so it hides every memory that mentions the word, including the one that recorded the abandonment | mcp_server/tests/test_recall.py `test_suppressed_topic_excluded` with `test_unsuppressed_topic_included` as the control; tests/test_lifecycle.py `test_suppress_and_list`, `test_is_topic_suppressed`"
   scope_enforced: "`project` as a tag filter pushed into the vector search and re-applied in Python | mcp_server/memory/recall.py:34-60,:198-203,:222-225, mcp_server/memory/store.py:37-72,:83,:134,:144 | `_build_filter_expr` composes `@project:{name}` into the `FT.SEARCH` pre-filter for the episodic, preference and knowledge indexes when the value passes the same character allowlist the tools enforce, and the loop re-checks `doc.project` after the search — the safety net for a filtered search that fell back to unfiltered and for the project namespace, which is never pushed down. Contradiction, duplicate and maintenance scans take the same `project_filter` | mcp_server/tests/test_recall.py `test_project_filter`, tests/test_issue20_temporal.py `test_project_filter_returns_knowledge_facts`, tests/test_contradiction.py `test_project_filter_respected`, tests/test_dedup.py `test_project_filter_respected`"
-  human_review: "the web UI and the skill gate | web_ui/routes/contradictions.py:12-84, web_ui/templates/contradictions.html:42-49, web_ui/routes/lifecycle.py:28-83, web_ui/routes/suppressions.py, web_ui/routes/skills.py:189-245, mcp_server/memory/skill_compiler.py:133-416 | `/contradictions` lists every cross-linked pair side by side with *Archive A* and *Archive B* buttons; `/duplicates/scan` shows clusters; every memory row carries deprioritise and delete actions and the detail page the full lifecycle; `/suppressions` adds and removes topics. A compiled skill is written only by `compile_skill_flow`'s two-step gate: `propose` stashes a draft under a TTL with the sha of the body it was diffed against, and `write` commits exactly that stash, refusing when the stash is missing or the stored body moved. The same flow backs the web UI's New Skill modal | mcp_server/tests/test_web_routes.py, tests/test_web_skills.py, tests/test_skills.py, tests/test_lifecycle.py"
   negative_eval: "exclusion cases with positive controls in the same suite | mcp_server/tests/test_recall.py:46-80,:158-178,:209-230 | `test_archived_memories_excluded` stores an archived and an active memory about the same subject and asserts no archived state in the results; `test_deleted_memories_excluded` likewise; `test_suppressed_topic_excluded` stores a memory, suppresses its topic and asserts no result contains the word, paired with `test_unsuppressed_topic_included`, which lifts the suppression and asserts the word returns; `test_no_false_positive_abandoned_warning` asserts an unrelated query raises no graveyard warning beside `test_abandoned_approach_detected`, which asserts a related one does. The changelog for 6.4.1 records the project finding three contradiction tests that passed while asserting nothing and one `remember()` test that skipped the check it was written for, and fixing them | mcp_server/tests/test_recall.py, tests/test_contradiction.py, tests/test_dedup.py"
 stack_storage: "kv"
 stack_retrieval: "lexical, vector"
@@ -419,12 +418,19 @@ written mid-session may carry only `project` until the startup migration
 backfills `project_name`. A project name with a character outside the
 allowlist is filtered in Python only.
 
-**`human_review` — earned.** The contradictions page is an adjudication
-surface with two verbs, the duplicates page a review of what maintenance
-will archive, every row has lifecycle actions, and the skill gate makes
-acceptance structural. The near-miss inside the mark: the only resolution
-the contradictions page offers is *archive one side*, and the link on the
-other side stays.
+**`human_review` — withheld**, on the skill gate rather than on the pages. The
+contradictions page, the duplicates scan and the per-row lifecycle actions are a
+good correction surface over memories already in recall, and the only resolution
+the contradictions page offers is *archive one side*, leaving the link on the
+other. None of that is a memory waiting to be believed. The gate that looked
+structural is not: `compile_skill(mode=…)` is a registered MCP tool
+(`mcp_server/server.py:304`, from `tools/skills.py:86`), and `mode` is a
+parameter the caller passes, so a model can call `propose` and then `write` in
+two turns. The docstring's *"'write' commits the stashed proposal after human
+review"* is a sentence, not a check, and `bless` beside it is registered too
+(`server.py:307`) — its own text calling the compile-time gate *"the safety
+net"*. The TTL stash and the sha-of-the-diffed-body comparison are real
+protections against a stale write, which is a different thing from an actor.
 
 **`negative_eval` — earned.** Exclusion cases for archived, deleted and
 suppressed material, each with a positive control in the same suite, and a
@@ -627,6 +633,8 @@ team that wants an agent's dead ends to stay dead can run it as it is.
 - `git ls-files | rg -i 'bench|eval'` — no benchmark or evaluation artifact.
 
 ## History
+
+**2026-09-19** — re-pinned to [`63685f8cb5cbbe11ffca829e6a0fcf0bc9c83d6f`](https://github.com/richarvey/OmniMem/commit/63685f8cb5cbbe11ffca829e6a0fcf0bc9c83d6f). `human_review` is **withdrawn**. Half of what it rested on was the web UI's archive, deprioritise and delete actions, which act on memories already in recall. The other half was the skill gate, described as making acceptance structural — and the tool registration says otherwise: `compile_skill` is registered at `mcp_server/server.py:304` and takes `mode` as a caller parameter, so a model can call `propose` and then `write` itself, with the docstring's *"commits the stashed proposal after human review"* being a sentence rather than a check. `bless` is registered at `:307` and calls that compile-time gate *"the safety net"*. The TTL stash and the sha comparison protect against a stale write, which is optimistic concurrency and not an actor boundary. `tombstone`, `scope_enforced` and `negative_eval` stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29`](https://github.com/richarvey/OmniMem/commit/6aaee7e8f5ac4abcf50cfed3af012e9f7a903c29) — re-read at a commit dated 15 September 2026, 36 commits past the previous pin. All four marks re-tested and held. `lifecycle.py`, the contradictions review surface and `test_recall.py` are unchanged, so the tombstone, review and negative-evaluation evidence stands as written. `recall.py` gained 243 lines and the scope predicate came with them rather than after them: `normalise_project_filter` is the one normaliser, `_build_filter_expr(namespace, project_filter)` builds the per-namespace expression, and `_candidate_k` widens the candidate pool when a filter will thin it. Two additions are recorded here for the first time — the `is_phantom` test that drops a hit whose backing record is gone, with the note explaining why the obvious `content == ""` test would have made every description-less project unrecallable, and the two-threshold score cut justified by the encoder's own overlap. Screened before reading, from a full clone: no auto-run surface, one build-time execution point, four unpinned dependency surfaces and one dependency file inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
