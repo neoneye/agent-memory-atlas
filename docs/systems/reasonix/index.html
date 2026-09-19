@@ -114,14 +114,14 @@ arm and keeps a column for when memory hurt.</p>
               <strong>esengine/DeepSeek-Reasonix</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/esengine/DeepSeek-Reasonix/commit/e4bfeb67f9125af238aca4ff9bf69b21cb1df998" title="e4bfeb67f9125af238aca4ff9bf69b21cb1df998">
+            <a class="meta-pill revision-pill" href="https://github.com/esengine/DeepSeek-Reasonix/commit/86d2424ce3a6bcb5eb2dd1d96d914569d8e2cd9a" title="86d2424ce3a6bcb5eb2dd1d96d914569d8e2cd9a">
               <span>Analyzed revision</span>
-              <code>e4bfeb67…</code>
+              <code>86d2424c…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-15</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/esengine--DeepSeek-Reasonix" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -335,11 +335,18 @@ page carrying suggestions and an accept action; and the whole engine
 reachable over ACP from an editor. In the approval modes below
 workspace-write and full access, <code>remember</code> and
 <code>forget</code> are ask rules in the permission gate, so each model
-write or retraction waits for a person; <code>AssessRememberWrite</code>
-lets a low-risk project fact through without asking. Memory is one part
-of a much larger agent — plan mode, permissions, a workspace sandbox and
-per-turn checkpoints are the product, and the checkpoints are session
-state rather than memory.</p>
+write or retraction raises a confirmation dialog;
+<code>AssessRememberWrite</code> lets a low-risk project fact through
+without asking (<code>internal/control/controller.go:2305</code>). That
+is a permission prompt and not a review state, and this report is
+explicit that the <code>human_review</code> mark rests on the suggestion
+path instead: a mined candidate is <em>"only persisted through
+<code>AcceptMemorySuggestion</code>"</em>, a method on the desktop
+binary's <code>App</code> that no tool in <code>internal/</code> can
+reach. The agent's own <code>remember</code> writes do not pass through
+that queue at all. Memory is one part of a much larger agent — plan
+mode, permissions, a workspace sandbox and per-turn checkpoints are the
+product, and the checkpoints are session state rather than memory.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <p>The honest summary is that this store is well-built for a single
@@ -519,6 +526,27 @@ memory-off comparison</li>
 <code>docs/SPEC.md</code>, <code>docs/ACP.md</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — re-pinned to <a
+href="https://github.com/esengine/DeepSeek-Reasonix/commit/86d2424ce3a6bcb5eb2dd1d96d914569d8e2cd9a"><code class="commit-id" title="86d2424ce3a6bcb5eb2dd1d96d914569d8e2cd9a">86d2424c…</code></a>,
+48 commits on. Both marks stand. <code>human_review</code> was
+producer-tested and its record rewritten, because half of what the
+previous record rested on does not support it: the <code>remember</code>
+/ <code>forget</code> ask rules raise a confirmation dialog, and
+<code>AssessRememberWrite</code>'s own doc comment says exactly that —
+it decides <em>"whether an interactive host may safely allow a remember
+call without a confirmation dialog."</em> A prompt guards against a
+slip, not against a decision. What does earn the mark is the other half,
+now stated alone: a <code>MemorySuggestion</code> is <em>"generated
+read-only from recent local history and only persisted through
+<code>AcceptMemorySuggestion</code>"</em>, and that method is bound on
+<code>*App</code> in the desktop binary's <code>main</code> package
+while the model's tools live in <code>internal/</code>. The limit is
+recorded with it — the queue does not gate the agent's own
+<code>remember</code> writes. <code>negative_eval</code> stands on the
+unchanged memorybench, whose <code>mb-contradiction/verify.sh</code>
+still pairs a required <code>pnpm install</code> with a forbidden
+<code>npm install</code>. Screened again first; a dependency surface was
+inside the cooldown, so nothing was installed and no suite was run.</p>
 <p><strong>2026-09-15</strong> — <a
 href="https://github.com/esengine/DeepSeek-Reasonix/commit/e4bfeb67f9125af238aca4ff9bf69b21cb1df998"><code class="commit-id" title="e4bfeb67f9125af238aca4ff9bf69b21cb1df998">e4bfeb67…</code></a>
 — 1,585 commits on, 2026-09-15. Screened on a sparse checkout of the

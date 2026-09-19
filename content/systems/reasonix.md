@@ -7,12 +7,12 @@ page_kind: system
 source_name: "esengine/DeepSeek-Reasonix"
 source_url: https://github.com/esengine/DeepSeek-Reasonix
 archive_name: "esengine--DeepSeek-Reasonix"
-revision: e4bfeb67f9125af238aca4ff9bf69b21cb1df998
-revision_url: https://github.com/esengine/DeepSeek-Reasonix/commit/e4bfeb67f9125af238aca4ff9bf69b21cb1df998
-analyzed_at: 2026-09-15
+revision: 86d2424ce3a6bcb5eb2dd1d96d914569d8e2cd9a
+revision_url: https://github.com/esengine/DeepSeek-Reasonix/commit/86d2424ce3a6bcb5eb2dd1d96d914569d8e2cd9a
+analyzed_at: 2026-09-19
 capabilities: "human_review, negative_eval"
 capability_evidence:
-  human_review: "the desktop Memory page and the tool approval gate | desktop/memory_suggestions.go; internal/control/controller.go:2245-2250 | MemorySuggestion is a draft mined from recent local history that only becomes a saved memory through AcceptMemorySuggestion; outside the workspace-write and full-access approval modes, `remember` and `forget` are ask rules, so a person approves each model write or retraction, with a low-risk project fact auto-allowed by AssessRememberWrite | desktop/memory_suggestions_test.go"
+  human_review: "the mined suggestion, which is never persisted until someone accepts it | desktop/memory_suggestions.go:27-30, :130 AcceptMemorySuggestion, :136 AcceptMemorySuggestionForTab | a `MemorySuggestion` is generated read-only from recent local history and, as its own doc comment puts it, `only persisted through AcceptMemorySuggestion`. That method is bound on `*App` in the desktop binary's `main` package and reached from the Memory page; the model's tool surface is `remember`, `forget` and `memory` in `internal/`, and none of them can call it. Two limits belong with the mark and neither is small. The suggestion queue does not gate the agent's own writes — a `remember` call does not pass through it. And the approval gate that covers those writes is not what earns this mark: `AssessRememberWrite` decides only `whether an interactive host may safely allow a remember call without a confirmation dialog` (`internal/memory/remember_policy.go:16-18`), and a confirmation dialog is a permission prompt rather than a state a memory waits in | desktop/memory_suggestions_test.go"
   negative_eval: "end-to-end agent behaviour, not the store | benchmarks/memorybench/tasks | each verify.sh pairs a required string with a forbidden one — mb-contradiction requires `pnpm install` and forbids `npm install`, mb-stale requires release/1.21 and forbids release/0.9 | benchmarks/memorybench/tasks/*/verify.sh"
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -207,8 +207,14 @@ normalises rather than failing.
 a desktop Memory page carrying suggestions and an accept action; and the whole
 engine reachable over ACP from an editor. In the approval modes below
 workspace-write and full access, `remember` and `forget` are ask rules in the
-permission gate, so each model write or retraction waits for a person;
-`AssessRememberWrite` lets a low-risk project fact through without asking. Memory is one part of a much larger
+permission gate, so each model write or retraction raises a confirmation dialog;
+`AssessRememberWrite` lets a low-risk project fact through without asking
+(`internal/control/controller.go:2305`). That is a permission prompt and not a
+review state, and this report is explicit that the `human_review` mark rests on
+the suggestion path instead: a mined candidate is *"only persisted through
+`AcceptMemorySuggestion`"*, a method on the desktop binary's `App` that no tool
+in `internal/` can reach. The agent's own `remember` writes do not pass through
+that queue at all. Memory is one part of a much larger
 agent — plan mode, permissions, a workspace sandbox and per-turn checkpoints are
 the product, and the checkpoints are session state rather than memory.
 
@@ -362,6 +368,8 @@ consequence of an append-only conversation rather than an oversight.
 - `docs/SESSION_MEMORY_RETRIEVAL.md`, `docs/SPEC.md`, `docs/ACP.md`
 
 ## History
+
+**2026-09-19** — re-pinned to [`86d2424ce3a6bcb5eb2dd1d96d914569d8e2cd9a`](https://github.com/esengine/DeepSeek-Reasonix/commit/86d2424ce3a6bcb5eb2dd1d96d914569d8e2cd9a), 48 commits on. Both marks stand. `human_review` was producer-tested and its record rewritten, because half of what the previous record rested on does not support it: the `remember` / `forget` ask rules raise a confirmation dialog, and `AssessRememberWrite`'s own doc comment says exactly that — it decides *"whether an interactive host may safely allow a remember call without a confirmation dialog."* A prompt guards against a slip, not against a decision. What does earn the mark is the other half, now stated alone: a `MemorySuggestion` is *"generated read-only from recent local history and only persisted through `AcceptMemorySuggestion`"*, and that method is bound on `*App` in the desktop binary's `main` package while the model's tools live in `internal/`. The limit is recorded with it — the queue does not gate the agent's own `remember` writes. `negative_eval` stands on the unchanged memorybench, whose `mb-contradiction/verify.sh` still pairs a required `pnpm install` with a forbidden `npm install`. Screened again first; a dependency surface was inside the cooldown, so nothing was installed and no suite was run.
 
 **2026-09-15** — [`e4bfeb67f9125af238aca4ff9bf69b21cb1df998`](https://github.com/esengine/DeepSeek-Reasonix/commit/e4bfeb67f9125af238aca4ff9bf69b21cb1df998) — 1,585 commits on, 2026-09-15. Screened on a sparse checkout of the memory, session-context, control, benchmark and desktop suggestion files plus the root manifests and `.githooks/`: one auto-run surface, one unpinned surface and four dependency surfaces inside the cooldown; nothing was installed or run. The memory package changed in ten files, and one change rewrote the report's premise: [`2b7c65227775a09392cc0070907ff06ca9af0fcd`](https://github.com/esengine/DeepSeek-Reasonix/commit/2b7c65227775a09392cc0070907ff06ca9af0fcd) (2 September) moved the memory index and pinned bodies out of the cached system prompt into a host-generated session-context snapshot that a write replaces on the next user turn, and `QueueMemory` now drops `forget`'s disregard sentence in favour of that replacement. Sections 1, 2, 4, 6, 8, 9 and 11 are rewritten for it. `scope_enforced` withdrawn: the project boundary is a directory partition, not a stored key applied on a read. `human_review` kept, with the approval gate on `remember` and `forget` added to its record; `negative_eval` kept on the unchanged memorybench. Revision snapshots under `.revisions/` are now described; they are not an event log. Two marks.
 
