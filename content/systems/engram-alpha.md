@@ -7,15 +7,14 @@ page_kind: system
 source_name: "techtheist/engram"
 source_url: https://github.com/techtheist/engram
 archive_name: "techtheist--engram"
-revision: 7fa2e462a4ecd4d13737630ebd0b58ce4cf8c330
-revision_url: https://github.com/techtheist/engram/commit/7fa2e462a4ecd4d13737630ebd0b58ce4cf8c330
-analyzed_at: 2026-09-16
-capabilities: "trust_state, bitemporal, audit_log, human_review, negative_eval"
+revision: cb7a3944def40e3a39ee58f31a9b59c9f2e7171c
+revision_url: https://github.com/techtheist/engram/commit/cb7a3944def40e3a39ee58f31a9b59c9f2e7171c
+analyzed_at: 2026-09-19
+capabilities: "trust_state, bitemporal, audit_log, negative_eval"
 capability_evidence:
   trust_state: "the node record and the suspects queue | crates/engram-core/src/schema.rs, engine.rs | three durable anchors on `nodes` — `confirmed_at` (*\"last deliberate act; the unapproved trust anchor\"*), `approved_at` (*\"last explicit approval; trust anchors here\"*) and `demoted_at` (*\"when contradicting evidence landed\"*) — plus `trust_override`, a pin that holds trust constant and turns decay off, and a `suspects.status` of suspected/confirmed/dismissed carrying an `nli_label` hint of contradiction/entailment/neutral beside it. Trust is computed at read time from the anchors rather than stored as a score | crates/engram-core/src/tests.rs `user_nodes_are_approved_on_creation_and_approve_restores_trust`, `claude_replaces_verdict_cannot_archive_a_pinned_node`, `decay_archives_only_stale_unapproved_claude_episodic_nodes`"
   bitemporal: "the node and edge records, and a graph-declared event clock on search | crates/engram-core/src/schema.rs, engine.rs:1850-1853,:1754-1790, timespec.rs:84-98, store.rs:562-567 | `valid_from` and `valid_until` on both tables, distinct from `created_at`: the record axis says when the store learned it, the validity axis when it held as canon. Setting `valid_until` is the supersede flow and nothing else — the comment says so at the call — and the audit action becomes `archived`; retrieval retains only rows whose `valid_until` is none. A second validity axis is the owner's: `search` reads its `after`/`before` window against `created_at` by default, and a `date_field` selector re-aims the same window at a date-kind custom field, or at a `from..to` pair with interval-overlap semantics, so a note captured today about something that held in 2019 answers a 2019 question. `check_clock` refuses an undeclared field or a clock with no window as an error rather than a dropped filter | crates/engram-core/src/tests.rs `resolve_replaces_archives_the_older_node`, `audit_logs_supersede_and_decay_as_archived`, `date_field_clock_filters_on_the_event_clock`, `date_field_clock_is_validated_loudly`, `sealed_indexed_fields_and_event_clock_still_work`"
   audit_log: "the store | crates/engram-core/src/schema.rs:66-81 | an insert-only `audit` table — *\"Rows are only ever inserted; `seq` is the pagination cursor\"* — one row per node or edge mutation over an eleven-value action vocabulary (created, updated, approved, unapproved, pinned, unpinned, demoted, undemoted, archived, deleted, imported), with full `before_json` and `after_json` snapshots, a `title` label that survives deletion, and the writing process stamped on the row: `origin` of pane/mcp/daemon/cli/library, `session_id`, `cwd`, `pid`, `version` | crates/engram-core/src/tests.rs `audit_journals_node_lifecycle_with_context`, `audit_journals_edges_with_sentence_labels`, `audit_logs_supersede_and_decay_as_archived`, `audit_page_keyset_pagination`, `audit_origin_stamp_and_session_fallback`, `audit_import_writes_one_summary_row`"
-  human_review: "the suspects queue, the pane and the pin | crates/engram-core/src/engine.rs (`resolve_suspect`, `approve`, `set_trust_override`, `nli_agreement`) | a write returns the look-alike pairs it queued so the assistant judges them in the same turn, and `resolve_suspect` records the verdict as conflict, replaces or dismiss. Pinning is a human act by construction — no MCP tool writes `trust_override` — and a pinned node ignores contradicting evidence until a person unpins it; approval is not: `approve_node` (crates/engram-mcp/src/lib.rs:1102-1109) restarts trust at 100% from the assistant's side, and its only restriction is the sentence in its description. The pane is the surface: stale nodes queue for a decision, conflicts are judged there, and the browser demo exercises all of it. `nli_agreement` scores the model hint against the human verdict and is deliberately excluded from the auto-tune inputs | crates/engram-core/src/tests.rs `user_nodes_are_approved_on_creation_and_approve_restores_trust`, `claude_replaces_verdict_cannot_archive_a_pinned_node`, `audit_answered_nominates_but_never_resolves`"
   negative_eval: "the offline evaluation harness | eval/src/generate.rs, eval/src/arms.rs, eval/results/floor-100.json, floor-500.json, floor-1500.json | the generated corpus carries a control arm of *\"questions about subjects that were never written\"* — one control subject per four tested facts, with chains generated before the controls so a phantom subject can never collide with a real one — and `controls_declined` is reported at every threshold in the committed floor sweeps, so a precision gain is never published without the recall it cost | the harness is the mechanism, and the three committed floor sweeps are its runs"
 stack_storage: "tepindb, sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -732,8 +731,8 @@ place by construction and in another by instruction. It writes nodes and edges,
 and it judges the suspects the write hands back. Pinning is human-only in the
 code: no MCP tool writes `trust_override`, retrieval moves nothing, and a pinned
 node ignores the assistant's evidence entirely until a human unpins it.
-Approval is not: `approve_node` is an MCP tool (`lib.rs:1102-1109`) that
-restarts trust at 100%, `Engine::approve` (`engine.rs:1873`) takes no source and
+Approval is not: `approve_node` is an MCP tool (`crates/engram-mcp/src/lib.rs:1356`)
+that restarts trust at 100%, `Engine::approve` takes no source and
 gates on nothing, and the whole restraint is the tool description — *"ONLY on
 explicit user demand or after word-by-word verification against current
 reality."* The audit row records `origin: mcp`, so an assistant's approval is
@@ -761,16 +760,22 @@ the boundary refusing an unaimed or undeclared clock rather than dropping it.
 durable epistemic stamps, `confirmed_at`, `approved_at` and `demoted_at`, which
 the policy reads separately and which the audit journal names as actions.
 
-**`human_review` — earned.** A review queue for stale nodes, conflict judgement,
-retirement, deletion and pinning, with pinning reserved to humans by the absence
-of any tool that sets it. Two further gestures are human-only by construction
-rather than by convention: reshaping the ontology — types, verbs, custom fields
-— has no MCP write surface at all, and `merge_nodes` refuses a pinned victim
-when the caller is the assistant. Approval is the gesture that is *not*: the
-`approve_node` tool exists and the engine does not ask who called it, so the
-line the documentation draws — *"the drawer is where you approve what you vouch
-for"* — is a line the assistant is asked to respect rather than one it cannot
-cross.
+**`human_review` — withheld**, and the paragraph that used to award it contains
+the reason. Three gestures here really are human-only by construction, and they
+are worth keeping: pinning, because no MCP tool writes `trust_override`;
+reshaping the ontology — types, verbs, custom fields — which has no MCP write
+surface at all; and `merge_nodes`, which refuses a pinned victim when the caller
+is the assistant. But none of those is a memory waiting to be admitted. A pin
+makes an existing node immune to contradicting evidence; it does not hold one
+back. What would be the admission gate is approval, and approval is the gesture
+that is not reserved: `approve_node` is an MCP tool (`crates/engram-mcp/src/lib.rs:1356`),
+`Engine::approve` takes no source and gates on nothing, and the whole restraint
+is the tool description — *"ONLY on explicit user demand or after word-by-word
+verification against current reality."* A sentence in a description is a request
+to the model. The suspects queue points the same way: the write hands the
+look-alike pairs back so the *assistant* judges them in the same turn. The audit
+row records `origin: mcp`, so an assistant's approval is distinguishable after
+the fact; it is not preventable before it.
 
 **`negative_eval` — earned.** The floor sweep carries unanswerable **controls**
 at every operating point and reports `controls_declined`, so the evaluation
@@ -1353,6 +1358,8 @@ which signals are allowed to change what an agent believes.
   `Created` with a `tombstoned` warning, never a refusal.
 
 ## History
+
+**2026-09-19** — re-pinned to [`cb7a3944def40e3a39ee58f31a9b59c9f2e7171c`](https://github.com/techtheist/engram/commit/cb7a3944def40e3a39ee58f31a9b59c9f2e7171c). `human_review` is **withdrawn**, on the evidence the awarding paragraph already set out beside it. What the code reserves to a person is real and stays in the report: no MCP tool writes `trust_override`, the ontology has no MCP write surface, and `merge_nodes` refuses a pinned victim from the assistant. None of those holds a memory back pending a decision — a pin makes an existing node immune to contradiction. The gesture that would be the gate is approval, and `approve_node` is an MCP tool whose entire restraint is a sentence in its own description, re-verified at this pin at `crates/engram-mcp/src/lib.rs:1356`; the suspects queue is handed back for the assistant to judge in the same turn. The previous record's `lib.rs:1102-1109` anchor no longer resolves and has been corrected. The other four marks stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`7fa2e462a4ecd4d13737630ebd0b58ce4cf8c330`](https://github.com/techtheist/engram/commit/7fa2e462a4ecd4d13737630ebd0b58ce4cf8c330) — re-read at a commit dated 16 September 2026, eleven commits past the previous pin. All five marks re-tested and held. Release 0.9.4 adds a second route into the suspects queue and justifies it with a measurement rather than an intuition: below the similarity floor a logic layer reads the two bare titles, because similarity alone *"cannot tell a contradiction from an agreeing restatement (MemStrata AUROC 0.59; the KnowledgeDrift gate probe reproduced it)"*, and on that probe titles separated the two at 0.99 against 0.61 for the claim text. The two auto-tuned dials are fenced from each other — only pairs the similarity path could have raised may inform the similarity dial, since the logic layer's verdicts *"would drag the floor toward the NLI band it never reads."* And the removal flag is now carried as a role on every surface rather than as a type name, so a custom ontology renaming its tombstone cannot let a reader *"take \"Removed: X\" for a memory of X."* Screened before reading, from a full clone: three auto-run surfaces, no build-time execution point, three unpinned dependency surfaces and three dependency files inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
