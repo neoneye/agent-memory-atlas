@@ -110,14 +110,14 @@ path is a per-writer hash-chained op log.</p>
               <strong>genomewalker/chitta-field</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/genomewalker/chitta-field/commit/f3176e587dced64dd3a6a663a40a58e3802b0a10" title="f3176e587dced64dd3a6a663a40a58e3802b0a10">
+            <a class="meta-pill revision-pill" href="https://github.com/genomewalker/chitta-field/commit/c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533" title="c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533">
               <span>Analyzed revision</span>
-              <code>f3176e58…</code>
+              <code>c5e0ff0e…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/genomewalker--chitta-field" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -166,6 +166,15 @@ normalises, re-ranks or blends can multiply it back up.
 <code>None</code> is not a number, and the compiler makes every caller
 decide what to do about it. The comment at the type it guards uses the
 right word — the status "vetoes the memory (excluded from results)".</p>
+<p>There are five callers and each spells the exclusion out differently,
+which is the point: the <code>Option</code> does not let any of them be
+careless. <code>src/store/recall.rs:735</code> uses
+<code>.is_some()</code> as a filter predicate, <code>:955-958</code>
+matches with a <code>None =&gt; continue</code> arm, <code>:1074</code>
+writes <code>Some(s) if ...is_none() =&gt; continue</code>, and
+<code>:1101</code> and <code>src/scoring/factors.rs:184</code> take the
+<code>?</code> early return. A zero would have allowed a sixth caller to
+do nothing at all and still compile.</p>
 <p><strong>Where a memory came from weights it and never withholds
 it.</strong> <code>EpistemicStatus</code> is
 <code>UserStated | ToolDerived | ModelInferred | AutonomousSynthesis</code>,
@@ -382,8 +391,31 @@ per kind and per epistemic status, and no ceiling was found.</p>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/genomewalker/chitta-field/commit/c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533"><code class="commit-id" title="c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533">c5e0ff0e…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line, which
+this system answers at the type level: a status that excludes returns
+<code>None</code> and one that admits returns a weight, so the filtering
+question and the ranking question are different return types. The mark
+holds. <code>status_multiplier</code> is now at
+<code>src/scoring/mod.rs:164-172</code> and the vocabulary at
+<code>src/state.rs:58-67</code>, both unchanged in substance. The three
+anchors into <code>src/store.rs</code> are dead: the file was split, and
+the call sites are in <code>src/store/recall.rs</code>. Re-mapping them
+raised the count — the record named three enforcement sites and there
+are five, each handling the <code>None</code> a different way:
+<code>.is_some()</code> as a filter predicate (<code>:735</code>), a
+<code>match</code> with a <code>None =&gt; continue</code> arm
+(<code>:955-958</code>), an <code>is_none() =&gt; continue</code> guard
+(<code>:1074</code>), and two <code>?</code> early returns
+(<code>:1101</code>, <code>src/scoring/factors.rs:184</code>). That
+variety is the argument for the <code>Option</code>: a zero would have
+let a sixth caller ignore it and still compile.
+<code>epistemic_multiplier</code> (<code>:175-181</code>) still returns
+a plain <code>f32</code> and still cannot veto. Screened again first;
+nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/genomewalker/chitta-field/commit/f3176e587dced64dd3a6a663a40a58e3802b0a10"><code class="commit-id" title="f3176e587dced64dd3a6a663a40a58e3802b0a10">f3176e58…</code></a>
+href="https://github.com/genomewalker/chitta-field/commit/c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533"><code class="commit-id" title="c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533">c5e0ff0e…</code></a>
 — first reading, at a commit dated 16 September 2026. Screened before
 opening, from a shallow clone: two files scanned, no auto-run surfaces,
 one build-time execution point, no unpinned surfaces and one dependency

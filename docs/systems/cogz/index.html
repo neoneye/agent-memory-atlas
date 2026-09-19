@@ -111,14 +111,14 @@ entirely by the markdown frontmatter a person edits.</p>
               <strong>balaianu/CogZ</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/balaianu/CogZ/commit/3b8486d8fae8bb5e13922a5246ea5ed161bbdff5" title="3b8486d8fae8bb5e13922a5246ea5ed161bbdff5">
+            <a class="meta-pill revision-pill" href="https://github.com/balaianu/CogZ/commit/6d664c869e503b942f7728e108cd680cda84c936" title="6d664c869e503b942f7728e108cd680cda84c936">
               <span>Analyzed revision</span>
-              <code>3b8486d8…</code>
+              <code>6d664c86…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/balaianu--CogZ" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -374,13 +374,31 @@ either.</p>
 <h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
 <p>Retrieval is hybrid: FTS5 lexical search and vector KNN, combined and
 then expanded across the graph. Status filtering runs at every layer —
-the batch fetch and the entity query append
+the batch fetch and the count queries append
 <code>status = 'active'</code>, the usage and doctor sweeps exclude
 <code>status != 'pruned'</code>, and
 <code>src/storage/embeddings.rs:261</code> excludes by status before
 candidates "consume KNN slots," which is the right place for it:
 filtering after the nearest-neighbour cut would silently shrink the
 result set rather than fill it with live rows.</p>
+<p>The general entity query is the one to look at, because its base SQL
+carries no status clause at all —
+<code>SELECT … FROM entities WHERE 1=1</code>
+(<code>src/storage/query.rs:35</code>), with the predicate appended only
+<code>if let Some(st) = filter.status</code> (<code>:42-45</code>). What
+keeps that from being a hole is that the omission is unreachable from
+the two places a caller arrives: <code>EntityFilter</code> implements
+<code>Default</code> with <code>status: Some("active")</code>
+(<code>:17-21</code>), and the MCP path resolves the request field
+through a documented rule before building the filter — <code>None</code>
+becomes <code>"active"</code>, the literal <code>"all"</code> becomes no
+filter, anything else is matched literally
+(<code>src/mcp/helpers.rs:189-202</code>), with the same rule mirrored
+in <code>search::resolve_status_filter</code>. So widening is a word a
+caller has to write, and forgetting the field narrows rather than
+widens. That is the shape this atlas keeps asking for, and it is worth
+noting that it is carried by a default and a resolver rather than by the
+query itself.</p>
 <p><code>graph_retrieve</code> takes the status filter as an explicit
 parameter, and <code>respects_status_filter</code> is the test that pins
 it. Context assembly then ranks, applies MMR for diversity, and
@@ -560,8 +578,33 @@ queries</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/balaianu/CogZ/commit/6d664c869e503b942f7728e108cd680cda84c936"><code class="commit-id" title="6d664c869e503b942f7728e108cd680cda84c936">6d664c86…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line, and the
+record's universal claim — that every retrieval surface filters on the
+status — was worth pulling on. The hard-coded clauses are all still
+there and the anchors are re-mapped: the count queries at
+<code>src/storage/query.rs:291</code>, <code>:301</code> and a third at
+<code>:311</code>, the batch fetch at
+<code>src/storage/crud_batch.rs:33</code> and <code>:80</code>, the
+usage sweep now at <code>src/storage/usage.rs:276</code> and the doctor
+check at <code>src/doctor/checks.rs:301</code>, with a new one in
+<code>src/doctor/checks_analysis.rs:16</code>. But the general entity
+query has no clause in its base SQL — <code>WHERE 1=1</code> at
+<code>:35</code>, with the predicate appended only when the caller
+supplies one. The omission is unreachable rather than absent:
+<code>EntityFilter::default()</code> sets
+<code>status: Some("active")</code> (<code>:17-21</code>), and the MCP
+path resolves the request field first — missing becomes active, the
+literal <code>all</code> becomes no filter, anything else matches
+literally (<code>src/mcp/helpers.rs:189-202</code>), mirrored in
+<code>search::resolve_status_filter</code>. So the accurate statement is
+not that every query carries the predicate but that widening takes a
+word a caller has to write, and forgetting the field narrows. The record
+and section 6 now say that. Screened again first; nothing was installed
+and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/balaianu/CogZ/commit/3b8486d8fae8bb5e13922a5246ea5ed161bbdff5"><code class="commit-id" title="3b8486d8fae8bb5e13922a5246ea5ed161bbdff5">3b8486d8…</code></a>
+href="https://github.com/balaianu/CogZ/commit/6d664c869e503b942f7728e108cd680cda84c936"><code class="commit-id" title="6d664c869e503b942f7728e108cd680cda84c936">6d664c86…</code></a>
 — first reading, at a commit dated 16 September 2026. Screened before
 opening, from a shallow clone: three files scanned, no auto-run surface,
 no build-time execution point and no unpinned dependency surface, with

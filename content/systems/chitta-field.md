@@ -7,12 +7,12 @@ page_kind: system
 source_name: "genomewalker/chitta-field"
 source_url: https://github.com/genomewalker/chitta-field
 archive_name: "genomewalker--chitta-field"
-revision: f3176e587dced64dd3a6a663a40a58e3802b0a10
-revision_url: https://github.com/genomewalker/chitta-field/commit/f3176e587dced64dd3a6a663a40a58e3802b0a10
-analyzed_at: 2026-09-16
+revision: c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533
+revision_url: https://github.com/genomewalker/chitta-field/commit/c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533
+analyzed_at: 2026-09-19
 capabilities: "trust_state, audit_log"
 capability_evidence:
-  trust_state: "a seven-value status where three return `None` from the scoring helper, and a `None` skips the candidate outright rather than scoring it low | src/scoring/mod.rs:163-172, src/store.rs:3780, :3441, :3661 | `status_multiplier` maps `Active | Verified | Observed | Proposed` to configurable weights and `Superseded | Contradicted | Archived` to `None`, documented as \"[r]eturns None for excluded statuses\" and, at the type it guards, as a veto: \"vetoes the memory (excluded from results)\". The recall loop reads it as `Some(s) if status_multiplier(&s.status, &pipeline_config).is_none() => continue`, so exclusion is a control-flow skip and not a small number that a later re-weighting could restore. Held separately from it, `EpistemicStatus` — `UserStated | ToolDerived | ModelInferred | AutonomousSynthesis`, commented \"[h]ow a memory was obtained — orthogonal to confidence\" — produces a multiplier and never a veto, so where a memory came from weights it and never withholds it | src/state.rs:58-77"
+  trust_state: "a seven-value status where three return `None` from the scoring helper, and every one of the five call sites is forced by the type system to handle that `None` as an exclusion | src/state.rs:58-67 (`MemoryStatus`), src/scoring/mod.rs:164-172 (`status_multiplier`), :175-181 (`epistemic_multiplier`), src/store/recall.rs:735, :955-958, :1074, :1101, src/scoring/factors.rs:184 | `status_multiplier` maps Active, Verified, Observed and Proposed to configurable weights and Superseded, Contradicted and Archived to `None`, documented as returning None for excluded statuses and, at the type it guards, as a veto that excludes the memory from results. Because the return is an `Option`, no caller can quietly treat an excluded status as a small number: the five call sites spell the exclusion out as control flow — `.is_some()` as a filter predicate, a `match` whose None arm continues, an `is_none() => continue`, and two `?` early returns. Held separately from it, `EpistemicStatus` — UserStated, ToolDerived, ModelInferred, AutonomousSynthesis, commented as how a memory was obtained and orthogonal to confidence — returns a plain `f32` and never a veto, so provenance weights a memory and never withholds it. The two axes differ in their return type, which is the distinction made where a reader cannot miss it | src/state.rs:58-77"
   audit_log: "every mutation is an `Op` in an append-only segment log whose records are SHA-256 hash-chained to their predecessor | src/log.rs:19-30, src/ops.rs:14-40, src/store.rs | The `Op` enum is the complete mutation vocabulary — put payload, update state, batched state drain, delete memory, add association edge, add and invalidate triplet, upsert and remove symbol and call edge, demote memory, clear project, and the session, transcript, task, user-model, theme and analytics events — and the log is the durable write path, appended from sixty-nine call sites in the store. Each record links into a chain as a SHA-256 over its sequence number, op type, previous hash and payload together, with a CRC per record and a `vector_space_id` lineage stamp in the V3 header so replay \"[l]ets replay() fence out segments written in a foreign vector space (model/dim/text-format)\". The chain is per segment and there is one segment per writer process, so it is tamper-evidence within a writer rather than a single global order | src/log.rs:11-17"
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
@@ -60,6 +60,14 @@ normalises, re-ranks or blends can multiply it back up. `None` is not a number,
 and the compiler makes every caller decide what to do about it. The comment at
 the type it guards uses the right word — the status "vetoes the memory (excluded
 from results)".
+
+There are five callers and each spells the exclusion out differently, which is
+the point: the `Option` does not let any of them be careless.
+`src/store/recall.rs:735` uses `.is_some()` as a filter predicate, `:955-958`
+matches with a `None => continue` arm, `:1074` writes
+`Some(s) if ...is_none() => continue`, and `:1101` and
+`src/scoring/factors.rs:184` take the `?` early return. A zero would have
+allowed a sixth caller to do nothing at all and still compile.
 
 **Where a memory came from weights it and never withholds it.**
 `EpistemicStatus` is `UserStated | ToolDerived | ModelInferred |
@@ -247,4 +255,6 @@ per epistemic status, and no ceiling was found.
 
 ## History
 
-**2026-09-16** — [`f3176e587dced64dd3a6a663a40a58e3802b0a10`](https://github.com/genomewalker/chitta-field/commit/f3176e587dced64dd3a6a663a40a58e3802b0a10) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: two files scanned, no auto-run surfaces, one build-time execution point, no unpinned surfaces and one dependency file inside the seven-day cooldown. Nothing was installed, built or run.
+**2026-09-19** — [`c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533`](https://github.com/genomewalker/chitta-field/commit/c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533) — `trust_state` re-tested against the narrowed line, which this system answers at the type level: a status that excludes returns `None` and one that admits returns a weight, so the filtering question and the ranking question are different return types. The mark holds. `status_multiplier` is now at `src/scoring/mod.rs:164-172` and the vocabulary at `src/state.rs:58-67`, both unchanged in substance. The three anchors into `src/store.rs` are dead: the file was split, and the call sites are in `src/store/recall.rs`. Re-mapping them raised the count — the record named three enforcement sites and there are five, each handling the `None` a different way: `.is_some()` as a filter predicate (`:735`), a `match` with a `None => continue` arm (`:955-958`), an `is_none() => continue` guard (`:1074`), and two `?` early returns (`:1101`, `src/scoring/factors.rs:184`). That variety is the argument for the `Option`: a zero would have let a sixth caller ignore it and still compile. `epistemic_multiplier` (`:175-181`) still returns a plain `f32` and still cannot veto. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-16** — [`c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533`](https://github.com/genomewalker/chitta-field/commit/c5e0ff0e218d5bd60a3a5d98507b17b1bf97f533) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: two files scanned, no auto-run surfaces, one build-time execution point, no unpinned surfaces and one dependency file inside the seven-day cooldown. Nothing was installed, built or run.

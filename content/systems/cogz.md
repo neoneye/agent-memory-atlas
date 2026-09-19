@@ -7,12 +7,12 @@ page_kind: system
 source_name: "balaianu/CogZ"
 source_url: https://github.com/balaianu/CogZ
 archive_name: "balaianu--CogZ"
-revision: 3b8486d8fae8bb5e13922a5246ea5ed161bbdff5
-revision_url: https://github.com/balaianu/CogZ/commit/3b8486d8fae8bb5e13922a5246ea5ed161bbdff5
-analyzed_at: 2026-09-16
+revision: 6d664c869e503b942f7728e108cd680cda84c936
+revision_url: https://github.com/balaianu/CogZ/commit/6d664c869e503b942f7728e108cd680cda84c936
+analyzed_at: 2026-09-19
 capabilities: "trust_state, audit_log, negative_eval"
 capability_evidence:
-  trust_state: "a five-value status column, indexed, that every retrieval surface filters on | src/storage/schema.rs:62-73, src/storage/status.rs:42, src/storage/crud_batch.rs:33, :80, src/storage/query.rs:291, :301, src/storage/usage.rs:186, src/doctor/checks.rs:293 | `entities.status TEXT DEFAULT 'active'` carries its own index, and `VALID_STATUSES` fixes the vocabulary at `active`, `stale`, `superseded`, `rejected`, `pruned`. This is a stored epistemic status rather than a ranking input or a write-time genre, and the read path consults it rather than merely recording it: the batch fetch appends `AND status = 'active'`, the entity query filters the same way, the usage sweeps and the doctor's observation check exclude `status != 'pruned'`, and KNN candidates are dropped by status before they can consume a retrieval slot. The mark rests on the reads, not on the column | src/search/graph_retrieval_tests.rs:227 `respects_status_filter` inserts a stale neighbour on a live edge, asserts the `active`-filtered traversal returns nothing, then re-runs the identical query under `stale` and asserts exactly one row comes back"
+  trust_state: "a five-value status column, indexed, resolved once by a shared helper that defaults closed and takes an explicit token to widen | src/storage/schema.rs:62-73, src/storage/status.rs:42 (`VALID_STATUSES`), src/mcp/helpers.rs:189-202 (the resolver), src/storage/query.rs:9-21 (`EntityFilter` and its `Default`), :42-45, :291, :301, :311, src/storage/crud_batch.rs:33, :80, src/storage/usage.rs:276, src/doctor/checks.rs:301, src/doctor/checks_analysis.rs:16 | `entities.status TEXT DEFAULT active` carries its own index, and `VALID_STATUSES` fixes the vocabulary at active, stale, superseded, rejected, pruned. This is a stored epistemic status rather than a ranking input or a write-time genre, and the read path consults it rather than merely recording it. The shape is a default a caller widens, never one they can omit: the MCP resolver maps a missing status to active, the literal string all to no filter, and anything else to a literal match, with the same rule mirrored in `search::resolve_status_filter`, while `EntityFilter::default()` independently sets `status: Some(active)`. Beneath that the count queries, the batch fetch and the usage and doctor sweeps hard-code their own clause. The mark rests on the reads, not on the column | src/search/graph_retrieval_tests.rs:227 `respects_status_filter` inserts a stale neighbour on a live edge, asserts the active-filtered traversal returns nothing, then re-runs the identical query under stale and asserts exactly one row comes back"
   audit_log: "an append-only domain-event table with one INSERT writer, no DELETE anywhere, and edit rows that carry the prior text | src/storage/events.rs:78-90, src/storage/schema.rs:152-161, src/files/events.rs:33-47 | `record_event` holds the only `INSERT INTO events` in the tree, and a corpus-wide search for `DELETE FROM events` returns nothing, so rows are never removed. The vocabulary is mutation-shaped rather than access-shaped — `observation_created`, `observation_edited`, `observation_rejected`, `rule_promoted`, `knowledge_merged`, `contradiction_found` — and the module states the scope deliberately: \"Only domain events are recorded — never indexing operations.\" The edit event is the strong part, because `record_edit_event` writes the pre-image into the payload as `old_content`, so the log preserves what a memory said before it was changed rather than only that it changed | src/storage/crud_batch.rs:158, :203 qualify the claim: the cascade delete runs `UPDATE events SET entity_id = NULL` to clear the foreign key before removing an entity, so the event row and its `old_content` payload survive a hard delete while the pointer naming which entity it described does not"
   negative_eval: "a committed must-not-retrieve assertion at the store level, with the same query under a different filter as its positive control | src/search/graph_retrieval_tests.rs:227-263 | `respects_status_filter` builds the adversarial case rather than asserting on an empty database: it inserts an active seed and a `stale` entity, joins them with a real `references` edge so the traversal would reach it, and then asserts `active.is_empty()` when `graph_retrieve` runs with `Some(\"active\")`. The control is the discriminating half — the identical call with `Some(\"stale\")` asserts `stale_results.len() == 1`, which proves the row was reachable and that the filter, not a broken fixture, is what suppressed it. The assertion is on what the retrieval layer returns rather than on a scoring function | the same file's neighbouring cases exercise the surrounding traversal, so a change that silently stopped filtering would have to break this test specifically rather than fail an unrelated one first"
 stack_storage: "sqlite"
@@ -215,11 +215,25 @@ read path enforces, so no scope mark applies either.
 
 Retrieval is hybrid: FTS5 lexical search and vector KNN, combined and then
 expanded across the graph. Status filtering runs at every layer — the batch
-fetch and the entity query append `status = 'active'`, the usage and doctor
+fetch and the count queries append `status = 'active'`, the usage and doctor
 sweeps exclude `status != 'pruned'`, and `src/storage/embeddings.rs:261`
 excludes by status before candidates "consume KNN slots," which is the right
 place for it: filtering after the nearest-neighbour cut would silently shrink
 the result set rather than fill it with live rows.
+
+The general entity query is the one to look at, because its base SQL carries no
+status clause at all — `SELECT … FROM entities WHERE 1=1`
+(`src/storage/query.rs:35`), with the predicate appended only `if let Some(st) =
+filter.status` (`:42-45`). What keeps that from being a hole is that the
+omission is unreachable from the two places a caller arrives: `EntityFilter`
+implements `Default` with `status: Some("active")` (`:17-21`), and the MCP path
+resolves the request field through a documented rule before building the filter
+— `None` becomes `"active"`, the literal `"all"` becomes no filter, anything
+else is matched literally (`src/mcp/helpers.rs:189-202`), with the same rule
+mirrored in `search::resolve_status_filter`. So widening is a word a caller has
+to write, and forgetting the field narrows rather than widens. That is the
+shape this atlas keeps asking for, and it is worth noting that it is carried by
+a default and a resolver rather than by the query itself.
 
 `graph_retrieve` takes the status filter as an explicit parameter, and
 `respects_status_filter` is the test that pins it. Context assembly then ranks,
@@ -357,4 +371,6 @@ may be missed when the candidate set saturates.
 
 ## History
 
-**2026-09-16** — [`3b8486d8fae8bb5e13922a5246ea5ed161bbdff5`](https://github.com/balaianu/CogZ/commit/3b8486d8fae8bb5e13922a5246ea5ed161bbdff5) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: three files scanned, no auto-run surface, no build-time execution point and no unpinned dependency surface, with two dependency files inside the seven-day cooldown and `Cargo.lock` present. `AGENTS.md` is addressed to a reading agent and was recorded as data. Nothing was installed, built or run.
+**2026-09-19** — [`6d664c869e503b942f7728e108cd680cda84c936`](https://github.com/balaianu/CogZ/commit/6d664c869e503b942f7728e108cd680cda84c936) — `trust_state` re-tested against the narrowed line, and the record's universal claim — that every retrieval surface filters on the status — was worth pulling on. The hard-coded clauses are all still there and the anchors are re-mapped: the count queries at `src/storage/query.rs:291`, `:301` and a third at `:311`, the batch fetch at `src/storage/crud_batch.rs:33` and `:80`, the usage sweep now at `src/storage/usage.rs:276` and the doctor check at `src/doctor/checks.rs:301`, with a new one in `src/doctor/checks_analysis.rs:16`. But the general entity query has no clause in its base SQL — `WHERE 1=1` at `:35`, with the predicate appended only when the caller supplies one. The omission is unreachable rather than absent: `EntityFilter::default()` sets `status: Some("active")` (`:17-21`), and the MCP path resolves the request field first — missing becomes active, the literal `all` becomes no filter, anything else matches literally (`src/mcp/helpers.rs:189-202`), mirrored in `search::resolve_status_filter`. So the accurate statement is not that every query carries the predicate but that widening takes a word a caller has to write, and forgetting the field narrows. The record and section 6 now say that. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-16** — [`6d664c869e503b942f7728e108cd680cda84c936`](https://github.com/balaianu/CogZ/commit/6d664c869e503b942f7728e108cd680cda84c936) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: three files scanned, no auto-run surface, no build-time execution point and no unpinned dependency surface, with two dependency files inside the seven-day cooldown and `Cargo.lock` present. `AGENTS.md` is addressed to a reading agent and was recorded as data. Nothing was installed, built or run.
