@@ -110,9 +110,9 @@ writes.</p>
               <strong>AgentSwarms-fyi/agentswarms</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/AgentSwarms-fyi/agentswarms/commit/28b656ad8ff196ace68766520f7665df1aef9750" title="28b656ad8ff196ace68766520f7665df1aef9750">
+            <a class="meta-pill revision-pill" href="https://github.com/AgentSwarms-fyi/agentswarms/commit/cf179dd9806ad075a11f2a69608ec69413d50185" title="cf179dd9806ad075a11f2a69608ec69413d50185">
               <span>Analyzed revision</span>
-              <code>28b656ad…</code>
+              <code>cf179dd9…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
@@ -515,13 +515,47 @@ of a conversation outlives the conversation, by design and without a
 stated lifetime.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>There are none.</strong> No test file matching
+<p><strong>Corrected on re-read.</strong> The first version of this
+section said there were none — <em>"No test file matching
 <code>*.test.ts</code> or <code>*.spec.ts</code> exists anywhere in the
-repository, for the memory subsystem or for anything else. No eval
-harness, no benchmark directory, no committed results.</p>
-<p>For this subsystem specifically the missing tests are unusually cheap
-and unusually pointed, because almost everything here is a pure function
-over strings or a single SQL statement:</p>
+repository, for the memory subsystem or for anything else."</em> That
+was false at the commit it was written against. <strong>395 test files
+existed at that pin</strong> and 397 exist now, under
+<code>tests/unit</code>, <code>tests/integration</code>,
+<code>tests/differential</code> and <code>tests/journey</code>. It is
+the only claim in this report that the Recorded Searches appendix
+carries no command for, which is exactly how it survived: every other
+absence here was enumerated and this one was assumed.</p>
+<p>What the suite covers is the platform, and the relevant part of it is
+the tenancy boundary this report's one mark rests on.
+<code>tests/unit/rlsPolicies.test.ts</code> replays the migrations in
+order and asserts against the end state, with the reason written at the
+top — a first version concatenated the migration directory and grepped
+<code>CREATE POLICY</code>, reporting <code>profiles</code> as readable
+by anonymous visitors and <code>certificates</code> as fully enumerable,
+<em>"[b]oth were true once and both had been dropped and replaced in a
+later migration. Reading a migration directory is reading a HISTORY;
+only the replayed end state means anything."</em> Any static reader of a
+schema, this atlas included, should take that as addressed to it.</p>
+<p>Two of its assertions reach the memory table without naming it: no
+policy exposes anything to anonymous visitors, and the set of tables
+carrying a <code>USING (true)</code> policy must equal a reviewed
+allow-list <em>exactly</em> — an allow-list, so a new blanket-read
+policy fails the test instead of merging quietly.
+<code>agent_memory_items</code> is not in that list, and that is the
+assertion protecting it.</p>
+<p>The gap is what the suite does <em>not</em> say about it. The test
+names a list of tables whose row-level security is explicitly required
+and the memory table is not among them, so RLS could be dropped from
+<code>agent_memory_items</code> and every assertion in the file would
+still pass: no policy, therefore nothing anonymous-readable and nothing
+on the blanket-read list.</p>
+<p><strong>Still true after the correction: nothing tests the memory
+subsystem's own behaviour.</strong> No test imports
+<code>src/utils/memory</code>, exercises the keyword tokenizer, or
+asserts anything about recall. The missing tests here are unusually
+cheap and unusually pointed, because almost everything is a pure
+function over strings or a single SQL statement:</p>
 <ul>
 <li><code>tokenize()</code> and <code>derive_memory_keywords()</code>
 must agree. They are two implementations of one tokenizer in two
@@ -535,9 +569,10 @@ assert, because nothing expires.</li>
 <li>A memory written under one agent does not surface under
 another.</li>
 </ul>
-<p>The absence is not a judgement about the rest of the platform, which
-is large and evidently shipped. It does mean every behavioural claim in
-this report was read from source and none of it was executed.</p>
+<p>Every behavioural claim in this report was read from source and none
+of it was executed. That was the defensible half of the original
+paragraph; the sentence around it, that the platform had no tests at
+all, was not.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <h3 id="steal">Steal</h3>
 <p><strong>Derive the retrieval index in the database, in a trigger,
@@ -706,9 +741,56 @@ recency boost at <code>:98-104</code></td>
 <td><code>git diff --stat &lt;prev-pin&gt;..HEAD -- '*memor*'</code></td>
 <td>76 insertions across four files, most of it list reformatting</td>
 </tr>
+<tr>
+<td><del>The repository has no tests</del> — <strong>false, corrected
+2026-09-19</strong></td>
+<td><code>find tests -name '*.test.ts' | wc -l</code>; and at the
+previous pin, the GitHub trees API filtered for
+<code>.test.ts</code></td>
+<td>397 now, <strong>395 at the pin the claim was published
+against</strong>. The original claim carried no command in this table,
+which is how it survived review</td>
+</tr>
+<tr>
+<td>Nothing tests the memory subsystem itself</td>
+<td><code>grep -rln "agent_memory|utils/memory|memory_remember|memory_recall|memory_forget" tests</code></td>
+<td>Three files, all of them BI or ML tests that mention a memory tool
+in passing; none imports <code>src/utils/memory</code> or exercises
+recall</td>
+</tr>
+<tr>
+<td>The RLS suite protects the memory table without naming it</td>
+<td><code>grep -n "agent_memory_items" tests/unit/rlsPolicies.test.ts</code>;
+read <code>:139-160</code>, <code>:173-200</code></td>
+<td>No match. Coverage comes from two exhaustive assertions — nothing
+anonymous-readable, and the blanket-read allow-list matched with
+<code>toEqual</code> — so RLS could be dropped on that table with every
+assertion still passing</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19 (re-read)</strong> — <a
+href="https://github.com/AgentSwarms-fyi/agentswarms/commit/cf179dd9806ad075a11f2a69608ec69413d50185"><code class="commit-id" title="cf179dd9806ad075a11f2a69608ec69413d50185">cf179dd9…</code></a>
+— re-pinned two commits later the same day and re-screened at the new
+pin: seven manifests inside the seven-day cooldown, one npm publish
+hook, and no instruction file addressed to a reading agent; nothing
+installed, built or run. The memory subsystem is byte-identical between
+the two pins — the two commits add numeric- and title-claim verification
+to the business-intelligence layer, which does not touch
+<code>src/utils/memory</code> — so no mark changes on the evidence that
+was read the first time. <strong>The re-read exists because a claim in
+section 10 was wrong.</strong> That section said no test file existed
+anywhere in the repository; 395 did at the pin it was published against,
+and it was the one claim the Recorded Searches appendix had no command
+for. Section 10 is rewritten, the appendix gains the three searches that
+should have grounded it, and the <code>scope_enforced</code> evidence is
+strengthened with <code>tests/unit/rlsPolicies.test.ts</code> — a suite
+that replays the migration history rather than grepping it, for a reason
+it records — together with the gap that suite leaves: the memory table
+is covered only by exhaustive assertions and is absent from the list of
+tables whose row-level security is explicitly required. The stack row
+moves from seeded to reviewed.</p>
 <p><strong>2026-09-19</strong> — re-pinned to <a
 href="https://github.com/AgentSwarms-fyi/agentswarms/commit/28b656ad8ff196ace68766520f7665df1aef9750"><code class="commit-id" title="28b656ad8ff196ace68766520f7665df1aef9750">28b656ad…</code></a>,
 15 commits and 82 files on. <strong><code>human_review</code> is

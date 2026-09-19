@@ -7,15 +7,15 @@ page_kind: system
 source_name: "AgentSwarms-fyi/agentswarms"
 source_url: https://github.com/AgentSwarms-fyi/agentswarms
 archive_name: "AgentSwarms-fyi--agentswarms"
-revision: 28b656ad8ff196ace68766520f7665df1aef9750
-revision_url: https://github.com/AgentSwarms-fyi/agentswarms/commit/28b656ad8ff196ace68766520f7665df1aef9750
+revision: cf179dd9806ad075a11f2a69608ec69413d50185
+revision_url: https://github.com/AgentSwarms-fyi/agentswarms/commit/cf179dd9806ad075a11f2a69608ec69413d50185
 analyzed_at: 2026-09-19
 capabilities: "scope_enforced"
 capability_evidence:
-  scope_enforced: "long-term memory recall | src/utils/memory/recall.server.ts:84-85 | `.eq(\"user_id\", userId).eq(\"agent_id\", agentId)` on the query, with row-level security enforcing the same at the database | unknown"
+  scope_enforced: "two owner predicates on the recall query, row-level security under them, and a committed suite that replays the migration history to check what the policies finally are | src/utils/memory/recall.server.ts:84-85, supabase/migrations/20260421221517_*.sql, tests/unit/rlsPolicies.test.ts:1-14, :139-160, :173-200 | the recall query carries a user predicate and an agent predicate, and row-level security re-applies the owner rule at the database for every path that does not use the service role. What was missed at the first reading is the test beside them: a suite that replays every migration in order and asserts against the policies left standing, because — in its own words — reading a migration directory is reading a history and only the replayed end state means anything, a lesson it records after a grep-based first version reported two tables as world-readable that had both been dropped and replaced. Two of its assertions are exhaustive and therefore cover the memory table without naming it: nothing at all is readable by anonymous visitors, and the set of tables carrying a blanket-read policy must equal a reviewed allow-list exactly, so a new one fails the suite rather than merging quietly | the memory table is covered only by those exhaustive assertions. It is absent from the suite's named list of tables whose row-level security is explicitly required, so dropping RLS on `agent_memory_items` would leave every assertion here passing"
 stack_storage: "postgres"
 stack_retrieval: "lexical"
-stack_source: "seeded"
+stack_source: "reviewed"
 matrix:
   memory_unit: "A row with a four-value `kind` — fact, preference, episodic, instruction — its content, and a trigger-derived keyword array"
   storage: "Supabase Postgres, three tables, row-level security per user; no vector column anywhere on the memory path"
@@ -409,13 +409,44 @@ without a stated lifetime.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**There are none.** No test file matching `*.test.ts` or `*.spec.ts` exists
-anywhere in the repository, for the memory subsystem or for anything else. No
-eval harness, no benchmark directory, no committed results.
+**Corrected on re-read.** The first version of this section said there were
+none — *"No test file matching `*.test.ts` or `*.spec.ts` exists anywhere in the
+repository, for the memory subsystem or for anything else."* That was false at
+the commit it was written against. **395 test files existed at that pin** and
+397 exist now, under `tests/unit`, `tests/integration`, `tests/differential`
+and `tests/journey`. It is the only claim in this report that the Recorded
+Searches appendix carries no command for, which is exactly how it survived:
+every other absence here was enumerated and this one was assumed.
 
-For this subsystem specifically the missing tests are unusually cheap and
-unusually pointed, because almost everything here is a pure function over
-strings or a single SQL statement:
+What the suite covers is the platform, and the relevant part of it is the
+tenancy boundary this report's one mark rests on. `tests/unit/rlsPolicies.test.ts`
+replays the migrations in order and asserts against the end state, with the
+reason written at the top — a first version concatenated the migration
+directory and grepped `CREATE POLICY`, reporting `profiles` as readable by
+anonymous visitors and `certificates` as fully enumerable, *"[b]oth were true
+once and both had been dropped and replaced in a later migration. Reading a
+migration directory is reading a HISTORY; only the replayed end state means
+anything."* Any static reader of a schema, this atlas included, should take that
+as addressed to it.
+
+Two of its assertions reach the memory table without naming it: no policy
+exposes anything to anonymous visitors, and the set of tables carrying a
+`USING (true)` policy must equal a reviewed allow-list *exactly* — an
+allow-list, so a new blanket-read policy fails the test instead of merging
+quietly. `agent_memory_items` is not in that list, and that is the assertion
+protecting it.
+
+The gap is what the suite does *not* say about it. The test names a list of
+tables whose row-level security is explicitly required and the memory table is
+not among them, so RLS could be dropped from `agent_memory_items` and every
+assertion in the file would still pass: no policy, therefore nothing
+anonymous-readable and nothing on the blanket-read list.
+
+**Still true after the correction: nothing tests the memory subsystem's own
+behaviour.** No test imports `src/utils/memory`, exercises the keyword
+tokenizer, or asserts anything about recall. The missing tests here are
+unusually cheap and unusually pointed, because almost everything is a pure
+function over strings or a single SQL statement:
 
 - `tokenize()` and `derive_memory_keywords()` must agree. They are two
   implementations of one tokenizer in two languages, and nothing checks that they
@@ -426,9 +457,9 @@ strings or a single SQL statement:
   because nothing expires.
 - A memory written under one agent does not surface under another.
 
-The absence is not a judgement about the rest of the platform, which is large
-and evidently shipped. It does mean every behavioural claim in this report was
-read from source and none of it was executed.
+Every behavioural claim in this report was read from source and none of it was
+executed. That was the defensible half of the original paragraph; the sentence
+around it, that the platform had no tests at all, was not.
 
 ## 11. For Your Own Build
 
@@ -562,8 +593,13 @@ Run from the root of the checkout at the pinned commit.
 | `last_used_at` is a live loop | `grep -n "last_used_at" src/utils/memory/recall.server.ts` | Written on every surfaced row at `:120`, read back as a recency boost at `:98-104` |
 | Scope reaches the query and the database | `grep -n "eq(" src/utils/memory/recall.server.ts`; `grep -c "ROW LEVEL SECURITY" supabase/migrations/20260421221517_*.sql` | Two `.eq` predicates; six RLS declarations |
 | The memory subsystem barely moved | `git diff --stat <prev-pin>..HEAD -- '*memor*'` | 76 insertions across four files, most of it list reformatting |
+| ~~The repository has no tests~~ — **false, corrected 2026-09-19** | `find tests -name '*.test.ts' \| wc -l`; and at the previous pin, the GitHub trees API filtered for `.test.ts` | 397 now, **395 at the pin the claim was published against**. The original claim carried no command in this table, which is how it survived review |
+| Nothing tests the memory subsystem itself | `grep -rln "agent_memory\|utils/memory\|memory_remember\|memory_recall\|memory_forget" tests` | Three files, all of them BI or ML tests that mention a memory tool in passing; none imports `src/utils/memory` or exercises recall |
+| The RLS suite protects the memory table without naming it | `grep -n "agent_memory_items" tests/unit/rlsPolicies.test.ts`; read `:139-160`, `:173-200` | No match. Coverage comes from two exhaustive assertions — nothing anonymous-readable, and the blanket-read allow-list matched with `toEqual` — so RLS could be dropped on that table with every assertion still passing |
 
 ## History
+
+**2026-09-19 (re-read)** — [`cf179dd9806ad075a11f2a69608ec69413d50185`](https://github.com/AgentSwarms-fyi/agentswarms/commit/cf179dd9806ad075a11f2a69608ec69413d50185) — re-pinned two commits later the same day and re-screened at the new pin: seven manifests inside the seven-day cooldown, one npm publish hook, and no instruction file addressed to a reading agent; nothing installed, built or run. The memory subsystem is byte-identical between the two pins — the two commits add numeric- and title-claim verification to the business-intelligence layer, which does not touch `src/utils/memory` — so no mark changes on the evidence that was read the first time. **The re-read exists because a claim in section 10 was wrong.** That section said no test file existed anywhere in the repository; 395 did at the pin it was published against, and it was the one claim the Recorded Searches appendix had no command for. Section 10 is rewritten, the appendix gains the three searches that should have grounded it, and the `scope_enforced` evidence is strengthened with `tests/unit/rlsPolicies.test.ts` — a suite that replays the migration history rather than grepping it, for a reason it records — together with the gap that suite leaves: the memory table is covered only by exhaustive assertions and is absent from the list of tables whose row-level security is explicitly required. The stack row moves from seeded to reviewed.
 
 **2026-09-19** — re-pinned to [`28b656ad8ff196ace68766520f7665df1aef9750`](https://github.com/AgentSwarms-fyi/agentswarms/commit/28b656ad8ff196ace68766520f7665df1aef9750), 15 commits and 82 files on. **`human_review` is withdrawn; `scope_enforced` stands alone.** The first reading was made on 2026-09-17, the day before the rubric narrowed to require that a memory wait in a state until an actor the producing agent cannot be resolves it, and the settings page does not meet that: an extracted item is live when written and the per-item bin removes it afterwards, which is inspection plus deletion rather than adjudication. The agent holds the same verb — `memory_forget` is a declared tool, registered behind an `allows("memory_forget")` check, and its description tells the model to use it when the user says something is no longer true. Nothing records either removal. The surface keeps its description in section 5 among the three destructive exits. Screened again first; nothing installed or run.
 
