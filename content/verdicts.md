@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 599 reports.**
+**This page covers all 600 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5359,3 +5359,17 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, beta, PostgreSQL 16 with pgvector across thirty-five tables, nine transcript adapters, a CLI, an MCP server, a web application, 108 test files, and deployment paths for Docker, systemd, launchd and Windows.
 - Study when: your memory ingests from a source your own system also writes to, or you are filtering a status column that is nullable with a default.
 - Do not copy when: you need the memory's own changes audited — the triggers here cover who may use the system and how it is configured, not what it remembers.
+
+### [`swarmai`](../systems/swarmai/)
+- Best idea: **share one constant between the list and the by-id action.** The lookup that approve and reject use returns a proposal only while it is awaiting a human decision, reusing the same frozen set the listing filters on — "so a proposal hidden from the list can never be re-approved by id" — and the docstring names the run in which a rejected proposal was re-approvable and an expired one approvable though invisible to the list. A committed test asserts the two paths use the shared constant, pinning the invariant rather than the behaviour.
+- Second idea: **derive the trust stamp; never let the record assert it.** A cultivation proposal's trust value is resolved at creation by reading the source run's own record, and the module header states the rule in capitals: an unresolvable run, a source that is not a run, or a run with no canonical outcome all yield not-applicable and **never** passed. A test asserts a run identifier containing path traversal cannot forge it.
+- Third idea: **grade the write guard's response by category.** Content reaching the memory files is scanned and sorted into three actions — secrets redacted, invisible characters stripped, and prompt injection, role hijack and exfiltration *rejected* with a raise rather than quietly cleaned. A memory layer that ingests session text is an injection surface, and sanitising everything silently is how a hijack attempt becomes a stored memory.
+- Fourth idea: **test the decision a later cleanup would undo.** One case asserts the per-proposal advisory lock file is deliberately *not* unlinked on release, with the comment walking through the inode-divergence race and pointing at both the corrected pattern elsewhere in the tree and the latent uncorrected one.
+- Fifth idea: **do not write a closed list or an absolute "never" into a document other systems read.** The memory-index header records that two successive revisions of its own documentation did exactly that — one named a single mechanism, and an injected governance file propagated it as an absolute "never body-BM25 over the archive"; the replacement claimed two and denied a third that ships an HTTP endpoint. The instruction that replaced them is to treat the list as the routes *measured so far*, with the search to re-derive the current set written down.
+- Biggest risk: **the automatic path discards what it distrusts instead of escalating it.** A proposal the adversarial judge does not pass is archived rather than queued, and the comment says so — "autonomy-first: no human review queue". Review therefore governs the proposals that reach the queue, and the judge-passed writes never do.
+- Second risk: the audit manager logs workspace configuration changes — skills, MCP servers, knowledgebases, settings — and memory writes are not among them. The evolution changelog beside it is agent-written prose rather than a structured record of mutations.
+- Third risk: the curated memory file's seven rules are excellent and are prose. "Stale memory that gets distilled becomes a self-reinforcing false belief" and "corrections are permanent" are instructions to a model; the guard that already inspects those writes enforces neither.
+- Most reusable component: `backend/routers/cultivation.py`'s `_find_proposal` and `_proposal_lock` — an actionability check that shares the listing's constant and a non-blocking per-item lock that returns a conflict rather than stalling, each with the incident that produced it named in the comment.
+- Maturity impression: MIT, built on the Claude Agent SDK, roughly a thousand Python files in the backend against 522 test files, a desktop application, a skill library, English and Chinese documentation, and comments that cite run identifiers so a reader can tell which lines are load-bearing.
+- Study when: you have a review queue with both a list and a by-id action, or you are deciding what a memory write guard should reject rather than clean.
+- Do not copy when: you need everything uncertain to reach a person — here the uncertain path archives instead of queueing, by design.

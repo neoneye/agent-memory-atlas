@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agent OS whose knowledge
+proposals carry a trust stamp that fails closed to not-applicable and
+never to passed, and whose approval endpoint reuses the same
+actionable-status constant the listing does — so a proposal hidden from
+the list cannot be approved by id.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="SwarmAI — Agent Memory Atlas">
+    <meta property="og:description" content="An agent OS whose knowledge
+proposals carry a trust stamp that fails closed to not-applicable and
+never to passed, and whose approval endpoint reuses the same
+actionable-status constant the listing does — so a proposal hidden from
+the list cannot be approved by id.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SwarmAI — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agent OS whose
+knowledge proposals carry a trust stamp that fails closed to
+not-applicable and never to passed, and whose approval endpoint reuses
+the same actionable-status constant the listing does — so a proposal
+hidden from the list cannot be approved by id.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>SwarmAI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "SwarmAI",
+      "description": "An agent OS whose knowledge proposals carry a trust stamp that fails closed to not-applicable and never to passed, and whose approval endpoint reuses the same actionable-status constant the listing does \u2014 so a proposal hidden from the list cannot be approved by id.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Self-evolving agent OS</p>
+          <h1>SwarmAI</h1>
+          <p class="document-deck">An agent OS whose knowledge proposals
+carry a trust stamp that fails closed to not-applicable and never to
+passed, and whose approval endpoint reuses the same actionable-status
+constant the listing does — so a proposal hidden from the list cannot be
+approved by id.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/xg-gh-25/SwarmAI">
+              <span>Source</span>
+              <strong>xg-gh-25/SwarmAI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/xg-gh-25/SwarmAI/commit/a032aafae0e698b8b3a92955a376511cb7f1aa1b" title="a032aafae0e698b8b3a92955a376511cb7f1aa1b">
+              <span>Analyzed revision</span>
+              <code>a032aafa…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/xg-gh-25--SwarmAI" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>xg-gh-25--SwarmAI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>SwarmAI is a desktop agent OS with a FastAPI backend — a thousand
+Python files, five hundred test files — built on the Claude Agent SDK.
+Its memory has two halves that behave very differently, and the report
+is mostly about the second.</p>
+<p>The <strong>curated half</strong> is markdown: raw session logs in a
+daily-activity file, distilled into a memory file the agent owns and the
+user directs. Its rules are written at the top of that file and they are
+good rules — <em>"Stale memory that gets distilled becomes a
+self-reinforcing false belief"</em>, <em>"Corrections are
+permanent"</em> — but they are instructions to a model, not
+mechanisms.</p>
+<p>The <strong>proposal half</strong> is code, and it carries three
+marks.</p>
+<p><strong>A proposal cannot assert its own trustworthiness.</strong>
+The trust stamp is resolved at creation by reading the source run's own
+record; an unresolvable run, a source that is not a run, or a run with
+no canonical outcome all yield <em>not-applicable</em>, and the header
+states the rule in capitals — <strong>never</strong> passed. A committed
+test asserts a run identifier containing path traversal cannot forge
+it.</p>
+<p><strong>The approval endpoint and the list share one
+constant.</strong> The by-id lookup returns a proposal only while it is
+awaiting a human decision, reusing the same frozen set the listing
+filters on — <em>"so a proposal hidden from the list can never be
+re-approved by id"</em> — with the run named in which a rejected
+proposal was re-approvable and an expired one approvable though
+invisible.</p>
+<p>And there is a write guard between any content and the memory files:
+secrets redacted, invisible characters stripped, prompt injection and
+exfiltration <strong>rejected</strong> rather than sanitised.</p>
+<p>The honest counterweight is in the same file as the trust gate. The
+automatic cultivation path does not escalate what it distrusts; it
+discards it to a recoverable archive, with the comment saying so plainly
+— <em>"autonomy-first: no human review queue"</em>. Review governs the
+proposals that reach the queue, and the judge-passed writes never
+do.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Sessions produce raw logs. Distillation turns those into curated
+memory. Separately, runs produce <em>proposals</em> — suggested edits to
+a project's own documents — and those go through a gate before they can
+write.</p>
+<p>The proposal is where the interesting state lives, because it carries
+two fields that are deliberately not the same thing. <code>status</code>
+is where the proposal is in its life: pending, applied, rejected,
+expired, escalated. The trust stamp is what is known about the evidence
+behind it, derived from the run that produced it rather than from
+anything the proposal says.</p>
+<p>Keeping those apart is what lets the system express <em>this is still
+open and we do not trust it</em> separately from <em>this is
+closed</em>.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — raw session logs are distilled into a curated memory file the agent owns, with a guard that redacts secrets, strips invisible characters and rejects prompt injection outright before any content reaches it; separately, runs produce cultivation proposals stamped with a trust value derived from the source run and failing closed to not-applicable, which gates whether a proposal may write into a project document — a non-passing one is sent to an adversarial judge whose error and timeout paths also fail closed, and a judge that does not pass discards to a recoverable archive rather than queueing for review, while proposals that do reach the queue are approved over HTTP routes no agent tool can reach, through a lookup that shares the listing's actionable-status constant</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: raw session logs are distilled into a curated memory file the agent owns, with a guard that redacts secrets, strips invisible characters and rejects prompt injection outright before any content reaches it; separately, runs produce cultivation proposals stamped with a trust value derived from the source run and failing closed to not-applicable, which gates whether a proposal may write into a project document — a non-passing one is sent to an adversarial judge whose error and timeout paths also fail closed, and a judge that does not pass discards to a recoverable archive rather than queueing for review, while proposals that do reach the queue are approved over HTTP routes no agent tool can reach, through a lookup that shares the listing&#39;s actionable-status constant
+flowchart TD
+    subgraph Curated[&quot;curated memory — prose the agent owns&quot;]
+        SESS[&quot;sessions&quot;] --&gt; DA[(&quot;DailyActivity/YYYY-MM-DD.md&lt;br/&gt;raw logs&quot;)]
+        DA --&gt; DIST[&quot;distillation&lt;br/&gt;size bounded on the write side&quot;]
+        DIST --&gt; GUARD{&quot;MemoryGuard.scan&quot;}
+        GUARD --&gt;|secrets| RED[&quot;redact&quot;]
+        GUARD --&gt;|&quot;injection · role hijack · exfiltration&quot;| REJ[&quot;reject — raises&quot;]
+        GUARD --&gt;|invisible chars| STRIP[&quot;strip&quot;]
+        RED --&gt; MEM[(&quot;MEMORY.md · EVOLUTION.md · USER.md&quot;)]
+        STRIP --&gt; MEM
+        MEM --&gt; INJ[&quot;always injected whole&lt;br/&gt;keyword scoring over sections&quot;]
+        DECAY[&quot;decay score&lt;br/&gt;Ebbinghaus + Hebbian&lt;br/&gt;floor: never fully vanishes&quot;] --&gt; DIST
+    end
+
+    subgraph Proposals[&quot;cultivation proposals — code&quot;]
+        RUN[&quot;a run&quot;] --&gt; PROP[&quot;CultivationProposal&lt;br/&gt;status: pending · applied · rejected&lt;br/&gt;expired · escalated&quot;]
+        RUN --&gt; STAMP{&quot;resolve the source run&#39;s&lt;br/&gt;canonical gate outcome&quot;}
+        STAMP --&gt;|&quot;gate cleared&quot;| PASSED[&quot;trust = passed&quot;]
+        STAMP --&gt;|&quot;unresolvable · not a run · no outcome&quot;| NA[&quot;trust = n/a — fail closed, NEVER passed&quot;]
+        STAMP --&gt;|blocked| FAILED[&quot;trust = failed&quot;]
+        PASSED --&gt; PROP
+        NA --&gt; PROP
+        FAILED --&gt; PROP
+
+        PROP --&gt; GATE{&quot;trust == passed?&quot;}
+        GATE --&gt;|no, and an append| JUDGE{&quot;self-adversarial judge&lt;br/&gt;error/timeout → suspect&quot;}
+        GATE --&gt;|&quot;no, and destructive&quot;| DISC[&quot;discard to archive&lt;br/&gt;recoverable&quot;]
+        JUDGE --&gt;|&quot;suspect · noise&quot;| DISC
+        JUDGE --&gt;|pass| FLOOR[&quot;quality / confidence floor&quot;]
+        GATE --&gt;|yes| FLOOR
+        FLOOR --&gt; APPLY[&quot;auto-write the document&quot;]
+    end
+
+    subgraph Review[&quot;review — what reaches the queue&quot;]
+        LIST[&quot;GET list&quot;] --&gt; CONST{{&quot;AWAITING_HUMAN_STATUSES&lt;br/&gt;pending · escalated&quot;}}
+        BYID[&quot;approve / reject by id&quot;] --&gt; CONST
+        CONST --&gt; LOCK[&quot;per-proposal flock&lt;br/&gt;non-blocking → 409&lt;br/&gt;lock file deliberately not unlinked&quot;]
+        LOCK --&gt; APPLY
+        UI[&quot;desktop app, over HTTP&quot;] --&gt; LIST
+        UI --&gt; BYID
+        AGENT[&quot;the agent&#39;s tool surface&lt;br/&gt;one MCP server: send a file&quot;] -.-&gt;|&quot;no route&quot;| BYID
+    end</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Proposal model, trust stamp, auto-gate:</strong>
+<code>backend/core/ddd_cultivation.py</code>.</li>
+<li><strong>Review routes and the shared constant:</strong>
+<code>backend/routers/cultivation.py</code>.</li>
+<li><strong>Write guard:</strong>
+<code>backend/core/memory_guard.py</code>,
+<code>backend/core/memory_validation.py</code>.</li>
+<li><strong>Memory parsing and recall:</strong>
+<code>backend/core/memory_index.py</code>.</li>
+<li><strong>Decay scoring:</strong>
+<code>backend/core/memory_decay.py</code>.</li>
+<li><strong>The curated file's own rules:</strong>
+<code>backend/context/MEMORY.md</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Two models, and they are worth separating because only one is
+enforced.</p>
+<p>The <strong>curated file</strong> is markdown with a header declaring
+it agent-owned and user-directed, and seven numbered rules: verify
+before trusting, curate rather than accumulate, prefer recency, check
+open threads each session, escalate a problem seen three times, and
+never delete a correction. Rule three states the failure mode the whole
+file exists to avoid — <em>"Stale memory that gets distilled becomes a
+self-reinforcing false belief."</em> These are excellent rules addressed
+to a model, and nothing in the code enforces them.</p>
+<p>The <strong>proposal</strong> is a dataclass with a target document
+and section, content, a confidence, the source run, a status, a change
+type, and the trust stamp. Its default is the restrictive value and a
+test asserts that, including for a dictionary that omits the field
+entirely.</p>
+<p><code>memory_decay.py</code> scores entries with an Ebbinghaus curve,
+Hebbian strengthening on co-access and a spacing effect, with a strength
+floor so <em>"entries never fully vanish"</em> — a number that informs
+pruning rather than a state that gates reading.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The curated file is always injected whole. The module that used to
+score sections for selective injection records its own deletion: there
+is no in-prompt index and no tiering, <em>"size is bounded on the WRITE
+side (distillation caps and the size-valve archiver), not by
+injection-time section dropping."</em></p>
+<p>That module also carries the most unusual comment in this reading,
+and it is about documentation rather than code. Several routes can reach
+archived shards, and the header warns that the recurring defect <em>"is
+not naming the wrong one, it is writing a CLOSED list or a system-wide
+'never'."</em> Two successive revisions of that docstring did exactly
+that — one named a single mechanism, and <strong>an injected governance
+file propagated it as an absolute "never body-BM25 over the
+archive"</strong>; the replacement claimed two mechanisms and denied a
+third that ships an HTTP endpoint. The instruction that replaced them is
+to <em>"treat the list below as the routes MEASURED so far, never as
+exhaustive"</em>, with the search to re-derive the current set written
+down.</p>
+<p>That is a project describing, about itself, the error class this
+atlas finds most often in its own work: a negative existence claim,
+stated absolutely, propagating into a document other things trust.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Everything that reaches the memory files passes
+<code>MemoryGuard</code>, which sorts its findings into three actions:
+secrets are redacted, invisible characters are stripped, and prompt
+injection, role hijack and exfiltration attempts are
+<strong>rejected</strong> — the function raises rather than returning
+cleaned content. A memory layer that ingests session text is an
+injection surface, and grading the response by category rather than
+sanitising everything is the right shape.</p>
+<p>The cultivation gate is the other write path. A proposal whose trust
+is not <em>passed</em> and whose change type is an append goes to a
+self-adversarial refute judge, whose error and timeout branches resolve
+to a non-passing verdict; a non-passing verdict discards. A proposal
+that is destructive rather than an append is discarded without being
+judged at all, on the reasoning that it is reversible only via the
+archive.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A desktop application over a FastAPI backend, a skill library, and
+one MCP server whose job is sending files on a channel. Built on the
+Claude Agent SDK; MIT; English and Chinese documentation.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded</strong>, on the derived stamp rather
+than the lifecycle status. The property that earns it is that the
+proposal cannot claim the value: it is resolved from the source run's
+record, and every way of failing to resolve it lands on the restrictive
+value.</p>
+<p><strong>Human review — awarded</strong>, on three things together:
+the approver is a person at the desktop application over HTTP, the
+agent's tool surface has no route to those endpoints, and the by-id
+action reuses the listing's constant so the two views cannot disagree
+about what is actionable. The caveat is large enough to state twice: the
+automatic path discards what it distrusts instead of escalating it, and
+the code says so — <em>"autonomy-first: no human review queue"</em>.
+What a person reviews is the set of proposals that reached the queue,
+not everything the system was unsure about.</p>
+<p><strong>Negative eval — awarded</strong>, on the five-state
+actionability table, the test that the two paths share one constant, and
+the path-traversal forging case.</p>
+<p><strong>Audit log — withheld.</strong> <code>audit_manager.py</code>
+logs workspace configuration changes — skills, MCP servers,
+knowledgebases, settings — with a change type, an entity type and a
+timestamp. Memory writes are not among them. An evolution changelog
+exists as a JSON-lines file in the context directory and is
+agent-written prose rather than a structured record of mutations.</p>
+<p><strong>Tombstone — withheld.</strong> A discarded proposal is
+archived and described as recoverable, which is a row-keyed archive.
+Nothing is keyed on the content so that the same proposal arriving again
+is refused; the judge would simply judge it again.</p>
+<p><strong>Scope enforced — withheld.</strong> Proposals live under
+per-project directories and documents are resolved per project, which
+partitions by path rather than by a stored key applied to a query.</p>
+<p><strong>Bi-temporal — withheld.</strong> Timestamps are record time;
+the decay model reasons about elapsed time since last reference, not
+about when a claim held.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong> and no <code>CITATION.cff</code>.</p>
+<p>522 test files in the backend. Two habits in them are worth naming
+beyond the cases carrying the mark.</p>
+<p>The suite tests <em>invariants</em>, not only outcomes: one case
+asserts that the by-id lookup uses the shared constant, and another
+asserts the advisory lock file is <strong>not</strong> unlinked on
+release — pinning a decision whose rationale is a race that a later
+tidy-up would happily undo. The comment explaining that decision walks
+through the inode-divergence failure and points at both the corrected
+pattern elsewhere in the tree and the latent uncorrected one, which is
+the kind of cross-reference that stops a fix from being local.</p>
+<p>And the incident identifiers are in the code. Comments cite the runs
+in which the defects were found — a re-approvable rejected proposal, a
+concurrent double-approve — so a reader can tell which lines are
+load-bearing.</p>
+<p>No retrieval benchmark is committed and none is claimed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Derive the trust stamp; never let the record assert
+it.</strong> Resolving it from the source run means a proposal cannot
+promote itself, and every failure to resolve should land on the
+restrictive value.</li>
+<li><strong>Share one constant between the list and the action.</strong>
+A by-id endpoint that restates the list's filter is a divergence waiting
+to happen, and the incident here is exactly that: a rejected proposal
+re-approvable by id while invisible in the list.</li>
+<li><strong>Grade the guard's response by category.</strong> Redact a
+secret, strip an invisible character, and <em>reject</em> an injection —
+sanitising everything silently is how a hijack attempt becomes a stored
+memory.</li>
+<li><strong>Test the invariant, not just the behaviour.</strong> A case
+asserting two modules use the same constant survives a refactor that a
+behavioural test would pass.</li>
+<li><strong>Write the incident id in the comment.</strong> Lines whose
+rationale is a race nobody can reproduce on demand need the pointer, or
+the next cleanup removes them.</li>
+<li><strong>Do not write a closed list or an absolute "never" into a
+document other systems read.</strong> This project's own docstring
+records a wrong absolute propagating into an injected governance file;
+the fix was to say <em>measured so far</em> and to write down the search
+that re-derives the set.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The automatic path discards what the judge does not pass, with the
+human queue at zero by design. Is the archive surfaced anywhere a person
+would browse it, or is recovery by path?</li>
+<li>The curated memory file's seven rules are prose the agent is asked
+to follow. Which of them could be enforced — the
+never-delete-a-correction rule looks like a candidate for the same guard
+that already inspects those writes.</li>
+<li><code>audit_manager</code> covers workspace configuration with a
+change type and an entity type. Would the same table accept a
+memory-file edit, and is the volume the reason it does not?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Proposal model, trust stamp, auto-gate:
+<code>backend/core/ddd_cultivation.py</code></li>
+<li>Review routes, shared constant, locking:
+<code>backend/routers/cultivation.py</code></li>
+<li>Write guard: <code>backend/core/memory_guard.py</code>,
+<code>backend/core/memory_validation.py</code></li>
+<li>Memory parsing, recall, the archive-reachability note:
+<code>backend/core/memory_index.py</code></li>
+<li>Decay: <code>backend/core/memory_decay.py</code></li>
+<li>Extraction and health endpoints:
+<code>backend/core/memory_extractor.py</code>,
+<code>backend/routers/memory.py</code></li>
+<li>Configuration audit: <code>backend/core/audit_manager.py</code></li>
+<li>The curated file and its rules:
+<code>backend/context/MEMORY.md</code></li>
+<li>Tests:
+<code>backend/tests/test_cultivation_proposal_lifecycle.py</code>,
+<code>backend/tests/test_admission_trust_field.py</code>,
+<code>backend/tests/test_memory_v2_wiring.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/xg-gh-25/SwarmAI/commit/a032aafae0e698b8b3a92955a376511cb7f1aa1b"><code class="commit-id" title="a032aafae0e698b8b3a92955a376511cb7f1aa1b">a032aafa…</code></a>
+— first reading, at the head of <code>main</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: two
+auto-run surfaces in an agent harness's hook scripts and settings, and a
+large set of manifests reported inside the seven-day cooldown across the
+backend, the desktop application and the skill templates. Nothing was
+installed, built or run. MIT. Three marks. This reading is of the memory
+and knowledge-admission subsystems — the curated file and its rules, the
+write guard, the memory index and decay modules, the cultivation
+proposal model and its trust stamp, the auto-apply gate and the
+adversarial judge, the review routes and their locking, and the
+admission and lifecycle test suites — and not of the thousand-file agent
+runtime around them; the skills, channels, desktop application and
+provisioning trees were read as context. Four marks are withheld with
+reasons in section 9. The finding worth carrying beyond the marks is in
+<code>memory_index.py</code>: its header records that two successive
+revisions of its own documentation wrote a closed list and an absolute
+"never", one of which an injected governance file then propagated as
+authoritative — the same negative-existence-claim failure this atlas
+most often makes about the systems it reads.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

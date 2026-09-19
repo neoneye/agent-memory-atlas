@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 599 reports.</strong></p>
+<p><strong>This page covers all 600 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24333,6 +24333,79 @@ default.</li>
 <li>Do not copy when: you need the memory's own changes audited — the
 triggers here cover who may use the system and how it is configured, not
 what it remembers.</li>
+</ul>
+<h3 id="swarmai"><a
+href="../systems/swarmai/"><code>swarmai</code></a></h3>
+<ul>
+<li>Best idea: <strong>share one constant between the list and the by-id
+action.</strong> The lookup that approve and reject use returns a
+proposal only while it is awaiting a human decision, reusing the same
+frozen set the listing filters on — "so a proposal hidden from the list
+can never be re-approved by id" — and the docstring names the run in
+which a rejected proposal was re-approvable and an expired one
+approvable though invisible to the list. A committed test asserts the
+two paths use the shared constant, pinning the invariant rather than the
+behaviour.</li>
+<li>Second idea: <strong>derive the trust stamp; never let the record
+assert it.</strong> A cultivation proposal's trust value is resolved at
+creation by reading the source run's own record, and the module header
+states the rule in capitals: an unresolvable run, a source that is not a
+run, or a run with no canonical outcome all yield not-applicable and
+<strong>never</strong> passed. A test asserts a run identifier
+containing path traversal cannot forge it.</li>
+<li>Third idea: <strong>grade the write guard's response by
+category.</strong> Content reaching the memory files is scanned and
+sorted into three actions — secrets redacted, invisible characters
+stripped, and prompt injection, role hijack and exfiltration
+<em>rejected</em> with a raise rather than quietly cleaned. A memory
+layer that ingests session text is an injection surface, and sanitising
+everything silently is how a hijack attempt becomes a stored
+memory.</li>
+<li>Fourth idea: <strong>test the decision a later cleanup would
+undo.</strong> One case asserts the per-proposal advisory lock file is
+deliberately <em>not</em> unlinked on release, with the comment walking
+through the inode-divergence race and pointing at both the corrected
+pattern elsewhere in the tree and the latent uncorrected one.</li>
+<li>Fifth idea: <strong>do not write a closed list or an absolute
+"never" into a document other systems read.</strong> The memory-index
+header records that two successive revisions of its own documentation
+did exactly that — one named a single mechanism, and an injected
+governance file propagated it as an absolute "never body-BM25 over the
+archive"; the replacement claimed two and denied a third that ships an
+HTTP endpoint. The instruction that replaced them is to treat the list
+as the routes <em>measured so far</em>, with the search to re-derive the
+current set written down.</li>
+<li>Biggest risk: <strong>the automatic path discards what it distrusts
+instead of escalating it.</strong> A proposal the adversarial judge does
+not pass is archived rather than queued, and the comment says so —
+"autonomy-first: no human review queue". Review therefore governs the
+proposals that reach the queue, and the judge-passed writes never
+do.</li>
+<li>Second risk: the audit manager logs workspace configuration changes
+— skills, MCP servers, knowledgebases, settings — and memory writes are
+not among them. The evolution changelog beside it is agent-written prose
+rather than a structured record of mutations.</li>
+<li>Third risk: the curated memory file's seven rules are excellent and
+are prose. "Stale memory that gets distilled becomes a self-reinforcing
+false belief" and "corrections are permanent" are instructions to a
+model; the guard that already inspects those writes enforces
+neither.</li>
+<li>Most reusable component:
+<code>backend/routers/cultivation.py</code>'s
+<code>_find_proposal</code> and <code>_proposal_lock</code> — an
+actionability check that shares the listing's constant and a
+non-blocking per-item lock that returns a conflict rather than stalling,
+each with the incident that produced it named in the comment.</li>
+<li>Maturity impression: MIT, built on the Claude Agent SDK, roughly a
+thousand Python files in the backend against 522 test files, a desktop
+application, a skill library, English and Chinese documentation, and
+comments that cite run identifiers so a reader can tell which lines are
+load-bearing.</li>
+<li>Study when: you have a review queue with both a list and a by-id
+action, or you are deciding what a memory write guard should reject
+rather than clean.</li>
+<li>Do not copy when: you need everything uncertain to reach a person —
+here the uncertain path archives instead of queueing, by design.</li>
 </ul>
         </article>
       </div>
