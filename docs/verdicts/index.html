@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 585 reports.</strong></p>
+<p><strong>This page covers all 586 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -23322,6 +23322,73 @@ of every session.</li>
 <li>Do not copy when: you need a memory that can be held back or marked
 retired — a superseded decision here is a later row, and nothing filters
 a read by anything.</li>
+</ul>
+<h3 id="graqle"><a
+href="../systems/graqle/"><code>graqle</code></a></h3>
+<ul>
+<li>Best idea: <strong>fix the order of a validator's steps so no
+acceptance check ever sees an un-normalised value.</strong>
+<code>validate_tenant_id</code> rejects a raw NUL, URL-decodes exactly
+once and rejects a residual <code>%XX</code> so a double-encoded
+separator cannot survive, NFC-normalises, length-checks <em>after</em>
+decoding, rejects traversal and separator characters <strong>and their
+unicode homographs</strong>, and only then allow-lists three shapes.
+Most partition-key checks do the acceptance test first and the
+normalisation after.</li>
+<li>Second idea: <strong>freeze the audit schema and extend it by
+composition.</strong> The v2 governed trace is the system of record and
+is <code>ConfigDict(extra="forbid")</code>, so the cryptographic-commit
+layer added later is a sidecar keyed by trace id rather than new fields
+— the module says why, that mutating the model would be "a breaking
+schema change touching every reader".</li>
+<li>Third idea: <strong>make the unavailable-dependency branch a state
+rather than an exception.</strong> The commit lifecycle is
+<code>PENDING → COMMITTED → ANCHORED</code> with
+<code>REPLAY_QUEUED</code> when the transparency log is unreachable and
+<code>FAILED</code> terminal and operator-surfaced; the enum's docstring
+calls it the no-silent-drop set, and a queued record is still
+progressing toward anchored rather than lost.</li>
+<li>Fourth idea: <strong>measure gaps, not scores.</strong> The five
+TRACE dimensions each report a deficit from 0.0 to 1.0 and the composite
+is <code>1.0 - total_gap</code>, so a sixth dimension can be added
+without rescaling the other five. Decay widens the transparency and
+auditability gaps as confidence falls, so a stale claim is recorded as
+less auditable rather than merely less likely.</li>
+<li>Biggest risk: <strong>a redaction that keeps the metadata.</strong>
+<code>redacted_for</code> replaces the value and preserves the source
+agent, the confidence and the TRACE score, and the summary line renders
+all three — so a reader below the clearance learns that a restricted
+finding exists, how confident the system is in it, and how
+well-evidenced it is. For a debate panel that is the point; used as a
+tenant boundary it is metadata leakage, and one mechanism serves
+both.</li>
+<li>Second risk: tenant scoping is off unless
+<code>GRAQLE_TENANT_SCOPING</code> is set — the failure mode is a named
+exception on a non-default tenant rather than a silent collapse, but the
+default deployment is single-partition. The validator's own docstring
+also notes that passing it does not assert the tenant exists; downstream
+authorisation must check that separately.</li>
+<li>Third risk: a patent notice in the governance middleware names
+European applications EP26162901.8 and EP26166054.2 and requires a
+separate licence to reimplement the methods elsewhere, alongside the
+repository's Apache-2.0 licence. It does not restrict reading or use of
+the software; it does restrict copying the mechanism into your own
+system.</li>
+<li>Most reusable component: <code>graqle/core/tenant.py</code> — sixty
+lines of partition-key validation with the attack order written into the
+docstring, usable anywhere a tenant id crosses a trust boundary.</li>
+<li>Maturity impression: Apache-2.0 with a patent rider, PyPI at 0.84.0,
+525 test files organised per module, 63 top-level packages including
+federation, metering, entitlement, calibration and compliance, Docker
+and Lambda images, a self-audit script with a committed report, and a
+version-migration guide — a commercial product rather than a reference
+implementation.</li>
+<li>Study when: you are validating a partition key that crosses a trust
+boundary, or designing an audit record you expect to extend after other
+people are already reading it.</li>
+<li>Do not copy when: you need a discrete state a memory can hold —
+every epistemic axis here is a number, and the enums are operational or
+access-control.</li>
 </ul>
         </article>
       </div>

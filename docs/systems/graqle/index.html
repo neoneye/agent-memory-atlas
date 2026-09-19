@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A typed knowledge graph whose
+memory entries carry a tenant key, a clearance level and five TRACE gap
+scores, decay toward zero confidence between verifications, and are
+redacted rather than hidden when a reader's clearance is too low — with
+every governed tool call captured into a Merkle-committed trace anchored
+to a public transparency log.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="GraQle — Agent Memory Atlas">
+    <meta property="og:description" content="A typed knowledge graph
+whose memory entries carry a tenant key, a clearance level and five
+TRACE gap scores, decay toward zero confidence between verifications,
+and are redacted rather than hidden when a reader's clearance is too low
+— with every governed tool call captured into a Merkle-committed trace
+anchored to a public transparency log.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GraQle — Agent Memory Atlas">
+    <meta name="twitter:description" content="A typed knowledge graph
+whose memory entries carry a tenant key, a clearance level and five
+TRACE gap scores, decay toward zero confidence between verifications,
+and are redacted rather than hidden when a reader's clearance is too low
+— with every governed tool call captured into a Merkle-committed trace
+anchored to a public transparency log.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>GraQle — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "GraQle",
+      "description": "A typed knowledge graph whose memory entries carry a tenant key, a clearance level and five TRACE gap scores, decay toward zero confidence between verifications, and are redacted rather than hidden when a reader's clearance is too low \u2014 with every governed tool call captured into a Merkle-committed trace anchored to a public transparency log.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Governed organisational knowledge graph</p>
+          <h1>GraQle</h1>
+          <p class="document-deck">A typed knowledge graph whose memory
+entries carry a tenant key, a clearance level and five TRACE gap scores,
+decay toward zero confidence between verifications, and are redacted
+rather than hidden when a reader's clearance is too low — with every
+governed tool call captured into a Merkle-committed trace anchored to a
+public transparency log.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/quantamixsol/graqle">
+              <span>Source</span>
+              <strong>quantamixsol/graqle</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/quantamixsol/graqle/commit/04f05a60c8b8d2a887c6d0fbb465e83be883888c" title="04f05a60c8b8d2a887c6d0fbb465e83be883888c">
+              <span>Analyzed revision</span>
+              <code>04f05a60…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/quantamixsol--graqle" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>quantamixsol--graqle</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>GraQle turns an organisation's existing material — code, documents,
+policies, decisions — into a typed knowledge graph that coding agents
+reason over. It is a commercial product: Apache-2.0 in the tree, on PyPI
+at 0.84.0, with editions, entitlements, metering, federation and
+compliance modules beside the graph itself. A patent notice in the
+governance middleware asserts two European applications over the methods
+it implements and permits their use under the project's licence while
+requiring a separate licence to reimplement them elsewhere; that is
+stated here because a reader should know it before copying anything, and
+it does not restrict reading or analysis.</p>
+<p>Three marks. The memory unit is a <code>ProvenanceEntry</code>
+carrying a tenant key, a clearance level, a confidence that decays
+between verifications, and five TRACE gap scores — Specification
+Compliance, Prior Knowledge Conformity, Logical Transparency,
+Auditability and Factual Sufficiency — that compose to a single quality
+number.</p>
+<p>Two things in it repay study. The first is the <strong>tenant
+validator</strong>, whose step order is fixed so that <em>"no acceptance
+check ever sees an un-normalised value"</em>: it URL-decodes exactly
+once and rejects a residual <code>%XX</code> so a double-encoded
+separator cannot survive, rejects unicode separator and dot homographs
+alongside their ASCII forms, and only then allow-lists three shapes. The
+second is the <strong>audit schema discipline</strong>: the governed
+trace is frozen with <code>extra="forbid"</code>, so the
+cryptographic-commit layer added later composes a sidecar record beside
+it rather than adding fields, because mutating the model would be <em>"a
+breaking schema change touching every reader"</em>.</p>
+<p><code>trust_state</code> is withheld, and section 9 gives the reason:
+every epistemic axis here is a number.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Three layers sit on top of each other, and the interesting behaviour
+is at the seams.</p>
+<p><strong>The graph</strong> is typed: nodes with an operational
+status, edges, an ontology with domain registries and a constraint
+graph, and a write gate with SHACL constraints in front of it.</p>
+<p><strong>The reasoning memory</strong> is what an agent actually sees.
+Findings from earlier rounds are held as provenance entries and rendered
+into a prompt ordered by confidence — but confidence is not static. Each
+entry decays as
+<code>confidence_initial × lambda^rounds_since_verification × penalty^contradiction_count</code>,
+and the decay also widens the entry's transparency and auditability
+gaps, so an old unverified claim does not merely score lower, it is
+recorded as less auditable.</p>
+<p><strong>The governance layer</strong> wraps every governed tool call
+in a trace, records each gate's verdict, and commits the record into a
+Merkle tree anchored to a public transparency log.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — material is ingested into a typed knowledge graph behind a write gate with SHACL constraints; reasoning rounds hold findings as provenance entries whose confidence decays by a caller-supplied lambda per unverified round and by a penalty per contradiction, widening the transparency and auditability gaps as it falls; the summary an agent sees drops entries below a confidence floor and passes every survivor through clearance redaction; and every governed tool call is wrapped in a trace carrying its governance verdicts, canonicalised, committed as a Merkle leaf and anchored to a public transparency log with an explicit commit lifecycle</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: material is ingested into a typed knowledge graph behind a write gate with SHACL constraints; reasoning rounds hold findings as provenance entries whose confidence decays by a caller-supplied lambda per unverified round and by a penalty per contradiction, widening the transparency and auditability gaps as it falls; the summary an agent sees drops entries below a confidence floor and passes every survivor through clearance redaction; and every governed tool call is wrapped in a trace carrying its governance verdicts, canonicalised, committed as a Merkle leaf and anchored to a public transparency log with an explicit commit lifecycle
+flowchart TD
+    subgraph Ingest
+        SRC[&quot;codebases · documents&lt;br/&gt;policies · decisions&quot;]
+        GATE[&quot;kg write gate&lt;br/&gt;SHACL constraints&quot;]
+        ONT[&quot;ontology&lt;br/&gt;domain registry · constraint graph&quot;]
+    end
+
+    subgraph Graph[&quot;typed knowledge graph&quot;]
+        NODE[&quot;nodes&lt;br/&gt;idle · activated · reasoning&lt;br/&gt;converged · error&quot;]
+        EDGE[&quot;edges&quot;]
+    end
+
+    subgraph Reasoning
+        PE[&quot;ProvenanceEntry&lt;br/&gt;tenant · clearance · TRACE&lt;br/&gt;confidence · contradictions&quot;]
+        DECAY[&quot;decay per round&lt;br/&gt;widens DLT and ADG gaps&quot;]
+        FLOOR[&quot;drop below confidence floor&quot;]
+        RED[&quot;redacted_for(viewer_clearance)&quot;]
+        SUM[&quot;prior-findings summary&lt;br/&gt;into the prompt&quot;]
+    end
+
+    subgraph Governance
+        TC[&quot;TraceCapture&lt;br/&gt;non-bypassable&quot;]
+        DEC[&quot;PASS · BLOCK · WARN&quot;]
+        V2[&quot;GovernedTrace v2&lt;br/&gt;extra=forbid&quot;]
+        V3[&quot;CommitRecord sidecar&lt;br/&gt;pending · committed · anchored&lt;br/&gt;replay_queued · failed&quot;]
+        MERK[&quot;RFC 8785 canonicalise&lt;br/&gt;RFC 6962 Merkle&quot;]
+        REKOR[&quot;Sigstore Rekor anchor&quot;]
+    end
+
+    SRC --&gt; GATE --&gt; NODE
+    ONT --&gt; GATE
+    NODE --&gt; EDGE
+    NODE --&gt; PE
+    PE --&gt; DECAY --&gt; FLOOR --&gt; RED --&gt; SUM
+    TC --&gt; DEC --&gt; V2 --&gt; V3 --&gt; MERK --&gt; REKOR
+    SUM -.governed call.-&gt; TC</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Memory unit and decay:</strong>
+<code>graqle/core/memory_types.py</code>.</li>
+<li><strong>Clearance:</strong> <code>graqle/core/types.py</code>
+(<code>ClearanceLevel</code>), and <code>redacted_for</code> in
+<code>memory_types.py</code>.</li>
+<li><strong>Tenant partitioning:</strong>
+<code>graqle/core/tenant.py</code>,
+<code>graqle/reasoning/memory.py</code>.</li>
+<li><strong>Prompt assembly:</strong>
+<code>graqle/reasoning/memory.py</code> — decay, floor, redaction,
+truncation.</li>
+<li><strong>Governance trace:</strong>
+<code>graqle/governance/trace_capture.py</code>,
+<code>trace_schema.py</code>, <code>trace_store.py</code>.</li>
+<li><strong>Tamper evidence:</strong>
+<code>graqle/governance/tamper_evidence/</code> —
+<code>merkle.py</code>, <code>canonicalize.py</code>,
+<code>committer.py</code>, <code>verifier.py</code>,
+<code>audit_log_v3.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>ProvenanceEntry</code> is a mutable dataclass, and the comments
+around its fields are worth as much as the fields:</p>
+<ul>
+<li><strong><code>tenant_id</code></strong> defaults through a
+<code>default_factory</code> rather than a bare default, with the reason
+recorded — so a test that reassigns the default tenant is honoured
+rather than frozen at class-definition time. Its
+<code>__post_init__</code> rejects a whitespace-only value and stores
+the stripped form.</li>
+<li><strong><code>clearance</code></strong> defaults to
+<code>PUBLIC</code>.</li>
+<li><strong><code>trace_scores</code></strong> are five <em>gaps</em>,
+each 0.0 for no gap and 1.0 for the maximum, so the composite is
+<code>1.0 - total_gap</code>. Measuring the deficit rather than the
+quality is a deliberate inversion, and it means a new dimension can be
+added without rescaling the others.</li>
+<li><strong><code>contradiction_count</code></strong> feeds the decay as
+an exponent.</li>
+<li>The module opens by rejecting a malformed default tenant with an
+explicit <code>raise</code> and a note that <code>assert</code> is
+stripped under <code>python -O</code> — a small thing that most
+codebases get wrong once.</li>
+</ul>
+<p>A field-ordering comment records the dataclass rule that any new
+required field must be inserted before the defaulted ones, which is the
+sort of note that stops a future contributor breaking every deserialised
+payload.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Activation selects which nodes reason; aggregation combines their
+outputs by weighted synthesis, majority vote, rank fusion or confidence
+weighting.</p>
+<p>What an agent sees from earlier rounds is assembled in one pass that
+does four things in order: decay every entry to the current round, sort
+by the decayed confidence, drop anything under the floor, and render
+each survivor through clearance redaction — then stop at a character cap
+with an explicit <code>... (truncated — more findings available)</code>
+line rather than silently cutting.</p>
+<p>The ordering matters for the same reason it does elsewhere in this
+corpus: decay runs <em>before</em> the floor, so the threshold is
+applied to a current value rather than to whatever the confidence was
+when the entry was written.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Ingestion passes a write gate with SHACL constraints and an ontology
+that can be generated and routed per domain. Every governed tool call is
+wrapped by <code>TraceCapture</code>, which creates the trace before
+execution rather than after, so a call that fails still leaves a
+record.</p>
+<p>The tamper-evidence layer then batches records, canonicalises them
+under RFC 8785, commits them as RFC 6962 Merkle leaves, and anchors to
+Sigstore Rekor. When Rekor is unreachable the record moves to
+<code>REPLAY_QUEUED</code> and a later drain advances it — the
+unavailable-dependency branch is a state in the lifecycle rather than an
+exception that loses the record.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, adapters for coding agents, a chat surface with its
+own permission manager, a CLI, Docker and Lambda images, and a PyPI
+package with editions and entitlement checks. The README's framing is
+organisational rather than personal — <em>"give your AI a memory of how
+your organisation actually works"</em> — and the surrounding modules
+(metering, licensing, federation, compliance) are consistent with
+that.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope enforced — awarded, on two axes.</strong> The tenant
+validator rejects the things a partition key is usually attacked with —
+double encoding, traversal, homographs — before it allow-lists anything,
+and clearance is applied where it matters: at the point an entry is
+rendered into a prompt. Two limits belong beside the mark. Tenant
+scoping is opt-in behind <code>GRAQLE_TENANT_SCOPING</code>, though the
+failure mode is a named exception rather than a silent collapse to one
+partition. And the validator's docstring is explicit that passing it
+does not assert the tenant exists — <em>"downstream authz must verify
+tenant existence independently"</em> — which is the correct division of
+responsibility and worth knowing.</p>
+<p><strong>Audit log — awarded.</strong> Non-bypassable capture, a
+verdict vocabulary, a frozen schema extended by composition, an explicit
+no-silent-drop commit lifecycle, and a public transparency-log
+anchor.</p>
+<p><strong>Negative eval — awarded.</strong> The clearance pair asserts
+both directions on one fixture, and the negative asserts a redaction
+marker rather than an absence.</p>
+<p><strong>Trust state — withheld.</strong> Every epistemic axis here is
+a number. <code>confidence</code> is a float that decays and is compared
+against a floor; the five TRACE dimensions are floats composing to
+another float; <code>contradiction_count</code> is an integer exponent;
+<code>reasoning_impact</code> is a HIGH/MED/LOW label with no read that
+filters on it. The discrete enums in the tree are operational rather
+than epistemic — <code>NodeStatus</code> is a reasoning node's
+lifecycle, <code>CommitStatus</code> is the audit record's commitment
+lifecycle, and <code>ClearanceLevel</code> is an access level already
+carrying <code>scope_enforced</code>. A confidence floor excluding a
+stale entry is the number axis doing threshold work, which this mark
+deliberately does not count.</p>
+<p><strong>Bitemporal — withheld.</strong> Entries carry a
+<code>timestamp</code> and round numbers for storage and verification,
+which is a processing clock rather than a second axis for when a fact
+was true; no read answers an as-of question.</p>
+<p><strong>Human review — withheld.</strong> Governance decisions are
+gate outcomes computed by the system. The clearance model describes who
+may <em>read</em>, not who has approved.</p>
+<p><strong>One disclosure worth naming.</strong>
+<code>redacted_for</code> replaces the value and keeps everything else —
+source agent, round, confidence and TRACE score all remain visible, and
+the summary line renders them. That is a deliberate choice, and a reader
+below the clearance therefore learns that a restricted finding exists,
+how confident the system is in it, and how well-evidenced it is. For a
+debate panel that is probably the point; for a tenant boundary it is
+metadata leakage, and the two uses share one mechanism.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong>, but a patent. Searched the README and docs
+for <code>arxiv</code>, <code>@article</code>, <code>@misc</code>,
+<code>doi.org</code> and <code>CITATION.cff</code>: none. The governance
+middleware instead carries a patent notice naming European applications
+EP26162901.8 and EP26166054.2, with use permitted under the project's
+licence and reimplementation of the methods requiring a separate patent
+licence. The repository is Apache-2.0 and the notice sits alongside it
+rather than replacing it; the atlas records such riders rather than
+treating them as an exclusion.</p>
+<p>525 Python test files, organised per module — activation, adapters,
+agents, alignment, analysis, assurance and onward. The pair this report
+leans on is in <code>tests/test_core/test_fault_isolation.py</code>, and
+section 9's evidence record quotes it.</p>
+<p>The repository also carries <code>benchmarks/</code>,
+<code>gate-demos/</code>, an <code>sdk_self_audit.py</code> with a
+committed <code>sdk_audit_report.json</code>, and a
+<code>MIGRATION-0.46-to-0.52.md</code> — signals of a product maintained
+across versions rather than a snapshot. No retrieval benchmark result is
+claimed in the README that this reading found, so there is no published
+number to check.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Fix the order of a validator's steps and say why.</strong>
+Decoding after an acceptance check is how a double-encoded separator
+gets in. This one URL-decodes exactly once, rejects a residual
+<code>%XX</code>, and only then tests.</li>
+<li><strong>Reject homographs, not just the ASCII form.</strong>
+Blocking <code>/</code> and <code>..</code> while allowing their unicode
+lookalikes is a partition boundary with a hole in it.</li>
+<li><strong>Freeze the audit schema and extend by composition.</strong>
+<code>extra="forbid"</code> on the record of truth, and a sidecar keyed
+by trace id for anything added later, keeps every existing reader
+working.</li>
+<li><strong>Make the unavailable-dependency branch a state.</strong>
+<code>REPLAY_QUEUED</code> is better than an exception, because the
+record is still progressing toward anchored rather than lost.</li>
+<li><strong>Measure gaps, not scores.</strong> Five dimensions each
+reporting a deficit compose by addition, and a sixth can be added
+without rescaling the rest.</li>
+<li><strong>Decide what a redaction still reveals.</strong> Keeping the
+fault code makes a redacted failure actionable; keeping the confidence
+and quality scores makes a restricted finding's existence public. Both
+are choices, and they should be made separately.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Tenant scoping is off unless an environment variable is set. What
+does a deployment that forgets it look like — every entry in the default
+partition, with the named exception only on an explicit non-default
+id?</li>
+<li><code>redacted_for</code> preserves the TRACE scores by design. Is
+there a deployment where clearance is a tenant boundary rather than a
+debate-panel filter, and does the metadata disclosure get revisited
+there?</li>
+<li>The Merkle commitments anchor to Sigstore Rekor. Is there a verifier
+path a customer can run independently of the product to check a trace
+against the public log?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Memory unit, decay, redaction:
+<code>graqle/core/memory_types.py</code></li>
+<li>Clearance and node status: <code>graqle/core/types.py</code></li>
+<li>Tenant validation: <code>graqle/core/tenant.py</code></li>
+<li>Prompt assembly: <code>graqle/reasoning/memory.py</code></li>
+<li>Graph and write gate: <code>graqle/core/graph.py</code>,
+<code>graqle/core/edge.py</code>,
+<code>graqle/governance/kg_write_gate.py</code></li>
+<li>Ontology: <code>graqle/ontology/</code></li>
+<li>Governed trace: <code>graqle/governance/trace_capture.py</code>,
+<code>trace_schema.py</code>, <code>trace_store.py</code></li>
+<li>Tamper evidence:
+<code>graqle/governance/tamper_evidence/</code></li>
+<li>Tests: <code>tests/test_core/test_fault_isolation.py</code> and 524
+others</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/quantamixsol/graqle/commit/04f05a60c8b8d2a887c6d0fbb465e83be883888c"><code class="commit-id" title="04f05a60c8b8d2a887c6d0fbb465e83be883888c">04f05a60…</code></a>
+— first reading, at the head of <code>master</code>, version 0.84.0.
+Screened with <code>scripts/screen_repo.py</code> before anything was
+read: unpinned dependency surfaces and manifests inside the seven-day
+cooldown, the latter an artefact of screening a <code>--depth 1</code>
+clone; nothing was installed, built or run. Three marks. The reading
+covered the provenance entry and its decay, the TRACE gap dimensions,
+the tenant validator and the clearance model, the prompt-assembly path
+that applies both, the governed-trace capture and its schema discipline,
+and the tamper-evidence layer with its commit lifecycle; the sixty-odd
+remaining modules — federation, metering, licensing, entitlement,
+calibration, compliance and the rest — were read as context rather than
+as subject, and a reader should treat this report as covering the memory
+and governance core of a much larger product. Apache-2.0, with a patent
+notice in the governance middleware naming European applications
+EP26162901.8 and EP26166054.2: use is permitted under the project's
+licence and reimplementing the methods elsewhere requires a separate
+patent licence, which is recorded here as a rider rather than an
+exclusion. Four marks are withheld with reasons in section 9; the short
+version is that every epistemic axis in this system is a number, and the
+discrete enums are operational or access-control rather than states a
+memory can hold.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

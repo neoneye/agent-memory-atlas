@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 585 reports.**
+**This page covers all 586 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5156,3 +5156,16 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, thirty Python test files plus shell suites for hooks and portability, adapters for seven coding agents with four marked first-class, installable bundles with a lockfile, and a script that exercises the repository's own single-source-of-truth locators in disposable copies rather than in the working tree.
 - Study when: you are evaluating whether a context convention earns its keep, or designing the state files a coding agent reads at the start of every session.
 - Do not copy when: you need a memory that can be held back or marked retired — a superseded decision here is a later row, and nothing filters a read by anything.
+
+### [`graqle`](../systems/graqle/)
+- Best idea: **fix the order of a validator's steps so no acceptance check ever sees an un-normalised value.** `validate_tenant_id` rejects a raw NUL, URL-decodes exactly once and rejects a residual `%XX` so a double-encoded separator cannot survive, NFC-normalises, length-checks *after* decoding, rejects traversal and separator characters **and their unicode homographs**, and only then allow-lists three shapes. Most partition-key checks do the acceptance test first and the normalisation after.
+- Second idea: **freeze the audit schema and extend it by composition.** The v2 governed trace is the system of record and is `ConfigDict(extra="forbid")`, so the cryptographic-commit layer added later is a sidecar keyed by trace id rather than new fields — the module says why, that mutating the model would be "a breaking schema change touching every reader".
+- Third idea: **make the unavailable-dependency branch a state rather than an exception.** The commit lifecycle is `PENDING → COMMITTED → ANCHORED` with `REPLAY_QUEUED` when the transparency log is unreachable and `FAILED` terminal and operator-surfaced; the enum's docstring calls it the no-silent-drop set, and a queued record is still progressing toward anchored rather than lost.
+- Fourth idea: **measure gaps, not scores.** The five TRACE dimensions each report a deficit from 0.0 to 1.0 and the composite is `1.0 - total_gap`, so a sixth dimension can be added without rescaling the other five. Decay widens the transparency and auditability gaps as confidence falls, so a stale claim is recorded as less auditable rather than merely less likely.
+- Biggest risk: **a redaction that keeps the metadata.** `redacted_for` replaces the value and preserves the source agent, the confidence and the TRACE score, and the summary line renders all three — so a reader below the clearance learns that a restricted finding exists, how confident the system is in it, and how well-evidenced it is. For a debate panel that is the point; used as a tenant boundary it is metadata leakage, and one mechanism serves both.
+- Second risk: tenant scoping is off unless `GRAQLE_TENANT_SCOPING` is set — the failure mode is a named exception on a non-default tenant rather than a silent collapse, but the default deployment is single-partition. The validator's own docstring also notes that passing it does not assert the tenant exists; downstream authorisation must check that separately.
+- Third risk: a patent notice in the governance middleware names European applications EP26162901.8 and EP26166054.2 and requires a separate licence to reimplement the methods elsewhere, alongside the repository's Apache-2.0 licence. It does not restrict reading or use of the software; it does restrict copying the mechanism into your own system.
+- Most reusable component: `graqle/core/tenant.py` — sixty lines of partition-key validation with the attack order written into the docstring, usable anywhere a tenant id crosses a trust boundary.
+- Maturity impression: Apache-2.0 with a patent rider, PyPI at 0.84.0, 525 test files organised per module, 63 top-level packages including federation, metering, entitlement, calibration and compliance, Docker and Lambda images, a self-audit script with a committed report, and a version-migration guide — a commercial product rather than a reference implementation.
+- Study when: you are validating a partition key that crosses a trust boundary, or designing an audit record you expect to extend after other people are already reading it.
+- Do not copy when: you need a discrete state a memory can hold — every epistemic axis here is a number, and the enums are operational or access-control.
