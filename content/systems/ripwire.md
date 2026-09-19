@@ -7,12 +7,11 @@ page_kind: system
 source_name: "redhat-et/ripwire"
 source_url: https://github.com/redhat-et/ripwire
 archive_name: "redhat-et--ripwire"
-revision: f8e6087cc1dae2b438b3a69ccc8a4b53c19314cd
-revision_url: https://github.com/redhat-et/ripwire/commit/f8e6087cc1dae2b438b3a69ccc8a4b53c19314cd
-analyzed_at: 2026-09-16
-capabilities: "human_review, negative_eval"
+revision: e54b688e63c0041049b49a8bf63997f8cd299844
+revision_url: https://github.com/redhat-et/ripwire/commit/e54b688e63c0041049b49a8bf63997f8cd299844
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  human_review: "a committed ledger whose whole design is that a change in what is suppressed shows up in a diff, a rescue that discloses per row which mechanism saved it, and a read-only listing built for pruning | src/quality.h:4838, :5544-5556, :5798-5802, src/verbs_quality.h:202, :263, :907, src/mcpverbs.h:3401 | `--quality-ack[=REASON]` is the adjudication: a person or agent accepts a reported finding at its current magnitude with a free-text reason, and the row lands in a file the project keeps committed for exactly this purpose, so a change in what is suppressed is reviewable as a diff. What lifts the mark is that the rescue is disclosed rather than assumed: `AckRescueRoute` is kept per row and not merely as a total, because *\"your ack survived because git recorded the rename\" and \"because the body is byte-for-byte the same after scrubbing\" are different claims with different trust, and collapsing them would hide which one the tool actually relied on.* `--notes` is the inspection half, flagging a note whose target no longer resolves as `dangling=\"1\"` so a person can prune it. Two qualifications belong with the mark: pruning and retirement are manual file edits with no action in the tool, and the project's own skill instructs an agent to write acks unattended with no CI job reading either sidecar | test/identitycheck.sh pins three claims that cannot be traded for one another, including that an ack does not survive a real change; test/notescheck.sh and test/staleackcheck.sh sit among 618 gate scripts named by the regression runner, all of which resolve to a file"
   negative_eval: "a dangling note that must appear in the listing and nowhere else, and an ack that must not survive a real change, both asserted against populated retrievals with positive controls beside them | test/notescheck.sh:150-170, test/identitycheck.sh:21-24, :187-218 | The notes case writes a note against a target that does not exist, asserts the listing shows it as `dangling=\"1\"` and shows a live target as `dangling=\"0\"`, then asserts its text appears in neither a task-scoped retrieval nor the default map — a must-not against two populated emissions with the positive control in the same script. The identity gate is the stronger half, because it pins the *boundary* of a rescue rather than only its success: claim (C) states that identity following a rename *\"must not become identity that follows a rewrite — that would turn the ratchet into the blank check its own contract forbids\"*, held by two arms, a worsened finding that must re-report across a rename and a moved-and-rewritten body that must not be content-matched | the gate runs on a synthetic git repository *\"so it never depends on ripwire's own current debt or ack ledger\"*, which is the property that keeps the assertion from passing for the wrong reason"
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -341,19 +340,36 @@ one an agent is instructed to use unattended.
 
 ## 9. Reliability, Safety, and Trust
 
-**Human review — awarded, with both halves qualified.** The adjudication is
-`--quality-ack`: a finding is looked at and accepted at a magnitude with a
-reason, and the verdict is committed to a file the project keeps in version
-control for exactly this reason — *"the ack file is committed precisely so a
-change in what is suppressed is reviewable"* (`src/quality.h:4931`). The
+**Human review — withdrawn on the 2026-09-19 re-read, and the ledger is still
+worth copying.** The adjudication is `--quality-ack`: a finding is looked at and
+accepted at a magnitude with a reason, and the verdict is committed to a file the
+project keeps in version control for exactly this reason — *"the ack file is
+committed precisely so a change in what is suppressed is reviewable"*. The
 inspection is `--notes`, which recomputes the live target set so a person can see
 what has gone dangling, described in the source as *"listed here so the human can
-prune it"* (`src/main.cpp:686`). What is missing on both sides is an action:
-pruning a note and retiring a stale ack are manual file edits, and the source
-records what that costs — *"A past round hand-retired 109 such dead rows out of
-this repo's own committed acks file — a whole session of manual audit for a
-question the tool could answer in one pass"* (`src/quality.h:5825`). No CI
-job reads either sidecar.
+prune it"*. Both are real, and the ratchet behind them — an ack accepts a finding
+at its measured size and re-reports it the moment it worsens — is better
+engineering than most review queues in this corpus.
+
+The mark asks a narrower question: can the agent that produced the debt also
+clear its review? Here the answer is not merely yes, it is documented. The
+shipped skills spell the command out for the model to run —
+`ripwire <dir> --quality-ack="why it's accepted"`
+(`skills/ripwire-quality-bar/SKILL.md:178`), `--ack-only=contract-change
+--quality-ack="arity change required by <fix>"` (`:188`), `--quality-ack="deliberate"`
+(`:206`) — and two more skills tell an agent to *graduate* a recurring comment
+into an ack reason (`skills/ripwire-handoff/SKILL.md:44`,
+`skills/ripwire-orient/SKILL.md:183`). No MCP verb writes the ledger, and the
+MCP `quality_delta` is declared read-only, so the ack is a command-line act; but
+a command-line act the project instructs the agent to perform is the producer
+clearing its own queue, not a person adjudicating it. The two qualifications the
+previous record already carried point the same way: pruning and retirement are
+manual file edits with no action in the tool — the source records what that
+costs, *"A past round hand-retired 109 such dead rows out of this repo's own
+committed acks file — a whole session of manual audit for a question the tool
+could answer in one pass"* — and no CI job reads either sidecar. The review the
+committed ledger makes possible is a review somebody still has to perform, and
+nothing in the tool notices whether they did.
 
 **Negative evaluation — awarded.** The notes case is the strongest shape this
 mark takes: a note is written against a target that does not exist, the listing
@@ -543,6 +559,8 @@ rg -n 'writeAckRecords|addNote\(' src/                                          
 ```
 
 ## History
+
+**2026-09-19** — re-pinned to [`e54b688e63c0041049b49a8bf63997f8cd299844`](https://github.com/redhat-et/ripwire/commit/e54b688e63c0041049b49a8bf63997f8cd299844), 449 commits and 300 files on from the previous pin. **`human_review` is withdrawn; `negative_eval` stands alone.** The ack ledger is unchanged in shape and is still described in sections 1, 5, 7 and 9, where it earns its space: a ratchet rather than a suppression, a rescue route kept per row, a file committed so a change in what is suppressed reads as a diff. What the mark needs is that the producer cannot clear its own queue, and here the project documents the opposite — `skills/ripwire-quality-bar/SKILL.md` spells the ack command out for the model three times (`:178`, `:188`, `:206`), and `ripwire-handoff` and `ripwire-orient` tell an agent to graduate a recurring comment into an ack reason. No MCP verb writes either sidecar and `quality_delta` is declared read-only, so this is a CLI act rather than a tool-surface verb; but a CLI act the shipped skill instructs the agent to perform is not a person's adjudication. The previous record's own two qualifications said as much. `negative_eval` re-verified: `test/notescheck.sh` still asserts a dangling note appears in the listing and in neither a task-scoped retrieval nor the default map, and `test/identitycheck.sh` still pins that an ack does not survive a rewrite. Screened again first: seventeen files, two auto-run surfaces, four unpinned surfaces, seven dependency files inside the cooldown. Nothing installed, built or run.
 
 **2026-09-16** — [`f8e6087cc1dae2b438b3a69ccc8a4b53c19314cd`](https://github.com/redhat-et/ripwire/commit/f8e6087cc1dae2b438b3a69ccc8a4b53c19314cd) — re-read at a commit dated 16 September 2026, 979 commits past the previous pin, at version 0.6.1. The identity repair is the substantive change: rather than teaching nine call sites to try an alias, a `healIdentity` pre-pass rekeys the baseline snapshot and the ack ledger forward into the current tree's identity before anything reads them, through the git-recorded rename map and then scrubbed-content-hash equality, with the rescue route kept per row and `--quality-ack` writing the healed rows back. `identitycheck.sh` pins three claims that may not be traded for one another, including that an ack must not survive a rewrite. Both marks re-tested and held, with the negative-eval record re-grounded on that gate alongside the dangling-note case. The ledger has grown to 1,310 rows and the named gate list to 618. `memory_recall` still does not read the notes store: `src/recall.h` carries 96 case-insensitive matches for "note", every one of them prose or an unrelated identifier, and none naming the store, its loader or its record type. Screened before reading: two auto-run surfaces, four unpinned dependency surfaces, none inside the seven-day cooldown. Nothing was installed, built or run.
 
