@@ -7,15 +7,14 @@ page_kind: system
 source_name: "martian56/redcell"
 source_url: https://github.com/martian56/redcell
 archive_name: "martian56--redcell"
-revision: 27b118b4e7f2171d7f70710720b9e5a07e978b8a
-revision_url: https://github.com/martian56/redcell/commit/27b118b4e7f2171d7f70710720b9e5a07e978b8a
-analyzed_at: 2026-09-15
-capabilities: "scope_enforced, trust_state, human_review, negative_eval"
+revision: cb557584fbd5cac03f3952c1afe24398cf267bef
+revision_url: https://github.com/martian56/redcell/commit/cb557584fbd5cac03f3952c1afe24398cf267bef
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, trust_state, negative_eval"
 capability_evidence:
-  scope_enforced: "the findings, loot and hosts repositories, and the triage merge | packages/core/redcell_core/repositories/findings.py:19, :43, :76 | `list_for_session` opens with `where(Finding.session_id == sid)` and takes no path that omits it; the dedup `exists` keys on `session_id` with title and location; `merge` dismisses a duplicate only when `dup.session_id == primary.session_id`. Both agent-facing reads, the chat context in `assistant.py` and the run recap in `runner.py`, go through `list_for_session` with the engagement's own id | packages/core/tests/test_findings_triage.py:47 (`test_merge_dismisses_duplicates_but_keeps_primary_and_other_sessions`), test_repo_core.py, test_repo_children.py"
-  trust_state: "the finding record — a discrete triage status that changes what the finding does | packages/core/redcell_core/repositories/findings.py:12, engine/reporting/generate.py:40, engine/runner.py:58 | `VALID_STATUSES = (candidate, verified, dismissed, inconclusive)`, validated on `set_status`. `dismissed` is filtered out of the client report (`select_report_findings`) and out of the progress recap a new run starts from (`summarize_progress`); `verified` is styled distinctly in the PDF. The chat context lists every finding with its status label and filters none | packages/core/tests/test_reporting.py:37, apps/api/tests/test_run_context.py:22"
-  human_review: "the operator console's triage endpoints | apps/api/app/routers/resources.py:256, :264, :277 | `POST /findings/{fid}/verify`, `/status` and `/merge` are the adjudication surface, and `dismissed` and `inconclusive` have no other writer. It is not the only route to `verified`: the agent's `record_finding` tool schema offers `status` with enum `[candidate, verified]` and `_record_finding` stores `args.get(status, candidate)` unvalidated, so review is a correction surface over agent writes rather than an admission gate | packages/core/tests/test_findings_triage.py:20, :47"
-  negative_eval: "the run recap — a dismissed finding must not reach a new run's context | packages/core/redcell_core/engine/runner.py:55-60 and :367-374 | `summarize_progress` drops `status == dismissed` before building the `Progress already made in this engagement` system message that a run with no checkpoint starts from. `test_summary_ignores_dismissed_findings` asserts a critical dismissed finding alone yields `None`, and `test_summary_includes_findings_hosts_and_loot` is the positive control on the same function, asserting a verified finding's title, location and severity appear. Added after the 2026-08-14 pin; the report-exclusion test that predates it guards a client deliverable, not agent context | apps/api/tests/test_run_context.py:22 and :26; packages/core/tests/test_reporting.py:37"
+  scope_enforced: "the findings, loot and hosts repositories, and the triage merge | packages/core/redcell_core/repositories/findings.py:19, :43, :76 (unchanged line numbers at this pin) | `list_for_session` opens with `where(Finding.session_id == sid)` and takes no path that omits it; the dedup `exists` keys on `session_id` with title and location; `merge` dismisses a duplicate only when `dup.session_id == primary.session_id`. Both agent-facing reads, the chat context in `assistant.py` and the run recap in `runner.py`, go through `list_for_session` with the engagement's own id | packages/core/tests/test_findings_triage.py:47 (`test_merge_dismisses_duplicates_but_keeps_primary_and_other_sessions`), test_repo_core.py, test_repo_children.py"
+  trust_state: "the finding record — a discrete triage status that changes what the finding does | packages/core/redcell_core/repositories/findings.py:12, :51, engine/reporting/generate.py:41, engine/run/support.py:34 | `VALID_STATUSES = (candidate, verified, dismissed, inconclusive)`, validated on `set_status`. `dismissed` is filtered out of the client report (`select_report_findings`) and out of the progress recap a new run starts from (`summarize_progress`); `verified` is styled distinctly in the PDF. The chat context lists every finding with its status label and filters none | packages/core/tests/test_reporting.py:37, apps/api/tests/test_run_context.py:22"
+  negative_eval: "the run recap — a dismissed finding must not reach a new run's context | packages/core/redcell_core/engine/run/support.py:33-34, packages/core/redcell_core/engine/runner.py:268, :277 | `summarize_progress` drops `status == dismissed` before building the `Progress already made in this engagement` system message that a run with no checkpoint starts from. `test_summary_ignores_dismissed_findings` asserts a critical dismissed finding alone yields `None`, and `test_summary_includes_findings_hosts_and_loot` is the positive control on the same function, asserting a verified finding's title, location and severity appear. Added after the 2026-08-14 pin; the report-exclusion test that predates it guards a client deliverable, not agent context | apps/api/tests/test_run_context.py:22 and :26; packages/core/tests/test_reporting.py:37"
 stack_storage: "postgres"
 stack_retrieval: ""
 stack_source: "reviewed"
@@ -103,10 +102,19 @@ with the enum `["candidate", "verified"]`, and `_record_finding` stores
 So **the agent may assert and may confirm; only a human may reject**. A
 `candidate` means "no human has ruled on this yet", but a `verified`
 finding does not mean one has — the row carries no field that separates an
-operator's verification from the agent's. This earns `trust_state`: the status
-is a discrete field with at least candidate / verified / dismissed, set on the
-value, and it changes what the value does downstream (a dismissed finding leaves
-the report).
+operator's verification from the agent's.
+
+That asymmetry decides two marks in opposite directions. It earns `trust_state`:
+the status is a discrete field with at least candidate / verified / dismissed,
+set on the value, and it changes what the value does downstream — a dismissed
+finding leaves the report and leaves the next run's context — and the state that
+withholds is precisely the one the producer cannot write, since the tool enum
+stops at `verified`. It costs `human_review`: the mark asks whether a memory
+waits until an actor the producing agent cannot be resolves it, and no finding
+waits. Every finding is live from the moment `record_finding` returns, `verified`
+included, and the triage endpoints correct the record afterwards. `set_status`
+checks `VALID_STATUSES` (`repositories/findings.py:51`); `_record_finding`
+(`engine/runner.py:867`) does not.
 
 How a memory dies: `dismissed`. There is no hard delete on the ordinary path and
 no decay. A dismissed finding stays in the table — so it is not a tombstone in
@@ -528,6 +536,8 @@ around it.
 - `packages/core/tests/test_repo_core.py`, `test_repo_children.py` — session-scoped repositories.
 
 ## History
+
+**2026-09-19** — re-pinned to [`cb557584fbd5cac03f3952c1afe24398cf267bef`](https://github.com/martian56/redcell/commit/cb557584fbd5cac03f3952c1afe24398cf267bef), 49 commits on. `human_review` is **withdrawn**, on the fact the record already carried beside it: the `record_finding` tool schema offers the model `status` with the enum `["candidate", "verified"]` and `_record_finding` stores `args.get("status", "candidate")` unvalidated, so the producer writes the confirmed state itself and no finding waits for anyone. The same asymmetry is why `trust_state` survives and is now stated as the stronger half — the one status that withholds, `dismissed`, is the one the tool enum cannot reach. `negative_eval` was re-anchored: `summarize_progress` moved to `engine/run/support.py:33-34` and its `status != "dismissed"` filter is intact; the previous record's `runner.py` line numbers no longer resolve. `scope_enforced` stands with its three anchors still at their old lines. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`27b118b4e7f2171d7f70710720b9e5a07e978b8a`](https://github.com/martian56/redcell/commit/27b118b4e7f2171d7f70710720b9e5a07e978b8a) — 2,851 commits on, 2026-09-13, almost all by the author and most of them one-line `docs(...)` commits (1,212 under `docs(mobile)` alone); the pin is an ancestor. Screened before reading: no auto-run surface, one build-time execution point (`conftest.py`), five unpinned manifests and four dependency surfaces inside the seven-day cooldown, so nothing was installed or run and the test counts above are counted. The findings, loot and hosts repositories and the finding model are byte-identical to the pin. `negative_eval` is added and is new: a run with no checkpoint now opens with `summarize_progress`, a recap of the engagement's findings, hosts and loot that drops dismissed findings, and `test_run_context.py` asserts that exclusion beside a positive control. A claim present since the first reading was wrong and is corrected throughout: the agent is not limited to `candidate`. The `record_finding` schema at the previous pin already offered `status` with `["candidate", "verified"]`, and the create path stores the argument unvalidated, so only rejection is human-only; `human_review` is kept as a correction surface over agent writes, not an admission gate. The LangGraph checkpointer moved from SQLite to Postgres, and the write and resume line anchors moved with `runner.py`.
 
