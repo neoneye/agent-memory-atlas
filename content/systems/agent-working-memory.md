@@ -9,10 +9,10 @@ source_url: https://github.com/CompleteIdeas/agent-working-memory
 archive_name: "CompleteIdeas--agent-working-memory"
 revision: 6b04ba62ac50b3123ab69a3fda2679da9ae9e611
 revision_url: https://github.com/CompleteIdeas/agent-working-memory/commit/6b04ba62ac50b3123ab69a3fda2679da9ae9e611
-analyzed_at: 2026-09-16
+analyzed_at: 2026-09-19
 capabilities: "trust_state, scope_enforced, negative_eval"
 capability_evidence:
-  trust_state: "the retracted flag, composed into every read query | src/storage/pglite.ts:329,347,370,399,509,538,565,584,672,695, retractEngram :475 | `retracted` is a boolean on the engram and every read path appends `AND retracted = FALSE` to its SQL rather than filtering afterwards. Four of the ten sites gate it behind an explicit `includeRetracted` opt-in, so recovering a retracted memory is possible and is a deliberate act by the caller. A retraction does not delete: `retractEngram` sets the flag and records who retracted it, and the engine writes a correction engram beside it | tests/integration/memory-lifecycle.test.ts"
+  trust_state: "the retracted flag, composed into every cognitive read in all three backends, and deliberately absent from the one search labelled diagnostic | src/storage/pglite.ts:329, :347, :370, :399, :509, :538, :565, :584, :672, :695, `retractEngram` at :475, the diagnostic `search` at :593-613; src/storage/postgres.ts:692-695; src/storage/sqlite.ts:879-882; src/api/routes.ts:525-539; src/engine/retraction.ts:79 | `retracted` is a boolean on the engram and every read path appends `AND retracted = FALSE` to its SQL rather than filtering afterwards — fourteen times in each of the three backends, which agree with one another. Four of the ten pglite read sites gate it behind an explicit `includeRetracted` opt-in, so recovering a retracted memory is possible and is a deliberate act by the caller. A retraction does not delete: `retractEngram` sets the flag and records who retracted it, and the engine writes a correction engram beside it. Two qualifications. The deterministic `search`, documented as diagnostic and structural rather than cognitive, opens on `agent_id` alone and adds the retracted clause only when the caller supplies one — identically in all three backends, so the omission is a decision rather than a slip, and it is reachable over HTTP with the field simply left out. And `retracted_by` is whatever string the caller passes; the engine retraction path passes null | tests/integration/memory-lifecycle.test.ts"
   scope_enforced: "agent_id as the leading predicate on the same queries | src/storage/pglite.ts:323,341,364,393,499,509,565,584,672,695 | every read is `WHERE agent_id = $1` or `agent_id = ANY($1::text[])` for the shared-scope variants, in the query rather than after it, so an agent cannot rank against another agent's engrams and a `LIMIT` means the same thing for every caller. The multi-agent form takes an explicit array, so sharing is a stated set rather than an absent filter | tests/coordination/"
   negative_eval: "a retracted engram must not activate, paired with a positive on the same result | tests/integration/memory-lifecycle.test.ts:219-231 | after retracting an engram the test runs a real activation against the populated store and asserts `expect(foundRetracted).toBeUndefined()` — and in the same result asserts the correction engram `toBeDefined()`. The positive control is what makes it evidence: an activation returning nothing fails this test rather than passing it, which is the check most negative suites in this corpus omit | this is the test"
 stack_storage: "sqlite, postgres"
@@ -27,9 +27,9 @@ matrix:
   scoping: "agent_id is a WHERE clause on every read; separate memory pools per folder"
   integration: "An MCP server with 16 tools, a CLI, hooks, and an onboarding pass over existing docs"
   background: "Staging resonance checks, Hebbian association strengthening, decay, eviction, consolidation"
-  trust: "retracted with retracted_by and retracted_at, excluded from search by default"
+  trust: "retracted with retracted_by and retracted_at, composed into the SQL of every cognitive read in all three backends — and absent by default from the one search documented as diagnostic"
   strengths: "Coherence-weighted contamination propagation, derived from a cited cognitive-science result"
-  risks: "Retraction is recorded on the row, so there is no append-only record of what was retracted"
+  risks: "Retraction is recorded on the row, so there is no append-only record of what was retracted; `retracted_by` is a caller-supplied string and the engine path passes null; and the diagnostic search endpoint returns retracted engrams unless the caller asks it not to"
 ---
 
 ## 1. Executive Summary
@@ -144,8 +144,18 @@ check).
 **Supersede** — the Form B atomic write-and-supersede path exercised by
 `tests/core/supersede-form-b.test.ts`.
 
-**Exclude** — `src/storage/pglite.ts` (`AND retracted = FALSE` at `:326`,
-`:344`, `:367`, `:396`, `:506`, `:558`, `:577`; `retractEngram` `:475`).
+**Exclude** — `src/storage/pglite.ts` (`AND retracted = FALSE` at `:329`,
+`:347`, `:370`, `:399`, `:509`, `:538`, `:565`, `:584`, `:672`, `:695`;
+`retractEngram` `:475`), and the same fourteen times in each of
+`src/storage/postgres.ts` and `src/storage/sqlite.ts`. The exception is
+`search`, the deterministic query documented as *"diagnostic / structural"*
+rather than cognitive: it opens on `agent_id` alone and appends the retracted
+clause only when the caller passes one (`pglite.ts:593-613`,
+`postgres.ts:692-695`, `sqlite.ts:879-882`). Three independent backends omit it
+in the same place, so it is a decision rather than a slip — but the HTTP search
+route passes `retracted` straight through (`src/api/routes.ts:525-539`), so a
+client that simply leaves the field out gets retracted engrams back from a
+public endpoint.
 
 **Measure** — `src/engine/eval.ts` (the four dimensions `:4-12`, `discardRegret`
 `:93-94`).
@@ -212,8 +222,16 @@ is preserved — all upgrades are backward compatible. New features … are opt-
 ## 9. Reliability, Safety, and Trust
 
 **Trust state — awarded.** `retracted` is a discrete field, set with
-`retracted_by` and `retracted_at`, read on every search path, and it withholds a
-memory from being treated as true without destroying it.
+`retracted_by` and `retracted_at`, and it withholds a memory from being treated
+as true without destroying it. It is composed into the SQL rather than applied
+after the rows come back, which is the part worth copying: a `LIMIT` then means
+the same thing to every caller. Two qualifications belong beside the award. The
+diagnostic `search` carries no default clause in any of the three backends and
+is reachable over HTTP, so "read on every search path" is true of the cognitive
+reads and not of that one. And `retracted_by` is whatever string the caller
+supplies — the engine's own retraction path passes `null`
+(`src/engine/retraction.ts:79`) — so the field records an assertion about the
+retractor, not a verified actor.
 
 **Scope enforced — awarded**, per section 6.
 
@@ -413,6 +431,8 @@ contract `:3-17`), `tests/storage/pglite-engine-integration.test.ts`,
 `tests/integration/mcp-smoke.test.ts`
 
 ## History
+
+**2026-09-19** — [`6b04ba62ac50b3123ab69a3fda2679da9ae9e611`](https://github.com/CompleteIdeas/agent-working-memory/commit/6b04ba62ac50b3123ab69a3fda2679da9ae9e611) — `trust_state` re-tested at an unchanged pin. Every anchor held, with a line-number correction: the pglite exclusions are at `:329`, `:347`, `:370`, `:399`, `:509`, `:538`, `:565`, `:584`, `:672` and `:695`, not the `:326`-`:577` set section 4 listed. The mark stands and is stronger than recorded — the clause appears fourteen times in each of the three backends, pglite, postgres and sqlite, which agree with one another, and it is composed into the SQL rather than applied to the rows afterwards, so a `LIMIT` means the same thing to every caller. The record said *every* read path appends it. One does not: `search`, documented as *diagnostic / structural* rather than cognitive, opens on `agent_id` alone and adds the retracted clause only when the caller supplies one (`pglite.ts:593-613`, `postgres.ts:692-695`, `sqlite.ts:879-882`). Three independent backends omit it in the same place, so it is a decision — but the HTTP search route passes `retracted` straight through (`src/api/routes.ts:525-539`), so a client that leaves the field out gets retracted engrams back from a public endpoint. Second qualification: `retracted_by` is whatever string the caller passes, and the engine's own retraction path passes `null` (`src/engine/retraction.ts:79`), so the field records an assertion rather than a verified actor — which is why it bears on `human_review`, withheld here, and not on this mark. Re-read from a fresh clone; nothing was installed and no suite was run.
 
 **2026-09-16** — [`6b04ba62ac50b3123ab69a3fda2679da9ae9e611`](https://github.com/CompleteIdeas/agent-working-memory/commit/6b04ba62ac50b3123ab69a3fda2679da9ae9e611) — re-read after 42 commits, at 0.15.8. The lifecycle integration test is byte-identical, and `src/storage/pglite.ts` changed only below line 1020 — percentile stats and a linked-feedback query — so the `retracted` predicate and the agent-scoped read at `:323` and `:329` are exact at both commits and all three marks hold unchanged. What the window contains is a data-loss fix, written up in section 9: the default store path was inside the installed npm package, where `npm install -g` deletes it on upgrade. The report carries it because where a memory store puts its file is a durability property of the memory system, and because the reason it shipped — every test passed `--db-path` explicitly, so the default was never exercised — is the generalisable half. The provenance tag `surface=` was also renamed to `client=`. Re-screened at this commit: one auto-run surface, one build-time execution path, one floating version, one manifest inside the cooldown. Nothing was installed, built or run.
 

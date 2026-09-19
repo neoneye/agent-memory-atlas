@@ -118,7 +118,7 @@ misinformation persists as a coherent story.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/CompleteIdeas--agent-working-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -251,10 +251,23 @@ Effect derivation <code>:16-37</code>, <code>NeighborhoodCohesion</code>
 <p><strong>Supersede</strong> — the Form B atomic write-and-supersede
 path exercised by <code>tests/core/supersede-form-b.test.ts</code>.</p>
 <p><strong>Exclude</strong> — <code>src/storage/pglite.ts</code>
-(<code>AND retracted = FALSE</code> at <code>:326</code>,
-<code>:344</code>, <code>:367</code>, <code>:396</code>,
-<code>:506</code>, <code>:558</code>, <code>:577</code>;
-<code>retractEngram</code> <code>:475</code>).</p>
+(<code>AND retracted = FALSE</code> at <code>:329</code>,
+<code>:347</code>, <code>:370</code>, <code>:399</code>,
+<code>:509</code>, <code>:538</code>, <code>:565</code>,
+<code>:584</code>, <code>:672</code>, <code>:695</code>;
+<code>retractEngram</code> <code>:475</code>), and the same fourteen
+times in each of <code>src/storage/postgres.ts</code> and
+<code>src/storage/sqlite.ts</code>. The exception is
+<code>search</code>, the deterministic query documented as
+<em>"diagnostic / structural"</em> rather than cognitive: it opens on
+<code>agent_id</code> alone and appends the retracted clause only when
+the caller passes one (<code>pglite.ts:593-613</code>,
+<code>postgres.ts:692-695</code>, <code>sqlite.ts:879-882</code>). Three
+independent backends omit it in the same place, so it is a decision
+rather than a slip — but the HTTP search route passes
+<code>retracted</code> straight through
+(<code>src/api/routes.ts:525-539</code>), so a client that simply leaves
+the field out gets retracted engrams back from a public endpoint.</p>
 <p><strong>Measure</strong> — <code>src/engine/eval.ts</code> (the four
 dimensions <code>:4-12</code>, <code>discardRegret</code>
 <code>:93-94</code>).</p>
@@ -316,8 +329,18 @@ features … are opt-in."</p>
 Trust</h2>
 <p><strong>Trust state — awarded.</strong> <code>retracted</code> is a
 discrete field, set with <code>retracted_by</code> and
-<code>retracted_at</code>, read on every search path, and it withholds a
-memory from being treated as true without destroying it.</p>
+<code>retracted_at</code>, and it withholds a memory from being treated
+as true without destroying it. It is composed into the SQL rather than
+applied after the rows come back, which is the part worth copying: a
+<code>LIMIT</code> then means the same thing to every caller. Two
+qualifications belong beside the award. The diagnostic
+<code>search</code> carries no default clause in any of the three
+backends and is reachable over HTTP, so "read on every search path" is
+true of the cognitive reads and not of that one. And
+<code>retracted_by</code> is whatever string the caller supplies — the
+engine's own retraction path passes <code>null</code>
+(<code>src/engine/retraction.ts:79</code>) — so the field records an
+assertion about the retractor, not a verified actor.</p>
 <p><strong>Scope enforced — awarded</strong>, per section 6.</p>
 <p><strong>Negative eval — awarded</strong>, per section 10.</p>
 <p><strong>The store used to live where an upgrade deletes it.</strong>
@@ -528,6 +551,34 @@ exclusion case <code>:343-356</code>),
 <code>tests/storage/pglite-engine-integration.test.ts</code>,
 <code>tests/integration/mcp-smoke.test.ts</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/CompleteIdeas/agent-working-memory/commit/6b04ba62ac50b3123ab69a3fda2679da9ae9e611"><code class="commit-id" title="6b04ba62ac50b3123ab69a3fda2679da9ae9e611">6b04ba62…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin. Every anchor
+held, with a line-number correction: the pglite exclusions are at
+<code>:329</code>, <code>:347</code>, <code>:370</code>,
+<code>:399</code>, <code>:509</code>, <code>:538</code>,
+<code>:565</code>, <code>:584</code>, <code>:672</code> and
+<code>:695</code>, not the <code>:326</code>-<code>:577</code> set
+section 4 listed. The mark stands and is stronger than recorded — the
+clause appears fourteen times in each of the three backends, pglite,
+postgres and sqlite, which agree with one another, and it is composed
+into the SQL rather than applied to the rows afterwards, so a
+<code>LIMIT</code> means the same thing to every caller. The record said
+<em>every</em> read path appends it. One does not: <code>search</code>,
+documented as <em>diagnostic / structural</em> rather than cognitive,
+opens on <code>agent_id</code> alone and adds the retracted clause only
+when the caller supplies one (<code>pglite.ts:593-613</code>,
+<code>postgres.ts:692-695</code>, <code>sqlite.ts:879-882</code>). Three
+independent backends omit it in the same place, so it is a decision —
+but the HTTP search route passes <code>retracted</code> straight through
+(<code>src/api/routes.ts:525-539</code>), so a client that leaves the
+field out gets retracted engrams back from a public endpoint. Second
+qualification: <code>retracted_by</code> is whatever string the caller
+passes, and the engine's own retraction path passes <code>null</code>
+(<code>src/engine/retraction.ts:79</code>), so the field records an
+assertion rather than a verified actor — which is why it bears on
+<code>human_review</code>, withheld here, and not on this mark. Re-read
+from a fresh clone; nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/CompleteIdeas/agent-working-memory/commit/6b04ba62ac50b3123ab69a3fda2679da9ae9e611"><code class="commit-id" title="6b04ba62ac50b3123ab69a3fda2679da9ae9e611">6b04ba62…</code></a>
 — re-read after 42 commits, at 0.15.8. The lifecycle integration test is
