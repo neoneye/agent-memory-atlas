@@ -1,19 +1,18 @@
 ---
 title: "ELIOT Memory OS"
-eyebrow: "A claim is not usable until an operator dispositions it"
+eyebrow: "A promotion checked field by field against its own receipt"
 description: "A pre-alpha MIT Rust control plane of 1.17 million lines whose memory unit is a claim card carrying a nine-value epistemic status on an axis separate from its lifecycle, which only an operator can promote out of candidate — and whose architecture boundaries are checked against the Cargo manifests by a script with three dispositions rather than a pass and a fail."
 root: ../..
 page_kind: system
 source_name: "UnknownAlienHuman/eliot-memory-os"
 source_url: https://github.com/UnknownAlienHuman/eliot-memory-os
 archive_name: "UnknownAlienHuman--eliot-memory-os"
-revision: 905dbe68e0d72a75346958b89e525731f2eaa19d
-revision_url: https://github.com/UnknownAlienHuman/eliot-memory-os/commit/905dbe68e0d72a75346958b89e525731f2eaa19d
-analyzed_at: 2026-09-16
-capabilities: "trust_state, human_review"
+revision: 3590b34422bdb55e4e3a899d6820f431e7e06329
+revision_url: https://github.com/UnknownAlienHuman/eliot-memory-os/commit/3590b34422bdb55e4e3a899d6820f431e7e06329
+analyzed_at: 2026-09-19
+capabilities: "trust_state"
 capability_evidence:
   trust_state: "a claim card carries a nine-value epistemic status on an axis separate from its lifecycle, weighted on read and gated on at the agent surface | crates/eliot-types/src/memory.rs:44-62, crates/eliot-store/src/canonical_observation_models.rs:44-50, crates/eliot-store/src/canonical_store.rs:893-895, crates/eliot-app/src/mcp_stdio/cognition.rs:1630, crates/eliot-app/src/mcp_stdio/operator.rs:3922 | `EpistemicStatus` is `Observed | Candidate | Supported | Verified | Contested | Superseded | Stale | Rejected | Unknown`, stored on `CanonicalClaimCard` beside a distinct `LifecycleStatus` of `Active | Dormant | Suppressed | Archived` — how well-founded a claim is kept separate from whether it is operationally live. The store maps status to a confidence weight (`Verified => 80`, `Supported => 50`, `Candidate => 10`), the cognition surface counts a source as promoted only when `claim.status == EpistemicStatus::Verified`, and the operator path refuses with \"only an undispositioned candidate claim can be promoted\" unless `candidate.status == EpistemicStatus::Candidate`. The verification path writes `Candidate` | crates/eliot-app/src/mcp_stdio/verification.rs:116, :524, :690"
-  human_review: "a candidate claim leaves candidacy only through an operator disposition, which is recorded with its provenance and re-verified against the receipt afterwards | crates/eliot-app/src/mcp_stdio/operator.rs:3911-3950, crates/eliot-app/src/mcp_stdio.rs:2324-2345 | the promotion path bails unless the claim is an undispositioned `Candidate`, calls `ensure_operator_candidate_is_active`, then stamps the payload with `candidate_only: false`, `admitted_by_operator: true` and an `operator_candidate_disposition` recording the disposition, task id, candidate ref, source write id and source memory revision, carrying an `actor`. A later reciprocal-promotion verification re-reads the claim and fails unless its status is `Verified`, its `write_id` matches the receipt, `candidate_only` is exactly `false`, `admitted_by_operator` is exactly `true`, and the cognitive run, call, call number and host all match the source attempt — so the operator's admission is checked against the receipt that recorded it rather than trusted | crates/eliot-engine/src/cognitive_disposition.rs:247"
 stack_storage: "graph, kv"
 stack_retrieval: "graph"
 stack_source: "reviewed"
@@ -103,7 +102,14 @@ Proof."
 
 A **claim card** is what the system believes, with two independent statuses.
 
-An **operator disposition** is the only way out of `Candidate`.
+An **operator disposition** is the only way out of `Candidate` — and
+"operator" here names a command surface rather than a person. `eliot_operator_command`
+sits in the MCP catalogue (`crates/eliot-app/src/mcp_stdio.rs:563`,
+`mcp_stdio/catalog.rs:195`) beside `eliot_procedure_candidate_disposition`,
+`eliot_autonomy_approval_decide` and every other `eliot_*` tool, on a flat list
+with no role filter. The task-scoped role the prompts insist on is guidance to
+the model, not a constraint on the catalogue. That is why this report does not
+carry `human_review`: the producing agent holds the disposition verb.
 
 A **write receipt** is what an approval is later checked against.
 
@@ -111,7 +117,7 @@ A **projection** — a report, a cognitive view — is generated from canonical
 state and is "prose not truth".
 
 ```mermaid
-%% caption: the epistemic and lifecycle axes are separate, only an operator moves a claim out of candidacy, and the promotion is later re-verified field by field against the receipt that recorded it
+%% caption: the epistemic and lifecycle axes are separate, a disposition is the only way out of candidacy — issued over the same MCP catalogue the model holds — and the promotion is later re-verified field by field against the receipt that recorded it
 flowchart TB
     OBS["tool observations · evidence atoms ·<br/>source snapshots · verification runs"] --> CC["CanonicalClaimCard"]
     CC --> E["EpistemicStatus — how well founded:<br/>Observed · Candidate · Supported ·<br/>Verified · Contested · Superseded ·<br/>Stale · Rejected · Unknown"]
@@ -295,5 +301,7 @@ the tree, and the project's own answer is that it is pre-alpha.
 | `config/architecture-boundaries.toml` | The kernel's forbidden dependencies, per package, with issue numbers |
 
 ## History
+
+**2026-09-19** — re-pinned to [`3590b34422bdb55e4e3a899d6820f431e7e06329`](https://github.com/UnknownAlienHuman/eliot-memory-os/commit/3590b34422bdb55e4e3a899d6820f431e7e06329), 68 commits on. `human_review` is **withdrawn**. The previous record read the promotion path and the reciprocal verification carefully and did not read the tool catalogue: `eliot_operator_command` is a declared MCP tool in `mcp_stdio.rs:563` and `mcp_stdio/catalog.rs:195`, on the same flat list as `eliot_procedure_candidate_disposition`, `eliot_autonomy_approval_decide` and `eliot_meta_experiment_disposition`, with no role filter applied to what a session is offered. So the producing agent holds the disposition verb, and "operator" names a command surface rather than an actor the agent cannot be. What the verification machinery does buy is untouched and remains the best thing here: the promotion is re-read field by field against the receipt that recorded it — `write_id`, `candidate_only`, `admitted_by_operator`, the cognitive run, call, call number and host must all match — so the record cannot drift from what happened, whoever acted. `trust_state` stands on the nine-value `EpistemicStatus`, re-verified at `crates/eliot-types/src/memory.rs:44-62`. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`905dbe68e0d72a75346958b89e525731f2eaa19d`](https://github.com/UnknownAlienHuman/eliot-memory-os/commit/905dbe68e0d72a75346958b89e525731f2eaa19d) — first reading, at a commit dated 15 September 2026, of a repository its own README calls pre-alpha and not ready for use. Screened before opening, from a shallow clone: 195 files scanned, no auto-run surfaces, three build-time execution points, no unpinned surfaces, and 187 dependency files inside the seven-day cooldown. The repository's documentation protocol and `AGENTS.md`, both addressed to reading agents, were read as data and not followed. Nothing was installed, built or run.
