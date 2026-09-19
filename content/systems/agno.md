@@ -7,13 +7,12 @@ page_kind: system
 source_name: "agno-agi/agno"
 source_url: https://github.com/agno-agi/agno
 archive_name: "agno-agi--agno"
-revision: 8bf156efe7a1fe6d496e4434be73726b374ed8aa
-revision_url: https://github.com/agno-agi/agno/commit/8bf156efe7a1fe6d496e4434be73726b374ed8aa
-analyzed_at: 2026-09-15
-capabilities: "scope_enforced, human_review, negative_eval"
+revision: 85b6d1d178b70d59e8f2c0d432d2a66b35004f31
+revision_url: https://github.com/agno-agi/agno/commit/85b6d1d178b70d59e8f2c0d432d2a66b35004f31
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "user memory recall and, since v3.0, user-namespaced entity memory | libs/agno/agno/learn/stores/user_memory.py:98-110 recall, libs/agno/agno/learn/utils.py:41-81 build_learning_id, libs/agno/agno/learn/stores/entity_memory.py | user memory is stored under an id built from user_id and recall returns None when user_id is falsy; entity memory under namespace=\"user\" embeds a digest of user_id in the row id and refuses get, delete and remember without one, while namespace=\"global\" or a custom group is shared by design | libs/agno/tests/unit/learn/test_entity_memory_user_isolation.py:56, :141-165"
-  human_review: "the AgentOS memory routes | libs/agno/agno/os/routers/memory/memory.py:143, :185 (DELETE), :447 (PATCH /memories/{memory_id}) | a person lists, reads, corrects and deletes a user's memories against a running system; PROPOSE and HITL modes contribute nothing — the first is a prompt string and the second is unsupported | libs/agno/tests/integration/os"
   negative_eval: "cross-user entity isolation, supersession and relevance | libs/agno/tests/unit/learn/test_entity_memory_user_isolation.py, libs/agno/tests/unit/learn/test_entity_supersession.py, libs/agno/tests/unit/learn/test_relevance_recall.py | two users record the same entity name and type; each reads only their own fact, Bob's private note is asserted absent from Alice's row, recall context and search, and forget and delete are asserted not to cross users; a retired fact is asserted absent from live_facts while both rows remain; a two-letter entity is asserted not recalled for an unrelated message beside the entity that is | libs/agno/tests/unit/learn/test_entity_memory_user_isolation.py:76, :84, :106, :116, :124"
 stack_storage: "sqlite, postgres, redis, mongo, files"
 stack_retrieval: ""
@@ -143,8 +142,15 @@ retrieval is recency, or an LLM call (§6).
 The operator-facing surface is **AgentOS**, a FastAPI control plane. Its memory
 router (`agno/os/routers/memory/memory.py`) exposes nine routes: create, get,
 list, patch, delete, bulk delete, topics, per-user stats, and optimize. This is
-the layer a person actually touches, and it is also — see §9 — the only reason
-this report carries a `human_review` mark.
+the layer a person actually touches, and every one of those verbs acts on a
+memory that is already stored and already recallable. That is why this report
+does not carry a `human_review` mark: correcting a row after the fact is not a
+state the row waited in. The two places that would have been a gate are the ones
+§9 takes apart — `LearningMode.PROPOSE`, which changes only which string
+`instructions()` returns, and a HITL pause that belongs to run execution rather
+than to memory admission. A search of `agno/learn/` and `agno/memory/` at this
+pin finds no `pending`, `proposed`, `approve` or `review` state on a memory at
+all.
 
 ## 4. Essential Implementation Paths
 
@@ -304,12 +310,14 @@ it by logging a warning and continuing without it
 3.0"*; after 3.0 it reads *"Reserved for future use; unsupported by every store"*,
 and the value still silently degrades to no gate at all.
 
-**`human_review` is earned, and not from the mode named after it.** The AgentOS
-router exposes `PATCH /memory/{id}` and `DELETE /memory/{id}` alongside list and
-get. A person can read a memory, correct its text, and delete it, against a
-running system. That is adjudication after the fact, which the rubric counts.
-The mark comes from a REST API; the feature called human-in-the-loop earns
-nothing.
+**`human_review` is not earned, and the mode named after it is not the reason.**
+The AgentOS router exposes `PATCH /memory/{id}` and `DELETE /memory/{id}`
+alongside list and get, so a person can read a memory, correct its text and
+delete it against a running system. That is a correction surface and a useful
+one, but the rubric counts a memory that waits in a state until an actor the
+producing agent cannot be resolves it, and here the row is live before anyone
+opens the page. So the mark fails twice over: the REST API adjudicates after the
+fact, and the feature called human-in-the-loop earns nothing either.
 
 **The destructive default.** `optimize_memories(user_id, strategy, apply=True)`
 is the single most dangerous call in this report. `SummarizeStrategy.optimize`
@@ -461,6 +469,8 @@ reach `POST /memory/optimize` before someone finds the button.
 | `libs/agno/agno/learn/stores/protocol.py` | 127 | The six-method `LearningStore` Protocol |
 
 ## History
+
+**2026-09-19** — re-pinned to [`85b6d1d178b70d59e8f2c0d432d2a66b35004f31`](https://github.com/agno-agi/agno/commit/85b6d1d178b70d59e8f2c0d432d2a66b35004f31), 18 commits on. `human_review` is **withdrawn**, and the record it rested on had already narrowed itself to the thing that fails: *"a person lists, reads, corrects and deletes a user's memories against a running system; PROPOSE and HITL modes contribute nothing."* Editing a stored memory is authoring, not a gate, and the mark asks for a state a memory waits in until an actor the producing agent cannot be resolves it. The alternative was re-checked rather than assumed: `agno/memory/` and `agno/learn/` carry no `pending`, `proposed`, `approve` or `review` state on a memory at this pin, and the HITL machinery in `agno/db/` is run-status pausing. `scope_enforced` and `negative_eval` both stand — `recall(user_id, …)` still requires the user id, and the three isolation, supersession and relevance suites are all present. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`8bf156efe7a1fe6d496e4434be73726b374ed8aa`](https://github.com/agno-agi/agno/commit/8bf156efe7a1fe6d496e4434be73726b374ed8aa) — 138 commits on, 2026-09-15, including the v3.0 release (#8210, 24 August). Screened before reading: one auto-run surface, 57 build-time execution points, five unpinned surfaces, one dependency surface inside the cooldown and three agent-instruction files read as data; nothing was installed or run. v3.0 fixed a cross-user leak the first reading missed: entity memory under `namespace="user"` keyed rows without the user, so two users naming the same entity shared and overwrote one row (#9319); the id now embeds a user digest, user-less reads and writes are refused, legacy rows are re-keyed, and an isolation suite pins it. v3.0 also removed the `MemoriesConfig`, `MemoriesStore` and `Decision` aliases, added learning-store migrations, and `search_user_memories` now returns every memory when no limit is passed. `LearningMode.PROPOSE` is still a prompt string and `HITL` still warns and continues. The optimize default, the absent audit and the absent tombstone stand. All three marks kept with evidence records.
 
