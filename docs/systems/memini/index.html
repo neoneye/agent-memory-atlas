@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A single Go binary serving
+remember and recall over MCP and REST, which tiers an untiered write
+with a deterministic regex classifier that can only raise it,
+deduplicates twice — once before paying for an embedding and once after
+— and restricts every cross-namespace read leg to durable tiers.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="memini — Agent Memory Atlas">
+    <meta property="og:description" content="A single Go binary serving
+remember and recall over MCP and REST, which tiers an untiered write
+with a deterministic regex classifier that can only raise it,
+deduplicates twice — once before paying for an embedding and once after
+— and restricts every cross-namespace read leg to durable tiers.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="memini — Agent Memory Atlas">
+    <meta name="twitter:description" content="A single Go binary serving
+remember and recall over MCP and REST, which tiers an untiered write
+with a deterministic regex classifier that can only raise it,
+deduplicates twice — once before paying for an embedding and once after
+— and restricts every cross-namespace read leg to durable tiers.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>memini — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "memini",
+      "description": "A single Go binary serving remember and recall over MCP and REST, which tiers an untiered write with a deterministic regex classifier that can only raise it, deduplicates twice \u2014 once before paying for an embedding and once after \u2014 and restricts every cross-namespace read leg to durable tiers.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Shared memory service</p>
+          <h1>memini</h1>
+          <p class="document-deck">A single Go binary serving remember
+and recall over MCP and REST, which tiers an untiered write with a
+deterministic regex classifier that can only raise it, deduplicates
+twice — once before paying for an embedding and once after — and
+restricts every cross-namespace read leg to durable tiers.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/eleboucher/memini">
+              <span>Source</span>
+              <strong>eleboucher/memini</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/eleboucher/memini/commit/452ff2299c185530c7010cb164d83cce8006f78a" title="452ff2299c185530c7010cb164d83cce8006f78a">
+              <span>Analyzed revision</span>
+              <code>452ff229…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/eleboucher--memini" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>eleboucher--memini</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>memini is a memory service rather than a library: one Go binary that
+any MCP-capable agent talks to, holding a store of tiered memories
+behind <code>remember</code> and <code>recall</code>. It boots with no
+configuration on an embedded SQLite file and runs the same code against
+Postgres. The licence is AGPL-3.0, with the full text in the tree.</p>
+<p>Two decisions shape everything else. The first is that <strong>an
+untiered write is classified by regex, not by a model</strong>. A caller
+who names no tier gets <code>working</code>, a 72-hour intake tier,
+unless a deterministic marker heuristic raises it — and the heuristic
+can only ever raise. It never demotes, never touches a write whose
+caller picked a tier, and fails safe: a miss leaves the memory in
+<code>working</code>, where it can still earn durability later. That
+makes tiering instant and identical on every deployment, including one
+with no LLM configured at all.</p>
+<p>The second is that <strong>the scope that widens a read narrows it on
+another axis at the same time</strong>. A recall resolves a set of
+namespaces — the primary, then ancestors nearest-first, then the
+caller's home, then stored links — and every leg past the primary is
+restricted to the durable tiers. Working and episodic memories never
+cross a namespace boundary on a read. A system that cascades without
+that rule leaks session chatter between projects; memini's cascade can
+only ever surface distilled facts from elsewhere.</p>
+<p>The report awards five marks: <code>scope_enforced</code>,
+<code>tombstone</code>, <code>bitemporal</code>, <code>audit_log</code>
+and <code>negative_eval</code>. It withholds <code>trust_state</code>,
+and section 9 says why — the epistemic axis here is a number, and the
+discrete state that withholds a memory is the supersession pointer the
+<code>tombstone</code> mark already covers.</p>
+<p>The sharpest finding is in section 10. The benchmark README publishes
+a full results table and says it is <em>"sourced from the committed
+<code>results/</code> JSON"</em>, linking that directory.
+<code>.gitignore</code> line 24 is <code>/bench/results/</code>. The
+harness is real and the datasets for one suite are committed; the
+numbers in the headline table are not reproducible from a clone of this
+repository.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Think of memini as a retrieval service with a lifecycle bolted to the
+front of it, not as a database with search on top.</p>
+<p>The lifecycle is four tiers on one horizon axis. <code>working</code>
+and <code>episodic</code> are short-term — transient, TTL'd at 72 hours
+and 30 days — and <code>semantic</code> and <code>procedural</code> are
+long-term, durable and curated, with no default expiry. The mapping is a
+method on the tier itself rather than a table someone maintains, so "is
+this short-term" and "when does this expire" have exactly one answer
+each.</p>
+<p>A memory moves up that ladder in one of three ways: a caller names
+its tier, the regex classifier raises it at write time, or a later
+consolidation pass promotes it. It moves down by expiring, by being
+demoted by a maintenance pass, or by being superseded — which does not
+delete it, but stamps the interval it was true for and points at what
+replaced it.</p>
+<p>The retrieval side is where the design opinion lives. Most memory
+systems advertise a blend of relevance, recency and importance. memini
+computes <code>relevance × (0.80 + 0.20 × quality)</code> and leaves the
+standalone recency and importance weights at zero, a fact the
+documentation states under the heading <em>"Ranking, honestly"</em> and
+the code confirms: <code>RerankWeights</code> has four fields and the
+production default sets two of them.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a write is validated and tiered by a raise-only regex classifier, routed to a namespace, scrubbed and sanitized, gated for signal, deduplicated once before the embedder is paid for and once after, then stored; a recall resolves a read set whose non-primary legs are durable-tier only, runs vector and keyword legs per namespace in parallel, fuses twice with first-seen order breaking ties, and re-scores with relevance multiplied by a quality modifier before reserves, guards and an optional reranker; both paths write to a closed-vocabulary activity log, and ten maintenance passes act on the store behind them</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a write is validated and tiered by a raise-only regex classifier, routed to a namespace, scrubbed and sanitized, gated for signal, deduplicated once before the embedder is paid for and once after, then stored; a recall resolves a read set whose non-primary legs are durable-tier only, runs vector and keyword legs per namespace in parallel, fuses twice with first-seen order breaking ties, and re-scores with relevance multiplied by a quality modifier before reserves, guards and an optional reranker; both paths write to a closed-vocabulary activity log, and ten maintenance passes act on the store behind them
+flowchart TD
+    subgraph Callers
+        MCP[&quot;MCP tools&lt;br/&gt;remember · recall · answer&lt;br/&gt;briefing · history · forget&quot;]
+        REST[&quot;REST API&lt;br/&gt;generated from OpenAPI&quot;]
+        CLI[&quot;CLI and UI&quot;]
+    end
+
+    subgraph Write[&quot;Write pipeline (internal/service)&quot;]
+        V[&quot;validate · resolve tier&lt;br/&gt;regex classifier, raise-only&quot;]
+        NS[&quot;route namespace&lt;br/&gt;by visibility&quot;]
+        SCRUB[&quot;scrub secrets&quot;]
+        SAN[&quot;sanitize bytes&lt;br/&gt;quarantine = downrank&quot;]
+        GATE[&quot;value gate&lt;br/&gt;accepted, not stored&quot;]
+        D1[&quot;exact dedup&lt;br/&gt;before paying for a vector&quot;]
+        EMB[&quot;embed&lt;br/&gt;absent embedder degrades&quot;]
+        D2[&quot;near-duplicate dedup&lt;br/&gt;supersede · hint · coalesce&quot;]
+    end
+
+    subgraph Read[&quot;Recall pipeline (internal/search)&quot;]
+        RS[&quot;resolve read set&lt;br/&gt;primary · ancestors · home · links&quot;]
+        LEGS[&quot;vector + keyword legs&lt;br/&gt;per namespace, in parallel&quot;]
+        FUSE[&quot;fuse within, then across&lt;br/&gt;first-seen breaks ties&quot;]
+        COMP[&quot;composite&lt;br/&gt;relevance x quality&quot;]
+        ADJ[&quot;reserve · turn-echo guard&lt;br/&gt;dedup · optional reranker&quot;]
+    end
+
+    subgraph Store[&quot;Store interface&quot;]
+        SQL[&quot;SQLite + vector ext&quot;]
+        PG[&quot;Postgres&quot;]
+        EV[&quot;activity log&lt;br/&gt;eleven closed kinds&quot;]
+    end
+
+    subgraph Maint[&quot;Maintenance passes&quot;]
+        M[&quot;forget · demote · dedup&lt;br/&gt;tombstone · reembed · backfill&lt;br/&gt;renamespace · scrub · repair · assess&quot;]
+    end
+
+    MCP --&gt; V
+    REST --&gt; V
+    CLI --&gt; V
+    V --&gt; NS --&gt; SCRUB --&gt; SAN --&gt; GATE --&gt; D1 --&gt; EMB --&gt; D2 --&gt; SQL
+    D2 -.-&gt; PG
+    MCP --&gt; RS
+    REST --&gt; RS
+    RS --&gt; LEGS --&gt; FUSE --&gt; COMP --&gt; ADJ
+    LEGS --&gt; SQL
+    LEGS -.-&gt; PG
+    V --&gt; EV
+    ADJ --&gt; EV
+    SQL --&gt; M
+    M --&gt; SQL</code></pre></details></figure>
+<p>The <code>Store</code> interface is the seam worth studying. Its
+method comments are the contract the two backends are held to —
+<code>Upsert</code> states what happens to a vectorless row and to a
+stale vector-index entry, <code>GetEmbedding</code> explains why a
+vector is deliberately absent from <code>Get</code> (dims × 4 bytes on
+every read path) and warns that a Get-then-Upsert round trip is
+therefore lossy. One shared conformance suite runs those contracts
+against SQLite and Postgres alike, which is what makes a claim about
+"the store" in this report a claim about both.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Write:</strong> <code>internal/service</code> — validate,
+classify, route, scrub, sanitize, gate, dedup, embed, dedup again,
+store.</li>
+<li><strong>Tier classification:</strong> a pure regex pass with three
+vetoes (length 20–400 runes, a transcript veto on
+<code>User:</code>/<code>Assistant:</code> scaffolding, a hedge veto on
+tentative phrasing) and five marker families.</li>
+<li><strong>Recall:</strong> <code>internal/search</code> — read-set
+resolution, parallel legs, the semantic floor, double fusion, the
+composite, the adjustment sequence.</li>
+<li><strong>Supersession:</strong>
+<code>internal/service/consolidate.go</code>
+(<code>applySupersede</code>, <code>asyncSupersede</code>) and the REST
+<code>SupersedeMemory</code> handler, both reaching
+<code>Store.SetSuperseded</code>.</li>
+<li><strong>Activity log:</strong>
+<code>internal/service/events.go</code> and <code>LogConfigEvent</code>,
+with the kind vocabulary and its validator in
+<code>internal/store/store.go</code>.</li>
+<li><strong>Maintenance:</strong> ten passes in
+<code>internal/maintenance</code>, each its own file with its own
+test.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A <code>Memory</code> carries more axes than most records in this
+corpus, and the type's comments are unusually careful about what each
+one means when it is absent:</p>
+<ul>
+<li><strong><code>Tier</code></strong> — <code>working</code>,
+<code>episodic</code>, <code>semantic</code>, <code>procedural</code>,
+with <code>Term()</code> and <code>DefaultTTL()</code> as methods on the
+tier.</li>
+<li><strong><code>Level</code></strong> — <code>explicit</code> or
+<code>deduced</code>, recording whether a fact was stated or inferred.
+The comment notes that the empty string is legacy and <em>passes filters
+unconstrained</em>, so the permissive case is the absent one.</li>
+<li><strong><code>Confidence</code></strong> — a corroboration number in
+[0,1] that grows logistically on re-observation and decays without
+reinforcement. <code>nil</code> means untracked, and the comment says it
+is <em>treated as fully trusted so existing data is never retroactively
+penalized</em> — a migration-safety decision stated rather than
+discovered.</li>
+<li><strong><code>AssessedImportance</code></strong> — an LLM judgement
+in [0.1,0.9] with an invariant written into the field comment: it is
+cleared whenever a caller supplies an explicit importance, so a non-nil
+value always refines a tier-seeded guess and never overrides what a user
+asked for.</li>
+<li><strong><code>SupersededBy</code></strong>,
+<strong><code>ValidFrom</code></strong>,
+<strong><code>ValidTo</code></strong> — the correction axes, covered in
+sections 7 and 9.</li>
+<li><strong><code>LinkedMemoryIDs</code></strong> — advisory links from
+the consolidator, with stale ones (target superseded) resolved at recall
+rather than at write.</li>
+</ul>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Read-set resolution runs concurrently with the query embedding. Each
+namespace in the set gets a vector leg and a keyword leg in parallel,
+and failure is isolated per leg on purpose: an unreachable ancestor is
+dropped and named in the response's degradation note, a failed vector
+leg falls back to that namespace's keyword results, and only losing the
+primary namespace's keyword leg — the one leg every recall has — fails
+the call.</p>
+<p>Before fusion, an absolute semantic gate drops vector candidates
+below a raw similarity floor (0.46 by default). The reasoning is stated
+and is the kind of thing that is usually learned the hard way: without
+an absolute bar, min-max normalization turns a batch of uniformly
+irrelevant candidates into competitive-looking scores. A keyword hit
+with no vector score is not gated — vectorless rows stay eligible — but
+a keyword hit whose vector score is known and below the floor is dropped
+from both legs.</p>
+<p>Fusion happens twice, and the second one is where scoping and ranking
+meet: per-namespace lists fuse into one ranking and <strong>ties at
+equal score break by first-seen order across the read set</strong>,
+which is why the cascade appends ancestors nearest-first. At equal
+relevance a memory in <code>acme/phoenix</code> outranks the same-scored
+one in <code>acme</code> because its namespace was seen first.</p>
+<p>Then the composite, then a fixed sequence: a durable-tier reserve
+holding up to two top-k slots for semantic and procedural memories but
+only when the durable is relevance-competitive; a turn-echo guard
+dropping conversation turns captured in the last five minutes, because a
+just-captured turn is still in the caller's live context and echoing it
+makes the agent parrot itself; dedup by normalized content; and an
+optional reranker whose failure or timeout falls back to the composite
+order rather than erroring the recall.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The pipeline is ten ordered steps, and three of them are decisions
+other implementations tend to skip.</p>
+<p><strong>Dedup runs twice, either side of the embedder.</strong> An
+exact content match in the same tier reinforces the existing memory
+instead of duplicating it — <em>before</em> paying for an embedding.
+Only a write that survives that is vectorized, and then a vector search
+over the same tier decides whether it should supersede, hint at, or
+coalesce into an existing memory. Putting the cheap check first is an
+obvious saving that is easy to get backwards.</p>
+<p><strong>A write can be accepted and not stored.</strong> The value
+gate strips harness boilerplate from auto-captured conversation turns
+and drops low-signal episodic writes, returning
+<code>stored: false</code> with the resolved tier. The documentation is
+explicit that this is a feature rather than an error, which matters for
+a client that would otherwise retry.</p>
+<p><strong>Degradation is designed rather than incidental.</strong> A
+slow or absent embedder degrades the write to keyword-only instead of
+failing it, and the store keeps the row searchable with no vector-index
+entry. <code>Upsert</code>'s comment states the matching invariant — a
+stale vector-index entry from a prior upsert of the same ID is removed,
+and <code>VectorSearch</code> never returns a vectorless row.</p>
+<p>Correction is supersession rather than deletion: the predecessor
+keeps its row, gains a <code>SupersededBy</code> pointer and a
+<code>ValidTo</code> stamp, and drops out of live recall while staying
+reachable by the <code>IncludeSuperseded</code> filter and by time
+travel.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Nine MCP tools: <code>memory_remember</code>,
+<code>memory_recall</code>, <code>memory_get</code>,
+<code>memory_list</code>, <code>memory_update</code>,
+<code>memory_forget</code>, <code>memory_history</code>,
+<code>memory_briefing</code> and <code>memory_answer</code>. Alongside
+them a REST API generated from an OpenAPI document, a CLI, a web UI, and
+plugins for several harnesses.</p>
+<p>Three pull surfaces have different defaults, and the difference
+between them is argued rather than assumed. The session-start briefing
+is query-less, full-scope and <strong>never reinforces</strong>: it
+fires on every session start over the same top-N regardless of
+relevance, so counting a briefing serve as a use would inflate access
+counts uniformly and distort the promotion and ranking that depend on
+them. The per-prompt injection runs after shape gates and is
+client-dependent. Explicit <code>memory_recall</code> reinforces — each
+served memory's access count bumps and its expiry slides forward by its
+own lifetime — and an automatic caller can send
+<code>reinforce: false</code> to search without changing retention. All
+three still appear in the activity log, so the record of what was served
+stays complete even where the counters deliberately do not move.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope enforcement — awarded.</strong> The namespace is a
+parameter on the store's methods rather than a clause a caller
+remembers, <code>Upsert</code> refuses an id that exists under a
+different namespace, and the cascade's durable-tier restriction means
+widening the read set cannot widen it to session material. The
+conformance suite's cross-namespace case is the control, and it runs on
+both backends.</p>
+<p><strong>Tombstone — awarded.</strong> One store writer, two shipped
+producers, a read filter that is off by default, and a reverse lookup
+for the versions a given id replaced. The predecessor survives;
+<code>maintenance/repair.go</code> exists to find tombstones whose
+chains no longer reach a live memory.</p>
+<p><strong>Bitemporal — awarded.</strong>
+<code>valid_from</code>/<code>valid_to</code> are settable through MCP
+and REST and are stamped by supersession, and <code>Filter.AsOf</code>
+switches a read to the rows whose window contained that instant. The
+implementation detail that earns the mark rather than merely claiming
+it: for a time-travel query the backend evaluates <em>live</em> at the
+as-of instant rather than at the current clock, so expiry and
+supersession move with the query.</p>
+<p><strong>Audit log — awarded.</strong> Eleven kinds, a closed
+validator, a producer for each, and <code>Forget</code> snapshotting the
+row before the delete so the feed can say what went.</p>
+<p><strong>Trust state — withheld, and the reason is worth
+stating.</strong> memini has an epistemic axis and it is a number:
+<code>Confidence</code> grows logistically on re-observation and decays
+without reinforcement, with <code>nil</code> treated as fully trusted.
+That is corroboration used for ranking — it feeds the quality term in
+the composite — and the mark asks for a discrete state that decides
+whether a memory may be treated as true. The field that does withhold is
+<code>SupersededBy</code>, and it is already carrying
+<code>tombstone</code>; awarding both to the same pointer would count
+one mechanism twice. <code>Level</code> (<code>explicit</code> /
+<code>deduced</code>) is a write-time provenance genre and the atlas
+does not award this mark for those.</p>
+<p><strong>Human review — not awarded.</strong> No approval state gates
+what a memory may be used for; API keys identify a writer
+(<code>metadata.author</code> is stamped from a named key) but nothing
+holds a memory pending anyone's decision.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> Searched the README and <code>docs/</code>
+for <code>arxiv</code>, <code>@article</code>, <code>@misc</code>,
+<code>doi.org</code> and a <code>CITATION.cff</code>: none. This is a
+product repository, and its evaluation claims are its own.</p>
+<p><strong>The harness is committed and the results are not.</strong>
+<code>bench/</code> holds a real retrieval harness —
+<code>cmd/bench</code>, <code>dataset.go</code>, and suites behind a
+<code>bench</code> build tag so they stay out of the default
+<code>go test ./...</code>, which the README explains rather than hides
+(<em>"a plain <code>go test ./bench/</code> reports 'no test files' by
+design"</em>). Three datasets ship: <code>sample.json</code>,
+<code>codingagent_pilot.json</code> and
+<code>codingagent_v1.json</code>. The large public datasets are
+deliberately excluded with a comment saying so —
+<code>bench/data/.gitignore</code> carries
+<code>longmemeval_*.json</code> and <code>locomo*.json</code> under
+<em>"download on demand … never commit"</em> — which is ordinary and
+fine.</p>
+<p>The result files are a different matter. The README's "Full results"
+table publishes recall@5, recall@10 and MRR for five retrieval
+strategies across three dataset slices, and introduces them as
+<em>"sourced from the committed <code>results/</code> JSON"</em> and
+links it. There is no <code>results/</code> directory anywhere in the
+tree (<code>find . -type d -name results</code> returns nothing), and
+<code>.gitignore</code> line 24 is <code>/bench/results/</code>. So the
+link in the published table resolves to nothing for anyone who clones
+the repository, and no figure in it — including the headline comparison
+at README line 117, that memini's hybrid retrieval <em>"beats
+<code>agentmemory</code>'s published LongMemEval-S numbers on the same
+model, dataset and metric (98.4% recall@5 against 95.2%)"</em> —
+recomputes from what is committed. The commands to regenerate them are
+given, so this is reproducible work whose artifacts are excluded, not a
+claim with nothing behind it; but a reader cannot check a single number
+without first obtaining two datasets and standing up an embedder.</p>
+<p><strong>The unit suite is large and mostly well-built</strong>, and
+one case is worth naming because it is the shape this atlas checks for.
+<code>service_test.go:645</code>,
+<code>TestRecallNamespaceIsolation</code>, writes one memory to
+<code>alice</code> and asserts that a recall from <code>bob</code>
+returns zero results. Nothing in it establishes that a recall from
+<code>alice</code> returns the memory, so a <code>Recall</code> that
+returned nothing for anybody would pass. The repair is one call. The
+mark is not withheld on its account, because the store conformance suite
+carries a properly controlled cross-namespace case — but a reader
+counting isolation coverage should count that one and not this one.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Put the cheap dedup before the embedder.</strong> An exact
+content match in the same tier reinforces without paying for a vector.
+The expensive near-duplicate check still runs, afterwards, on what
+survived.</li>
+<li><strong>Multiply the quality modifier by relevance instead of adding
+it.</strong> An off-topic memory has almost no score to amplify, so a
+corroborated durable fact can rise above comparably relevant chatter
+without ever beating something genuinely more relevant. Leaving the
+unused weights at zero and saying so in the docs is the other half of
+that.</li>
+<li><strong>Narrow one axis when you widen another.</strong> A cascade
+that reaches ancestors, home and links is a leak waiting to happen
+unless the legs past the primary are restricted — here, to durable
+tiers.</li>
+<li><strong>Decide what counts as a use.</strong> The briefing serves
+memories and refuses to reinforce them, because a fixed top-N served on
+every session start would inflate the counters that promotion depends
+on. Logging the serve while not counting it is the distinction most
+systems collapse.</li>
+<li><strong>Snapshot before you delete.</strong> An activity feed that
+can only say "some memory was forgotten" is not worth much.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The event-kind comment still describes <code>pin</code>,
+<code>unpin</code> and <code>settings</code> as vocabulary that
+<em>"landed ahead of the pin/settings write paths that will actually
+emit them"</em>. Six handlers now emit them. Is the comment stale, or is
+some further write path still intended?</li>
+<li><code>Level</code> is stamped on writes and the comment says an
+empty value passes filters unconstrained. Which read paths filter on it
+at all, and what happens to a corpus that predates the field?</li>
+<li>The bench README's <code>results/</code> link and the
+<code>.gitignore</code> entry disagree. Were the results committed once
+and removed, or was the table always written against a local
+directory?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Domain types: <code>internal/memory/types.go</code></li>
+<li>Store contract and event vocabulary:
+<code>internal/store/store.go</code></li>
+<li>Backends: <code>internal/store/sqlitevec/</code>,
+<code>internal/store/postgres/</code></li>
+<li>Shared conformance suite:
+<code>internal/store/storetest/conformance.go</code></li>
+<li>Write path and supersession:
+<code>internal/service/service.go</code>,
+<code>internal/service/consolidate.go</code></li>
+<li>Ranking: <code>internal/search/rank.go</code></li>
+<li>Activity log: <code>internal/service/events.go</code></li>
+<li>Maintenance passes: <code>internal/maintenance/</code></li>
+<li>Surfaces: <code>internal/api/mcp/</code>,
+<code>internal/api/rest/</code>, <code>cmd/</code></li>
+<li>Benchmark harness: <code>bench/</code>, <code>cmd/bench</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/eleboucher/memini/commit/452ff2299c185530c7010cb164d83cce8006f78a"><code class="commit-id" title="452ff2299c185530c7010cb164d83cce8006f78a">452ff229…</code></a>
+— first reading, at the head of <code>main</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: two
+auto-run surfaces (a Claude Code plugin manifest and a devcontainer with
+a <code>postCreateCommand</code>) and every dependency manifest inside
+the seven-day cooldown, which is an artefact of screening a
+<code>--depth 1</code> clone rather than a statement about the upstream.
+Nothing was installed, built or run; the reading is from the source and
+the committed documentation. Five marks. The reading covered the domain
+types, both store backends and the conformance suite they share, the
+write pipeline and its classifier, the recall pipeline and its ranking
+composite, the supersession and time-travel paths, the activity log, and
+the benchmark harness; the UI, the importer and the per-harness plugins
+were read as context rather than as subject. Three findings are worth
+the reader's time: the benchmark table's <code>results/</code> source is
+excluded by <code>.gitignore</code>, so no published figure recomputes
+from a clone; the service-level namespace isolation test asserts an
+absence with no positive control, though the store conformance suite
+carries a properly controlled equivalent; and the event vocabulary's
+comment describing the pin and settings kinds as unwired has been
+overtaken by six handlers that emit them.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

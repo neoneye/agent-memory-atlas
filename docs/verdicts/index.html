@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 580 reports.</strong></p>
+<p><strong>This page covers all 581 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -23012,6 +23012,74 @@ product, or deciding how many tiers of retrieved context a single prompt
 should carry.</li>
 <li>Do not copy when: you need the retrieval order to reach the model,
 or you need to ask what a memory used to say.</li>
+</ul>
+<h3 id="memini"><a
+href="../systems/memini/"><code>memini</code></a></h3>
+<ul>
+<li>Best idea: <strong>narrow one axis while you widen the
+other.</strong> A recall cascades from the primary namespace through its
+ancestors nearest-first, the caller's home and stored links — and every
+leg past the primary is restricted to the durable tiers, so working and
+episodic memories never cross a namespace boundary on a read. A link may
+narrow that further and never widen it. The cascade is the feature most
+likely to leak between projects, and the tier restriction is what makes
+it safe to ship on by default.</li>
+<li>Second idea: <strong>put the cheap dedup in front of the
+embedder.</strong> An exact content match in the same tier reinforces
+the existing memory rather than duplicating it, before a vector is paid
+for; only what survives is embedded, and a second vector-space check
+then decides whether the write supersedes, hints at, or coalesces into
+an existing memory. Two dedup passes either side of the expensive call,
+in the order that saves the money.</li>
+<li>Third idea: <strong>multiply the quality modifier by relevance
+instead of adding it.</strong> The composite is
+<code>relevance × (0.80 + 0.20 × quality)</code>, so an off-topic memory
+has almost no score to amplify and a corroborated durable fact can rise
+above comparably relevant chatter without ever outranking something
+genuinely more relevant. The struct still carries standalone recency and
+importance weights; the shipped default leaves both at zero, and the
+documentation says so under the heading "Ranking, honestly".</li>
+<li>Fourth idea: <strong>decide what counts as a use, and log the serve
+anyway.</strong> The session-start briefing serves memories and
+deliberately does not reinforce them, because a fixed top-N fired on
+every session open would inflate the access counts that promotion and
+ranking depend on. The activity log still records what it served.</li>
+<li>Biggest risk: <strong>the benchmark table's own source is excluded
+from the repository.</strong> <code>bench/README.md</code> introduces
+its full results table as "sourced from the committed
+<code>results/</code> JSON" and links <code>results/</code>; there is no
+such directory in the tree and <code>.gitignore</code> line 24 is
+<code>/bench/results/</code>. The harness, the commands and a
+coding-agent dataset are all committed, so this is reproducible work
+whose artifacts are absent rather than a claim with nothing behind it —
+but no published figure, including the comparison against
+<code>agentmemory</code>'s LongMemEval-S numbers, recomputes from a
+clone.</li>
+<li>Second risk: the service-level namespace isolation test writes one
+memory to <code>alice</code> and asserts that <code>bob</code> sees
+nothing, with no control establishing that <code>alice</code> does. A
+recall broken for everybody would pass it. The store conformance suite
+carries a properly controlled cross-namespace case, so the coverage
+exists — it is just not the test whose name a reader would look
+for.</li>
+<li>Most reusable component: the <code>Store</code> interface in
+<code>internal/store/store.go</code>, whose method comments are the
+contract both backends are held to — what happens to a vectorless row,
+why a vector is kept off <code>Get</code> and why that makes a
+Get-then-Upsert round trip lossy — with one shared conformance suite
+running them against SQLite and Postgres alike.</li>
+<li>Maturity impression: AGPL-3.0 with the licence text in the tree, a
+Go service with two storage backends behind one conformance suite, ten
+named maintenance passes each with its own test, an OpenAPI-generated
+REST layer, nine MCP tools, and documentation that explains its own
+defaults rather than advertising them.</li>
+<li>Study when: you are building a memory service several agents share,
+or deciding how a retrieval cascade should be bounded, or looking for a
+worked example of a ranking composite whose unused terms are left at
+zero and admitted to.</li>
+<li>Do not copy when: you need a discrete state that withholds a memory
+from being believed — corroboration here is a number that feeds ranking,
+and the only state that withholds is the supersession pointer.</li>
 </ul>
         </article>
       </div>
