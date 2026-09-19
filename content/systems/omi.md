@@ -7,15 +7,14 @@ page_kind: system
 source_name: "BasedHardware/omi"
 source_url: https://github.com/BasedHardware/omi
 archive_name: "BasedHardware--omi"
-revision: f9e3d0e3dfb5bb0b38c19e33c2f1aa941b95e67a
-revision_url: https://github.com/BasedHardware/omi/commit/f9e3d0e3dfb5bb0b38c19e33c2f1aa941b95e67a
-analyzed_at: 2026-09-15
-capabilities: "trust_state, scope_enforced, audit_log, human_review, negative_eval"
+revision: b38c5457a19cd54e21c6354e989be854496951c4
+revision_url: https://github.com/BasedHardware/omi/commit/b38c5457a19cd54e21c6354e989be854496951c4
+analyzed_at: 2026-09-19
+capabilities: "trust_state, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   trust_state: "the item status and review state, read on list and vector reads | backend/database/memory_vector_metadata.py:209-232 _active_memory_vector_filter_clauses, backend/database/memories.py:244-256 _memory_passes_list_visibility, backend/models/product_memory.py:91 MemoryItemStatus, backend/database/review_queue.py:610 | canonical items carry a status of active, superseded, hidden or tombstoned and every memory vector search adds status = active and source_state = active to its filter; list reads drop a row whose user_review is False and, unless history is asked for, one whose invalid_at is set; an accepted review writes qualifiers['epistemic_status'] = 'accepted' beside capture_confidence and veracity | backend/tests/unit/test_memories_user_review.py:166"
   scope_enforced: "every memory read, by user id | backend/database/memory_vector_metadata.py:218-232 _base_memory_vector_filter, backend/database/vector_db.py:385 build_legacy_memory_vector_filter and :605-635 query_memory_vector_candidates, backend/database/memories.py:370-384 get_memories | Pinecone memory search always sends uid $eq on the stored uid metadata and raises when uid is empty, legacy namespace searches carry the same clause, and Firestore reads are rooted at users/{uid}/memories, so no read path spans users | backend/tests/unit/memory_import_isolation.py"
   audit_log: "the per-user commit ledger beside the state head | backend/database/memory_ledger.py:522 commit_id_for, :572 append_commit, :604 append_commit_with_builder, :635 and :690 the typed transactions; backend/database/memories.py:713-715 and review_queue.py:652-662 as writers | every add, supersede, refine and retract is a typed mutation appended as a commit whose id hashes the parent and mutations, under a head check that raises HeadConflict; privacy erasure deletes the commits that reference an erased memory (purge_legacy_memory_commits_for_memories :215, purge_canonical_privacy_history_for_memories :269) | backend/tests/unit/test_memory_ledger.py"
-  human_review: "the review queue and its routes | backend/database/review_queue.py:81 create_review_conflict, :74 should_escalate_conflict, :737 resolve_review_conflict, :1056 resolve_expired_review_conflicts; backend/routers/memories.py:887, :905, :1022 | a conflict is filed when an ambiguous new fact clears the impact threshold, listed at GET /v3/memories/review-queue, and resolved by a person through POST /v3/memories/{memory_id}/review as accept, correct or drop, routed through MemoryService so historical rows are not mutated; expired conflicts resolve by timeout | backend/tests/unit/test_memories_user_review.py, test_memories_review_item_endpoint.py"
   negative_eval: "the review-visibility read path, as committed cases | backend/tests/unit/test_memories_user_review.py | a mixed set is built and the memory a user reviewed away is asserted absent from the result while the other three are present (`assert '4' not in result_ids`, :166), and user_review and invalid_at are asserted absent from the Firestore filter fields (:225-226) | backend/tests/unit/test_memories_user_review.py:166, :225-226"
 stack_storage: "pinecone"
 stack_retrieval: "lexical, vector, graph"
@@ -374,7 +373,26 @@ gate has no caller at this pin.
 
 The human surface is the review queue, exposed through the app: conflicts listed,
 accepted or rejected, with the rejection stamping `invalid_at` and
-`review_status` and the memory disappearing from default retrieval.
+`review_status` and the memory disappearing from default retrieval. The routes
+work. What is missing is anything that files a conflict into the queue.
+`create_review_conflict` (`backend/database/review_queue.py:81`) is the only
+writer of a new document to the `memory_review_queue` collection — the one
+`.set()` on that collection is at `:101`, inside it — and it has no caller in
+the backend outside its own definition. `should_escalate_conflict` at `:74`, the
+impact test that would decide when to call it, is referenced only from
+`backend/tests/unit/test_short_term_memory.py` and mocked in
+`backend/tests/unit/memory_import_isolation.py`. So in a running deployment the
+queue is empty, the listing returns nothing, and the resolution routes have
+nothing to resolve. This is the third mechanism in this subsystem whose
+production caller is absent, after `can_use_for_action` and the as-of replay.
+
+The live review path is a different and simpler thing: `POST` at
+`backend/routers/memories.py:1023` calls
+`review_memory(uid, memory_id, value)` (`backend/database/memories.py:897-902`),
+which sets `reviewed` and `user_review` on a memory that is already stored and
+already being read. `_memory_passes_list_visibility` then hides it. That is a
+rejection after the fact, and it is why this report no longer carries
+`human_review`.
 
 
 ## 9. Reliability, Safety, and Trust
@@ -405,9 +423,12 @@ as-of read a caller can reach.
 `uid $eq` on the stored `uid` metadata and refuses an empty `uid`; Firestore reads
 are rooted at the user document; data is encrypted per user at rest.
 
-**`human_review` — earned.** A review queue a person works, with accept and
-reject writing real state, and escalation bounded by impact so the queue stays
-answerable.
+**`human_review` — withheld, and the reason is upstream of the queue's design.**
+Accept and reject do write real state, and the impact bound on escalation is a
+good idea. But nothing calls `create_review_conflict`, so no fact ever waits
+there; and the review path that does run sets a flag on a memory already in
+use. A queue nothing fills is not a gate, and a rejection after the fact is not
+one either.
 
 **`negative_eval` — earned.** `test_memories_user_review.py` builds a mixed set
 and asserts the memory a user reviewed away is absent from the result while the
@@ -583,6 +604,8 @@ design decisions, and those transplant.
   `test_memory_contracts.py`; `contract_tests/`; `backend/tests/eval/`
 
 ## History
+
+**2026-09-19** — re-pinned to [`b38c5457a19cd54e21c6354e989be854496951c4`](https://github.com/BasedHardware/omi/commit/b38c5457a19cd54e21c6354e989be854496951c4), 153 commits on. `human_review` is **withdrawn**, on the same class of finding the previous reading made twice over. `create_review_conflict` is the only function that writes a new document into `memory_review_queue`, and it has no caller in the backend outside its own definition; `should_escalate_conflict`, the impact test that would decide when to call it, appears only in a unit test and a mock. The queue's list, get and resolve routes all work and there is nothing for them to work on. The review path that does run — `POST` to the router at `:1023`, into `review_memory`, setting `user_review` on a stored row — stamps a rejection on a memory already in use. The other four marks stand with anchors re-verified at the new pin, including the list-visibility predicate that `negative_eval` rests on, which is fed by that live path rather than by the queue. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`f9e3d0e3dfb5bb0b38c19e33c2f1aa941b95e67a`](https://github.com/BasedHardware/omi/commit/f9e3d0e3dfb5bb0b38c19e33c2f1aa941b95e67a) — 2,353 commits on, 2026-09-15. Read from a blobless checkout of the tree. Screened before reading: three auto-run surfaces, twelve build-time execution points, thirty unpinned surfaces, five dependency surfaces inside the cooldown, and `AGENTS.md` and `CLAUDE.md` read as data; nothing was installed or run. The memory subsystem moved about 7,500 lines: the canonical apply store nearly doubled, knowledge-ledger read and write tools, an entity timeline tool and just-in-time conversation reads joined the agent's retrieval surface, vector search gained a uid-and-status filter builder, and review resolution gained timeout expiry and privacy purges of ledger history. Two findings of the earlier readings were wrong and are corrected. `can_use_for_action` and `permitted_uses` have no caller outside `review_queue.py`, so the report's headline — status decides what a memory may do — is restated as a policy the read and action paths do not consult. `bitemporal` is withdrawn: the as-of replay `replay_to` and `fold_commits(valid_time=…)` have no production caller. `trust_state`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval` are kept with re-anchored records. Five marks.
 
