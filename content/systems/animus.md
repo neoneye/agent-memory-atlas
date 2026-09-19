@@ -9,8 +9,8 @@ source_url: https://github.com/railstracks/animus
 archive_name: "railstracks--animus"
 revision: 6d0e14fb12d460b71d8cf44e155b0504c5c3a780
 revision_url: https://github.com/railstracks/animus/commit/6d0e14fb12d460b71d8cf44e155b0504c5c3a780
-analyzed_at: 2026-09-16
-capabilities: "trust_state, scope_enforced, audit_log, human_review"
+analyzed_at: 2026-09-19
+capabilities: "trust_state, scope_enforced, audit_log"
 stack_storage: "sqlite, postgres"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -18,7 +18,6 @@ capability_evidence:
   trust_state: "Episodic observations and the ontology properties keyed to them | include/animus_kernel/MemoryStore.h:18-22, src/kernel/context/ActiveMemoryProvider.cpp:256-261, src/kernel/memory/MemoryStore.cpp:983-1001, src/kernel/tools/ConsolidationTool.cpp:734-772 | `enum class MemoryState : int32_t { New = 0, Current = 1, Deprecated = 2 }` persisted as `observations.memory_state`. The state is used to *withhold*, not to rank: `AppendEpisodic` runs `if (obs.memory_state == memory::MemoryState::Deprecated) continue;` before an observation can enter the assembled `## EPISODIC MEMORY` block, `ListObservationsDueForReview` restricts its batch with `AND memory_state IN (0, 1)`, and `RunPerspectiveRevision` refuses to regenerate a layer's perspectives when every observation in it is `Deprecated`. Ranking is a separate `weight REAL` column. Producers sit on paths an agent and an operator can reach: `ConsolidationTool::HandleRetire` sets `Deprecated` behind a `VerifyOwnership` check, `HandleMerge` deprecates every source of a merge, and `RunLayerConsolidation` sets `Current` on any reviewed observation and `Deprecated` on an explicit `memory_state` in the model's verdict | unknown"
   scope_enforced: "Unified memory search, observation arm | src/kernel/memory/MemorySearch.cpp:613-644, 579-612 | both dialects carry the agent key into the SQL rather than filtering after the fact: the SQLite arm is `FROM observations_fts JOIN observations o ON o.id = observations_fts.rowid JOIN memory_layers ml ON ml.id = o.layer_id WHERE observations_fts MATCH ? AND ml.agent_id=?`, and the PostgreSQL arm is the same join under `o.search_vector @@ to_tsquery('english', ?) AND ml.agent_id=?`. The key is the *layer's* `agent_id`, not the observation's, which matches the invariant stated at `include/animus_kernel/MemoryStore.h:132-134` — *the layer is the access boundary; the observation's agent_id is a stamp, not access control*. The diary arm filters `d.agent_id=?`, the memory-file arm `(f.agent_id = 0 OR f.agent_id = ?) AND f.superseded = 0`, and the session arm skips `session->AgentId() != agentKey`. The ontology arm of the same call has no agent predicate at all and is analysed in section 6 | unknown"
   audit_log: "Ontology entities and properties | src/kernel/ontology/OntologyStore.cpp:222-232, 427-437, 617-653, 706-724 | `ontology_mutations` is INSERT-only through `OntologyStore::LogMutation` and holds `previous_state` and `new_state` as complete JSON snapshots of the row, so a property's prior value is recoverable from the log. Producers are on every reachable ontology write: `CreateEntity` (`create_entity`), `UpdateEntity` (`update_entity`), `DeleteEntity` (`delete_entity`), `SetProperty` (`create_property` / `set_property`) and `DeleteProperty` (`delete_property`). `rg -n 'DELETE FROM ontology_mutations|UPDATE ontology_mutations' src/ include/` returns nothing. The episodic `memory_mutations` table is the weaker sibling — it records `previous_state` only for a move, and `MemoryStore::DeleteObservation` writes no entry at all | unknown"
-  human_review: "Episodic layers and observations in the embedded admin UI | admin-ui/src/views/MemoryView.vue:252-392, src/kernel/admin/internal/AdminServerRoutesInterfacesSessionsMemory.inc:2416-2460, 2751-2807 | the Memory view is not a viewer. A person creates and edits layers (`POST`/`PUT /api/v1/memory/layers`), authors an observation into a layer (`POST /api/v1/memory/layers/{id}/observations` → `MemoryManager::SqlCreateLayerObservation`), deletes one (`DELETE /api/v1/memory/observations/{id}` → `SqlDeleteObservation` for a numeric id), rewrites the layer's retrospective/current/future perspective text (`PUT /api/v1/memory/layers/{id}/perspective`), and triggers intake and consolidation on demand. `ActiveMemoryView.vue` renders the assembled active-memory block from `/api/v1/context/active-memory` so the reviewer can read exactly what the agent will be given. What the surface cannot do is edit an observation's text — see section 8 | unknown"
 matrix:
   memory_unit: "An `Observation` — one line of text in one layer, carrying `weight`, `decay_rate`, `tags`, `source`, a `memory_state` of new/current/deprecated and a `superseded_by` pointer; beside it an ontology `(entity, key) → value` property and a whole `MemoryFile` with its chunks"
   storage: "One shared `IDataStore` connection, SQLite by default and PostgreSQL behind `-DANIMUS_WITH_POSTGRESQL=ON`; every store calls `EnsureSchema()` in its own constructor and branches on `Dialect()` for FTS5 versus tsvector"
@@ -56,8 +55,21 @@ skips a `Deprecated` observation before it can enter the prompt, and
 `ListObservationsDueForReview` will not put one in front of the model again.
 Ranking is a separate `weight` column. Systems that collapse "how sure" and "may
 this be acted on" into one float cannot express *I have this on record and do
-not believe it*; Animus can, and four marks follow from mechanisms of that
-quality: `trust_state`, `scope_enforced`, `audit_log` and `human_review`.
+not believe it*; Animus can, and three marks follow from mechanisms of that
+quality: `trust_state`, `scope_enforced` and `audit_log`.
+
+`human_review` is withheld, on the admin surface's own shape rather than on any
+weakness in it. The Memory view is a strong authoring surface — a person creates
+and edits layers, writes an observation into one, deletes one, rewrites a
+layer's retrospective, current and future perspective text, and triggers intake
+and consolidation on demand — and `ActiveMemoryView.vue` lets the reviewer read
+the assembled block the agent will actually be given, which is more than most
+admin panels offer. But every one of those verbs acts on a store the agent is
+already reading. Nothing in `src/kernel/memory` holds an observation in a state
+pending anyone's decision, and the state that does withhold, `Deprecated`, is a
+correction applied afterwards rather than a gate an observation passes through.
+The mark asks for a memory that waits until an actor the producing agent cannot
+be resolves it; here the waiting never happens.
 
 **The weakness is not in what was designed but in what was wired.** Four
 findings, each checkable in one file:
@@ -1120,6 +1132,8 @@ git log --oneline -- tests/ConsolidationTests.cpp tests/MemorySearchTests.cpp
 ```
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`6d0e14fb12d460b71d8cf44e155b0504c5c3a780`](https://github.com/railstracks/animus/commit/6d0e14fb12d460b71d8cf44e155b0504c5c3a780); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**. The record opened with *"the Memory view is not a viewer"* and then listed create, author, delete, rewrite and trigger — every one of them an act on a store the agent is already reading. Viewing is not reviewing, and neither is authoring: the mark asks whether a memory waits in a state until an actor the producing agent cannot be resolves it. `src/kernel/memory` was searched at this pin for any such state and has none; `Deprecated`, which does withhold, is applied after the fact and keeps its credit under `trust_state`. The admin surface keeps every other credit the report gives it, including `ActiveMemoryView.vue` showing the reviewer the exact block the agent will be handed. The other three marks stand. Screened again first; nothing was installed, built or run.
 
 **2026-09-16** — [`6d0e14fb12d460b71d8cf44e155b0504c5c3a780`](https://github.com/railstracks/animus/commit/6d0e14fb12d460b71d8cf44e155b0504c5c3a780) — re-read at a commit dated 12 September 2026, 121 commits past the previous pin. The repository moved 13,193 lines across 132 files and the memory did not: `src/kernel/memory` and `src/kernel/ontology` have identical tree hashes at both commits, and `include/animus_kernel/MemoryStore.h`, `src/kernel/context/ActiveMemoryProvider.cpp` and `admin-ui/src/views/MemoryView.vue` are byte-identical, so every line number and quotation behind the four marks is still exact. The one anchor that changed is the admin route listing a session's turns, and the change is a paging optimisation rather than a review one — it now fetches a page straight from the store instead of hydrating the whole session, so *"[o]pen cost scales with the page, not the session length"*. All four marks hold. Screened before reading, from a full clone: no auto-run surface, no build-time execution point, one unpinned dependency surface and none inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
