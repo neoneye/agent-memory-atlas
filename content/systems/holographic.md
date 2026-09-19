@@ -7,9 +7,9 @@ page_kind: system
 source_name: NousResearch/hermes-agent
 source_url: https://github.com/NousResearch/hermes-agent
 archive_name: "NousResearch--hermes-agent"
-revision: 8c8003f80b528377d4387b96faa2c00283168d68
-revision_url: https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68
-analyzed_at: 2026-09-17
+revision: 8df0a03793784205833f9e0db12395aa33ada433
+revision_url: https://github.com/NousResearch/hermes-agent/commit/8df0a03793784205833f9e0db12395aa33ada433
+analyzed_at: 2026-09-19
 capabilities: ""
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -372,6 +372,8 @@ rg -n 'search_facts' .                                                          
 ```
 
 ## History
+
+**2026-09-19** — re-pinned to [`8df0a03793784205833f9e0db12395aa33ada433`](https://github.com/NousResearch/hermes-agent/commit/8df0a03793784205833f9e0db12395aa33ada433), moving with the Hermes report that shares this repository. The plugin is untouched in the range: `plugins/memory/holographic/` carries byte-identical blobs at both commits, checked by comparing the directory listing's file shas rather than the compare API, whose changed-file list truncates at 300 across the 1,706 commits between them. No marks to re-derive — this report carries none — and nothing in the body needed re-anchoring. Screened again at the new commit; nothing installed or run.
 
 **2026-09-17** — [`8c8003f80b528377d4387b96faa2c00283168d68`](https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68) — re-pinned alongside [Hermes Agent](../hermes-agent/), which shares this repository, so the two reports stay on one commit. The plugin directory changed by seventeen lines across two files in 2,893 commits, and both are consolidations onto canonical helpers rather than changes to what this report describes. `save_config` replaced a hand-rolled read-modify-write of `config.yaml` — which ended in a bare `except Exception: pass`, so a failed config write said nothing — with the shared writer that holds the config lock, refuses in managed mode, strips defaults and replaces atomically. And the `hrr_vector` column addition moved from a raw `ALTER TABLE` onto `add_column_if_missing`. This report carries no capability marks, so there was nothing to re-derive; every other line in it is exact at the new pin. Nothing was installed, built or run.
 

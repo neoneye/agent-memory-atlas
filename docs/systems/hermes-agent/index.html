@@ -111,14 +111,14 @@ skills as procedural memory, and a pluggable provider interface.</p>
               <strong>NousResearch/hermes-agent</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68" title="8c8003f80b528377d4387b96faa2c00283168d68">
+            <a class="meta-pill revision-pill" href="https://github.com/NousResearch/hermes-agent/commit/8df0a03793784205833f9e0db12395aa33ada433" title="8df0a03793784205833f9e0db12395aa33ada433">
               <span>Analyzed revision</span>
-              <code>8c8003f8…</code>
+              <code>8df0a037…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/NousResearch--hermes-agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -548,7 +548,15 @@ scan is deterministic from disk bytes, so the snapshot is byte-stable
 for the session and the prefix-cache invariant the whole design is built
 on survives a security control being added to the hot path.</li>
 <li>Human approval available for memory writes via a shared staging
-gate.</li>
+gate, and the queue is drained from a terminal rather than from the
+agent's own surface: <code>write_approval</code> is imported by the
+memory tool to stage and by
+<code>hermes_cli/write_approval_commands.py</code> to list, apply and
+discard, and by <code>mcp_serve.py</code> not at all. The MCP bridge
+does expose <code>permissions_list_open</code> and
+<code>permissions_respond</code>, which resolve the host's exec and
+plugin permission prompts — a different queue from this one, and worth
+separating when reading either.</li>
 <li>Foreign-write detection with automatic backup and refusal.</li>
 <li>Refusal rather than guessing on failed or ambiguous reads, including
 the case that costs the most: <code>add</code> rewrites the whole file
@@ -773,6 +781,27 @@ orchestration: <code>agent/memory_manager.py</code>.</li>
 rg -n &#39;audit&#39; tools/memory_tool_store.py tools/memory_tool.py        # 0: no log covers memory mutations
 rg -n &#39;tombstone|rejected|superseded&#39; tools/memory_tool_store.py     # 0: a remove writes no record</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — re-pinned to <a
+href="https://github.com/NousResearch/hermes-agent/commit/8df0a03793784205833f9e0db12395aa33ada433"><code class="commit-id" title="8df0a03793784205833f9e0db12395aa33ada433">8df0a037…</code></a>.
+<strong>Both marks hold.</strong> The first reading was made on
+2026-09-17, a day before the rubric narrowed, so
+<code>human_review</code> was re-tested against the current wording and
+the record now cites the import graph rather than the gate alone.
+<code>tools/write_approval.py</code> is imported in exactly two places
+outside its tests: <code>tools/memory_tool.py</code>, which stages, and
+<code>hermes_cli/write_approval_commands.py</code>, which lists, applies
+and discards. <code>mcp_serve.py</code> does not import it, so the
+staged memory queue is drained from a terminal and not from the agent's
+tool surface. Worth separating while reading either: the MCP bridge
+<em>does</em> expose <code>permissions_list_open</code> and
+<code>permissions_respond(id, decision)</code>, and those resolve the
+host's exec and plugin permission prompts, a different queue. The two
+limits the previous record carried were re-verified rather than repeated
+— the gate is per-subsystem and off unless configured, and
+<code>_gate_or_stage</code> opens with a bare
+<code>except: return None</code> under a docstring stating it fails open
+when the gate module cannot load. Screened again first; nothing
+installed or run.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/NousResearch/hermes-agent/commit/8c8003f80b528377d4387b96faa2c00283168d68"><code class="commit-id" title="8c8003f80b528377d4387b96faa2c00283168d68">8c8003f8…</code></a>
 — re-read after 2,893 commits. <code>tools/memory_tool.py</code> and
