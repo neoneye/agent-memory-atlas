@@ -7,13 +7,12 @@ page_kind: system
 source_name: "bytedance/deer-flow"
 source_url: https://github.com/bytedance/deer-flow
 archive_name: "bytedance--deer-flow"
-revision: 14c9d44440780e63563e935046db8708e121a5b1
-revision_url: https://github.com/bytedance/deer-flow/commit/14c9d44440780e63563e935046db8708e121a5b1
-analyzed_at: 2026-09-15
-capabilities: "scope_enforced, human_review"
+revision: 34bbeb18065cac10022c49959c753d4c43965bca
+revision_url: https://github.com/bytedance/deer-flow/commit/34bbeb18065cac10022c49959c753d4c43965bca
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "memory retrieval — the host resolves a user for every call and the default backend's shared index filters on it | backend/app/gateway/routers/memory.py:18-37 `_resolve_memory_user_id`, backend/packages/harness/deerflow/runtime/user_context.py:101-110 and :178, backend/packages/harness/deerflow/agents/memory/backends/deermem/deermem/core/retrieval.py:383-405 | the HTTP router honours a trusted internal owner header only after the auth middleware validated the internal token, otherwise takes `get_effective_user_id()`; the agent's memory tools call `resolve_runtime_user_id(runtime)`, which walks server identity, LangGraph auth, runtime context and the ContextVar. Both are typed `-> str` and fall back to `DEFAULT_USER_ID = \"default\"`, so no shipped caller passes an empty user. The default DeerMem backend keeps facts in per-user files and searches one shared FTS5 database, adding `scope_user = ?` to the query when a user is given — a conditional clause the host always satisfies. Unauthenticated CLI and test paths share the `default` bucket | backend/tests/"
-  human_review: "the memory settings page — a person creates, edits and deletes stored facts | frontend/src/components/workspace/settings/memory-settings-page.tsx:284-288, backend/app/gateway/routers/memory.py:305, :338, :362 | the page wires `useCreateMemoryFact`, `useUpdateMemoryFact` and `useDeleteMemoryFact` to `POST /memory/facts`, `PATCH /memory/facts/{fact_id}` and `DELETE /memory/facts/{fact_id}`, which call the manager's `create_fact`, `update_fact` and `delete_fact` against the same store the agent reads. Review is post-hoc — facts the agent extracts take effect before a person sees them | backend/tests/"
 stack_storage: "files, delegated"
 stack_retrieval: ""
 stack_source: "seeded"
@@ -113,7 +112,7 @@ flowchart TD
     B --> M0["mem0"]
     B --> OV["openviking"]
     B --> NO["noop — the template"]
-    UI["memory settings page"] -->|"tier 3: create/update/delete_fact"| M
+    UI["memory settings page"] -->|"tier 3: create/update/delete_fact,<br/>after the fact is already live"| M
     M -->|"NotImplementedError"| R501["caller returns 501"]
     DM --> SHAPE["must return the DeerMem shape"]
     M0 --> SHAPE
@@ -210,11 +209,14 @@ page asks whether a host contract carries scope across the boundary; this one
 does, which puts it with [MateClaw](../mateclaw/) rather than with the contracts
 that leave the backend to guess.
 
-**`human_review` is granted.** `create_fact`, `update_fact` and `delete_fact` are
-contracted hooks wired to buttons on a memory settings page, and the gateway
-returns 501 for a backend that has not implemented them. A person opens a page,
-reads their agent's facts, edits one, and deletes another — that is inspection
-and adjudication of memory content, not a display.
+**`human_review` is withheld, and the record that once granted it said why.**
+`create_fact`, `update_fact` and `delete_fact` are contracted hooks wired to
+buttons on a memory settings page, and the gateway returns 501 for a backend
+that has not implemented them — a well-specified correction surface, and better
+than a page that only lists. What it is not is a gate: as the withdrawn record
+put it, *"facts the agent extracts take effect before a person sees them."*
+Nothing in the memory path holds a fact in a state pending anyone's decision,
+and a person opening the page later is authoring over what is already in use.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -352,6 +354,8 @@ the original one.
 | `backend/tests/test_memory_prompt_injection.py` | A test name almost nothing else here has |
 
 ## History
+
+**2026-09-19** — re-pinned to [`34bbeb18065cac10022c49959c753d4c43965bca`](https://github.com/bytedance/deer-flow/commit/34bbeb18065cac10022c49959c753d4c43965bca), 47 commits on. `human_review` is **withdrawn**. The code did not change in the relevant way; the question did. The record already carried its own answer — *"Review is post-hoc — facts the agent extracts take effect before a person sees them"* — and the mark now asks whether a memory waits in a state until an actor the producing agent cannot be resolves it. It does not: the settings page creates, patches and deletes rows that are already being read. The three routes were re-verified at the new pin and the contracted-hook design, including the 501 for an unimplemented backend, keeps its credit in section 8 as a correction surface. `scope_enforced` stands, with `_resolve_memory_user_id` and `get_effective_user_id` both re-read. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`14c9d44440780e63563e935046db8708e121a5b1`](https://github.com/bytedance/deer-flow/commit/14c9d44440780e63563e935046db8708e121a5b1) — second reading, 398 commits on. Screened again; nothing was installed and nothing was run. Both marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. The scope record states a dependency the first reading did not: the default DeerMem backend searches a shared FTS5 database and adds its user clause only when a user is supplied, so the mark rests on the host — and both host paths resolve through functions that return a string and fall back to `default`, never an empty value. The memory package moved by 3,139 lines, most of it in the OpenViking adapter, whose HTTP client module was removed in favour of a session module and a rewritten manager; the manager contract grew by 204 lines.
 
