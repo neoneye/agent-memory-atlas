@@ -120,7 +120,7 @@ re-runnable pentest script against the claims it makes.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/MihaiBuilds--memory-vault" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -416,6 +416,31 @@ grep -rn &quot;space_ids&quot; src/memory_vault/services/search.py        # the 
 grep -rn &quot;content_hash&quot; src/memory_vault --include=&#39;*.py&#39; --include=&#39;*.sql&#39;   # dedup on live rows; nothing retained past a delete
 grep -rn &quot;valid_from\|as_of\|recorded_at&quot; src/memory_vault --include=&#39;*.py&#39;   # 0 — both timestamps are record-axis</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/MihaiBuilds/memory-vault/commit/84987337c1418d85468c4dd09c28e7a75252c378"><code class="commit-id" title="84987337c1418d85468c4dd09c28e7a75252c378">84987337…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin. The exclusion
+clause is at six sites, <code>forget</code> still refuses a chunk
+already forgotten and keeps the row, and the purge tests are better
+named than the previous line ranges suggested —
+<code>test_recent_forget_survives_the_default_window</code>,
+<code>test_old_forget_is_purged</code>,
+<code>test_zero_days_purges_every_forgotten_memory</code> and
+<code>test_negative_days_is_rejected</code>, the last being the guard
+against a negative window quietly meaning everything. One correction,
+and it reverses the sense of the sentence. The record said an
+entity-filtered query goes through a view that hardcodes the exclusion.
+It does not, and the comment explains the choice
+(<code>api/routers/chunks.py:74-79</code>): the filter is written as an
+<code>EXISTS</code> against <code>entity_mentions</code> rather than
+against <code>live_entity_mentions</code> precisely because <em>the view
+hardcodes <code>forgotten IS NOT TRUE</code>, which would quietly
+override <code>include_forgotten=true</code> for entity-filtered queries
+only</em>, so the two parameters keep agreeing. That is not an honest
+admission of a gap; it is a gap identified and declined, with the
+reasoning left for whoever reaches for the convenient view next. It is
+the inverse of what this sweep found in beever-atlas, where a fallback
+path lost the same kind of guarantee without anyone noticing. Screened
+again first; nothing was installed and no suite was run.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/MihaiBuilds/memory-vault/commit/84987337c1418d85468c4dd09c28e7a75252c378"><code class="commit-id" title="84987337c1418d85468c4dd09c28e7a75252c378">84987337…</code></a>
 — first reading, at the head of <code>main</code>, 165 commits in.
