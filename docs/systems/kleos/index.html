@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust cognitive-infrastructure
+server whose optional review gate withholds a pending memory from every
+listed read path, behind an MCP dispatcher that will resolve the approve
+route by name whether or not it was advertised.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Kleos — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust
+cognitive-infrastructure server whose optional review gate withholds a
+pending memory from every listed read path, behind an MCP dispatcher
+that will resolve the approve route by name whether or not it was
+advertised.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Kleos — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust
+cognitive-infrastructure server whose optional review gate withholds a
+pending memory from every listed read path, behind an MCP dispatcher
+that will resolve the approve route by name whether or not it was
+advertised.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Kleos — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Kleos",
+      "description": "A Rust cognitive-infrastructure server whose optional review gate withholds a pending memory from every listed read path, behind an MCP dispatcher that will resolve the approve route by name whether or not it was advertised.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The listing is an allow-list, the dispatch
+is not</p>
+          <h1>Kleos</h1>
+          <p class="document-deck">A Rust cognitive-infrastructure
+server whose optional review gate withholds a pending memory from every
+listed read path, behind an MCP dispatcher that will resolve the approve
+route by name whether or not it was advertised.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Ghost-Frame/Kleos">
+              <span>Source</span>
+              <strong>Ghost-Frame/Kleos</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Ghost-Frame/Kleos/commit/7ce95482242ded53e9a9d9ae1221024ab77a0145" title="7ce95482242ded53e9a9d9ae1221024ab77a0145">
+              <span>Analyzed revision</span>
+              <code>7ce95482…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Ghost-Frame--Kleos" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Ghost-Frame--Kleos</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Kleos is a self-hosted Rust server that stores agent memories in
+SQLite and retrieves them through full-text search, a 1024-dimension
+vector index and a graph of entities, communities and PageRank scores.
+Twenty-five workspace crates ship as one binary with an HTTP API, an MCP
+server, a CLI, a terminal approval UI and a desktop GUI. The README
+opens by refusing the category — <em>"Kleos is not a memory engine.
+Calling it one is like calling a brain a hard drive."</em></p>
+<p><strong>Four marks.</strong> <code>trust_state</code>,
+<code>scope_enforced</code>, <code>audit_log</code> and
+<code>negative_eval</code>. The mechanism worth reading here is the
+optional review gate, and what is worth reading about it is where it
+stops.</p>
+<p>A memory can be stored <code>pending</code> instead of
+<code>approved</code>, and <code>pending</code> withholds it from
+recall, search, listing, timeline and the generated prompt. The decision
+is resolved once, before the write, by a pure function over
+<code>(source, importance, gate config)</code>, and passed into the
+insert so the row and the returned <code>StoreResult.pending</code>
+cannot disagree. It is off by default and the code says so in the
+comment beside it.</p>
+<p><strong>What it does not do is keep the producing agent out of the
+approval.</strong> <code>inbox.approve</code> is a registered route. The
+MCP server advertises a curated list of tools, but
+<code>tools/call</code> does not dispatch from that list — it resolves
+any route name against the full registry and refuses only two, both of
+them credential routes. So a model that knows the name can call
+<code>inbox_approve</code> on its own pending memory, and the terminal
+approval UI is the second door the rubric warns about rather than the
+first one closing. <code>human_review</code> is withheld on exactly
+that.</p>
+<p>The second gap is quieter. <code>prompts.rs</code> builds generated
+prompt material from three queries; two carry
+<code>status != 'pending'</code> with a comment explaining that pending
+memories must not surface, and the third — the attribution header,
+served from a live route — carries no status predicate at all.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a row of text with a lifecycle bolted to it on several
+independent axes, and reads compose predicates across all of them.</p>
+<p><code>is_forgotten</code> is deletion. <code>is_archived</code> is
+retirement. <code>is_latest</code> and <code>version</code> are
+supersession. <code>is_consolidated</code> marks material a background
+pass has folded into a summary. <code>status</code> is review. None of
+these subsumes another, and a read path is correct only if it names
+every axis it cares about — which is why the interesting defects in this
+codebase are all predicates that are present in one query and absent in
+its sibling.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a store resolves its review status once through a pure function over source, importance and gate configuration, before the row is written, so the row and the returned pending flag cannot disagree; a SimHash pass deduplicates against live rows in the same space only, deliberately excluding rejected ones so a fresh store is never folded into a rejected row; listed read paths compose a deny-list status predicate with the owning user id, while the attribution-header query composes the user id alone; and the MCP surface advertises a curated tool list but dispatches any route name that resolves, refusing only the two credential routes, so inbox.approve is reachable by a model that names it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a store resolves its review status once through a pure function over source, importance and gate configuration, before the row is written, so the row and the returned pending flag cannot disagree; a SimHash pass deduplicates against live rows in the same space only, deliberately excluding rejected ones so a fresh store is never folded into a rejected row; listed read paths compose a deny-list status predicate with the owning user id, while the attribution-header query composes the user id alone; and the MCP surface advertises a curated tool list but dispatches any route name that resolves, refusing only the two credential routes, so inbox.approve is reachable by a model that names it
+flowchart TD
+    S[&quot;store(req)&quot;] --&gt; DUP{&quot;SimHash within 3 bits&lt;br/&gt;same user · same space&lt;br/&gt;is_latest · not archived&lt;br/&gt;status != &#39;rejected&#39;&quot;}
+    DUP --&gt;|match| REUSE[&quot;return duplicate_of&lt;br/&gt;no new row&quot;]
+    DUP --&gt;|no match| RES[&quot;resolve_initial_status&lt;br/&gt;pure over source · importance · gate&quot;]
+
+    RES --&gt; ST{&quot;gate enabled AND&lt;br/&gt;source allowlisted OR&lt;br/&gt;importance &gt; threshold?&quot;}
+    ST --&gt;|yes| P[&quot;status = &#39;pending&#39;&quot;]
+    ST --&gt;|no| A[&quot;status = &#39;approved&#39;&quot;]
+
+    P --&gt; TX
+    A --&gt; TX
+    TX[(&quot;one transaction:&lt;br/&gt;INSERT memories + quota counters&quot;)]
+
+    TX --&gt; AUD[&quot;INSERT audit_log&lt;br/&gt;no UPDATE path anywhere&quot;]
+
+    TX --&gt; READS
+    subgraph READS[&quot;read paths&quot;]
+        R1[&quot;recall · search · list · timeline&quot;] --&gt; PRED[&quot;status != &#39;pending&#39;&lt;br/&gt;AND user_id = ?&quot;]
+        R2[&quot;generate_prompt&lt;br/&gt;static facts · important&quot;] --&gt; PRED
+        R3[&quot;generate_header&lt;br/&gt;attribution, live route&quot;] --&gt; ONLY[&quot;user_id = ?&lt;br/&gt;no status predicate&quot;]
+    end
+
+    subgraph INBOX[&quot;resolving a pending memory&quot;]
+        IA[&quot;inbox.approve&lt;br/&gt;status = &#39;approved&#39;&quot;]
+        IR[&quot;inbox.reject&lt;br/&gt;status = &#39;rejected&#39;&lt;br/&gt;is_archived = 1&quot;]
+        IE[&quot;inbox.edit&lt;br/&gt;guarded: WHERE status = &#39;pending&#39;&quot;]
+    end
+
+    TUI[&quot;kleos-approval-tui&lt;br/&gt;a person at a terminal&quot;] --&gt; IA
+    MCP[&quot;MCP tools/call&quot;] --&gt; DISP{&quot;is_mcp_blocked?&lt;br/&gt;admin.cred_resolve&lt;br/&gt;admin.cred_proxy&quot;}
+    DISP --&gt;|blocked| NO[&quot;refused&quot;]
+    DISP --&gt;|anything else| IA
+
+    IR --&gt; REC[&quot;rejected row stays,&lt;br/&gt;keyed on the record&quot;]
+    REC -.-&gt;|&quot;excluded from dedup on purpose&quot;| DUP
+
+    CORR[&quot;correct_memory&quot;] --&gt; SUP[&quot;is_superseded = 1&lt;br/&gt;new version row&quot;]
+    CORR --&gt; RCN[(&quot;reconsolidations&lt;br/&gt;memory_id · old_content · new_content&lt;br/&gt;two writers · no reader&quot;)]</code></pre></details></figure>
+<p>One binary, one SQLite file. <code>rusqlite</code> with
+<code>deadpool-sqlite</code> pooling, writes serialized through a writer
+transaction, reads through a pool. No Python anywhere, which the README
+makes a badge of.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The gate decision</strong> —
+<code>kleos-lib/src/memory/mod.rs:813-836</code>.
+<code>resolve_initial_status</code> is pure over
+<code>(source, importance, enabled, sources, importance_threshold)</code>
+and returns <code>"approved"</code> immediately when the gate is off.
+Its doc comment states the default-preserving intent. The caller at
+<code>:646</code> resolves it <em>before</em> opening the transaction
+and passes it in, with a comment recording why: <em>"so the INSERT and
+the returned StoreResult.pending cannot disagree."</em></p>
+<p><strong>The deduplicate</strong> — <code>mod.rs:578-600</code>. A
+SimHash fingerprint within a Hamming distance of 3 against live rows for
+the same <code>user_id</code> and the same <code>space_id</code>,
+ordered <code>id DESC</code> for an early exit. The comment above it
+records a fixed defect worth repeating: the query formerly carried
+<code>LIMIT 1000</code> and therefore <em>"silently re-stored duplicates
+of anything older than the newest thousand memories."</em> A capped
+sweep that could never reach its own backlog.</p>
+<p><strong>The rejected-row exclusion</strong> — same query.
+<code>is_archived = 0 AND status != 'rejected'</code>, under a comment
+saying a new store <em>"must not be treated as a duplicate of a rejected
+memory (which would boost the rejected row instead of storing the fresh
+content)."</em> The consequence is deliberate and is also the reason
+<code>tombstone</code> is withheld: content a reviewer rejected can be
+stored again as a fresh row.</p>
+<p><strong>The MCP dispatch</strong> —
+<code>kleos-mcp/src/tools.rs:165-177</code>. <code>registry()</code>
+builds <code>tools/list</code> from <code>DAILY_TOOL_NAMES</code>, a
+curated allow-list. <code>dispatch()</code> calls
+<code>resolve_tool_name(name)</code> against the whole route registry
+and refuses only <code>is_mcp_blocked(name)</code>, which tests
+membership of
+<code>MCP_BLOCKED_ROUTES = ["admin.cred_resolve", "admin.cred_proxy"]</code>
+(<code>kleos-client/src/routes.rs:96</code>). The comment states the
+intent exactly — secret-bearing routes <em>"are dispatchable by name
+even though they are absent from the curated tools/list"</em> — so the
+wider dispatch is by design and the refusal was scoped to
+credentials.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>One <code>memories</code> table carrying the content,
+<code>category</code>, <code>source</code>, <code>importance</code>,
+<code>tags</code>, a 1024-float embedding blob, and the five independent
+lifecycle axes of section 2. Supersession is <code>root_memory_id</code>
+plus <code>version</code> plus <code>is_latest</code>. Scope is
+<code>user_id</code> and a nullable <code>space_id</code>.</p>
+<p><code>status</code> is the review axis: <code>pending</code>,
+<code>approved</code>, <code>rejected</code>. Transitions live in
+<code>kleos-lib/src/inbox.rs</code> — <code>:96</code> approves,
+<code>:119</code> rejects and archives in the same statement, and
+<code>:215</code> edits under
+<code>WHERE ... AND status = 'pending'</code>, so an edit cannot reach a
+memory that has already been decided.</p>
+<p><code>reconsolidations</code> records a correction as
+<code>(memory_id, old_content, new_content, reason, user_id, created_at)</code>.
+It has two writers, <code>intelligence/correction.rs:66</code> and
+<code>intelligence/reconsolidation.rs:183</code>, an index on
+<code>memory_id</code>, and <strong>no reader anywhere in the
+workspace</strong>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three arms compose: FTS5 over a <code>memories_fts</code> shadow
+table, cosine over the 1024-dimension vectors, and a graph layer with
+entity links, community detection and PageRank. Ranking folds in an
+FSRS-derived <code>decay_score</code>, so a memory fades when it is not
+recalled.</p>
+<p>The listed read paths compose <code>status != 'pending'</code> with
+<code>user_id = ?</code> and the liveness flags —
+<code>mod.rs:1059</code> for list, <code>:1135</code> for the timeline,
+<code>:1224</code> and <code>:1233</code> for the space-scoped reads.
+The predicate is a <strong>deny-list</strong>: it names the one status
+to exclude rather than the statuses to admit, so a status value added
+later is readable by default until every one of these sites is
+revisited.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>store</code> normalizes tags, infers a category when the caller
+passes <code>general</code>, resolves the gate status, then does the
+quota check, the insert and the counter updates inside one transaction.
+<code>enforce_quota_in_tx</code> runs inside the writer-serialized
+transaction rather than before it, so two concurrent stores cannot both
+pass a check against the same pre-write total.</p>
+<p>Correction is <code>correct_memory</code>: store a new version, mark
+the original <code>is_superseded = 1</code>, write the reconsolidation
+row.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server over stdio and HTTP, an HTTP API, a CLI, a sidecar, and
+<code>kleos-approval-tui</code> — a terminal UI for working the pending
+inbox.</p>
+<p>The curated <code>tools/list</code> is a real design decision: names
+are normalized from <code>memory.store</code> to
+<code>memory_store</code> because <em>"strict MCP clients (VS Code)
+reject dot-notation names and silently drop those tools"</em>, and the
+unit test beside it asserts every advertised name is dot-free, unique,
+and resolvable back to a route. The list is careful about what it shows.
+It is not what governs what can be called.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>trust_state</code>.</strong> <code>status</code> is a
+discrete field, not a score, and <code>pending</code> withholds the
+memory from being treated as true on every listed read path. That is the
+definition.</p>
+<p><strong><code>scope_enforced</code>.</strong> <code>user_id</code>
+composes into the recall, search, list, timeline, prompt and graph
+queries, and <code>space_id</code> scopes the dedup. A migration even
+installs a trigger refusing a memory link whose two endpoints have
+different owners (<code>db/migrations.rs:1754</code>).</p>
+<p><strong><code>audit_log</code>.</strong> <code>audit.rs:86</code> and
+<code>:123</code> are the only writers and both are <code>INSERT</code>.
+There is no <code>UPDATE</code> against the table anywhere in the
+workspace. The one <code>DELETE</code> is a 90-day retention sweep in
+<code>admin/mod.rs:106</code>, which is a retention rule rather than a
+rewrite.</p>
+<p><strong><code>human_review</code> is withheld.</strong> The gate
+holds a memory in <code>pending</code> until something resolves it, and
+<code>kleos-approval-tui</code> is a person doing that. But the mark
+asks that the resolver be <em>an actor the producing agent cannot
+be</em>, and <code>inbox.approve</code> is dispatchable over MCP by
+name. Nothing in the dispatch path consults the curated list, and the
+block-list holds two credential routes. The approval UI is a second
+door; it does not close the first.</p>
+<p><strong><code>tombstone</code> is withheld</strong>, on two
+independent grounds. A rejection sets <code>status = 'rejected'</code>
+on the row — keyed on the record, not the value — and the dedup query
+then excludes rejected rows on purpose, so identical content stored
+again becomes a fresh row rather than being recognised. And the table
+that does hold the rejected text, <code>reconsolidations</code>, is
+never read.</p>
+<p><strong><code>bitemporal</code> is withheld.</strong>
+<code>created_at</code> and <code>updated_at</code> are both record
+time; <code>forget_after</code> is an expiry, not a validity bound.
+There is no axis for when a fact was true as distinct from when it was
+written.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A Rust test suite across the workspace, plus CI at
+<code>.github/workflows/ci.yml</code> and a clippy workflow. Nothing was
+installed and no suite was run for this reading; what follows is read
+from the committed cases.</p>
+<p><code>kleos-lib/tests/read_isolation_a1.rs</code> is the strongest
+file for this atlas's purposes. Its header states the design — the tests
+<em>"run against one monolith database"</em> — and it asserts that one
+user's material does not appear in another's results across four
+surfaces: <code>generate_prompt</code>, <code>generate_header</code>,
+<code>pack</code>, and contradiction detection. Those are negative
+assertions on a read path, which is the strict reading of
+<code>negative_eval</code>.</p>
+<p><code>kleos-lib/tests/store_dedup.rs</code> pairs
+<code>same_space_near_duplicate_collapses</code> with
+<code>different_space_is_not_deduped</code> — the second asserting that
+a boundary is <em>not</em> crossed, with
+<code>assert_eq!(b.duplicate_of, None)</code>. A scope-boundary must-not
+beside the positive case is the harder version of this test and the one
+worth copying.</p>
+<p>What is not tested is the gap in section 1: no case asserts that a
+<code>pending</code> memory is absent from <code>generate_header</code>,
+which is the read path that lacks the predicate.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Resolve a gate decision once, before the write, in a pure
+function.</strong> <code>resolve_initial_status</code> takes the config
+as arguments rather than reading the environment, so it is testable
+without process state, and the row and the returned flag come from the
+same value.</li>
+<li><strong>Put the quota check inside the writer transaction.</strong>
+Two stores cannot both pass a check against the same pre-write
+total.</li>
+<li><strong>Pair every dedup test with a boundary test.</strong>
+<code>different_space_is_not_deduped</code> is what stops a dedup
+predicate widening silently.</li>
+<li><strong>Say in the comment why a row is excluded.</strong> The
+dedup's rejected-row exclusion reads as an oversight until the comment
+explains it is not.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>An allow-list for the listing and a deny-list for the
+dispatch.</strong> If <code>tools/list</code> is curated and
+<code>tools/call</code> resolves anything, the curation is
+documentation. Dispatch from the same list you advertise, or make the
+refusal the allow-list's complement.</li>
+<li><strong>A deny-list status predicate.</strong>
+<code>status != 'pending'</code> admits every status invented after it.
+<code>status = 'approved'</code> fails closed.</li>
+<li><strong>A history table nothing reads.</strong>
+<code>reconsolidations</code> costs two writes and an index on every
+correction and answers no question, because no query names it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take Kleos if you want a single self-hosted binary with real
+retrieval breadth and are willing to run the review gate yourself — and
+if you do turn it on, restrict MCP at the transport rather than trusting
+the advertised tool list.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>inbox.approve</code> is dispatchable over MCP. Is the curated
+<code>tools/list</code> meant to be the security boundary, or is the
+boundary meant to be elsewhere — and if elsewhere, where?</li>
+<li><code>generate_header</code> omits the review-gate predicate its two
+sibling queries carry and document. Deliberate, because an attribution
+header is not recall, or missed?</li>
+<li><code>reconsolidations</code> has two writers and no reader. Is it
+intended as an export surface, or as the input to a correction-aware
+dedup that has not been built?</li>
+<li>The status predicate is written as a deny-list in every read path.
+Was <code>!= 'pending'</code> chosen over <code>= 'approved'</code> to
+keep legacy rows with a null or absent status readable?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kleos-lib/src/memory/mod.rs</code></td>
+<td><code>store</code>, <code>resolve_initial_status</code>, the dedup
+query, the listed read predicates</td>
+</tr>
+<tr>
+<td><code>kleos-lib/src/inbox.rs</code></td>
+<td>approve, reject and the pending-guarded edit</td>
+</tr>
+<tr>
+<td><code>kleos-lib/src/prompts.rs</code></td>
+<td>three prompt queries; two carry the gate predicate and one does
+not</td>
+</tr>
+<tr>
+<td><code>kleos-lib/src/audit.rs</code></td>
+<td>the two <code>INSERT</code>s that are the whole audit writer</td>
+</tr>
+<tr>
+<td><code>kleos-lib/src/intelligence/correction.rs</code></td>
+<td>supersession plus the reconsolidation row</td>
+</tr>
+<tr>
+<td><code>kleos-lib/src/memory/simhash.rs</code></td>
+<td>the 64-bit fingerprint and Hamming threshold</td>
+</tr>
+<tr>
+<td><code>kleos-mcp/src/tools.rs</code></td>
+<td><code>registry()</code> over the curated list,
+<code>dispatch()</code> over the registry</td>
+</tr>
+<tr>
+<td><code>kleos-client/src/routes.rs</code></td>
+<td>the route table, <code>MCP_BLOCKED_ROUTES</code>,
+<code>is_mcp_blocked</code></td>
+</tr>
+<tr>
+<td><code>kleos-lib/tests/read_isolation_a1.rs</code></td>
+<td>cross-user must-not assertions on four read surfaces</td>
+</tr>
+<tr>
+<td><code>kleos-lib/tests/store_dedup.rs</code></td>
+<td>the dedup case and its scope-boundary counterpart</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nothing reads <code>reconsolidations</code></td>
+<td><code>grep -rn "reconsolidations" --include='*.rs' .</code></td>
+<td>Two <code>INSERT</code>s, the <code>CREATE TABLE</code>, its index,
+and migration bookkeeping. No <code>SELECT</code></td>
+</tr>
+<tr>
+<td><code>inbox.approve</code> is not blocked from MCP</td>
+<td>read <code>kleos-client/src/routes.rs:96</code></td>
+<td><code>MCP_BLOCKED_ROUTES = ["admin.cred_resolve", "admin.cred_proxy"]</code></td>
+</tr>
+<tr>
+<td>No approve verb is advertised</td>
+<td><code>grep -rn -i 'approve|reject|pending' kleos-mcp/src/*.rs</code></td>
+<td>Only two comments about rejecting dot-notation <em>names</em></td>
+</tr>
+<tr>
+<td><code>generate_header</code> is wired, not dead code</td>
+<td><code>grep -rn "generate_header" --include='*.rs' .</code></td>
+<td>Called from <code>kleos-server/src/routes/prompts/mod.rs:611</code>
+and from the isolation test</td>
+</tr>
+<tr>
+<td>The audit log has no update path</td>
+<td><code>grep -rn "audit_log" --include='*.rs' kleos-lib/src</code></td>
+<td>Two <code>INSERT</code>s; one <code>DELETE</code> at
+<code>admin/mod.rs:106</code>, a 90-day retention sweep</td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>wc -l LICENSE</code>;
+<code>grep -i 'anthropic|analys|benchmark' LICENSE</code></td>
+<td>91 lines of stock Elastic License 2.0; no match</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/Ghost-Frame/Kleos/commit/7ce95482242ded53e9a9d9ae1221024ab77a0145"><code class="commit-id" title="7ce95482242ded53e9a9d9ae1221024ab77a0145">7ce95482…</code></a>
+— first reading, at 984 files across 25 workspace crates. Screened
+before reading: two auto-run surfaces (committed
+<code>.githooks/</code>, inert unless <code>core.hooksPath</code> points
+at them, and a <code>hooks/</code> directory holding only a README), one
+build-time execution point, three unpinned manifests, nothing inside the
+seven-day cooldown; nothing was installed, built or run. Elastic License
+2.0, read in full for a rider and carrying none. Four marks:
+<code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.
+<code>human_review</code> is withheld although the review gate is
+otherwise careful at every other point, because
+<code>inbox.approve</code> is dispatchable over MCP by name and the
+curated <code>tools/list</code> governs only what is advertised.
+<code>tombstone</code> and <code>bitemporal</code> are withheld, each
+for a reason recorded in section 9.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

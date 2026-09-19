@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 600 reports.</strong></p>
+<p><strong>This page covers all 601 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24419,6 +24419,52 @@ action, or you are deciding what a memory write guard should reject
 rather than clean.</li>
 <li>Do not copy when: you need everything uncertain to reach a person —
 here the uncertain path archives instead of queueing, by design.</li>
+</ul>
+<h3 id="kleos"><a href="../systems/kleos/"><code>kleos</code></a></h3>
+<ul>
+<li>Best idea: <strong>resolve a gate decision once, before the write,
+in a pure function.</strong> <code>resolve_initial_status</code> takes
+source, importance and the gate configuration as arguments rather than
+reading the environment at the write, returns <code>"approved"</code>
+immediately when the gate is off, and is computed before the transaction
+opens so the stored row and the returned
+<code>StoreResult.pending</code> cannot disagree — the comment beside it
+says exactly that. A <code>pending</code> memory is then withheld from
+recall, search, listing, timeline and the generated prompt.</li>
+<li>Biggest risk: <strong>the MCP surface advertises a curated tool list
+and dispatches from a different one.</strong> <code>tools/list</code> is
+built from <code>DAILY_TOOL_NAMES</code>; <code>tools/call</code>
+resolves any route name against the full registry and refuses only
+<code>admin.cred_resolve</code> and <code>admin.cred_proxy</code>.
+<code>inbox.approve</code> is a registered route, so a model that names
+it can approve its own pending memory, and the terminal approval UI is a
+second door rather than the first one closing. Separately, two of the
+three queries in <code>prompts.rs</code> carry
+<code>status != 'pending'</code> with a comment explaining why and the
+third — the attribution header, served from a live route — carries no
+status predicate at all.</li>
+<li>Most reusable component:
+<code>kleos-lib/tests/store_dedup.rs</code>, which pairs
+<code>same_space_near_duplicate_collapses</code> with
+<code>different_space_is_not_deduped</code>. A dedup test with a
+scope-boundary counterpart is what stops the predicate widening
+silently, and it is four assertions long.</li>
+<li>Maturity impression: Elastic License 2.0, 984 files across 25 Rust
+workspace crates shipping as one binary with an HTTP API, an MCP server,
+a CLI, a terminal approval UI and a desktop GUI; SQLite throughout, no
+Python anywhere, and a CI workflow beside a clippy workflow. Four marks
+— <code>trust_state</code>, <code>scope_enforced</code>,
+<code>audit_log</code>, <code>negative_eval</code>.
+<code>human_review</code> is withheld despite the review gate being the
+best-built mechanism here, for the dispatch reason above.
+<code>tombstone</code> is withheld twice over: a rejection is a status
+on a row, and <code>reconsolidations</code>, the table that does hold
+the superseded text, has two writers and no reader.</li>
+<li>Study when: you are building a review gate and want to see one done
+carefully at the write and left open at the transport — the gap between
+<code>registry()</code> and <code>dispatch()</code> in
+<code>kleos-mcp/src/tools.rs</code> is fifteen lines apart and worth
+reading together.</li>
 </ul>
         </article>
       </div>

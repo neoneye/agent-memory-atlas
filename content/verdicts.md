@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 600 reports.**
+**This page covers all 601 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5373,3 +5373,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: MIT, built on the Claude Agent SDK, roughly a thousand Python files in the backend against 522 test files, a desktop application, a skill library, English and Chinese documentation, and comments that cite run identifiers so a reader can tell which lines are load-bearing.
 - Study when: you have a review queue with both a list and a by-id action, or you are deciding what a memory write guard should reject rather than clean.
 - Do not copy when: you need everything uncertain to reach a person — here the uncertain path archives instead of queueing, by design.
+
+### [`kleos`](../systems/kleos/)
+
+- Best idea: **resolve a gate decision once, before the write, in a pure function.** `resolve_initial_status` takes source, importance and the gate configuration as arguments rather than reading the environment at the write, returns `"approved"` immediately when the gate is off, and is computed before the transaction opens so the stored row and the returned `StoreResult.pending` cannot disagree — the comment beside it says exactly that. A `pending` memory is then withheld from recall, search, listing, timeline and the generated prompt.
+- Biggest risk: **the MCP surface advertises a curated tool list and dispatches from a different one.** `tools/list` is built from `DAILY_TOOL_NAMES`; `tools/call` resolves any route name against the full registry and refuses only `admin.cred_resolve` and `admin.cred_proxy`. `inbox.approve` is a registered route, so a model that names it can approve its own pending memory, and the terminal approval UI is a second door rather than the first one closing. Separately, two of the three queries in `prompts.rs` carry `status != 'pending'` with a comment explaining why and the third — the attribution header, served from a live route — carries no status predicate at all.
+- Most reusable component: `kleos-lib/tests/store_dedup.rs`, which pairs `same_space_near_duplicate_collapses` with `different_space_is_not_deduped`. A dedup test with a scope-boundary counterpart is what stops the predicate widening silently, and it is four assertions long.
+- Maturity impression: Elastic License 2.0, 984 files across 25 Rust workspace crates shipping as one binary with an HTTP API, an MCP server, a CLI, a terminal approval UI and a desktop GUI; SQLite throughout, no Python anywhere, and a CI workflow beside a clippy workflow. Four marks — `trust_state`, `scope_enforced`, `audit_log`, `negative_eval`. `human_review` is withheld despite the review gate being the best-built mechanism here, for the dispatch reason above. `tombstone` is withheld twice over: a rejection is a status on a row, and `reconsolidations`, the table that does hold the superseded text, has two writers and no reader.
+- Study when: you are building a review gate and want to see one done carefully at the write and left open at the transport — the gap between `registry()` and `dispatch()` in `kleos-mcp/src/tools.rs` is fifteen lines apart and worth reading together.
+
