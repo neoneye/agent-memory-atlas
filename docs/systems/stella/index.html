@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust coding agent whose context
+plane keeps a bi-temporal property graph in one SQLite file and
+re-checks every committed claim before it can steer — demoting a lapsed
+one out of the cached prefix, dropping a refuted one entirely, and
+stamping a record's authority from the directory it was read out of
+rather than from anything it says about itself.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Stella — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust coding agent whose
+context plane keeps a bi-temporal property graph in one SQLite file and
+re-checks every committed claim before it can steer — demoting a lapsed
+one out of the cached prefix, dropping a refuted one entirely, and
+stamping a record's authority from the directory it was read out of
+rather than from anything it says about itself.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Stella — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust coding agent whose
+context plane keeps a bi-temporal property graph in one SQLite file and
+re-checks every committed claim before it can steer — demoting a lapsed
+one out of the cached prefix, dropping a refuted one entirely, and
+stamping a record's authority from the directory it was read out of
+rather than from anything it says about itself.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Stella — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Stella",
+      "description": "A Rust coding agent whose context plane keeps a bi-temporal property graph in one SQLite file and re-checks every committed claim before it can steer \u2014 demoting a lapsed one out of the cached prefix, dropping a refuted one entirely, and stamping a record's authority from the directory it was read out of rather than from anything it says about itself.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Context plane</p>
+          <h1>Stella</h1>
+          <p class="document-deck">A Rust coding agent whose context
+plane keeps a bi-temporal property graph in one SQLite file and
+re-checks every committed claim before it can steer — demoting a lapsed
+one out of the cached prefix, dropping a refuted one entirely, and
+stamping a record's authority from the directory it was read out of
+rather than from anything it says about itself.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/macanderson/stella">
+              <span>Source</span>
+              <strong>macanderson/stella</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/macanderson/stella/commit/e5faf774aaa3bd67c819ec3a6c4e72ac5366c25a" title="e5faf774aaa3bd67c819ec3a6c4e72ac5366c25a">
+              <span>Analyzed revision</span>
+              <code>e5faf774…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/macanderson--stella" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>macanderson--stella</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Stella is a terminal coding agent in Rust — thirty crates, its own
+TUI, a plugin consent boundary, a fleet layer. The part this atlas reads
+is the <strong>context plane</strong>, described in its own header as
+the single door between the engine and everything the agent knows that
+isn't already in the prompt: one SQLite file holding a bi-temporal
+property graph, a fingerprinted embedding index and episodic memory,
+with a budgeted, cited retrieval pipeline on top.</p>
+<p>Six marks, and what they have in common is that each one is enforced
+somewhere a later contributor cannot quietly undo.</p>
+<p><strong>Append-only is a database trigger, not a rule.</strong> The
+lifecycle ledger's migration installs <code>BEFORE UPDATE</code> and
+<code>BEFORE DELETE</code> triggers that abort, and the module says why
+in one sentence: the guarantee then holds against every writer
+<em>"including a future one that has forgotten this module
+exists."</em></p>
+<p><strong>Authority is stamped from the filesystem.</strong> A record's
+<code>origin</code>, <code>truth.basis</code> and
+<code>verified_by</code> are fields inside the file being judged, and a
+checkout can assert them as easily as it asserts anything else. So the
+trust tier is set by the loader from <em>which directory the file was
+read out of</em>, and nothing in the file can change it — <em>"a decree
+only counts when somebody signed it."</em> The default is the lower
+tier, with a test asserting that a forgotten stamp fails toward the
+restrictive answer.</p>
+<p><strong>A committed claim is re-checked before it can steer.</strong>
+The truth sweep's own motivating case is a <code>CLAUDE.md</code> that
+says <em>"we use Node 20"</em> while <code>.nvmrc</code> has said
+<code>22</code> for months — a claim probed once at extraction and never
+again, teaching the agent something false on every turn with the full
+authority of a reviewed policy file. A refuted claim is dropped from the
+block; a merely expired one is demoted into the volatile channel, where
+the reason can be said out loud without putting a clock into the
+byte-stable cached prefix.</p>
+<p><strong>Two time axes, closed by different writers.</strong> An edge
+carries when the fact held in the world and when the store believed it,
+and the neighbour query applies both at once.</p>
+<p>The one mark withheld that the code appears to claim is the
+tombstone. Stella uses the word for its node-suppression marker, which
+is a soft delete keyed on the row. It is reversible, tested as an exact
+inverse, and applied before the budget rather than after — but nothing
+here is keyed on a rejected <em>value</em>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two planes, and it is worth keeping them apart.</p>
+<p><strong>The context plane</strong> is the graph: nodes, edges,
+embeddings, episodes. It answers <em>what do we know, and what did we
+know at T1</em>. Facts are edges, and a correction closes intervals
+rather than deleting rows.</p>
+<p><strong>The record plane</strong> is policy: rule files and record
+files, merged into one order and rendered into the prompt. It answers
+<em>what should steer this turn</em>. Records carry a truth axis, get
+probed on a cadence, and are dispositioned before rendering.</p>
+<p>The design constraint that shapes the second plane is prompt caching.
+The <code>must</code>/<code>should</code> records ride a byte-stable
+cached prefix built once per session, so nothing turn-varying may enter
+it — which is why a stale record is not annotated in place but moved to
+the volatile channel, and why staleness is deliberately <em>not</em> a
+record status but a separate derived selection-health value.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — records load from the repository's and the user's rules directories with a trust tier stamped from the directory itself, pass a deterministic ingest gate that quarantines executable content and refuses to arm a command-running probe on mined content, and are dispositioned by a truth sweep before rendering — a refuted claim dropped from the prompt, a lapsed one demoted out of the byte-stable cached prefix into the volatile channel; separately the context plane keeps a bi-temporal property graph in one SQLite file where a correction closes the prior belief's intervals rather than deleting, recall fuses vector, recency and graph adjacency under a domain-scope exclusion and a token budget with a citation on every frame, and every lifecycle record lands in an append-only ledger whose immutability is enforced by database triggers</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: records load from the repository&#39;s and the user&#39;s rules directories with a trust tier stamped from the directory itself, pass a deterministic ingest gate that quarantines executable content and refuses to arm a command-running probe on mined content, and are dispositioned by a truth sweep before rendering — a refuted claim dropped from the prompt, a lapsed one demoted out of the byte-stable cached prefix into the volatile channel; separately the context plane keeps a bi-temporal property graph in one SQLite file where a correction closes the prior belief&#39;s intervals rather than deleting, recall fuses vector, recency and graph adjacency under a domain-scope exclusion and a token budget with a citation on every frame, and every lifecycle record lands in an append-only ledger whose immutability is enforced by database triggers
+flowchart TD
+    subgraph RecordPlane[&quot;record plane&quot;]
+        RF[&quot;rules files&lt;br/&gt;repo · user home&quot;] --&gt; LOAD[&quot;loader stamps Trust&lt;br/&gt;from the directory&lt;br/&gt;the file cannot claim it&quot;]
+        LOAD --&gt; GATE{&quot;ingest gate&lt;br/&gt;atomic? executable quarantined?&lt;br/&gt;probe gated by origin?&lt;br/&gt;probe can refute?&quot;}
+        GATE --&gt; SWEEP{&quot;truth sweep&lt;br/&gt;basis · probe verdict · ttl · on_expiry&quot;}
+        SWEEP --&gt;|refuted| DROP[&quot;Drop — leaves the prompt&lt;br/&gt;still visible to validate/explain&quot;]
+        SWEEP --&gt;|expired| STALE[&quot;SelectStale — demoted to&lt;br/&gt;the volatile channel&quot;]
+        SWEEP --&gt;|unfalsifiable| UNF[&quot;renders, stated unverified&lt;br/&gt;never folded into supported&quot;]
+        SWEEP --&gt;|believed| SEL[&quot;Select&quot;]
+        SEL --&gt; PREFIX[[&quot;byte-stable cached prefix&quot;]]
+        STALE --&gt; VOL[[&quot;volatile channel, per turn&quot;]]
+        UNF --&gt; VOL
+    end
+
+    subgraph ContextPlane[&quot;context plane — one SQLite file&quot;]
+        UP[&quot;upsert&quot;] --&gt; TX{&quot;one transaction&quot;}
+        TX --&gt; NODE[(&quot;node&lt;br/&gt;current state&lt;br/&gt;superseded_at marker&quot;)]
+        TX --&gt; EDGE[(&quot;edge&lt;br/&gt;valid_from/valid_to · world&lt;br/&gt;recorded_at/superseded_at · belief&quot;)]
+        TX --&gt; EMB[(&quot;embedding&lt;br/&gt;keyed by content hash + fingerprint&quot;)]
+        TX --&gt; LED[(&quot;lifecycle ledger&lt;br/&gt;BEFORE UPDATE/DELETE triggers abort&quot;)]
+
+        Q[&quot;recall&quot;] --&gt; SCOPE[&quot;exclude nodes tagged&lt;br/&gt;only out of scope&quot;]
+        SCOPE --&gt; FUSE[&quot;vector + recency + graph&lt;br/&gt;reciprocal-rank fusion&quot;]
+        FUSE --&gt; BUD[&quot;budget pack&lt;br/&gt;citation on every frame&lt;br/&gt;drops reported, never silent&quot;]
+        NODE --&gt; Q
+        EDGE --&gt; Q
+        EMB --&gt; Q
+        ASOF[&quot;facts_as_of / valid_at&quot;] --&gt; EDGE
+    end
+
+    PREFIX --&gt; TURN[&quot;the turn&quot;]
+    VOL --&gt; TURN
+    BUD --&gt; TURN</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>The plane's contract:</strong>
+<code>crates/stella-context/src/lib.rs</code> — four jobs, and the
+binding lessons it names.</li>
+<li><strong>Store and schema:</strong>
+<code>crates/stella-context/src/store.rs</code>,
+<code>store/schema.rs</code>, <code>store/node.rs</code>,
+<code>store/edge.rs</code>.</li>
+<li><strong>Ledger:</strong>
+<code>crates/stella-context/src/store/ledger.rs</code>.</li>
+<li><strong>Write-back:</strong>
+<code>crates/stella-context/src/writeback.rs</code>.</li>
+<li><strong>Recall:</strong>
+<code>crates/stella-context/src/retrieval.rs</code>,
+<code>candidates.rs</code>.</li>
+<li><strong>Scope:</strong>
+<code>crates/stella-context/src/store/domain.rs</code>.</li>
+<li><strong>Truth sweep and rendering:</strong>
+<code>crates/stella-records/src/records/sweep.rs</code>,
+<code>registry.rs</code>, <code>render.rs</code>,
+<code>trust.rs</code>.</li>
+<li><strong>Ingest gate:</strong>
+<code>crates/stella-records/src/ingest/gate.rs</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Nodes carry a typed kind — file, symbol, concept, fact, episode,
+person, artifact, task, memory — and the vocabulary has a stated
+fallback: an unknown stored kind reads back as <code>concept</code>
+rather than failing.</p>
+<p>Edges carry four time columns. Nodes carry them too, and two of the
+four are never written, which the schema comment addresses head-on:
+dropping a column in SQLite rewrites the table, so they stay, and the
+row type <em>deliberately does not project them</em> so no consumer can
+read the NULL as an absence of valid time rather than an absence of node
+versioning. Fact history is recoverable; node content history is not,
+and the file says so.</p>
+<p>On the record side, <code>RecordStatus</code> is the stored canonical
+field — active, retracted, archived — while <code>EffectiveStatus</code>
+is derived at query time from the historical prefix, adding superseded
+and expired, and is excluded from the record hash because it is a
+projection rather than state.</p>
+<p>The most instructive type in the tree is an enum variant.
+<code>EpisodeOutcome</code> carries an <code>Unverified</code> value
+whose documentation is the clearest statement of the idea anywhere in
+this reading: the episode ran to completion and nothing proved it.
+Deliberately not <code>Success</code>, because episodes are recalled
+into later sessions as grounding and labelling an unproven run a success
+hands a future turn a worked example that was never checked.
+Deliberately not <code>Failure</code>, because nothing found the work
+wrong and a retrieval that reads it as a mistake teaches the opposite
+lesson. Distinct from <code>Partial</code>, which is a claim about how
+much of the goal landed — <em>"this is a claim about the
+evidence."</em></p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall fuses vector, recency and graph-adjacency channels by
+reciprocal rank, deduplicates by content hash, and packs to the caller's
+token budget. Three rules are enforced rather than advised: every frame
+must carry a human citation label, and a frame constructed without one
+is a constructor error; silent truncation is banned, so assembly reports
+what it dropped; and weak coverage falls back to bounded lexical search
+<strong>labelled as such</strong> rather than dressed up as
+grounding.</p>
+<p>Scope is an exclusion set built by anti-join and applied during
+retrieval. Its one asymmetry is documented in the entry point rather
+than discovered later: a node tagged exclusively with out-of-scope
+domains is excluded, and an untagged node is not, because most memories
+carry no domain tag and a scope that dropped them would empty the
+channel.</p>
+<p>Point-in-time recall applies the as-of predicate before the budget,
+which is the same discipline suppression needed and for the same
+reason.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every write batch is one transaction, so a kill mid-index rolls back
+to a consistent store. Vectors are keyed by content hash and embedder
+fingerprint together: identical content is never re-embedded, and
+retrieval never mixes fingerprints.</p>
+<p>Corrections close and supersede. The function that finds what to
+close is worth reading for its bug note: it used to be a single-valued
+<code>ORDER BY id DESC LIMIT 1</code>, so an assert closed the newest
+belief and left every older live one open, and the store kept answering
+with two simultaneous beliefs for a fact that is single-valued by
+definition. It now closes all of them, and the note explains how two
+live edges arise honestly — the same predicate asserted multivalued and
+later corrected as single-valued.</p>
+<p>Compaction is bounded by the same guarantee it must not break: it
+reclaims only derived index entries whose owner is already gone,
+<em>precisely because</em> deleting them cannot change what
+<code>facts_as_of</code> answers, and edges, memory revisions and
+superseded node rows are named exclusions.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A terminal agent with its own TUI, an MCP crate, a plugin system with
+a consent prompt and a verification ladder, an autonomy layer, a fleet
+layer and an observatory. Dual-licensed: AGPL-3.0-only, or a negotiated
+commercial licence, with the "or any later version" clause deliberately
+not granted.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded.</strong> A stored truth axis, a probe
+verdict, and a disposition resolved before rendering, with the
+unselected dispositions removed from the prompt by the channel function
+rather than annotated in place. The distinction the module draws between
+<em>refuted</em> and <em>expired</em> is the part worth copying: one has
+been measured against the world and lost, the other has merely gone
+unchecked, and they get opposite defaults.</p>
+<p><strong>Bi-temporal — awarded</strong>, on two intervals written by
+different operations and applied together in one predicate. The limit is
+stated in the schema comment rather than left for a reader to find: only
+edges are versioned.</p>
+<p><strong>Scope enforced — awarded</strong>, with the untagged-node
+asymmetry in the evidence record and documented in the code.</p>
+<p><strong>Audit log — awarded.</strong> Triggers, not convention;
+content-derived ids so a replay is a no-op; a different hash under the
+same id raised as an error rather than swallowed.</p>
+<p><strong>Human review — awarded</strong>, on the strongest shape
+available: the reviewer's authority is the one fact the reviewed
+artefact cannot assert about itself. The gate requires a loader-stamped
+user tier, a truth basis of decree, and a non-empty signature, and its
+two callers each add a condition locally rather than widening the shared
+half — the comment notes that moving either one inward would tighten the
+other gate silently.</p>
+<p><strong>Negative eval — awarded.</strong> See the evidence record;
+the assertion that an excluded id is absent from the <em>dropped</em>
+list too is the one that distinguishes a filter applied before ranking
+from one applied after.</p>
+<p><strong>Tombstone — withheld, and the vocabulary needs
+stating.</strong> The codebase calls <code>supersede_node</code> a
+tombstone, and by its own definition it is one: a marker rather than a
+delete, reversible, invisible to every reader but the restore path. What
+this atlas means by the word is narrower — a durable record of a
+rejected <em>value</em>, keyed on the value, so a later extraction
+cannot silently re-assert it. Stella's marker is keyed on the row.
+Re-ingesting the same sentence from the same file produces a live node
+again. The nearest thing to a value-keyed refusal is elsewhere and is
+about alerts rather than content: a dismissed ingest lineage never
+produces a drift alert again, and its module is explicit that
+<em>"dismissal says nothing about the records themselves: they stay live
+and recallable."</em></p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong> and no <code>CITATION.cff</code>.</p>
+<p>Tests live beside the code as Rust unit modules, with integration
+suites per crate and a <code>bench/</code> tree carrying a
+terminal-bench adapter, a loop benchmark and a request benchmark. No
+benchmark results are committed.</p>
+<p>The recall suite is the one to read, and its distinguishing habit is
+that the docstring on each case names the defect it exists to prevent —
+suppression running after the budget so a one-frame recall returned zero
+frames; a point-in-time parameter that <em>"looked honored and was
+not"</em>; a migration test that reuses the store's own legacy fixture
+builder because <em>"two fixture builders for one schema ladder is how a
+migration test ends up asserting against a shape the ladder never
+produces."</em></p>
+<p>Two more enforcement mechanisms sit outside the test suite and are
+worth counting as evals in spirit. Undocumented public items are a build
+failure under the lint profile, which the comment explains as closing a
+gap that <em>"cannot reopen one field at a time"</em>. And the
+append-only guarantee is checked by the database rather than by a test,
+which is the difference between an invariant and a habit.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Enforce append-only in the storage engine.</strong> A
+<code>BEFORE UPDATE</code> trigger that aborts costs one migration and
+survives every future writer, including the one who never reads your
+module header.</li>
+<li><strong>Stamp authority from something the artefact cannot
+write.</strong> A record's own <code>origin</code> field is worth
+exactly as much as the trust you already extend to whoever wrote the
+file.</li>
+<li><strong>Default the trust tier to the restrictive value, and test
+it.</strong> The failure mode of the other default is a checkout
+silently inheriting a person's authority.</li>
+<li><strong>Separate refuted from expired.</strong> Dropping every claim
+whose owner went on holiday makes a time-to-live a foot-gun; keeping a
+measured-and-lost claim with a warning attached is the harm rather than
+the mitigation.</li>
+<li><strong>Apply suppression before the budget.</strong> Filtering
+after ranking spends a slot on a row you then throw away, and the turn
+gets less context than it asked for with nothing reporting it.</li>
+<li><strong>Derive record ids from content.</strong> A replay then
+converges instead of duplicating, and a genuine identity collision
+becomes an error you can see.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Node content is not versioned while the columns for it exist and are
+deliberately unprojected. Is versioning nodes a planned step, or is the
+current split — fact history recoverable, node content history not — the
+intended end state?</li>
+<li>The domain scope excludes only nodes tagged exclusively out of
+scope. Is there a deployment where the opposite reading is wanted, and
+would that need a distinction between an untagged node and one tagged
+with a domain nobody named?</li>
+<li>The one tool that collected a model's judgement of whether a shown
+memory was useful has been retired, on the stated ground that marking a
+memory truthful because it was shown <em>"would be a guess dressed up as
+evidence"</em>, with its tables kept unused for a later holdout sweep.
+What does that sweep look like, and what evidence would it use
+instead?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Plane contract: <code>crates/stella-context/src/lib.rs</code></li>
+<li>Store, schema, nodes, edges:
+<code>crates/stella-context/src/store.rs</code>,
+<code>store/schema.rs</code>, <code>store/node.rs</code>,
+<code>store/edge.rs</code></li>
+<li>Ledger: <code>crates/stella-context/src/store/ledger.rs</code></li>
+<li>Domains and scope:
+<code>crates/stella-context/src/store/domain.rs</code></li>
+<li>Write-back: <code>crates/stella-context/src/writeback.rs</code></li>
+<li>Recall: <code>crates/stella-context/src/retrieval.rs</code>,
+<code>crates/stella-context/src/candidates.rs</code></li>
+<li>Truth sweep, registry, rendering, trust:
+<code>crates/stella-records/src/records/sweep.rs</code>,
+<code>records/registry.rs</code>, <code>records/render.rs</code>,
+<code>records/trust.rs</code></li>
+<li>Ingest gate and lineages:
+<code>crates/stella-records/src/ingest/gate.rs</code>,
+<code>ingest/lineage.rs</code></li>
+<li>Tests:
+<code>crates/stella-context/src/retrieval/tests/recall.rs</code>,
+<code>crates/stella-context/src/store/tests.rs</code>,
+<code>crates/stella-records/src/records/tests.rs</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/macanderson/stella/commit/e5faf774aaa3bd67c819ec3a6c4e72ac5366c25a"><code class="commit-id" title="e5faf774aaa3bd67c819ec3a6c4e72ac5366c25a">e5faf774…</code></a>
+— first reading, at the head of <code>main</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: three
+auto-run surfaces (committed git hooks and an agent harness's hook
+scripts and settings), seven build-time execution paths including a
+Cargo build script, a web postinstall and four pytest conftest files,
+floating ranges in the website package, and an <code>AGENTS.md</code>
+and a <code>CLAUDE.md</code> addressed to a reading agent, read as data
+throughout. Every manifest reported inside the seven-day cooldown, which
+is an artefact of a <code>--depth 1</code> clone dating every file to
+the tip; <code>Cargo.lock</code> is committed. Nothing was installed,
+built or run. Dual-licensed AGPL-3.0-only or commercial, with the "or
+any later version" clause deliberately not granted and no rider
+restricting analysis. Six marks. The reading covered the context plane
+end to end — schema and both time axes, the node and edge writers, the
+ledger and its triggers, write-back and supersession, recall with its
+scope exclusion and budget, compaction's stated bound — and the record
+plane's loader trust tier, ingest gate, truth sweep, registry and
+renderer, plus the recall and trust test suites; the TUI, fleet,
+autonomy, plugin and model crates were read only where they touched
+those paths. <code>tombstone</code> is withheld and the reason is a
+vocabulary difference worth recording: this codebase uses the word for a
+reversible node-suppression marker keyed on the row, and the atlas
+reserves it for a durable record of a rejected value keyed on the
+value.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
