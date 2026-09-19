@@ -9,12 +9,11 @@ source_url: https://github.com/lets-order-some-fries/loreweave
 archive_name: "lets-order-some-fries--loreweave"
 revision: 8fe4c5a2961f46732aa60ce9d8753f0c7818ddc7
 revision_url: https://github.com/lets-order-some-fries/loreweave/commit/8fe4c5a2961f46732aa60ce9d8753f0c7818ddc7
-analyzed_at: 2026-09-16
-capabilities: "bitemporal, audit_log, human_review"
+analyzed_at: 2026-09-19
+capabilities: "bitemporal, audit_log"
 capability_evidence:
   bitemporal: "two query parameters, and a comment that gets the backdating case right | src/facts/model.ts:296-328, src/temporal/dates.ts:205-206, src/facts/extract.ts:147-162 | `queryFacts` takes `asOf` and `asKnownAt` as separate options and builds separate predicates. `asOf` is valid time — `COALESCE(valid_from, recorded_at) <= ?` with `(valid_until IS NULL OR valid_until > ?)`. `asKnownAt` is transaction time — `recorded_at <= ?` with `(superseded_at IS NULL OR superseded_at > ?)` — and its comment states the semantics that separate a real second axis from a decorated first one: \"A fact asserted afterwards was not available to anyone reasoning at T, however early its validity was backdated to start.\" The axes are fed from different places rather than from one clock: `valid_from` is read from a note's frontmatter (`date`, `event_date`, `created`, `valid_from`), from a trailing `{valid_from=…}` annotation on a fact line, or from an explicit CLI or MCP argument, while `recorded_at` is stamped on the write | src/facts/extract.ts:114 records the regression this area already had once, where a parser change meant \"every extracted fact lost its valid_from and `--as-of`\" stopped working"
   audit_log: "markdown fact lines as the durable record, with the database rebuilt from them | src/facts/journal.ts:1-11, :19-21, src/facts/model.ts:73-75, :129, :251 | the module opens by stating the inversion: \"Fact lines in markdown are the durable record; DB fact rows are a replay.\" Every assertion appends `- [fact] Subject :: predicate :: Object {valid_from=…, confidence=…}` and every closure appends `- [invalidate] Subject :: predicate {valid_until=…}` to `lore/journal/YYYY-MM-DD.md`, both through `appendJournalLine`, and both `assertFact` and the invalidate path return the journal path they wrote. \"Rebuild wipes and replays ALL fact rows deterministically, so the index stays a pure cache of the vault\", which is what makes the record authoritative rather than advisory — a mutation that never reached the journal does not survive a rebuild. Line-based storage is handled rather than assumed: control characters are escaped losslessly, \"or a fact containing a newline would be silently truncated on replay (data loss)\" | tests/ covers journal round-tripping and rebuild, and the escape helper round-trips through `unescapeField`"
-  human_review: "the CLI, over the same vault the agent writes into | src/cli/main.ts (`facts`, `timeline`, `invalidate`, `review`, `count`), src/facts/model.ts:231-251 | `lore facts` and `lore timeline` print a subject's current facts and its full validity chain with each interval's window, `lore invalidate` closes a fact that is wrong, and `lore review` lists what has decayed below the retrievability threshold. Because the store is the vault, the same person can also open `lore/journal/2026-09-15.md` and edit or delete the line an agent wrote, and the next rebuild replays the corrected file. The limit worth naming is that the MCP surface's adjudication step is not this: `lore_propose_facts` returns candidates \"for you to adjudicate\" and says it \"keeps judgement with you and out of the index\", but the tool description addresses the model, so the reviewer it means is an agent | tests/ exercises the CLI commands, and the invalidate path is covered alongside the journal replay"
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -151,6 +150,17 @@ own retrieved-then-used history rather than assumed, and `lore review` surfaces
 what has faded below the threshold. The default fact query returns only facts
 that are neither expired nor superseded; `includeHistory` returns the chain.
 
+`lore review` is a listing, not a gate, and neither is anything else here, which
+is why this report does not carry `human_review`. `lore facts`, `lore timeline`
+and `lore invalidate` act on facts already in the index; the vault is markdown,
+so a person can equally open the journal file and edit the line an agent wrote,
+and the next rebuild replays the corrected file. The one surface that calls
+itself adjudication is addressed to the wrong reader: `lore_propose_facts`
+returns candidates *"for you to adjudicate"* and says it *"keeps judgement with
+you and out of the index"*, but it is an MCP tool description, so the "you" is
+the model. A candidate promoted through it has been reviewed by the same kind of
+thing that proposed it.
+
 ## 7. Write Mechanics
 
 A write is refused rather than accepted quietly when it cannot be made
@@ -216,5 +226,7 @@ fact to be treated differently from a stated one; nothing does.
 | `src/temporal/dates.ts:205-206` | Where valid time comes from when nobody supplies it |
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`8fe4c5a2961f46732aa60ce9d8753f0c7818ddc7`](https://github.com/lets-order-some-fries/loreweave/commit/8fe4c5a2961f46732aa60ce9d8753f0c7818ddc7); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, and the withdrawn record had already found the decisive fact and filed it as a limit instead of a disqualification: `lore_propose_facts` keeps judgement *"with you"*, but it is a tool description, so the reviewer it addresses is the model. The rest of the surface is correction rather than review — `facts`, `timeline` and `invalidate` act on facts already in the index, and because the vault is markdown a person can edit the journal line directly, which the next rebuild replays. Nothing in `src/` holds a fact pending anyone. `bitemporal` and `audit_log` stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`8fe4c5a2961f46732aa60ce9d8753f0c7818ddc7`](https://github.com/lets-order-some-fries/loreweave/commit/8fe4c5a2961f46732aa60ce9d8753f0c7818ddc7) — first reading, at a commit dated 15 September 2026. Screened before opening, from a shallow clone: four files scanned, one auto-run surface, one build-time execution point, one unpinned dependency surface and two dependency files inside the seven-day cooldown, with `package-lock.json` present. Nothing was installed, built or run.
