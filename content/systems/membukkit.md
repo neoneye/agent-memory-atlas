@@ -9,10 +9,9 @@ source_url: https://github.com/memseekai/membukkit
 archive_name: "memseekai--membukkit"
 revision: ecd2cfe9731e2cb31eb61a428edf6aa4c6cce71a
 revision_url: https://github.com/memseekai/membukkit/commit/ecd2cfe9731e2cb31eb61a428edf6aa4c6cce71a
-analyzed_at: 2026-09-16
-capabilities: "human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  human_review: "the local GUI — fact-level inspection, source drill-down and adjudication | src/membukkit/service/local_app.py:452-503 | `GET /api/stores/{name}/facts` pages the store filtered by kind and topic bucket, `GET /api/stores/{name}/facts/{id}/source` resolves the fact back to the exact turn or chunk it came from through `doc_id` plus `source_ref`, and `DELETE /api/stores/{name}/facts/{id}` removes it through `MemorySystem.delete_facts` — dropping the verbatim turn behind it unless another fact still needs it, reviving whatever it had superseded, and returning a report carrying `revived`. It is adjudication after the fact rather than an approval gate before one, and nothing records who did it | tests/test_deletion.py"
   negative_eval: "retrieval routing — an excluded topic bucket must not contribute candidates | tests/test_bucket_control.py:39-56 | `test_route_topic_exclude_closes_bucket` routes once normally, then routes again excluding the top bucket and asserts `not blocked_rows & set(cand_ex)` under the message `excluded bucket's facts leaked`, with the trace asserted to record the exclusion. The vacuity guard is a separate committed case: `test_route_topic_exclude_all_returns_empty_not_full_scan` pins that excluding everything returns nothing rather than falling back to a full scan | this is the test"
 stack_storage: "files"
 stack_retrieval: "lexical, vector"
@@ -46,7 +45,14 @@ spends most of its length looking for, and here it is load-bearing rather than
 decorative — `is_active_as_of` drops superseded facts out of the evidence pool
 before the reader sees them.
 
-Two marks. The report's central finding is what the temporal model **is not**:
+One mark, `negative_eval`. The GUI's fact listing, source drill-down and delete
+are a good correction surface — the delete revives whatever the removed fact had
+superseded and returns that in a `revived` report, which most deletion paths do
+not — but they act on facts already in the evidence pool, and as the withdrawn
+record put it, *"nothing records who did it"*. Nothing in `src/membukkit/` holds
+a fact pending anyone's decision.
+
+The report's central finding is what the temporal model **is not**:
 there is one time axis, not two. A fact carries a `timestamp` for when it was
 true and a `valid_to` for when it stopped being true, and `valid_to` is set to
 the *replacement fact's own timestamp*. Nothing on a fact records when the store
@@ -332,6 +338,8 @@ persists the store. Nothing found here writes who deleted what, or when.
 | `tests/test_deletion.py`, `tests/test_bucket_control.py` | Revival on delete; the excluded-bucket leak test |
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`ecd2cfe9731e2cb31eb61a428edf6aa4c6cce71a`](https://github.com/memseekai/membukkit/commit/ecd2cfe9731e2cb31eb61a428edf6aa4c6cce71a); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, on the record's own closing sentence: the GUI is *"adjudication after the fact rather than an approval gate before one, and nothing records who did it."* Both halves disqualify it under the question the mark now asks. The tree carries no pending, staged or approval state on a fact at this pin. The delete path keeps its credit — it drops the verbatim turn behind a fact unless another still needs it, revives what the fact had superseded, and reports the revival — which is more care than most deletion paths take. `negative_eval` stands. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`ecd2cfe9731e2cb31eb61a428edf6aa4c6cce71a`](https://github.com/memseekai/membukkit/commit/ecd2cfe9731e2cb31eb61a428edf6aa4c6cce71a) — re-read at a commit dated 2026-09-02, 9 commits past the previous pin. Both marks re-tested and held; each anchored file has the same blob at both commits, so no line number moved. Screened before reading: no auto-run surface, no build-time execution point, one unpinned dependency surface and none inside the seven-day cooldown. Nothing was installed, built or run.
 
