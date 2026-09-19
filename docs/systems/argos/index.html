@@ -137,7 +137,7 @@ those runs never exercised the version chains.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/bobaba76--Argos" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -865,6 +865,40 @@ rg -n -i &#39;arxiv|bibtex|citation|doi\.org&#39; README.md docs MEMORY_SYSTEM.m
 rg -n -i &#39;agent-memory-atlas|neoneye|perseus&#39; --glob &#39;!*.jsonl&#39; .                         # spec-04, the contradiction matrix, the claims audit
 python3 -c &quot;import json;print(sum(json.loads(l)[&#39;autoeval_label&#39;][&#39;label&#39;] for l in open(&#39;eval/repro/judged_glm500_final.jsonl&#39;)))&quot;   # 449</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/bobaba76/Argos/commit/755f652a5d1cff21b1a38c371f5790f79feb87af"><code class="commit-id" title="755f652a5d1cff21b1a38c371f5790f79feb87af">755f652a…</code></a>
+— <code>trust_state</code> re-tested, read from the archive fork since
+the upstream is still 404. The pin is unchanged, so the additions are
+the atlas's own. Three of them, all on the question of how hard the
+predicate is to switch off. Every read of <code>memory_records</code>
+composes its WHERE clause through one builder in
+<code>store_retrieval.py:66</code>, whose docstring fixes the clause
+order — status, then temporal, expiry, user scope, project, namespace,
+client scope, category, tier — and appends the status clause first with
+the comment <em>"Status — always present"</em>. The temporal gate has
+<code>as_of</code> and <code>include_closed</code>, the expiry gate has
+<code>include_expired</code>; the status gate has no parameter at all.
+The one place a status escape exists,
+<code>get_memories_by_ids(include_quarantined=...)</code>, is covered
+from the other side: <code>include_quarantined</code>,
+<code>include_archived</code>, <code>include_expired</code>,
+<code>include_closed</code> and <code>suppress_retrieval</code> are
+listed in <code>api_facade.py</code> as
+<code>FORBIDDEN_CLIENT_FLAGS</code> — <em>"internal-only and must not be
+set by API clients"</em> — and an external caller that passes one is
+refused with code <code>forbidden</code>, asserted by
+<code>test_forbidden_client_flags_rejected</code>. Its single internal
+user reads a record's <code>valid_from</code> and <code>valid_to</code>
+to fill in an update's temporal fields, not its content. On the
+candidate side, two sentences the record should have quoted. The
+approval invariant explains its own location — automatic review may not
+write <code>approved</code>, and this is <em>"enforced here, at the
+storage boundary, not by prompt instructions"</em>. And a failed
+reconciliation deliberately does <strong>not</strong> reject the
+candidate, because on a one-way ladder that <em>"would permanently burn
+the candidate and block paraphrased retries"</em>; it returns to
+<code>pending_user_confirmation</code> instead. Nothing was installed
+and no suite was run.</p>
 <p><strong>2026-09-18</strong> — re-read with the subject still gone,
 and the archive re-verified because the seven marks rest on it.
 <code>bobaba76/Argos</code> still returns <em>"Repository not

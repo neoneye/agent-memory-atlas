@@ -136,7 +136,7 @@ deprecated or superseded.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jarmstrong158--context-keeper" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -736,6 +736,36 @@ rg -n &#39;assert|sys.exit|threshold&#39; evals/abstention.py                   
 rg -n &#39;evals&#39; .github/workflows/                                              # none: CI runs pytest tests/ only
 rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs  # none: no paper</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/jarmstrong158/context-keeper/commit/d08355a46548d5a20d9170d3271e2054c51a4db9"><code class="commit-id" title="d08355a46548d5a20d9170d3271e2054c51a4db9">d08355a4…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin; the mark
+holds and one sentence in the record was wrong. It said
+<em>"<code>get_context</code> drops non-active entries"</em>. It does
+not: both status tests inside <code>handle_get_context</code>
+(<code>:2069</code> on the assembled set, <code>:2170</code> on the
+related-entry walk) compare against <code>"deprecated"</code> alone, so
+a <code>superseded</code> entry is assembled into context — and
+<code>superseded</code> is the value the system writes <em>itself</em>
+when a newer entry supersedes an older one, while
+<code>deprecated</code> is the one a caller must ask for with a reason.
+The allowlist the record was describing is real but lives elsewhere:
+<code>handle_get_project_summary</code> keeps
+<code>status == "active"</code> across decisions, pipelines and
+constraints, and the rules writer does the same before emitting a file
+per scope. The write path is guarded the same way — the near-duplicate
+scan ignores deprecated and superseded entries, and only an
+<code>active</code> entry may be superseded — so the mark rests on
+those. Two things found alongside are worth a reader's time.
+<code>query_entries</code> returns every status by default and says so
+in its own tool description, which is the honest version of a default
+this atlas has seen claimed the other way round. And the abstention
+comment at <code>:2199</code> is the narrowed reading of this mark,
+arrived at independently: the composite score <em>"is inflated by
+recency/status/origin, so even a totally irrelevant active entry ranks
+~55 and looks confident"</em>, so the honesty signal was re-keyed to
+tag-and-text overlap alone — a project noticing that folding a state
+into a number stops the number answering how sure, and separating them.
+Nothing was installed and no suite was run.</p>
 <p><strong>2026-09-18</strong> — re-read at the same commit; nothing
 upstream has moved. All three marks stand, and the eval is the part
 worth drawing out further than the record does.</p>

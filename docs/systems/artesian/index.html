@@ -138,7 +138,7 @@ controls in the same result prove the query was not simply empty.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/aquifer-labs--artesian" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -887,6 +887,37 @@ fd -g &#39;SPEC.md&#39; -g &#39;receipts.schema.json&#39; .                     
 rg -n &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs ARTESIAN.md  # citations to others; no paper of its own
 rg -n &#39;FilesBackend::new&#39; crates/artesian-cli/src/main.rs                # the eviction handler constructs one unconditionally</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/aquifer-labs/artesian/commit/14e4f2d9494d396695f79350b9e42bacd82d953d"><code class="commit-id" title="14e4f2d9494d396695f79350b9e42bacd82d953d">14e4f2d9…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin. Every claim
+in the record holds and three things are added. The filter's
+<em>position</em> is the best of them: on the files backend the state
+clause is the first link in the chain (<code>files.rs:157-161</code>),
+ahead of node, tag and tenancy matching and ahead of
+<code>score_record</code>, so a withheld record never reaches the scorer
+— the shape this atlas keeps distinguishing from a rank that merely
+sinks a retired row. Eviction is symmetrical: it selects only records
+that are still <code>Active</code>, so nothing already archived is
+re-archived. Second, the escape hatch is named for one state and governs
+two — <code>--include-archived</code> re-admits <code>Retracted</code>
+records as well as <code>Archived</code> ones, since the predicate tests
+equality with <code>Active</code> rather than inequality with
+<code>Archived</code>. The <code>MemoryState</code> doc comment makes
+that discoverable; the flag name and the comment beside the filter
+(<em>"Exclude Archived records unless --include-archived is set"</em>)
+do not, and <code>Retracted</code> is the epistemically loaded value,
+the one carrying <code>retracted_at</code> and a
+<code>superseded_by</code> link to a stored retraction record. Third,
+<code>Active</code> is persisted as the <em>absence</em> of the field:
+<code>state</code> is <code>#[serde(default)]</code> with
+<code>skip_serializing_if = "is_active_state"</code>, so a record whose
+key is missing, hand-edited away or truncated reads as
+retrieval-eligible. That is deliberate and documented — <em>"the serde
+default is <code>Active</code> so that records written before this field
+existed round-trip correctly"</em> — and it is the opposite polarity
+from the one that protects an unconstrained column elsewhere in this
+corpus, so it is worth a reader knowing which way it falls. Nothing was
+installed and no suite was run.</p>
 <p><strong>2026-09-18</strong> — re-read at the same commit; nothing
 upstream has moved. <code>trust_state</code> stands:
 <code>MemoryState</code> is <code>Active | Archived | Retracted</code>

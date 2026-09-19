@@ -117,7 +117,7 @@ written reason.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Coding-Dev-Tools--engraphis" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -501,6 +501,38 @@ grep -rn &quot;review_state&quot; --include=&quot;*.py&quot; . | grep -v &quot;/
 grep -rn -i &quot;arxiv\|bibtex\|@article\|citation\|doi&quot; README.md docs/
 ls CITATION.cff</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/Coding-Dev-Tools/engraphis/commit/ca790261f499e0d124cdc7131235ffff89637248"><code class="commit-id" title="ca790261f499e0d124cdc7131235ffff89637248">ca790261…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin. The mark is
+right and the record pointed at the wrong line for it.
+<code>service.py:7011-7014</code> is not the packer: it is the review
+queue, and its test <em>keeps</em> the quarantined, pending and
+conflicted rows rather than dropping them — the comment two lines down
+says so, <em>"Pending/quarantined content is evidence for a human
+reviewer, not model context."</em> The packer's rule is
+<code>prompt_eligible</code> in <code>core/poisoning.py:531</code>, and
+it is the strongest form of this mechanism the sweep has found. One
+function answers <em>"whether a record may enter agent/model
+context"</em>, conjoining four tests — explicit trust, an explicit
+approval state, untainted metadata, and not-unverified-LLM-derivation —
+and its approval test is an equality with <code>REVIEW_APPROVED</code>,
+so an unrecognised value fails closed rather than slipping through a
+denylist. It has nine call sites, a sibling for graph edges with a
+documented legacy rule, and, decisively, it is registered as a SQLite
+user-defined function at <code>service.py:316-318</code> and
+<code>:1209</code>, so the SQL path appends
+<code>AND _engraphis_prompt_eligible(provenance, metadata)=1</code> and
+executes the same Python the application calls. There is one
+implementation of the rule, not a query copy and an application copy
+that drift. Two more details belong on the record: the write-time stamp
+is preceded by a comment naming its threat model — <em>"Transport labels
+are not capabilities… otherwise a remote caller could simply submit
+source=agent and self-approve prompt-visible content"</em> — and
+<code>_merge_provenance_envelopes</code> is written so that merging two
+trust envelopes cannot lose a restriction, with <code>trusted</code>
+false, <code>quarantined</code> true and any non-approved review state
+each surviving by construction. Nothing was installed and no suite was
+run.</p>
 <p><strong>2026-09-18</strong> — <a
 href="https://github.com/Coding-Dev-Tools/engraphis/commit/ca790261f499e0d124cdc7131235ffff89637248"><code class="commit-id" title="ca790261f499e0d124cdc7131235ffff89637248">ca790261…</code></a>
 — re-pinned from <code>c496480</code>; 36 files and +1,139 lines,

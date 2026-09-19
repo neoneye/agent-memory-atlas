@@ -117,7 +117,7 @@ deletes the files and checks it disappears.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kage-core--kage" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -613,6 +613,28 @@ harnesses including <code>locomo-kage-retrieval.mjs</code>,
 (the repository dogfoods the format; one packet is currently
 <code>"stale": true</code> against <code>mcp/kernel.ts</code>)</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/kage-core/kage/commit/e7cc087666fd3d01a5727f8a67e7b9e745fca904"><code class="commit-id" title="e7cc087666fd3d01a5727f8a67e7b9e745fca904">e7cc0876…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin. The record
+described the status as a field the read paths test, which is true and
+is the second half of the mechanism. The first half is that a pending
+packet lives somewhere else: <code>.agent_memory/packets</code> holds
+approved memory and <code>.agent_memory/pending</code> is the inbox, and
+<code>loadApprovedPackets</code> reads the packets directory then also
+filters <code>status === "approved"</code>, while
+<code>loadPendingPackets</code> reads the other directory outright. A
+pending packet is not a row recall skips — it is a file recall never
+opens, with the predicate as a second line over the partition. Two more
+sites are worth the record: a deprecated or superseded packet is refused
+by two paths rather than merely filtered, one of them returning the
+reason as a string a caller can print. And the one denylist in the file
+is on a surface where the opposite polarity is correct and justified
+with a measurement: the stale-findings scan skips deprecated and
+superseded but keeps pending, because flagging end-state packets as
+stale <em>"dominated the stale list"</em> — 292 of the findings in the
+audit that prompted the change — while a pending packet is exactly the
+thing a person can still act on. Nothing was installed and no suite was
+run.</p>
 <p><strong>2026-09-18</strong> — re-read at the same commit; nothing
 upstream has moved. <code>human_review</code> stands, and the producer
 test is worth recording because this system makes it the hard way. The

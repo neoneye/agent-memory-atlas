@@ -117,7 +117,7 @@ comes back.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/esaradev--icarus-memory-infra" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -550,6 +550,29 @@ behaviour was not traced.</li>
 argument guard at <code>:24</code>),
 <code>src/icarus_memory/cli.py</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/esaradev/icarus-memory-infra/commit/6e348708dcddb7cf1ad47726cb287cd4c9183c40"><code class="commit-id" title="6e348708dcddb7cf1ad47726cb287cd4c9183c40">6e348708…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin; the mark
+stands and the mechanism is tidier than the record showed. Three
+structures do three separate jobs and none of them is doing another's
+work: <code>_VERIFIED_ORDER</code> ranks,
+<code>_MIN_VERIFIED_THRESHOLD</code> expresses a floor as the set of
+values each threshold admits, and <code>_matches_status_filter</code>
+decides admission. The default matters and it is consistent:
+<code>status_filter</code> is <code>"safe"</code> at all four public
+entry points — both <code>search</code> signatures in
+<code>retrieval.py</code> and both in <code>__init__.py</code> — and
+<code>safe</code> excludes exactly the two values that mean <em>not
+believed</em>. Best of all is the shape of the escape. There is no
+<code>include_rolled_back</code> flag on the ordinary search to be
+passed by accident; the widening is a differently named function,
+<code>audit_search</code>, whose one-line docstring is <em>"Raw audit
+search that includes contradicted, rolled-back, and superseded
+entries."</em> A caller reaches the audit view by asking for it by name.
+The transition table is exact as recorded: <code>rolled_back</code> is
+terminal by having an empty outgoing set, and <code>contradicted</code>
+can only move to <code>rolled_back</code>, so nothing walks back to
+<code>verified</code>. Nothing was installed and no suite was run.</p>
 <p><strong>2026-09-18</strong> — <a
 href="https://github.com/esaradev/icarus-memory-infra/commit/6e348708dcddb7cf1ad47726cb287cd4c9183c40"><code class="commit-id" title="6e348708dcddb7cf1ad47726cb287cd4c9183c40">6e348708…</code></a>
 — re-read at the same commit. Nothing upstream had moved and nothing in

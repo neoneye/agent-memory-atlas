@@ -117,7 +117,7 @@ suppressing.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/quixiai--hexis" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -606,6 +606,35 @@ hidden prompt, or subjective rubric"</em></td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/quixiai/hexis/commit/7423622a276382f617196b5d8925bdcd7c8311ff"><code class="commit-id" title="7423622a276382f617196b5d8925bdcd7c8311ff">7423622a…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin. The predicate
+is where the record said and the mark is clean; what the record could
+not show is <em>why the other reads are allowed to omit it</em>.
+<code>user_model_claims</code> is read at nine places in
+<code>85_functions_connector_cognition.sql</code> and only one carries
+the pair, which looks like a leak until the function boundaries are
+drawn: every other read sits inside <code>upsert_user_model_claim</code>
+(the write path's dedup, supersession and contradiction resolution),
+inside <code>list_user_model_claims</code> where
+<code>p_review_status</code> is an optional filter a reviewer chooses,
+or inside <code>review_user_model_claim</code>, the writer itself.
+<code>get_approved_user_model_context</code> is the only one that
+assembles context for an agent, and it requires both
+<code>status = 'active'</code> and
+<code>review_status = 'approved'</code>. The fallback polarity is right
+too: an unrecognised review value coerces to
+<code>pending_review</code>, so the permissive value is never what an
+unexpected input lands on. One asymmetry is worth carrying, because it
+is the shape that has bitten a sibling system in this corpus from the
+other direction. Re-upserting an already-approved claim deliberately
+preserves the approval rather than returning it to the queue, while
+<code>claim</code> is overwritten with the incoming text unconditionally
+— and the row is matched on <code>claim_key</code>, a caller-supplied
+string derived from a parameter rather than from the claim. So the
+approval attaches to the key, and the sentence under that key can be
+replaced without a second review. Nothing was installed and no suite was
+run.</p>
 <p><strong>2026-09-18</strong> — <a
 href="https://github.com/quixiai/hexis/commit/7423622a276382f617196b5d8925bdcd7c8311ff"><code class="commit-id" title="7423622a276382f617196b5d8925bdcd7c8311ff">7423622a…</code></a>
 — re-read at the same commit; <code>main</code> has not moved since 1
