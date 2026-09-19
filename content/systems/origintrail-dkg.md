@@ -9,11 +9,10 @@ source_url: https://github.com/OriginTrail/dkg
 archive_name: "OriginTrail--dkg"
 revision: d499fb2d5bce5b4717c62c2dd1fda93dc7495f21
 revision_url: https://github.com/OriginTrail/dkg/commit/d499fb2d5bce5b4717c62c2dd1fda93dc7495f21
-analyzed_at: 2026-09-15
-capabilities: "scope_enforced, human_review, negative_eval"
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "working-memory isolation and context-graph read authority | packages/agent/src/dkg-agent-query.ts:425-434, packages/cli/src/daemon/routes/query.ts:551-586, packages/core/src/constants.ts:558 | a Working Memory graph is named by context graph and agent address, and a `view: 'working-memory'` query resolves to that agent's graph prefix; an agent-scoped token's caller address is compared with the requested address and a mismatch returns nothing, an omitted address defaults to the caller, and an unauthenticated caller may read only the node-default agent; private context graphs are denied before the engine runs. A node-operator token may read any local agent's Working Memory, which is how the OpenClaw adapter reads | packages/agent/test/wm-multi-agent-isolation-extra.test.ts:151, :188"
-  human_review: "the node UI's promotion controls | packages/node-ui/src/ui/views/project/components/ka.tsx:55-70 VerifyOnDkgButton, packages/node-ui/src/ui/views/project/components/entities.tsx:485 | a person browsing a project sees each entity with its layer and, where the project profile declares the labels, a button that shares a Working Memory draft to Shared Working Memory (\"Propose\", or a profile's \"Submit for editorial review\") and another that publishes shared content to Verifiable Memory (\"Ratify\", or \"Publish as canon\"); nothing reaches the other layers without one of these calls or an agent making the same call | packages/node-ui/src/ui/views/project/components/ka.tsx"
   negative_eval: "the memory-layer end-to-end suite | packages/agent/test/e2e-memory-layers.test.ts:432 | writes one triple to Working Memory, asserts the draft query returns it, then asserts the same subject returns no binding from Shared Working Memory or the default data graph; `:461` does the same for shared content against the data graph, and wm-multi-agent-isolation-extra.test.ts:151 asserts an agent authenticated as B reading A's Working Memory gets zero bindings beside `:188`, where A reading its own returns one | packages/agent/test/e2e-memory-layers.test.ts:432"
 stack_storage: "graph, files"
 stack_retrieval: "lexical, graph"
@@ -70,7 +69,17 @@ engine supports. A self-attested verifiable asset and a consensus-verified one
 rank the same. The trust levels are real, protocol-written and filterable on
 request; the default agent recall does not ask.
 
-Three marks: `scope_enforced`, `human_review`, `negative_eval`.
+Two marks: `scope_enforced`, `negative_eval`. `human_review` is withheld, and
+the layered model is the reason it looked earned rather than the reason it is:
+a draft really does wait in Working Memory and really is invisible from Shared
+Working Memory until something promotes it — the `negative_eval` case pins
+exactly that. What promotes it is not an actor the producing agent cannot be.
+The node UI's "Propose" and "Ratify" buttons call the same operations the
+shipped MCP server hands the model directly: `dkg_knowledge_asset_share` and
+`dkg_knowledge_asset_publish`, beside `dkg_knowledge_asset_finalize` and
+`dkg_knowledge_asset_discard` (`packages/mcp-dkg/src/tools/assertions.ts`). An
+agent can write a draft, share it and publish it without a person in the loop,
+so the layers separate *confidence* rather than *authority*.
 
 ## 2. Mental Model
 
@@ -437,5 +446,7 @@ replace the recall.
 - `rg -n "TRUST_LEVEL_PREDICATE" packages/core/src packages/agent/src packages/publisher/src`
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`d499fb2d5bce5b4717c62c2dd1fda93dc7495f21`](https://github.com/OriginTrail/dkg/commit/d499fb2d5bce5b4717c62c2dd1fda93dc7495f21); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**, and the record's own closing clause was the answer: nothing reaches the other layers without one of the UI calls *"or an agent making the same call"*. The shipped MCP server was enumerated rather than assumed, and it hands the model `dkg_knowledge_asset_share`, `dkg_knowledge_asset_publish`, `dkg_knowledge_asset_finalize` and `dkg_knowledge_asset_discard` — every verb behind the UI's "Propose" and "Ratify" buttons. The layering itself is not in question and keeps its credit: `scope_enforced` and `negative_eval` both stand, the latter on `WM data is not visible in SWM or default data graph`, which is the assertion that makes the withholding checkable. What the layers separate is confidence, not authority. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`d499fb2d5bce5b4717c62c2dd1fda93dc7495f21`](https://github.com/OriginTrail/dkg/commit/d499fb2d5bce5b4717c62c2dd1fda93dc7495f21) — first reading, at a commit dated 10 September 2026. Screened before opening: two auto-running editor surfaces read as data, two build-time execution points, no manifests inside the seven-day cooldown, 58 unpinned surfaces. Nothing was installed, built or run. The reading covered the memory model, the query and trust paths, lifecycle metadata, the OpenClaw memory slot and the memory-layer tests, not the chain, economics or synchronization packages.

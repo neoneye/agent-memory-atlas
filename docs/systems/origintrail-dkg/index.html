@@ -127,7 +127,7 @@ level.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-15</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/OriginTrail--dkg" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -135,7 +135,7 @@ level.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -191,8 +191,22 @@ never passes the minimum-trust filter the query engine supports. A
 self-attested verifiable asset and a consensus-verified one rank the
 same. The trust levels are real, protocol-written and filterable on
 request; the default agent recall does not ask.</p>
-<p>Three marks: <code>scope_enforced</code>, <code>human_review</code>,
-<code>negative_eval</code>.</p>
+<p>Two marks: <code>scope_enforced</code>, <code>negative_eval</code>.
+<code>human_review</code> is withheld, and the layered model is the
+reason it looked earned rather than the reason it is: a draft really
+does wait in Working Memory and really is invisible from Shared Working
+Memory until something promotes it — the <code>negative_eval</code> case
+pins exactly that. What promotes it is not an actor the producing agent
+cannot be. The node UI's "Propose" and "Ratify" buttons call the same
+operations the shipped MCP server hands the model directly:
+<code>dkg_knowledge_asset_share</code> and
+<code>dkg_knowledge_asset_publish</code>, beside
+<code>dkg_knowledge_asset_finalize</code> and
+<code>dkg_knowledge_asset_discard</code>
+(<code>packages/mcp-dkg/src/tools/assertions.ts</code>). An agent can
+write a draft, share it and publish it without a person in the loop, so
+the layers separate <em>confidence</em> rather than
+<em>authority</em>.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A unit of memory is a <strong>Knowledge Asset</strong>: a named set
 of RDF quads inside a <strong>context graph</strong> (the UI calls these
@@ -633,6 +647,24 @@ publish, discard, <code>provenanceEvents</code></li>
 <li><code>rg -n "TRUST_LEVEL_PREDICATE" packages/core/src packages/agent/src packages/publisher/src</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — audited at the unchanged pin <a
+href="https://github.com/OriginTrail/dkg/commit/d499fb2d5bce5b4717c62c2dd1fda93dc7495f21"><code class="commit-id" title="d499fb2d5bce5b4717c62c2dd1fda93dc7495f21">d499fb2d…</code></a>;
+nothing upstream moved, so the correction is ours.
+<code>human_review</code> is <strong>withdrawn</strong>, and the
+record's own closing clause was the answer: nothing reaches the other
+layers without one of the UI calls <em>"or an agent making the same
+call"</em>. The shipped MCP server was enumerated rather than assumed,
+and it hands the model <code>dkg_knowledge_asset_share</code>,
+<code>dkg_knowledge_asset_publish</code>,
+<code>dkg_knowledge_asset_finalize</code> and
+<code>dkg_knowledge_asset_discard</code> — every verb behind the UI's
+"Propose" and "Ratify" buttons. The layering itself is not in question
+and keeps its credit: <code>scope_enforced</code> and
+<code>negative_eval</code> both stand, the latter on
+<code>WM data is not visible in SWM or default data graph</code>, which
+is the assertion that makes the withholding checkable. What the layers
+separate is confidence, not authority. Screened again first; nothing was
+installed and no suite was run.</p>
 <p><strong>2026-09-15</strong> — <a
 href="https://github.com/OriginTrail/dkg/commit/d499fb2d5bce5b4717c62c2dd1fda93dc7495f21"><code class="commit-id" title="d499fb2d5bce5b4717c62c2dd1fda93dc7495f21">d499fb2d…</code></a>
 — first reading, at a commit dated 10 September 2026. Screened before
