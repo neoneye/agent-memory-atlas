@@ -115,14 +115,14 @@ apart.</p>
               <strong>takecchi/mnemora</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/takecchi/mnemora/commit/3676311e73ad95ca650957d44ccb46a627cc74da" title="3676311e73ad95ca650957d44ccb46a627cc74da">
+            <a class="meta-pill revision-pill" href="https://github.com/takecchi/mnemora/commit/509f4e739ca1ad017876a5b661062d23c2ead773" title="509f4e739ca1ad017876a5b661062d23c2ead773">
               <span>Analyzed revision</span>
-              <code>3676311e…</code>
+              <code>509f4e73…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/takecchi--mnemora" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -405,8 +405,31 @@ in the docs rather than in the types.</p>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/takecchi/mnemora/commit/509f4e739ca1ad017876a5b661062d23c2ead773"><code class="commit-id" title="509f4e739ca1ad017876a5b661062d23c2ead773">509f4e73…</code></a>
+— <code>trust_state</code> re-tested. The mark holds and the vocabulary
+anchor was exact (<code>packages/core/src/memory.ts:5-13</code>, a union
+and a Zod enum declared together). The recall anchors were not:
+<code>:1044</code> and <code>:1050</code> are dead, and the predicate
+<code>WHERE status IN ('active', 'contested')</code> now appears six
+times — the scan, its count, and the embedding-state variants beside
+them (<code>packages/postgres/src/memory-store.ts:1132</code>,
+<code>:1138</code>, <code>:1155</code>, <code>:1160</code>,
+<code>:1163</code>, <code>:1166</code>). One qualification the record
+omitted, and the project states it plainly in its own doc comment: the
+<code>expectedStatus</code> compare-and-set is opt-in. Passing it adds
+<code>AND status = …</code> to the UPDATE; when it is absent <em>nothing
+changes from today</em>, because most callers — the transitions to
+archived and forgotten — are meant to stay unconditional. The same
+comment is honest about a race the mechanism cannot close: when the
+conditional update matches no row, a second SELECT tells a missing id
+from a status mismatch, and because that re-read happens after the
+rejection the reported observed status is not the value at the moment of
+rejection. Recording the limit of a guard beside the guard is the habit
+this atlas looks for; the record now carries it. Screened again first;
+nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/takecchi/mnemora/commit/3676311e73ad95ca650957d44ccb46a627cc74da"><code class="commit-id" title="3676311e73ad95ca650957d44ccb46a627cc74da">3676311e…</code></a>
+href="https://github.com/takecchi/mnemora/commit/509f4e739ca1ad017876a5b661062d23c2ead773"><code class="commit-id" title="509f4e739ca1ad017876a5b661062d23c2ead773">509f4e73…</code></a>
 — first reading, at a commit dated 16 September 2026. Screened before
 opening, from a shallow clone: nineteen files scanned, no auto-run
 surfaces, no build-time execution points, three unpinned surfaces and
