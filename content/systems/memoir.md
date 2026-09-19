@@ -9,12 +9,11 @@ source_url: https://github.com/zhangfengcdt/memoir
 archive_name: "zhangfengcdt--memoir"
 revision: b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392
 revision_url: https://github.com/zhangfengcdt/memoir/commit/b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392
-analyzed_at: 2026-09-15
-capabilities: "scope_enforced, audit_log, human_review"
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, audit_log"
 capability_evidence:
   scope_enforced: "search — the namespace is an argument to the index query, defaulting to a named namespace rather than to all of them | src/memoir/services/search_service.py:25-48, src/memoir/services/vector_service.py:133-144 | `search(query, namespace=\"default\", k)` converts the namespace to its key tuple and passes it to `vector_service.search(namespace, …)`, which calls `ns_store.text_index_search(namespace, idx_name, query, k)`; keys are prefixed by namespace in the ProllyTree, so a search reads one namespace's index. Omitting the argument reads the `default` namespace, not every namespace | tests/test_services/"
   audit_log: "the versioned store's own commit history, exposed per key with authorship | src/memoir/services/crypto_service.py:187-200 `get_blame`, src/memoir/cli/commands/crypto.py:176, src/memoir/ui/handlers/crypto_handler.py:155 | memory is a ProllyTree over a git object store, so every mutation is a commit in the memory store itself — not the project's source history — and `get_blame(key, namespace)` reads that store's native commit log to return, per change, the commit, author, date and message. It is reachable from the CLI as `memoir crypto blame` and from the UI | tests/test_ui_commit_snapshot.py"
-  human_review: "branch merge — a conflicting merge is refused until a person resolves it | src/memoir/ui/handlers/branch_handler.py:283-285 | a merge that conflicts returns HTTP 409, *Merge conflict detected. Please resolve manually.*, so conflicting memory content does not take effect until someone adjudicates it. The basis is narrow and stated as such in the report: the `REJECT`/`ConflictInfo` path serves an automated read-merge-write caller as well as a person | tests/test_services/test_branch_service.py"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "seeded"
@@ -101,7 +100,7 @@ flowchart TD
     PT --> GS["harden_git_config: gc.auto=0, gc.pruneExpire=never<br/>applied on create AND on every open"]
     PT --> BL["memoir blame key → commit, author, date, message"]
     PT --> PF["memoir proof / verify → Merkle inclusion proof"]
-    BR["branch merge conflict"] --> H409["HTTP 409 — 'Please resolve manually'"]
+    BR["branch merge conflict"] --> H409["HTTP 409 — the merge simply<br/>does not happen; nothing is parked"]
 ```
 
 ## 3. Architecture
@@ -232,12 +231,16 @@ and the message. An append-only record of memory mutations in the system's own
 store, with authorship — which is more than most audit tables in this atlas
 carry.
 
-**Human review — awarded**, on a narrow basis worth stating precisely: a branch
-merge that conflicts returns HTTP 409 with "Merge conflict detected. Please
-resolve manually" (`ui/handlers/branch_handler.py:283-285`), which is a person
-adjudicating memory content before it takes effect. The `REJECT` /
-`ConflictInfo` path is designed for both an interactive CLI and an automated
-read-merge-write caller, so it supports the mark rather than establishing it.
+**Human review — withheld.** The narrow basis it once rested on does not hold
+up: a branch merge that conflicts returns HTTP 409 with "Merge conflict
+detected. Please resolve manually" (`ui/handlers/branch_handler.py:283-285`).
+That is an error response, not a state. The merge does not happen and nothing is
+parked anywhere waiting for a decision — the next caller may simply try again,
+and the `REJECT` / `ConflictInfo` path serves an automated read-merge-write
+caller as readily as an interactive one. Nothing else in `src/memoir/` holds a
+memory pending: the one other candidate, `memory_handler.py:157`, *"returns the
+proposed new content without writing to the store"*, which is a dry run a caller
+reads and then acts on itself.
 
 **`git_safety.py` is the best short file in this batch.** The hazard:
 
@@ -413,6 +416,8 @@ accident.
 `judge.py`, `memoir_runner.py`
 
 ## History
+
+**2026-09-19** — audited at the unchanged pin [`b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392`](https://github.com/zhangfengcdt/memoir/commit/b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392); nothing upstream moved, so the correction is ours. `human_review` is **withdrawn**. It had been awarded on a basis the previous entry itself called narrow — a 409 on a conflicting branch merge — and a 409 is a refusal to act, not a state a memory waits in. Nothing is parked, no one is asked, and the next caller can retry; the `REJECT` / `ConflictInfo` path serves an automated read-merge-write caller as readily as a person. The tree was searched for any other waiting state and has none: the only neighbouring candidate returns proposed content without writing, which is a dry run. `scope_enforced` and `audit_log` both stand, including the per-key `get_blame` history that carries authorship. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392`](https://github.com/zhangfengcdt/memoir/commit/b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392) — second reading, five commits on, spanning release 0.2.5. Screened again: one auto-run finding, the Claude Code plugin manifest; nothing inside the cooldown; nothing installed or run. All three marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. The additions are a visual time-travel History view over the store's commits, a toggle that auto-matches a branch, support for the MCP Python SDK 2, and new tests for the branch service and UI commit snapshots — the second of which gives `audit_log` a committed test it did not have. None changes a mark.
 

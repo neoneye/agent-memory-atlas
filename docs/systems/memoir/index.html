@@ -118,7 +118,7 @@ and no model call.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-15</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/zhangfengcdt--memoir" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -126,7 +126,7 @@ and no model call.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (42%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -203,7 +203,7 @@ flowchart TD
     PT --&gt; GS[&quot;harden_git_config: gc.auto=0, gc.pruneExpire=never&lt;br/&gt;applied on create AND on every open&quot;]
     PT --&gt; BL[&quot;memoir blame key → commit, author, date, message&quot;]
     PT --&gt; PF[&quot;memoir proof / verify → Merkle inclusion proof&quot;]
-    BR[&quot;branch merge conflict&quot;] --&gt; H409[&quot;HTTP 409 — &#39;Please resolve manually&#39;&quot;]</code></pre></details></figure>
+    BR[&quot;branch merge conflict&quot;] --&gt; H409[&quot;HTTP 409 — the merge simply&lt;br/&gt;does not happen; nothing is parked&quot;]</code></pre></details></figure>
 <h2 id="3-architecture">3. Architecture</h2>
 <p><code>src/memoir/</code>: <code>store</code> (the ProllyTree adapter,
 backend resolution, a cwd-locked tree, git safety),
@@ -345,14 +345,18 @@ graph, and <code>memoir blame &lt;key&gt;</code> returns, per change,
 the commit hash, the author, the date and the message. An append-only
 record of memory mutations in the system's own store, with authorship —
 which is more than most audit tables in this atlas carry.</p>
-<p><strong>Human review — awarded</strong>, on a narrow basis worth
-stating precisely: a branch merge that conflicts returns HTTP 409 with
-"Merge conflict detected. Please resolve manually"
-(<code>ui/handlers/branch_handler.py:283-285</code>), which is a person
-adjudicating memory content before it takes effect. The
-<code>REJECT</code> / <code>ConflictInfo</code> path is designed for
-both an interactive CLI and an automated read-merge-write caller, so it
-supports the mark rather than establishing it.</p>
+<p><strong>Human review — withheld.</strong> The narrow basis it once
+rested on does not hold up: a branch merge that conflicts returns HTTP
+409 with "Merge conflict detected. Please resolve manually"
+(<code>ui/handlers/branch_handler.py:283-285</code>). That is an error
+response, not a state. The merge does not happen and nothing is parked
+anywhere waiting for a decision — the next caller may simply try again,
+and the <code>REJECT</code> / <code>ConflictInfo</code> path serves an
+automated read-merge-write caller as readily as an interactive one.
+Nothing else in <code>src/memoir/</code> holds a memory pending: the one
+other candidate, <code>memory_handler.py:157</code>, <em>"returns the
+proposed new content without writing to the store"</em>, which is a dry
+run a caller reads and then acts on itself.</p>
 <p><strong><code>git_safety.py</code> is the best short file in this
 batch.</strong> The hazard:</p>
 <blockquote>
@@ -554,6 +558,21 @@ at the path you look under.</li>
 <code>cognitive.py</code>, <code>judge.py</code>,
 <code>memoir_runner.py</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — audited at the unchanged pin <a
+href="https://github.com/zhangfengcdt/memoir/commit/b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392"><code class="commit-id" title="b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392">b8b14fce…</code></a>;
+nothing upstream moved, so the correction is ours.
+<code>human_review</code> is <strong>withdrawn</strong>. It had been
+awarded on a basis the previous entry itself called narrow — a 409 on a
+conflicting branch merge — and a 409 is a refusal to act, not a state a
+memory waits in. Nothing is parked, no one is asked, and the next caller
+can retry; the <code>REJECT</code> / <code>ConflictInfo</code> path
+serves an automated read-merge-write caller as readily as a person. The
+tree was searched for any other waiting state and has none: the only
+neighbouring candidate returns proposed content without writing, which
+is a dry run. <code>scope_enforced</code> and <code>audit_log</code>
+both stand, including the per-key <code>get_blame</code> history that
+carries authorship. Screened again first; nothing was installed and no
+suite was run.</p>
 <p><strong>2026-09-15</strong> — <a
 href="https://github.com/zhangfengcdt/memoir/commit/b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392"><code class="commit-id" title="b8b14fce66ea1d9a0fcbcf5c516cee1bdfc8f392">b8b14fce…</code></a>
 — second reading, five commits on, spanning release 0.2.5. Screened
