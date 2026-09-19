@@ -7,14 +7,13 @@ page_kind: system
 source_name: "TAIPANBOX/engram"
 source_url: https://github.com/TAIPANBOX/engram
 archive_name: "TAIPANBOX--engram"
-revision: c6d0d3f2aabcba6c96a7c4f503a2ccc9dabb74a9
-revision_url: https://github.com/TAIPANBOX/engram/commit/c6d0d3f2aabcba6c96a7c4f503a2ccc9dabb74a9
-analyzed_at: 2026-09-16
-capabilities: "scope_enforced, audit_log, human_review, negative_eval"
+revision: 240a4d9d433e2f4a366d8877279449381b59b6fa
+revision_url: https://github.com/TAIPANBOX/engram/commit/240a4d9d433e2f4a366d8877279449381b59b6fa
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, audit_log, negative_eval"
 capability_evidence:
   scope_enforced: "agent_id as a vec0 partition key that the instance carries into every episodic read | engram/core.py:336, engram/schema.py:44-58, engram/store.py:893-901 | `agent_id = None if cross_agent else self._agent_id` is the whole rule: the key is fixed on the Engram instance at construction and reaches the query on every episodic read. In the vector index it is a vec0 partition key rather than an outer join predicate, so a scoped `recall(k=5)` counts five rows that already belong to the agent instead of trimming a global top-k that may contain none of them. A caller widens with `cross_agent=True` and cannot omit the key on a call. The boundary is drawn in the code rather than left to be discovered: facts and entities carry no agent_id and are shared across the agents in one file by decision, and `fact_count` declines to hide them because a scoped count would disagree with what `timeline()` and `contradictions()` return on the same instance | tests/test_multiagent.py:517 asserts a scoped recall over a 60-against-5 store returns none of the other agent's episodes, with tests/test_multiagent.py:524 as the cross-agent control"
   audit_log: "an NDJSON event file with a per-file append-only hash chain, off unless configured | engram/events.py:101-107, :396-412, engram/core.py:227, :272, :394, :495, :545, :605 | every event carries the previous event's hash over its own canonicalised body, the chain advances only after a successful write, and reopening a file resumes its chain rather than starting a new one, so one file stays one chain across process restarts. Coverage is the mutation set: `memory_written` from `observe`, `observe_many` and `assert_fact`, `memory_forgotten` from `forget`, `forget_fact` and `forget_entity` (one event per erased memory, deliberately, because a count cannot be reconciled against the `memory_written` events that created those memories), plus `reflection_run` and `contradiction_found`. Three limits belong with the mark. The log is off unless `events_path` or `ENGRAM_EVENTS_PATH` is set; it stays off on an instance with no agent_id even when a path is given, though the skip is counted rather than silent; and `emit` never raises, so a write failure is logged and swallowed | tests/test_events.py:89, :100, :128, :154-299 cover off-by-default, the agent_id rule, fail-open, and one test per event type"
-  human_review: "the CLI, over the same file the library writes | engram/cli.py:286, :291, :317, :379-383, :234-247 | `engram inspect` reports what the store holds, `engram recall` searches episodes, `engram timeline <entity>` prints a fact history with each row's validity period, and `engram forget <path> --episode ID`, or `--entity NAME` for everything about a person, erases. A person at a terminal reads what the agent believes about an entity and removes it, against the same `.engram` file the running agent uses, with `--agent-id` deciding whose episodes are in view. It is an after-the-fact surface: nothing waits for approval before it takes effect, and the erasure is permanent rather than a held state | tests/test_cli.py exercises the commands, and tests/test_multiagent.py:407-447 pins the agent-scoped CLI behaviour"
   negative_eval: "must-not-retrieve on a deliberately lopsided store, with its positive control beside it | tests/test_multiagent.py:474-529 | the fixture is the point: one agent writes 60 near-identical episodes and the other writes 5, so a global top-k contains none of the quiet agent's rows and the assertion cannot pass by accident. `test_scoped_recall_never_leaks_the_other_agent` then asserts both directions — no episode containing \"step\" reaches the quiet agent at k=20, and no episode containing \"rollback\" reaches the noisy one. `test_cross_agent_recall_still_sees_both` is the control that keeps the first test from passing vacuously on an empty result, and `test_scoped_hybrid_recall_returns_k_despite_a_dominant_agent` repeats the shape for hybrid mode on a fixture that denies BM25 any shared query term | the two run together in the committed suite, and the surrounding comment records the pre-v2.3 bug they regress: agent_id filtered in the outer join could only cut into a top-k vec0 had already chosen"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -208,7 +207,15 @@ object counts as a contradiction and emits an event.
 A Python library, an async wrapper, an `engram` CLI, and an MCP server exposing
 `remember`, `recall`, `why`, `forget` and `stats` with per-call `agent_id`.
 `reflect()` is deliberately not exposed as a tool — the pass that spends tokens
-and rewrites the semantic plane stays with the operator.
+and rewrites the semantic plane stays with the operator. That withholding is the
+one real actor boundary here, and it is on the *rewriting* pass rather than on
+admission: `forget` is on the tool surface, so the agent erases as readily as a
+person does. The `engram` CLI reads and erases the same `.engram` file the
+running agent uses, which makes it a correction surface rather than a review
+one — nothing waits for approval before it takes effect, and an erasure is
+permanent rather than a held state. This report therefore does not carry
+`human_review`; `engram/core.py` and `engram/cli.py` carry no pending, staged or
+approval state on a memory at this pin.
 
 ## 9. Reliability, Safety, and Trust
 
@@ -269,5 +276,7 @@ which is a claim about the person rather than about the actors column.
 | `tests/test_multiagent.py:474-529` | A must-not-retrieve assertion with its control beside it |
 
 ## History
+
+**2026-09-19** — re-pinned to [`240a4d9d433e2f4a366d8877279449381b59b6fa`](https://github.com/TAIPANBOX/engram/commit/240a4d9d433e2f4a366d8877279449381b59b6fa), 2 commits on. `human_review` is **withdrawn**, and the record's own closing sentence is the reason, kept here verbatim because it was already right: *"It is an after-the-fact surface: nothing waits for approval before it takes effect, and the erasure is permanent rather than a held state."* Under the question the mark now asks, that settles it. The tree was checked for an admission state at this pin and has none. Worth recording beside the withdrawal: the one place this design does hold something back from the agent is `reflect()`, kept off the tool surface so the pass that rewrites the semantic plane stays with the operator — while `forget` is on it, so erasure is not held back at all. The other three marks stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`c6d0d3f2aabcba6c96a7c4f503a2ccc9dabb74a9`](https://github.com/TAIPANBOX/engram/commit/c6d0d3f2aabcba6c96a7c4f503a2ccc9dabb74a9) — first reading, at a commit dated 13 September 2026. Screened before opening, from a shallow clone: three files scanned, no auto-run surfaces, no build-time execution points, one unpinned dependency surface and one dependency file inside the seven-day cooldown. `CLAUDE.md` is addressed to a reading agent and was recorded as data. Nothing was installed, built or run.
