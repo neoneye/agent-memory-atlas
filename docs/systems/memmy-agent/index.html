@@ -115,14 +115,14 @@ induces anti-pattern 'avoid' policies from failures.</p>
               <strong>MemTensor/memmy-agent</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/MemTensor/memmy-agent/commit/25acd5f29fc7df73b943713abe61f1b2f9839887" title="25acd5f29fc7df73b943713abe61f1b2f9839887">
+            <a class="meta-pill revision-pill" href="https://github.com/MemTensor/memmy-agent/commit/65c1825dc4d5daafc9d2ae283977cf08610c4938" title="65c1825dc4d5daafc9d2ae283977cf08610c4938">
               <span>Analyzed revision</span>
-              <code>25acd5f2…</code>
+              <code>65c1825d…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-14</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/MemTensor--memmy-agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -373,16 +373,46 @@ Vectors are separate in <code>memory_vector_entries</code>, stamped with
 the embedding model, provider and dimension — so unlike some stores here
 a vector carries the space that produced it.</p>
 <p>Three facts decide marks.</p>
-<p><strong>Status is discrete and gates recall.</strong>
-<code>activated</code>/<code>resolving</code>/<code>archived</code>/
-<code>deleted</code> is a real lifecycle: a <code>candidate</code> maps
-to <code>resolving</code> (<code>memory-service.ts:2183</code>), and the
-read paths filter <code>status IN ('activated','resolving')</code>
-(<code>indexed-candidate-pool.ts:41</code>,
-<code>retrieval-service.ts:1493</code>,
-<code>read-model/skill.ts:313</code>). <code>trust_state</code> is
-earned — a status field the store acts on, plus world-model confidence
-and skill-trial pass/fail as adjacent signals.</p>
+<p><strong>Status is discrete and gates recall, in two nested
+layers.</strong> The row status
+<code>activated</code>/<code>resolving</code>/<code>archived</code>/<code>deleted</code>
+is declared three times so the wire, the type and the store agree — a
+TypeScript union (<code>types.ts:33</code>), a Zod enum on the runtime
+contract (<code>contracts/memory-runtime.ts:35</code>) and a SQLite
+<code>CHECK</code> (<code>storage/schema.ts:35</code>). The lifecycle
+mapping is <code>memoryStatusForLifecycleStatus</code>
+(<code>memory-service.ts:2672-2674</code>), where a
+<code>candidate</code> becomes <code>resolving</code>. Reads act on it
+two ways: the cross-agent skill pool hard-codes
+<code>AND status IN ('activated', 'resolving')</code>
+(<code>storage/repositories.ts:698</code>), while <code>search</code>
+and the other list paths set it as a <strong>default</strong> a caller
+may widen (<code>:922</code>, <code>:967</code>, <code>:990</code>,
+<code>:1018</code>, <code>:1054</code>, <code>:1082</code>,
+<code>:1233</code>) — the viewer and HTTP APIs expose exactly that
+widening (<code>server/viewer-api.ts:438</code>,
+<code>server/http.ts:1538</code>). Invoking a skill outside the pair is
+refused rather than silently empty: <code>read-model/skill.ts:313</code>
+throws <code>conflict</code> naming the offending status.</p>
+<p>Beneath it sits a finer state that is the more interesting one. An L2
+policy carries
+<code>candidate | active | verification_required | quarantined | superseded | archived</code>
+(<code>algorithm/plugin-algorithms.ts:84</code>). Only
+<code>active</code> and <code>candidate</code> reach recall, and the
+candidate is not merely admitted — it is <strong>relabelled</strong> in
+the injected context as "Candidate Experience (unverified)" with an
+instruction to treat it as a hypothesis and verify it in the current
+task. Reuse is gated separately by
+<code>policyIsEligibleForDownstream</code> (<code>:3336-3341</code>),
+which requires <code>active</code> <em>and</em> a revalidation deadline
+that has not passed, so freshness and belief are two conditions rather
+than one blended number. Induction demotes a formerly
+<code>active</code> policy to <code>verification_required</code> when
+its support and gain stop clearing the bar
+(<code>service/evolution/policy-induction.ts:709-711</code>).</p>
+<p><code>trust_state</code> is earned on both layers, and neither enters
+a score: world-model confidence and skill-trial pass/fail are adjacent
+signals the ranker reads, the states are not.</p>
 <p><strong>Rejected values are recorded and keyed on content.</strong>
 The anti-pattern policies are keyed on a <code>stableHash</code> of a
 failure signature and merged rather than duplicated, and
@@ -482,11 +512,15 @@ person.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
 <ul>
-<li><strong>Trust is a status the store acts on.</strong> Recall filters
-to <code>activated</code>/ <code>resolving</code>, so an archived or
-deleted memory does not surface, and the candidate
-(<code>resolving</code>) lifecycle is a real intermediate state — not a
-score the ranker ignores.</li>
+<li><strong>Trust is a status the store acts on, and the injected
+context repeats it.</strong> Recall filters to
+<code>activated</code>/<code>resolving</code>, so an archived or deleted
+memory does not surface; a skill invoked outside that pair is refused by
+name rather than silently missing. Under it the policy lifecycle admits
+only <code>active</code> and <code>candidate</code>, and the candidate
+arrives in the prompt carrying its own caveat — the state is not just a
+filter the model never sees, it changes what the model is told about
+what it is reading.</li>
 <li><strong>Failures are remembered as anti-patterns.</strong> The
 negative-experience pipeline turns a failure into a durable,
 content-keyed avoid policy surfaced on read. That is the rejected-value
@@ -625,8 +659,45 @@ optional hosted backend.</li>
 — the must-not-inject assertions.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/MemTensor/memmy-agent/commit/65c1825dc4d5daafc9d2ae283977cf08610c4938"><code class="commit-id" title="65c1825dc4d5daafc9d2ae283977cf08610c4938">65c1825d…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line, which
+asks whether the field answers <em>may this be acted on</em> and gets
+used for filtering, rather than <em>how sure</em> and used for ranking.
+The mark stands and was understated. The record described one four-value
+row status; there are two nested states. The row status is declared
+three times over — a union, a Zod enum on the runtime contract and a
+SQLite <code>CHECK</code> — and reads act on it two ways: the
+cross-agent skill pool hard-codes the pair
+(<code>Memory/src/storage/repositories.ts:698</code>) while
+<code>search</code> and six sibling list paths set it as a default a
+caller may widen (<code>:922</code> and after), which the viewer and
+HTTP APIs deliberately do. Beneath it an L2 policy carries six values —
+candidate, active, verification_required, quarantined, superseded,
+archived (<code>Memory/src/algorithm/plugin-algorithms.ts:84</code>) —
+of which only the first two reach recall, and the candidate is
+relabelled in the injected context as Candidate Experience (unverified)
+with an instruction to treat it as a hypothesis. Reuse is gated by a
+separate predicate requiring <code>active</code> and an unexpired
+revalidation deadline (<code>:3336-3341</code>), so freshness and belief
+stay two conditions instead of one blended number, and induction demotes
+a formerly active policy to verification_required when its support and
+gain stop clearing the bar
+(<code>Memory/src/service/evolution/policy-induction.ts:709-711</code>).
+Three corrections to what was written down: the candidate-to-resolving
+mapping is <code>memoryStatusForLifecycleStatus</code> at
+<code>memory-service.ts:2672-2674</code>, not <code>:2183</code>; two
+frontmatter anchors were missing their <code>Memory/</code> prefix; and
+the evidence cited
+<code>Memory/tests/repository/memory-retrieval-index.test.ts:358</code>,
+which is an <code>EXPLAIN QUERY PLAN</code> assertion pinning the index,
+not the filtering behaviour — the behavioural test is
+<code>Memory/tests/service/retrieval/query-and-filter.test.ts:123-177</code>,
+which walks all six policy states through recall and asserts what comes
+back. Screened again first; nothing was installed and no suite was
+run.</p>
 <p><strong>2026-09-14</strong> — <a
-href="https://github.com/MemTensor/memmy-agent/commit/25acd5f29fc7df73b943713abe61f1b2f9839887"><code class="commit-id" title="25acd5f29fc7df73b943713abe61f1b2f9839887">25acd5f2…</code></a>
+href="https://github.com/MemTensor/memmy-agent/commit/65c1825dc4d5daafc9d2ae283977cf08610c4938"><code class="commit-id" title="65c1825dc4d5daafc9d2ae283977cf08610c4938">65c1825d…</code></a>
 — re-read, 749 commits past the previous pin across 1,128 files, most of
 it desktop application, release and Windows work rather than memory. All
 four marks stand and each was re-verified in source rather than carried

@@ -18445,9 +18445,9 @@ host-wide behind a loopback and admin gate</td>
 <td>A six-phase <code>sleep</code>: consolidation, dedup, quality audit
 that hard-deletes, auto-share, ambient state, graph extraction
 drain</td>
-<td><code>verified | observed | inferred | stale</code>, where only the
-first three are stored and <code>stale</code> is derived from disuse at
-30 days</td>
+<td>A stored epistemic tier — verified, observed, inferred or stale —
+beside a derived age-out boolean that exempts pinned and verified rows
+and fires at 30 days of disuse</td>
 <td>A scope boundary enforced in the query and deliberately suspended
 for consolidation, fenced at the transport layer instead; a retention
 prune that records its own execution</td>
@@ -22689,10 +22689,12 @@ MCP</td>
 <td>An evolution job pipeline (evolution_jobs + workers) consolidates,
 dedups and promotes memories up the layers and mines skills and
 anti-patterns — this is what 'self-evolving' means in code</td>
-<td>A discrete status (activated/resolving/archived/deleted) consumed on
-read — recall filters to activated and resolving; a resolving state is
-the candidate lifecycle; plus world-model confidence and skill-trial
-pass/fail</td>
+<td>Two nested states: a row status
+(activated/resolving/archived/deleted) recall filters on by default, and
+a six-value policy lifecycle
+(candidate/active/verification_required/quarantined/superseded/archived)
+where only active and candidate reach a prompt and the candidate is
+labelled unverified</td>
 <td>A genuinely local layered memory shared across every connected agent
 through an injected CLI skill, with an LLM evolution pipeline that
 induces reusable policies and anti-patterns from experience, and
@@ -29625,9 +29627,9 @@ SessionStart and Stop hooks it writes into Claude Code and Devin CLI
 config</td>
 <td>None. No consolidation, extraction or maintenance pass exists; the
 only pipeline stage implemented is <code>NoopPipeline</code></td>
-<td>A <code>trust_state</code> column carrying <code>candidate</code>
-and <code>rejected</code>, filtered out of every read path, beside a
-<code>rejection_reason</code> and a <code>superseded_by</code> pointer.
+<td>A <code>trust_state</code> column declaring candidate, verified,
+rejected and stale; only rejected is filtered out of every read path,
+and <code>verified</code> comes from a tool argument the model sets.
 <code>atoms.confidence</code> is a per-fact score the rule-based
 extractor writes and no read path consults</td>
 <td>A rejected-value tombstone the write path consults by content hash
@@ -40320,7 +40322,7 @@ href="https://github.com/Prateek816/7layermem/commit/d3500bfd74b380585e8220f6c6f
 <li><a
 href="https://github.com/cognicore-dev/cognicore-env">cognicore-dev/cognicore-env</a>
 at <a
-href="https://github.com/cognicore-dev/cognicore-env/commit/cfe1fd11e08b2be9774789ce7f11f15c6083c87e"><code class="commit-id" title="cfe1fd11e08b2be9774789ce7f11f15c6083c87e">cfe1fd11…</code></a></li>
+href="https://github.com/cognicore-dev/cognicore-env/commit/08d91395a5d4c6e714a141b2f42d91deb4030c88"><code class="commit-id" title="08d91395a5d4c6e714a141b2f42d91deb4030c88">08d91395…</code></a></li>
 <li><a
 href="https://github.com/RBKunnela/ALMA-memory">RBKunnela/ALMA-memory</a>
 at <a
@@ -40336,7 +40338,7 @@ href="https://github.com/fuyuxiang/echo-agent/commit/f612b74f5721a80237a709a3f62
 <li><a
 href="https://github.com/kitfunso/hippo-memory">kitfunso/hippo-memory</a>
 at <a
-href="https://github.com/kitfunso/hippo-memory/commit/da122e6b07effdc1153f514438d80d028d39dda2"><code class="commit-id" title="da122e6b07effdc1153f514438d80d028d39dda2">da122e6b…</code></a></li>
+href="https://github.com/kitfunso/hippo-memory/commit/f774b2db885d7f7c87dccb38b7f0ae919b14dc36"><code class="commit-id" title="f774b2db885d7f7c87dccb38b7f0ae919b14dc36">f774b2db…</code></a></li>
 <li><a href="https://github.com/kunal12203/swafra">kunal12203/swafra</a>
 at <a
 href="https://github.com/kunal12203/swafra/commit/669e7bdbcbcd421deb172a05f8fe52b741c0e915"><code class="commit-id" title="669e7bdbcbcd421deb172a05f8fe52b741c0e915">669e7bdb…</code></a></li>
@@ -40905,7 +40907,7 @@ at <a
 href="https://github.com/calibrae/palazzo/commit/07a788ac1f4c06343d697a149857e4df9a621a8a"><code class="commit-id" title="07a788ac1f4c06343d697a149857e4df9a621a8a">07a788ac…</code></a></li>
 <li><a href="https://github.com/youngbryan97/aura">youngbryan97/aura</a>
 at <a
-href="https://github.com/youngbryan97/aura/commit/165f29a83b47362fccf0cddca4b3322fcb597a7a"><code class="commit-id" title="165f29a83b47362fccf0cddca4b3322fcb597a7a">165f29a8…</code></a>
+href="https://github.com/youngbryan97/aura/commit/cf84a733c4bcf174646bc2a955d996ed170b990e"><code class="commit-id" title="cf84a733c4bcf174646bc2a955d996ed170b990e">cf84a733…</code></a>
 — read only at the second pin; the previous pin is an ancestor, so the
 5,339-commit drift is real rather than a rewrite; two manifests inside
 the seven-day cooldown, so nothing was installed and the audit-chain
@@ -41940,7 +41942,7 @@ dependency surface changed the same day, so nothing was installed</li>
 <li><a
 href="https://github.com/tinhien11/remem-mcp">tinhien11/remem-mcp</a> at
 <a
-href="https://github.com/tinhien11/remem-mcp/commit/40c1a26de76946d3522b557aa819f272ab8f4481"><code class="commit-id" title="40c1a26de76946d3522b557aa819f272ab8f4481">40c1a26d…</code></a>
+href="https://github.com/tinhien11/remem-mcp/commit/7590cecee7347ee3b3f855d0c48fe0537b445d7f"><code class="commit-id" title="7590cecee7347ee3b3f855d0c48fe0537b445d7f">7590cece…</code></a>
 — read only at the third pin, 70 commits and four versions on; a
 manifest was inside the cooldown, so nothing was installed. All four
 marks re-tested at the producer; the v11 raw fallback drops
@@ -42455,7 +42457,7 @@ about tests are claims about their committed source</li>
 <li><a
 href="https://github.com/GuyMannDude/mnemo-cortex">GuyMannDude/mnemo-cortex</a>
 at <a
-href="https://github.com/GuyMannDude/mnemo-cortex/commit/ef056f3410fc3321c7e6059739f74d687a6cac28"><code class="commit-id" title="ef056f3410fc3321c7e6059739f74d687a6cac28">ef056f34…</code></a>
+href="https://github.com/GuyMannDude/mnemo-cortex/commit/fec22efd46c83b62899cc76d4e9bc9b8e12df84b"><code class="commit-id" title="fec22efd46c83b62899cc76d4e9bc9b8e12df84b">fec22efd…</code></a>
 — read only; four dependency manifests under <code>integrations/</code>
 changed the day of the pin, inside the cooldown, and a build-time
 execution point. Nothing was installed and the suite was not run</li>
@@ -42691,7 +42693,7 @@ append-only event logs were read from <code>engine.ts</code>,
 <li><a
 href="https://github.com/MemTensor/memmy-agent">MemTensor/memmy-agent</a>
 at <a
-href="https://github.com/MemTensor/memmy-agent/commit/25acd5f29fc7df73b943713abe61f1b2f9839887"><code class="commit-id" title="25acd5f29fc7df73b943713abe61f1b2f9839887">25acd5f2…</code></a>
+href="https://github.com/MemTensor/memmy-agent/commit/65c1825dc4d5daafc9d2ae283977cf08610c4938"><code class="commit-id" title="65c1825dc4d5daafc9d2ae283977cf08610c4938">65c1825d…</code></a>
 — read only; FRESH manifests across the workspaces, so nothing was
 installed or run. The <code>Memory/</code> package was confirmed as the
 authoritative local SQLite engine (distinct from the MemOS Python

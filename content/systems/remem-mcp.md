@@ -7,13 +7,13 @@ page_kind: system
 source_name: "tinhien11/remem-mcp"
 source_url: https://github.com/tinhien11/remem-mcp
 archive_name: "tinhien11--remem-mcp"
-revision: 40c1a26de76946d3522b557aa819f272ab8f4481
-revision_url: https://github.com/tinhien11/remem-mcp/commit/40c1a26de76946d3522b557aa819f272ab8f4481
-analyzed_at: 2026-09-14
+revision: 7590cecee7347ee3b3f855d0c48fe0537b445d7f
+revision_url: https://github.com/tinhien11/remem-mcp/commit/7590cecee7347ee3b3f855d0c48fe0537b445d7f
+analyzed_at: 2026-09-19
 capabilities: "tombstone, trust_state, scope_enforced, negative_eval"
 capability_evidence:
   tombstone: "the capture write path | src/server.ts | handleCapture hashes the redacted content, calls findRejectedByContentHash before writing, and refuses with the stored rejection_reason unless override_rejection is set; a partial index on content_hash WHERE trust_state = rejected backs the lookup | tests: forget creates a tombstone (soft delete) and prevents recapture in search"
-  trust_state: "the captures table | src/storage/sqlite.ts | trust_state carries candidate and rejected, reject() sets it with a rejection_reason and drops the vector row, and every read path filters trust_state != rejected | tests: tombstoned row still exists in DB with deleted_at set, get() returns null for tombstoned entry"
+  trust_state: "the captures table — four declared states, three writers, and two schemas that disagree about the fifth | src/storage/types.ts:20, src/storage/sqlite.ts:2091 and :2153 and :2163-2165, src/server.ts:2163, src/storage/schema.sql:66, src/hook-handlers.ts:3941 | `TrustState` is candidate, verified, rejected and stale. `reject` writes rejected with a rejection_reason and drops the vector row; the supersede path writes stale with a superseded_by pointer and a valid_until; `verified` is set from a tool argument the calling model supplies. Every read filters `trust_state != rejected` (src/server.ts:1541, src/hook-handlers.ts:480, :485, :884, :4684) and a partial index backs the write-path recapture lookup, so the state filters and never ranks. Two caveats a reader should have: `setTrustState` has no production caller, only tests, and the canonical schema defaults the column to candidate while the hooks path creates the same table defaulting it to trusted — a value outside the union — so a hook-written row is born in one state or the other depending on which process created the database | tests/integration/correction.test.ts:245-265 is the only caller of setTrustState; tests: tombstoned row still exists in DB with deleted_at set, get() returns null for tombstoned entry"
   scope_enforced: "the captures read path, both arms | src/server.ts | handleRecall defaults sessionKey to defaultSessionKey() when the caller omits it, and storage.search applies session_key = ? to the BM25 and vector arms alike | tests: recall without session_key does NOT leak across projects (real handler)"
   negative_eval: "the captures read path — scope boundary and rejected content | tests/integration/atlas-fixes.test.ts:116 and :152, tests/integration/correction.test.ts:83-320 | `recall without session_key does not leak across projects` and `search without session_key does not leak across projects` pin the scope boundary; `correction.test.ts` adds the content cases — a rejected capture must not appear in recall, in vector search or in hybrid search, `findConflicts` must not return rejected captures, and a non-rejected capture must not be returned by `findRejectedByContentHash`. The suite moved out of `src/__tests__` into `tests/` since the previous pin | tests/integration/correction.test.ts:303 is the hybrid-search case"
 stack_storage: "sqlite"
@@ -28,7 +28,7 @@ matrix:
   scoping: "`session_key` defaulting to `sha256(cwd)`, applied as `session_key = ?` on the BM25 and vector arms alike, substituted by each read handler before the storage layer sees the argument; beside it `agent_id`, `team_id`, `user_id` and `task_id`, with an `org` scope that deliberately drops the agent filter for cross-agent handoff"
   integration: "Six MCP tools — recall, capture, search, forget, handoff, adr — plus SessionStart and Stop hooks it writes into Claude Code and Devin CLI config"
   background: "None. No consolidation, extraction or maintenance pass exists; the only pipeline stage implemented is `NoopPipeline`"
-  trust: "A `trust_state` column carrying `candidate` and `rejected`, filtered out of every read path, beside a `rejection_reason` and a `superseded_by` pointer. `atoms.confidence` is a per-fact score the rule-based extractor writes and no read path consults"
+  trust: "A `trust_state` column declaring candidate, verified, rejected and stale; only rejected is filtered out of every read path, and `verified` comes from a tool argument the model sets. `atoms.confidence` is a per-fact score the rule-based extractor writes and no read path consults"
   strengths: "A rejected-value tombstone the write path consults by content hash before every capture, refusing with the stored reason and an explicit override; a scope default applied by every shipping read handler and pinned by a test that enters through one rather than through a helper; secret redaction before hashing and storage"
   risks: "The tombstone is scoped to `(content_hash, session_key, agent_id)`, so the same rejected value re-asserted under a different agent id or project is not refused; the audit log records tool calls to a file rather than mutations to the store; and `override_rejection` is a plain tool argument the model can set for itself"
 ---
@@ -93,13 +93,34 @@ level:
 | L1 | `atoms` — `fact`, `confidence` | written by the rule-based extractor the default config selects |
 | L2 | `scenarios` — `atom_ids`, `summary`, `persona_tags` | table created, never written |
 
-The epistemic state machine is two states wide, and the second state is the
-report. A capture arrives as `candidate`; `reject(id, reason)` moves it to
-`rejected`, which every read path filters out and the *write* path looks up by
-content hash; `superseded_by` points a correction at what it replaced and is
-excluded from retrieval the same way; `forget` with a confirm destroys the row
-outright. Nothing verifies a capture and nothing expires one, so `candidate` is
-where almost everything stays.
+The epistemic state machine declares four states and earns its mark on one of
+them. `TrustState` is `candidate | verified | rejected | stale`
+(`src/storage/types.ts:20`). A capture arrives as `candidate`; `reject(id,
+reason)` moves it to `rejected` with the reason and a `deleted_at`
+(`src/storage/sqlite.ts:2091`), which every read path filters out and the *write*
+path looks up by content hash; the supersede path moves it to `stale` and sets
+`superseded_by` and `valid_until` (`:2153`); `forget` with a confirm destroys the
+row outright.
+
+Only `rejected` filters. `stale` is written but never tested for — a superseded
+row is kept out of retrieval by the `superseded_by IS NULL` clause beside it
+(`src/server.ts:1541`), not by its state, so the state and the pointer are two
+mechanisms for one job. `verified` is set from an argument on the tool call
+(`src/server.ts:2163`, `:3060`), which makes it the model's own assertion about
+itself rather than a fact about who checked. And `setTrustState`
+(`src/storage/sqlite.ts:2163-2165`), the general-purpose setter that would let
+something else move a row between states, has no caller outside the test suite.
+
+One discrepancy is worth writing down, because it decides what state a memory is
+born in. The canonical schema declares `trust_state TEXT NOT NULL DEFAULT
+'candidate'` (`src/storage/schema.sql:66`). The hooks path opens the database
+directly, bypassing the backend's migration, and creates the same table itself
+with `trust_state TEXT DEFAULT 'trusted'` (`src/hook-handlers.ts:3941`) — a fifth
+value the `TrustState` union does not contain. Every hook insert omits the column
+(`:844`, `:1340`, `:1748`, `:1980`, `:4246`), so the default decides, and
+`CREATE TABLE IF NOT EXISTS` means whichever process reached the file first fixes
+that default for the life of the database. The same hook-captured memory is
+`candidate` on one machine and `trusted` on another.
 
 Two questions then decide what a query can reach, and neither is about ranking.
 The first is which session the caller is in, answered by a default the handler
@@ -114,7 +135,7 @@ flowchart TB
     RJ -- yes --> REF["refused, with the stored<br/>rejection_reason<br/>unless override_rejection"]
     RJ -- no --> DH{"content_hash<br/>already present<br/>in this session?"}
     DH -- yes --> SKIP["skipped as duplicate"]
-    DH -- no --> W["INSERT captures<br/>session_key = args ?? sha256 of cwd<br/>trust_state = candidate"]
+    DH -- no --> W["INSERT captures<br/>session_key = args ?? sha256 of cwd<br/>trust_state = candidate<br/>(trusted on a hooks-created DB)"]
     W --> FTS["FTS5 row via trigger"]
     W --> VEC["captures_vec row, 384-dim"]
 
@@ -359,11 +380,13 @@ has to be careful: the lookup is scoped to
 different agent id or in another project is not refused, and `override_rejection`
 is an ordinary tool argument the model that was just refused can set for itself.
 
-**A two-value trust state that both read arms honour.** `candidate` on insert,
-`rejected` after `reject(id, reason)`, with `AND c.trust_state != 'rejected'` on
-the BM25 and vector arms alike, beside `AND c.superseded_by IS NULL`. It is a
-state used for filtering rather than a score used for ranking, which is the
-distinction the mark turns on.
+**One of four trust states is honoured by both read arms.** `AND c.trust_state
+!= 'rejected'` sits on the BM25 and vector arms alike, beside `AND
+c.superseded_by IS NULL`. That is a state used for filtering rather than a score
+used for ranking, which is the distinction the mark turns on — and the mark rests
+on `rejected` alone. `stale` is written and never read back, `verified` is the
+caller's own claim, and the general setter that would move a row between the four
+is called only from tests.
 
 **The audit log records that a tool ran, not what changed.** `args_hash` is a
 hash, so the log answers "was `forget` called at 14:02" and cannot answer "what
@@ -537,7 +560,9 @@ of its age, and none of it has been exercised by anyone but its author.
 
 ## History
 
-**2026-09-14** — [`40c1a26de76946d3522b557aa819f272ab8f4481`](https://github.com/tinhien11/remem-mcp/commit/40c1a26de76946d3522b557aa819f272ab8f4481) — third reading, 70 commits on, spanning versions v10 to v13. Screened again: one auto-run finding, `server.json` — the MCP registry manifest, which declares the published npm package `remem-mcp@0.7.4` over stdio as the launch target rather than executing anything in this tree — two build-time execution points, and a dependency surface changed four days before the reading, so nothing was installed and nothing was run. All four marks were re-tested at the producer and all four hold. The test suite moved from `src/__tests__` to `tests/`, so the `negative_eval` record is repointed and widened to the content cases in `tests/integration/correction.test.ts`; one of the new files is named `atlas-fixes.test.ts`. The v11 addition worth recording is `rawFallbackSearch`: when a hybrid search returns nothing, the store re-queries FTS with `trust_state` dropped from the exclusion list, keeping only `deleted_at IS NULL` and `superseded_by IS NULL` alongside the scope filters. That does not resurrect a rejected capture today, because `reject()` writes `deleted_at` in the same statement as `trust_state = 'rejected'` and the fallback excludes on `deleted_at` — so what keeps a rejected memory off this path is the soft-delete, not the trust state. The distinction is not hypothetical: `setTrustState` is on the storage interface and can produce `rejected` without `deleted_at`, `tests/unit/v11-features.test.ts:170-205` uses it for exactly that reason under the comment *"without deleted_at, unlike reject()"*, and asserts the fallback then returns the rejected capture. No production path calls `setTrustState`.
+**2026-09-19** — [`7590cecee7347ee3b3f855d0c48fe0537b445d7f`](https://github.com/tinhien11/remem-mcp/commit/7590cecee7347ee3b3f855d0c48fe0537b445d7f) — `trust_state` re-tested against the narrowed line — does the field answer whether a memory may be acted on and get used for filtering, or how sure and get used for ranking. The mark stands on `rejected`, and three things written down here were wrong, all of them already wrong at the previous pin rather than changed since. `TrustState` is four values, not two: candidate, verified, rejected and stale (`src/storage/types.ts:20`). Something does verify a capture — `verified` is set from an argument on the tool call (`src/server.ts:2163`, `:3060`), which is the model's assertion about itself. Something does expire one — the supersede path writes `stale` with a `superseded_by` and a `valid_until` (`src/storage/sqlite.ts:2153`), though nothing reads that state back: a superseded row is kept out of retrieval by the `superseded_by IS NULL` clause beside it, so the state and the pointer duplicate one job. `setTrustState` (`:2163-2165`), the setter that would move a row between the four, has no caller outside `tests/integration/correction.test.ts:245-265`. The find that matters most is a schema disagreement about what state a memory is born in. The canonical schema declares the column `NOT NULL DEFAULT 'candidate'` (`src/storage/schema.sql:66`); the hooks path opens the database directly, bypassing the backend's migration, and creates the same table with `DEFAULT 'trusted'` (`src/hook-handlers.ts:3941`) — a fifth value the union does not contain. Every hook insert omits the column, and `CREATE TABLE IF NOT EXISTS` means whichever process reached the file first fixes the default for the life of that database, so the same hook-captured memory is `candidate` on one machine and `trusted` on another. Section 3, the diagram, the matrix row and section 9 were rewritten. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-14** — [`7590cecee7347ee3b3f855d0c48fe0537b445d7f`](https://github.com/tinhien11/remem-mcp/commit/7590cecee7347ee3b3f855d0c48fe0537b445d7f) — third reading, 70 commits on, spanning versions v10 to v13. Screened again: one auto-run finding, `server.json` — the MCP registry manifest, which declares the published npm package `remem-mcp@0.7.4` over stdio as the launch target rather than executing anything in this tree — two build-time execution points, and a dependency surface changed four days before the reading, so nothing was installed and nothing was run. All four marks were re-tested at the producer and all four hold. The test suite moved from `src/__tests__` to `tests/`, so the `negative_eval` record is repointed and widened to the content cases in `tests/integration/correction.test.ts`; one of the new files is named `atlas-fixes.test.ts`. The v11 addition worth recording is `rawFallbackSearch`: when a hybrid search returns nothing, the store re-queries FTS with `trust_state` dropped from the exclusion list, keeping only `deleted_at IS NULL` and `superseded_by IS NULL` alongside the scope filters. That does not resurrect a rejected capture today, because `reject()` writes `deleted_at` in the same statement as `trust_state = 'rejected'` and the fallback excludes on `deleted_at` — so what keeps a rejected memory off this path is the soft-delete, not the trust state. The distinction is not hypothetical: `setTrustState` is on the storage interface and can produce `rejected` without `deleted_at`, `tests/unit/v11-features.test.ts:170-205` uses it for exactly that reason under the comment *"without deleted_at, unlike reject()"*, and asserts the fallback then returns the rejected capture. No production path calls `setTrustState`.
 
 **2026-08-31** — [`53a8612dea423db1255817ce0cfdb13086462129`](https://github.com/tinhien11/remem-mcp/commit/53a8612dea423db1255817ce0cfdb13086462129) — `scope_enforced` resolved in favour of the mark, at the same pin, and the sections arguing the other way were describing an earlier shape of the handler. `src/server.ts:1403` reads `const sessionKey = (args.session_key as string) ?? defaultSessionKey();`; `handleSearch` at `:1908` and `handleExplainRecall` at `:2236` repeat it verbatim, so `sqlite.ts`'s `if (sessionKey)` guard — which does treat `undefined` as no filter — has no shipped caller that reaches it. `tests/integration/full-flow.test.ts:325` asserts the property through `createServer` and the live `_requestHandlers` entry rather than through a helper.
 

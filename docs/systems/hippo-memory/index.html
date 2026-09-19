@@ -108,14 +108,14 @@ enforced in the query and suspended on purpose for consolidation.</p>
               <strong>kitfunso/hippo-memory</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/kitfunso/hippo-memory/commit/da122e6b07effdc1153f514438d80d028d39dda2" title="da122e6b07effdc1153f514438d80d028d39dda2">
+            <a class="meta-pill revision-pill" href="https://github.com/kitfunso/hippo-memory/commit/f774b2db885d7f7c87dccb38b7f0ae919b14dc36" title="f774b2db885d7f7c87dccb38b7f0ae919b14dc36">
               <span>Analyzed revision</span>
-              <code>da122e6b…</code>
+              <code>f774b2db…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-14</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kitfunso--hippo-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -194,8 +194,9 @@ on the CLI, HTTP and MCP surfaces, and a refused write is itself audited
 is exact-normalized-value only: a paraphrase of a rejected value still
 evades it (<code>src/rejection.ts:5-8</code>). That earns
 <code>tombstone</code>.</p>
-<p>Second weakness, and subtler: <strong>staleness is computed from
-disuse, not from evidence.</strong> See section 2.</p>
+<p>Second weakness, and subtler: <strong>the one place the confidence
+state filters, it filters on disuse rather than on evidence.</strong>
+See section 2.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
 <p>A memory is a <strong>row in SQLite</strong> carrying
 <code>strength</code>, <code>half_life_days</code>, <code>layer</code>,
@@ -206,22 +207,40 @@ disuse, not from evidence.</strong> See section 2.</p>
 <p><code>confidence</code> is the epistemic axis and it is a discrete
 state, not a score:
 <code>ConfidenceLevel = 'verified' | 'observed' | 'inferred' | 'stale'</code>
-(<code>src/memory.ts:23</code>). <strong>Only the first three are ever
-stored.</strong> <code>resolveConfidence</code>
-(<code>src/memory.ts:447</code>) short-circuits on <code>pinned</code>
-or <code>verified</code>, then returns <code>'stale'</code> when
-<code>last_retrieved</code> is more than thirty days old, otherwise the
-stored value.</p>
-<p>That is worth stating plainly, because it is the design's quiet
-substitution: a memory goes stale <strong>because nobody looked at
-it</strong>, not because anything suggested it stopped being true. A
-verified fact is exempt; an <code>observed</code> one that happens to be
-both correct and unfashionable is marked stale on a fixed thirty-day
-threshold. The other three values in that union are epistemic, so a
-reader sees a single field mixing "how we came to believe this" with
-"how recently it was useful" — the conflation <a
-href="../../patterns/decay-and-reinforcement/">decay and
-reinforcement</a> exists to separate.</p>
+(<code>src/memory.ts:23</code>), a <code>NOT NULL</code> column
+(<code>src/db.ts:65</code>). All four values are stored.
+<code>stale</code> is written by <code>invalidateMatching</code>
+(<code>src/invalidation.ts:138</code>), which also halves the half-life
+and tags the row <code>invalidated</code>, and again by the supersession
+path (<code>src/cli.ts:5195</code>).</p>
+<p>Disuse is a <strong>second, separate</strong> axis.
+<code>isAgedOut</code> (<code>src/memory.ts:444-448</code>) exempts a
+<code>pinned</code> row and a <code>verified</code> tier, then returns
+true when <code>last_retrieved</code> is more than thirty days old;
+<code>confidenceFacets</code> (<code>:456-458</code>) hands back
+<code>{ tier, agedOut }</code> — the stored belief and the derived
+disuse as two fields, not one. <code>resolveConfidence</code>
+(<code>:475-477</code>) is the one-line shim that collapses the pair
+back into a single value, and it survives for the single caller that
+needs a scalar.</p>
+<p>That split is the point, and it is worth stating plainly because the
+collapsed form is the design's quiet substitution: a memory that reads
+<code>stale</code> <strong>because nobody looked at it</strong> has had
+nothing said about whether it stopped being true. Keeping the two facets
+apart means a correct and unfashionable <code>observed</code> memory is
+reported as <code>observed, aged</code> rather than demoted — the
+conflation <a href="../../patterns/decay-and-reinforcement/">decay and
+reinforcement</a> exists to separate, handled here at the display and
+audit surfaces (<code>src/cli.ts:2087</code>,
+<code>src/mcp/server.ts:226</code>,
+<code>src/dashboard.ts:96</code>).</p>
+<p>The state gates one read path and no ranking.
+<code>sampleForReplay</code> (<code>src/replay.ts:105</code>) drops
+every survivor whose resolved confidence is <code>stale</code> from
+consolidation rehearsal; nothing in <code>src/rrf.ts</code>,
+<code>src/salience.ts</code>, <code>src/memory-value.ts</code> or
+<code>src/recall-scope.ts</code> reads <code>confidence</code> at all.
+Recall carries the tier as a label, not as a filter.</p>
 <p>Strength itself is separate and richer:
 <code>calculateStrength</code> (<code>src/memory.ts:309</code>) with
 <code>deriveHalfLife</code> (<code>:390</code>), an
@@ -236,7 +255,7 @@ flowchart TD
     C[&quot;capture / CLI / HTTP / MCP write&quot;] --&gt; S[&quot;stored with confidence:&lt;br/&gt;verified, observed or inferred&quot;]
     S --&gt; R{&quot;read&quot;}
     R --&gt;|&quot;pinned or verified&quot;| K[&quot;returned as stored&quot;]
-    R --&gt;|&quot;last_retrieved older&lt;br/&gt;than 30 days&quot;| ST[&quot;reported as stale&lt;br/&gt;(derived, never written)&quot;]
+    R --&gt;|&quot;last_retrieved older&lt;br/&gt;than 30 days&quot;| ST[&quot;reported tier, aged&lt;br/&gt;(derived, beside the tier)&quot;]
     R --&gt;|&quot;otherwise&quot;| K
     S --&gt;|&quot;a newer claim arrives&quot;| SU[&quot;superseded_by set&lt;br/&gt;— row hidden on read&quot;]
     S --&gt;|&quot;forget() / reject&quot;| D[[&quot;DELETE FROM memories&quot;]]
@@ -476,12 +495,12 @@ action.</li>
 </ul>
 <h3 id="avoid">Avoid</h3>
 <ul>
-<li><strong>Deriving an epistemic state from retrieval recency.</strong>
-<code>stale</code> sitting in a union with <code>verified</code>,
-<code>observed</code> and <code>inferred</code> invites a reader to
-treat "nobody asked for this in a month" as evidence about truth. Keep
-the decay axis and the belief axis apart, and let a memory be both
-current and unused.</li>
+<li><strong>Collapsing retrieval recency into an epistemic
+state.</strong> A single value that can mean either "we checked this" or
+"nobody asked for this in a month" invites a reader to treat disuse as
+evidence about truth. This project reached the separation the hard way
+and keeps the decay axis and the belief axis in two fields; copy the
+pair, not the scalar shim that still collapses them.</li>
 <li><strong>A quality audit that deletes host-wide.</strong> It is
 fenced here; if you copy the phase without the fence you have built a
 cross-tenant delete.</li>
@@ -516,9 +535,12 @@ path.</li>
 tenant still wants?</strong> Phase 3 hard-deletes on an
 <code>error</code> grade with no quarantine tier and no undo, and the
 audit row records that it happened rather than what was lost.</li>
-<li><strong>How often does <code>stale</code> fire on a memory that is
-still true?</strong> The threshold is a fixed thirty days of disuse, and
-nothing measures the false-positive rate.</li>
+<li><strong>How often does the replay filter drop a memory that is still
+true?</strong> <code>sampleForReplay</code> excludes anything resolving
+to <code>stale</code>, which includes a row aged out on a fixed thirty
+days of disuse. Display was taught to keep the two facets apart; this
+filter still reads the collapsed value, and nothing measures how much of
+what it drops was merely unused.</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <p><strong>Storage and schema</strong></p>
@@ -574,6 +596,39 @@ intervals</li>
 <code>src/ablation.ts</code>, <code>src/compare.ts</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/kitfunso/hippo-memory/commit/f774b2db885d7f7c87dccb38b7f0ae919b14dc36"><code class="commit-id" title="f774b2db885d7f7c87dccb38b7f0ae919b14dc36">f774b2db…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line: a state
+answers whether a memory may be acted on and gets used for filtering,
+where a confidence number answers how sure and gets used for ranking.
+The mark stands, and the record that carried it was wrong in both
+directions. It said <code>stale</code> is computed and never stored;
+<code>invalidateMatching</code> writes it onto every matching row
+(<code>src/invalidation.ts:138</code>), halving the half-life and
+tagging the row <code>invalidated</code>, and the supersession path
+writes it at <code>src/cli.ts:5195</code> — the 14 September entry below
+describes that writer in its own words while the record beside it denied
+one existed. It also said no test pins the pinned-and-verified
+exemption; <code>tests/confidence-display-facets.test.ts:156</code> and
+<code>tests/confidence-tier-preserved.test.ts:78</code> both do, and
+both predate the pin that reading used. What the mark actually rests on
+is narrower and better than what was written down: the stored tier and
+the derived age-out are two fields, not one
+(<code>confidenceFacets</code>, <code>src/memory.ts:456-458</code>),
+<code>resolveConfidence</code> (<code>:475-477</code>) is a one-line
+shim kept for the single caller that needs a scalar, and that caller is
+the only filter — <code>sampleForReplay</code>
+(<code>src/replay.ts:105</code>) drops a stale survivor from
+consolidation rehearsal. No ranking path reads <code>confidence</code>
+at all: <code>src/rrf.ts</code>, <code>src/salience.ts</code>,
+<code>src/memory-value.ts</code> and <code>src/recall-scope.ts</code>
+never mention it. That is the passing shape — a state that filters one
+read path and never enters a score. Section 2, the matrix row, the
+diagram and the Avoid bullet were rewritten to match. Screened again
+first: eleven freshness findings are shallow-clone artefacts dating
+every file to the tip, the three exec findings are the two npm lifecycle
+hooks and a pytest <code>conftest.py</code>, and the licence is
+unchanged MIT. Nothing was installed and no suite was run.</p>
 <p><strong>2026-09-14</strong> — <a
 href="https://github.com/kitfunso/hippo-memory/commit/da122e6b07effdc1153f514438d80d028d39dda2"><code class="commit-id" title="da122e6b07effdc1153f514438d80d028d39dda2">da122e6b…</code></a>
 — re-read, 52 commits past the previous pin. All six marks stand and

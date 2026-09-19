@@ -7,12 +7,12 @@ page_kind: system
 source_name: "kitfunso/hippo-memory"
 source_url: https://github.com/kitfunso/hippo-memory
 archive_name: "kitfunso--hippo-memory"
-revision: da122e6b07effdc1153f514438d80d028d39dda2
-revision_url: https://github.com/kitfunso/hippo-memory/commit/da122e6b07effdc1153f514438d80d028d39dda2
-analyzed_at: 2026-09-14
+revision: f774b2db885d7f7c87dccb38b7f0ae919b14dc36
+revision_url: https://github.com/kitfunso/hippo-memory/commit/f774b2db885d7f7c87dccb38b7f0ae919b14dc36
+analyzed_at: 2026-09-19
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, tombstone, negative_eval"
 capability_evidence:
-  trust_state: "the memory row — a stored confidence tier, with staleness derived rather than stored | src/memory.ts | `resolveConfidence` short-circuits on `pinned` and `verified`, then returns `stale` when `last_retrieved` is older than thirty days, so `verified | observed | inferred` are stored and `stale` is computed | tests/ — committed cases exercise the tiers; no test pins the verified/pinned short-circuit itself"
+  trust_state: "the memory row — a stored epistemic tier beside a derived age-out, kept as two fields rather than one collapsed value | src/memory.ts:23, :444-448, :456-458, :475-477, src/replay.ts:105, src/invalidation.ts:138 | `ConfidenceLevel` is verified / observed / inferred / stale in a NOT NULL column (`src/db.ts:65`). `isAgedOut` exempts `pinned` and a `verified` tier, then ages a row out after thirty days of disuse; `confidenceFacets` returns the stored tier and that boolean separately, and `resolveConfidence` is the one-line shim that collapses them for the single caller that filters. `stale` is stored as well as computed — `invalidateMatching` writes it onto every matching row, halves the half-life and tags the row `invalidated`, and the supersession path writes it at `src/cli.ts:5195`. The state filters rather than ranks: `sampleForReplay` drops anything resolving to stale from consolidation rehearsal, while no scoring path reads confidence at all | tests/confidence-display-facets.test.ts:156 and tests/confidence-tier-preserved.test.ts:78 pin the pinned and verified exemption; tests/confidence-tier-preserved.test.ts:68 pins the replay filter on both an aged-out survivor and a deliberately marked one"
   bitemporal: "two axes in two shapes — an explicit interval on policies, a successor-derived one on memories | src/policies.ts, src/search.ts | policies carry a required `valid_from` and a nullable `valid_to` read by the as-of query; memories carry `valid_from` and `superseded_by` with no `valid_to`, and `--as-of` recall derives expiry from the successor's `valid_from` at src/search.ts:429 and :1113, dropping later entries at :433 and :1117 | tests/ — the policy as-of path carries a committed fix note and test; the memory as-of derivation was read rather than run"
   scope_enforced: "recall — `tenant_id` carried on the row and applied in the search pipeline | src/search.ts | tenant scoping threaded through the recall path, with the sleep-time quality audit the known exception because `auditMemories` and `deleteEntry` run host-wide | tests/l9-tenant-scoping.test.ts"
   audit_log: "the store — an append-only mutation trail carrying tenant from the first migration | src/db.ts | `audit_log` created at :424, in the same migration block whose comment states both it and `memories` carry `tenant_id` from day one | tests/ — committed cases assert audit rows on mutation"
@@ -30,7 +30,7 @@ matrix:
   scoping: "`tenant_id` as a read-path predicate on the API; the CLI is single-tenant-per-process by design and `sleep` is host-wide behind a loopback and admin gate"
   integration: "31 HTTP routes, an MCP server, and a large CLI"
   background: "A six-phase `sleep`: consolidation, dedup, quality audit that hard-deletes, auto-share, ambient state, graph extraction drain"
-  trust: "`verified | observed | inferred | stale`, where only the first three are stored and `stale` is derived from disuse at 30 days"
+  trust: "A stored epistemic tier — verified, observed, inferred or stale — beside a derived age-out boolean that exempts pinned and verified rows and fires at 30 days of disuse"
   strengths: "A scope boundary enforced in the query and deliberately suspended for consolidation, fenced at the transport layer instead; a retention prune that records its own execution"
   risks: "Staleness is computed from retrieval recency rather than from evidence; the quality audit deletes host-wide; the rejected-value tombstone is keyed on the exact normalized value, so a paraphrase of a rejected value still evades it"
 ---
@@ -84,8 +84,8 @@ the CLI, HTTP and MCP surfaces, and a refused write is itself audited
 only: a paraphrase of a rejected value still evades it (`src/rejection.ts:5-8`).
 That earns `tombstone`.
 
-Second weakness, and subtler: **staleness is computed from disuse, not from
-evidence.** See section 2.
+Second weakness, and subtler: **the one place the confidence state filters, it
+filters on disuse rather than on evidence.** See section 2.
 
 ## 2. Mental Model
 
@@ -95,20 +95,33 @@ A memory is a **row in SQLite** carrying `strength`, `half_life_days`, `layer`,
 
 `confidence` is the epistemic axis and it is a discrete state, not a score:
 `ConfidenceLevel = 'verified' | 'observed' | 'inferred' | 'stale'`
-(`src/memory.ts:23`). **Only the first three are ever stored.**
-`resolveConfidence` (`src/memory.ts:447`) short-circuits on `pinned` or
-`verified`, then returns `'stale'` when `last_retrieved` is more than thirty
-days old, otherwise the stored value.
+(`src/memory.ts:23`), a `NOT NULL` column (`src/db.ts:65`). All four values are
+stored. `stale` is written by `invalidateMatching` (`src/invalidation.ts:138`),
+which also halves the half-life and tags the row `invalidated`, and again by the
+supersession path (`src/cli.ts:5195`).
 
-That is worth stating plainly, because it is the design's quiet substitution: a
-memory goes stale **because nobody looked at it**, not because anything
-suggested it stopped being true. A verified fact is exempt; an `observed` one
-that happens to be both correct and unfashionable is marked stale on a fixed
-thirty-day threshold. The other three values in that union are epistemic, so a
-reader sees a single field mixing "how we came to believe this" with "how
-recently it was useful" — the conflation
+Disuse is a **second, separate** axis. `isAgedOut` (`src/memory.ts:444-448`)
+exempts a `pinned` row and a `verified` tier, then returns true when
+`last_retrieved` is more than thirty days old; `confidenceFacets` (`:456-458`)
+hands back `{ tier, agedOut }` — the stored belief and the derived disuse as two
+fields, not one. `resolveConfidence` (`:475-477`) is the one-line shim that
+collapses the pair back into a single value, and it survives for the single
+caller that needs a scalar.
+
+That split is the point, and it is worth stating plainly because the collapsed
+form is the design's quiet substitution: a memory that reads `stale` **because
+nobody looked at it** has had nothing said about whether it stopped being true.
+Keeping the two facets apart means a correct and unfashionable `observed` memory
+is reported as `observed, aged` rather than demoted — the conflation
 [decay and reinforcement](../../patterns/decay-and-reinforcement/) exists to
-separate.
+separate, handled here at the display and audit surfaces (`src/cli.ts:2087`,
+`src/mcp/server.ts:226`, `src/dashboard.ts:96`).
+
+The state gates one read path and no ranking. `sampleForReplay`
+(`src/replay.ts:105`) drops every survivor whose resolved confidence is `stale`
+from consolidation rehearsal; nothing in `src/rrf.ts`, `src/salience.ts`,
+`src/memory-value.ts` or `src/recall-scope.ts` reads `confidence` at all. Recall
+carries the tier as a label, not as a filter.
 
 Strength itself is separate and richer: `calculateStrength` (`src/memory.ts:309`)
 with `deriveHalfLife` (`:390`), an `applyOutcome` that moves the score on a
@@ -124,7 +137,7 @@ flowchart TD
     C["capture / CLI / HTTP / MCP write"] --> S["stored with confidence:<br/>verified, observed or inferred"]
     S --> R{"read"}
     R -->|"pinned or verified"| K["returned as stored"]
-    R -->|"last_retrieved older<br/>than 30 days"| ST["reported as stale<br/>(derived, never written)"]
+    R -->|"last_retrieved older<br/>than 30 days"| ST["reported tier, aged<br/>(derived, beside the tier)"]
     R -->|"otherwise"| K
     S -->|"a newer claim arrives"| SU["superseded_by set<br/>— row hidden on read"]
     S -->|"forget() / reject"| D[["DELETE FROM memories"]]
@@ -336,10 +349,11 @@ from asserting that a particular memory must not surface.
 
 ### Avoid
 
-- **Deriving an epistemic state from retrieval recency.** `stale` sitting in a
-  union with `verified`, `observed` and `inferred` invites a reader to treat
-  "nobody asked for this in a month" as evidence about truth. Keep the decay
-  axis and the belief axis apart, and let a memory be both current and unused.
+- **Collapsing retrieval recency into an epistemic state.** A single value that
+  can mean either "we checked this" or "nobody asked for this in a month"
+  invites a reader to treat disuse as evidence about truth. This project reached
+  the separation the hard way and keeps the decay axis and the belief axis in
+  two fields; copy the pair, not the scalar shim that still collapses them.
 - **A quality audit that deletes host-wide.** It is fenced here; if you copy the
   phase without the fence you have built a cross-tenant delete.
 - **Supersession as your *only* correction.** Hiding a row does not stop the next
@@ -370,8 +384,11 @@ design stops at hiding rows.
 - **What happens to a memory the quality audit deletes that a tenant still
   wants?** Phase 3 hard-deletes on an `error` grade with no quarantine tier and
   no undo, and the audit row records that it happened rather than what was lost.
-- **How often does `stale` fire on a memory that is still true?** The threshold
-  is a fixed thirty days of disuse, and nothing measures the false-positive rate.
+- **How often does the replay filter drop a memory that is still true?**
+  `sampleForReplay` excludes anything resolving to `stale`, which includes a row
+  aged out on a fixed thirty days of disuse. Display was taught to keep the two
+  facets apart; this filter still reads the collapsed value, and nothing measures
+  how much of what it drops was merely unused.
 
 ## Appendix: File Index
 
@@ -407,6 +424,8 @@ design stops at hiding rows.
 - `src/eval-suite.ts`, `src/eval.ts`, `src/ablation.ts`, `src/compare.ts`
 
 ## History
+
+**2026-09-19** — [`f774b2db885d7f7c87dccb38b7f0ae919b14dc36`](https://github.com/kitfunso/hippo-memory/commit/f774b2db885d7f7c87dccb38b7f0ae919b14dc36) — `trust_state` re-tested against the narrowed line: a state answers whether a memory may be acted on and gets used for filtering, where a confidence number answers how sure and gets used for ranking. The mark stands, and the record that carried it was wrong in both directions. It said `stale` is computed and never stored; `invalidateMatching` writes it onto every matching row (`src/invalidation.ts:138`), halving the half-life and tagging the row `invalidated`, and the supersession path writes it at `src/cli.ts:5195` — the 14 September entry below describes that writer in its own words while the record beside it denied one existed. It also said no test pins the pinned-and-verified exemption; `tests/confidence-display-facets.test.ts:156` and `tests/confidence-tier-preserved.test.ts:78` both do, and both predate the pin that reading used. What the mark actually rests on is narrower and better than what was written down: the stored tier and the derived age-out are two fields, not one (`confidenceFacets`, `src/memory.ts:456-458`), `resolveConfidence` (`:475-477`) is a one-line shim kept for the single caller that needs a scalar, and that caller is the only filter — `sampleForReplay` (`src/replay.ts:105`) drops a stale survivor from consolidation rehearsal. No ranking path reads `confidence` at all: `src/rrf.ts`, `src/salience.ts`, `src/memory-value.ts` and `src/recall-scope.ts` never mention it. That is the passing shape — a state that filters one read path and never enters a score. Section 2, the matrix row, the diagram and the Avoid bullet were rewritten to match. Screened again first: eleven freshness findings are shallow-clone artefacts dating every file to the tip, the three exec findings are the two npm lifecycle hooks and a pytest `conftest.py`, and the licence is unchanged MIT. Nothing was installed and no suite was run.
 
 **2026-09-14** — [`da122e6b07effdc1153f514438d80d028d39dda2`](https://github.com/kitfunso/hippo-memory/commit/da122e6b07effdc1153f514438d80d028d39dda2) — re-read, 52 commits past the previous pin. All six marks stand and each mechanism was re-checked in source. Two fixes land on them directly. **A read was undoing an invalidation.** `hippo invalidate` marks a memory wrong by storing confidence `stale`, and the context path rewrote it — `confidence: e.confidence === 'stale' ? 'observed' : e.confidence` — so one recall restored the tier while the `invalidated` tag stayed on the row, leaving a memory that looked rejected and was treated as observed. The line is gone, the replacement comment states the principle it violated (confidence *"is an epistemic tier"*, not something a read derives), and `tests/invalidation-survives-recall.test.ts` pins it by name. This corpus keeps finding the same class — an archive erased by re-assertion, a record keyed on an id the next write reuses — and this is the sharpest form of it, because reading is the operation least expected to change what it reads. The second fix separates the stored confidence tier from the derived age-out, which is the same distinction one layer down. Beside them the schema gained two hardenings: a trigger rewritten so a `NULL` kind cannot bypass the check substitute, and `UNIQUE(memory_id, archived_at)` on `raw_archive` so re-archiving one id in the same instant cannot produce ambiguous audit rows. Screened again first; nothing was installed and no suite was run.
 

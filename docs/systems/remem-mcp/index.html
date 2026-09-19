@@ -110,14 +110,14 @@ key applied to both retrieval arms.</p>
               <strong>tinhien11/remem-mcp</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/tinhien11/remem-mcp/commit/40c1a26de76946d3522b557aa819f272ab8f4481" title="40c1a26de76946d3522b557aa819f272ab8f4481">
+            <a class="meta-pill revision-pill" href="https://github.com/tinhien11/remem-mcp/commit/7590cecee7347ee3b3f855d0c48fe0537b445d7f" title="7590cecee7347ee3b3f855d0c48fe0537b445d7f">
               <span>Analyzed revision</span>
-              <code>40c1a26d…</code>
+              <code>7590cece…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-14</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/tinhien11--remem-mcp" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -225,15 +225,43 @@ implements one level:</p>
 </tr>
 </tbody>
 </table></div>
-<p>The epistemic state machine is two states wide, and the second state
-is the report. A capture arrives as <code>candidate</code>;
-<code>reject(id, reason)</code> moves it to <code>rejected</code>, which
-every read path filters out and the <em>write</em> path looks up by
-content hash; <code>superseded_by</code> points a correction at what it
-replaced and is excluded from retrieval the same way;
-<code>forget</code> with a confirm destroys the row outright. Nothing
-verifies a capture and nothing expires one, so <code>candidate</code> is
-where almost everything stays.</p>
+<p>The epistemic state machine declares four states and earns its mark
+on one of them. <code>TrustState</code> is
+<code>candidate | verified | rejected | stale</code>
+(<code>src/storage/types.ts:20</code>). A capture arrives as
+<code>candidate</code>; <code>reject(id, reason)</code> moves it to
+<code>rejected</code> with the reason and a <code>deleted_at</code>
+(<code>src/storage/sqlite.ts:2091</code>), which every read path filters
+out and the <em>write</em> path looks up by content hash; the supersede
+path moves it to <code>stale</code> and sets <code>superseded_by</code>
+and <code>valid_until</code> (<code>:2153</code>); <code>forget</code>
+with a confirm destroys the row outright.</p>
+<p>Only <code>rejected</code> filters. <code>stale</code> is written but
+never tested for — a superseded row is kept out of retrieval by the
+<code>superseded_by IS NULL</code> clause beside it
+(<code>src/server.ts:1541</code>), not by its state, so the state and
+the pointer are two mechanisms for one job. <code>verified</code> is set
+from an argument on the tool call (<code>src/server.ts:2163</code>,
+<code>:3060</code>), which makes it the model's own assertion about
+itself rather than a fact about who checked. And
+<code>setTrustState</code>
+(<code>src/storage/sqlite.ts:2163-2165</code>), the general-purpose
+setter that would let something else move a row between states, has no
+caller outside the test suite.</p>
+<p>One discrepancy is worth writing down, because it decides what state
+a memory is born in. The canonical schema declares
+<code>trust_state TEXT NOT NULL DEFAULT 'candidate'</code>
+(<code>src/storage/schema.sql:66</code>). The hooks path opens the
+database directly, bypassing the backend's migration, and creates the
+same table itself with <code>trust_state TEXT DEFAULT 'trusted'</code>
+(<code>src/hook-handlers.ts:3941</code>) — a fifth value the
+<code>TrustState</code> union does not contain. Every hook insert omits
+the column (<code>:844</code>, <code>:1340</code>, <code>:1748</code>,
+<code>:1980</code>, <code>:4246</code>), so the default decides, and
+<code>CREATE TABLE IF NOT EXISTS</code> means whichever process reached
+the file first fixes that default for the life of the database. The same
+hook-captured memory is <code>candidate</code> on one machine and
+<code>trusted</code> on another.</p>
 <p>Two questions then decide what a query can reach, and neither is
 about ranking. The first is which session the caller is in, answered by
 a default the handler supplies rather than by the caller. The second is
@@ -245,7 +273,7 @@ flowchart TB
     RJ -- yes --&gt; REF[&quot;refused, with the stored&lt;br/&gt;rejection_reason&lt;br/&gt;unless override_rejection&quot;]
     RJ -- no --&gt; DH{&quot;content_hash&lt;br/&gt;already present&lt;br/&gt;in this session?&quot;}
     DH -- yes --&gt; SKIP[&quot;skipped as duplicate&quot;]
-    DH -- no --&gt; W[&quot;INSERT captures&lt;br/&gt;session_key = args ?? sha256 of cwd&lt;br/&gt;trust_state = candidate&quot;]
+    DH -- no --&gt; W[&quot;INSERT captures&lt;br/&gt;session_key = args ?? sha256 of cwd&lt;br/&gt;trust_state = candidate&lt;br/&gt;(trusted on a hooks-created DB)&quot;]
     W --&gt; FTS[&quot;FTS5 row via trigger&quot;]
     W --&gt; VEC[&quot;captures_vec row, 384-dim&quot;]
 
@@ -500,13 +528,15 @@ identical value asserted under a different agent id or in another
 project is not refused, and <code>override_rejection</code> is an
 ordinary tool argument the model that was just refused can set for
 itself.</p>
-<p><strong>A two-value trust state that both read arms honour.</strong>
-<code>candidate</code> on insert, <code>rejected</code> after
-<code>reject(id, reason)</code>, with
-<code>AND c.trust_state != 'rejected'</code> on the BM25 and vector arms
-alike, beside <code>AND c.superseded_by IS NULL</code>. It is a state
-used for filtering rather than a score used for ranking, which is the
-distinction the mark turns on.</p>
+<p><strong>One of four trust states is honoured by both read
+arms.</strong> <code>AND c.trust_state != 'rejected'</code> sits on the
+BM25 and vector arms alike, beside
+<code>AND c.superseded_by IS NULL</code>. That is a state used for
+filtering rather than a score used for ranking, which is the distinction
+the mark turns on — and the mark rests on <code>rejected</code> alone.
+<code>stale</code> is written and never read back, <code>verified</code>
+is the caller's own claim, and the general setter that would move a row
+between the four is called only from tests.</p>
 <p><strong>The audit log records that a tool ran, not what
 changed.</strong> <code>args_hash</code> is a hash, so the log answers
 "was <code>forget</code> called at 14:02" and cannot answer "what did it
@@ -719,8 +749,43 @@ property asserted for <code>recall</code> and for
 backup paths</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/tinhien11/remem-mcp/commit/7590cecee7347ee3b3f855d0c48fe0537b445d7f"><code class="commit-id" title="7590cecee7347ee3b3f855d0c48fe0537b445d7f">7590cece…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line — does
+the field answer whether a memory may be acted on and get used for
+filtering, or how sure and get used for ranking. The mark stands on
+<code>rejected</code>, and three things written down here were wrong,
+all of them already wrong at the previous pin rather than changed since.
+<code>TrustState</code> is four values, not two: candidate, verified,
+rejected and stale (<code>src/storage/types.ts:20</code>). Something
+does verify a capture — <code>verified</code> is set from an argument on
+the tool call (<code>src/server.ts:2163</code>, <code>:3060</code>),
+which is the model's assertion about itself. Something does expire one —
+the supersede path writes <code>stale</code> with a
+<code>superseded_by</code> and a <code>valid_until</code>
+(<code>src/storage/sqlite.ts:2153</code>), though nothing reads that
+state back: a superseded row is kept out of retrieval by the
+<code>superseded_by IS NULL</code> clause beside it, so the state and
+the pointer duplicate one job. <code>setTrustState</code>
+(<code>:2163-2165</code>), the setter that would move a row between the
+four, has no caller outside
+<code>tests/integration/correction.test.ts:245-265</code>. The find that
+matters most is a schema disagreement about what state a memory is born
+in. The canonical schema declares the column
+<code>NOT NULL DEFAULT 'candidate'</code>
+(<code>src/storage/schema.sql:66</code>); the hooks path opens the
+database directly, bypassing the backend's migration, and creates the
+same table with <code>DEFAULT 'trusted'</code>
+(<code>src/hook-handlers.ts:3941</code>) — a fifth value the union does
+not contain. Every hook insert omits the column, and
+<code>CREATE TABLE IF NOT EXISTS</code> means whichever process reached
+the file first fixes the default for the life of that database, so the
+same hook-captured memory is <code>candidate</code> on one machine and
+<code>trusted</code> on another. Section 3, the diagram, the matrix row
+and section 9 were rewritten. Screened again first; nothing was
+installed and no suite was run.</p>
 <p><strong>2026-09-14</strong> — <a
-href="https://github.com/tinhien11/remem-mcp/commit/40c1a26de76946d3522b557aa819f272ab8f4481"><code class="commit-id" title="40c1a26de76946d3522b557aa819f272ab8f4481">40c1a26d…</code></a>
+href="https://github.com/tinhien11/remem-mcp/commit/7590cecee7347ee3b3f855d0c48fe0537b445d7f"><code class="commit-id" title="7590cecee7347ee3b3f855d0c48fe0537b445d7f">7590cece…</code></a>
 — third reading, 70 commits on, spanning versions v10 to v13. Screened
 again: one auto-run finding, <code>server.json</code> — the MCP registry
 manifest, which declares the published npm package
