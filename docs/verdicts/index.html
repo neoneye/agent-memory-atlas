@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 607 reports.</strong></p>
+<p><strong>This page covers all 608 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24718,6 +24718,49 @@ the MCP surface carries no apply verb.</li>
 pair here — archived rows must stay out of an ordinary read, and must
 come back in an as-of read — is what stops a filter that is always on or
 always off from passing.</li>
+</ul>
+<h3 id="synapse-hippocampus"><a
+href="../systems/synapse-hippocampus/"><code>synapse-hippocampus</code></a></h3>
+<ul>
+<li>Best idea: <strong>write down which database behaviour a workaround
+exists for.</strong> The point-in-time filter compares
+<code>substring(r.valid_at, 0, 10)</code> rather than the field, and the
+comment says why — <em>"substring() forces function evaluation before
+comparison"</em>. That sentence is what stops the next maintainer
+deleting it as noise. Beside it, the forgetting curve is worth lifting
+whole: <code>S(t) = exp(-t / tau)</code> with <code>tau</code> stretched
+by salience and boosted by recall, which keeps how-memorable and
+how-recently-used as two inputs to one decay instead of one number doing
+both jobs.</li>
+<li>Biggest risk: <strong>the filter that decides whether a superseded
+fact is visible is tested by reading its own SQL.</strong> All three
+assertions in <code>tests/test_falkor.py</code> are string containment
+over the generated Cypher —
+<code>assert "r.invalid_at IS NULL" in query</code> — with no graph
+populated and no query executed, so no invalidated edge is ever observed
+being excluded. A generator that produced a correct-looking string and
+passed it to nothing would pass all three. Three files away,
+<code>test_cognitive_map.py</code> asserts on outcomes; the suite tests
+a traversal bound by what comes back and the supersession filter by its
+text.</li>
+<li>Most reusable component:
+<code>src/synapse/hippocampus/forgetting.py</code>. Self-contained,
+parameterised, independent of the graph, and tested on outcomes rather
+than on shape.</li>
+<li>Maturity impression: MIT, 66 files over
+<code>graphiti-core[falkordb]&gt;=0.29.2</code> — a floating constraint
+on the component that defines the data model. One mark,
+<code>negative_eval</code>, recorded narrowly. <code>bitemporal</code>
+is withheld and credited to <a href="../systems/graphiti/">graphiti</a>:
+<code>valid_at</code> and <code>invalid_at</code> are the dependency's
+fields, and counting them here would make two pages claim one
+mechanism.</li>
+<li>Study when: you are about to assert that a query builder produced
+the right clause and call it a test of the filter. Also read
+<code>src/synapse/tools.py:39</code> first if you deploy it —
+<code>at_time</code> is declared as a plain string, reaches Cypher
+through f-string interpolation, and the only thing between the model and
+the query language is a ten-character slice.</li>
 </ul>
         </article>
       </div>

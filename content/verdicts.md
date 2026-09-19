@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 607 reports.**
+**This page covers all 608 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5429,4 +5429,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: the filter builder in `src/lerim/context/store.py`. Besides the scope tri-state, it resolves the as-of moment and the status filter together in one helper, which is why an as-of read can correctly *ignore* `include_archived` instead of inheriting it — asking what was true in February must return a record archived in April.
 - Maturity impression: Apache 2.0, Python over SQLite at 653 files with 157 test files, an MCP server, an HTTP API, a Next.js dashboard and a `benchmarks/` tree. Four marks — `bitemporal`, `scope_enforced`, `human_review`, `negative_eval`. `human_review` covers skill patches rather than the records: a proposal is saved `pending_review`, `update_mode` defaults to `review` in both the table and the schema, auto-apply needs four conditions and records `applied_by` when it fires, and the MCP surface carries no apply verb.
 - Study when: you are writing the tests for a bitemporal store. The pair here — archived rows must stay out of an ordinary read, and must come back in an as-of read — is what stops a filter that is always on or always off from passing.
+
+### [`synapse-hippocampus`](../systems/synapse-hippocampus/)
+
+- Best idea: **write down which database behaviour a workaround exists for.** The point-in-time filter compares `substring(r.valid_at, 0, 10)` rather than the field, and the comment says why — *"substring() forces function evaluation before comparison"*. That sentence is what stops the next maintainer deleting it as noise. Beside it, the forgetting curve is worth lifting whole: `S(t) = exp(-t / tau)` with `tau` stretched by salience and boosted by recall, which keeps how-memorable and how-recently-used as two inputs to one decay instead of one number doing both jobs.
+- Biggest risk: **the filter that decides whether a superseded fact is visible is tested by reading its own SQL.** All three assertions in `tests/test_falkor.py` are string containment over the generated Cypher — `assert "r.invalid_at IS NULL" in query` — with no graph populated and no query executed, so no invalidated edge is ever observed being excluded. A generator that produced a correct-looking string and passed it to nothing would pass all three. Three files away, `test_cognitive_map.py` asserts on outcomes; the suite tests a traversal bound by what comes back and the supersession filter by its text.
+- Most reusable component: `src/synapse/hippocampus/forgetting.py`. Self-contained, parameterised, independent of the graph, and tested on outcomes rather than on shape.
+- Maturity impression: MIT, 66 files over `graphiti-core[falkordb]>=0.29.2` — a floating constraint on the component that defines the data model. One mark, `negative_eval`, recorded narrowly. `bitemporal` is withheld and credited to [graphiti](../systems/graphiti/): `valid_at` and `invalid_at` are the dependency's fields, and counting them here would make two pages claim one mechanism.
+- Study when: you are about to assert that a query builder produced the right clause and call it a test of the filter. Also read `src/synapse/tools.py:39` first if you deploy it — `at_time` is declared as a plain string, reaches Cypher through f-string interpolation, and the only thing between the model and the query language is a ten-character slice.
 

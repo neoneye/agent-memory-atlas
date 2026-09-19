@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A hippocampus-shaped wrapper over
+graphiti-core adding a salience-modulated forgetting curve and
+point-in-time search, whose temporal filter is proved by asserting its
+own Cypher string contains the clause.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Synapse — Agent Memory Atlas">
+    <meta property="og:description" content="A hippocampus-shaped
+wrapper over graphiti-core adding a salience-modulated forgetting curve
+and point-in-time search, whose temporal filter is proved by asserting
+its own Cypher string contains the clause.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Synapse — Agent Memory Atlas">
+    <meta name="twitter:description" content="A hippocampus-shaped
+wrapper over graphiti-core adding a salience-modulated forgetting curve
+and point-in-time search, whose temporal filter is proved by asserting
+its own Cypher string contains the clause.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Synapse — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Synapse",
+      "description": "A hippocampus-shaped wrapper over graphiti-core adding a salience-modulated forgetting curve and point-in-time search, whose temporal filter is proved by asserting its own Cypher string contains the clause.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The exclusion is tested by reading the
+query, not by running it</p>
+          <h1>Synapse</h1>
+          <p class="document-deck">A hippocampus-shaped wrapper over
+graphiti-core adding a salience-modulated forgetting curve and
+point-in-time search, whose temporal filter is proved by asserting its
+own Cypher string contains the clause.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Ardha-Eco-System/synapse">
+              <span>Source</span>
+              <strong>Ardha-Eco-System/synapse</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Ardha-Eco-System/synapse/commit/64c8b14a6a610a7ce351bd01b70cef1748998803" title="64c8b14a6a610a7ce351bd01b70cef1748998803">
+              <span>Analyzed revision</span>
+              <code>64c8b14a…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Ardha-Eco-System--synapse" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Ardha-Eco-System--synapse</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Synapse is a small wrapper — 66 files, MIT — that puts a
+hippocampus-shaped layer over <a href="../graphiti/">graphiti-core</a>
+on FalkorDB, and exposes it to agents as MCP tools. The temporal
+knowledge graph the README leads with belongs to the dependency; what
+Synapse adds is a forgetting curve, a salience model, a set of
+consolidation passes named after hippocampal functions, and a
+point-in-time search built around a query-planner workaround.</p>
+<p><strong>One mark: <code>negative_eval</code></strong>, and it is
+narrow.</p>
+<p>The finding worth the page is a contrast inside the test suite.
+<code>tests/test_falkor.py</code> proves the temporal filter by
+asserting that the generated Cypher <em>contains the string</em>
+<code>r.invalid_at IS NULL</code> — it builds a query, never runs one,
+and never observes an invalidated edge being excluded.
+<code>tests/test_cognitive_map.py</code>, three files away, asserts on
+outcomes:
+<code>assert "D" not in neighbors  # 2-hop, beyond depth=1</code>. The
+same suite tests a traversal bound by what comes back and tests the
+supersession filter by reading its own SQL.</p>
+<p>The second finding is a surface rather than a defect observed in
+operation. The point-in-time query is assembled by f-string
+interpolation, and the value interpolated is an MCP tool argument the
+model supplies, declared in the schema as
+<code>{"type": "string", "description": "ISO date (optional)."}</code>
+with no format, no pattern, and no validation at the handler. The only
+bound is a ten-character slice.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Facts are graphiti edges carrying <code>valid_at</code> and, once
+superseded, <code>invalid_at</code>. Synapse reads them back with a
+temporal filter and layers a strength model on top: every memory decays
+on an Ebbinghaus curve whose half-life is stretched by salience, and
+recall boosts it again.</p>
+<p><code>synapse_remember</code> is the escape hatch — an explicit fact
+stored <em>"with maximum salience (1.0)"</em>, described in the source
+as exempt from the forgetting curve: the agent's curated permanent
+memories.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — entity extraction, edge writes and the valid_at and invalid_at semantics belong to graphiti-core on a floating version constraint, while Synapse adds a salience-modulated Ebbinghaus decay, consolidation passes named after hippocampal functions, and a point-in-time read whose Cypher is assembled by string interpolation from a model-supplied tool argument that nothing validates; each group id is a separate FalkorDB graph rather than a filtered column, and the temporal exclusion is asserted by checking the generated query text rather than by observing a result</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: entity extraction, edge writes and the valid_at and invalid_at semantics belong to graphiti-core on a floating version constraint, while Synapse adds a salience-modulated Ebbinghaus decay, consolidation passes named after hippocampal functions, and a point-in-time read whose Cypher is assembled by string interpolation from a model-supplied tool argument that nothing validates; each group id is a separate FalkorDB graph rather than a filtered column, and the temporal exclusion is asserted by checking the generated query text rather than by observing a result
+flowchart TD
+    AG((&quot;agent&quot;)) --&gt; T1[&quot;synapse_search&lt;br/&gt;query · at_time&quot;]
+    AG --&gt; T2[&quot;synapse_remember&lt;br/&gt;salience 1.0, exempt from decay&quot;]
+
+    T1 --&gt; H[&quot;handle_search&lt;br/&gt;at_time = args.get(&#39;at_time&#39;)&lt;br/&gt;no validation&quot;]
+    H --&gt; TS[&quot;temporal_search(query, at_time)&quot;]
+    TS --&gt; TFQ[&quot;temporal_filter_query&lt;br/&gt;f-string into Cypher&lt;br/&gt;value sliced to 10 chars&quot;]
+    TFQ --&gt; CY[&quot;substring(r.valid_at, 0, 10) &amp;lt;= &#39;…&#39;&lt;br/&gt;AND (r.invalid_at IS NULL OR …)&quot;]
+    CY --&gt; G
+
+    G[(&quot;FalkorDB graph&lt;br/&gt;select_graph(group_id)&lt;br/&gt;one graph per group, not a column&quot;)]
+    GC[&quot;graphiti-core &gt;= 0.29.2&lt;br/&gt;extraction · edge writes&lt;br/&gt;valid_at / invalid_at semantics&quot;] --&gt; G
+
+    G --&gt; RES[&quot;results&quot;]
+    RES --&gt; FC[&quot;ForgettingCurve&lt;br/&gt;S(t) = exp(-t/tau)&lt;br/&gt;tau = half_life · (1 + salience · boost) / ln 2&quot;]
+    FC --&gt; AG
+
+    subgraph HIP[&quot;hippocampus passes&quot;]
+        CONS[&quot;consolidation&quot;]
+        RECON[&quot;reconsolidation&quot;]
+        PSEP[&quot;pattern separation&quot;]
+        PCOMP[&quot;pattern completion&quot;]
+        SCHEMA[&quot;schema extraction&quot;]
+        PE[&quot;prediction error&quot;]
+    end
+    G --- HIP
+
+    TST[&quot;tests/test_falkor.py&quot;] -.-&gt;|&quot;asserts the STRING&lt;br/&gt;&#39;r.invalid_at IS NULL&#39; in query&quot;| TFQ
+    TST2[&quot;tests/test_cognitive_map.py&quot;] -.-&gt;|&quot;asserts the OUTCOME&lt;br/&gt;&#39;D&#39; not in neighbors&quot;| CM[&quot;cognitive map traversal&quot;]</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The workaround</strong> —
+<code>src/synapse/falkor.py:41-80</code>. The docstring calls it
+<em>"the substring() workaround"</em> and the inline comment explains
+the reason: <em>"substring() forces function evaluation before
+comparison"</em>, working around a FalkorDB comparison behaviour. So
+every temporal comparison is a lexical string compare over the first ten
+characters of an ISO timestamp — correct for ISO-8601 ordering, and
+date-granular by construction: two facts valid on the same day cannot be
+ordered by this filter.</p>
+<p><strong>The interpolation</strong> — the same function. Three
+interpolation sites:</p>
+<pre class="python"><code>conditions.append(f&quot;substring(r.valid_at, 0, 10) &lt;= &#39;{valid_at_max[:10]}&#39;&quot;)</code></pre>
+<p>and again for <code>valid_at_min</code>, and a third inside the
+<code>invalid_at</code> clause. The slice bounds each insertion to ten
+characters.</p>
+<p><strong>The value's origin</strong> —
+<code>src/synapse/tools.py:39</code> declares <code>at_time</code> as a
+plain string with a prose description, and <code>:91-94</code> reads it
+and passes it on:</p>
+<pre class="python"><code>at_time = args.get(&quot;at_time&quot;)
+if at_time:
+    results = retrieval_engine.temporal_search(query, at_time)</code></pre>
+<p>No parse, no regex, no <code>datetime.fromisoformat</code>. The path
+from a model's tool call to a Cypher clause has no validation in it.
+Nothing was run to test this and no exploit is claimed; what is
+checkable from the source is that the only constraint is the length of
+the slice.</p>
+<p><strong>The curve</strong> —
+<code>src/synapse/hippocampus/forgetting.py</code>.
+<code>S(t) = exp(-t / tau)</code> with
+<code>tau = base_half_life * (1 + salience * boost) / ln(2)</code>, a
+seven-day default half-life, a salience boost of 3 and a recall boost of
+1.5. High-salience memories decay slower; recall events strengthen them,
+which is spaced repetition stated as such.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Not Synapse's. Entities and edges are graphiti's, with
+<code>valid_at</code> for when a fact held and <code>invalid_at</code>
+set when it is superseded — <code>consolidation.py:18</code> states the
+convention: <em>"An edge with <code>invalid_at</code> set means the fact
+was superseded."</em> The dependency is declared
+<code>graphiti-core[falkordb]&gt;=0.29.2</code>, a floating constraint,
+so the exact semantics behind those fields depend on what resolves at
+install time.</p>
+<p>Synapse's own state is the salience and strength model layered over
+what comes back.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>A BM25-style query and a temporal query, both assembled as Cypher
+strings against a graph selected by <code>group_id</code>.
+<code>FalkorHelper.get_graph</code> calls
+<code>select_graph(group_id)</code>, so each group is a distinct
+FalkorDB graph — the module header says so directly: <em>"Graphiti
+stores data in FalkorDB graphs named after the group_id."</em></p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes go through graphiti. <code>synapse_remember</code> is the one
+Synapse-specific write: maximum salience, exempt from decay.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP tool surface — search with an optional <code>at_time</code>,
+and remember — plus a <code>plugin.yaml</code> and Docker files.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>negative_eval</code></strong> — section 10, and
+narrowly.</p>
+<p><strong><code>bitemporal</code> is withheld and credited to the
+dependency.</strong> <code>valid_at</code> and <code>invalid_at</code>
+are graphiti's fields, written by graphiti's extraction, and <a
+href="../graphiti/">graphiti has its own report</a>. Synapse reads them;
+it does not define them, and counting the mark here would make two pages
+claim one mechanism. Worth noting separately: on the edges Synapse
+queries, <code>created_at</code> appears on nodes rather than on the
+relationships, so the record-time half of the pair is not what this
+wrapper's temporal read consults either way.</p>
+<p><strong><code>scope_enforced</code> is withheld.</strong> Isolation
+is a separate FalkorDB graph per <code>group_id</code>, not a stored key
+filtered on a read path. The outcome may be stronger; the mechanism is
+not the one the mark measures.</p>
+<p><strong><code>trust_state</code> is withheld.</strong> Salience is a
+float that stretches a decay constant, and the permanent tier is set by
+the caller at write time — <code>synapse_remember</code> stores at 1.0
+because the agent chose that tool. Nothing expresses <em>recorded but
+not believed</em>.</p>
+<p><strong><code>tombstone</code>, <code>audit_log</code> and
+<code>human_review</code> are withheld.</strong> <code>invalid_at</code>
+marks a superseded edge and is keyed on the edge; there is no
+append-only mutation log; and nothing holds a memory in a state until a
+person resolves it.</p>
+<p><strong>One surface belongs in this section rather than in a
+footnote.</strong> A model-supplied tool argument reaches a Cypher
+clause through string interpolation with no validation and a
+ten-character bound. A reader deploying this should validate
+<code>at_time</code> before it leaves the handler.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A pytest suite of a dozen files. Nothing was installed and nothing
+was run.</p>
+<p>The mark rests on <code>tests/test_cognitive_map.py</code>, which
+asserts outcomes and includes a bound stated as a must-not:</p>
+<pre class="python"><code>assert &quot;D&quot; not in neighbors  # 2-hop, beyond depth=1</code></pre>
+<p>with <code>assert path == []</code> for an unreachable pair beside
+it. Those are assertions about what a traversal returns.</p>
+<p><strong>The contrast is the finding.</strong>
+<code>tests/test_falkor.py</code> covers the temporal filter — the
+mechanism that decides whether a superseded fact is visible — and every
+assertion in it is about the query string:</p>
+<pre class="python"><code>assert &quot;substring(r.valid_at, 0, 10)&quot; in query
+assert &quot;r.invalid_at IS NULL&quot; in query</code></pre>
+<p>with the <code>include_invalid=True</code> case asserting the same
+substring is <em>absent</em>. No graph is populated, no query is
+executed, and no invalidated edge is ever observed to be excluded. A
+refactor that built a correct-looking string and passed it to nothing
+would satisfy all three. The suite proves the query was assembled; it
+does not prove it filters.</p>
+<p>No benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Write down why a workaround exists.</strong>
+<em>"substring() forces function evaluation before comparison"</em> is
+the sentence that stops the next maintainer deleting it as noise, and it
+names a database behaviour rather than a superstition.</li>
+<li><strong>Separate salience from strength.</strong> A decay constant
+stretched by importance, with recall boosting it, keeps "how memorable"
+and "how recently used" as two inputs to one curve rather than one
+number doing both jobs.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Testing a query by its text.</strong> Asserting a clause is
+present in generated SQL proves the generator; only running it against a
+populated store proves the filter. This is the difference between a test
+of the mechanism and a test of the outcome, and the mechanism test
+passes for the wrong reasons.</li>
+<li><strong>Interpolating a model-supplied value into a query
+language.</strong> A ten-character slice is a length limit, not a
+parser. Validate the date at the handler, or pass it as a query
+parameter.</li>
+<li><strong>A floating dependency constraint for the component that
+defines your data model.</strong> <code>graphiti-core&gt;=0.29.2</code>
+means the semantics of <code>valid_at</code> and <code>invalid_at</code>
+are whatever installs today.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take the forgetting curve — it is self-contained, tested on outcomes,
+and independent of the graph. Take the rest only if you are already
+running graphiti on FalkorDB, and validate <code>at_time</code> before
+you deploy it.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>at_time</code> reaches Cypher unvalidated. Is the
+ten-character slice intended as a guard, or as a convenience for callers
+passing full timestamps?</li>
+<li>The temporal filter is date-granular by construction. Is same-day
+ordering meant to be resolved elsewhere?</li>
+<li><code>synapse_remember</code> writes at maximum salience and is
+exempt from decay. What stops an agent from marking everything
+permanent?</li>
+<li>The temporal tests assert on the query string. Was an integration
+test against a populated graph intended, and is
+<code>test_falkor.py</code> a stand-in for it?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/synapse/falkor.py</code></td>
+<td><code>get_graph(group_id)</code>, and
+<code>temporal_filter_query</code> with the substring workaround and its
+interpolation</td>
+</tr>
+<tr>
+<td><code>src/synapse/tools.py</code></td>
+<td>the MCP tool schemas, and the handler that passes
+<code>at_time</code> on unvalidated</td>
+</tr>
+<tr>
+<td><code>src/synapse/retrieval.py</code></td>
+<td><code>temporal_search</code>, between the handler and the query
+builder</td>
+</tr>
+<tr>
+<td><code>src/synapse/provider.py</code></td>
+<td>the graphiti-core wiring</td>
+</tr>
+<tr>
+<td><code>src/synapse/hippocampus/forgetting.py</code></td>
+<td>the Ebbinghaus curve with salience and recall boosts</td>
+</tr>
+<tr>
+<td><code>tests/test_falkor.py</code></td>
+<td>the three string-containment assertions about the temporal
+filter</td>
+</tr>
+<tr>
+<td><code>tests/test_cognitive_map.py</code></td>
+<td>the outcome assertions the mark rests on</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The temporal tests assert on the query string</td>
+<td>read <code>tests/test_falkor.py:6-36</code></td>
+<td>Three tests, all <code>in query</code> / <code>not in query</code>;
+no graph is populated and no query executed</td>
+</tr>
+<tr>
+<td><code>at_time</code> is unvalidated</td>
+<td>read <code>src/synapse/tools.py:39</code>, <code>:91-94</code></td>
+<td>Declared <code>{"type": "string"}</code> with a prose description,
+read with <code>args.get</code> and passed straight to
+<code>temporal_search</code></td>
+</tr>
+<tr>
+<td>The data model belongs to graphiti</td>
+<td>read <code>pyproject.toml:17-19</code>;
+<code>grep -rn "graphiti" --include='*.py' src</code></td>
+<td><code>graphiti-core[falkordb]&gt;=0.29.2</code>, imported in
+<code>provider.py:85-90</code>; no edge-write code in this tree</td>
+</tr>
+<tr>
+<td>Scope is a separate graph, not a column</td>
+<td>read <code>src/synapse/falkor.py:3</code>, <code>:37-39</code></td>
+<td><code>select_graph(group_id)</code>; the module header states graphs
+are named after the group id</td>
+</tr>
+<tr>
+<td>No tombstone or audit vocabulary</td>
+<td><code>grep -rli "tombstone|audit" --include='*.py' src</code></td>
+<td>Nothing for either</td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>head -3 LICENSE</code>;
+<code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>Stock MIT, no match</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/Ardha-Eco-System/synapse/commit/64c8b14a6a610a7ce351bd01b70cef1748998803"><code class="commit-id" title="64c8b14a6a610a7ce351bd01b70cef1748998803">64c8b14a…</code></a>
+— first reading, at 66 files. Screened before reading: no auto-run
+surface, one build-time execution point, one unpinned surface and
+nothing inside the cooldown; nothing was installed and nothing was run,
+so the interpolation surface in section 9 is described from the source
+path rather than from an attempt. MIT. One mark,
+<code>negative_eval</code>, resting on outcome assertions in the
+cognitive-map tests. <code>bitemporal</code> is withheld and credited to
+<a href="../graphiti/">graphiti</a>, whose <code>valid_at</code> and
+<code>invalid_at</code> this wrapper reads and does not define;
+<code>scope_enforced</code> because isolation is a separate FalkorDB
+graph per group id rather than a filtered key. The project's badges
+point at <code>ardhaecosystem/synapse</code> while the remote is
+<code>Ardha-Eco-System/synapse</code>; the atlas had no report under
+either name before this one.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
