@@ -127,7 +127,7 @@ fail on a primary key rather than be refused in application code.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RamaAditya49--titen" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -467,6 +467,29 @@ surface a person's?</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/RamaAditya49/titen/commit/a68ce06302f3dfc3aef04e83306ad1c35e2b058c"><code class="commit-id" title="a68ce06302f3dfc3aef04e83306ad1c35e2b058c">a68ce063…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin. Both CHECK
+constraints held at <code>src/core/migrations.ts:78</code> and
+<code>:80</code>, and the scope index at <code>:86</code>. Two things
+the record asserted are now anchored, and one is sharper than it was
+written. The status is read on, not merely indexed: organization-visible
+federation admits <code>status IN ('active', 'disputed')</code>
+(<code>src/core/federation.ts:287</code>) — surfacing a disputed claim
+rather than suppressing it, the same deliberate choice mnemora makes
+with contested — while the governance and atlas reads narrow to active
+(<code>src/core/governance.ts:425</code>, <code>:889-891</code>,
+<code>src/core/atlas.ts:204</code>). And the trust ceiling is a
+credential property rather than a request field:
+<code>assertTrustCeiling</code> (<code>src/core/auth.ts:210-213</code>)
+throws a forbidden when the requested level ranks above
+<code>principal.maxTrust</code>, so a caller cannot assert
+<code>policy_approved</code> unless its own key permits it. Three write
+paths call it — <code>src/core/claims.ts:189</code> and
+<code>src/core/federation.ts:426</code>, <code>:493</code>. That is the
+passing shape this atlas looks for on the producer side: the level is
+bounded by what was presented, not by what was claimed. Screened again
+first; nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/RamaAditya49/titen/commit/a68ce06302f3dfc3aef04e83306ad1c35e2b058c"><code class="commit-id" title="a68ce06302f3dfc3aef04e83306ad1c35e2b058c">a68ce063…</code></a>
 — first reading, at a commit dated 30 August 2026. Screened before
