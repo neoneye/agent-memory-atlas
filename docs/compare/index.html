@@ -165,7 +165,7 @@ preamble, a summarization or a write, which is a different and weaker
 thing. Read the count as a ceiling on the strict reading rather than as
 its total.</li>
 <li><strong>Trust is usually a number, not a state.</strong>
-151 of 580 record
+150 of 580 record
 a discrete epistemic status. The rest store a confidence float, which
 cannot express <em>rejected</em> and so cannot survive being wrong.</li>
 </ol>
@@ -21936,17 +21936,17 @@ compression, decay, forgetting, insights, belief derivation,
 contradiction detection and relationship inference, with a run tracker
 and a health module. each concern is its own module rather than one
 consolidation pass</td>
-<td>Two layers with different answers. A belief carries a typed
-<code>status</code> of <code>candidate</code>, <code>active</code> or
-<code>superseded</code> in its own table, promoted only when confidence
-clears a floor and the supporting count clears a provenance floor,
-demoted when confidence falls back, and read with
-<code>WHERE status = ? AND confidence &gt;= ?</code> — so a candidate or
-superseded belief is excluded. A memory carries no status: the
-contradiction detector quarantines one that disagrees with an active
-belief by writing a metadata flag and a tag, with a threshold defaulting
-to three, and no retrieval path consults either, so a quarantined memory
-continues to be returned by search</td>
+<td>Two layers with different answers. A belief carries a typed, indexed
+<code>status</code> of <code>candidate</code>, <code>active</code>,
+<code>superseded</code> or <code>disputed</code> in its own table,
+promoted only when confidence clears a floor and the supporting count
+clears a provenance floor, demoted when confidence falls back, and read
+with <code>WHERE status = ? AND confidence &gt;= ?</code> — so a
+candidate, superseded or disputed belief is excluded. A memory carries
+no status: the contradiction detector quarantines one that disagrees
+with an active belief by writing a metadata flag and a tag, with a
+threshold defaulting to three, and no retrieval path consults either, so
+a quarantined memory continues to be returned by search</td>
 <td>A belief ladder with two floors to promote and one to demote,
 filtered in SQL rather than scored; a consolidation package that models
 associations, decay, compression, forgetting, belief and contradiction
@@ -23871,8 +23871,9 @@ chains; a <code>Tombstone</code> WAL op</td>
 <td>ACL module over a single file; no multi-tenant model traced</td>
 <td>Rust library and CLI over a portable file</td>
 <td>Enrichment workers, maintenance, doctor</td>
-<td>A three-value frame status filtered on the search path, checksums
-per frame, and enrichment provenance by engine and version</td>
+<td>A three-value frame status whose demotion unlinks the frame from all
+three retrieval indexes, checksums per frame, and enrichment provenance
+by engine and version</td>
 <td>Immutable frames plus as-of reads and session replay — the memory
 can be rewound</td>
 <td>Headline benchmark numbers with no committed result artifacts found;
@@ -23895,10 +23896,12 @@ quarantined</td>
 extension</td>
 <td>Procedure evolution from episodes, with an evolution log recording
 each diff and refusals written to a quarantine file for a person</td>
-<td>metadata.status needs_review plus is_current false holds a revision
-out of retrieval</td>
-<td>The only system here that tests a correction against other memories
-before applying it</td>
+<td>A regression gate decides is_current before promotion; the database
+carries two partial indexes on it, and needs_review records the reason
+beside it</td>
+<td>A correction is tested against the other current procedures before
+it is applied, and one that breaks a dependent is quarantined rather
+than promoted</td>
 <td>The quarantine queue is rendered but has no exit — no verb promotes
 or discards a gated revision, so it waits indefinitely once a person has
 read it</td>
@@ -24095,7 +24098,8 @@ merge path writes; no rejected state</td>
 metrics</td>
 <td>OpenClaw plugin with a written spec and a sidecar manager</td>
 <td>Self-upgrade worker: candidate → replay → gate → promote</td>
-<td>A three-value <code>status</code> filtered in the read query, plus a
+<td>A three-value <code>status</code> filtered in the read query and
+evicted from the full-text index by each of its nine writers, plus a
 source session and turn range; reinforcement is kept apart from
 confidence, and confidence itself defaults to 0.7 with no verification
 path</td>
@@ -26532,9 +26536,9 @@ applied as a filter anywhere</td>
 commands and the four rules; no API, no tool surface</td>
 <td>None. <code>generate_indexes.py</code> runs on demand, and CI fails
 if its output differs from what was committed</td>
-<td>A per-type status enum — an ADR is proposed, accepted, superseded,
-deprecated or rejected — validated against a discriminated union on
-every file</td>
+<td>A per-type status enum validated against a discriminated union on
+every file, then printed as a label in the generated index; no code
+reads it back to decide anything</td>
 <td>The checks that exist are real and gate merges, and the sanitization
 gate deliberately refuses its own allowlist on commit messages and PR
 bodies</td>
@@ -26764,9 +26768,10 @@ isolation is exercised by a runtime gate against a live stack</td>
 package</td>
 <td>An ARQ worker running extraction and indexing, with the gate waiting
 on both indexed and graph-complete states before it asserts</td>
-<td>A five-value episode status with supersession and rejection excluded
-by default, an outcome score derived from success, partial or failure,
-and confidence thresholds that gate pattern promotion</td>
+<td>A six-value episode status with supersession and rejection excluded
+by default — a denylist that archived is not on — an outcome score
+derived from success, partial or failure, and confidence thresholds that
+gate pattern promotion</td>
 <td>A runtime gate that boots a fresh stack and proves tenant isolation
 through the public routes rather than in a unit test; a golden fixture
 that names what must not be extracted and freezes its thresholds at 1.0;
@@ -28226,9 +28231,10 @@ plus agent and user columns for multi-tenant scope</td>
 for Python, Go, TypeScript and WebAssembly</td>
 <td>Consolidation, decay, embedding migration across versioned embedding
 spaces, snapshots, and a mesh and sync layer for peers</td>
-<td>Supersession and invalidation bound in the read; a salience at
-encoding and a storage strength that never decays; a reliability score
-on procedural memories. No approval surface</td>
+<td>Supersession and invalidation bound in the read, and kept out of the
+erase and purge paths on purpose; a salience at encoding and a storage
+strength that never decays; a reliability score on procedural memories.
+No approval surface</td>
 <td>Two scope layers whose tests each disable the other so neither
 passes for the wrong reason; a sabotaged-statement test that proves the
 backstop without the predicate; two documented ways row-level security
@@ -34562,7 +34568,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>151 of 580:</em> <a
+<p><em>150 of 580:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/agent-working-memory/"><code>agent-working-memory</code></a>,
@@ -34664,8 +34670,6 @@ href="../systems/npcpy/"><code>npcpy</code></a>, <a
 href="../systems/oh-my-hermes/"><code>oh-my-hermes</code></a>, <a
 href="../systems/omi/"><code>omi</code></a>, <a
 href="../systems/omniintelligence/"><code>omniintelligence</code></a>,
-<a
-href="../systems/omninode-knowledge-base/"><code>omninode-knowledge-base</code></a>,
 <a
 href="../systems/one-agent-many-hats/"><code>one-agent-many-hats</code></a>,
 <a
@@ -41562,7 +41566,7 @@ unpinned dependency surface, <code>AGENTS.md</code> and
 <li><a
 href="https://github.com/doobidoo/mcp-memory-service">doobidoo/mcp-memory-service</a>
 at <a
-href="https://github.com/doobidoo/mcp-memory-service/commit/236ef182ce60bed203f896dba7edc4177960d0a8"><code class="commit-id" title="236ef182ce60bed203f896dba7edc4177960d0a8">236ef182…</code></a>
+href="https://github.com/doobidoo/mcp-memory-service/commit/742f50b19abc3cb89fd0f142a4642485c67f4672"><code class="commit-id" title="742f50b19abc3cb89fd0f142a4642485c67f4672">742f50b1…</code></a>
 — read only; four auto-run surfaces, seven build-time execution paths,
 eight unpinned dependency surfaces, an uninstalled
 <code>pre-commit</code> hook payload</li>
@@ -47215,7 +47219,7 @@ each reference the analyzer could not resolve, so the index ships its
 own coverage gaps. Read against the corpus this atlas holds, that is a
 discrete ordered status that withholds, kept apart from where a claim
 came from, and applied on the read path — the combination <a
-href="../capabilities/">151
+href="../capabilities/">150
 systems</a> here express as a single float, and the reason
 <code>trust_state</code> is the mark most often refused. <strong>And the
 README states the retrieval consequence better than most memory systems

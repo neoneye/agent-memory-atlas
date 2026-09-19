@@ -117,7 +117,7 @@ promoted.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/alibaizhanov--mengram" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -539,7 +539,13 @@ nothing moves a revision out of the third</td>
 <td><code>is_current</code> is a read predicate</td>
 <td><code>grep -n "is_current" cloud/store/_profile.py</code></td>
 <td><code>AND is_current = TRUE</code> on the current-procedure reads at
-<code>:447</code>, <code>:487</code>, <code>:490</code></td>
+<code>:455</code>, <code>:495</code>, <code>:498</code></td>
+</tr>
+<tr>
+<td>The database treats it as a filter, not a field</td>
+<td><code>grep -n "idx_procedures_current" cloud/schema.sql</code></td>
+<td>two <em>partial</em> indexes at <code>:255-256</code>, both
+<code>WHERE is_current = TRUE</code></td>
 </tr>
 <tr>
 <td>The benchmark's baselines are definitional</td>
@@ -557,6 +563,33 @@ never flags"</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/alibaizhanov/mengram/commit/e90a8caa819f5f75fdb3cecb262e1b5071de894b"><code class="commit-id" title="e90a8caa819f5f75fdb3cecb262e1b5071de894b">e90a8caa…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin. The report's
+account of the gate was right in every particular and the evidence
+record was a four-clause shorthand for it; the record now carries the
+mechanism. Two things are added that neither had. First, the database
+itself says which of the two fields is the filter:
+<code>idx_procedures_current</code> and
+<code>idx_procedures_current_sub</code> are <em>partial</em> indexes
+declared <code>WHERE is_current = TRUE</code>
+(<code>cloud/schema.sql:255-256</code>), so a non-current revision is
+not skipped during a scan — it is not in the index being scanned.
+Second, the upsert is where a status flag actually fails, and this
+project has the scar: <code>ON CONFLICT ... DO UPDATE</code> rewrites
+<code>steps</code> unconditionally but wraps <code>is_current</code>,
+<code>metadata</code>, <code>parent_version_id</code> and
+<code>evolved_from_episode</code> each in
+<code>CASE WHEN procedures.version &gt; 1</code>, and
+<code>tests/test_upsert_lifecycle.py</code> exists because an earlier
+version rewrote the steps and left the lifecycle fields alone — a stale
+quarantined row stayed non-current while the old version had already
+been retired, and <em>"the procedure vanished from every listing"</em>.
+The suite is hermetic, asserting the SQL string the store sends with no
+database attached. One citation in the verification table was stale by
+eight lines and is corrected to <code>:455</code>, <code>:495</code>,
+<code>:498</code>, matching the evidence record. Nothing was installed
+and no suite was run.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/alibaizhanov/mengram/commit/e90a8caa819f5f75fdb3cecb262e1b5071de894b"><code class="commit-id" title="e90a8caa819f5f75fdb3cecb262e1b5071de894b">e90a8caa…</code></a>
 — re-pinned after 51 commits. <code>cloud/store/_profile.py</code>

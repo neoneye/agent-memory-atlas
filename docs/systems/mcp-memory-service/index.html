@@ -124,14 +124,14 @@ path consults, so a quarantined memory is still returned by search.</p>
               <strong>doobidoo/mcp-memory-service</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/doobidoo/mcp-memory-service/commit/236ef182ce60bed203f896dba7edc4177960d0a8" title="236ef182ce60bed203f896dba7edc4177960d0a8">
+            <a class="meta-pill revision-pill" href="https://github.com/doobidoo/mcp-memory-service/commit/742f50b19abc3cb89fd0f142a4642485c67f4672" title="742f50b19abc3cb89fd0f142a4642485c67f4672">
               <span>Analyzed revision</span>
-              <code>236ef182…</code>
+              <code>742f50b1…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/doobidoo--mcp-memory-service" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -172,9 +172,11 @@ manifests inside the seven-day cooldown, and an uninstalled
 <p><strong>Two layers, two different answers, and the gap between them
 is the report.</strong> The belief layer gets this right: beliefs live
 in their own table with a <code>candidate</code> → <code>active</code> →
-<code>superseded</code> status, promotion requires both a confidence
-floor and a provenance floor, demotion happens when confidence falls
-back, and <code>get_beliefs</code> filters
+<code>superseded</code> status with a fourth value,
+<code>disputed</code>, used while a challenged belief is re-derived;
+promotion requires both a confidence floor and a provenance floor,
+demotion happens when confidence falls back, and
+<code>get_beliefs</code> filters
 <code>WHERE status = ? AND confidence &gt;= ?</code> with
 <code>active</code> as the default — a state that excludes rather than
 reorders. That earns <code>trust_state</code>.</p>
@@ -459,12 +461,30 @@ The semantic-search case pairs a present and an absent term on the top
 hit.</p>
 <p><strong>Trust state — awarded, on the belief table.</strong>
 <code>beliefs.status</code> is <code>candidate</code>,
-<code>active</code> or <code>superseded</code>, stored in a typed
-column, moved by rules that require a confidence floor <em>and</em> a
-provenance floor to promote and a fall below the floor to demote, and
-filtered in SQL with <code>active</code> as the default. The confidence
-rides alongside as an ordering and a floor. That is the mark
-exactly.</p>
+<code>active</code>, <code>superseded</code> or <code>disputed</code>,
+stored in a typed and indexed column, moved by rules that require a
+confidence floor <em>and</em> a provenance floor to promote and a fall
+below the floor to demote, and filtered in SQL with <code>active</code>
+as the default. The confidence rides alongside as an ordering and a
+floor. That is the mark exactly — and the clearest demonstration is a
+boundary test: <code>should_promote(0.9, PROVENANCE_FLOOR - 1)</code> is
+<code>False</code>, so a belief the system is 90% sure of still cannot
+enter the acting set on one witness. The number answers how sure; the
+state answers whether it may be used.</p>
+<p><strong>The two floors are different numbers on the same
+predicate.</strong> Every consumer filters on
+<code>status = "active"</code> — including the session bootstrap that
+assembles starting context, which is the read most likely to be written
+separately from the search path and so to be written without it. What
+varies here is the confidence: the bootstrap asks for <code>0.6</code>
+before it will <em>show</em> a belief, while the on-store quarantine
+gate asks for <code>0.35</code> before it will <em>act</em> on one. So
+the set a belief must join to suppress an incoming memory is wider than
+the set it must join to be printed as context, and the difference is
+expressed in the number while the state stays constant. Quarantine then
+closes the loop: a belief that quarantines three memories is itself
+challenged and re-derived, so the state that decides what may be acted
+on is revised by what it acted against.</p>
 <p><strong>And the same idea is unfinished one module away.</strong> The
 memory row has a discrete condition — <code>quarantined</code> — that is
 stored, produced on a real path by the contradiction detector, carries
@@ -679,6 +699,38 @@ rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.
 ls scripts/benchmarks tests/benchmarks                                  # LoCoMo and LongMemEval harnesses committed; no result file for either
 rg -n &#39;not in&#39; tests --glob &#39;*.py&#39; | rg -i &#39;result|memories&#39;            # the two paired cases; nothing asserts a quarantined memory absent</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/doobidoo/mcp-memory-service/commit/742f50b19abc3cb89fd0f142a4642485c67f4672"><code class="commit-id" title="742f50b19abc3cb89fd0f142a4642485c67f4672">742f50b1…</code></a>
+— <code>trust_state</code> re-tested, and the whole
+<code>consolidation/</code> subtree is byte-identical to the previous
+pin, so every correction below is the atlas's own. Three of them. The
+vocabulary is four values, not three: <code>disputed</code> is written
+by <code>challenge_belief</code> (<code>belief_service.py:205</code>)
+and was present at the first reading too — though it is a marker rather
+than a resting state, since the same call re-derives the belief and
+overwrites it fourteen lines later, and it survives only if the
+derivation raises in between. There are four consumers, not two, and the
+one the record missed is the strongest:
+<code>quarantine.check_beliefs_on_store</code> reads only
+<code>status="active"</code> beliefs before letting any of them suppress
+an incoming memory, and a belief that quarantines three memories is
+itself challenged — the state that decides what may be acted on is
+revised by what it acted against. And the two call sites differ in the
+number while agreeing on the state: the session bootstrap wants
+<code>min_confidence=0.6</code> to <em>show</em> a belief, the
+quarantine gate <code>0.35</code> to <em>act</em> on one, so the acting
+set is wider than the presented set. The split the mark tests for is
+also asserted directly — <code>tests/test_belief_store.py:193-194</code>
+fixes <code>should_promote(0.9, PROVENANCE_FLOOR - 1)</code> at
+<code>False</code>, so a 90%-confident belief with one witness cannot
+enter the acting set. The report's spine is untouched: the memory row's
+quarantine flag is still read by no retrieval path. Screened again first
+— the surface is unchanged at seven build-time execution paths, four
+auto-run surfaces, eight floating dependency ranges and two auto-run
+agent-harness hook scripts; the FRESH count rises from 4 to 12 only
+because this screen ran on a <code>--depth 1</code> clone, which dates
+every file to the tip, so that one number is not comparable with the
+previous reading. Nothing was installed and no suite was run.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/doobidoo/mcp-memory-service/commit/236ef182ce60bed203f896dba7edc4177960d0a8"><code class="commit-id" title="236ef182ce60bed203f896dba7edc4177960d0a8">236ef182…</code></a>
 — re-pinned after 52 commits. Every anchored file is byte-identical at
@@ -689,7 +741,7 @@ that read it, and both cited test files behind
 line number and quotation here is exact at the new pin. Nothing was
 installed, built or run.</p>
 <p><strong>2026-09-10</strong> — <a
-href="https://github.com/doobidoo/mcp-memory-service/commit/236ef182ce60bed203f896dba7edc4177960d0a8"><code class="commit-id" title="236ef182ce60bed203f896dba7edc4177960d0a8">236ef182…</code></a>
+href="https://github.com/doobidoo/mcp-memory-service/commit/63801ca5e3f2f02f392c34d395fc62adc9049796"><code class="commit-id" title="63801ca5e3f2f02f392c34d395fc62adc9049796">63801ca5…</code></a>
 — first reading, at the head of <code>main</code>, the last commit of 10
 September 2026. Screened before reading: four auto-run surfaces, seven
 build-time execution paths, eight unpinned dependency surfaces, two

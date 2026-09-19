@@ -8,11 +8,11 @@ source_name: "ardiannurcahya/open-graph-memory"
 source_url: https://github.com/ardiannurcahya/open-graph-memory
 revision: cf7b0d23480e0dc1bf1c0cbbdfa90418e9d84d70
 revision_url: https://github.com/ardiannurcahya/open-graph-memory/commit/cf7b0d23480e0dc1bf1c0cbbdfa90418e9d84d70
-analyzed_at: 2026-09-17
+analyzed_at: 2026-09-19
 archive_name: "ardiannurcahya--open-graph-memory"
 capabilities: "trust_state, scope_enforced, negative_eval"
 capability_evidence:
-  trust_state: "a status on the episode whose superseded and rejected values are excluded from the search path by default | apps/api/app/memory/service.py:170-182, :228-238, apps/api/app/memory/api.py:159, :195, :319-330, apps/api/app/memory/confidence.py:136, :169 | `AgentMemoryEpisode.status` carries `open`, `active`, `degraded`, `superseded` and `rejected`, and the full-text search path applies `status.not_in([\"superseded\", \"rejected\"])` unless a caller sets `include_inactive`, with the same exclusion repeated on the pattern join. Supersession is a pointer, not a delete: the API refuses to supersede an episode that is already superseded or to point at one that is, then sets `status` and `superseded_by_id` together in one statement, and the confidence path marks a target superseded on its own terms. The graph view draws the supersession as an edge when both ends are in range, so the retired episode stays visible to a reader who asks for it | the index `ix_memory_facts_scope_status` on `(project_id, scope, status)` is built for exactly this pair of predicates"
+  trust_state: "a status on the episode whose superseded and rejected values are excluded from the search path by default — but the exclusion is a denylist, and a sixth value was added to the vocabulary without being added to it | apps/api/app/memory/service.py:170-182, :228-238, apps/api/app/memory/schemas.py:22, apps/api/app/memory/api.py:159, :195, :319-330, :418-432, apps/api/app/retention.py:70, :141, :149, apps/api/migrations/versions/0027_add_archived_episode_status.py | `AgentMemoryEpisode.status` carries `open`, `active`, `degraded`, `superseded`, `rejected` and `archived`, and the full-text search path applies `status.not_in([\"superseded\", \"rejected\"])` unless a caller sets `include_inactive`, with the same exclusion repeated on the pattern join. That earns the mark: two values withhold an episode from retrieval by a real predicate in the query. What the shape costs is visible in the same tree — because the predicate is a denylist rather than an allowlist, `archived`, added later by migration 0027, passes it. Supersession itself is careful: the API refuses to supersede an episode that is already superseded or to point at one that is, then sets `status` and `superseded_by_id` together in one statement, and the confidence path marks a target superseded on its own terms. The graph view draws the supersession as an edge when both ends are in range, so the retired episode stays visible to a reader who asks for it | the index `ix_memory_facts_scope_status` on `(project_id, scope, status)` is built for exactly this pair of predicates"
   scope_enforced: "`project_id` bound on the memory reads, with a live gate proving the boundary through the public HTTP routes | apps/api/app/memory/service.py:173, :298, apps/api/app/models.py:130, evaluation/m4_runtime_gate.py:85-201 | the search and the graph view both open their WHERE with `AgentMemoryEpisode.project_id == project.project_id`, and the chunk table carries a composite `ix_chunks_scope` on `(project_id, dataset_id)`. What raises this above a predicate in a query builder is that the boundary is checked end to end rather than asserted: `m4_runtime_gate.py` boots a fresh Postgres through Compose, creates a second tenant with its own dataset and token, uploads a document to each, and then drives the public graph routes as the outsider | :186 asserts the two tenants' same-named `Acme` entities have different ids, so nothing merged across the boundary, and :201 asserts every one of the primary tenant's paths returns 404 to the outsider's token"
   negative_eval: "an outsider's 404 on every primary path in a live stack, and a golden fixture whose labels deliberately omit what the extractor must not invent | evaluation/m4_runtime_gate.py:178-201, evaluation/m3_golden/v1.0.json, evaluation/README.md:5 | the M4 gate's exclusion is executable rather than mocked — a second tenant, a fresh database, and `request(base, \"GET\", item, headers=outsider_headers)[0] == 404 for item in primary_paths`, with the rest of the gate's canonical search, two-hop path and subgraph checks passing for the primary tenant as the control. The M3 fixture adds the extraction half: its golden labels `deliberately exclude the ambiguous and unsupported relations: a deterministic extractor must not invent either`, and the frozen thresholds demand relation precision and recall of 1.0, so producing either one fails the gate | the fixture also carries an `excluded_relations` list naming the two forbidden relations, which no code loads — the rule is enforced by the precision threshold rather than by that list"
 stack_storage: "postgres"
@@ -27,7 +27,7 @@ matrix:
   scoping: "A project context bound into the memory reads, a dataset beneath it for documents and chunks, and a composite index on the pair; the isolation is exercised by a runtime gate against a live stack"
   integration: "A FastAPI service, a worker, a web app, a Python SDK and a contracts package"
   background: "An ARQ worker running extraction and indexing, with the gate waiting on both indexed and graph-complete states before it asserts"
-  trust: "A five-value episode status with supersession and rejection excluded by default, an outcome score derived from success, partial or failure, and confidence thresholds that gate pattern promotion"
+  trust: "A six-value episode status with supersession and rejection excluded by default — a denylist that archived is not on — an outcome score derived from success, partial or failure, and confidence thresholds that gate pattern promotion"
   strengths: "A runtime gate that boots a fresh stack and proves tenant isolation through the public routes rather than in a unit test; a golden fixture that names what must not be extracted and freezes its thresholds at 1.0; and an evaluation README that removed two benchmark gates when the API they measured was retired, saying the current endpoints cannot honestly reproduce those metrics"
   risks: "The `excluded_relations` list in the golden fixture is read by nothing, so a gate failure reports a precision number rather than naming the relation that was invented; the retired milestone's published baselines remain in the tree as JSONL artifacts scored by an evaluator that never calls a model or store; and every dependency manifest changed on the day of this reading"
 ---
@@ -201,6 +201,28 @@ assertions are the ones this atlas cares about most, because a tenant boundary
 tested through the public routes with a second token is a different claim from a
 predicate visible in a query builder.
 
+**The denylist has fallen one value behind the vocabulary.** `EpisodeStatus`
+names six values; the search path excludes two of them. The third retired value,
+`archived`, was added by migration `0027` and never added to
+`status.not_in(["superseded", "rejected"])`, so an archived episode is still
+returned by the default search. That matters because archiving is the *default*
+way to remove an episode: `DELETE /episodes/{id}` takes a `mode` that defaults to
+`"archive"`, and the MCP tool that fronts it is called `memory_forget` and
+answers `{"deleted": true}`. An agent that forgets a memory through the shipped
+tool is told the memory is gone and will be handed it again by the next search.
+Pass `mode=invalidate` four lines away in the same function and the episode
+becomes `rejected`, which *is* excluded — the two modes differ in effect and
+nothing at the call site says so.
+
+The rest of the codebase already draws the line correctly, which is what makes
+this a slip rather than a position. `retention.py` treats
+`["archived", "superseded", "rejected"]` as one class twice over, and the
+finalize guard at `api.py:159` writes the same three-way split as an *allowlist*
+— `if item.status not in {"open", "active", "degraded"}` — which is the polarity
+that would have absorbed a new value without an edit. The committed coverage
+stops at the flag: `tests/test_bugfixes.py:222` asserts the status is `archived`
+after `memory_forget` and never searches for the episode afterwards.
+
 One finding, small and precise. The M3 golden file carries an
 `excluded_relations` list naming the two relations a correct extractor must not
 produce — and no code loads it. The rule is still enforced, because the frozen
@@ -274,6 +296,8 @@ grep -rn "valid_from\|as_of" apps/api/app --include='*.py'                 # 0 �
 ```
 
 ## History
+
+**2026-09-19** — [`cf7b0d23480e0dc1bf1c0cbbdfa90418e9d84d70`](https://github.com/ardiannurcahya/open-graph-memory/commit/cf7b0d23480e0dc1bf1c0cbbdfa90418e9d84d70) — `trust_state` re-tested at the unchanged pin; the mark holds and the record was one value out of date. `EpisodeStatus` carries six values, not five — `archived` was added by migration `0027` — and the search path's exclusion is a denylist of two, so the new value passes it. Archiving is not an obscure corner: it is the default `mode` of `DELETE /episodes/{id}`, and the MCP tool fronting it is named `memory_forget` and returns `{"deleted": true}`. An agent that forgets an episode through the shipped tool gets it back from the next default search, while the sibling mode four lines away sets `rejected` and is excluded. The project's own code draws the line correctly twice elsewhere — `retention.py:70` and `:141` treat archived, superseded and rejected as one class, and the finalize guard at `api.py:159` states the split as an allowlist — so this is a missed edit rather than a decision, and the allowlist polarity is the one that would have survived the migration untouched. The committed test stops at the flag (`tests/test_bugfixes.py:222` asserts the status and never searches). Everything the record said about supersession is exact: the refusal to supersede an already-superseded episode, the single statement setting `status` and `superseded_by_id` together, and the graph edge that keeps the retired episode visible to a reader who asks. Nothing was installed and no suite was run.
 
 **2026-09-17** — [`cf7b0d23480e0dc1bf1c0cbbdfa90418e9d84d70`](https://github.com/ardiannurcahya/open-graph-memory/commit/cf7b0d23480e0dc1bf1c0cbbdfa90418e9d84d70)
 — first reading, at the head of `main`, 203 commits in. Screened with

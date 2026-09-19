@@ -123,7 +123,7 @@ than let them report numbers the new API cannot honestly produce.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ardiannurcahya--open-graph-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -309,6 +309,33 @@ fresh stack. The M4 isolation assertions are the ones this atlas cares
 about most, because a tenant boundary tested through the public routes
 with a second token is a different claim from a predicate visible in a
 query builder.</p>
+<p><strong>The denylist has fallen one value behind the
+vocabulary.</strong> <code>EpisodeStatus</code> names six values; the
+search path excludes two of them. The third retired value,
+<code>archived</code>, was added by migration <code>0027</code> and
+never added to <code>status.not_in(["superseded", "rejected"])</code>,
+so an archived episode is still returned by the default search. That
+matters because archiving is the <em>default</em> way to remove an
+episode: <code>DELETE /episodes/{id}</code> takes a <code>mode</code>
+that defaults to <code>"archive"</code>, and the MCP tool that fronts it
+is called <code>memory_forget</code> and answers
+<code>{"deleted": true}</code>. An agent that forgets a memory through
+the shipped tool is told the memory is gone and will be handed it again
+by the next search. Pass <code>mode=invalidate</code> four lines away in
+the same function and the episode becomes <code>rejected</code>, which
+<em>is</em> excluded — the two modes differ in effect and nothing at the
+call site says so.</p>
+<p>The rest of the codebase already draws the line correctly, which is
+what makes this a slip rather than a position. <code>retention.py</code>
+treats <code>["archived", "superseded", "rejected"]</code> as one class
+twice over, and the finalize guard at <code>api.py:159</code> writes the
+same three-way split as an <em>allowlist</em> —
+<code>if item.status not in {"open", "active", "degraded"}</code> —
+which is the polarity that would have absorbed a new value without an
+edit. The committed coverage stops at the flag:
+<code>tests/test_bugfixes.py:222</code> asserts the status is
+<code>archived</code> after <code>memory_forget</code> and never
+searches for the episode afterwards.</p>
 <p>One finding, small and precise. The M3 golden file carries an
 <code>excluded_relations</code> list naming the two relations a correct
 extractor must not produce — and no code loads it. The rule is still
@@ -390,6 +417,32 @@ grep -rn &quot;status.not_in\|status ==&quot; apps/api/app/memory --include=&#39
 grep -rn &quot;project_id ==&quot; apps/api/app/memory --include=&#39;*.py&#39;              # bound on both the search and the graph view
 grep -rn &quot;valid_from\|as_of&quot; apps/api/app --include=&#39;*.py&#39;                 # 0 — timestamps are record-axis</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/ardiannurcahya/open-graph-memory/commit/cf7b0d23480e0dc1bf1c0cbbdfa90418e9d84d70"><code class="commit-id" title="cf7b0d23480e0dc1bf1c0cbbdfa90418e9d84d70">cf7b0d23…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin; the mark
+holds and the record was one value out of date.
+<code>EpisodeStatus</code> carries six values, not five —
+<code>archived</code> was added by migration <code>0027</code> — and the
+search path's exclusion is a denylist of two, so the new value passes
+it. Archiving is not an obscure corner: it is the default
+<code>mode</code> of <code>DELETE /episodes/{id}</code>, and the MCP
+tool fronting it is named <code>memory_forget</code> and returns
+<code>{"deleted": true}</code>. An agent that forgets an episode through
+the shipped tool gets it back from the next default search, while the
+sibling mode four lines away sets <code>rejected</code> and is excluded.
+The project's own code draws the line correctly twice elsewhere —
+<code>retention.py:70</code> and <code>:141</code> treat archived,
+superseded and rejected as one class, and the finalize guard at
+<code>api.py:159</code> states the split as an allowlist — so this is a
+missed edit rather than a decision, and the allowlist polarity is the
+one that would have survived the migration untouched. The committed test
+stops at the flag (<code>tests/test_bugfixes.py:222</code> asserts the
+status and never searches). Everything the record said about
+supersession is exact: the refusal to supersede an already-superseded
+episode, the single statement setting <code>status</code> and
+<code>superseded_by_id</code> together, and the graph edge that keeps
+the retired episode visible to a reader who asks. Nothing was installed
+and no suite was run.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/ardiannurcahya/open-graph-memory/commit/cf7b0d23480e0dc1bf1c0cbbdfa90418e9d84d70"><code class="commit-id" title="cf7b0d23480e0dc1bf1c0cbbdfa90418e9d84d70">cf7b0d23…</code></a>
 — first reading, at the head of <code>main</code>, 203 commits in.

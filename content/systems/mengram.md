@@ -9,10 +9,10 @@ source_url: https://github.com/alibaizhanov/mengram
 archive_name: "alibaizhanov--mengram"
 revision: e90a8caa819f5f75fdb3cecb262e1b5071de894b
 revision_url: https://github.com/alibaizhanov/mengram/commit/e90a8caa819f5f75fdb3cecb262e1b5071de894b
-analyzed_at: 2026-09-17
+analyzed_at: 2026-09-19
 capabilities: "trust_state, scope_enforced"
 capability_evidence:
-  trust_state: "procedure retrieval | cloud/store/_profile.py:455, :495, :498, cloud/store/_procedures.py:585 | `is_current = TRUE` as a predicate on every current-procedure read, with `metadata.status` of `needs_review` holding a revision out | benchmark/procinterfere"
+  trust_state: "a boolean the database is physically indexed on, set by a deterministic gate that runs before promotion | cloud/schema.sql:219, :255-256, cloud/store/_profile.py:455, :495, :498, cloud/store/_procedures.py:560-585, :625-646, :68-88, cloud/regression_gate.py:197-208 | `is_current` carries the admission decision and `metadata.status` carries its reason, which is the whole split: the boolean is what every current-procedure read tests, and `needs_review` beside `quarantine_reason` is what a person reads afterwards. The database agrees about which of the two is the filter — both `idx_procedures_current` and `idx_procedures_current_sub` are *partial* indexes declared `WHERE is_current = TRUE`, so the non-current rows are not merely skipped at query time, they are not in the index being searched. The state is produced by a cross-procedure regression gate, deterministic code with no model call: before a revision is promoted, `find_regressions` asks whether it adds a precondition or an ordering that some other *current* procedure no longer satisfies, and a revision that adds no new demand short-circuits as safe. If it is not safe the new version lands as `is_current = not gated` — false — and, decisively, the `UPDATE ... SET is_current = FALSE` that would retire the predecessor is skipped, so the last known-good version keeps serving rather than the procedure going dark. The upsert is where this is hard, and the project found that out: `ON CONFLICT ... DO UPDATE` sets `steps` unconditionally but wraps every lifecycle field in `CASE WHEN procedures.version > 1`, with seven lines of comment saying which producer each conflict comes from | tests/test_upsert_lifecycle.py is a hermetic regression suite for two audit bugs of exactly this shape, pinning the SQL the store sends with no database: H2 is that an earlier `DO UPDATE` *rewrote steps but not `is_current`/metadata*, so a stale quarantined row stayed non-current while the old version had already been retired and the procedure vanished from every listing"
   scope_enforced: "procedure reads | cloud/store/_profile.py:495 | `WHERE user_id = %s` with `sub_user_id` beside it as arguments to every procedure read | unknown"
 stack_storage: "postgres"
 stack_retrieval: "lexical, vector"
@@ -26,8 +26,8 @@ matrix:
   scoping: "user_id and sub_user_id are arguments to every procedure read"
   integration: "Python and npm SDKs, an MCP server, an Obsidian plugin, a VS Code extension"
   background: "Procedure evolution from episodes, with an evolution log recording each diff and refusals written to a quarantine file for a person"
-  trust: "metadata.status needs_review plus is_current false holds a revision out of retrieval"
-  strengths: "The only system here that tests a correction against other memories before applying it"
+  trust: "A regression gate decides is_current before promotion; the database carries two partial indexes on it, and needs_review records the reason beside it"
+  strengths: "A correction is tested against the other current procedures before it is applied, and one that breaks a dependent is quarantined rather than promoted"
   risks: "The quarantine queue is rendered but has no exit — no verb promotes or discards a gated revision, so it waits indefinitely once a person has read it"
 ---
 
@@ -393,11 +393,14 @@ Run from the root of the checkout at the pinned commit.
 | --- | --- | --- |
 | Refusals reach a file a person reads | `grep -rn "quarantine" --include="*.py" cli.py local/ cloud/` | `local/evolve.py:34` writes `.mengram/quarantine.json`; `read_quarantine` feeds `local/map.py`, rendered from `cli.py:511-513` |
 | No verb resolves a quarantined revision | the same search, filtered for `approve\|reject\|promote\|resolve` | `evolve` returns `promoted`, `revised_in_place`, `quarantined` or a failure; nothing moves a revision out of the third |
-| `is_current` is a read predicate | `grep -n "is_current" cloud/store/_profile.py` | `AND is_current = TRUE` on the current-procedure reads at `:447`, `:487`, `:490` |
+| `is_current` is a read predicate | `grep -n "is_current" cloud/store/_profile.py` | `AND is_current = TRUE` on the current-procedure reads at `:455`, `:495`, `:498` |
+| The database treats it as a filter, not a field | `grep -n "idx_procedures_current" cloud/schema.sql` | two *partial* indexes at `:255-256`, both `WHERE is_current = TRUE` |
 | The benchmark's baselines are definitional | read `latest_wins` and `append_only` in `benchmark/procinterfere/run.py` | Both are `return False` — "promotes unconditionally, never flags" |
 | Case split | `python3 -c` over `benchmark/procinterfere/cases.jsonl` | 20 cases, 12 breaking, 8 safe |
 
 ## History
+
+**2026-09-19** — [`e90a8caa819f5f75fdb3cecb262e1b5071de894b`](https://github.com/alibaizhanov/mengram/commit/e90a8caa819f5f75fdb3cecb262e1b5071de894b) — `trust_state` re-tested at the unchanged pin. The report's account of the gate was right in every particular and the evidence record was a four-clause shorthand for it; the record now carries the mechanism. Two things are added that neither had. First, the database itself says which of the two fields is the filter: `idx_procedures_current` and `idx_procedures_current_sub` are *partial* indexes declared `WHERE is_current = TRUE` (`cloud/schema.sql:255-256`), so a non-current revision is not skipped during a scan — it is not in the index being scanned. Second, the upsert is where a status flag actually fails, and this project has the scar: `ON CONFLICT ... DO UPDATE` rewrites `steps` unconditionally but wraps `is_current`, `metadata`, `parent_version_id` and `evolved_from_episode` each in `CASE WHEN procedures.version > 1`, and `tests/test_upsert_lifecycle.py` exists because an earlier version rewrote the steps and left the lifecycle fields alone — a stale quarantined row stayed non-current while the old version had already been retired, and *"the procedure vanished from every listing"*. The suite is hermetic, asserting the SQL string the store sends with no database attached. One citation in the verification table was stale by eight lines and is corrected to `:455`, `:495`, `:498`, matching the evidence record. Nothing was installed and no suite was run.
 
 **2026-09-17** — [`e90a8caa819f5f75fdb3cecb262e1b5071de894b`](https://github.com/alibaizhanov/mengram/commit/e90a8caa819f5f75fdb3cecb262e1b5071de894b) — re-pinned after 51 commits. `cloud/store/_profile.py` gained 11 net lines and both predicates were re-derived rather than assumed: `is_current = TRUE` still guards every current-procedure read and `WHERE user_id = %s` still carries `sub_user_id` beside it, at `:455`, `:495` and `:498`. The `needs_review` quarantine the trust-state record cites is written at `cloud/store/_procedures.py:585`, which the evidence record now names explicitly rather than attributing to the profile module; two committed tests exercise it. Both marks hold. Nothing was installed, built or run.
 

@@ -122,7 +122,7 @@ database role makes the backstop inert.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/major7apps--pensyve" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -459,6 +459,28 @@ grep -rn &quot;log_activity(&quot; --include=&#39;*.rs&#39; . | grep -v &quot;fn
 grep -rn &quot;superseded_by IS NULL\|invalid_at IS NULL&quot; pensyve-core/src/storage/*.rs   # bound in the statements, both backends
 grep -rn &quot;approver\|approved_by\|reviewed_by&quot; pensyve-core/src --include=&#39;*.rs&#39;      # 0 — no approval surface</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/major7apps/pensyve/commit/9ec26ade242a9360a69dc130356d54311dca1c87"><code class="commit-id" title="9ec26ade242a9360a69dc130356d54311dca1c87">9ec26ade…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin. Every
+predicate the record cites is exact, on both backends, and the re-read
+adds the half that is more interesting than the filter: where the
+project refuses to apply it. The erasure fixture seeds a superseded
+episodic row on purpose, with the reason in a doc comment — a GDPR erase
+<em>"has to take history, not just current state, so neither predicate
+may grow a <code>superseded_by IS NULL</code> clause — and every read
+path around the delete filters on supersession somewhere, so such a
+clause would look natural."</em> That is a project naming the wrong edit
+its own convention invites and building the fixture that would fail it.
+The purge verifier makes the same move from the other side: it reads
+through <code>get_all_memories_by_namespace_including_superseded</code>
+rather than the plain accessor, because the plain one filters
+<code>superseded_by IS NULL</code> and so <em>cannot see the rows the
+test is about</em> — a check that would otherwise pass by being blind to
+its own subject. The isolation assertions in the same file carry
+positive controls of the same character, one of which fails with
+<em>"the predicate-free select matched nothing even in the owning
+namespace, so the cross-namespace assertion above proved nothing"</em>.
+Nothing was installed and no suite was run.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/major7apps/pensyve/commit/9ec26ade242a9360a69dc130356d54311dca1c87"><code class="commit-id" title="9ec26ade242a9360a69dc130356d54311dca1c87">9ec26ade…</code></a>
 — first reading, at the head of <code>main</code>, 752 commits in.

@@ -9,12 +9,12 @@ source_url: https://github.com/memvid/memvid
 archive_name: "memvid--memvid"
 revision: e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813
 revision_url: https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813
-analyzed_at: 2026-09-17
+analyzed_at: 2026-09-19
 capabilities: "bitemporal, audit_log, trust_state, negative_eval"
 capability_evidence:
   bitemporal: "the memory card — when a fact was true, kept apart from when the file recorded it | src/types/memory_card.rs:200, :204, :276-280, src/types/memories_track.rs:381 | a `MemoryCard` carries `event_date` and `document_date` alongside `created_at`, three distinct fields, and `get_at_time(entity, slot, timestamp)` walks the cards for a slot, keeps those whose timestamp precedes the instant asked for, sorts newest-first and returns the first that is not a retraction | src/types/memories_track.rs `test_get_at_time` — two cards for one slot at document dates 1000 and 2000, asserting the value at 1500 and at 2500. The limit worth stating: `effective_timestamp()` coalesces `event_date ?? document_date ?? created_at`, so the axes are stored separately and the shipped read asks them as one — what the file could answer and its API cannot is *what did the store believe then*, independent of when the fact held"
   audit_log: "the frame log itself — every mutation appends an immutable frame and the predecessor is retained | src/memvid/mutation.rs:1510-1524, :2061-2075, :2723-2736, src/types/common.rs:106 | a correction appends a new frame carrying `supersedes`, and WAL replay calls `mark_frame_superseded(predecessor, frame_id)`, which sets the old frame's status to `Superseded` rather than removing it; a deletion is a `FrameWalOp::Tombstone` that sets `Deleted`. The predecessor, its checksum and its enrichment provenance stay in the file, so what the memory said before a correction is answerable from the store | no test in `tests/` covers it. Three limits belong on the record: the WAL is truncated at checkpoint (`mutation.rs:998`), so the op sequence is not retained, only its effect; the replay session log records `Put` and `Find` and never `Delete` or `Update`, needs an active session, and sits behind a non-default `replay` feature; and `src/memvid/audit.rs`, despite the name, is a retrieval provenance report — the rubric's explicit 'not this' — and is **not** what this mark rests on"
-  trust_state: "frame status, filtered on the search path | src/types/common.rs:106, src/memvid/search/builders.rs:22, src/memvid/search/api.rs:1043, src/memvid/mutation.rs:2074, :2735 | `FrameStatus` is `Active | Superseded | Deleted`, and both search entry points filter `frame.status == FrameStatus::Active` before scoring, so a superseded or tombstoned frame cannot reach a result. The writers are live rather than declarative: WAL replay sets `Superseded` whenever a frame carries `supersedes`, and the `Tombstone` op sets `Deleted` | no committed case asserts the filter; it is read from the two call sites"
+  trust_state: "frame status — and leaving `Active` is the same call that unlinks the frame from every retrieval index | src/types/common.rs:104-108, src/memvid/mutation.rs:2074, :2735, :2739-2751, :2754-2762, :3173-3178, :3247-3252, src/memvid/search/builders.rs:22, :54, :254, src/memvid/search/api.rs:665-674, :1004-1008, :1043 | `FrameStatus` is Active, Superseded or Deleted, defaulting to Active. Both writers do the same two things in order: set the status, then call `remove_frame_from_indexes`, which deletes the frame from the Tantivy engine, the lexical index and the vector index — all three retrieval structures. So the status test in the readers is a second line rather than the only one: a read path that forgot the predicate would still not find the frame, because the frame is no longer in the thing it searches. Where the predicate is written it is shared rather than copied — `frame_is_active` is a named method the search builders call, and `is_frame_text_indexable` puts the status test first, before any MIME question. The state also gates writes: `update_frame` and `delete_frame` each refuse a non-active target with `reason: \"frame is not active\"`, so a superseded frame cannot be corrected or deleted again. And the time-travel read applies the status filter *before* the as-of cutoff, so replaying to an earlier instant shows the frames that are active now and existed then, not the frames that were active then | no committed case asserts the filter, and the one that looks like it does not: `tests/mutation.rs:180-217` is named `delete_frame_marks_deleted` and asserts only that the frame count is zero or one, over its own comment *\"Both are valid - the key is no panic occurred\"* — true for any implementation, including one where delete does nothing"
   negative_eval: "the as-of read over a corrected value | src/types/memories_track.rs test module, `test_get_at_time` | the case writes two cards for `user:location` — `New York` at document date 1000 and `San Francisco` at 2000, the second built with `.updates()` — then asserts `get_at_time(\"user\", \"location\", 1500).value == \"New York\"`. The corrected value must not come back for an instant before the correction, asserted by value identity through the real read | its own positive control is the next two lines: the same query at 2500 returns `San Francisco`, so the arrangement can return the newer value and does not at 1500. This is the shape the rubric calls the harder and more useful version — asserted about a value that was corrected"
 stack_storage: "files"
 stack_retrieval: "lexical, vector, graph"
@@ -28,7 +28,7 @@ matrix:
   scoping: "ACL module over a single file; no multi-tenant model traced"
   integration: "Rust library and CLI over a portable file"
   background: "Enrichment workers, maintenance, doctor"
-  trust: "A three-value frame status filtered on the search path, checksums per frame, and enrichment provenance by engine and version"
+  trust: "A three-value frame status whose demotion unlinks the frame from all three retrieval indexes, checksums per frame, and enrichment provenance by engine and version"
   strengths: "Immutable frames plus as-of reads and session replay — the memory can be rewound"
   risks: "Headline benchmark numbers with no committed result artifacts found; correction is frame-keyed"
 ---
@@ -222,9 +222,9 @@ What is absent:
   `Active`, `Superseded` or `Deleted`, and nothing marks it candidate, verified or
   rejected — which is why the first reading called the mark absent. The rubric's
   test is not that vocabulary but *"at least one state that withholds a memory
-  from being treated as true"*, and two of the three do exactly that: both search
-  entry points filter `frame.status == FrameStatus::Active` before scoring. The
-  mark is carried from 2026-09-17. What remains absent is a judgement about
+  from being treated as true"*, and two of the three do exactly that — twice
+  over, since leaving `Active` also unlinks the frame from all three retrieval
+  indexes in the same call. The mark is carried from 2026-09-17. What remains absent is a judgement about
   truth — the status is a lifecycle position, and provenance is checksums and
   enrichment lineage rather than an epistemic claim.
 - **No value-level tombstone.** `FrameWalOp::Tombstone` marks a *frame*. Re-ingesting
@@ -287,7 +287,9 @@ Strengths:
   rests on here, and a stronger answer to *what did this say before* than a
   side-table of events.
 - **Two of the three frame statuses withhold a frame from every search**, filtered
-  in both search builders before scoring.
+  in both search builders — and evicted from the lexical, vector and Tantivy
+  indexes by the same call that sets the status, so the filter is the second
+  line of defence rather than the only one.
 - **One artifact to deploy**, with search, graph, encryption and ACL inside it.
 
 Gaps:
@@ -425,6 +427,8 @@ and it is a bet: everything gets simpler except sharing.
 - Access and audit: `src/memvid/acl.rs`, `src/memvid/audit.rs`.
 
 ## History
+
+**2026-09-19** — [`e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813`](https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813) — `trust_state` re-tested at the unchanged pin, so every correction is the atlas's own. The record described the mechanism as a filter on the search path and stopped there. The filter is real, but it is the second line, not the first: both writers set the status and then call `remove_frame_from_indexes` in the same function (`mutation.rs:2751`, `:2737`), which deletes the frame from the Tantivy engine, the lexical index and the vector index. Leaving `Active` *is* the eviction. A read path that forgot the predicate would still not find the frame, which is the structural answer to the usual risk of a predicate hand-written at twenty sites. Three things follow that the record did not carry. The predicate is shared where it is written — `frame_is_active` is a named method the search builders call, and `is_frame_text_indexable` tests the status before it tests the MIME type. The state gates writes as well as reads: `update_frame` and `delete_frame` both refuse a non-active target with `reason: "frame is not active"`, so a superseded frame cannot be corrected or deleted twice. And the time-travel read applies the status filter *before* the as-of cutoff (`search/api.rs:665-674`), so replaying to an earlier instant returns the frames that are active now and existed then — not the frames that were active then, which is worth knowing beside the `bitemporal` mark. The two anchors the record cited as *"both search entry points"* are in fact the two index builders, `build_lex_artifact` and `rebuild_tantivy_engine`; the citation is corrected. Nothing was installed and no suite was run.
 
 **2026-09-17** — [`e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813`](https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813) — re-read at the same commit, still the tip; the last commit upstream is 14 July 2026 and it edits the README. Nothing in the code could have moved, so this reading audited the first one. Screened again: no auto-run surface, no build-time execution path beyond the Rust toolchain file, nothing inside the cooldown; nothing was installed, built or run.
 

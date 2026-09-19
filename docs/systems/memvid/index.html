@@ -117,7 +117,7 @@ than only correct.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/memvid--memvid" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -321,12 +321,12 @@ applied.</strong> A frame is <code>Active</code>,
 candidate, verified or rejected — which is why the first reading called
 the mark absent. The rubric's test is not that vocabulary but <em>"at
 least one state that withholds a memory from being treated as
-true"</em>, and two of the three do exactly that: both search entry
-points filter <code>frame.status == FrameStatus::Active</code> before
-scoring. The mark is carried from 2026-09-17. What remains absent is a
-judgement about truth — the status is a lifecycle position, and
-provenance is checksums and enrichment lineage rather than an epistemic
-claim.</li>
+true"</em>, and two of the three do exactly that — twice over, since
+leaving <code>Active</code> also unlinks the frame from all three
+retrieval indexes in the same call. The mark is carried from 2026-09-17.
+What remains absent is a judgement about truth — the status is a
+lifecycle position, and provenance is checksums and enrichment lineage
+rather than an epistemic claim.</li>
 <li><strong>No value-level tombstone.</strong>
 <code>FrameWalOp::Tombstone</code> marks a <em>frame</em>. Re-ingesting
 the same source produces a new frame with a new id, and the entity:slot
@@ -391,7 +391,10 @@ which is what the <code>audit_log</code> mark rests on here, and a
 stronger answer to <em>what did this say before</em> than a side-table
 of events.</li>
 <li><strong>Two of the three frame statuses withhold a frame from every
-search</strong>, filtered in both search builders before scoring.</li>
+search</strong>, filtered in both search builders — and evicted from the
+lexical, vector and Tantivy indexes by the same call that sets the
+status, so the filter is the second line of defence rather than the only
+one.</li>
 <li><strong>One artifact to deploy</strong>, with search, graph,
 encryption and ACL inside it.</li>
 </ul>
@@ -550,6 +553,35 @@ afterwards?</li>
 <code>src/memvid/audit.rs</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813"><code class="commit-id" title="e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813">e6bd9f7b…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin, so every
+correction is the atlas's own. The record described the mechanism as a
+filter on the search path and stopped there. The filter is real, but it
+is the second line, not the first: both writers set the status and then
+call <code>remove_frame_from_indexes</code> in the same function
+(<code>mutation.rs:2751</code>, <code>:2737</code>), which deletes the
+frame from the Tantivy engine, the lexical index and the vector index.
+Leaving <code>Active</code> <em>is</em> the eviction. A read path that
+forgot the predicate would still not find the frame, which is the
+structural answer to the usual risk of a predicate hand-written at
+twenty sites. Three things follow that the record did not carry. The
+predicate is shared where it is written — <code>frame_is_active</code>
+is a named method the search builders call, and
+<code>is_frame_text_indexable</code> tests the status before it tests
+the MIME type. The state gates writes as well as reads:
+<code>update_frame</code> and <code>delete_frame</code> both refuse a
+non-active target with <code>reason: "frame is not active"</code>, so a
+superseded frame cannot be corrected or deleted twice. And the
+time-travel read applies the status filter <em>before</em> the as-of
+cutoff (<code>search/api.rs:665-674</code>), so replaying to an earlier
+instant returns the frames that are active now and existed then — not
+the frames that were active then, which is worth knowing beside the
+<code>bitemporal</code> mark. The two anchors the record cited as
+<em>"both search entry points"</em> are in fact the two index builders,
+<code>build_lex_artifact</code> and <code>rebuild_tantivy_engine</code>;
+the citation is corrected. Nothing was installed and no suite was
+run.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/memvid/memvid/commit/e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813"><code class="commit-id" title="e6bd9f7b9c38cd8d5370fa0fc936ac1dcd751813">e6bd9f7b…</code></a>
 — re-read at the same commit, still the tip; the last commit upstream is

@@ -113,7 +113,7 @@ when it beats the incumbent on eight measured deltas.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/aiming-lab--MetaClaw" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -694,6 +694,35 @@ all, because every assertion in it is <code>self.assertNotIn</code> or
 <code>self.assertFalse</code>. The mark in this report rests on cases
 that first search reported as absent.</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8acc8aa47b3b21"><code class="commit-id" title="922caf3a1cd093fb316e95183a8acc8aa47b3b21">922caf3a…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin, so the
+corrections are the atlas's own. The <code>list_active</code> predicate
+is exactly where the record said, and the record stopped one line too
+early. Every writer that moves a unit off <code>active</code> calls
+<code>_remove_fts</code> on the following line — <code>supersede</code>
+(<code>store.py:1457</code>), <code>expire_stale</code>
+(<code>:502</code>) and four archival passes in the manager
+(<code>:1186</code>, <code>:1246</code>, <code>:1351</code>,
+<code>:1504</code>) — so the row leaves <code>memories_fts</code> in the
+same call that changes its status. The filter is the second line of
+defence, not the only one. Nine writers, nine evictions, none missed;
+but no single method does both, so what holds the invariant is a
+repeated two-line idiom rather than an abstraction, and a tenth writer
+would have to remember. Two further observations. The keyword path
+intersects the FTS hit set with <code>list_active</code> rather than
+trusting the index — the code comments the step as <em>"Filter to
+active-only from the main table"</em> — and the manual fallback scans
+<code>list_active</code> directly, so the fallback carries the predicate
+that fallbacks usually lose. And a limit worth recording beside the
+retrieval fields rather than the mark: both keyword arms call
+<code>list_active(scope_id, limit=500)</code>, whose SQL is
+<code>ORDER BY updated_at DESC LIMIT ?</code>, so keyword search can
+only ever see the 500 most recently updated active units in a scope —
+and the expiry filter runs in Python <em>after</em> that limit, so
+expired rows consume slots before being dropped. An older active memory
+is unreachable by keyword search however well it matches. Nothing was
+installed and no suite was run.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/aiming-lab/MetaClaw/commit/922caf3a1cd093fb316e95183a8acc8aa47b3b21"><code class="commit-id" title="922caf3a1cd093fb316e95183a8acc8aa47b3b21">922caf3a…</code></a>
 — re-read at the same commit, which is still the tip of
