@@ -9,8 +9,10 @@ source_url: https://github.com/alexisfox7/PRO-LONG
 archive_name: "alexisfox7--PRO-LONG"
 revision: 9d2f2d46fea8759ed494ce5b0166c7004a2e97c4
 revision_url: https://github.com/alexisfox7/PRO-LONG/commit/9d2f2d46fea8759ed494ce5b0166c7004a2e97c4
-analyzed_at: 2026-09-13
-capabilities: ""
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
+capability_evidence:
+  negative_eval: "the installed hook runtime — what must not enter the log | tests/lifecycle.test.ts:86-93, :112-130, templates/runtime.mjs:33-38 | the runtime refuses to record a tool event whose serialized input names the log — `if (json(toolInput)?.includes('.prolong/log.jsonl')) return;` — and the lifecycle test drives the real runtime, has the agent grep its own log, and asserts the file is still one line long with the reason in the message: 'reading the memory log must not copy it back into itself'. Two further must-not cases sit beside it: an uninstall must leave a user-modified adapter file in place, and an init that hits unparseable existing hook JSON must fail before creating any managed file, asserted by `assert.rejects` on both `.prolong/runtime.mjs` and `AGENTS.md` | subsystem: this is the npm tooling layer, not the ARC harness the rest of this report reads, and it is a write-path assertion rather than a negative retrieval one. The guard is a substring match on one spelling of the path, so `cd .prolong && rg x log.jsonl` and a `.prolong/*.jsonl` glob both record; the Python harness under research/ has no test of any kind"
 stack_storage: "files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
@@ -74,10 +76,11 @@ committed Fable 5 runs the agent's copy is an exact byte prefix of the host
 master, so no agent ever wrote to its own log. The defect is latent, and what
 keeps it latent is a convention no code states.
 
-No tests exist in the tree. `pyproject.toml` declares the MIT trove classifier
-and no `LICENSE` file is present, so the grant is asserted and absent — the same
-caveat this atlas records for [Membase](../membase/), and worth knowing before
-reusing anything here.
+The research harness under `research/` carries no test of any kind. The
+installer beside it, described in section 3, has one — so the half that ships to
+other people's machines is tested and the half the paper's numbers come from is
+not. MIT, by a `LICENSE` file at the root as well as the trove classifier in
+`pyproject.toml`.
 
 ## 2. Mental Model
 
@@ -294,6 +297,31 @@ the one the harness can replay, the reader can read and the ablation can remove.
 `--compact-pct` triggers compaction of the first on the Claude Code backend,
 which is precisely the moment the second earns its keep.
 
+**How the installer's side writes.** The `.prolong/runtime.mjs` it generates is
+63 lines. Each hook event is appended as
+`{timestamp, client, sessionId, type, content}`, and `eventType` normalises the
+four clients' differing event names onto six shared kinds — `session_start`,
+`user_prompt`, `tool_call`, `tool_result`, `assistant_message`, `session_end` —
+by lowercasing and substring-matching, so an unrecognised name is recorded under
+itself rather than dropped.
+
+One mechanism there has no counterpart in the research code, because only the
+installed version needs it. An agent that greps its own memory produces tool
+output containing the log, which a naive recorder would append straight back
+into it — so `record` drops any tool event whose serialized input names the log
+path:
+
+```js
+if (json(toolInput)?.includes(".prolong/log.jsonl")) return;
+```
+
+The guard is a substring match on one spelling. An absolute path still contains
+that substring and is caught; `cd .prolong && rg decision log.jsonl` is not, and
+neither is a `.prolong/*.jsonl` glob. Installation is careful in a way worth
+naming: `init` is idempotent, refuses to touch a client whose existing hook JSON
+does not parse, and `uninstall` removes PRO-LONG's own block while preserving
+both the user's pre-existing hooks and any adapter file they edited.
+
 ## 9. Reliability, Safety, and Trust
 
 **The sync defect.** The invariant the incremental copy needs is that the sandbox
@@ -341,11 +369,34 @@ no general network egress, and a proxy for the model API only.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**No tests.** No `tests/` directory, no test file, no assertion anywhere in the
-tree. For a harness whose result is a benchmark number, the evaluation is the
-test suite — but the log parser, the window splitter and the sync are ordinary
-functions that would take a dozen lines each to pin, and the sync defect above is
-exactly what a test would have caught.
+**One test file, and it is on the other half of the repository.**
+`tests/lifecycle.test.ts` is 144 lines over three cases, wired to `npm test`
+(`npm run build && node --test dist/tests/*.test.js`), and it covers the npm
+tooling layer of section 8 — not the ARC harness. It is good: it spawns the
+generated `runtime.mjs` as a real subprocess, feeds it a hook event on stdin,
+and reads back the log it wrote.
+
+Its centre is a must-not case. The agent is made to grep its own memory, and the
+assertion is that the memory did not grow:
+
+```js
+assert.equal(afterSelfRead.length, 1, "reading the memory log must not copy it back into itself");
+```
+
+Two more sit beside it — an `uninstall` must leave a user-modified adapter file
+in place and warn rather than delete, and an `init` that meets unparseable
+existing hook JSON must fail *before* creating any managed file, asserted by
+`assert.rejects` on both `runtime.mjs` and `AGENTS.md`. All three are about what
+must not happen to something the user owns, which is the right instinct for a
+tool that edits other programs' config.
+
+**The research harness has nothing.** No test touches
+`research/arc-agi-3/prolong_agent/`. For a harness whose result is a benchmark
+number, the evaluation is the test suite — but the log parser, the window
+splitter and the sync are ordinary functions that would take a dozen lines each
+to pin, and the sync defect above is exactly what a test would have caught. The
+asymmetry is the finding: the half that ships to other people's machines is
+tested, and the half the paper's numbers come from is not.
 
 **Four committed scorecards**, and the set is unusually well-formed:
 
@@ -434,20 +485,24 @@ API key, and the transferable part is 200 lines and an idea.
 - **The scope boundary is a directory.** Isolation is real — one workspace per
   game, one container — but it is a filesystem fact, not a stored key applied on
   a read path, so nothing survives a change in how runs are laid out.
-- **An asserted licence with no file.** The MIT trove classifier in
-  `pyproject.toml` is not a grant, and no `LICENSE` exists in the tree.
-- **No tests**, in a repository whose central claim is a measurement.
+- **No tests where the numbers are.** The npm tooling layer has a test file; the
+  research harness the paper reports on has none, in a repository whose central
+  claim is a measurement.
+- **A self-ingestion guard that matches one spelling of a path.** `record` drops
+  a tool event whose serialized input contains `.prolong/log.jsonl`; reaching the
+  same file by another route records normally, and the committed case exercises
+  only the spelling the guard checks.
 
 ## 13. Build-vs-Borrow Takeaways
 
 Borrow the idea and none of the code. The transferable claim is that for
 machine-generated, exactly-checkable observations, a verbatim append-only text
-log plus a coding agent outperforms a summarizing memory — and it is now
-supported by a matched pair of committed runs rather than by assertion.
+log plus a coding agent outperforms a summarizing memory — and it is supported
+by a matched pair of committed runs rather than by assertion.
 
-Build the three things this harness does not have, in this order: a sync whose
-offset you own, a marker separating what was observed from what was inferred, and
-one test per parser. The first is a correctness bug, the second is what turns the
+Build the three things the research harness does not have, in this order: a sync
+whose offset you own, a marker separating what was observed from what was
+inferred, and one test per parser. The first is a correctness bug, the second is what turns the
 log into memory rather than a transcript, and the third is what stops the first
 from recurring.
 
@@ -481,8 +536,32 @@ demands isolation, not because the memory does.
 | `scorecards/` | Four committed result files, including the 500-action rerun |
 | `release_logs/` | 25 full workspaces — `logs.txt`, `notes.md`, `actions.json`, `CLAUDE.md` |
 | `environment_files/` | Three games committed for offline runs |
+| `src/` | The npm tooling layer — `init`, `status`, `uninstall`, one adapter per client |
+| `templates/runtime.mjs` | The 63-line hook runtime that writes `.prolong/log.jsonl`, including the self-read guard |
+| `tests/lifecycle.test.ts` | The repository's only test file, over the tooling layer |
+| `LICENSE` | MIT, at the repository root |
+
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| ~~No assertion anywhere in the tree~~ — **false, corrected 2026-09-19** | GitHub trees API at this commit, filtered for `test`/`spec` | `tests/lifecycle.test.ts`, 144 lines, wired to `npm test`. The original claim was made over the `research/` subtree and published over the whole repository |
+| ~~No `LICENSE` exists in the tree~~ — **false, corrected 2026-09-19** | `ls LICENSE` | A top-level MIT `LICENSE`, *"Copyright (c) 2026 PRO-LONG authors"*. The grant is a file, not only a trove classifier |
+| The research harness has no test | `grep -rl "research/arc-agi-3" tests/`; and the whole of `tests/` is one file over `src/` | Nothing. `tests/lifecycle.test.ts` imports `../src/init.js`, `../src/status.js`, `../src/uninstall.js` |
+| The self-read guard matches one spelling | read `templates/runtime.mjs:33-38` | `json(toolInput)?.includes(".prolong/log.jsonl")` — a substring test on the serialized input |
+| Nothing has moved upstream since this pin | `GET /repos/alexisfox7/PRO-LONG/commits?sha=main&per_page=1` | This commit is still the tip, dated 2026-08-20 |
 
 ## History
+
+**2026-09-19** — [`9d2f2d46fea8759ed494ce5b0166c7004a2e97c4`](https://github.com/alexisfox7/PRO-LONG/commit/9d2f2d46fea8759ed494ce5b0166c7004a2e97c4) — audited at the unchanged pin, which is still the tip of `main`; the last commit upstream is 20 August 2026. Nothing could have moved, so every error found here is this atlas's own. Two published claims were false, and both were checkable with one `ls`.
+
+**There is a `LICENSE` file**, MIT, at the repository root. Section 1 and section 12 both stated that the grant was asserted by a trove classifier and absent as a file, and section 12 listed it as an antipattern. That is withdrawn in full, including the comparison to [Membase](../membase/), which is a different situation. A report telling readers a licence grant is missing is the most consequential kind of error this atlas can make, because it argues against reuse.
+
+**There is a test file.** `tests/lifecycle.test.ts`, 144 lines, wired to `npm test`. The claim was true of `research/` — where the paper's numbers come from — and published over the whole repository. Section 10 is rewritten around the asymmetry that replaces it.
+
+`negative_eval` is **added**. The test's centre is a must-not case over the installed runtime: the agent is made to grep its own memory and the log is asserted not to have grown, *"reading the memory log must not copy it back into itself."* Reading the guard behind it added a finding of its own — it is a substring match on one spelling of the path, so `cd .prolong && rg x log.jsonl` records normally. Section 8 gains the runtime's write mechanism; the appendix gains the searches that should have grounded both original claims.
 
 **2026-09-13** — [`9d2f2d46fea8759ed494ce5b0166c7004a2e97c4`](https://github.com/alexisfox7/PRO-LONG/commit/9d2f2d46fea8759ed494ce5b0166c7004a2e97c4) — re-read, 18 commits past the previous pin and a restructuring: 256 files changed, 3,709 lines added against 9,841 removed. The ARC-AGI-3 implementation moved wholesale under `research/arc-agi-3/`, so every path in the appendix gained that prefix, and a TypeScript installer for coding CLIs arrived beside it, described in section 4. Two published claims are corrected. `consume_clear_tombstone` at `base.py:97` no longer exists — it and `clear_session` were replaced by a `_clear_files` helper, and the word `tombstone` appears nowhere in the tree — so the observation that the word was taken for session-clearing is recorded as the repository's own history rather than as current state. The mark itself is unaffected: nothing is keyed on a rejected value, and `capabilities` stays empty. The paper the report already cites, [arXiv:2607.20064](https://arxiv.org/abs/2607.20064), now has a `CITATION.cff` and a README badge beside it. Screened again first; nothing was installed and no suite was run.
 
