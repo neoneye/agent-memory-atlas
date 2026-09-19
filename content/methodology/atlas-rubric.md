@@ -154,9 +154,12 @@ published report on this site and corrected on 2026-09-18:
 - **Permission, authorisation or a per-user mute.** Who may change an ACL, and
   what one viewer sees, are different questions from whether a memory is
   admitted.
-- **A queue nothing drains.** An approve route correctly off the tool surface
-  still fails if the queue lives in process memory, or if no read path consults
-  the approved state.
+- **A queue nothing drains — or nothing fills.** An approve route correctly off
+  the tool surface still fails if the queue lives in process memory, or if no
+  read path consults the approved state. Check the other end too: in
+  [Omi](../../systems/omi/) the list, get and resolve routes all work, and the
+  one function that writes a conflict into the queue has no caller outside its
+  own definition, so in a running deployment the queue is empty.
 - **Prose.** A tool description asking the model to show the user first is a
   request to the model, not a constraint on it.
 
