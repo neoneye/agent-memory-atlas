@@ -121,7 +121,7 @@ refuses to on the other surface.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/szara7678--OpenAkashic" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -641,6 +641,31 @@ fallback</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/szara7678/OpenAkashic/commit/6c916d9aac6198de0912a97739ff95d439a9b382"><code class="commit-id" title="6c916d9aac6198de0912a97739ff95d439a9b382">6c916d9a…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin and
+<strong>moved to a different column</strong>. The previous record put
+the mark on <code>claim_review_status</code> and described it
+accurately: <em>"the public API adds a per-state term inside its ranking
+SQL"</em>, and the closed-web server multiplies by a trust multiplier.
+That is the ranking axis, and reading the SQL settles it —
+<code>confirmed</code> adds 0.14, <code>disputed</code> subtracts 0.18,
+<code>superseded</code> 0.42 and <code>merged</code> 0.30, in the same
+sum as the claim-role weight and the confirm and dispute counts. A
+superseded claim is penalised and still returned if it scores well
+enough, which is the definition this mark excludes. The column that does
+withhold is <code>claims.status</code>, which the record did not
+mention: <code>pending</code>, <code>accepted</code> or
+<code>rejected</code>, CHECK-constrained, indexed, defaulting to
+<code>pending</code> in the schema, and filtered by every retrieval path
+— the vector query, the ranked query and the expansion query all carry
+<code>c.status = ANY(%(statuses)s)</code>, and a caller who names no
+status gets <code>["accepted"]</code>. One weakening belongs with it:
+the API's own write schema defaults <code>status</code> to
+<code>accepted</code>, so a claim arriving through the API is admitted
+immediately and the database's <code>pending</code> default only applies
+to a writer that omits the column. Nothing was installed and no suite
+was run.</p>
 <p><strong>2026-09-18</strong> — <a
 href="https://github.com/szara7678/OpenAkashic/commit/6c916d9aac6198de0912a97739ff95d439a9b382"><code class="commit-id" title="6c916d9aac6198de0912a97739ff95d439a9b382">6c916d9a…</code></a>
 — re-read at the same commit. Both marks now carry evidence records, and

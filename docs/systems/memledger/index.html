@@ -118,7 +118,7 @@ the write path refuses to consult.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/riktar--memledger" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -645,6 +645,27 @@ the validator</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/riktar/memledger/commit/27f67e436ec0910e50c4b1c41cdf96f7afb6b341"><code class="commit-id" title="27f67e436ec0910e50c4b1c41cdf96f7afb6b341">27f67e43…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin. The record
+called the transition table a <em>"whitelist of layer-and-status
+transitions"</em>, which undersells what that buys. The entries are
+four-tuples over the current layer, the current status, the target layer
+and the target status, so the two axes are constrained <em>jointly</em>:
+the only legal route into the <code>instinct</code> layer is from
+<code>(episodic, active)</code>, which means a quarantined extraction
+cannot be promoted no matter what else happens to it, and no transition
+expires an instinct tuple. Twelve legal moves, three legal initial
+states, <code>deleted</code> only ever a target. On the read side the
+exclusion is two-tiered and, more importantly, placed before the
+scoring: <code>deleted</code>, <code>superseded</code> and
+<code>expired</code> are dropped unconditionally while
+<code>quarantined</code> is dropped only when the caller has not asked
+for it, and the recency decay and impact boost are computed after both
+<code>continue</code>s — so a withheld record never takes a candidate
+slot on its way to being discarded. The status is then included in the
+result payload, which is the right order: filter, then label. Nothing
+was installed and no suite was run.</p>
 <p><strong>2026-09-18</strong> — <a
 href="https://github.com/riktar/memledger/commit/27f67e436ec0910e50c4b1c41cdf96f7afb6b341"><code class="commit-id" title="27f67e436ec0910e50c4b1c41cdf96f7afb6b341">27f67e43…</code></a>
 — re-read at the same commit. Nothing upstream had moved, so every
