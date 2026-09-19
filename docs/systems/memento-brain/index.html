@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A self-hosted collector that
+aggregates AI coding conversations from every device and scopes each
+read through one shared device filter whose empty case means see
+nothing, with no committed case asserting one user cannot see
+another's.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Memento — Agent Memory Atlas">
+    <meta property="og:description" content="A self-hosted collector
+that aggregates AI coding conversations from every device and scopes
+each read through one shared device filter whose empty case means see
+nothing, with no committed case asserting one user cannot see
+another's.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memento — Agent Memory Atlas">
+    <meta name="twitter:description" content="A self-hosted collector
+that aggregates AI coding conversations from every device and scopes
+each read through one shared device filter whose empty case means see
+nothing, with no committed case asserting one user cannot see
+another's.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Memento — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Memento",
+      "description": "A self-hosted collector that aggregates AI coding conversations from every device and scopes each read through one shared device filter whose empty case means see nothing, with no committed case asserting one user cannot see another's.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One filter helper, and nothing that tests
+it</p>
+          <h1>Memento</h1>
+          <p class="document-deck">A self-hosted collector that
+aggregates AI coding conversations from every device and scopes each
+read through one shared device filter whose empty case means see
+nothing, with no committed case asserting one user cannot see
+another's.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ddong8/memento">
+              <span>Source</span>
+              <strong>ddong8/memento</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ddong8/memento/commit/9f25d7fbc446b5dc94e3f484111e4fb1d712522d" title="9f25d7fbc446b5dc94e3f484111e4fb1d712522d">
+              <span>Analyzed revision</span>
+              <code>9f25d7fb…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ddong8--memento" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ddong8--memento</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Memento collects AI coding conversations from the tools and machines
+a person already uses, aggregates them on a self-hosted backend, and
+serves them back through a web interface and an MCP server. Python and
+Next.js over Postgres with pgvector, AGPL-3.0, 457 files across a
+server, a collector, a Tauri desktop collector, a mobile app and an
+embedding service.</p>
+<p><strong>One mark: <code>scope_enforced</code></strong>, and it is
+earned on a shape this atlas asks for by name: <strong>one filter,
+written once, applied by every read path.</strong></p>
+<p><code>server/server/services/user_filter.py</code> is thirty lines
+and does the whole job. <code>user_machine_ids</code> returns the
+machines a user owns, and its docstring states the tri-state exactly:
+<em>"Returns None for admin/owner (no filtering needed — they see
+everything). Returns empty list if user has no devices (sees
+nothing)."</em> A user with no devices gets
+<code>machine_id IN ()</code>, which matches nothing — the empty case
+fails closed, and it does so because someone decided it should rather
+than because SQL happened to behave that way.</p>
+<p>What is missing is the assertion. Nine test files sit beside it and
+<strong>none of them establishes that one user cannot see another's
+documents.</strong> The closest, <code>test_device_filter.py</code>,
+mocks the database and checks that a device lookup returns
+<code>None</code> for sentinel values. The property the helper's own
+docstring describes is the one property nothing exercises.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Ownership runs through devices. A collector on a machine ships
+conversations to the server; the machine belongs to a user; a document
+belongs to the machine it arrived from. So "your memory" means
+"documents from your devices", and every scoped query filters on
+<code>machine_id</code>, not on a <code>user_id</code> column on the
+document.</p>
+<p>That indirection is why the filter is a helper rather than a
+<code>where</code> clause: the set of machine ids has to be resolved
+first, and resolving it is the only place the user's role is
+consulted.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — collectors on each machine ship conversations to a self-hosted server where a document belongs to the machine it arrived from and a machine belongs to a user, so every scoped read resolves the user's machine ids once and applies them through a single shared helper whose empty result matches nothing and whose None result is the admin bypass; the keyword and semantic branches of search both apply it, the semantic one degrading to keyword-only rather than failing when the embedding server is slow, and an access log records reads rather than mutations</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: collectors on each machine ship conversations to a self-hosted server where a document belongs to the machine it arrived from and a machine belongs to a user, so every scoped read resolves the user&#39;s machine ids once and applies them through a single shared helper whose empty result matches nothing and whose None result is the admin bypass; the keyword and semantic branches of search both apply it, the semantic one degrading to keyword-only rather than failing when the embedding server is slow, and an access log records reads rather than mutations
+flowchart TD
+    C1[&quot;collector · CLI&quot;] --&gt; SRV
+    C2[&quot;Tauri desktop collector&quot;] --&gt; SRV
+    C3[&quot;mobile&quot;] --&gt; SRV
+    SRV[&quot;FastAPI server&quot;] --&gt; DB[(&quot;Postgres + pgvector&lt;br/&gt;documents.machine_id&lt;br/&gt;machines.user_id&quot;)]
+
+    Q[&quot;any scoped read&quot;] --&gt; UMI[&quot;user_machine_ids(db, user)&quot;]
+    UMI --&gt;|&quot;role in (admin, owner)&quot;| NONE[&quot;None — no filter&quot;]
+    UMI --&gt;|&quot;user has devices&quot;| IDS[&quot;[machine ids]&quot;]
+    UMI --&gt;|&quot;user has none&quot;| EMPTY[&quot;[] — matches nothing&quot;]
+
+    NONE --&gt; AUF
+    IDS --&gt; AUF
+    EMPTY --&gt; AUF
+    AUF[&quot;apply_user_filter(query, ids, col)&lt;br/&gt;no-op on None, else col.in_(ids)&quot;]
+
+    AUF --&gt; KW[&quot;keyword branch&quot;]
+    AUF --&gt; SEM[&quot;semantic branch&lt;br/&gt;BGE-M3 cosine&quot;]
+    SEM -.-&gt;|&quot;any failure · 30s ceiling&quot;| DEG[&quot;returns ([], {})&lt;br/&gt;degrade to keyword, never 500&quot;]
+    KW --&gt; RRF[&quot;reciprocal rank fusion&lt;br/&gt;RRF_K = 60, cited to Cormack 2009&quot;]
+    SEM --&gt; RRF
+    RRF --&gt; OUT[&quot;results&quot;]
+    OUT --&gt; WEB((&quot;web UI&quot;))
+    OUT --&gt; MCP((&quot;MCP&quot;))
+
+    OUT --&gt; AL[(&quot;access_logs&lt;br/&gt;user · document · action · ip · agent&lt;br/&gt;records reads, not mutations&quot;)]
+    AL -.-&gt;|&quot;deleted with the document,&lt;br/&gt;the user or the device&quot;| GC[&quot;cascade&quot;]
+
+    TESTS[&quot;9 test files&quot;] -.-&gt;|&quot;none asserts&lt;br/&gt;user A cannot see user B&quot;| AUF</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The filter</strong> —
+<code>server/server/services/user_filter.py</code>. Two functions.
+<code>user_machine_ids</code> returns <code>None</code> for
+<code>admin</code>/<code>owner</code>, otherwise the user's machine ids,
+which may be an empty list. <code>apply_user_filter</code> is a no-op on
+<code>None</code> and otherwise appends
+<code>machine_id_col.in_(machine_ids)</code>. The admin bypass is a
+return value rather than a branch at each call site, which is why it
+cannot be forgotten in one place and remembered in another.</p>
+<p><strong>Both search branches</strong> —
+<code>server/server/api/search.py:128</code> resolves <code>mids</code>
+once, <code>:153</code> applies the filter to the keyword query,
+<code>:189</code> to a follow-up query, and the semantic ranker takes
+<code>mids</code> as an argument and applies the same <code>in_</code>
+at <code>:72-73</code>. One resolution, three applications, no second
+derivation.</p>
+<p><strong>The entity surface</strong> —
+<code>server/server/api/memory.py</code> scopes differently and more
+conventionally, composing
+<code>KnowledgeEntity.user_id == _user.id</code> directly at
+<code>:29</code>, <code>:51</code>, <code>:72</code>, <code>:99</code>,
+<code>:220</code>, <code>:242</code>, each guarded by
+<code>if not admin</code>, plus an ownership check on the by-id path at
+<code>:150</code>. Two scoping idioms in one codebase — the helper on
+documents, inline predicates on entities — is worth knowing before
+extending either.</p>
+<p><strong>The degradation rule</strong> — <code>search.py:33-37</code>.
+The semantic ranker returns <code>([], {})</code> on <em>any</em>
+failure, with the reason stated: <em>"a missing/slow embedding server
+must degrade this endpoint to pure keyword search, never 500 it. The
+keyword branch is the floor; semantic is strictly additive."</em> The
+30-second timeout carries its own justification — BGE-M3 is CPU-only on
+Apple Silicon and a cold cache with Chinese tokenization takes 5–12
+seconds, so a shorter ceiling <em>"produces false 'unavailable' and
+silently drops users back to keyword-only on a healthy server."</em></p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Documents carry the conversation content and a
+<code>machine_id</code>. A separate knowledge layer holds
+<code>KnowledgeEntity</code> and <code>KnowledgeRelation</code> rows
+with a direct <code>user_id</code>. Embeddings live in
+<code>DocumentEmbedding</code> for pgvector cosine search.</p>
+<p><code>AccessLog</code> records <code>user_id</code>,
+<code>document_id</code>, <code>action</code>, <code>ip_address</code>,
+<code>user_agent</code>, a JSONB metadata blob and
+<code>created_at</code>, indexed by user and by document, both
+newest-first.</p>
+<p>There is no status field, no supersession, no validity window and no
+confidence:
+<code>grep -rl "tombstone\|supersede\|deleted_at\|confidence\|valid_from"</code>
+over the Python returns nothing for any of them. A memory here is a
+record of what was said, not a claim the system holds a position on.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Hybrid: a keyword branch and a pgvector cosine branch, fused with
+reciprocal rank fusion. <code>RRF_K = 60</code> carries a citation and a
+reason — <em>"the value from the original RRF paper (Cormack et al.
+2009) and the de-facto default in Elasticsearch/Vespa: large enough that
+the top few ranks don't dominate outright, small enough that rank-1
+still clearly outranks rank-10."</em></p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Collectors parse tool-native conversation formats and ship them. The
+parser handles Anthropic <code>redacted_thinking</code> blocks by
+recording their size rather than their content —
+<code>[redacted thinking: N bytes]</code>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server mounted on the API, a web UI, and collectors for
+several coding tools across desktop and mobile.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>scope_enforced</code>.</strong> One helper, both search
+branches, and the empty case failing closed by design rather than by
+accident.</p>
+<p>Two limits belong on the record beside it. The bypass is broad:
+<code>admin</code> and <code>owner</code> receive <code>None</code> and
+see every user's documents, which is a deployment decision rather than a
+bug but is worth knowing for a multi-person instance. And the boundary
+is device ownership — a document is yours because it arrived from your
+machine, so re-assigning a machine moves its history with it.</p>
+<p><strong><code>audit_log</code> is withheld.</strong>
+<code>AccessLog</code> is a genuine audit and it records the wrong verb
+for this mark: it captures reads — who viewed which document, from what
+address — not mutations of memory. Rows are also deleted when the
+document, the user or the device is removed (<code>admin.py:201</code>,
+<code>:235</code>, <code>devices.py:184</code>), which is the right
+behaviour for a personal-data store and not the property "append-only"
+describes. The export endpoint coarsens IP addresses to a /24 or /48
+when audit rows are included, which is a careful default.</p>
+<p><strong><code>negative_eval</code> is withheld</strong>, and this is
+the finding of the page — section 10.</p>
+<p><strong><code>trust_state</code>, <code>tombstone</code>,
+<code>bitemporal</code> and <code>human_review</code> are
+withheld.</strong> Nothing carries an epistemic state, nothing records a
+rejected value, there is one clock, and nothing waits for a person.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nine test files under <code>server/tests/</code>, covering the
+conversation parser, session compaction, orphaned subagents, title
+healing, workspace extraction, update checks and the AI provider.
+Nothing was installed and nothing was run.</p>
+<p><strong>No committed case asserts the isolation property.</strong>
+<code>test_device_filter.py</code> is the only file that touches the
+ownership code, and what it tests is lookup behaviour with a mocked
+session: that <code>find_machine_by_id_or_hash</code> returns
+<code>None</code> for the sentinel values <code>auto</code>,
+<code>ask_only</code> and <code>all</code> without issuing a query
+(<code>db.execute.assert_not_called()</code>), and that it resolves a
+machine by token hash, by name and by UUID fallback.</p>
+<p>None of that exercises <code>apply_user_filter</code>. Seeding two
+users with one machine each and asserting the second user's search
+returns nothing of the first's is about fifteen lines, and it is the
+assertion the rubric describes as <em>the cheapest catastrophic failure
+in the set</em> — one that costs nothing to write and is unrecoverable
+once material has reached a prompt.</p>
+<p>The gap is sharper here than in a project with no tests, because the
+helper's docstring already states the property in words. What is written
+down as intent is not written down as a case.</p>
+<p>No benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Resolve the scope once and pass it, rather than re-deriving
+it.</strong> <code>user_machine_ids</code> runs a single query and every
+branch takes its result, so the keyword path and the semantic path
+cannot disagree about who the caller is.</li>
+<li><strong>Make the admin bypass a return value.</strong>
+<code>None</code> meaning "no filter" is decided in one function; an
+<code>if is_admin</code> at each call site is decided at every call
+site.</li>
+<li><strong>Say what an empty scope means, in the docstring, before you
+need to.</strong> <em>"Returns empty list if user has no devices (sees
+nothing)"</em> is the sentence that stops someone later "fixing" the
+empty case into a no-op.</li>
+<li><strong>State the reason for a timeout in the timeout's
+comment.</strong> The note that a shorter ceiling <em>"produces false
+'unavailable'"</em> is what keeps the next person from tuning it
+down.</li>
+<li><strong>Record the size of redacted content, not the
+content.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two scoping idioms in one codebase.</strong> A shared helper
+on documents and inline <code>user_id ==</code> predicates on entities
+means a new surface has to know which half it belongs to.</li>
+<li><strong>Documenting an isolation property you never assert.</strong>
+The docstring is precise and the suite is silent; the next refactor has
+nothing to fail against.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take it for a single-person or small-team self-hosted archive of
+coding conversations. Before running it for more than one person, write
+the two-user test.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>admin</code> and <code>owner</code> see every user's
+documents. On a shared instance, is that intended to stay unconditional,
+or to become a per-action grant?</li>
+<li>Ownership is by device. What is meant to happen to a machine's
+history when the machine is transferred between users?</li>
+<li>The entity layer scopes by <code>user_id</code> and the document
+layer by <code>machine_id</code>. Are the two meant to converge?</li>
+<li><code>AccessLog</code> rows are deleted with their document. Is a
+retained, document-free access record wanted for a shared deployment, or
+is deletion the privacy position?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>server/server/services/user_filter.py</code></td>
+<td>the whole scoping mechanism, in two functions</td>
+</tr>
+<tr>
+<td><code>server/server/api/search.py</code></td>
+<td>both branches applying it, the RRF constant and the degradation
+rule</td>
+</tr>
+<tr>
+<td><code>server/server/api/memory.py</code></td>
+<td>the entity surface's inline <code>user_id</code> predicates and
+by-id ownership check</td>
+</tr>
+<tr>
+<td><code>server/server/db/models.py</code></td>
+<td><code>AccessLog</code> and the document/machine/user chain</td>
+</tr>
+<tr>
+<td><code>server/server/middleware/access_log.py</code></td>
+<td>the read-audit writer</td>
+</tr>
+<tr>
+<td><code>server/tests/test_device_filter.py</code></td>
+<td>the only test touching the ownership code, and what it does not
+cover</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Both search branches apply the filter</td>
+<td><code>grep -n "apply_user_filter|mids" server/server/api/search.py</code></td>
+<td>Resolved once at <code>:128</code>, applied at <code>:153</code> and
+<code>:189</code>, and inside the semantic ranker at
+<code>:72-73</code></td>
+</tr>
+<tr>
+<td>No test asserts cross-user isolation</td>
+<td><code>grep -rln "apply_user_filter|machine_ids" server/tests/</code>;
+then read the file</td>
+<td><code>test_device_filter.py</code> only, and it exercises
+<code>find_machine_by_id_or_hash</code> against a mocked session</td>
+</tr>
+<tr>
+<td><del><code>search.py</code> does no scoping</del> — <strong>false, a
+first pass grepped the wrong symbol</strong></td>
+<td><code>grep -c "user_id" server/server/api/search.py</code> returned
+0</td>
+<td>The scoping is by <code>machine_id</code> through the shared helper;
+grepping the concept rather than the imported symbol produced a zero
+that meant nothing</td>
+</tr>
+<tr>
+<td>No epistemic vocabulary exists</td>
+<td><code>grep -rl "tombstone|supersede|deleted_at|confidence|valid_from" --include='*.py' server mcp_server memento_brain</code></td>
+<td>Nothing for any of the five</td>
+</tr>
+<tr>
+<td>The access log records reads, not mutations</td>
+<td>read <code>server/server/middleware/access_log.py:1</code>,
+<code>db/models.py:301-317</code></td>
+<td><em>"records document/page views to audit log"</em>; the row carries
+an action, an IP and a user agent</td>
+</tr>
+<tr>
+<td>Access rows are deleted with their subject</td>
+<td><code>grep -rn "delete(AccessLog)" --include='*.py' server</code></td>
+<td><code>admin.py:201</code> and <code>:235</code>,
+<code>devices.py:184</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/ddong8/memento/commit/9f25d7fbc446b5dc94e3f484111e4fb1d712522d"><code class="commit-id" title="9f25d7fbc446b5dc94e3f484111e4fb1d712522d">9f25d7fb…</code></a>
+— first reading, at 457 files. Screened before reading: no auto-run
+surface, one build-time execution point, three unpinned surfaces and
+nothing inside the cooldown; nothing was installed and nothing was run.
+AGPL-3.0. One mark, <code>scope_enforced</code>, on a single shared
+device filter both search branches apply and whose empty case matches
+nothing by design. <code>audit_log</code> is withheld because the log
+records reads rather than mutations and its rows are deleted with their
+subject; <code>negative_eval</code> because no committed case asserts
+the isolation the filter's own docstring describes. One correction was
+made during the reading and is recorded in the appendix: a first pass
+grepped <code>search.py</code> for <code>user_id</code>, found none, and
+would have published a scope-leak claim about a file that scopes
+correctly through an imported helper by <code>machine_id</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

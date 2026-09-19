@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 608 reports.</strong></p>
+<p><strong>This page covers all 609 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24761,6 +24761,46 @@ the right clause and call it a test of the filter. Also read
 <code>at_time</code> is declared as a plain string, reaches Cypher
 through f-string interpolation, and the only thing between the model and
 the query language is a ten-character slice.</li>
+</ul>
+<h3 id="memento-brain"><a
+href="../systems/memento-brain/"><code>memento-brain</code></a></h3>
+<ul>
+<li>Best idea: <strong>resolve the scope once, pass it, and decide the
+admin bypass in one place.</strong> <code>user_machine_ids</code> runs a
+single query and returns <code>None</code> for admin or owner, the
+machine ids otherwise; <code>apply_user_filter</code> is a no-op on
+<code>None</code> and appends <code>machine_id.in_(...)</code>
+otherwise. Search resolves it once and applies it to the keyword query,
+a follow-up query and the semantic ranker, so the two arms cannot
+disagree about who is asking. The docstring states the tri-state before
+anything depends on it: <em>"Returns empty list if user has no devices
+(sees nothing)"</em> — which is the sentence that stops someone later
+"fixing" the empty case into a no-op.</li>
+<li>Biggest risk: <strong>nothing asserts the property the docstring
+describes.</strong> Nine test files sit beside the helper and none
+establishes that one user cannot see another's documents;
+<code>test_device_filter.py</code>, the only one touching the ownership
+code, exercises a device lookup against a mocked session and never
+reaches <code>apply_user_filter</code>. Seeding two users with one
+machine each is about fifteen lines, and the rubric calls this the
+cheapest catastrophic failure in the set. The gap is sharper than in a
+project with no tests, because the intent is already written down in
+words and not in a case.</li>
+<li>Most reusable component:
+<code>server/server/services/user_filter.py</code> — thirty lines
+holding the whole mechanism, including the decision that an empty device
+list is a predicate matching nothing rather than an absent filter.</li>
+<li>Maturity impression: AGPL-3.0, Python and Next.js over Postgres with
+pgvector, 457 files across a server, CLI, desktop and mobile collectors
+and an embedding service. One mark, <code>scope_enforced</code>.
+<code>audit_log</code> is withheld because <code>AccessLog</code>
+records reads rather than mutations and its rows are deleted with their
+document, user or device — right for a personal-data store, not what
+append-only describes.</li>
+<li>Study when: you want a worked example of a scope helper whose admin
+bypass is a return value rather than a condition repeated at every call
+site — and a reminder to write the two-user test while the helper is
+still thirty lines.</li>
 </ul>
         </article>
       </div>

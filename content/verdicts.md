@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 608 reports.**
+**This page covers all 609 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5437,4 +5437,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `src/synapse/hippocampus/forgetting.py`. Self-contained, parameterised, independent of the graph, and tested on outcomes rather than on shape.
 - Maturity impression: MIT, 66 files over `graphiti-core[falkordb]>=0.29.2` — a floating constraint on the component that defines the data model. One mark, `negative_eval`, recorded narrowly. `bitemporal` is withheld and credited to [graphiti](../systems/graphiti/): `valid_at` and `invalid_at` are the dependency's fields, and counting them here would make two pages claim one mechanism.
 - Study when: you are about to assert that a query builder produced the right clause and call it a test of the filter. Also read `src/synapse/tools.py:39` first if you deploy it — `at_time` is declared as a plain string, reaches Cypher through f-string interpolation, and the only thing between the model and the query language is a ten-character slice.
+
+### [`memento-brain`](../systems/memento-brain/)
+
+- Best idea: **resolve the scope once, pass it, and decide the admin bypass in one place.** `user_machine_ids` runs a single query and returns `None` for admin or owner, the machine ids otherwise; `apply_user_filter` is a no-op on `None` and appends `machine_id.in_(...)` otherwise. Search resolves it once and applies it to the keyword query, a follow-up query and the semantic ranker, so the two arms cannot disagree about who is asking. The docstring states the tri-state before anything depends on it: *"Returns empty list if user has no devices (sees nothing)"* — which is the sentence that stops someone later "fixing" the empty case into a no-op.
+- Biggest risk: **nothing asserts the property the docstring describes.** Nine test files sit beside the helper and none establishes that one user cannot see another's documents; `test_device_filter.py`, the only one touching the ownership code, exercises a device lookup against a mocked session and never reaches `apply_user_filter`. Seeding two users with one machine each is about fifteen lines, and the rubric calls this the cheapest catastrophic failure in the set. The gap is sharper than in a project with no tests, because the intent is already written down in words and not in a case.
+- Most reusable component: `server/server/services/user_filter.py` — thirty lines holding the whole mechanism, including the decision that an empty device list is a predicate matching nothing rather than an absent filter.
+- Maturity impression: AGPL-3.0, Python and Next.js over Postgres with pgvector, 457 files across a server, CLI, desktop and mobile collectors and an embedding service. One mark, `scope_enforced`. `audit_log` is withheld because `AccessLog` records reads rather than mutations and its rows are deleted with their document, user or device — right for a personal-data store, not what append-only describes.
+- Study when: you want a worked example of a scope helper whose admin bypass is a return value rather than a condition repeated at every call site — and a reminder to write the two-user test while the helper is still thirty lines.
 
