@@ -7,14 +7,13 @@ page_kind: system
 source_name: "OmniNode-ai/omniintelligence"
 source_url: https://github.com/OmniNode-ai/omniintelligence
 archive_name: "OmniNode-ai--omniintelligence"
-revision: 5039c8a3b17f6e2468cbed764d3405d450cefb1f
-revision_url: https://github.com/OmniNode-ai/omniintelligence/commit/5039c8a3b17f6e2468cbed764d3405d450cefb1f
-analyzed_at: 2026-09-16
-capabilities: "trust_state, audit_log, human_review, negative_eval"
+revision: 274f097fcd9a008d4888163834f8c459fbfea728
+revision_url: https://github.com/OmniNode-ai/omniintelligence/commit/274f097fcd9a008d4888163834f8c459fbfea728
+analyzed_at: 2026-09-19
+capabilities: "trust_state, audit_log, negative_eval"
 capability_evidence:
   trust_state: "learned_patterns.status, filtered on the injection read path | deployment/database/migrations/005_create_learned_patterns.sql:36, src/omniintelligence/repositories/learned_patterns.repository.yaml:80,134,228 | the column is constrained to `candidate, provisional, validated, deprecated`, and three injection queries in the repository contract carry an explicit lifecycle filter marked in the YAML as OMN-1894 -- only injectable states are returned, so a candidate or deprecated pattern is withheld from a session rather than ranked below the others | tests/unit/repositories/test_contract_lifecycle_filter.py"
   audit_log: "pattern_lifecycle_transitions, one row per state change | deployment/database/migrations/010_create_pattern_lifecycle_audit.sql, src/omniintelligence/nodes/node_pattern_lifecycle_effect/handlers/handler_transition.py | a separate table records the transitions rather than overwriting a status column in place, and the transition handler is the writer, so promotion and demotion both leave a durable trail. It is the state-change history, not a content history: the row records the move, not the pattern text before and after | tests/integration/test_promotion_lifecycle_integration.py"
-  human_review: "pattern_disable_events, an actor-and-reason record over disable and re-enable | deployment/database/migrations/006_create_pattern_disable_events.sql:16-40, 008_create_disabled_patterns_current_view.sql | `reason TEXT NOT NULL` and `actor VARCHAR(100) NOT NULL` are both required by the schema, so a disable cannot be recorded anonymously or without an explanation, and `event_type` is constrained to `disabled` or `re_enabled` so the reversal is a first-class event rather than a delete. A target may be one pattern or a whole pattern class. The schema does not distinguish a human actor from an automated one -- the column admits `user, system, or automated process` by its own comment -- so the mark rests on the surface existing and being mandatory, not on a proof that a person used it | none"
   negative_eval: "the contract lifecycle filter, asserted against the SQL rather than a result set | tests/unit/repositories/test_contract_lifecycle_filter.py | the case loads the repository contract and inspects the SQL of every injection query for a status it must not permit, so a query that would return a deprecated pattern fails at contract level rather than only when a fixture happens to contain one. It is a static assertion about the read path, which is stronger than a single populated-result case in coverage and weaker in that it never exercises the database | this is the test"
 stack_storage: "postgres"
 stack_retrieval: "lexical"
@@ -178,6 +177,8 @@ Manual disable is an append-only event — `pattern_disable_events`, with `event
 The demotion and promotion queries do not read that table. They join `disabled_patterns_current`, a **materialized view** created in migration `008`, whose own comment carries the operating instruction: *"Refresh with: REFRESH MATERIALIZED VIEW CONCURRENTLY disabled_patterns_current;"*. Searching the tree for that statement returns the comment, one line of the migration explaining the unique-index requirement, and four calls inside `tests/integration/nodes/node_pattern_promotion_effect/test_promotion_integration.py`. No scheduler, no job, no dispatch handler refreshes it.
 
 So the strongest correction the system offers — a person naming a pattern and a reason and turning it off — takes effect when somebody remembers a maintenance command that is documented in a SQL comment. The integration tests pass because they run it themselves.
+
+That section is also why this report does not carry `human_review`. Three things stand against it and any one would be enough. The event is a *disable*, applied to a pattern already promoted and already injected, so nothing waits in it. The actor is a string the writer chooses, admitting *"user, system, or automated process"* by the schema's own comment at `006_create_pattern_disable_events.sql:39`. And the disable does not reach a reader at all until the materialized view is refreshed by hand. Requiring a reason and an actor on an override remains rare and right, and it is recorded here for that rather than for a gate.
 
 ### Outcome feedback — `node_enforcement_feedback_effect`
 
@@ -362,6 +363,8 @@ The uncomfortable judgement is about the gap between the design and its wiring. 
 - Self-documented wiring: `docs/reference/NODE_INVENTORY.md`.
 
 ## History
+
+**2026-09-19** — re-pinned to [`274f097fcd9a008d4888163834f8c459fbfea728`](https://github.com/OmniNode-ai/omniintelligence/commit/274f097fcd9a008d4888163834f8c459fbfea728). `human_review` is **withdrawn** on three grounds, each already written in this report. The record itself supplied the second: the actor column *"does not distinguish a human actor from an automated one — the column admits `user, system, or automated process` by its own comment"*, so the mark rested on the surface existing rather than on who used it. The first is that a `pattern_disable_events` row is a disable applied to a pattern already promoted and already injected, so no memory waits in it. The third is section 4's own finding: the disable does not reach any reader until `REFRESH MATERIALIZED VIEW CONCURRENTLY disabled_patterns_current` is run by hand, and nothing in the tree runs it outside the integration tests. Requiring a reason and a named actor on an override is still rare and right, and it keeps that credit. `trust_state`, `audit_log` and `negative_eval` stand. Screened again first; nothing was installed, built or run.
 
 **2026-09-16** — [`5039c8a3b17f6e2468cbed764d3405d450cefb1f`](https://github.com/OmniNode-ai/omniintelligence/commit/5039c8a3b17f6e2468cbed764d3405d450cefb1f) — re-read at a commit dated 2026-09-16, 11 commits past the previous pin. All four marks re-tested and held; each anchored file has the same blob at both commits, so no line number moved. Screened before reading: no auto-run surface, 29 build-time execution points, no unpinned dependency surface and one dependency file inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
