@@ -7,13 +7,12 @@ page_kind: system
 source_name: moorcheh-ai/memanto
 source_url: https://github.com/moorcheh-ai/memanto
 archive_name: "moorcheh-ai--memanto"
-revision: d453f66a91f730fc14e34f98d680b40c27d6e601
-revision_url: https://github.com/moorcheh-ai/memanto/commit/d453f66a91f730fc14e34f98d680b40c27d6e601
-analyzed_at: 2026-09-16
-capabilities: "scope_enforced, human_review"
+revision: ce38df5070cbaf57613f7a404fef6779ee3bef44
+revision_url: https://github.com/moorcheh-ai/memanto/commit/ce38df5070cbaf57613f7a404fef6779ee3bef44
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced"
 capability_evidence:
   scope_enforced: "agent_id on every route and on the session it binds | memanto/app/routes/memory.py:74-79,:377-382,:410-423, memanto/app/services/memory_read_service.py, memanto/app/services/namespace_service.py | every memory route takes `agent_id` as a path segment validated by `validate_safe_id`, `enforce_session_scope` refuses a session whose `agent_id` is not the route's, and reads and conflict reports are issued per agent through the backend namespace | none"
-  human_review: "the conflict report a person resolves | memanto/app/routes/memory.py:1211-1240, memanto/app/models/__init__.py:169-200, memanto/cli/commands/memory.py (detect-conflicts, conflicts) | `/conflicts/resolve` takes an index into a dated report and one of the five actions, `validate_manual_resolution` requires the manual action to carry its text, and the CLI walks the report interactively | tests/test_cli.py:1284-1392 (resolve_conflict through the client: keep_new, expire_old, a rejected action, an invalid index)"
 stack_storage: "files"
 stack_retrieval: "vector"
 stack_source: "seeded"
@@ -210,6 +209,18 @@ store. That keeps the queue inspectable with ordinary tools, diffable, and
 independent of the vector service — and it means a conflict report survives a
 store migration, which the conflicts themselves may not.
 
+What the report does not do is hold anything back, which is why this report does
+not carry `human_review`. `constants.py:29-31` states the lifecycle plainly: *"A
+memory is `active` until an expiry policy, a conflict resolution, or an explicit
+`memanto memory expire` stamps it `expired`."* So while a conflict sits
+unresolved, both sides stay `active` and both keep being recalled; resolution is
+what expires the loser. The queue is a to-do list rather than a gate. The actor
+side is the half that does hold — the MCP server publishes eleven tools
+(`answer`, `batch_remember`, `create_agent`, `delete_agent`, `get_agent`,
+`list_agents`, `recall`, `recall_as_of`, `recall_changed_since`,
+`recall_recent`, `remember`) and none of them touches a conflict — but a gate
+needs something waiting behind it.
+
 ## 5. Memory Data Model
 
 A memory carries title, content, `confidence` (0–1, default 0.8), tags, type,
@@ -404,6 +415,8 @@ This lifecycle is generalized as [resolve, don't just detect](../../patterns/res
   `MOORCHEH_ONPREM_URL`).
 
 ## History
+
+**2026-09-19** — re-pinned to [`ce38df5070cbaf57613f7a404fef6779ee3bef44`](https://github.com/moorcheh-ai/memanto/commit/ce38df5070cbaf57613f7a404fef6779ee3bef44). `human_review` is **withdrawn**, on the lifecycle rather than the actor. The actor half holds: the MCP server publishes eleven tools and not one touches a conflict, so the producing agent cannot resolve one. But nothing waits for it to. `constants.py:29-31` says a memory is `active` until an expiry policy, a conflict resolution, or an explicit expire stamps it `expired` — so while a conflict is unresolved both sides stay active and both keep being recalled, and the resolution is what expires the loser. A queue nothing is held behind is a to-do list. The on-disk dated reports keep their credit in section 4. `scope_enforced` stands. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`d453f66a91f730fc14e34f98d680b40c27d6e601`](https://github.com/moorcheh-ai/memanto/commit/d453f66a91f730fc14e34f98d680b40c27d6e601) — re-read at a commit dated 2026-09-16, 53 commits past the previous pin. Both marks re-tested and held. Recall now logs an activity event carrying the operation, the agent and a count — never which memories — so it is an access counter rather than a retrieval transcript and earns no mark; it is written as a free function that swallows its own failures so telemetry cannot take down a memory operation. Screened before reading, from a full clone: one auto-run surface, five build-time execution points, 19 unpinned dependency surfaces and two dependency files inside the seven-day cooldown. Nothing was installed, built or run.
 
