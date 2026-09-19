@@ -137,7 +137,7 @@ running.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/AlexisOlson--somnigraph" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -760,6 +760,22 @@ grep -rn &#39;valid_until\|valid_from&#39; src scripts --include=&#39;*.py&#39; 
 grep -rn -i &#39;project\|tenant\|user_id\|workspace&#39; src --include=&#39;*.py&#39;  # session transcript paths only; no scope key on a record
 grep -rn &#39;dedup_rejected&#39; src scripts docs                           # written once, read by two analysis scripts, consulted by no write path</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/AlexisOlson/somnigraph/commit/6dc4d3497adb63df888ccf9874d33a166f65b09c"><code class="commit-id" title="6dc4d3497adb63df888ccf9874d33a166f65b09c">6dc4d349…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin. Every element
+of the record checks: the column defaults to <code>active</code>, the
+partial index on the pending set is where the record said, and the
+active predicate appears nine times across <code>tools.py</code> rather
+than on one path. The detail worth drawing out is what the partial index
+means — an index built <code>WHERE status = 'pending'</code> is the
+schema stating that pending is the small exceptional set and active is
+the norm, and it exists to make the <em>review queue</em> cheap rather
+than the recall path, which is the right way round: the common read
+needs no help because it is a plain equality on the default. The shape
+is the one this atlas keeps recommending — an automatic capture
+proposes, a person confirms, and until they do the memory is absent from
+search, listing and context rather than present with a lower score.
+Nothing was installed and no suite was run.</p>
 <p><strong>2026-09-18</strong> — re-read at the same commit; nothing
 upstream has moved. <strong><code>human_review</code> is
 withdrawn.</strong> <code>review_pending</code> is decorated

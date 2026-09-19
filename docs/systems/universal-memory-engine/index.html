@@ -121,7 +121,7 @@ in this atlas, beside a golden retrieval set with forbidden ids.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/12ziyad--universal-memory-engine" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -501,6 +501,22 @@ not located.</li>
 <code>test/eval_extraction.spec.js</code>.</p>
 <p><strong>Licence</strong> — <code>LICENSE</code> (Apache-2.0).</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/12ziyad/universal-memory-engine/commit/b17c5486553634b66b3aa70777a007928dab54d7"><code class="commit-id" title="b17c5486553634b66b3aa70777a007928dab54d7">b17c5486…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin. The ladder is
+where the record said, and two details about the <em>listing</em> are
+worth carrying because they are the parts a later change could break.
+The status filter is written
+<code>COALESCE(status, 'pending') = ?</code>, so a row with a missing
+status reads as <code>pending</code> rather than as anything permissive
+— the fallback is the restrictive value, which is the polarity that
+survives a schema migration adding rows without the column. And
+<code>AND suppressed_at IS NULL</code> sits beside it unconditionally,
+outside the status branch, so suppression is not something the
+<code>status = "all"</code> widening can reach: a caller asking to see
+every state still does not see suppressed proposals. The widening itself
+is an explicit token rather than a boolean, which makes it visible at
+the call site. Nothing was installed and no suite was run.</p>
 <p><strong>2026-09-18</strong> — re-read at the same commit; nothing
 upstream has moved. <code>human_review</code> stands, and it is enforced
 in code rather than by an omission — the strongest form of this mark
