@@ -130,14 +130,14 @@ survived.</p>
               <strong>smaramwbc/statewave</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/smaramwbc/statewave/commit/0f7fda8847dcd3cd48a39bd9097b35194a8c2247" title="0f7fda8847dcd3cd48a39bd9097b35194a8c2247">
+            <a class="meta-pill revision-pill" href="https://github.com/smaramwbc/statewave/commit/8d4d1e264cc9ea6487ffc572d3f60d4a1375f88f" title="8d4d1e264cc9ea6487ffc572d3f60d4a1375f88f">
               <span>Analyzed revision</span>
-              <code>0f7fda88…</code>
+              <code>8d4d1e26…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/smaramwbc--statewave" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -738,8 +738,27 @@ rg -n &#39;not in&#39; tests --glob &#39;*.py&#39; | rg -i &#39;bundle|assemble&
 rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs  # none: no paper
 rg -n &#39;tenant_id&#39; tests/test_tenant_scoping.py tests/integration/test_tenant_isolation.py  # compiled-SQL assertions and the data-level pair</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/smaramwbc/statewave/commit/8d4d1e264cc9ea6487ffc572d3f60d4a1375f88f"><code class="commit-id" title="8d4d1e264cc9ea6487ffc572d3f60d4a1375f88f">8d4d1e26…</code></a>
+— <code>trust_state</code> re-tested. The vocabulary and its rename
+comment are unchanged at <code>server/domain/models.py:25-34</code>. The
+read anchor was stale: the filter is not at
+<code>repositories.py:43</code> but at eight sites through that file
+(<code>:296</code>, <code>:333</code>, <code>:348</code>,
+<code>:374</code>, <code>:463</code>, <code>:545</code>,
+<code>:567</code>), with a ninth use at <code>:429</code> partitioning
+episode ids into alive and dead by the same test. One detail is worth
+adding because it closes a gap this sweep looks for. The TTL sweep
+(<code>server/services/memory_ttl.py:75-81</code>) does not simply set
+<code>tombstoned</code> on anything past its <code>valid_to</code> — it
+is gated on <code>status == 'active'</code> first, so it cannot
+resurrect a superseded row into a tombstoned one or tombstone the same
+row twice. A maintenance pass that constrains the state it transitions
+<em>from</em>, not only the one it transitions to, is the version of
+this that does not corrupt a lifecycle over time. Screened again first;
+nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/smaramwbc/statewave/commit/0f7fda8847dcd3cd48a39bd9097b35194a8c2247"><code class="commit-id" title="0f7fda8847dcd3cd48a39bd9097b35194a8c2247">0f7fda88…</code></a>
+href="https://github.com/smaramwbc/statewave/commit/8d4d1e264cc9ea6487ffc572d3f60d4a1375f88f"><code class="commit-id" title="8d4d1e264cc9ea6487ffc572d3f60d4a1375f88f">8d4d1e26…</code></a>
 — re-pinned after 3 commits. The whole diff is three lines of
 <code>pyproject.toml</code>: requirement bumps for litellm, ruff and
 alembic. No source file, test or migration changed, so every anchor,

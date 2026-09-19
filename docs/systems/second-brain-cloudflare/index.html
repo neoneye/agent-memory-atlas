@@ -109,14 +109,14 @@ becomes a tie-breaker instead of a gate.</p>
               <strong>rahilp/second-brain-cloudflare</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/rahilp/second-brain-cloudflare/commit/40d1174925a0ce2285b061a0b79216ae64d846ef" title="40d1174925a0ce2285b061a0b79216ae64d846ef">
+            <a class="meta-pill revision-pill" href="https://github.com/rahilp/second-brain-cloudflare/commit/7bd02dabaebee41e419f72fffc45d26a823715b5" title="7bd02dabaebee41e419f72fffc45d26a823715b5">
               <span>Analyzed revision</span>
-              <code>40d11749…</code>
+              <code>7bd02dab…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/rahilp--second-brain-cloudflare" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -615,8 +615,36 @@ match</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/rahilp/second-brain-cloudflare/commit/7bd02dabaebee41e419f72fffc45d26a823715b5"><code class="commit-id" title="7bd02dabaebee41e419f72fffc45d26a823715b5">7bd02dab…</code></a>
+— <code>trust_state</code> re-tested. The record was a single line
+naming three anchors; the mechanism is larger than that and the shape of
+it matters. The status is not a column — it lives in the
+<code>tags[]</code> array behind a <code>status:</code> prefix
+(<code>src/memory/status.ts:1-15</code>), parsed by a helper that
+returns null for anything outside the three values and written by one
+that strips any existing status tag first, so a row cannot carry two.
+That is a reasonable way to keep a state in a general tag namespace, and
+it is worth saying out loud because the exclusion it powers is a
+substring match: recall's SQL filters
+<code>tags NOT LIKE '%"status:deprecated"%'</code>
+(<code>src/recall/search.ts:416</code>) and then repeats the test on the
+hydrated rows (<code>:583</code>). Two uses the record did not carry.
+Graph traversal returns <code>readable</code> and
+<code>deprecated</code> as two sets rather than dropping the second
+silently (<code>src/graph/traverse.ts:109-128</code>), so a caller can
+see what was withheld. And the status reaches the write path: a
+capsule-defining entry with no status is stored as draft
+(<code>src/capture/entry.ts:88</code>), and a canonical target is
+protected from being overwritten — the newcomer is stored as a duplicate
+candidate instead (<code>:110-119</code>) — under a comment naming the
+defect that produced the branch, where the route returned an id for a
+row it had never inserted. <code>canonical</code> also raises the
+recency floor (<code>src/recall/math.ts:34</code>), so this status
+filters in three places and ranks in one, which the record now says.
+Screened again first; nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/rahilp/second-brain-cloudflare/commit/40d1174925a0ce2285b061a0b79216ae64d846ef"><code class="commit-id" title="40d1174925a0ce2285b061a0b79216ae64d846ef">40d11749…</code></a>
+href="https://github.com/rahilp/second-brain-cloudflare/commit/7bd02dabaebee41e419f72fffc45d26a823715b5"><code class="commit-id" title="7bd02dabaebee41e419f72fffc45d26a823715b5">7bd02dab…</code></a>
 — re-read after 39 commits, at app and Worker 3.3.0.
 <code>src/memory/status.ts</code>, <code>src/recall/math.ts</code> and
 <code>src/capture/duplicate.ts</code> are byte-identical, so the
