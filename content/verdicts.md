@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 597 reports.**
+**This page covers all 598 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5329,3 +5329,18 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: Apache-2.0, a single compiled Go binary with no runtime dependencies, 349 source files against 143 test files, nine migrations, an embedded SQLite store per plane, atomic quest claims for parallel agents across different editors, and a committed `go.sum`.
 - Study when: you have more than one read path over the same status column, or you are building a nudge layer and want to know whether your rules are working.
 - Do not copy when: you need the memory half auditable — every mutation to an entry overwrites it, and the event log covers the task board instead.
+
+### [`recallweave`](../systems/recallweave/)
+- Best idea: **make the log the state rather than a record kept beside it.** Memory values are never stored; they are materialised by replaying an append-only log, which removes the whole class of bug where an audit table and a row disagree about what happened.
+- Second idea: **exclude the digest from the payload it commits to, and include everything else.** Each record commits to the previous record's digest and to its own sequence number, timestamp, event and previous link — the payload "intentionally excludes `digest` itself but includes everything else, so any edit to seq/ts/event/prev is detected by verification". One sentence, and it is the difference between a chain that catches an edited timestamp and one that does not.
+- Third idea: **compose the retirement conditions into one predicate.** Tombstoned, superseded and expired become a single `is_live`, and the listing path filters on that method rather than restating three conditions at each call site. The one place that deliberately bypasses it says why inline: the expiry sweep cannot use `is_live` to find work, because an expired memory is already not live.
+- Fourth idea: **record the reason beside the tombstone.** Retirement is a flag and an explanation, with the sweep supplying a canonical `ttl-expired`, so a later reader of the log can tell an expiry from a correction from a conflict resolution without inferring it.
+- Fifth idea: **say what your hash is not.** The digest is a custom sponge construction and the module's own header states it "is not SHA-256 and makes no cryptographic security claims", suitable for accidental corruption and casual tampering in a local file. A disclaimed claim is worth more than an unqualified one.
+- Sixth idea: **let a lexical detector report and stop.** Two conflict detectors ship — the same normalised content under two kinds, and two live preferences differing on a recognised antonym — described as "lexical and honest about it", and "they never mutate state; resolving a conflict is an explicit `supersede`/`tombstone` by the caller".
+- Biggest risk: **the tombstone is one predicate away.** The content fingerprint is exactly the key a rejected-value record needs, it is computed on the write path, and it is compared against existing memories before anything is stored — against `m.is_live(now) && m.kind == spec.kind && m.fingerprint == fingerprint`. The liveness clause filters to survivors, so a fact tombstoned with a reason, whose tombstone event is still in the verifiable log, does not participate in the check and the same content asserted again is written fresh.
+- Second risk: there is no scope key of any kind — no user, tenant or namespace field anywhere in the model. The store is one local file for one person and nothing pretends otherwise.
+- Third risk: compaction drops records belonging to already-retired memories, so the evidence that a tombstone existed is itself subject to removal — which interacts with the first risk.
+- Most reusable component: `src/model.rs`'s `LogRecord` with `payload_json` and `src/store.rs`'s `verify` — a hash-chained ledger in under a hundred lines, with the committed test that mutates a record and asserts the verifier catches it.
+- Maturity impression: MIT, seven source files and about 2,900 lines of Rust with an **empty dependency list** — JSON parsing and hashing are both implemented in the repository — plus a CLI, a TypeScript viewer, and two integration test files that verify the chain at three separate points rather than once at the end.
+- Study when: you want a small, readable worked example of an event-sourced memory store with tamper-evident integrity, or of a conflict detector that refuses to act on its own heuristic.
+- Do not copy when: you need the rejection to survive — the fingerprint is the right key and the consult looks only at what is still alive.

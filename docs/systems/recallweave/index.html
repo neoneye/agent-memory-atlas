@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A dependency-free Rust memory
+engine whose hash-chained append-only log is the source of truth and
+whose current state is replayed from it — with a content fingerprint
+that is exactly the right dedupe key, and a liveness predicate on the
+consult that stops it from becoming a tombstone.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="RecallWeave — Agent Memory Atlas">
+    <meta property="og:description" content="A dependency-free Rust
+memory engine whose hash-chained append-only log is the source of truth
+and whose current state is replayed from it — with a content fingerprint
+that is exactly the right dedupe key, and a liveness predicate on the
+consult that stops it from becoming a tombstone.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RecallWeave — Agent Memory Atlas">
+    <meta name="twitter:description" content="A dependency-free Rust
+memory engine whose hash-chained append-only log is the source of truth
+and whose current state is replayed from it — with a content fingerprint
+that is exactly the right dedupe key, and a liveness predicate on the
+consult that stops it from becoming a tombstone.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>RecallWeave — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "RecallWeave",
+      "description": "A dependency-free Rust memory engine whose hash-chained append-only log is the source of truth and whose current state is replayed from it \u2014 with a content fingerprint that is exactly the right dedupe key, and a liveness predicate on the consult that stops it from becoming a tombstone.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Lifecycle engine</p>
+          <h1>RecallWeave</h1>
+          <p class="document-deck">A dependency-free Rust memory engine
+whose hash-chained append-only log is the source of truth and whose
+current state is replayed from it — with a content fingerprint that is
+exactly the right dedupe key, and a liveness predicate on the consult
+that stops it from becoming a tombstone.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/alexahern0808/RecallWeave">
+              <span>Source</span>
+              <strong>alexahern0808/RecallWeave</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/alexahern0808/RecallWeave/commit/9acde4a350fc41d15991fdc1e5cef4b5b8171199" title="9acde4a350fc41d15991fdc1e5cef4b5b8171199">
+              <span>Analyzed revision</span>
+              <code>9acde4a3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/alexahern0808--RecallWeave" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>alexahern0808--RecallWeave</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>RecallWeave is a small Rust engine — seven source files, about 2,900
+lines, <strong>no dependencies at all</strong> — for the part of memory
+that comes after storing something. Its README frames the gap the way
+this atlas does: a vector index answers what is similar to this and
+stays silent on where a belief came from, which of two contradicting
+beliefs wins, and when something should stop being believed.</p>
+<p>Three marks.</p>
+<p><strong>The log is the source of truth, and the state is replayed
+from it.</strong> Each record carries a sequence number, the event, the
+digest of the record before it and a digest over its own payload — and
+that payload <em>"intentionally excludes <code>digest</code> itself but
+includes everything else, so any edit to seq/ts/event/prev is detected
+by verification."</em> A memory value is never stored; it is
+materialised by replay. That is a stronger position than an audit table
+beside a store, because there is no second copy to disagree with the
+record.</p>
+<p><strong>Three ways to retire, one predicate.</strong> Tombstoned,
+superseded and expired compose into a single <code>is_live</code>, and
+the listing path filters on exactly that method rather than restating
+the three conditions. Confidence sits beside them as a separate number,
+so the store can hold something it does not believe.</p>
+<p><strong>The conflict detector refuses to act.</strong> It ships two
+lexical detectors, calls them lexical, and states the boundary:
+<em>"They never mutate state; resolving a conflict is an explicit
+<code>supersede</code>/<code>tombstone</code> by the caller."</em></p>
+<p>And the near miss is a single word. The dedupe consult computes a
+content fingerprint — the right key for a rejected-value tombstone — and
+checks it against
+<code>m.is_live(now) &amp;&amp; m.kind == spec.kind &amp;&amp; m.fingerprint == fingerprint</code>.
+Because the predicate filters to live memories, a fact that was
+tombstoned and then asserted again is admitted as new. Everything the
+mark needs is present except that the consult looks only at what
+survived.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>One file, append-only, hash-chained. Everything else is derived.</p>
+<p>Three event variants cover the whole lifecycle: assert a memory,
+tombstone one with a reason, supersede one by naming the id it replaces.
+The third is redundant in principle — a new memory with a
+<code>supersedes</code> pointer would do — and the comment says why it
+exists anyway: <em>"recording it as a distinct event keeps the intent
+explicit."</em> Legibility of the log to a later reader is treated as a
+design goal rather than a side effect.</p>
+<p>A memory carries provenance as a source and a free-form detail, a
+confidence, a kind from four, tags, and links to other memories
+described as a lightweight knowledge graph. Retirement is one of three
+conditions, and reading is filtering the replayed live set.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an append-only log file is the source of truth, each record carrying a sequence number, the event, the digest of the previous record and a digest over its own payload excluding itself; memory values are never stored but replayed from the log, and three retirement conditions — tombstoned, superseded, expired — compose into one liveness predicate the listing path filters on; an assert whose normalized fingerprint matches a live memory of the same kind returns the existing id instead of writing, a conflict detector reports without mutating, and compaction drops retired records and re-verifies the chain</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an append-only log file is the source of truth, each record carrying a sequence number, the event, the digest of the previous record and a digest over its own payload excluding itself; memory values are never stored but replayed from the log, and three retirement conditions — tombstoned, superseded, expired — compose into one liveness predicate the listing path filters on; an assert whose normalized fingerprint matches a live memory of the same kind returns the existing id instead of writing, a conflict detector reports without mutating, and compaction drops retired records and re-verifies the chain
+flowchart TD
+    subgraph Write
+        A[&quot;assert(spec)&quot;] --&gt; FP[&quot;content_fingerprint&lt;br/&gt;normalized lexical&quot;]
+        FP --&gt; DEDUP{&quot;a LIVE memory,&lt;br/&gt;same kind, same fingerprint?&quot;}
+        DEDUP --&gt;|yes| REUSE[&quot;return existing id&lt;br/&gt;deduped = true, no record&quot;]
+        DEDUP --&gt;|no| EV1[&quot;Event::Assert&quot;]
+        T[&quot;tombstone(id, reason)&quot;] --&gt; EV2[&quot;Event::Tombstone&quot;]
+        SUP[&quot;supersede(old, new)&quot;] --&gt; EV3[&quot;Event::Supersede&lt;br/&gt;a distinct variant, to keep intent explicit&quot;]
+        TTL[&quot;forget_expired(now)&quot;] --&gt; EV2
+    end
+
+    EV1 --&gt; LOG
+    EV2 --&gt; LOG
+    EV3 --&gt; LOG
+    LOG[(&quot;append-only log&lt;br/&gt;seq · ts · event · prev · digest&lt;br/&gt;payload excludes digest, includes all else&quot;)]
+
+    LOG --&gt; MAT[&quot;materialize: replay in order&quot;]
+    MAT --&gt; MEM[&quot;Memory values&lt;br/&gt;never stored, always derived&quot;]
+
+    MEM --&gt; LIVE{&quot;is_live(now)&lt;br/&gt;not tombstoned&lt;br/&gt;AND not superseded&lt;br/&gt;AND not expired&quot;}
+    LIVE --&gt; Q[&quot;query: kind · tag · confidence · text&quot;]
+    Q --&gt; OUT[&quot;results, sorted deterministically&quot;]
+
+    MEM --&gt; CONF[&quot;detect_conflicts&lt;br/&gt;duplicate fingerprint across kinds&lt;br/&gt;preference polarity clash&quot;]
+    CONF --&gt; REPORT[&quot;reported, never resolved&lt;br/&gt;the caller supersedes or tombstones&quot;]
+
+    LOG --&gt; VER[&quot;verify(): walk the chain&lt;br/&gt;seq position · prev link · digest&quot;]
+    LOG --&gt; COMP[&quot;compact: drop retired records&quot;]
+    COMP --&gt; VER
+    DEDUP -.-&gt;|&quot;the live filter is why&lt;br/&gt;a re-assert after a tombstone is admitted&quot;| REUSE</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Model, events, log record:</strong>
+<code>src/model.rs</code>.</li>
+<li><strong>Store, dedupe, retirement, verification,
+compaction:</strong> <code>src/store.rs</code>.</li>
+<li><strong>Hashing and the honesty note:</strong>
+<code>src/hash.rs</code>.</li>
+<li><strong>Query:</strong> <code>src/query.rs</code>.</li>
+<li><strong>Lifecycle test:</strong>
+<code>tests/lifecycle.rs</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Four kinds — semantic, episodic, procedural, preference — and the
+struct keeps the fields an atlas reader looks for: provenance as a
+source plus a detail, a confidence in the unit interval, both
+supersession pointers, and a tombstone flag <em>with its
+reason</em>.</p>
+<p>The reason string is the field most systems omit. Retirement here is
+not a boolean but a boolean and an explanation, and the sweep supplies a
+canonical one — <code>ttl-expired</code> — so a reader of the log can
+tell an expiry from a correction from a conflict resolution without
+inferring it from what else happened.</p>
+<p><code>fingerprint</code> is a short stable hash of the normalized
+content, described as the dedupe key. It is the right shape for keying a
+rejection on a value; section 9 covers why it does not get there.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no vector index and none is claimed. Retrieval is filtering
+the replayed live set by kind, tag, confidence and text, sorted
+deterministically — the listing method sorts by id explicitly <em>"for
+deterministic output"</em>, which matters more than it sounds for a
+store whose state is a replay.</p>
+<p>The single liveness predicate is the whole access-control story for
+retirement, and the one place that deliberately bypasses it says so: the
+expiry sweep cannot use <code>is_live</code> to find work, because an
+expired memory is already not live, so it tests the two active flags
+directly to find the ones that still need tombstoning.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>An assert normalizes, fingerprints, and scans the materialized set
+for a live memory of the same kind with the same fingerprint; on a hit
+it returns that id with a deduped flag and writes nothing. The docstring
+is careful about what kind of dedupe this is:
+<em>"exact/normalized-lexical dedupe, not semantic — see honest
+limitations in the docs."</em></p>
+<p>Conflict detection ships two detectors — the same normalized content
+stored under two different kinds, and two live preference memories
+sharing a subject token but differing on a recognised antonym from a
+small built-in table — and describes both as <em>"lexical and honest
+about it"</em>. Neither mutates anything.</p>
+<p>Compaction drops records belonging to memories that are already
+retired, and the test around it asserts that the live set is identical
+before and after, id for id, and that the chain still verifies.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A command-line binary and a library, with a TypeScript viewer beside
+them. There is no MCP server and no SDK. The dependency list in
+<code>Cargo.toml</code> is empty: JSON parsing and hashing are both
+implemented in the repository, in 455 and 184 lines respectively.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded</strong>, on the composed liveness
+predicate and the separate confidence field.</p>
+<p><strong>Audit log — awarded.</strong> The log is not a record of what
+happened to the state; it is what the state is computed from, which
+removes the failure mode where the two disagree. The caveat belongs on
+the record and the project states it first: the digest is a custom
+construction and <em>"is not SHA-256 and makes no cryptographic security
+claims"</em>, suitable for accidental corruption and casual tampering in
+a local file. That is the correct claim for a local-first tool and it is
+written where someone would look for it.</p>
+<p><strong>Negative eval — awarded</strong>, on the paired absences and
+the identifier-by-identifier compaction assertion.</p>
+<p><strong>Tombstone — withheld, by one predicate.</strong> The content
+fingerprint is the key a rejected-value tombstone needs, it is computed
+on the write path, and it is compared against existing memories before
+anything is stored. The comparison is
+<code>m.is_live(now) &amp;&amp; m.kind == spec.kind &amp;&amp; m.fingerprint == fingerprint</code>.
+Because the first clause filters to survivors, a memory that was
+tombstoned with a reason — and whose tombstone event is still in the
+log, still verifiable, still carrying the word <em>forgotten</em> — does
+not participate in the check, so asserting the same content again writes
+a fresh live memory. Dropping the liveness clause and consulting the
+tombstone reason would turn this into the mark; leaving it in makes the
+fingerprint a duplicate-suppressor rather than a rejection record.</p>
+<p><strong>Scope enforced — withheld.</strong> There is no user, tenant
+or namespace field anywhere in the model. The store is one local file
+for one person, and nothing pretends otherwise.</p>
+<p><strong>Bi-temporal — withheld.</strong> <code>created_at</code> is
+described as logical creation time and the log record carries a
+wall-clock timestamp beside it, which is two clocks about the
+<em>record</em> rather than one about the record and one about the
+world. No read takes an as-of parameter.</p>
+<p><strong>Human review — withheld</strong>, though the conflict
+detector is built for one. It reports and refuses to resolve, and the
+resolution verb belongs to <em>the caller</em> — who, for a local-first
+agent memory engine, is the agent. Nothing distinguishes a person's
+supersede from an agent's, and no field records who made the call.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong> and no <code>CITATION.cff</code>.</p>
+<p>Two integration files and the unit tests inside the store module. The
+end-to-end lifecycle case is the one that carries the mark, and it is
+worth noting what it does beyond the assertions quoted in the evidence
+record: it verifies the chain at three separate points — after the
+asserts, after the retirements, and after compaction — so the integrity
+property is checked as an invariant across the test rather than once at
+the end.</p>
+<p>There is no eval harness, no benchmark and no committed result, and
+none is claimed. For an engine this size that is the honest position
+rather than a gap; the README's argument is about what a vector index
+cannot answer, not about retrieval quality.</p>
+<p>The repository owner was renamed. The continuous-integration badge in
+the README still points at <code>michaeldelali/RecallWeave</code>, which
+now redirects to the current name — one repository, not two, and the
+badge is stale rather than the history being split.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Make the log the state, not a record beside it.</strong>
+Replaying events to materialise memories removes the class of bug where
+an audit table and a row disagree about what happened.</li>
+<li><strong>Exclude the digest from the payload it commits to, and
+include everything else.</strong> One sentence in a comment, and it is
+the difference between a chain that detects an edited timestamp and one
+that does not.</li>
+<li><strong>Compose the retirement conditions into one
+predicate.</strong> Three reasons a memory should not be returned,
+restated at four call sites, is three opportunities to forget one.</li>
+<li><strong>Record the reason beside the tombstone.</strong> Expired,
+superseded and forgotten are different events, and a log a person may
+read later should say which.</li>
+<li><strong>Say what your hash is not.</strong> A custom digest with the
+security claim explicitly disclaimed is more trustworthy than an
+unqualified one.</li>
+<li><strong>Let a lexical detector report and stop.</strong> Two
+heuristics that never mutate, with resolution handed to the caller, is
+the right division when the detector cannot be sure.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The dedupe consult filters to live memories. Would checking the
+tombstoned set too — and returning the tombstone reason rather than an
+id — be the behaviour you want, or does a re-assert after a deliberate
+forget mean the caller changed their mind?</li>
+<li>Compaction drops records for already-retired memories. What happens
+to the evidence that a tombstone ever existed, and does that interact
+with the previous question?</li>
+<li>Conflict resolution is the caller's. Is there a shape in mind for
+recording <em>who</em> resolved one, or is the single-user local file
+the intended boundary?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Model, events, log record: <code>src/model.rs</code></li>
+<li>Store, dedupe, retirement, verification, compaction:
+<code>src/store.rs</code></li>
+<li>Hashing and its stated limits: <code>src/hash.rs</code></li>
+<li>Query: <code>src/query.rs</code></li>
+<li>Hand-rolled JSON: <code>src/json.rs</code></li>
+<li>CLI: <code>src/main.rs</code></li>
+<li>Tests: <code>tests/lifecycle.rs</code>,
+<code>tests/cli.rs</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/alexahern0808/RecallWeave/commit/9acde4a350fc41d15991fdc1e5cef4b5b8171199"><code class="commit-id" title="9acde4a350fc41d15991fdc1e5cef4b5b8171199">9acde4a3…</code></a>
+— first reading, at the head of <code>main</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: one
+build-time execution surface in a Makefile whose default target was
+checked, and two floating ranges with no lockfile in the TypeScript
+viewer; no instruction file addressed to a reading agent, and the Rust
+crate declares no dependencies at all. Nothing was installed, built or
+run. MIT. Three marks. Ownership was checked before scaffolding because
+the README's badge names a different account:
+<code>michaeldelali/RecallWeave</code> redirects to the current name, so
+this is a rename rather than a fork and there is one repository. The
+reading covered the whole crate — the model and its three event
+variants, the store's assert, tombstone, supersede, expiry, conflict,
+verification and compaction paths, the query filters and the hash module
+— and the two integration tests; the TypeScript viewer was read as
+context. Four marks are withheld with reasons in section 9, and the one
+worth repeating is <code>tombstone</code>: the content fingerprint is
+the right key and is consulted on the write path, and the liveness
+clause in that consult is the single reason a re-assert after a
+tombstone is admitted.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 597 reports.</strong></p>
+<p><strong>This page covers all 598 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24187,6 +24187,77 @@ rules are working.</li>
 <li>Do not copy when: you need the memory half auditable — every
 mutation to an entry overwrites it, and the event log covers the task
 board instead.</li>
+</ul>
+<h3 id="recallweave"><a
+href="../systems/recallweave/"><code>recallweave</code></a></h3>
+<ul>
+<li>Best idea: <strong>make the log the state rather than a record kept
+beside it.</strong> Memory values are never stored; they are
+materialised by replaying an append-only log, which removes the whole
+class of bug where an audit table and a row disagree about what
+happened.</li>
+<li>Second idea: <strong>exclude the digest from the payload it commits
+to, and include everything else.</strong> Each record commits to the
+previous record's digest and to its own sequence number, timestamp,
+event and previous link — the payload "intentionally excludes
+<code>digest</code> itself but includes everything else, so any edit to
+seq/ts/event/prev is detected by verification". One sentence, and it is
+the difference between a chain that catches an edited timestamp and one
+that does not.</li>
+<li>Third idea: <strong>compose the retirement conditions into one
+predicate.</strong> Tombstoned, superseded and expired become a single
+<code>is_live</code>, and the listing path filters on that method rather
+than restating three conditions at each call site. The one place that
+deliberately bypasses it says why inline: the expiry sweep cannot use
+<code>is_live</code> to find work, because an expired memory is already
+not live.</li>
+<li>Fourth idea: <strong>record the reason beside the
+tombstone.</strong> Retirement is a flag and an explanation, with the
+sweep supplying a canonical <code>ttl-expired</code>, so a later reader
+of the log can tell an expiry from a correction from a conflict
+resolution without inferring it.</li>
+<li>Fifth idea: <strong>say what your hash is not.</strong> The digest
+is a custom sponge construction and the module's own header states it
+"is not SHA-256 and makes no cryptographic security claims", suitable
+for accidental corruption and casual tampering in a local file. A
+disclaimed claim is worth more than an unqualified one.</li>
+<li>Sixth idea: <strong>let a lexical detector report and stop.</strong>
+Two conflict detectors ship — the same normalised content under two
+kinds, and two live preferences differing on a recognised antonym —
+described as "lexical and honest about it", and "they never mutate
+state; resolving a conflict is an explicit
+<code>supersede</code>/<code>tombstone</code> by the caller".</li>
+<li>Biggest risk: <strong>the tombstone is one predicate away.</strong>
+The content fingerprint is exactly the key a rejected-value record
+needs, it is computed on the write path, and it is compared against
+existing memories before anything is stored — against
+<code>m.is_live(now) &amp;&amp; m.kind == spec.kind &amp;&amp; m.fingerprint == fingerprint</code>.
+The liveness clause filters to survivors, so a fact tombstoned with a
+reason, whose tombstone event is still in the verifiable log, does not
+participate in the check and the same content asserted again is written
+fresh.</li>
+<li>Second risk: there is no scope key of any kind — no user, tenant or
+namespace field anywhere in the model. The store is one local file for
+one person and nothing pretends otherwise.</li>
+<li>Third risk: compaction drops records belonging to already-retired
+memories, so the evidence that a tombstone existed is itself subject to
+removal — which interacts with the first risk.</li>
+<li>Most reusable component: <code>src/model.rs</code>'s
+<code>LogRecord</code> with <code>payload_json</code> and
+<code>src/store.rs</code>'s <code>verify</code> — a hash-chained ledger
+in under a hundred lines, with the committed test that mutates a record
+and asserts the verifier catches it.</li>
+<li>Maturity impression: MIT, seven source files and about 2,900 lines
+of Rust with an <strong>empty dependency list</strong> — JSON parsing
+and hashing are both implemented in the repository — plus a CLI, a
+TypeScript viewer, and two integration test files that verify the chain
+at three separate points rather than once at the end.</li>
+<li>Study when: you want a small, readable worked example of an
+event-sourced memory store with tamper-evident integrity, or of a
+conflict detector that refuses to act on its own heuristic.</li>
+<li>Do not copy when: you need the rejection to survive — the
+fingerprint is the right key and the consult looks only at what is still
+alive.</li>
 </ul>
         </article>
       </div>
