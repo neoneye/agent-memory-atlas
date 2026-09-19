@@ -1,19 +1,18 @@
 ---
 title: "teamai-cli"
 eyebrow: "A team's learnings, voted on by the agents that used them"
-description: "A 64,635-line TypeScript CLI from Tencent that distributes a team's skills, rules, hooks and knowledge to ten coding agents from a git repository — where learnings are Markdown documents with frontmatter pushed through a merge request, filed at a shared root or under a project namespace the index admits only for that project's members, ranked by votes that count only documents the transcript shows were recalled, pruned or archived below a confidence a formula computes, and reached by the model through a subagent a managed block in its instructions tells it to invoke; and where a learning deleted upstream is reconciled out of every user-scope member's cache before the index is rebuilt, while the named deletion list that retires a rule, a skill or an agent has no learnings handler and spares any deployed skill that is not byte-identical to its source."
+description: "A 64,635-line TypeScript CLI from Tencent that distributes a team's skills, rules, hooks and knowledge to ten coding agents from a git repository — where learnings are Markdown documents with frontmatter queued locally and pushed to a shared `teamai-learnings` branch with no review in front of them, filed at a shared root or under a project namespace the index admits only for that project's members, ranked by votes that count only documents the transcript shows were recalled, pruned or archived below a confidence a formula computes, and reached by the model through a subagent a managed block in its instructions tells it to invoke; and where a learning deleted upstream is reconciled out of every user-scope member's cache before the index is rebuilt, while the named deletion list that retires a rule, a skill or an agent has no learnings handler and spares any deployed skill that is not byte-identical to its source."
 root: ../..
 page_kind: system
 source_name: "Tencent/teamai-cli"
 source_url: https://github.com/Tencent/teamai-cli
 archive_name: "Tencent--teamai-cli"
-revision: c674ffe9b8523698e9f30fd4e62d349ee3330e8c
-revision_url: https://github.com/Tencent/teamai-cli/commit/c674ffe9b8523698e9f30fd4e62d349ee3330e8c
-analyzed_at: 2026-09-16
-capabilities: "scope_enforced, human_review, negative_eval"
+revision: c6367b96da72e11fa8feec1ec923fefed4383ca9
+revision_url: https://github.com/Tencent/teamai-cli/commit/c6367b96da72e11fa8feec1ec923fefed4383ca9
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "two stored scope keys applied when the index is chosen and when it is built | src/recall.ts:341-425, src/utils/search-index.ts:462-489, src/utils/search-index.ts:573-655, src/utils/learnings-mirror.ts:17-83, src/pull.ts:864-870, src/projects.ts:156-186, src/contribute.ts:22-49 | `recall` detects a project configuration and loads the project index; the user index is consulted only when the project's `inheritUserScope` is true, results are labelled `[project]` and `[user]`, a project entry shadows a user entry of the same type and filename, and inherited user hits are read-only for votes. Inside a scope, a second key partitions the learnings themselves: `manifest/projects.yaml` maps a project id to its `resources.learnings` namespaces, `collectLearningsEntries` indexes the flat root plus each active namespace subdirectory and skips every other one, the user-scope cache is reconciled against the repository by `mirrorLearnings`, which deletes a root Markdown file or a file under a selected namespace that the repository no longer holds and then copies under a filter admitting only the root files and the active namespaces, and `contribute` files a new learning into the single active namespace or, when there are none or several, at the shared root | src/__tests__/recall-scope-isolation.test.ts:116-236 (ten cases: project only, user only, merged on opt-in, shadowing, no vote write through the project channel), src/__tests__/learnings-namespace.test.ts:41-59 (four cases: the exact indexed title set for no namespace, one, several, and the undefined default), src/__tests__/projects.test.ts (16), src/__tests__/learnings-mirror.test.ts:28-67 (three cases: the admitted set, deletion followed by a rebuilt index, and an unrelated root file left alone)"
-  human_review: "the review queue over machine-written codebase sections, and the merge request in front of every learning | src/review-store.ts:19-31, :140-230, src/review-cmd.ts:124-134, :160-235, src/iwiki-dual.ts:309-325, src/index.ts:837, src/import.ts:64-65, :223-227, src/contribute.ts:133-252 | an import run with `--require-review` writes each AI-generated section of the team codebase wiki to `.teamai/pending-review.jsonl` with a kind, a target file and section, a risk and a source instead of applying it; `teamai review` lists, shows, applies one or all under a maximum risk, or rejects by removing the item; a contributed learning is written to a branch and pushed as a merge request that a reviewer merges before `pull` distributes it | src/__tests__/review-store.test.ts (15), review-cmd.test.ts (8), iwiki-review-apply.test.ts (2)"
   negative_eval: "the scope isolation suite, the namespace suite, the vote guard and the mirror's reindex case | src/__tests__/recall-scope-isolation.test.ts:116-127, :128-138, :202-214, src/__tests__/learnings-namespace.test.ts:47-52, src/__tests__/votes-e2e.test.ts:60-110, src/__tests__/learnings-mirror.test.ts:37-55 | in project mode the captured output contains the project learning's title and does not contain the user learning's title, in user mode the reverse, each with the present title as the control in the same assertion block; a recall that inherits user hits does not write a vote through the project channel; an index built for one active namespace equals the shared root's title plus that namespace's title, which asserts the other project's title absent against two present controls in one comparison; a document the transcript referenced but never recalled is not upvoted while the recalled one is; and an index rebuilt after a shared learning is deleted upstream equals exactly the one surviving title, which asserts the deleted document absent against a present control in one comparison | the same files, plus src/__tests__/learnings-mirror.test.ts:37-55"
 stack_storage: "files"
 stack_retrieval: "lexical"
@@ -22,13 +21,13 @@ matrix:
   memory_unit: "A learning — a Markdown document with `title`, `author`, `date` and `tags` frontmatter, named from its title with a date and a hash — at the root of the team repository's `learnings/` directory, where it is shared with everyone, or under a `learnings/<project>/` subdirectory, where only that project's members index it; an index entry over it with title and tag tokens and a vote score; a per-user votes file with a recalled and an upvoted count per document; beside them docs, rules, skills and a codebase wiki indexed the same way"
   storage: "A git repository per team, cloned under `.teamai/team-repo/` in a project or under the home directory; `manifest/roles.yaml` and `manifest/projects.yaml` declaring the namespaces; `search-index.json` per scope; `~/.teamai/learnings/` as a reconciled cache in user scope; `~/.teamai/votes/<user>.yaml` synced to `votes/` in the repository or its reports branch; `usage.jsonl`, sessions and contribute state under `~/.teamai/`; `.teamai/pending-review.jsonl` per project"
   retrieval: "A hand-built index over the learnings root plus the member's active project namespaces — frontmatter parsed, tokens from title, tags and body, IDF with smoothing, title matches at three times IDF, tag at two, body at one, a length normalisation, a domain weight, a title-or-tag match required, a vote score added — searched project-first with a relevance verdict of RELEVANT or NOT_RELEVANT against a threshold derived from the index's IDF baseline; the model reaches it through a `teamai-recall` subagent that runs the precheck and then the search"
-  write: "A session ends, the Stop hook scores its friction — interruptions, retries, denied tools — and prints a reminder to run the share-learnings skill, which a team or a member can switch off; the model writes a Markdown document with the required frontmatter and `teamai contribute` commits it on a branch and pushes a merge request, filing it under the one active learnings namespace or, when there are none or several, at the shared root; a merge-request importer drafts a learning from a merged change and computes which session learnings it supersedes; the codebase wiki is written by a local AI CLI the tool spawns"
+  write: "A session ends, the Stop hook scores its friction — interruptions, retries, denied tools — and prints a reminder to run the share-learnings skill, which a team or a member can switch off; the model writes a Markdown document with the required frontmatter and `teamai contribute` queues it and publishes it into a `teamai-learnings` worktree that is pushed directly — the source notes that nothing touches the default branch, so a member needs no write access to it — filing it under the one active learnings namespace or, when there are none or several, at the shared root; a merge-request importer drafts a learning from a merged change and computes which session learnings it supersedes; the codebase wiki is written by a local AI CLI the tool spawns"
   update_delete: "`teamai recall maintenance --prune` removes learnings whose confidence falls under a threshold, or moves them to `learnings/_archive/`, which the collector never indexes; `promote` rewrites a mature learning into a skill, rule or doc through the AI CLI; the importer's `supersedes` list is logged and consumed by nothing; `teamai remove` appends a rule, skill, agent or MCP name to a committed `<type>/.removed` file that the next pull uses to delete every member's local copy and that the push scan consults so a stale copy is never re-uploaded — a mechanism learnings and docs are not part of, and one whose pull-side deletion of a skill is conditional: a tombstoned skill directory holding nested VCS metadata is kept with a warning, and a skill dropped by a role or tag change is deleted only when it is byte-identical to its team-repo source; a user-scope pull and a user-scope contribute reconcile `~/.teamai/learnings/` against the repository with `mirrorLearnings`, which deletes a shared root document, an inactive namespace directory and a file under an active namespace that the repository has dropped before the overwrite copy, so a prune or an archive reaches every member's cache and the index built from it"
   scoping: "Project scope from the working directory's configuration, user scope from the home directory, chosen at read time with user results admitted only on opt-in; inside a scope, a project manifest maps an active project to learnings namespaces the index and the user-scope copy admit and every other subdirectory is skipped; roles map a member to knowledge and skill namespaces and tags subscribe a member to resources, both applied on pull"
   integration: "A CLI with `init`, `pull`, `push`, `recall`, `contribute`, `review`, `digest`, `dashboard` and more; hooks installed into Claude Code, Codex, Cursor, CodeBuddy, OpenCode, Qoder and others, dispatched through one `hook-dispatch` command with a handler registry; a built-in `teamai-recall` subagent and a managed block in each agent's instructions; git hosts including GitHub, GitLab, GitCode, CNB and TGit; an HTTP local-agent backend as an alternative to the repository"
   background: "A SessionStart pull, a Stop-time friction score and vote sync, usage tracking on skill calls, a dashboard report; no scheduled consolidation; maintenance, promotion and quality drafts are commands a person runs"
   trust: "A confidence per document — recalled and upvoted counts, recency of last recall, an upvote ratio — used for pruning, promotion and a health report; upvotes counted only for documents the transcript shows were recalled; a risk of medium or high on each review item; no state on a learning"
-  strengths: "Votes that require the document to have been recalled before it can be credited; a relevance verdict that reports its threshold and the matched and missing terms; a review queue with a risk level for machine-written knowledge; a namespace key applied at the copy, the index and the contribution, with a path-segment guard at three boundaries; scope isolation proved by tests; 3,020 test cases"
+  strengths: "Votes that require the document to have been recalled before it can be credited; a relevance verdict that reports its threshold and the matched and missing terms; a review queue with a risk level for machine-written knowledge, behind a hidden opt-in flag; a namespace key applied at the copy, the index and the contribution, with a path-segment guard at three boundaries; scope isolation proved by tests; 3,020 test cases"
   risks: "Supersession is computed and written to nothing; `teamai remove` has no learnings handler, so retiring a lesson by name is a repository edit rather than a record any later write consults; the skill deletion that does propagate is skipped for a deployed copy that differs from its source or cannot be compared against one, which is the copy a member is most likely to have edited; the learnings reconcile treats its source as authoritative, so a call site passing a partial snapshot deletes whatever the snapshot omits; retrieval is title and tag matching with a body fallback, no vector arm; the recall block tells the model it *should* invoke the subagent with four skip conditions, so recall is advisory; documents are required to be in Chinese by the share skill"
 ---
 
@@ -50,11 +49,18 @@ and *friction-based share-learnings, sessions, digest, dashboard*.
 
 A learning is a Markdown document. The share-learnings skill tells the
 model to write one with `title`, `author`, `date` and `tags` in its
-frontmatter and the body in Chinese, and `teamai contribute` writes it to
-`learnings/` in an isolated worktree, commits and pushes it as a merge
-request (`src/contribute.ts:133-252`); a reviewer merges, and the next
-`teamai pull` on every member's machine rebuilds the search index
-(`src/pull.ts:745-808`).
+frontmatter, and `teamai contribute` writes it to a durable local queue and
+publishes from there — *"Nothing about it depends on the network, on push
+rights, or on a git operation succeeding right now"* (`src/contribute.ts:119-126`).
+`publishQueuedLearnings` writes every queued file into a `teamai-learnings`
+worktree and pushes that branch (`src/utils/learnings-publish.ts:118-140`), and
+the next `teamai pull` on every member's machine refreshes the branch and
+rebuilds the search index. **No merge request is created anywhere in this
+tree**, and the comment above the publisher says why the design does not need
+one: *"Nothing touches the default branch, so a member needs no write access to
+it."* The two modules whose names suggest otherwise run the other way —
+`src/mr-hint.ts` lists already-merged MRs to seed a session's context, and
+`src/import-mr.ts` drafts a learning *from* an MR URL.
 
 The index is built by hand (`src/utils/search-index.ts:573-655`):
 frontmatter parsed (`:241-280`), title tokens at three times IDF, tags at
@@ -100,12 +106,21 @@ compact summary with document ids. The changelog's unreleased section removes
 what preceded it: an `auto-recall` hook that searched the knowledge base
 after every shell, grep and web call *"passively, implicitly."*
 
-Three marks: `scope_enforced` for recall's project-first, opt-in-user
-index selection; `negative_eval` for the ten-case isolation suite that
-asserts the other scope's title absent beside the active scope's title
-present; and `human_review` for `teamai review` over a queue of
-machine-written codebase sections and for the merge request in front of
-every learning.
+Two marks: `scope_enforced` for recall's project-first, opt-in-user index
+selection, and `negative_eval` for the ten-case isolation suite that asserts the
+other scope's title absent beside the active scope's title present.
+**`human_review` was withdrawn on the 2026-09-19 re-read**, and both of its legs
+went for different reasons. The merge request in front of every learning is not
+in this tree: a contribution is queued locally and pushed to a shared
+`teamai-learnings` branch, with nothing between the model writing the document
+and a teammate's next `pull` reading it. And the review queue over
+machine-written codebase sections is filled only when `--require-review` is
+passed — a hidden option (`new Option(...).hideHelp()`, `src/index.ts:882`)
+defaulting to `false` (`src/import.ts:228`) — and drained by
+`teamai review --apply`, `--reject` or `--all-apply --max-risk high`, an
+ordinary command with a `--json` mode and no actor of any kind. A queue a caller
+opts into and a caller empties is the `--force` shape the rubric names. The
+queue is still a good thing to have and keeps its description below.
 
 Three findings sit against the design. **Supersession is unwired.** The
 merge-request importer computes which session learnings a new draft
@@ -618,6 +633,8 @@ rg -n 'learnings' src/pull.ts | rg -i 'tombstone|removed'             # none: le
 ```
 
 ## History
+
+**2026-09-19** — re-pinned to [`c6367b96da72e11fa8feec1ec923fefed4383ca9`](https://github.com/Tencent/teamai-cli/commit/c6367b96da72e11fa8feec1ec923fefed4383ca9), 35 commits and 169 files on. **`human_review` is withdrawn; two marks stand.** One leg of it was upstream drift and one was ours. The contribution path no longer opens a merge request — and, reading it again, nothing in the tree ever creates one: `teamai contribute` writes to a durable local queue and `publishQueuedLearnings` pushes a `teamai-learnings` branch, under a comment stating that nothing touches the default branch *"so a member needs no write access to it"*. The two modules named for merge requests read them rather than open them. The report's description of the write path, and the opening line of the description, are corrected to match. The other leg fails the producer test as it stands: `--require-review` is a hidden option defaulting to false, and `teamai review --all-apply --max-risk high` drains the queue with no actor check and a machine-readable output mode. `scope_enforced` and `negative_eval` re-verified. Screened again first; nothing installed or run.
 
 **2026-09-16** — [`c674ffe9b8523698e9f30fd4e62d349ee3330e8c`](https://github.com/Tencent/teamai-cli/commit/c674ffe9b8523698e9f30fd4e62d349ee3330e8c) — re-read after 56 commits. All five test files behind the marks are byte-identical at both commits, as are the search index, the learnings mirror, the review store, the review command and the dual-wiki module, so `human_review` and `negative_eval` rest on unchanged code and all three marks hold. The five source files that moved were re-derived. The change worth recording is a scoping one that deliberately did *not* reach the memory: roles became a second scope dimension in this window, scoping team agents, MCP servers and hooks by role, and `resolveProjectResourceNamespaces` states in the source that it is *"the ONLY source of learnings namespaces. Roles never contribute them"* — the caller unions the two dimensions on the knowledge and skills axes only, with same-named resources across a role and a project namespace treated as an admin-side duplicate rather than a runtime precedence rule. So the learnings scope predicate the mark rests on is exactly what it was, and the new dimension is documented as staying out of it. Anchors in `recall.ts`, `projects.ts` and `contribute.ts` moved and are updated. Re-screened at this commit: two agent-directed files read as data, one build-time execution path, one floating version, two manifests inside the cooldown. Nothing was installed, built or run.
 
