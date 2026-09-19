@@ -141,14 +141,14 @@ and the gates, not what the product does with them.</p>
               <strong>El-AI-Intelligence/engram-format</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/El-AI-Intelligence/engram-format/commit/349fec44c48c7baad5e6f7616c9438925bb9f94d" title="349fec44c48c7baad5e6f7616c9438925bb9f94d">
+            <a class="meta-pill revision-pill" href="https://github.com/El-AI-Intelligence/engram-format/commit/f1e92dadff542c12d37613279619adbadd412303" title="f1e92dadff542c12d37613279619adbadd412303">
               <span>Analyzed revision</span>
-              <code>349fec44…</code>
+              <code>f1e92dad…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/El-AI-Intelligence--engram-format" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -807,8 +807,36 @@ internal caller);
 (none).</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/El-AI-Intelligence/engram-format/commit/f1e92dadff542c12d37613279619adbadd412303"><code class="commit-id" title="f1e92dadff542c12d37613279619adbadd412303">f1e92dad…</code></a>
+— <code>trust_state</code> re-tested. The record already listed which
+reads carry the quarantine clause and which do not, which is the right
+shape; what it did not say is why the second group lacks it, and the
+answer changes how a reader should hold the mark.
+<code>QuarantineFilter::All</code> means no clause at all — its
+<code>sql()</code> returns an empty string
+(<code>src/store.rs:121</code>) — and it is the type's
+<code>#[default]</code> (<code>:104-107</code>). More to the point, the
+four convenience entry points hard-code it: <code>search_by_layer</code>
+(<code>:1232</code>), <code>search_by_content</code>
+(<code>:1259</code>), <code>list</code> (<code>:1386</code>) and
+<code>search_by_tags</code> (<code>:1557</code>) each delegate to their
+<code>_filtered</code> sibling passing
+<code>QuarantineFilter::All</code>. So the short method name is the
+unfiltered one and excluding quarantined rows takes the longer call —
+the permissive behaviour is the ergonomic default twice over. The credit
+side is worth keeping beside that. The predicate has a single definition
+rather than being retyped: <code>QuarantineFilter::sql</code> takes a
+table qualifier so the same clause serves a join
+(<code>:118-129</code>), and the link paths apply it unconditionally
+(<code>:955</code>), so a live memory never links into quarantine and a
+quarantined one gains no links. <code>digest_window</code> uses the live
+and quarantined forms side by side to report each population
+(<code>:1481-1486</code>). The mechanism is well made; it is the entry
+points that decline to use it. Screened again first; nothing was
+installed and no suite was run.</p>
 <p><strong>2026-09-17</strong> — <a
-href="https://github.com/El-AI-Intelligence/engram-format/commit/349fec44c48c7baad5e6f7616c9438925bb9f94d"><code class="commit-id" title="349fec44c48c7baad5e6f7616c9438925bb9f94d">349fec44…</code></a>
+href="https://github.com/El-AI-Intelligence/engram-format/commit/f1e92dadff542c12d37613279619adbadd412303"><code class="commit-id" title="f1e92dadff542c12d37613279619adbadd412303">f1e92dad…</code></a>
 — re-read after 10 commits, through v0.1.6. <code>src/engram.rs</code>
 is byte-identical, so the quarantine constructor behind
 <code>trust_state</code> is unchanged; <code>src/store.rs</code> grew
@@ -825,7 +853,7 @@ report says so. A deletion cascade to consolidation outputs, links and
 embeddings also landed, with a regression test. Nothing was installed,
 built or run.</p>
 <p><strong>2026-09-06</strong> — <a
-href="https://github.com/El-AI-Intelligence/engram-format/commit/349fec44c48c7baad5e6f7616c9438925bb9f94d"><code class="commit-id" title="349fec44c48c7baad5e6f7616c9438925bb9f94d">349fec44…</code></a>
+href="https://github.com/El-AI-Intelligence/engram-format/commit/f1e92dadff542c12d37613279619adbadd412303"><code class="commit-id" title="f1e92dadff542c12d37613279619adbadd412303">f1e92dad…</code></a>
 — first reading, at the head of <code>main</code>, three commits in, the
 day after the crate's only crates.io release. The screen found no
 auto-run surface; both manifests were inside the seven-day cooldown, and
