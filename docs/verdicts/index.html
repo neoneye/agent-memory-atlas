@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 588 reports.</strong></p>
+<p><strong>This page covers all 589 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -23532,6 +23532,78 @@ in a system prompt.</li>
 true. Nothing here carries an epistemic status; the ask lifecycle is a
 task state, and the instruction to supersede contradictions is a
 sentence addressed to the model.</li>
+</ul>
+<h3 id="papez"><a href="../systems/papez/"><code>papez</code></a></h3>
+<ul>
+<li>Best idea: <strong>pair every exclusion test with an inclusion that
+uses the same query.</strong> The vector pair stores the visible and the
+invisible node with the <em>identical</em> embedding and searches for
+it, so the difference between the hit and the miss is visibility and
+nothing else — an exclusion that cannot be explained by the search
+having found nothing. The traversal case puts both halves in one
+assertion block: the org node is in the result, the private node linked
+to it is not.</li>
+<li>Second idea: <strong>raise on a missing scope key.</strong> Identity
+lives in request-scoped context variables, and the store's user resolver
+raises when none is set rather than returning an empty result — because
+an empty result for an unset identity is the same code path as a
+legitimate empty result, and only one of them is a bug anyone notices.
+The org list has no default at all, with the reason written down: a
+shared mutable default is a cross-request leak hazard.</li>
+<li>Third idea: <strong>write the false positive into the heuristic's
+comments.</strong> The cheap contradiction pre-check fires only when two
+texts carry different numbers under a shared anchor word, and both its
+stopword list and its unit keying name the case that produced them — the
+comment cites a field report where a 200ms latency memory flagged a
+$50,000 budget memory because both shared the anchor "is". The module
+then labels the whole thing hints only, never verified contradictions
+and never materialized as edges.</li>
+<li>Fourth idea: <strong>let the edge's direction decide who is
+superseded.</strong> A prior version marked the superseder itself as
+superseded whenever the old node fell out of the result set,
+"down-ranking the correction it was supposed to prefer". New is the
+source, old is the target, only targets are tagged.</li>
+<li>Fifth idea: <strong>publish a benchmark number with the protocol
+frozen and the ceiling stated.</strong> The README gives 85.55 ± 0.37 on
+LoCoMo with a named answerer and judge, temperature 0 and ten runs, says
+that self-reported figures above roughly 90 use different answerers and
+judges and are not comparable, gives the oracle retrieval ceiling under
+that protocol as 94.9, and points at a separate harness. Nothing in the
+repository reproduces it, so it is checkable elsewhere rather than
+here.</li>
+<li>Biggest risk: <strong>every ingredient of a trust state, and no read
+that withholds.</strong> There is a seven-value status field, a
+CONTRADICTS edge, a SUPERSEDES edge and an LLM detector that creates
+them — and a superseded memory comes back with its rank multiplied by
+0.3 and a <code>superseded_by</code> field attached. A client that does
+not read that field sees the correction and the thing it corrected as
+peers. The <code>amend</code> tool documents the choice and its reason,
+which is more than most systems do; it is still a ranking signal rather
+than a filter.</li>
+<li>Second risk: forgetting is a hard delete, and the
+<code>pruned</code> value in the status enum is never assigned by
+anything. A pruned memory leaves no record, so nothing prevents the same
+content arriving again.</li>
+<li>Third risk: <code>evaluate_transitions</code> composes an old value,
+a new value and a reason for every ladder move, and its only caller
+takes the length of the list and throws the rest away — the sole account
+of why a memory was demoted, discarded at the point of use.</li>
+<li>Most reusable component: <code>src/papez/context.py</code> with
+<code>storage/memory.py</code>'s <code>_visible_nodes</code> — eleven
+lines of context variables and one resolver behind every read, including
+the raise-when-unset rule.</li>
+<li>Maturity impression: AGPL-3.0 with a contributor licence agreement,
+on PyPI as <code>papez</code>, a stdio MCP server with a Dockerfile and
+a shim under the project's former name <code>genesys-memory</code>, 19
+test files with a security suite covering ownership and admin
+boundaries, and a hosted product the README is careful to exclude from
+the package.</li>
+<li>Study when: you are enforcing a tenant boundary inside a store
+rather than at its door, or you want a template for isolation tests that
+cannot pass vacuously.</li>
+<li>Do not copy when: you need a correction to actually suppress what it
+corrects — here the old memory is ranked down and labelled, and the
+default read returns both.</li>
 </ul>
         </article>
       </div>

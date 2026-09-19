@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MCP memory server whose nodes
+move through a consolidation ladder and are deleted only when five
+criteria hold at once, with per-user and per-org partitioning applied
+inside the store's own read helpers and a missing identity raising
+rather than returning empty.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Papez — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP memory server whose
+nodes move through a consolidation ladder and are deleted only when five
+criteria hold at once, with per-user and per-org partitioning applied
+inside the store's own read helpers and a missing identity raising
+rather than returning empty.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Papez — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP memory server whose
+nodes move through a consolidation ladder and are deleted only when five
+criteria hold at once, with per-user and per-org partitioning applied
+inside the store's own read helpers and a missing identity raising
+rather than returning empty.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Papez — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Papez",
+      "description": "An MCP memory server whose nodes move through a consolidation ladder and are deleted only when five criteria hold at once, with per-user and per-org partitioning applied inside the store's own read helpers and a missing identity raising rather than returning empty.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Causal memory graph</p>
+          <h1>Papez</h1>
+          <p class="document-deck">An MCP memory server whose nodes move
+through a consolidation ladder and are deleted only when five criteria
+hold at once, with per-user and per-org partitioning applied inside the
+store's own read helpers and a missing identity raising rather than
+returning empty.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Astrix-Labs/papez">
+              <span>Source</span>
+              <strong>Astrix-Labs/papez</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Astrix-Labs/papez/commit/3ef91dd17a9cda4d522f8f4aa4cc53cc7fc484e6" title="3ef91dd17a9cda4d522f8f4aa4cc53cc7fc484e6">
+              <span>Analyzed revision</span>
+              <code>3ef91dd1…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Astrix-Labs--papez" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Astrix-Labs--papez</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Papez is an MCP memory server built around a causal graph. Memories
+are scored multiplicatively — relevance times connectivity times
+reactivation — linked by typed edges, walked up a consolidation ladder
+by a background pass, and eventually deleted. The README's framing is
+that flat vector memory gives recall with no understanding, and the
+graph is the answer to <em>why did I choose X</em>.</p>
+<p>Two marks, and both are about boundaries rather than beliefs.</p>
+<p><strong>Scope is enforced inside the store, not at the door.</strong>
+Every read helper resolves through one visibility function: the caller's
+own partition, plus anything marked org-visible whose org is in the
+caller's list. Identity lives in request-scoped context variables, and
+the resolver <strong>raises</strong> when no user is set rather than
+falling back to a shared bucket — the failure mode is an error, not a
+quiet read of everyone's data.</p>
+<p><strong>The exclusion tests are paired.</strong> The traversal case
+asserts, in one block, that the org node came back and the private one
+did not; the vector pair uses the <em>same</em> embedding for the
+included and excluded nodes, so the difference between them is
+visibility and nothing else. That is what separates a real isolation
+test from one that passes because the query matched nothing.</p>
+<p>What is withheld is more interesting than what is awarded. This
+system has a seven-value status enum, a CONTRADICTS edge, a SUPERSEDES
+edge and an LLM contradiction detector — everything a trust state is
+usually made of — and no read path withholds anything on any of it. A
+superseded memory has its rank multiplied by 0.3 and gains a
+<code>superseded_by</code> field. It is still returned, and the
+<code>amend</code> tool's docstring says leaving it that way is
+deliberate.</p>
+<p>And forgetting is a hard delete. The enum's <code>pruned</code> value
+is never assigned by any code in the package.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Three mechanisms run over one graph and they are easy to
+conflate.</p>
+<p><strong>The ladder</strong> is consolidation: <code>tagged</code> on
+arrival, promoted to <code>active</code> when an edge forms, demoted to
+<code>episodic</code> after three sessions below a relevance threshold,
+to <code>dormant</code> after ninety days, or promoted to
+<code>core</code> by a composite of ACT-R activation, hub degree,
+neighbourhood density and stability. These are tiers of importance.</p>
+<p><strong>The edges</strong> are epistemics: CONTRADICTS and
+SUPERSEDES, created by an LLM check against high-similarity neighbours.
+They describe relationships between claims.</p>
+<p><strong>The sweep</strong> is deletion, and it is the only thing here
+that destroys anything.</p>
+<p>The three meet in exactly one place: when a new memory contradicts a
+node that is currently <code>core</code>, a SUPERSEDES edge is added and
+the old node is demoted to <code>episodic</code> — losing a tier because
+something disagreed with it. Everywhere else the ladder and the edges
+run past each other.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a store tool embeds, auto-links and runs LLM contradiction detection against high-similarity neighbours, adding CONTRADICTS and — for a contradicted core memory — SUPERSEDES edges; recall combines vector, keyword and traversal results through one visibility helper that partitions by user id and org list, then reranks by spreading activation, a date-anchor window and a multiplier that pushes superseded hits down while still returning them; a maintenance pass rescores every non-core node, walks the consolidation ladder, and hard-deletes only orphans meeting all five forgetting criteria</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a store tool embeds, auto-links and runs LLM contradiction detection against high-similarity neighbours, adding CONTRADICTS and — for a contradicted core memory — SUPERSEDES edges; recall combines vector, keyword and traversal results through one visibility helper that partitions by user id and org list, then reranks by spreading activation, a date-anchor window and a multiplier that pushes superseded hits down while still returning them; a maintenance pass rescores every non-core node, walks the consolidation ladder, and hard-deletes only orphans meeting all five forgetting criteria
+flowchart TD
+    subgraph Write
+        ST[&quot;memory_store&quot;] --&gt; EMB[&quot;embed + auto-link&quot;]
+        EMB --&gt; CD{&quot;LLM contradiction&lt;br/&gt;similarity &amp;gt; 0.85, confidence &amp;gt; 0.7&quot;}
+        CD --&gt;|confirmed| CE[&quot;CONTRADICTS edge&quot;]
+        CD --&gt;|&quot;target is core&quot;| SE[&quot;SUPERSEDES edge&lt;br/&gt;core → episodic&quot;]
+        AM[&quot;memory_amend&quot;] --&gt; SE2[&quot;SUPERSEDES edge&lt;br/&gt;old node&#39;s status untouched&quot;]
+    end
+
+    G[(&quot;causal graph&lt;br/&gt;per-user partition&lt;br/&gt;+ org-visible union&quot;)]
+    EMB --&gt; G
+    CE --&gt; G
+    SE --&gt; G
+    SE2 --&gt; G
+
+    subgraph Read
+        VIS{&quot;_visible_nodes&lt;br/&gt;raises if no user id&quot;}
+        V[&quot;vector&quot;] --&gt; VIS
+        K[&quot;keyword&quot;] --&gt; VIS
+        TR[&quot;traversal&quot;] --&gt; VIS
+        VIS --&gt; RR[&quot;rerank&lt;br/&gt;spreading activation&lt;br/&gt;date anchor&lt;br/&gt;superseded × 0.3, tagged not dropped&quot;]
+    end
+    G --&gt; V
+    G --&gt; K
+    G --&gt; TR
+    RR --&gt; OUT[&quot;results&quot;]
+
+    subgraph Maintenance[&quot;maintenance loop&quot;]
+        RS[&quot;rescore every non-core node&quot;] --&gt; TRN[&quot;ladder transitions&lt;br/&gt;tagged · active · episodic&lt;br/&gt;semantic · core · dormant&quot;]
+        TRN --&gt; SW{&quot;forgetting sweep&lt;br/&gt;orphan AND score below floor&lt;br/&gt;AND not pinned AND not core&lt;br/&gt;AND not org AND idle 30 days&quot;}
+        SW --&gt;|all five| DEL[&quot;delete_node&lt;br/&gt;row removed&quot;]
+    end
+    G --&gt; RS
+    DEL --&gt; G</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Identity:</strong> <code>src/papez/context.py</code> — four
+context variables and the reason two of them have no default.</li>
+<li><strong>Visibility:</strong>
+<code>src/papez/storage/memory.py</code> — <code>_get_org_ids</code>,
+<code>_visible_nodes</code>, and the read helpers built on them.</li>
+<li><strong>Tools:</strong> <code>src/papez/mcp/tools.py</code> — store,
+recall, search, traverse, amend, promote, erase.</li>
+<li><strong>Ladder:</strong>
+<code>src/papez/engine/transitions.py</code>; promotion in
+<code>src/papez/core_memory/promoter.py</code>.</li>
+<li><strong>Contradiction:</strong>
+<code>src/papez/engine/contradiction.py</code>.</li>
+<li><strong>Forgetting:</strong>
+<code>src/papez/engine/forgetting.py</code>, driven by
+<code>src/papez/engine/maintenance.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A node carries its scoring state on its face:
+<code>decay_score</code>, <code>causal_weight</code>,
+<code>reactivation_count</code>, a <code>reactivation_pattern</code> of
+burst, steady or single, an <code>irrelevance_counter</code>, and a
+<code>stability</code> term described as spaced repetition. Alongside
+those sit <code>pinned</code>, <code>promotion_reason</code>, and the
+three scope fields — <code>org_id</code>, <code>visibility</code>,
+<code>original_user_id</code>.</p>
+<p>The status field is the one worth naming carefully, because its shape
+invites a misreading. <code>tagged</code>, <code>active</code>,
+<code>episodic</code>, <code>semantic</code> and <code>core</code> are a
+consolidation ladder; <code>dormant</code> is its floor;
+<code>pruned</code> is declared and, at this pin, never assigned — the
+forgetting sweep calls <code>delete_node</code> instead.</p>
+<p>Content can be a summary alone, a summary plus full text, or a
+summary plus a reference, which is a sensible way to keep a
+200-character summary in the graph while the body lives elsewhere.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Recall runs vector and keyword searches and pulls causal chains, all
+through the visibility helper, then reranks. Three adjustments stack: a
+small bonus per edge between two members of the result set (spreading
+activation), a boost when one of a memory's dates falls inside an
+absolute window parsed out of the question, and a multiplier of 0.3 on
+any hit a newer memory supersedes.</p>
+<p>The date-anchor module is careful in a way worth noting: it requires
+an explicit four-digit year before it will emit any window, so relative
+temporal questions are left completely untouched rather than anchored to
+a guess, and its docstring states that no rule references a gold answer
+or dataset statistic — a declaration about benchmark hygiene made in the
+code rather than the README.</p>
+<p>The supersession handling carries a bug comment that is the clearest
+thing in the file. A previous version marked the superseder itself as
+superseded whenever the old node fell out of the result set —
+<em>"down-ranking the correction it was supposed to prefer."</em> The
+direction of the edge now decides: new is the source, old is the target,
+only targets are tagged.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Storing embeds, auto-links, and runs contradiction detection over the
+twenty nearest neighbours, keeping only pairs above 0.85 similarity and
+asking an LLM to confirm, above 0.7 confidence, before writing a
+CONTRADICTS edge.</p>
+<p>There is also a cheap pre-check, and its comments are a short lesson
+in building a heuristic against real failures. It fires
+<code>numeric_mismatch</code> only when two texts carry different
+numbers under a <em>shared anchor word</em>, with a stopword list that
+exists because <em>"budget is 50000"</em> and <em>"latency is 200"</em>
+were colliding on the anchor <code>is</code> — the comment cites the
+field report, a 200ms latency memory flagging a $50,000 budget memory. A
+number's unit is part of its key, so six weeks and eight months never
+conflict. And the whole thing is labelled: hints only, <em>"never
+verified contradictions and never materialized as edges."</em></p>
+<p>Correction is <code>memory_amend</code>: a new node with a SUPERSEDES
+edge back. The old node's status is explicitly not changed, on the
+reasoning that recall already decays and tags it and the transitions
+engine will demote it naturally, and that mutating status here would
+bypass that engine and be non-reversible.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A stdio MCP server, published on PyPI as <code>papez</code>, with a
+Dockerfile and a compatibility shim under the project's former name. The
+README is explicit that this package is the core library — in-process
+graph, optional JSON persistence, no database dependency and no REST API
+— and that the hosted product with Postgres and an HTTP API is separate
+and not included.</p>
+<p>One artefact of the rename survives: every tunable is still read from
+a <code>GENESYS_</code>-prefixed environment variable.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope enforced — awarded.</strong> One helper behind every
+read, fed from request-scoped identity that raises when unset, and an
+org list with no default because a shared mutable default is a leak
+hazard. Two limits belong on the record and are in the evidence: the
+store's helpers accept an explicit override, and the stdio server in
+this package sets a single constant user id, so the partition this mark
+certifies is exercised by the tests rather than by that deployment.</p>
+<p><strong>Negative eval — awarded</strong>, on the paired cases rather
+than on the end-to-end recall test, which asserts only an absence and
+would pass on an empty result.</p>
+<p><strong>Trust state — withheld, and this is the near miss of the
+report.</strong> Everything needed is present: a stored discrete field
+with seven values, a CONTRADICTS edge type, a SUPERSEDES edge type, and
+an LLM detector that creates them. What is missing is a read that
+withholds. Supersession multiplies a rank score by 0.3 and adds a
+<code>superseded_by</code> field to the result — the rubric's
+distinction exactly, a number used for ranking rather than a state used
+for filtering. The status field <em>can</em> be filtered on, but only
+because the caller passes <code>filters.status</code>; the default is no
+filter, so a dormant memory is returned by default. The one place a
+state does change on epistemic grounds is a contradicted
+<code>core</code> node being demoted to <code>episodic</code>, and
+episodic is a tier, not a doubt.</p>
+<p><strong>Tombstone — withheld.</strong> The forgetting sweep calls
+<code>delete_node</code>; nothing is keyed on a rejected value and no
+write path consults anything. The <code>pruned</code> status exists in
+the enum and nothing sets it.</p>
+<p><strong>Audit log — withheld.</strong>
+<code>evaluate_transitions</code> builds a record of every transition
+with an old value, a new value and a reason — and its only caller takes
+the length of the list and discards it. Erasure produces a manifest and
+fires a <code>user.erased</code> event, but <code>_notify</code> is a
+callback the embedder supplies, not a store.</p>
+<p><strong>Human review — withheld.</strong> Ownership is checked on
+pin, unpin, delete, promote and amend, and an admin role is bounded so
+that it can reach another user's org node but not a different org's and
+not a private one. Those are access controls on the actor, not a place
+where a person adjudicates content.</p>
+<p><strong>Bi-temporal — withheld.</strong> <code>created_at</code> may
+be supplied by the caller, and the date-anchor reranker reads event
+dates out of the content text. Both are one axis; no read returns the
+graph as of a past instant.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong>, and no <code>CITATION.cff</code>. The
+benchmark claim lives in the README and is unusually well-qualified:
+85.55 ± 0.37 on LoCoMo under a protocol it names as frozen — a fixed
+answerer and judge, temperature 0, ten runs — with comparison figures
+for two other systems, a statement that self-reported figures above
+roughly 90 use different answerers and judges and are not comparable,
+and the oracle retrieval ceiling under that protocol given as 94.9. The
+harness is a separate repository. Nothing in <em>this</em> repository
+reproduces the number, so the claim is checkable elsewhere and not
+here.</p>
+<p>The in-repo <code>benchmarks/</code> directory is a different thing:
+a runner comparing Papez against a flat vector baseline over four
+committed scenario files — causal reasoning, outdated info, structural
+importance, temporal awareness — graded against ground-truth prose by an
+LLM, needing API keys, with no results committed.</p>
+<p>19 test files. The isolation pairs carry the negative-eval mark and
+are quoted in the evidence. Two more are worth naming for their shape
+rather than their mark: <code>test_private_orphan_still_pruned</code> is
+the positive control that keeps
+<code>test_org_node_exempt_from_forgetting</code> honest, and
+<code>test_gdpr_erasure</code> checks both erasure modes, including the
+one that anonymises a promoted node and scrubs PII from edge reasons
+rather than deleting it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Raise on a missing scope key.</strong> Returning an empty
+result for an unset identity is the same code path as a legitimate empty
+result, and only one of them is a bug you will notice.</li>
+<li><strong>Give a scope list no default.</strong> The comment here is
+worth internalising: a shared mutable default is a cross-request leak
+waiting to happen.</li>
+<li><strong>Pair every exclusion test with an inclusion that uses the
+same query.</strong> Identical embeddings for the visible and invisible
+node is the cheapest way to prove the exclusion was caused by the
+boundary rather than by the search finding nothing.</li>
+<li><strong>Write the false positive into the heuristic's
+comments.</strong> The stopword list and unit keying in the
+contradiction pre-check each name the case that produced them, which is
+what stops the next maintainer simplifying them away.</li>
+<li><strong>Decide whether supersession ranks or filters, and say
+which.</strong> This code chose to rank and tag, and documented the
+reason in the amend tool. That is a defensible choice; leaving it
+implicit is not.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The <code>pruned</code> status is declared and never set, while
+forgetting deletes the row. Was a soft-delete tier intended, and would
+it change what the sweep can safely do at its 0.01 threshold?</li>
+<li><code>evaluate_transitions</code> composes a reason string for every
+transition and the maintenance pass keeps only the count. Those reasons
+are the only account of why a memory moved down the ladder — is there a
+plan to persist them?</li>
+<li>A superseded memory is returned with a <code>superseded_by</code>
+field and a rank multiplier. What happens in a client that renders
+results without reading that field — is an opt-in filter on the recall
+tool worth the reversibility the amend docstring is protecting?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Identity: <code>src/papez/context.py</code></li>
+<li>Visibility and the graph store:
+<code>src/papez/storage/memory.py</code></li>
+<li>MCP tools: <code>src/papez/mcp/tools.py</code></li>
+<li>Node and edge models: <code>src/papez/models/node.py</code>,
+<code>src/papez/models/edge.py</code>,
+<code>src/papez/models/enums.py</code></li>
+<li>Ladder and promotion: <code>src/papez/engine/transitions.py</code>,
+<code>src/papez/core_memory/promoter.py</code></li>
+<li>Contradiction: <code>src/papez/engine/contradiction.py</code></li>
+<li>Forgetting and maintenance:
+<code>src/papez/engine/forgetting.py</code>,
+<code>src/papez/engine/maintenance.py</code></li>
+<li>Date anchors: <code>src/papez/retrieval/date_anchor.py</code></li>
+<li>Tests: <code>tests/test_org_accounts.py</code>,
+<code>tests/test_cross_org_security.py</code>,
+<code>tests/test_phase1_security.py</code>,
+<code>tests/test_forgetting.py</code>,
+<code>tests/test_gdpr_erasure.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/Astrix-Labs/papez/commit/3ef91dd17a9cda4d522f8f4aa4cc53cc7fc484e6"><code class="commit-id" title="3ef91dd17a9cda4d522f8f4aa4cc53cc7fc484e6">3ef91dd1…</code></a>
+— first reading, at the head of <code>main</code>. The project was
+renamed: the changelog records <em>genesys-memory is now papez</em>, a
+compatibility shim ships under the old name, and every environment
+variable still carries the <code>GENESYS_</code> prefix; neither name
+appears elsewhere in this corpus. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: an MCP
+server manifest declaring a start command and two dependency surfaces
+with no lockfile beside them, and nothing else. Nothing was installed,
+built or run. AGPL-3.0 with a contributor licence agreement that governs
+contributions rather than use. Two marks. The reading covered the node
+and edge models, the visibility helpers and every read path built on
+them, the tool handler's identity threading, the consolidation ladder
+and its thresholds, the contradiction detector and its pre-check, the
+amend and erasure paths, the forgetting sweep, the date-anchor reranker,
+and the isolation tests; the hosted service's Postgres backend is
+outside this package and was not read. Five marks are withheld with
+reasons in section 9, and the one to read is <code>trust_state</code>:
+every ingredient is in the schema and the only consumer ranks rather
+than filters.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
