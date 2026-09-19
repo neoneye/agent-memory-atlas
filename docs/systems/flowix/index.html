@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust notebook app whose memos an
+agent can search, read, write and delete over MCP, with hourly
+auto-versioning capped at twenty, an in-memory bigram index that
+verifies every hit against the raw body, and a cross-process write lock
+— and none of the governance state the atlas's marks test for.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Flowix — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust notebook app whose
+memos an agent can search, read, write and delete over MCP, with hourly
+auto-versioning capped at twenty, an in-memory bigram index that
+verifies every hit against the raw body, and a cross-process write lock
+— and none of the governance state the atlas's marks test for.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Flowix — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust notebook app whose
+memos an agent can search, read, write and delete over MCP, with hourly
+auto-versioning capped at twenty, an in-memory bigram index that
+verifies every hit against the raw body, and a cross-process write lock
+— and none of the governance state the atlas's marks test for.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Flowix — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Flowix",
+      "description": "A Rust notebook app whose memos an agent can search, read, write and delete over MCP, with hourly auto-versioning capped at twenty, an in-memory bigram index that verifies every hit against the raw body, and a cross-process write lock \u2014 and none of the governance state the atlas's marks test for.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Markdown notebook with an agent surface</p>
+          <h1>Flowix</h1>
+          <p class="document-deck">A Rust notebook app whose memos an
+agent can search, read, write and delete over MCP, with hourly
+auto-versioning capped at twenty, an in-memory bigram index that
+verifies every hit against the raw body, and a cross-process write lock
+— and none of the governance state the atlas's marks test for.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/text2future/flowix">
+              <span>Source</span>
+              <strong>text2future/flowix</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/text2future/flowix/commit/d3f5b81229a33a4bde48b76697957eee020f8080" title="d3f5b81229a33a4bde48b76697957eee020f8080">
+              <span>Analyzed revision</span>
+              <code>d3f5b812…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/text2future--flowix" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>text2future--flowix</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Flowix is a Markdown notebook — a Rust workspace with a desktop app,
+a web build, a CLI and a plugin runtime — that has grown an agent
+surface. The <code>dsh-flowix-memory</code> bundle registers a local
+<code>flowix-cli</code> MCP server with a DeepSeek Harness instance, and
+the agent gets one tool, <code>memo</code>, with twelve actions: list
+notebooks, list memos, list tags, show, search, create, edit, write,
+delete, and three artifact operations.</p>
+<p>It is in this corpus because memos outlive the session that wrote
+them, are retrieved later by search, and can be corrected and deleted.
+It carries no capability mark, and that is a statement about what the
+product is rather than a defect list: a memo has no status, no
+confidence and no review state; nothing records what happened to one;
+and a delete is complete, taking the version history with it. The
+atlas's marks test for governance a notebook app does not need.</p>
+<p>What it does have is worth reading anyway, and two things in
+particular. The search module knows its own failure mode and defends
+against it: a bigram index will match <code>ab</code> and
+<code>bc</code> for a query of <code>abc</code> without the substring
+being present anywhere, so every surviving candidate is re-checked with
+an exact <code>body.contains</code> before it is returned. And the
+version-cleanup code is written so that <em>"a missing index row cannot
+destroy recoverable history"</em> — the sweeper retains version
+directories it cannot account for rather than deleting what it does not
+recognise.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A notebook is a directory. A memo is a Markdown file in it whose
+frontmatter carries an eight-character <code>flowix_key</code> as its
+identity — with the older six-character form still accepted, and a
+legacy <code>key</code> field kept but no longer used for
+identification.</p>
+<p>Editing a memo may snapshot it: at most once an hour, into
+<code>&lt;notebook&gt;/.flowix/versions/&lt;memo_id&gt;/</code>, with a
+manifest recording each version's id, timestamp, source
+(<code>auto</code>, <code>manual</code> or <code>restore_backup</code>),
+title, size and content hash. Twenty are kept.</p>
+<p>Search is a separate, ephemeral structure. The inverted index lives
+in memory and is never written to disk; it is rebuilt when the notebook
+changes, and it tracks the app's own write commands as they happen.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an agent reaches memos through a DeepSeek Harness bundle that spawns a local flowix-cli over stdio; the same flowix-core serves the desktop app, the web build and the CLI, taking a cross-process lock on every file write; memos are Markdown files in notebook directories registered in a SQLite index, snapshotted hourly into a capped version history with a content hash each, and searched through an in-memory bigram index that re-verifies every candidate against the raw body before returning it</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an agent reaches memos through a DeepSeek Harness bundle that spawns a local flowix-cli over stdio; the same flowix-core serves the desktop app, the web build and the CLI, taking a cross-process lock on every file write; memos are Markdown files in notebook directories registered in a SQLite index, snapshotted hourly into a capped version history with a content hash each, and searched through an in-memory bigram index that re-verifies every candidate against the raw body before returning it
+flowchart TD
+    subgraph Agents
+        DSH[&quot;DeepSeek Harness&lt;br/&gt;dsh-flowix-memory bundle&quot;]
+        MCP[&quot;flowix-cli MCP server&lt;br/&gt;memo tool, 12 actions&quot;]
+    end
+
+    subgraph Surfaces
+        DESK[&quot;flowix-desktop&quot;]
+        WEB[&quot;flowix-web&quot;]
+        CLI[&quot;flowix-cli&quot;]
+    end
+
+    CORE[&quot;flowix-core&lt;br/&gt;service.rs&quot;]
+    LOCK[&quot;cross-process write lock&lt;br/&gt;on every write, rename, delete&quot;]
+
+    subgraph Disk
+        NB[&quot;notebook directories&lt;br/&gt;*.md with frontmatter&quot;]
+        REG[&quot;~/.flowix/index.db&lt;br/&gt;notebook registry&quot;]
+        VER[&quot;.flowix/versions/&amp;lt;memo&amp;gt;/&lt;br/&gt;manifest + snapshots&quot;]
+    end
+
+    subgraph Search[&quot;in memory, never persisted&quot;]
+        TOK[&quot;BigramTokenizer&lt;br/&gt;ASCII words + CJK bigrams&quot;]
+        INV[&quot;inverted index&lt;br/&gt;token -&gt; memo ids&quot;]
+        VERIFY[&quot;exact body.contains&lt;br/&gt;re-check&quot;]
+    end
+
+    DSH --&gt; MCP --&gt; CORE
+    DESK --&gt; CORE
+    WEB --&gt; CORE
+    CLI --&gt; CORE
+    CORE --&gt; LOCK --&gt; NB
+    CORE --&gt; REG
+    CORE --&gt; VER
+    NB --&gt; TOK --&gt; INV --&gt; VERIFY
+    CORE --&gt; INV</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Service surface:</strong>
+<code>app/flowix-core/src/service.rs</code>.</li>
+<li><strong>Memo files, frontmatter and identity:</strong>
+<code>app/flowix-core/src/memo_file/frontmatter.rs</code>,
+<code>types.rs</code>, <code>ops/crud.rs</code>.</li>
+<li><strong>Versions:</strong>
+<code>app/flowix-core/src/memo_file/versions.rs</code>.</li>
+<li><strong>Notebook registry:</strong>
+<code>app/flowix-core/src/memo_file/notebook.rs</code>.</li>
+<li><strong>Search:</strong>
+<code>app/flowix-core/src/search.rs</code>.</li>
+<li><strong>Agent bundle:</strong> <code>dsh-flowix-memory/</code> —
+<code>cordis.patch.yml</code>, <code>launcher.mjs</code>,
+<code>memo-tool-schema.json</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memo is its file. Frontmatter carries <code>flowix_key</code> as
+the identity, a title, tags, <code>created_at</code> and
+<code>updated_at</code>; the body is the Markdown beneath the
+<code>---</code> block. There is no status, no confidence, no owner and
+no review field.</p>
+<p>The version manifest is the only other durable structure per
+memo:</p>
+<pre><code>{ version, memo_id, versions: [
+    { id, memo_id, created_at, source, filename, title, size, content_hash }
+] }</code></pre>
+<p><code>MEMO_AUTO_VERSION_INTERVAL_MS</code> is an hour,
+<code>MEMO_VERSION_LIMIT</code> is twenty, and
+<code>MEMO_ORPHAN_VERSION_RETENTION</code> is thirty days — the window
+an unrecognised version directory is kept before cleanup, with the
+comment explaining that it protects against transient sync visibility
+and delayed watcher events.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The index maps a token to a sorted set of memo ids, and a multi-token
+query is an intersection folded from the smallest set. Scoring is flat
+and stated in the module header: a title hit is worth 10, a tag hit 5,
+and body hits accrue by frequency from 1.0 in steps of 0.1 up to a
+ceiling of 3.0, with <code>updated_at / 1e13</code> added as a tie-break
+and the memo id as the final stable one.</p>
+<p>Two design notes are worth carrying out of this file.</p>
+<p>The <strong>false-positive defence</strong> is the better one. A
+bigram index has a known weakness — matching <code>ab</code> and
+<code>bc</code> does not establish that <code>abc</code> occurs — and
+the module says so, then re-verifies each candidate with an exact
+<code>body.contains(query_lower)</code> before returning it, discarding
+what fails. The committed case for it,
+<code>search_bigram_false_positive_rejected</code>, queries
+<code>bcde</code> against a body of <code>abc def</code> and asserts
+nothing comes back.</p>
+<p>The <strong>stated limitation</strong> is the other. The index tracks
+the app's own write commands — rename, write, add, import, clear, delete
+— so a user who edits a <code>.md</code> in an external editor leaves it
+stale until switching notebooks triggers a rebuild. The header says this
+plainly and names the fix it has not made yet: hang a
+<code>notify</code> watcher on the directory.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every file write, rename and delete goes through
+<code>acquire_cross_process_write_lock</code>, which matters because
+three processes can hold the same notebook open — the desktop app, the
+CLI, and the MCP server the agent talks to.</p>
+<p>An edit may create a version, at most hourly, and the sweep that
+enforces the twenty-version cap is deliberately conservative about what
+it does not recognise. Deletion is the opposite:
+<code>delete_memo_result_global</code> removes the <code>.md</code>,
+calls <code>remove_memo_versions_for_notebook</code>, and updates the
+index. A committed test,
+<code>delete_memo_removes_version_history</code>, seeds both a current
+version directory and a legacy one and asserts that both are gone
+afterwards.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The bundle is small and honest about its own reach.
+<code>cordis.patch.yml</code> inserts one
+<code>@deepseek-ai/dsh-mcp-client</code> row that ships inside every
+Harness distribution, and <code>launcher.mjs</code> proxies to
+<code>flowix-cli</code> when it is installed — and when it is not, keeps
+the tool registered and returns an actionable installation error to the
+agent rather than disappearing. The README states the boundary:
+<em>"Nothing here connects to a remote Flowix service — the CLI is
+spawned locally over stdio and reads the local notebook data
+directory."</em></p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No capability mark is awarded</strong>, and each is worth
+naming so a reader can tell a mark that was considered from one nobody
+looked for.</p>
+<p><strong>Trust state — no such field exists.</strong> A memo's
+frontmatter carries an id, a title, tags and two timestamps. There is no
+draft, no confirmed, no deprecated, nothing a read could filter on.</p>
+<p><strong>Tombstone — deletion is complete.</strong> The file goes, the
+version history goes with it, and the committed test asserts exactly
+that. Nothing remains to say a memo was ever there.</p>
+<p><strong>Bitemporal — one time axis.</strong> <code>created_at</code>
+and <code>updated_at</code> record when the store learned something.
+There is no field for when the thing described happened, and no as-of
+read.</p>
+<p><strong>Audit log — none.</strong> Searched <code>flowix-core</code>
+for <code>audit</code>, <code>event_log</code>,
+<code>activity_log</code> and <code>history</code>: the only hits are
+the version history and a maintenance report type. Nothing records that
+a memo was read, edited by whom, or why.</p>
+<p><strong>Scope enforced — notebooks are a filter, not a
+boundary.</strong> <code>search_notebooks</code> takes
+<code>notebook_filter: Option&lt;&amp;str&gt;</code>, and with
+<code>None</code> the search spans every registered notebook. For a
+single-user notebook app that is the right default; it means the
+notebook is a place to put things rather than a predicate a read must
+satisfy.</p>
+<p><strong>Negative eval — withheld, and the repair is one
+line.</strong> <code>search_bigram_false_positive_rejected</code> builds
+an index containing exactly one memo and asserts that a near-miss query
+returns zero hits. The result set it measures is empty by construction,
+so a search that returned nothing for everything would pass it. The
+other fourteen cases in the file include real positive assertions —
+<code>search_cross_token_intersection</code> names two ids that must be
+present — but they are separate tests with separate fixtures. Adding an
+assertion to the false-positive case that <code>abc</code> <em>does</em>
+return the memo would close it.</p>
+<p><strong>Human review — not applicable.</strong> There is no approval
+surface.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper.</strong> Searched the README and <code>docs/</code>
+for <code>arxiv</code>, <code>@article</code>, <code>@misc</code>,
+<code>doi.org</code> and <code>CITATION.cff</code>: none. This is a
+product.</p>
+<p>The suite is substantial for an app of this size: 148
+<code>#[test]</code> functions in <code>memo_file/tests.rs</code> alone,
+with further test modules under <code>search.rs</code>,
+<code>secret/</code>, <code>derivation/</code>, <code>file_io/</code>,
+the desktop agent session and the CLI. The cases are specific — CJK
+bigram tokenisation with a unigram fallback, title-outranks-body
+ordering, tag-only matches, empty-query handling, limit truncation and
+the stable tiebreak — and several verify migration and cleanup
+behaviour, including that a recent unknown version directory survives a
+sweep.</p>
+<p>No retrieval benchmark is committed, and none is claimed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Verify a probabilistic index against the source.</strong> If
+your tokenizer can produce a hit the raw text does not support, check
+the raw text before returning. This file names the failure mode and then
+closes it in the same function.</li>
+<li><strong>Make the cleanup sweep conservative about the
+unfamiliar.</strong> Retaining an unrecognised version directory for
+thirty days, so that a missing index row cannot destroy recoverable
+history, is the right default for anything that prunes.</li>
+<li><strong>Take a cross-process lock if more than one process can
+write.</strong> A desktop app, a CLI and an MCP server sharing a
+directory is three writers, not one.</li>
+<li><strong>Say what your index does not track.</strong> The header
+names the write commands it follows and the case it misses, which is
+more useful than a correctness claim.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The search index is per-notebook and rebuilt on switch, while
+<code>search_notebooks</code> spans all of them. What does a
+cross-notebook search cost on a large registry, and is every notebook's
+index resident?</li>
+<li>Sync is a whole crate (<code>flowix-sync</code>) with its own store
+and manager. What happens to version manifests and the
+<code>flowix_key</code> identity when two devices edit the same
+memo?</li>
+<li>The bundle's launcher keeps the tool registered when
+<code>flowix-cli</code> is absent. Does an agent that calls it then
+receive an error it can act on in every action, or only in the ones the
+launcher proxies?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Service: <code>app/flowix-core/src/service.rs</code></li>
+<li>Memo model and frontmatter:
+<code>app/flowix-core/src/memo_file/types.rs</code>,
+<code>frontmatter.rs</code></li>
+<li>CRUD and deletion:
+<code>app/flowix-core/src/memo_file/ops/crud.rs</code></li>
+<li>Versions:
+<code>app/flowix-core/src/memo_file/versions.rs</code></li>
+<li>Notebook registry:
+<code>app/flowix-core/src/memo_file/notebook.rs</code></li>
+<li>Search: <code>app/flowix-core/src/search.rs</code></li>
+<li>Locking and file IO:
+<code>app/flowix-core/src/memo_file/file_io.rs</code></li>
+<li>Agent bundle: <code>dsh-flowix-memory/</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/text2future/flowix/commit/d3f5b81229a33a4bde48b76697957eee020f8080"><code class="commit-id" title="d3f5b81229a33a4bde48b76697957eee020f8080">d3f5b812…</code></a>
+— first reading, at the head of <code>main</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: an
+unpinned dependency surface and dependency manifests inside the
+seven-day cooldown, which is what screening a <code>--depth 1</code>
+clone reports; nothing was installed, built or run. <strong>No
+capability mark.</strong> The reading covered the memo model and its
+frontmatter identity, the CRUD and deletion paths, the version manifest
+and its cleanup, the notebook registry, the search index and its
+scoring, the cross-process lock, and the DeepSeek Harness bundle that
+exposes the twelve-action <code>memo</code> tool; the sync crate, the
+plugin runtime and the desktop and web front-ends were read as context
+rather than as subject. MIT. Section 9 names every mark that was
+considered and why it was withheld — the short version is that a memo
+has no status, deletion takes the version history with it, one time axis
+is recorded, nothing audits, a notebook is an optional search filter
+rather than a predicate, and the one case written as a negative control
+measures an empty result set. The two mechanisms worth a reader's time
+are the bigram false-positive re-check and a version sweep written so
+that a missing index row cannot destroy recoverable history.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

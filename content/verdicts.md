@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 583 reports.**
+**This page covers all 584 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5105,7 +5105,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you are building a memory service several agents share, or deciding how a retrieval cascade should be bounded, or looking for a worked example of a ranking composite whose unused terms are left at zero and admitted to.
 - Do not copy when: you need a discrete state that withholds a memory from being believed — corroboration here is a number that feeds ranking, and the only state that withholds is the supersession pointer.
 
-### [`CodeWiki-Plus`](../systems/codewiki-plus/)
+### [`codewiki-plus`](../systems/codewiki-plus/)
 - Best idea: **three responses to an uncertain claim, applied to three values of one field.** In `handle_query_wiki` a `deprecated` note hits `continue` and leaves the result set, a `draft` note is returned with its title rewritten to `[unconfirmed] <title>`, and everything else is multiplied by an authority factor folding note type, status, confidence level and source into a number clamped to 0.7–1.3. Excluded, labelled, weighted — most systems pick one and apply it to everything retired.
 - Second idea: **record the third telemetry event.** The vocabulary is `hit` (I saw it), `adopted` (I cited it) and `outcome` (after using it, did the work succeed?), per-user append-only JSONL, with the outcome carrying the adoption key so a citation and its result are linkable. Retrieval logs usually stop at the first of those.
 - Third idea: **feed the failures back into the prompt that writes the next memory.** Recent failure notes become `negative_examples` — last 30 days, capped at five, newest first — injected into the distillation and consolidation payloads with an avoidance hint.
@@ -5118,7 +5118,7 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Study when: you are bolting a knowledge base onto a tool that generates documents, or deciding what a retrieval system should do with a claim nobody has confirmed yet.
 - Do not copy when: you need per-user read isolation, or a review tier an author cannot assert about themselves.
 
-### [`MIRA`](../systems/mira/)
+### [`mira`](../systems/mira/)
 - Best idea: **pick a clock per term rather than per system.** The importance formula's decay counts the user's *activity days*, so a fortnight offline does not degrade the store, while `happens_at` and `expires_at` count calendar days — the header says why, *"since real-world deadlines don't pause"*. Two clocks in one SQL expression, each with its reasoning written beside it.
 - Second idea: **forbid the pruner from creating.** The `MemoryCuratorAgent` links, merges, archives and salvages, and its docstring records the restriction that makes that safe: it *"can NEVER create memories (create_memory is excluded from its tool schema) -- preventing manufactured silt"*. One line of schema configuration removes a whole class of failure — the process that decides what to discard cannot replace it with something it wrote.
 - Third idea: **check the isolation contract at boot, against the live catalogue.** `_check_postgres_rls` confirms the service pool has not inherited `app.current_user_id`, confirms the admin role is the deliberate `BYPASSRLS` exception, queries `pg_class` and `pg_policy` for eleven named tables, and then plants a canary row and asserts that its owner can see it and another user cannot — before Hypercorn binds a socket.
@@ -5130,3 +5130,15 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: AGPL-3.0 with the licence text in the tree; Postgres with pgvector and RLS on eleven tables, Valkey, a vault, a FastAPI service and an agent framework of its own — one person's system, described by its author as "my TempleOS", with production-grade isolation and effectively no test suite.
 - Study when: you are designing decay for a store a human uses irregularly, or deciding what an LLM curator of a memory graph should be forbidden to do.
 - Do not copy when: you need to answer what a memory said before, or which pass changed it — there is no audit trail and no as-of read.
+
+### [`flowix`](../systems/flowix/)
+- Best idea: **verify a probabilistic index against the source before returning a hit.** A bigram index will match `ab` and `bc` for a query of `abc` without the substring occurring anywhere; `search.rs` names that failure mode in its own header and then closes it, re-checking every surviving candidate with an exact `body.contains(query_lower)` and discarding what fails.
+- Second idea: **make the pruner conservative about what it does not recognise.** Version cleanup retains unknown version directories for thirty days, and the constant's comment gives the reason — transient sync visibility and delayed watcher events — with a further note that a missing index row must not be able to destroy recoverable history.
+- Third idea: **state what your index does not track.** The module header lists the write commands the in-memory inverted index follows and says plainly that an external editor changing a `.md` leaves search stale until a notebook switch rebuilds it, naming the `notify` watcher it has not added yet.
+- Fourth idea: **take a cross-process lock when more than one process can write.** A desktop app, a CLI and an MCP server share one notebook directory, and every write, rename and delete goes through the same guard.
+- Biggest risk: **no capability mark, and the report says why for each one.** A memo has no status, confidence or review field; deletion removes the file and its version history together, which a committed test asserts; one time axis is recorded; nothing audits a read or an edit; and a notebook is an optional search filter rather than a predicate a read must satisfy, since `search_notebooks` spans every registered notebook when none is named.
+- Second risk: the one case written as a negative control, `search_bigram_false_positive_rejected`, asserts an empty result over an index holding a single memo, so it would pass against a search that returned nothing for everything. The repair is an assertion in the same test that the matching query does return the memo.
+- Most reusable component: `app/flowix-core/src/search.rs` — a small inverted index with a CJK-aware bigram tokenizer, flat documented scoring, UTF-8-safe snippet extraction, and the exact-substring re-check that makes the whole approach sound.
+- Maturity impression: MIT, a Rust workspace with desktop, web, CLI, sync and plugin-runtime crates, 148 test functions in the memo-file module alone and further suites across search, secrets, derivation, file IO and the CLI; the agent surface is a small DeepSeek Harness bundle that proxies to a locally spawned binary and returns an actionable error when it is absent.
+- Study when: you are building keyword search over user-authored Markdown, especially with CJK content, or deciding how a desktop notebook should expose itself to an agent without adding a service.
+- Do not copy when: you need a memory that can be held back, corrected without losing what it said, or accounted for afterwards — none of those exist here.

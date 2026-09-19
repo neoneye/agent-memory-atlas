@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 583 reports.</strong></p>
+<p><strong>This page covers all 584 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -23082,7 +23082,7 @@ from being believed — corroboration here is a number that feeds ranking,
 and the only state that withholds is the supersession pointer.</li>
 </ul>
 <h3 id="codewiki-plus"><a
-href="../systems/codewiki-plus/"><code>CodeWiki-Plus</code></a></h3>
+href="../systems/codewiki-plus/"><code>codewiki-plus</code></a></h3>
 <ul>
 <li>Best idea: <strong>three responses to an uncertain claim, applied to
 three values of one field.</strong> In <code>handle_query_wiki</code> a
@@ -23146,7 +23146,7 @@ a claim nobody has confirmed yet.</li>
 <li>Do not copy when: you need per-user read isolation, or a review tier
 an author cannot assert about themselves.</li>
 </ul>
-<h3 id="mira"><a href="../systems/mira/"><code>MIRA</code></a></h3>
+<h3 id="mira"><a href="../systems/mira/"><code>mira</code></a></h3>
 <ul>
 <li>Best idea: <strong>pick a clock per term rather than per
 system.</strong> The importance formula's decay counts the user's
@@ -23206,6 +23206,60 @@ irregularly, or deciding what an LLM curator of a memory graph should be
 forbidden to do.</li>
 <li>Do not copy when: you need to answer what a memory said before, or
 which pass changed it — there is no audit trail and no as-of read.</li>
+</ul>
+<h3 id="flowix"><a
+href="../systems/flowix/"><code>flowix</code></a></h3>
+<ul>
+<li>Best idea: <strong>verify a probabilistic index against the source
+before returning a hit.</strong> A bigram index will match
+<code>ab</code> and <code>bc</code> for a query of <code>abc</code>
+without the substring occurring anywhere; <code>search.rs</code> names
+that failure mode in its own header and then closes it, re-checking
+every surviving candidate with an exact
+<code>body.contains(query_lower)</code> and discarding what fails.</li>
+<li>Second idea: <strong>make the pruner conservative about what it does
+not recognise.</strong> Version cleanup retains unknown version
+directories for thirty days, and the constant's comment gives the reason
+— transient sync visibility and delayed watcher events — with a further
+note that a missing index row must not be able to destroy recoverable
+history.</li>
+<li>Third idea: <strong>state what your index does not track.</strong>
+The module header lists the write commands the in-memory inverted index
+follows and says plainly that an external editor changing a
+<code>.md</code> leaves search stale until a notebook switch rebuilds
+it, naming the <code>notify</code> watcher it has not added yet.</li>
+<li>Fourth idea: <strong>take a cross-process lock when more than one
+process can write.</strong> A desktop app, a CLI and an MCP server share
+one notebook directory, and every write, rename and delete goes through
+the same guard.</li>
+<li>Biggest risk: <strong>no capability mark, and the report says why
+for each one.</strong> A memo has no status, confidence or review field;
+deletion removes the file and its version history together, which a
+committed test asserts; one time axis is recorded; nothing audits a read
+or an edit; and a notebook is an optional search filter rather than a
+predicate a read must satisfy, since <code>search_notebooks</code> spans
+every registered notebook when none is named.</li>
+<li>Second risk: the one case written as a negative control,
+<code>search_bigram_false_positive_rejected</code>, asserts an empty
+result over an index holding a single memo, so it would pass against a
+search that returned nothing for everything. The repair is an assertion
+in the same test that the matching query does return the memo.</li>
+<li>Most reusable component: <code>app/flowix-core/src/search.rs</code>
+— a small inverted index with a CJK-aware bigram tokenizer, flat
+documented scoring, UTF-8-safe snippet extraction, and the
+exact-substring re-check that makes the whole approach sound.</li>
+<li>Maturity impression: MIT, a Rust workspace with desktop, web, CLI,
+sync and plugin-runtime crates, 148 test functions in the memo-file
+module alone and further suites across search, secrets, derivation, file
+IO and the CLI; the agent surface is a small DeepSeek Harness bundle
+that proxies to a locally spawned binary and returns an actionable error
+when it is absent.</li>
+<li>Study when: you are building keyword search over user-authored
+Markdown, especially with CJK content, or deciding how a desktop
+notebook should expose itself to an agent without adding a service.</li>
+<li>Do not copy when: you need a memory that can be held back, corrected
+without losing what it said, or accounted for afterwards — none of those
+exist here.</li>
 </ul>
         </article>
       </div>
