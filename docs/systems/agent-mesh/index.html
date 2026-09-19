@@ -131,7 +131,7 @@ receives still never reads the decision store at all.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/cbalgeman--agent-mesh" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -1124,6 +1124,29 @@ definition, one import, and <code>workbench.py:4594</code>.</li>
 <code>docs/migration.md</code>, <code>docs/privacy.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/cbalgeman/agent-mesh/commit/a8187089dab47539c21c4d2b2d761779428a59b9"><code class="commit-id" title="a8187089dab47539c21c4d2b2d761779428a59b9">a8187089…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin. Every writer
+the record cited is exact, and the record was all writers: it proved the
+status is set carefully and never said where it is read. The reader is
+<code>evaluate_decision_applicability</code> in
+<code>core/decision_applicability.py</code>, the engine that decides
+which decisions apply to a set of paths — and the predicate is in Python
+rather than SQL, which is why a grep for a status clause misses it. The
+shape is the strong one: a status set defaulting to
+<code>{"accepted", "in_force"}</code> and a <code>continue</code> on
+anything outside it, so it is an allowlist and an unanticipated value is
+withheld rather than admitted. Widening is explicit and named —
+<code>include_proposed</code> adds exactly one value,
+<code>lifecycle_statuses</code> replaces the set — and the agent-facing
+context builder (<code>core/decision_context.py:54</code>) passes the
+narrow default through; the only caller that widens is the CLI, behind
+<code>--include-proposed</code>. <code>adoption.py:325</code> applies
+the same pair as SQL for its migration report. One detail is added on
+the write side too: folding a decision back to <code>proposed</code>
+clears <code>in_force_utc</code> as well as <code>accepted_utc</code>,
+in the same statement, so neither timestamp can outlive the standing it
+records. Nothing was installed and no suite was run.</p>
 <p><strong>2026-09-18</strong> — <a
 href="https://github.com/cbalgeman/agent-mesh/commit/a8187089dab47539c21c4d2b2d761779428a59b9"><code class="commit-id" title="a8187089dab47539c21c4d2b2d761779428a59b9">a8187089…</code></a>
 — re-read at the same commit; nothing upstream moved, so the corrections

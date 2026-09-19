@@ -117,7 +117,7 @@ automatic extraction does not use.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/RBKunnela--ALMA-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -125,7 +125,7 @@ automatic extraction does not use.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -236,8 +236,9 @@ contradicting source and a <code>verified_at</code> back onto the row,
 through <code>update_memory_verification</code>, implemented on
 <strong>both</strong> the SQLite and Postgres backends and added to both
 by migration <code>v1_2_0_atlas_gaps.py</code>. The verifier calls it by
-default. <code>trust_state</code> is earned: four discrete states, as a
-field, on the two shipped backends.</p>
+default. Four discrete states, as a field, on the two shipped backends —
+and nothing reads the field back to decide what an agent may use, which
+is where the mark comes apart below.</p>
 <p><strong>And the benchmark numbers are traceable, which is rarer than
 the rest of it.</strong>
 <code>benchmarks/results-v1.0-phase1.json</code> carries a LongMemEval
@@ -489,9 +490,9 @@ MCP tools <code>alma_get_weak_memories</code> and
 and <code>alma_smart_forget</code> removes the forgettable ones —
 <em>"weak memories can be rescued before deletion,"</em> as the module's
 header puts it. The state is derived from the number at read time, so it
-is a ranking, not a persisted judgement, which is why
-<code>trust_state</code> rests on <code>verification_status</code>
-rather than here.</p>
+is a ranking, not a persisted judgement.
+<code>verification_status</code> is the persisted judgement, and it
+turns out not to gate anything either.</p>
 <p><strong>The audit row holds the value it removed.</strong>
 <code>record_forget_audit</code> stores the pruned heuristic's
 <code>strategy</code> alongside the reason. That is a durable record of
@@ -526,12 +527,28 @@ Trust</h2>
 <p><strong><code>scope_enforced</code> — earned, in its strict
 form.</strong> <code>WHERE project_id = ?</code> on every read path,
 with a composite <code>(project_id, agent)</code> index behind it.</p>
-<p><strong><code>trust_state</code> — earned.</strong> Four discrete
-states with three named derivation methods, written to
+<p><strong><code>trust_state</code> — withdrawn on re-reading.</strong>
+Four discrete states with three named derivation methods, written to
 <code>verification_status</code> on both shipped backends, with the
 method, the confidence, the reason and the contradicting source stored
-beside the verdict. The vocabulary was always better than most systems
-that carry this mark; what it lacked was a column.</p>
+beside the verdict. The vocabulary is excellent and the column is real.
+What is missing is a reader: no retrieval path excludes a contradicted
+memory, and the two predicates that would do it are written and never
+called. <code>VerificationResult.is_usable()</code> returns true for
+<code>verified</code> and <code>uncertain</code> and is invoked only by
+its own unit tests; <code>VerificationResults.all_usable</code> is the
+same. The shipped MCP tool <code>alma_retrieve_verified</code> returns
+all four buckets in one payload — <code>verified</code>,
+<code>uncertain</code>, <code>contradicted</code> (carrying its
+contradicting source) and <code>unverifiable</code> — so the state
+decides which JSON key a memory appears under, not whether the agent is
+handed it. The persisted column is read back by exactly one query,
+<code>list_by_verification_status</code>, whose MCP front-end defaults
+to <code>contradicted</code>: a review listing, not a gate. That is the
+same distinction this atlas drew against MCP Memory Service's quarantine
+flag, and it falls the same way. The mark asks whether the state is used
+to decide what may be acted on; here it is used to label what was
+already handed over.</p>
 <p><strong><code>audit_log</code> — earned, and the coverage is the
 caveat.</strong> <code>alma_forget_audit</code> is an explicit
 insert-only table in the system's own store, written before the delete,
@@ -813,6 +830,34 @@ nothing beyond the LongMemEval citation; no
 <code>CITATION.cff</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d"><code class="commit-id" title="91a352f25fa1060c25c414770ecdfc57fb49f52d">91a352f2…</code></a>
+— <strong><code>trust_state</code> is withdrawn</strong>, at the
+unchanged pin, on a narrower reading. The previous reading's own
+sentence names the test it applied: <em>"four discrete states, as a
+field, on the two shipped backends"</em>, and <em>"what it lacked was a
+column"</em> — persistence, not use. Every fact in that record is still
+true and none of it is a filter. <code>VerifiedRetriever</code>
+partitions its results into <code>verified</code>,
+<code>uncertain</code>, <code>contradicted</code> and
+<code>unverifiable</code>, and the shipped MCP tool
+<code>alma_retrieve_verified</code> serializes all four into one
+response, giving the contradicted ones an extra
+<code>contradiction</code> field naming the source. Nothing is withheld.
+The predicate that would withhold it exists — <code>is_usable()</code>
+returns true for verified and uncertain — and grepping the whole tree
+finds its only callers in <code>tests/unit/test_verification.py</code>;
+<code>all_usable</code> is the same, tests and a design doc. The
+persisted column has one reader,
+<code>list_by_verification_status</code> on both backends, fronted by an
+MCP tool that defaults to listing the <code>contradicted</code> ones: a
+review queue. So the state labels a partition and populates a queue, and
+no retrieval consults it. <code>scope_enforced</code> and
+<code>audit_log</code> are untouched, and the verification vocabulary
+remains the best part of this system to study —
+<code>VerificationMethod</code> separating ground truth from
+cross-verification from a confidence fallback is still the thing worth
+copying. Nothing was installed and no suite was run.</p>
 <p><strong>2026-09-18</strong> — re-read at the same commit; nothing
 upstream has moved. <code>scope_enforced</code> stands and the six cited
 lines are exact: each <code>get_*</code> composes

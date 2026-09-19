@@ -9,10 +9,9 @@ source_url: https://github.com/RBKunnela/ALMA-memory
 archive_name: "RBKunnela--ALMA-memory"
 revision: 91a352f25fa1060c25c414770ecdfc57fb49f52d
 revision_url: https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d
-analyzed_at: 2026-09-18
-capabilities: "trust_state, scope_enforced, audit_log"
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, audit_log"
 capability_evidence:
-  trust_state: "the verification block on every memory row | alma/retrieval/verification.py:28-60,:317,:502, alma/storage/verification_store.py, alma/storage/sqlite_local.py:1764, alma/storage/postgresql.py:2103 | `VerificationStatus` is `verified | uncertain | contradicted | unverifiable`, and `VerificationMethod` names whether the verdict came from ground truth, cross-verification against other memories or a confidence fallback. `VerifiedRetriever` calls `persist_verification` by default, which writes status, method, confidence, reason, contradicting source and `verified_at` through `update_memory_verification` on both shipped SQL backends. The status is written on the read path, so a row nobody retrieves carries none | tests/unit/test_atlas_gaps_561.py `test_persist_verification_on_outcome`, `test_verified_retriever_persists`"
   scope_enforced: "`project_id` as a SQL predicate on every table's read path | alma/storage/sqlite_local.py:957,:1008,:1086,:1139,:1194,:1243, alma/cli.py:300-375 | each `get_*` composes `WHERE project_id = ?` into the query — with `AND agent IN (…)` on the per-agent variants — rather than filtering after it, and the Postgres DDL indexes `(project_id, agent)` on all five tables | none: `rg -n 'def test_\\w*(scope|isolat|other_project|cross_project)' tests/` finds only domain-scope and cache-namespace cases; no committed test writes under one project and asserts a read under another misses it"
   audit_log: "an insert-only prune record in the system's own store | alma/learning/forgetting.py:294,:306,:384,:429, alma/storage/sqlite_local.py:1820, alma/storage/postgresql.py:2153 | `_audit_forget` calls `record_forget_audit` — id, project, memory type and id, agent, reason, the pruned heuristic's strategy, `pruned_at`, metadata — before the delete at three of the engine's eight delete sites; the bulk `delete_outcomes_older_than` (`:232`) and the per-row deletes at `:484`, `:512`, `:822` and `:848` are unrecorded | tests/unit/test_atlas_gaps_561.py `test_forget_audit_recorded`"
 stack_storage: "sqlite, postgres, chroma, qdrant, pinecone, files"
@@ -27,7 +26,7 @@ matrix:
   scoping: "`project_id` and `agent` on every one of the five tables, applied as a SQL predicate on the read path and indexed together"
   integration: "An MCP server of 31 tools, including a verified retrieve, a list-by-verification-status, reinforce and list-weak-memories, plus a CLI, a PyPI package and a JS package"
   background: "The forgetting engine's pruning strategies, decay-based strength that is recomputed on demand rather than swept, and a file-mining ingestion pass"
-  trust: "Four verification states — verified, uncertain, contradicted, unverifiable — derived by ground truth, cross-verification or confidence, and written to a `verification_status` column on both backends"
+  trust: "Four verification states — verified, uncertain, contradicted, unverifiable — derived by ground truth, cross-verification or confidence and written to a column on both backends, then returned to the caller as four labelled lists; no retrieval excludes any of them"
   strengths: "An anti-pattern table storing the reason something was wrong and the better alternative beside it, a persisted epistemic status, and a LongMemEval recall curve that recomputes exactly from committed per-question records"
   risks: "The anti-pattern write guard sits on `learn()` alone, so the heuristic extractor, the consolidation pass, the conversation miner and two MCP write paths reach the store without passing it"
 ---
@@ -91,8 +90,9 @@ involved. `alma/storage/verification_store.py` writes the status, the method, th
 confidence, the reason, the contradicting source and a `verified_at` back onto
 the row, through `update_memory_verification`, implemented on **both** the SQLite
 and Postgres backends and added to both by migration
-`v1_2_0_atlas_gaps.py`. The verifier calls it by default. `trust_state` is
-earned: four discrete states, as a field, on the two shipped backends.
+`v1_2_0_atlas_gaps.py`. The verifier calls it by default. Four discrete states,
+as a field, on the two shipped backends — and nothing reads the field back to
+decide what an agent may use, which is where the mark comes apart below.
 
 **And the benchmark numbers are traceable, which is rarer than the rest of it.**
 `benchmarks/results-v1.0-phase1.json` carries a LongMemEval run over 500
@@ -318,8 +318,8 @@ by explicit importance, and buckets the number as `strong`, `normal`, `weak` or
 the weak ones and restart their clock, and `alma_smart_forget` removes the
 forgettable ones — *"weak memories can be rescued before deletion,"* as the
 module's header puts it. The state is derived from the number at read time, so
-it is a ranking, not a persisted judgement, which is why `trust_state` rests on
-`verification_status` rather than here.
+it is a ranking, not a persisted judgement. `verification_status` is the
+persisted judgement, and it turns out not to gate anything either.
 
 **The audit row holds the value it removed.** `record_forget_audit` stores the
 pruned heuristic's `strategy` alongside the reason. That is a durable record of
@@ -353,11 +353,23 @@ the company adapter was removed so that *"ALMA-memory stays memory-only OSS."*
 **`scope_enforced` — earned, in its strict form.** `WHERE project_id = ?` on
 every read path, with a composite `(project_id, agent)` index behind it.
 
-**`trust_state` — earned.** Four discrete states with three named derivation
-methods, written to `verification_status` on both shipped backends, with the
-method, the confidence, the reason and the contradicting source stored beside the
-verdict. The vocabulary was always better than most systems that carry this mark;
-what it lacked was a column.
+**`trust_state` — withdrawn on re-reading.** Four discrete states with three
+named derivation methods, written to `verification_status` on both shipped
+backends, with the method, the confidence, the reason and the contradicting
+source stored beside the verdict. The vocabulary is excellent and the column is
+real. What is missing is a reader: no retrieval path excludes a contradicted
+memory, and the two predicates that would do it are written and never called.
+`VerificationResult.is_usable()` returns true for `verified` and `uncertain` and
+is invoked only by its own unit tests; `VerificationResults.all_usable` is the
+same. The shipped MCP tool `alma_retrieve_verified` returns all four buckets in
+one payload — `verified`, `uncertain`, `contradicted` (carrying its
+contradicting source) and `unverifiable` — so the state decides which JSON key
+a memory appears under, not whether the agent is handed it. The persisted column
+is read back by exactly one query, `list_by_verification_status`, whose MCP
+front-end defaults to `contradicted`: a review listing, not a gate. That is the
+same distinction this atlas drew against MCP Memory Service's quarantine flag,
+and it falls the same way. The mark asks whether the state is used to decide
+what may be acted on; here it is used to label what was already handed over.
 
 **`audit_log` — earned, and the coverage is the caveat.** `alma_forget_audit` is
 an explicit insert-only table in the system's own store, written before the
@@ -587,6 +599,8 @@ rather than yours to configure.
   LongMemEval citation; no `CITATION.cff`.
 
 ## History
+
+**2026-09-19** — [`91a352f25fa1060c25c414770ecdfc57fb49f52d`](https://github.com/RBKunnela/ALMA-memory/commit/91a352f25fa1060c25c414770ecdfc57fb49f52d) — **`trust_state` is withdrawn**, at the unchanged pin, on a narrower reading. The previous reading's own sentence names the test it applied: *"four discrete states, as a field, on the two shipped backends"*, and *"what it lacked was a column"* — persistence, not use. Every fact in that record is still true and none of it is a filter. `VerifiedRetriever` partitions its results into `verified`, `uncertain`, `contradicted` and `unverifiable`, and the shipped MCP tool `alma_retrieve_verified` serializes all four into one response, giving the contradicted ones an extra `contradiction` field naming the source. Nothing is withheld. The predicate that would withhold it exists — `is_usable()` returns true for verified and uncertain — and grepping the whole tree finds its only callers in `tests/unit/test_verification.py`; `all_usable` is the same, tests and a design doc. The persisted column has one reader, `list_by_verification_status` on both backends, fronted by an MCP tool that defaults to listing the `contradicted` ones: a review queue. So the state labels a partition and populates a queue, and no retrieval consults it. `scope_enforced` and `audit_log` are untouched, and the verification vocabulary remains the best part of this system to study — `VerificationMethod` separating ground truth from cross-verification from a confidence fallback is still the thing worth copying. Nothing was installed and no suite was run.
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved.
 `scope_enforced` stands and the six cited lines are exact: each `get_*` composes
