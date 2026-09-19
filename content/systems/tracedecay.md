@@ -1,18 +1,17 @@
 ---
 title: "TraceDecay"
 eyebrow: "Proposals a person applies, and a delete that is final"
-description: "A Rust semantic code-intelligence daemon whose fact store ranks on a feedback-moved trust score and filters below it, proposes every deletion — dedup, hygiene and supersession alike — as a review-required candidate nothing applies without an explicit flag, and hard-deletes by stated policy, with twelve committed memory-eval scenarios each citing the upstream it was adapted from."
+description: "A Rust semantic code-intelligence daemon whose fact store ranks on a feedback-moved trust score and filters below it, proposed every deletion as a review-required candidate until curation became a daemon-owned automatic curator that derives its own apply authority from a machine actor id, and hard-deletes by stated policy, with twelve committed memory-eval scenarios each citing the upstream it was adapted from."
 root: ../..
 page_kind: system
 source_name: "ScriptedAlchemy/tracedecay"
 source_url: https://github.com/ScriptedAlchemy/tracedecay
 archive_name: "ScriptedAlchemy--tracedecay"
-revision: 61ca3b08987be59acf01b0f1ec124ca78ea2fea8
-revision_url: https://github.com/ScriptedAlchemy/tracedecay/commit/61ca3b08987be59acf01b0f1ec124ca78ea2fea8
-analyzed_at: 2026-09-16
-capabilities: "human_review, negative_eval"
+revision: 9e2f7beda863be76daef39e69f291e68379d0a2e
+revision_url: https://github.com/ScriptedAlchemy/tracedecay/commit/9e2f7beda863be76daef39e69f291e68379d0a2e
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  human_review: "every deletion is a proposal marked review-required, and the curation path is a dry run until a person passes an explicit flag | crates/tracedecay-runtime-core/src/memory/hygiene.rs:1-9, crates/tracedecay-dashboard-api/src/memory_analysis.rs:600-636, src/cli/help.rs:466-479 | the hygiene rules are \"conservative, rule-based checks — no model is ever invoked from Rust\" and they only *reject* secret-like writes and *propose* deletions in the dry-run plan; the supersession analysis emits `\"recommended_op\": \"delete\"` with `\"review_required\": true`, `\"status\": \"candidate\"` and a reason ending \"confirm which fact is current before applying\"; the CLI states the contract — \"Curation defaults to a dry-run preview; nothing is deleted without --apply\" — with a dashboard curation panel as the visual surface | tests/dashboard_api_test/memory_curation.rs:4 curate_apply_ops_contract; :318 curate_apply_merge_with_missing_loser_is_atomic"
   negative_eval: "twelve committed memory-eval scenarios, each pairing a well-behaved path with a violation whose expectation is declared, and each citing the upstream it was adapted from | eval/scenarios/, tests/memory_suite/memory_eval_test.rs:853-1010 | `memory-no-pollution` is titled \"Transient run noise must not become facts\" and guards that a throwaway token produces no fact \"while genuinely durable decisions still can\" — the positive control and the must-not in one declaration — beside `memory-secret-rejection`, `memory-supersede-without-dup`, `memory-curation-conservatism`, `memory-skip-local` and the ranking scenarios; `run_scenario` executes the well-behaved steps first and asserts a compliant end state before the violation runs, and each file records `adapted_from` with the source project, its licence and the exact commit | tests/memory_suite/memory_eval_test.rs:970"
 stack_storage: "sqlite"
 stack_retrieval: "vector, lexical, graph"
@@ -21,13 +20,13 @@ matrix:
   memory_unit: "A `FactRecord`: content, a category, tags, entities, a `trust_score`, a source, retrieval and access counts, helpful and unhelpful counts, created/updated/last-retrieved/last-recalled/last-feedback timestamps and free metadata; plus typed fact relations of `supports`, `contradicts`, `supersedes` or `derived_from` with their own confidence"
   storage: "Local libSQL/SQLite — a per-project store beside the code graph and a separate `user-memory.db` per profile for conversations with no project"
   retrieval: "Full-text candidates fused with similarity, filtered by category and a minimum trust score that defaults to 0.3, with retrieval reinforcement recorded against the fact"
-  write: "`fact_store` over MCP and the CLI; a hygiene gate rejects secret-like content at write time; automation can propose facts for review"
-  update_delete: "Feedback moves trust by +0.05 or −0.10 within [0,1]; curation proposes dedup merges and hygiene deletions as a dry-run plan; deletion is a permanent hard delete whose cascade — fact row, FTS mirror, entity links, feedback events — is pinned by a store-level test"
+  write: "`fact_store` over MCP and the CLI, with add, update, remove, supersede and curate all on the MCP tool surface; a hygiene gate rejects secret-like content at write time"
+  update_delete: "Feedback moves trust by +0.05 or −0.10 within [0,1]; curation is run by a daemon-owned automatic curator whose caller may bound review size and confidence only, and whose apply authority is checked to be the machine actor `automation:memory-curator`; deletion is a permanent hard delete whose cascade — fact row, FTS mirror, entity links, feedback events — is pinned by a store-level test"
   scoping: "A per-project store, a separate per-profile user store, a path-prefix scope for code queries, and branch-aware graph state; the fact store itself is scoped by which database is open rather than by a predicate on the row"
   integration: "An MCP server with `tracedecay_context`, `tracedecay_search`, `tracedecay_callers`, `tracedecay_impact` and `fact_store`, a CLI, a daemon, a local dashboard, and host integrations"
   background: "Extraction workers, a daemon, an automation loop with a memory curator, session reflector and skill writer, each producing validated runs with durable artifacts"
   trust: "A bounded trust score moved only by explicit feedback, a minimum-trust retrieval floor, rule-based hygiene with no model in the Rust path, and an LLM review loop that lives outside it"
-  strengths: "Deletion proposals that are always review-required; hygiene rules that are deterministic and say so, with the model kept in a wrapper layer; twelve eval scenarios committed with their upstream attribution; a hard-delete cascade pinned by test rather than assumed"
+  strengths: "Hygiene rules that only reject at write time and never delete from Rust; hygiene rules that are deterministic and say so, with the model kept in a wrapper layer; twelve eval scenarios committed with their upstream attribution; a hard-delete cascade pinned by test rather than assumed"
   risks: "Deleted memories are permanently hard-deleted by stated policy, so there is no record a fact was rejected and nothing stops the same content being written again; supersession is a relation a caller asserts and a candidate the dashboard proposes, not a state the read path acts on; trust is a continuous score rather than a status, so a fact that is wrong rather than unhelpful needs three negative votes before it drops below the retrieval floor"
 ---
 
@@ -44,16 +43,31 @@ fewer tool calls • local by default".
 The memory subsystem is 5,755 lines in `tracedecay-runtime-core`, and two
 things about it are worth reading.
 
-**Every deletion is a proposal.** The hygiene module states its own boundary:
-the rules are "conservative, rule-based checks — no model is ever invoked from
-Rust", and standalone TraceDecay only *rejects* secret-like writes and
-*proposes* hygiene deletions in a dry-run plan; any LLM review of those
-proposals lives in a wrapper layer, with capabilities reporting
-`llm_curation: false` in the core. The dashboard's supersession analysis emits
-`"recommended_op": "delete"` alongside `"review_required": true`,
-`"status": "candidate"` and a reason that ends "confirm which fact is current
-before applying". The CLI states the contract in its help text: "Curation
-defaults to a dry-run preview; nothing is deleted without `--apply`."
+**Hygiene still refuses without a model, and the review it used to feed is
+gone.** The hygiene module states its own boundary and still does, at its new
+address (`crates/tracedecay-session-memory/src/memory/hygiene.rs:1-8`): the rules
+are "conservative, rule-based checks, no model is ever invoked from Rust", and
+standalone TraceDecay only *rejects* secret-like writes and *proposes* hygiene
+deletions, with any LLM review of those proposals living in the Hermes wrapper
+layer and capabilities reporting `llm_curation: false` here. That half holds.
+
+What no longer exists is the person the proposals went to. The string
+`review_required` appears nowhere in the tree at this pin, and the CLI's
+dry-run-until-`--apply` contract has been replaced by a tool:
+`tracedecay_fact_store_curate` "[r]un[s] the daemon-owned automatic Memory
+Curator", where "[c]allers may bound review size and confidence only; TraceDecay
+derives the run, operations, validation, policy, and apply authority"
+(`crates/tracedecay-mcp-catalog/src/definitions/memory.rs:17-24`). That authority
+is a machine identity: `evaluate_curation_apply`
+(`crates/tracedecay-policy/src/curation.rs:103-124`) checks the actor against a
+fixed table in which the memory-curator subject must be
+`"automation:memory-curator"`, and the runner builds it from string literals
+(`crates/tracedecay-automation-runtime/src/automation/runner.rs:109-138`). The
+policy binds the automation's own identity to the operation; it does not ask
+anyone. Beside it, `fact_store_add`, `_update`, `_remove` and `_supersede` are
+all ordinary MCP tools. **`human_review` is withdrawn on that basis**, and the
+report keeps the description of what replaced it because the replacement is
+carefully built — it simply is not a review.
 
 **The eval suite is committed and attributed.** Twelve scenarios in
 `eval/scenarios/` each declare a well-behaved path and a violation with a
@@ -92,7 +106,7 @@ leaves nothing behind. The cascade is careful and pinned by a store-level test
 but there is no record that a fact was rejected, so nothing stops the same
 content arriving again tomorrow.
 
-Two marks: `human_review`, `negative_eval`.
+One mark: `negative_eval`.
 
 ## 2. Mental Model
 
@@ -106,8 +120,10 @@ at 0.3 and 0.75.
 A **relation** joins two facts as supports, contradicts, supersedes or
 derived-from, with its own confidence and source.
 
-**Curation** is a plan: dedup merges, hygiene deletions and supersession
-candidates, each with a confidence and a review flag, applied only on request.
+**Curation** is a daemon-owned run: dedup merges, hygiene deletions and
+supersession candidates, each with a confidence, accepted under a policy whose
+apply authority is the curator's own machine actor id. A caller bounds how many
+facts it reviews and at what confidence, and nothing else.
 
 A **store** is a database file — one per project, plus a per-profile
 `user-memory.db` for conversations with no project. Separation is by file, not
@@ -277,5 +293,7 @@ fact has been superseded.
 | `tests/memory_suite/memory_eval_test.rs` | The runner and its two-phase assertion |
 
 ## History
+
+**2026-09-19** — re-pinned to [`9e2f7beda863be76daef39e69f291e68379d0a2e`](https://github.com/ScriptedAlchemy/tracedecay/commit/9e2f7beda863be76daef39e69f291e68379d0a2e), a very large range — the compare reports 6,597 commits and truncates its file list at 300, so the read was scoped deliberately to the curation and fact-store path rather than re-derived across the tree. **`human_review` is withdrawn; `negative_eval` stands alone.** This one is upstream drift rather than a correction. The mark rested on two quotations and neither survives: `review_required` appears nowhere in the tree, and the CLI's *"Curation defaults to a dry-run preview; nothing is deleted without `--apply`"* has been replaced by `tracedecay_fact_store_curate`, a tool that runs *"the daemon-owned automatic Memory Curator"* where *"[c]allers may bound review size and confidence only; TraceDecay derives the run, operations, validation, policy, and apply authority."* That authority is a machine identity — `evaluate_curation_apply` checks the actor against a fixed table requiring `"automation:memory-curator"` for this subject, and the runner constructs it from string literals — so the policy binds the automation's own identity rather than asking a person. `fact_store_add`, `_update`, `_remove` and `_supersede` are ordinary MCP tools beside it. The half that held is the hygiene boundary: the module moved to `crates/tracedecay-session-memory/src/memory/hygiene.rs` and still states that no model is ever invoked from Rust and that standalone TraceDecay only rejects and proposes. Screened again first; nothing installed, built or run, and no Rust toolchain was used.
 
 **2026-09-16** — [`61ca3b08987be59acf01b0f1ec124ca78ea2fea8`](https://github.com/ScriptedAlchemy/tracedecay/commit/61ca3b08987be59acf01b0f1ec124ca78ea2fea8) — first reading, at a commit dated 15 September 2026, scoped to the memory subsystem rather than the code graph. Screened before opening, from a shallow clone: sixty-eight files, three auto-run surfaces (a `.githooks/` directory, a `.gitmodules` and an MCP server manifest), nine build-time execution points, three unpinned surfaces, forty-nine dependency files inside the cooldown, and `AGENTS.md` and `CLAUDE.md` read as data. The `codegraph` submodule was not fetched. Nothing was installed, built or run.

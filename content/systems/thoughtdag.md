@@ -7,13 +7,12 @@ page_kind: system
 source_name: "chenxiachan/thoughtdag"
 source_url: https://github.com/chenxiachan/thoughtdag
 archive_name: "chenxiachan--thoughtdag"
-revision: 3c57d429f83946498fce06d8e2a579c99f102e1e
-revision_url: https://github.com/chenxiachan/thoughtdag/commit/3c57d429f83946498fce06d8e2a579c99f102e1e
-analyzed_at: 2026-09-16
-capabilities: "audit_log, human_review, negative_eval"
+revision: f05fc44d811f2ca5f33fa0ee4449aec4c483b4e2
+revision_url: https://github.com/chenxiachan/thoughtdag/commit/f05fc44d811f2ca5f33fa0ee4449aec4c483b4e2
+analyzed_at: 2026-09-19
+capabilities: "audit_log, negative_eval"
 capability_evidence:
   audit_log: "the canvas event log | src/store/slices/events.ts:1-26, src/types.ts:300-318, src/store/streaming.ts:281-286, src/store/slices/nodes.ts:27-454, src/store/slices/llm.ts:20-619, src/lib/adapters/thoughtdag-canvas.ts:209-222 | an append-only list of semantic operations — ask, generate, edit-question, edit-response, regenerate, delete, archive, unarchive, highlight, connect, disconnect, merge, weave, explore, fanout, material-add, undo, redo and commit — each with a timestamp, the object id and metadata only, never text; undo rolls the graph back and is itself an event; `commit` records at dispatch the SHA-256 of the canonical request, its message count, images, lane and model; the log persists with the canvas and in every backup, exports as CSV, and is projected into canonical `context.committed` events; a cap of 10,000 drops the oldest 1,000 past it, ambient-memory admissions announce themselves with a toast and write no event, an agent turn's approvals are kept on the node and not in the log, and an agent-lane `commit` hashes the compiled messages under lane `proxy` when the runtime received a flattened block or the bare question | cli/test/canvas.test.mjs:49-130 (a backup's commit events round-trip through the canvas adapter with their hash and bundle id), cli/test/events.test.mjs"
-  human_review: "the canvas, the will-send preview and the memory manager | src/store/context-builder.ts:183-350, src/store/slices/nodes.ts:391, src/lib/memory.ts:125-165, docs/guides/context-control.md, docs/guides/models-tools.md | a person decides what a model sees by wiring, disconnecting, archiving, editing an answer, choosing a version and replaying; the panel's preview is built by the same `buildContext` the request uses, so what is shown is what is sent; every ambient-memory admission shows a toast with Undo and the manager edits, imports, exports, disables or deletes entries; no autonomous process redraws the graph | scripts/smoke.mjs (persistence round-trip), the benchmark's `equivalence.mjs` (the preview's compiler is the request's compiler)"
   negative_eval: "the why layer and the benchmark compiler | cli/test/why.test.mjs:131-145, benchmark/tools/equivalence.mjs, benchmark/runs/compiled/rp-pilot-bakery-trays-k1.{polluted,source_prune,subgraph_prune}.compile.json | `why <path>` must not return read-only turns by default and must return them with `--include-read`, with the count of hidden reads reported — a populated index, the excluded material present, a positive control in the same case; the equivalence suite compiles every benchmark condition through the product's `buildContext` and asserts its node order equals an independent reference compiler's for every case, including the pruned conditions whose compiled artifacts show the deleted turn absent (seven messages polluted, five after source prune, three after subgraph prune) and a cyclic graph refused | cli/test/why.test.mjs:114 (facts hold no interpretation and no full answers), :123 (a stray file does not enter the index)"
 stack_storage: "files"
 stack_retrieval: "graph, lexical"
@@ -114,10 +113,20 @@ operations, traces immutable, a scorer that re-scores from traces with no
 API call, and a `STATUS.md` that records a design flaw a reader caught, a
 withdrawn generalisation and a corrected statistic.
 
-Three marks: `audit_log` for the event log, `human_review` for the canvas
-itself, `negative_eval` for the why layer's hidden-reads case and the
-benchmark's compiler equivalence. `tombstone`, `trust_state`, `bitemporal`
-and `scope_enforced` withheld, each a near miss stated in section 9. No
+Two marks: `audit_log` for the event log and `negative_eval` for the why
+layer's hidden-reads case and the benchmark's compiler equivalence.
+`human_review` was withdrawn on the 2026-09-19 re-read. The canvas is
+authoring, not review: a person wires, disconnects, archives, edits and
+replays, and the preview is built by the same `buildContext` the request uses,
+which makes it honest rather than a gate. The one path where a machine writes
+memory is `judgeMemory` (`src/lib/memory.ts:129-170`), and it appends the entry
+to the store and then raises an eight-second toast with an Undo — the write has
+landed before the person is told, which is the rubric's *editing after the fact*
+rather than a state a memory waits in. The tool-approval surface repaired at the
+previous pin, `pendingApprovals`, is a real human gate and gates tool calls
+rather than memory content, so it is described in section 9 and carries no mark.
+`tombstone`, `trust_state`, `bitemporal` and `scope_enforced` are withheld too,
+each a near miss stated in section 9. No
 paper; the repository cites itself as software and publishes the
 benchmark as a web report.
 
@@ -700,6 +709,8 @@ rg -c '^\s*(test|it)\(' cli/test/*.mjs                                # 54
 ```
 
 ## History
+
+**2026-09-19** — re-pinned to [`f05fc44d811f2ca5f33fa0ee4449aec4c483b4e2`](https://github.com/chenxiachan/thoughtdag/commit/f05fc44d811f2ca5f33fa0ee4449aec4c483b4e2), two commits and eight files on. **`human_review` is withdrawn; two marks stand.** Nothing in the range touches the mechanisms, so this is a correction to the reading. The surfaces the record named are all real and all keep their description: the canvas, the will-send preview built by the same `buildContext` the request uses, and the memory manager. None of them is a state a memory waits in. `judgeMemory` — the only path where a machine writes a memory — calls `setMemories` with the new entry and *then* raises a toast with an eight-second Undo, so the entry is live before anyone is told about it, and an update overwrites in place with the same affordance. A person disconnecting a node or deleting an entry afterwards is authoring, which the rubric separates from review by name. The `pendingApprovals` surface is a genuine human gate and gates tool calls, not memory content; it stays in section 9 without a mark, the same call this atlas made for OpenExecutive's approval ledger. Screened again first; nothing installed, built or run.
 
 **2026-09-16** — [`3c57d429f83946498fce06d8e2a579c99f102e1e`](https://github.com/chenxiachan/thoughtdag/commit/3c57d429f83946498fce06d8e2a579c99f102e1e) — re-read at a commit dated 15 September 2026, 42 commits past the previous pin. All three marks re-tested and held, and the review surface is repaired: `pendingApproval` was one slot, so a second tool call arriving in parallel evicted the first question before anyone saw it and left the turn waiting on a card that no longer existed. It is now `pendingApprovals`, appended to and de-duplicated by request id. The `agentSession` record is merged rather than replaced for the same reason, and each stored version now carries the effort its run used. Screened before reading, from a full clone: no auto-run surface, no build-time execution point, three unpinned dependency surfaces and two dependency files inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
