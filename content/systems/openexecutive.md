@@ -7,13 +7,12 @@ page_kind: system
 source_name: "SenteLabsAI/OpenExecutive"
 source_url: https://github.com/SenteLabsAI/OpenExecutive
 archive_name: "SenteLabsAI--OpenExecutive"
-revision: c7b615a8bc080c1608873ecdeab23010f97355ef
-revision_url: https://github.com/SenteLabsAI/OpenExecutive/commit/c7b615a8bc080c1608873ecdeab23010f97355ef
-analyzed_at: 2026-09-16
-capabilities: "scope_enforced, human_review, negative_eval"
+revision: c54d0e71884fb3c9c833a30328012e8b54f01589
+revision_url: https://github.com/SenteLabsAI/OpenExecutive/commit/c54d0e71884fb3c9c833a30328012e8b54f01589
+analyzed_at: 2026-09-19
+capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "session_id, applied by the prompt-injection builder | packages/core/openexecutive/memory/episodic.py:574-594,:1436-1450, packages/core/tests/unit/test_episodic.py:256-300 | `get_recent_decisions` and `get_recent_advice` take a `session_id` and branch to `SELECT * FROM decisions WHERE session_id = ?` when it is non-empty. `format_for_prompt`, which renders the `<past_decisions>` block, passes it through, and the docstring states the reason: the channel handlers use it *\\\"so each conversation sees its own extracted context rather than a global mix from unrelated conversations,\\\"* while *\\\"Initiatives are always global (company-wide)\\\"* by design. The key reaches the query on the path that feeds the model, which is what the mark certifies; the default is `session_id: str = \\\"\\\"` and an unscoped call returns everything, and two other callers — a department check-in workflow and the today route — read with no scope at all. A second stored key, `department`, is written on every decision row and described as *\\\"Department slug owning this decision\\\"* and is never used as a filter anywhere in retrieval | tests/unit/test_episodic.py:283-300 asserts the rendered prompt carries thread A and excludes thread B"
-  human_review: "the memories API and its UI, over content the extractor wrote | packages/core/openexecutive/api/routes/episodic.py:50-120, packages/ui/src/app/memories/page.tsx, packages/ui/src/components/memories/MemorySection.tsx, packages/core/openexecutive/memory/decision_ledger.py | `/memories/decisions`, `/memories/initiatives` and `/memories/advice` each expose GET, PATCH and DELETE, so a person reads back what the background `claude-haiku-4-5` pass extracted, rewrites it, or removes it — inspection and adjudication of memory content after it takes effect, with a Next.js surface built for it. Separately, `decision_instances` carries the strongest approval record in this corpus for gated *actions*: `proposed_payload_json` beside `final_payload_json` so an edit is visible as a diff, `approver_person_id` and `resolver_person_id` as identities rather than booleans, `gate_mode`, `confidence` as a float held apart from `status`, `resolved_at`, `reversal_reason` and `severity`, under an eight-value state machine the module says is *\\\"enforced by compare-and-set\\\"* | tests/unit/test_decision_ledger.py"
   negative_eval: "test_episodic.py, on the rendered prompt and on the query beneath it | packages/core/tests/unit/test_episodic.py:256-300, packages/core/tests/unit/test_sessions_route_scoping.py:56-67 | `test_format_for_prompt_scopes_decisions_and_advice_keeps_initiatives` stores decisions under two thread ids plus a company-wide initiative, renders the injection block for thread A, and asserts thread A's decision and advice are present, thread B's decision is **absent**, and the initiative is present — three positives and a negative over one store, on the artifact that actually reaches the model. Under it, `test_get_recent_decisions_scoped_excludes_other_sessions` asserts a scoped read returns one of three rows and its sibling `test_get_recent_decisions_global_returns_all` asserts the unscoped read returns everything, so the pair pins the filter and its absence rather than only the filter. `test_sessions_list_unknown_email_returns_empty_not_principal` asserts an unrostered email gets `[]` *\\\"not the principal's chats\\\"* | this is the test"
 stack_storage: "sqlite, chroma"
 stack_retrieval: "vector, lexical"
@@ -49,11 +48,20 @@ background `claude-haiku-4-5` pass extracts decisions, initiatives and advice,
 and the next session opens with a `<past_decisions>` block. An optional Honcho
 deployment adds per-person memory.
 
-Three marks. `session_id` reaches the query that builds the injected block, so
-one conversation thread's extracted decisions do not appear in another's. A
-person can read back, rewrite and delete anything the extractor wrote, through
-an API and a UI built for it. And the tests assert the exclusion on the rendered
-prompt rather than on the store beneath it.
+Two marks. `session_id` reaches the query that builds the injected block, so one
+conversation thread's extracted decisions do not appear in another's. And the
+tests assert the exclusion on the rendered prompt rather than on the store
+beneath it.
+
+A person can also read back, rewrite and delete anything the extractor wrote,
+through an API and a UI built for it — a genuine correction surface, and not
+`human_review`. GET, PATCH and DELETE act on rows the injected block is already
+built from, and the memory module has no admission state: the `pending` on an
+episodic row is an initiative's task lifecycle, with `_VALID_INSERT_STATUSES =
+{"pending", "done"}` chosen by the writer
+(`packages/core/openexecutive/memory/episodic.py:834`). The approval machinery
+this project does have is the best-built thing in it and is about gated
+*actions* rather than memory, which section 7 sets out.
 
 The finding worth carrying away is about the audit log, and it is not that one
 is missing. There is a good one — a closed fourteen-value event vocabulary, a
@@ -364,6 +372,8 @@ traced.
 | `packages/core/tests/unit/test_episodic.py` | The scoping tests, including the one on the rendered prompt |
 
 ## History
+
+**2026-09-19** — re-pinned to [`c54d0e71884fb3c9c833a30328012e8b54f01589`](https://github.com/SenteLabsAI/OpenExecutive/commit/c54d0e71884fb3c9c833a30328012e8b54f01589), 13 commits on. `human_review` is **withdrawn**, and the withdrawn record named the reason in its own first clause: the memories API and UI are *"inspection and adjudication of memory content after it takes effect."* The memory module was searched at this pin for an admission state and has none — the `pending` on an episodic row is an initiative's task lifecycle, and `_VALID_INSERT_STATUSES` is `{"pending", "done"}`, chosen by whoever inserts. The `decision_instances` ledger keeps every word of its credit in section 7: proposed beside final payload, approver and resolver as identities rather than booleans, confidence held apart from status, and an eight-value machine enforced by compare-and-set. It gates actions, not memories, and the record now says which. `scope_enforced` and `negative_eval` stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`c7b615a8bc080c1608873ecdeab23010f97355ef`](https://github.com/SenteLabsAI/OpenExecutive/commit/c7b615a8bc080c1608873ecdeab23010f97355ef) — re-read at a commit dated 2026-09-16, 152 commits past the previous pin. All three marks re-tested and held. One read path was added and it carries the scope key rather than counting across the store: `count_nudges_for_scope` filters `WHERE scope_key = ? AND status = 'done' AND kind = 'proactive_nudge'` and backs a per-scope cap, so a stalled item cannot be nudged repeatedly on the strength of activity elsewhere. Screened before reading, from a full clone: one auto-run surface, two build-time execution points, one unpinned dependency surface and four dependency files inside the seven-day cooldown; an agent-addressed instruction file was recorded as data. Nothing was installed, built or run.
 
