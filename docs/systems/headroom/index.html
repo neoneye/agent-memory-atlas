@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local context-compression proxy
+whose cross-agent memory supersedes rather than edits, and which removes
+the superseded row from both search indexes because each index holds a
+cached copy of the metadata that would otherwise still call it
+current.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Headroom — Agent Memory Atlas">
+    <meta property="og:description" content="A local context-compression
+proxy whose cross-agent memory supersedes rather than edits, and which
+removes the superseded row from both search indexes because each index
+holds a cached copy of the metadata that would otherwise still call it
+current.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Headroom — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local
+context-compression proxy whose cross-agent memory supersedes rather
+than edits, and which removes the superseded row from both search
+indexes because each index holds a cached copy of the metadata that
+would otherwise still call it current.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Headroom — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Headroom",
+      "description": "A local context-compression proxy whose cross-agent memory supersedes rather than edits, and which removes the superseded row from both search indexes because each index holds a cached copy of the metadata that would otherwise still call it current.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Compression layer with memory</p>
+          <h1>Headroom</h1>
+          <p class="document-deck">A local context-compression proxy
+whose cross-agent memory supersedes rather than edits, and which removes
+the superseded row from both search indexes because each index holds a
+cached copy of the metadata that would otherwise still call it
+current.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/headroomlabs-ai/headroom">
+              <span>Source</span>
+              <strong>headroomlabs-ai/headroom</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/headroomlabs-ai/headroom/commit/bc21c9370793f7e4aa94ac4c5d9a67a8d2dd0df9" title="bc21c9370793f7e4aa94ac4c5d9a67a8d2dd0df9">
+              <span>Analyzed revision</span>
+              <code>bc21c937…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/headroomlabs-ai--headroom" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>headroomlabs-ai--headroom</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Headroom is a context-compression layer: a local proxy and library
+that compresses tool outputs, logs, RAG chunks and files before they
+reach the model. Most of the repository is about that. The part this
+atlas reads is the cross-agent memory subsystem beside it — roughly
+eleven thousand lines under <code>headroom/memory</code> — which stores
+facts across Claude, Codex, Gemini and Grok in one place.</p>
+<p>Two marks, and the first one turns on a detail worth the whole
+report.</p>
+<p><strong>Supersession closes a validity window, and then removes the
+old row from the indexes.</strong> The store keeps the predecessor so
+history still reads, and the default search excludes superseded rows.
+That alone looks sufficient and is not, because the vector and text
+indexes hold their own cached copy of the metadata — in which
+<code>valid_until</code> is still null. The comment says what happened
+without it: <em>"the superseded (stale) version keeps resurfacing from
+search alongside the new one, so contradictory/outdated facts get
+recalled together."</em> A status filter that reads a stale cache is not
+a filter.</p>
+<p><strong>The user id is a field of the system object, not an
+argument.</strong> The memory system binds it at construction and passes
+that same field into every search, save, update and delete, so the
+surface an agent reaches has no parameter for naming somebody else.
+Update and delete re-verify the stored row's owner on top of that and
+return a permission denial on mismatch.</p>
+<p>What is missing is a test for the first of those. The index-removal
+comment records a bug that shipped, and nothing in eight hundred-odd
+test files asserts that a superseded memory stays out of search — so the
+class of defect the comment describes can return silently.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two systems share a repository and it is worth keeping them
+apart.</p>
+<p><strong>Compression</strong> is the product: a router that detects
+content type and picks a compressor, a cache aligner that flags content
+which would bust a provider's prefix cache, and a reversible mode that
+keeps originals locally and retrieves them on demand. None of it is
+memory in this atlas's sense — it shortens what is in flight.</p>
+<p><strong>Memory</strong> is the subsystem this report is about. A
+memory belongs to a user and optionally to a session, an agent and a
+turn, and its scope level is <em>derived</em> from which of those are
+set rather than stored separately — so the level cannot disagree with
+the identifiers. Corrections supersede rather than edit, and a
+<code>promotion_chain</code> records memories that bubbled up from a
+narrower scope to a wider one.</p>
+<p>Between them sits <code>headroom learn</code>, which mines failed
+sessions into corrections and writes them into an agent instruction
+file.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a compression layer routes prompts, tool outputs and files through type-specific compressors before they reach the provider, while a separate cross-agent memory subsystem stores facts scoped by user, session, agent and turn; the memory system binds a user id at construction and supplies it to every operation, re-verifying ownership before an update or a delete, and a correction stores a replacement, closes the predecessor's validity window and removes the old id from both the vector and text indexes because each index caches its own copy of that field</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a compression layer routes prompts, tool outputs and files through type-specific compressors before they reach the provider, while a separate cross-agent memory subsystem stores facts scoped by user, session, agent and turn; the memory system binds a user id at construction and supplies it to every operation, re-verifying ownership before an update or a delete, and a correction stores a replacement, closes the predecessor&#39;s validity window and removes the old id from both the vector and text indexes because each index caches its own copy of that field
+flowchart TD
+    subgraph Compression[&quot;compression — not memory&quot;]
+        IN[/&quot;prompts · tool output · logs · RAG · files&quot;/] --&gt; ROUTE[&quot;ContentRouter&quot;]
+        ROUTE --&gt; C1[&quot;SmartCrusher — JSON&quot;]
+        ROUTE --&gt; C2[&quot;CodeCompressor — AST&quot;]
+        ROUTE --&gt; C3[&quot;Kompress — prose&quot;]
+        C1 --&gt; ALIGN[&quot;CacheAligner&lt;br/&gt;flags prefix-cache busters&lt;br/&gt;never rewrites prompts&quot;]
+        C2 --&gt; ALIGN
+        C3 --&gt; ALIGN
+        ALIGN --&gt; LLM[&quot;provider&quot;]
+        CCR[(&quot;CCR cache&lt;br/&gt;originals, retrievable&quot;)] --- ALIGN
+    end
+
+    subgraph Memory[&quot;cross-agent memory&quot;]
+        SYS[&quot;MemorySystem&lt;br/&gt;user_id bound at construction&quot;]
+        SYS --&gt;|&quot;self._user_id on every call&quot;| OPS{&quot;search · save · update · delete&quot;}
+        OPS --&gt;|&quot;update / delete&quot;| OWN{&quot;row.user_id == bound id?&quot;}
+        OWN --&gt;|no| DENY[&quot;permission denied&quot;]
+        OWN --&gt;|yes| CORE
+
+        CORE[&quot;MemoryCore&quot;] --&gt; STORE[(&quot;store&lt;br/&gt;user · session · agent · turn&lt;br/&gt;valid_from / valid_until&lt;br/&gt;supersedes / superseded_by&lt;br/&gt;promotion_chain · importance&quot;)]
+        CORE --&gt; VEC[(&quot;vector index&quot;)]
+        CORE --&gt; TXT[(&quot;text index&quot;)]
+
+        SUP[&quot;supersede(old, new)&quot;] --&gt; KEEP[&quot;store: close valid_until&lt;br/&gt;history still reads&quot;]
+        SUP --&gt; RM[&quot;remove old id from BOTH indexes&lt;br/&gt;the indexes cache valid_until = null,&lt;br/&gt;so the status filter alone lets it resurface&quot;]
+        KEEP --&gt; STORE
+        RM --&gt; VEC
+        RM --&gt; TXT
+        DET[&quot;detach_supersession&quot;] --&gt; REPAIR[&quot;atomic lineage repair&lt;br/&gt;both rows re-indexed&quot;]
+
+        SEARCH[&quot;search(include_superseded=False)&quot;] --&gt; STORE
+    end
+
+    LEARN[&quot;headroom learn&lt;br/&gt;mines failed sessions&quot;] --&gt; WRITE[&quot;corrections → CLAUDE.local.md&lt;br/&gt;personal and gitignored by default&quot;]
+    SYNC[&quot;sync adapters&lt;br/&gt;Claude Code · Codex&quot;] --&gt; STORE</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Record model and scope levels:</strong>
+<code>headroom/memory/models.py</code>.</li>
+<li><strong>Core operations, supersession, indexes:</strong>
+<code>headroom/memory/core.py</code>.</li>
+<li><strong>Agent-facing surface and ownership checks:</strong>
+<code>headroom/memory/system.py</code>,
+<code>headroom/memory/mcp_server.py</code>.</li>
+<li><strong>Cross-agent sync and dedup:</strong>
+<code>headroom/memory/sync.py</code>,
+<code>headroom/memory/sync_adapters/</code>.</li>
+<li><strong>Learn pass and its writer:</strong>
+<code>headroom/learn/</code>.</li>
+<li><strong>Measurement of compression policy:</strong>
+<code>headroom/audit/maturation.py</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The record carries the usual fields and three that are worth
+naming.</p>
+<p><code>scope_level</code> is a computed property rather than a column:
+turn if a turn id is set, else agent, else session, else user. A derived
+level cannot drift from the identifiers it describes.</p>
+<p><code>promotion_chain</code> and <code>promoted_from</code> record a
+memory that bubbled from a narrower scope into a wider one, which is a
+mechanism most hierarchical stores describe and few keep the lineage
+for.</p>
+<p>And <code>normalize_entity_refs</code> is a function-length
+post-mortem. <code>entity_refs</code> is typed as a list of strings and
+nothing enforced it, so callers persisted the richer dictionary shape
+into it by mistake; the docstring records what that cost — a set update
+raising on an unhashable dict and a lower-case call raising on a dict
+<em>"took down whole memory searches rather than the one bad row"</em>.
+The fix unwraps a dict to its name so nothing is lost and drops anything
+with no recoverable name rather than stringifying it, because a ref like
+<code>"{'entity_type': 'project'}"</code> <em>"would only pollute the
+graph"</em>. Coercing at the boundary, and choosing to drop rather than
+to stringify, is the right pair of decisions.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector similarity with full-text and graph adapters beside it,
+filtered by user, session and agent, by scope level, by a minimum
+similarity, and by validity — <code>include_superseded</code> defaults
+to false.</p>
+<p>The supersession path is where the care shows. Closing the validity
+window in the store is not enough on its own, because the search filters
+off a copy of that metadata cached in the index; the old id is therefore
+removed from both indexes, and the comment notes it mirrors what
+<code>delete()</code> already did. This is the failure mode worth
+carrying away from this report: <strong>a status filter is only as fresh
+as the copy of the status the filter reads.</strong></p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Correction is supersession. The replacement is created with the
+predecessor's scope, importance, entity refs and metadata, embedded, and
+linked; the old row keeps its place in history with its validity closed;
+both indexes drop the old id and gain the new one; the cache invalidates
+the old entry and stores the new.</p>
+<p><code>detach_supersession</code> reverses exactly one reciprocal
+edge, with the store doing the lineage repair atomically and both rows
+re-indexed afterwards so the restored memory is immediately searchable.
+A supersession that can be undone without hand-editing a graph is
+uncommon and worth noting.</p>
+<p>Cross-agent sync computes a truncated SHA-256 of the content and
+builds the set of hashes already present before importing, so re-running
+a sync does not duplicate. That is idempotence, not a rejection record —
+see section 9.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A proxy, an MCP server exposing compress, retrieve and stats, agent
+wrappers for a dozen coding tools, Python and TypeScript SDKs, and sync
+adapters that put Claude Code and Codex on one store.
+<code>headroom learn</code> mines failed sessions and writes corrections
+to <code>CLAUDE.local.md</code> by default, with the reasoning stated: a
+project's <code>CLAUDE.md</code> is team-shared and checked into git
+while the local file is personal and gitignored, and learned patterns
+are personal-by-default. Writing inferred corrections to the private
+file unless someone asks otherwise is the right default.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded</strong>, on the validity close plus
+the index removal. The limit is that it is a timestamp rather than a
+vocabulary: nothing distinguishes a memory superseded because the world
+changed from one retracted because it was wrong.</p>
+<p><strong>Scope enforced — awarded</strong>, on the bound user id and
+the ownership re-verification, with the caveat that the layer below
+takes it as an optional argument.</p>
+<p><strong>Negative eval — withheld, and this is the sharpest finding in
+the report.</strong> The index-removal comment documents a defect that
+reached users: superseded memories resurfacing from search beside their
+replacements. Eight hundred-odd test files include a supersession test
+that asserts the pointers are set and the old row is marked, and none
+asserts that the superseded memory is absent from a search. The test
+that would have caught the original bug, and would catch its return, is
+the one not written. A cross-user isolation assertion is present in the
+form of a count rather than an identity, which is weaker again.</p>
+<p><strong>Tombstone — withheld.</strong> The sync dedup is keyed on a
+content hash, which is the right key, but it is consulted to avoid
+importing something that already exists rather than to refuse something
+that was rejected. Nothing records a rejection.</p>
+<p><strong>Audit log — withheld, and the naming is worth a warning to a
+reader.</strong> There is a module called <code>audit</code> and a
+module called <code>tracker</code>, and neither is what those names
+suggest to someone looking for a memory audit trail:
+<code>headroom/audit/</code> simulates a compression policy against real
+transcripts, and <code>memory/tracker.py</code> tracks process RAM. No
+append-only record of memory mutations exists; supersession leaves
+lineage pointers on the rows themselves.</p>
+<p><strong>Bi-temporal — withheld.</strong> <code>valid_from</code> and
+<code>valid_until</code> look like a second axis and are used as lineage
+bounds on the record axis — both default to now,
+<code>valid_until</code> is set at supersession time, and no read takes
+an as-of parameter. There is no query that answers what the store held
+at a past instant.</p>
+<p><strong>Human review — withheld.</strong> The learn pass writes to a
+personal gitignored file by default, which limits the blast radius of an
+inferred correction, but nothing gates a write on a person's
+approval.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong> and no <code>CITATION.cff</code>. A
+compression model is published on Hugging Face; the memory subsystem
+cites nothing.</p>
+<p>Eight hundred and thirty-eight test files, of which a handful touch
+memory directly. <code>tests/test_memory_system.py</code> alone carries
+104 cases covering the scope hierarchy, ownership, supersession pointers
+and per-user clearing.</p>
+<p>The measurement work in <code>headroom/audit/maturation.py</code>
+deserves a mention even though it is about compression rather than
+memory, because the method is the one an atlas reader should want
+applied to a memory policy. It simulates a read-maturation policy
+against a real transcript corpus and reports the distribution rather
+than an average: on 81 sessions, 35.5% of reads are re-reads and 95% of
+those are partial, 60.7% of large reads are never touched again, and the
+median next touch is four turns — <em>"hence quiesce_turns=5."</em> A
+tuning constant derived from a measured distribution, with the corpus
+and the date written down beside it, is what most configuration defaults
+are not.</p>
+<p>No memory benchmark result is committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Assume your index caches the field your filter
+reads.</strong> Closing a validity window in the store and filtering on
+it at query time looks complete and is not, if the vector index holds
+its own copy of that metadata. Remove the row from the index too.</li>
+<li><strong>Write the regression test for the bug your comment
+describes.</strong> A comment explaining why a line exists is a record
+of a defect; without a test it is also a record of how the defect will
+return.</li>
+<li><strong>Bind the scope key to the object, not to the call.</strong>
+A user id that is a field of the system an agent talks to cannot be
+named differently by the agent.</li>
+<li><strong>Derive the scope level from the identifiers.</strong> A
+stored level and the ids it summarises are two things that can disagree;
+a computed property is one.</li>
+<li><strong>Coerce at the boundary and drop what you cannot
+recover.</strong> A wrong-shaped value in a typed list took down whole
+searches rather than one row, and stringifying it would have polluted
+the graph instead.</li>
+<li><strong>Default an inferred correction to the private file.</strong>
+Team-shared and checked into git is the wrong destination for something
+a machine concluded from a failed session.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Supersession is a timestamp. Would a reason on the close —
+corrected, retracted, expired — change what the search default should
+exclude, or is one bucket enough for this use?</li>
+<li>The core accepts an optional user id and the system above it never
+omits one. Is the core's permissiveness needed by a caller, or could it
+take the id as a required argument and remove the asymmetry?</li>
+<li><code>headroom learn</code> writes corrections into an instruction
+file the agent reads every session. Is there a path for retiring one
+that turned out wrong, or does it live until a person edits the
+file?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Record model, scope levels, entity-ref coercion:
+<code>headroom/memory/models.py</code></li>
+<li>Core operations, supersession, index maintenance:
+<code>headroom/memory/core.py</code></li>
+<li>Agent surface and ownership checks:
+<code>headroom/memory/system.py</code>,
+<code>headroom/memory/mcp_server.py</code>,
+<code>headroom/memory/tools.py</code></li>
+<li>Ports and adapters: <code>headroom/memory/ports.py</code>,
+<code>headroom/memory/adapters/</code>,
+<code>headroom/memory/backends/</code></li>
+<li>Cross-agent sync: <code>headroom/memory/sync.py</code>,
+<code>headroom/memory/sync_adapters/</code></li>
+<li>Learn pass: <code>headroom/learn/analyzer.py</code>,
+<code>headroom/learn/writer.py</code></li>
+<li>Compression-policy measurement:
+<code>headroom/audit/maturation.py</code></li>
+<li>Tests: <code>tests/test_memory_system.py</code>,
+<code>tests/test_memory_decision.py</code>,
+<code>tests/test_memory_rank_policy.py</code>,
+<code>tests/test_memory_eval.py</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/headroomlabs-ai/headroom/commit/bc21c9370793f7e4aa94ac4c5d9a67a8d2dd0df9"><code class="commit-id" title="bc21c9370793f7e4aa94ac4c5d9a67a8d2dd0df9">bc21c937…</code></a>
+— first reading, at the head of <code>main</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: four
+auto-run surfaces including a Claude Code plugin manifest, a
+devcontainer configuration, a Copilot instructions file and an MCP
+server manifest, alongside build-time execution paths and unpinned
+dependency surfaces across a large polyglot tree, with every manifest
+reported inside the seven-day cooldown as an artefact of a
+<code>--depth 1</code> clone. Nothing was installed, built or run.
+Apache-2.0 with a <code>NOTICE</code>. Two marks. This reading is of the
+memory subsystem — the record model, the core's supersession and index
+maintenance, the system object's scope binding and ownership checks, the
+sync path's dedup, and the memory test suites — and not of the
+compression layer that is the bulk of the repository; the Rust crates,
+the proxy, the plugins and the SDKs were read only where they touched
+those paths. Five marks are withheld with reasons in section 9. The one
+worth repeating is <code>negative_eval</code>: the comment on the
+index-removal records a defect that shipped, and no committed test
+asserts that a superseded memory stays out of search.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A layer that re-judges every
+stored fact against each new event and moves it between seven statuses
+of which recall returns two, logs an event that reads as a question or
+an instruction without ever writing it, and re-judges a kill with the
+memory alone in context before it lands.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="invalidate — Agent Memory Atlas">
+    <meta property="og:description" content="A layer that re-judges
+every stored fact against each new event and moves it between seven
+statuses of which recall returns two, logs an event that reads as a
+question or an instruction without ever writing it, and re-judges a kill
+with the memory alone in context before it lands.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="invalidate — Agent Memory Atlas">
+    <meta name="twitter:description" content="A layer that re-judges
+every stored fact against each new event and moves it between seven
+statuses of which recall returns two, logs an event that reads as a
+question or an instruction without ever writing it, and re-judges a kill
+with the memory alone in context before it lands.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>invalidate — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "invalidate",
+      "description": "A layer that re-judges every stored fact against each new event and moves it between seven statuses of which recall returns two, logs an event that reads as a question or an instruction without ever writing it, and re-judges a kill with the memory alone in context before it lands.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Staleness layer</p>
+          <h1>invalidate</h1>
+          <p class="document-deck">A layer that re-judges every stored
+fact against each new event and moves it between seven statuses of which
+recall returns two, logs an event that reads as a question or an
+instruction without ever writing it, and re-judges a kill with the
+memory alone in context before it lands.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/chopratejas/invalidate">
+              <span>Source</span>
+              <strong>chopratejas/invalidate</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/chopratejas/invalidate/commit/edaa56e1c2fea4cdde914500bb0bf988d375919e" title="edaa56e1c2fea4cdde914500bb0bf988d375919e">
+              <span>Analyzed revision</span>
+              <code>edaa56e1…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/chopratejas--invalidate" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>chopratejas--invalidate</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>A memory system can usually write a fact and delete one. invalidate
+exists for the step in between: deciding, when something new happens,
+whether what is already stored is still true. The README states the
+problem in three lines — a fact learned in March, a migration announced
+in June, an answer in September that still cites the March fact — and
+the whole design follows from taking that seriously.</p>
+<p>Five marks, and each rests on a distinction the code draws and most
+do not.</p>
+<p><strong>Seven statuses, and recall returns two.</strong> Active and
+frozen are <code>live</code>; the enum says so as a property rather than
+leaving it to each query. The probability the judge produced lives in a
+separate field, so the store can say <em>on record, not believed</em> —
+and the recall path applies the status set twice, once to its own query
+and again to every candidate a caller supplies from its own vector
+index, re-read fresh from the store.</p>
+<p><strong>An event that is a question, or an instruction, is logged and
+never written.</strong> Two of the eight dispositions exist for this.
+<code>HYPOTHETICAL</code> covers a plan or proposal;
+<code>DIRECTIVE</code> covers an event that commands the system about
+what to believe — and the threshold's own comment names the reason:
+<em>"Prompt-injection defense; source trust stays with the caller."</em>
+A memory layer that reads a stream of events is a memory layer that can
+be told what to think, and this one declines.</p>
+<p><strong>A kill is re-judged before it lands.</strong> When a verdict
+would contradict or supersede a memory, the memory is sent back alone in
+the context; if the clean read disagrees, it goes to review instead of
+dying. The comment says where that came from — batches of near-identical
+memories were the one place the judge's distractor weakness showed up in
+scale tests — and prices it honestly: kills are rare, so it costs one
+request per kill.</p>
+<p><strong>Every judgement is kept, including the ones that did
+nothing.</strong> The verdicts table holds the raw votes, the
+disposition, both statuses and whether it applied, so a frozen memory
+that was judged and deliberately not flipped leaves a row, and a
+threshold can be re-swept against past judgements without calling the
+model again.</p>
+<p>What it does not have is a rejected-value tombstone, and the reason
+is the most interesting sentence in the engine — see section 9.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two logs and a cursor.</p>
+<p>Memories are facts, stored verbatim. Events are things that happened,
+appended to a per-namespace log with a sequence number. Each memory
+carries <code>checked_seq</code>: the position of the last event it has
+been judged against. Every event above that number is pending for
+it.</p>
+<p>That cursor is what makes the guarantee tractable.
+<code>observe()</code> can judge eagerly, or append and let
+<code>validate()</code> drain later; in lazy mode <code>recall()</code>
+drains the pending events for its top candidates before returning them,
+so <em>"nothing stale is returned even when observe() only appended to
+the log."</em></p>
+<p>The judge only votes. It returns five probabilities — does this event
+bear on this memory, is the memory still true, does the event state a
+replacement, is the event hypothetical, is it a directive — and every
+threshold that turns those into a write lives in one policy dataclass,
+<em>"in plain code, so it can be tuned against your own data without
+touching the questions."</em></p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — facts are stored verbatim and born current, carrying a cursor into a per-namespace event log; each new event is judged against every memory whose cursor is behind it, the model returning five probabilities that one policy object composes into a disposition, with a question or a system-directed instruction logged and never written and a contradiction re-judged with the memory alone before it lands; every judged pair is appended to a verdicts table including the ones that changed nothing, and recall returns only the two live statuses, re-checking caller-supplied candidates against the store before ranking</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: facts are stored verbatim and born current, carrying a cursor into a per-namespace event log; each new event is judged against every memory whose cursor is behind it, the model returning five probabilities that one policy object composes into a disposition, with a question or a system-directed instruction logged and never written and a contradiction re-judged with the memory alone before it lands; every judged pair is appended to a verdicts table including the ones that changed nothing, and recall returns only the two live statuses, re-checking caller-supplied candidates against the store before ranking
+flowchart TD
+    REM[&quot;remember(fact)&quot;] --&gt; BORN[&quot;born current&lt;br/&gt;checked_seq = max_seq(namespace)&lt;br/&gt;prior events are not evidence&quot;]
+    BORN --&gt; MEM[(&quot;memories&lt;br/&gt;status · p_true · namespace&lt;br/&gt;checked_seq · superseded_by&quot;)]
+
+    EV[&quot;observe(event)&quot;] --&gt; LOG[(&quot;events&lt;br/&gt;per-namespace seq&quot;)]
+    LOG --&gt; PEND{&quot;memories with&lt;br/&gt;checked_seq &amp;lt; seq&quot;}
+    PEND --&gt; SCREEN[&quot;cheap bears-only screen&lt;br/&gt;on large pools&quot;]
+    SCREEN --&gt; JUDGE[&quot;judge: 5 probabilities&lt;br/&gt;bears · still_true · replaces&lt;br/&gt;hypothetical · directive&quot;]
+
+    JUDGE --&gt; POL{&quot;Policy.dispose&quot;}
+    POL --&gt;|&quot;hypothetical ≥ max&quot;| LOGGED[&quot;HYPOTHETICAL — logged, never written&quot;]
+    POL --&gt;|&quot;directive ≥ max&quot;| LOGGED2[&quot;DIRECTIVE — logged, never written&lt;br/&gt;prompt-injection defence&quot;]
+    POL --&gt;|&quot;partial ≥ min&quot;| REVIEW[&quot;needs_review — rewrite a compound fact&quot;]
+    POL --&gt;|&quot;within the dead band&quot;| REVIEW
+    POL --&gt;|&quot;source is review-only&quot;| REVIEW
+    POL --&gt;|&quot;contradicted / superseded&quot;| SECOND{&quot;second opinion:&lt;br/&gt;re-judge alone in context&quot;}
+    SECOND --&gt;|&quot;disagrees&quot;| REVIEW
+    SECOND --&gt;|&quot;agrees&quot;| KILL[&quot;status flips&lt;br/&gt;successor linked by superseded_by&quot;]
+    POL --&gt;|&quot;frozen&quot;| PINNED[&quot;judged, logged, never flipped&quot;]
+
+    LOGGED --&gt; V[(&quot;verdicts — append only&lt;br/&gt;raw votes · disposition&lt;br/&gt;from_status → to_status · applied&quot;)]
+    LOGGED2 --&gt; V
+    REVIEW --&gt; V
+    KILL --&gt; V
+    PINNED --&gt; V
+    KILL --&gt; MEM
+    REVIEW --&gt; MEM
+
+    RC[&quot;recall(query)&quot;] --&gt; LIVE{&quot;status in {active, frozen}&lt;br/&gt;+ needs_review only if asked&lt;br/&gt;namespace matches · not expired&quot;}
+    MEM --&gt; LIVE
+    CAND[/&quot;caller&#39;s candidates&lt;br/&gt;from its own vector store&quot;/] --&gt; REREAD[&quot;re-read fresh from store&lt;br/&gt;status and namespace re-checked&quot;]
+    REREAD --&gt; LIVE
+    LIVE --&gt; DRAIN[&quot;lazy mode: drain pending events first&quot;]
+    DRAIN --&gt; RANK[&quot;relevance judged by the model&quot;]
+    RANK --&gt; OUT[&quot;live, relevant facts&quot;]</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Types and statuses:</strong>
+<code>src/invalidate/types.py</code>.</li>
+<li><strong>Policy:</strong> <code>src/invalidate/policy.py</code> —
+every threshold, each with its reason.</li>
+<li><strong>Engine:</strong> <code>src/invalidate/engine.py</code> —
+remember, observe, validate, recall, freeze.</li>
+<li><strong>Store:</strong> <code>src/invalidate/store.py</code> — three
+tables and the read filters.</li>
+<li><strong>Questions put to the judge:</strong>
+<code>src/invalidate/questions.py</code>.</li>
+<li><strong>Adapters:</strong> <code>src/invalidate/adapters/</code> —
+the same lifecycle over someone else's rows.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memory is the fact verbatim plus a status, a <code>p_true</code>, a
+namespace, a source, a kind, four timestamps and two pointers. Keeping
+the fact verbatim matters for what this system does: the judge is shown
+the original sentence, not a summary of it.</p>
+<p><code>checked_seq</code> is the field that does the work, and
+<code>remember()</code> sets it with the comment that explains the
+system's temporal stance:</p>
+<blockquote>
+<p><strong>Born current:</strong> a fact stored now postdates every
+event already in the log, so those events are not evidence against it.
+Only events that arrive after it are pending for it.</p>
+</blockquote>
+<p>The <code>Disposition</code> enum is worth reading as a list of the
+cases a simpler design collapses: unrelated, confirmed, contradicted,
+superseded, uncertain, hypothetical, directive, partial.
+<code>PARTIAL</code> is the one most systems have no answer for — an
+event that changes only part of a compound fact — and it routes to
+review for a rewrite <em>"instead of dying"</em>, with a deliberately
+high threshold because the judge reads most facts as having some second
+part.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There are no embeddings. Relevance is a probability the judge returns
+for the query against each candidate, over a pool already narrowed by
+status, namespace and expiry. The design assumption is explicit: a
+caller that wants vector recall passes its own top-k as
+<code>candidates</code>, and invalidate re-checks and ranks them.</p>
+<p>That re-check is the part worth copying. Each supplied candidate is
+re-read from the store by id and admitted only if it is still live,
+still in the namespace and not expired — so a shortlist assembled
+minutes ago against a vector index that has not heard about a
+supersession cannot put the stale fact back in front of the model.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><code>observe()</code> judges the new event against every memory in
+the judge statuses, with a cheap bears-only screen in front for large
+pools and a two-stage question set that asks the two expensive votes
+only for memories whose still-true vote already fell below the
+contradiction threshold.</p>
+<p>Three guards sit between a vote and a write, and all three are in the
+policy with their reasons attached. The <strong>dead band</strong>
+routes a still-true vote within <code>margin</code> of a threshold to
+review, so a vote that wobbles across the line run to run lands
+consistently. The <strong>second opinion</strong> re-judges a kill with
+the memory alone. And <strong>review-only sources</strong> cap what an
+event may do by where it came from: from a listed source, the worst
+outcome is review, with <em>"customer email, public webhooks"</em> named
+as the intended entries.</p>
+<p>When the event states the replacement,
+<code>remember_successor</code> stores it as a new memory and links the
+old row to it through <code>superseded_by</code>.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A library and a CLI, two provider client wrappers that inject live
+facts into the system prompt and observe the user's message afterwards,
+and adapters that apply the same lifecycle to rows held by a dozen other
+stores — mem0, Letta, Graphiti, Cognee, Chroma, Qdrant, pgvector, Redis,
+LlamaIndex, LangGraph, an MCP memory server, and Markdown files. It is
+positioned as a layer over a memory system rather than as one.</p>
+<p>The judge is a hosted model, so the compression of this system's own
+dependency is worth stating plainly: the votes come from an external
+service, and the thresholds and every write decision are local.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded.</strong> Seven statuses, a
+<code>live</code> property, a separate probability field, and a
+per-source ceiling on transitions.</p>
+<p><strong>Scope enforced — awarded</strong>, on the engine's discipline
+rather than the store's; the caveat is in the evidence record.</p>
+<p><strong>Audit log — awarded</strong>, and the detail that earns it is
+the <code>applied = false</code> rows. A log of what changed is common;
+a log of what the system considered and declined is not, and it is what
+makes a frozen memory's accumulated verdicts readable as <em>what would
+have happened</em>.</p>
+<p><strong>Human review — awarded</strong>, on the shape where the model
+has no reach: there is no tool schema in the tree, the integrations are
+prompt wrappers, and freeze lives in the library and the CLI. A pinned
+memory keeps being judged, so the person who pinned it is not blinded by
+the pin.</p>
+<p><strong>Negative eval — awarded</strong>, on the fixture that asserts
+what never reached the ranker.</p>
+<p><strong>Tombstone — withheld, and the reason is a deliberate design
+decision rather than a gap.</strong> Everything a value-keyed tombstone
+needs is nearly here: a fact that was contradicted keeps its row and its
+status, and the event that killed it is still in the log. But
+<code>remember()</code> sets a new memory's cursor to the current end of
+the log, so re-storing "we use Postgres" after the June migration event
+does not re-judge it against that event — the fact is <em>born
+current</em>, and the prior log is not evidence against it. That is the
+right temporal rule for a system whose facts arrive with timestamps, and
+it means the rejection does not survive a re-add. A store consulting a
+record of what was rejected, keyed on the value, would catch that case;
+this one catches it only when the next event on the topic arrives.</p>
+<p><strong>Bi-temporal — withheld.</strong> <code>created_at</code>,
+<code>updated_at</code>, <code>last_checked</code> and
+<code>expires_at</code> are all record time. Events carry their own
+creation time, but no read answers what the store believed at a past
+instant.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong> and no <code>CITATION.cff</code>.</p>
+<p>Eighteen test files; the badge claims 695 tests. The three cited in
+section 9 are the ones that pin the marks.</p>
+<p>The eval set is the unusual part and deserves to be read on its own
+terms. It is not a retrieval benchmark: <code>evals/cases.py</code>
+holds 157 labelled cases across sixteen categories, and
+<code>run_eval.py</code> measures how well the policy turns the judge's
+five probabilities into the right disposition for one pair. The runner
+sweeps thresholds, saves raw votes so a run can be re-scored offline
+against a different policy without re-calling the model, and offers a
+batched mode that groups cases sharing an event exactly as
+<code>observe()</code> would — with the stated purpose of comparing it
+against per-case mode to see whether packing memories into one request
+moves the votes. There is a deterministic keyword judge for running the
+whole thing with no API key.</p>
+<p>The README's badges claim 89.2% strict and 97.5% lenient accuracy and
+<strong>0 false invalidations of 157</strong>, and the policy's own
+comment says the defaults were chosen by sweeping that set <em>"for the
+highest strict accuracy that does not add a single false
+invalidation."</em> Choosing an operating point by the error you most
+want to avoid, and saying so where the numbers live, is the right way to
+present a threshold. The figures are the project's own and this atlas
+has not re-run them; the harness to do so is committed, which is the
+part that matters.</p>
+<p>A <code>longmemeval</code> directory sits beside it, and no benchmark
+result is committed to the tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Name the statuses your read path returns, in the
+enum.</strong> A <code>live</code> property beside the values is one
+line and it stops each query inventing its own idea of which states are
+safe.</li>
+<li><strong>Re-check candidates a caller hands you.</strong> A shortlist
+from someone else's vector index is a snapshot; re-reading each row by
+id before ranking is what stops a supersession that happened since from
+being invisible.</li>
+<li><strong>Give a question and an instruction their own
+dispositions.</strong> An event stream is an injection surface, and
+<em>"the migration is done"</em> and <em>"from now on, remember that the
+migration is done"</em> are different claims about the world.</li>
+<li><strong>Put a dead band around every threshold that writes.</strong>
+A vote that wobbles across a line produces a memory that flips between
+runs; a margin turns that into a consistent <em>uncertain</em>.</li>
+<li><strong>Re-judge the destructive verdict alone.</strong> The
+cheapest place to spend an extra call is the one that deletes something,
+and the cost is bounded by how rare that is.</li>
+<li><strong>Log the judgements that changed nothing.</strong> The record
+of what the system declined to do is what makes a pinned or frozen item
+reviewable.</li>
+<li><strong>Let the source cap the transition.</strong> A fact from a
+public webhook should be able to raise a question and not to kill a
+belief.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Born-current is right for a timestamped log and leaves the re-add
+case open. Would consulting the contradicting event — or a record keyed
+on the fact's own text — at <code>remember()</code> time be worth the
+false positives it would bring?</li>
+<li>The verdicts table is append-only by convention. Is a trigger or a
+check constraint worth it, given the table is the evidence for every
+status the store holds?</li>
+<li><code>review_only_sources</code> is a set of exact source strings.
+What happens to an adapter whose upstream source names are not under the
+operator's control?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Types, statuses, dispositions:
+<code>src/invalidate/types.py</code></li>
+<li>Policy and thresholds: <code>src/invalidate/policy.py</code></li>
+<li>Engine: <code>src/invalidate/engine.py</code></li>
+<li>Store and schema: <code>src/invalidate/store.py</code></li>
+<li>Judge and questions: <code>src/invalidate/judge.py</code>,
+<code>src/invalidate/questions.py</code></li>
+<li>CLI: <code>src/invalidate/cli.py</code></li>
+<li>Provider wrappers: <code>src/invalidate/integrations/</code></li>
+<li>Store adapters: <code>src/invalidate/adapters/</code></li>
+<li>Tests: <code>tests/test_engine.py</code>,
+<code>tests/test_policy.py</code>,
+<code>tests/test_second_opinion.py</code>,
+<code>tests/test_lazy.py</code>, <code>tests/test_store.py</code></li>
+<li>Evals: <code>evals/cases.py</code>, <code>evals/run_eval.py</code>,
+<code>evals/README.md</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/chopratejas/invalidate/commit/edaa56e1c2fea4cdde914500bb0bf988d375919e"><code class="commit-id" title="edaa56e1c2fea4cdde914500bb0bf988d375919e">edaa56e1…</code></a>
+— first reading, at the head of <code>main</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: one
+build-time execution path in a pytest conftest, two unpinned dependency
+surfaces, and no instruction file addressed to a reading agent; nothing
+was installed, built or run. Apache-2.0 with a <code>NOTICE</code>. Five
+marks. The reading covered the type model and both enums, the policy and
+every threshold's stated reason, the engine's remember, observe,
+validate, recall and freeze paths, the store's three tables and its read
+filters, the integrations and the adapter surface, and the engine test
+suite; the dozen store adapters were read as a list rather than
+individually, and the judge's hosted service is outside the repository.
+Two marks are withheld with reasons in section 9, and the one worth
+repeating is <code>tombstone</code>: the mechanism is absent because of
+an explicit temporal rule — a fact stored now postdates the log, so the
+event that contradicted its predecessor is not evidence against it.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

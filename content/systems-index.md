@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **594 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **596 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -252,6 +252,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/halofy/"><span class="az-id">Halofy</span><span class="az-what">Governed custody, delegated recall</span><code class="az-repo">halofyai/halofy</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/hatchdoor/"><span class="az-id">Hatchdoor</span><span class="az-what">Nothing is unlinked from disk</span><code class="az-repo">BatterWorks/Hatchdoor</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/one-agent-many-hats/"><span class="az-id">Hats</span><span class="az-what">Lessons refused at write time</span><code class="az-repo">klairtech/one-agent-many-hats</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/headroom/"><span class="az-id">Headroom</span><span class="az-what">Compression layer with memory</span><code class="az-repo">headroomlabs-ai/headroom</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span></span></a></li>
 <li><a class="az-row" href="../systems/heimdall/"><span class="az-id">Heimdall</span><span class="az-what">A verdict on every hit</span><code class="az-repo">ArihantDeva/heimdall</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/helix-agi/"><span class="az-id">Helix AGI</span><span class="az-what">Belief physics on a journal</span><code class="az-repo">munch2u-a11y/Helix-AGI</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/helm/"><span class="az-id">Helm</span><span class="az-what">Confidence-ratcheted SQLite memory</span><code class="az-repo">GOODMAN-PRO/helm</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
@@ -285,6 +286,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 <li><a class="az-row" href="../systems/inno-agent/"><span class="az-id">Inno Agent</span><span class="az-what">A careful evidence model, and two tools that route around it</span><code class="az-repo">hhyqhh/inno-agent</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/inspeximus/"><span class="az-id">inspeximus</span><span class="az-what">The value that was corrected is refused when it comes back</span><code class="az-repo">DanceNitra/inspeximus</code><span class="az-caps"><span class="az-cap">Tombstone</span><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/intaris/"><span class="az-id">Intaris</span><span class="az-what">Memory about the agent, not the world</span><code class="az-repo">fpytloun/intaris</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Human review</span></span></a></li>
+<li><a class="az-row" href="../systems/invalidate/"><span class="az-id">invalidate</span><span class="az-what">Staleness layer</span><code class="az-repo">chopratejas/invalidate</code><span class="az-caps"><span class="az-cap">Trust state</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Human review</span><span class="az-cap">Negative evals</span></span></a></li>
 </ul>
 
 ## J
