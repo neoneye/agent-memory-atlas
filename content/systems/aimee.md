@@ -7,13 +7,12 @@ page_kind: system
 source_name: "RakuenSoftware/aimee"
 source_url: https://github.com/RakuenSoftware/aimee
 archive_name: "RakuenSoftware--aimee"
-revision: 4831f5bd034f7aa3142b4dc0e5857923a3121550
-revision_url: https://github.com/RakuenSoftware/aimee/commit/4831f5bd034f7aa3142b4dc0e5857923a3121550
-analyzed_at: 2026-09-16
-capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
+revision: bedabac667c5c00f9f14fe6f47efd3b369a46922
+revision_url: https://github.com/RakuenSoftware/aimee/commit/bedabac667c5c00f9f14fe6f47efd3b369a46922
+analyzed_at: 2026-09-19
+capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   tombstone: "memory_rejection_tombstones, consulted before every memory write and backstopped by a database trigger | server-go/modules/memory/domain.go:135-150, server-go/modules/memory/mutations.go:26-77, src/modules/db2/c/schema.sql:144-185, src/modules/db2/c/fact_mutation.c:82-98 | `Reject` inserts the rejected value into `memory_rejection_tombstones` keyed on object kind, memory key, content and scope; a later write consults the active tombstones for the same key and content and fails closed with `write blocked by rejection tombstone`, and the typed-fact path keeps `fm_tombstone_blocks`; the schema trigger backstops both | src/tests/test_fact_lifecycle.c (the tombstoned re-extraction case), scripts/memory-governance-pg-test.sql (both trigger backstops)"
-  human_review: "the review-list, rejection and restore surface over stored memory | src/kb/kb_service_memory.c:975-1013, src/kb/kb_service.c:1262-1264, server-go/modules/memory/queries.go:195-235, server-go/modules/memory/domain.go:135-150, src/kb/http/kb_http_console.c:302 | `memory.review_list` lists rejected and archived rows with the tombstone reason beside them, `memory.reject` writes the tombstone and archives the row with `activation_suppressed`, and `memory.restore` deactivates the tombstone recording who restored it and when, all through the Go store the KB service calls | src/tests/test_kb_client_memory.c, scripts/memory-governance-pg-test.sql"
   trust_state: "lifecycle_state on memories and the typed-fact lifecycle, both read by every recall | server-go/modules/memory/domain.go:463-523, server-go/modules/memory/fact_recall.go, src/modules/db2/c/fact_lifecycle.c:88-125, src/modules/db2/c/memory_lifecycle.h:16-24, src/modules/db2/c/memory_scope_query.h:32-38 | a memory is `active`, `pending`, `fulfilled`, `superseded` or `archived` and only `active` rows enter an answer candidate set; a typed fact carries the lifecycle the C header still names and the Go recall filters on it | server-go/modules/memory/fact_recall_test.go:69-100, src/tests/test_fact_lifecycle.c"
   bitemporal: "memories.valid_from/valid_until against created_at/updated_at, read by ValidAt and the recall predicate | server-go/modules/memory/fact_recall.go:20-45, server-go/modules/memory/domain.go:93-94,:570-594, src/modules/db2/c/schema.sql:129 | the row carries `valid_at`/`invalid_at` as a pair separate from `created_at`, `ValidAt` answers whether a memory held at an instant with open bounds, and the fact query applies `(valid_at <= $2) AND (invalid_at > $2)` when an instant is given | server-go/modules/memory/fact_recall_test.go:101 (`TestMemoryValidAtUsesOpenBitemporalBounds`), src/tests/test_integration.sh (the over-the-wire `memory.get --as-of` assertions)"
   scope_enforced: "a normalized scope on every read, a placement that owns only its scopes, and Postgres row-level security over the memory rows and the membership graph | server-go/modules/memory/scope.go:44, server-go/modules/memory/data.go, src/modules/db2/c/memory_scope_query.h:16-38, src/modules/db2/c/schema.sql (the `ROW LEVEL SECURITY` blocks) | `normalizeScope` refuses a scope a placement does not own — the server placement only user memory, the KB placement only KB scopes — before any SQL runs, the scope filter is a predicate in the recall SQL, and the database enforces row scope with `FORCE ROW LEVEL SECURITY` | server-go/modules/memory/data_test.go:152-224 (`TestServerPlacementOwnsOnlyUserMemory`, `TestKBPlacementOwnsOnlyKBScopes`, `TestKBVisibleSearchExpandsScopeInGo`), scripts/memory-governance-pg-test.sql"
@@ -53,7 +52,7 @@ columns. They are written by different paths, read by different queries, and
 corrected by different verbs. Most of what this report finds worth reading sits
 in the second one.
 
-Seven marks. A refused value gets its own keyed row in
+Six marks. A refused value gets its own keyed row in
 `memory_rejection_tombstones`, consulted at the head of the mutation seam and
 repeated as a database trigger underneath it, so a later extraction that
 re-asserts the value is declined rather than admitted. The typed-fact layer
@@ -61,9 +60,17 @@ excludes superseded, invalidated and suppressed rows from every recall query it
 has, unconditionally and behind no flag. The episodic row carries event-time
 validity bounds separate from its transaction timestamps, with a function that
 answers *was this in force on 12 June*. The recall path filters candidates by
-scope and records why it dropped each one, with row-level security under it. A
-person rejects and restores memories through three RPCs over one queue, and the
-verdict gates what the write path will admit next. The audit store is
+scope and records why it dropped each one, with row-level security under it.
+Rejection and restoration go through three RPCs over one queue, and the verdict
+gates what the write path will admit next — which is the `tombstone` mark, not a
+review one. `human_review` is withheld for two reasons that compound. The row is
+already active before any of it: `memory.reject` sets
+`lifecycle_state='archived'` and `activation_suppressed=1` on a row in recall
+(`server-go/modules/memory/domain.go:159`), so the surface corrects rather than
+admits. And the three ops sit in the same route table as `memory.search` and
+`memory.delete`, dispatched through `rh_dispatch_op` with identical flags
+(`src/server/server_http_routes.c:1686-1688`), so nothing distinguishes the
+caller that rejects from the caller that wrote. The audit store is
 append-only by two independent mechanisms, says out loud which of them an
 attacker can remove, and receives memory mutations from a trigger in the same
 transaction as the row change. And the recall tests are built so that an empty
@@ -756,6 +763,8 @@ attributes it to the extractor rather than to an adversary.
 | `docs/validation/flag-rollout-readiness.md` | The six-point flip gate and the WIRED / INERT TOGGLE audit |
 
 ## History
+
+**2026-09-19** — re-pinned to [`bedabac667c5c00f9f14fe6f47efd3b369a46922`](https://github.com/RakuenSoftware/aimee/commit/bedabac667c5c00f9f14fe6f47efd3b369a46922). `human_review` is **withdrawn**, on two grounds that compound. `memory.reject` acts on a row that is already active — it sets `lifecycle_state='archived'` and `activation_suppressed=1` (`server-go/modules/memory/domain.go:159`) — so it corrects rather than admits, and the mark asks for a memory that waits before it can be believed. And `memory.review_list`, `memory.reject` and `memory.restore` sit in the same route table as `memory.search` and `memory.delete`, dispatched through `rh_dispatch_op` with identical flags (`src/server/server_http_routes.c:1686-1688`), so nothing in the routing distinguishes the caller that rejects from the caller that wrote. The queue, the tombstone it writes and the restore that records who restored are all real and keep their credit under `tombstone` and `audit_log` — which is where the strength of this design actually lives. The other six marks stand. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`4831f5bd034f7aa3142b4dc0e5857923a3121550`](https://github.com/RakuenSoftware/aimee/commit/4831f5bd034f7aa3142b4dc0e5857923a3121550) — re-read at a commit dated 9 September 2026, 61 commits past the previous pin. All seven marks re-tested and held. The change worth checking was a new read path: `server-go/modules/memory/visibility_search.go` adds `SearchVisible`, and a new read is where a scope predicate usually goes missing. It does not. The query carries `lifecycle_state='active'` and a scope disjunction over global, project and workspace, and although an `IncludeAll` flag short-circuits that disjunction, it widens only within the row-level security policy on `memories` — `p_memories_row_scope` gates on `memory_row_scope_visible(scope_type, scope_value)`, which reads `current_setting('aimee.memory_project')` and its workspace twin rather than anything the caller passes. The function refuses outright when placement is not KB. `lifecycle_state='active'` appears at forty non-test sites across six files in the module. Screened before reading: fifteen files scanned, one auto-run surface, one build-time execution point, three unpinned dependency surfaces and none inside the seven-day cooldown. Nothing was installed, built or run.
 
