@@ -118,7 +118,7 @@ trust model of which one value is ever written.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Open-Curiosity--gini-agent" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -543,6 +543,31 @@ channels, RRF), <code>reranker.ts</code>, <code>temporal.ts</code>,
 <code>integration.test.ts</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124bd4890b16c329970d8"><code class="commit-id" title="6c5d85ed0ecd7fe8567124bd4890b16c329970d8">6c5d85ed…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin, and the
+negative half of the record needed the same treatment this sweep has
+been giving every negative claim. Natively it holds: the only
+<code>SET status</code> in production is <code>memory-db.ts:945</code>,
+writing <code>archived</code> for observation rows. But
+<code>proposed</code>, <code>rejected</code> and <code>conflicted</code>
+are not unreachable. <code>coerceMemoryStatus</code>
+(<code>packages/runtime/src/integrations/openclaw-migrate.ts:3297-3301</code>)
+accepts all five values from an imported OpenClaw record and passes the
+value through on insert (<code>:3039</code>), defaulting anything
+unrecognised to <code>active</code> — the most permissive value rather
+than a quarantine. So the vocabulary is inherited rather than dead, and
+the consequence is worth stating: an imported unit in one of those three
+states is stored, honoured by the filter and therefore invisible, with
+no native transition back to <code>active</code>. The filter itself is
+at four reads rather than the one recorded
+(<code>memory/recall.ts:203</code>, <code>:242</code>,
+<code>:353</code>, <code>:383</code>). One smaller observation beside
+it: the web UI carries a red pill style for <code>conflicted</code>
+(<code>packages/web/src/components/StatusPill.tsx:18</code>), so the
+interface is built to display a state the engine never produces on its
+own. Re-read from a fresh clone; nothing was installed and no suite was
+run.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/Open-Curiosity/gini-agent/commit/6c5d85ed0ecd7fe8567124bd4890b16c329970d8"><code class="commit-id" title="6c5d85ed0ecd7fe8567124bd4890b16c329970d8">6c5d85ed…</code></a>
 — re-read at the same commit, still the tip; the last commit upstream
