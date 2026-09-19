@@ -7,13 +7,12 @@ page_kind: system
 source_name: "omdsh-dev/dsh-mnemon"
 source_url: https://github.com/omdsh-dev/dsh-mnemon
 archive_name: "omdsh-dev--dsh-mnemon"
-revision: 1363ebffaf19c9ab4badf0137f6fe87acacaf989
-revision_url: https://github.com/omdsh-dev/dsh-mnemon/commit/1363ebffaf19c9ab4badf0137f6fe87acacaf989
-analyzed_at: 2026-09-16
-capabilities: "human_review, negative_eval"
+revision: 432d69c23d297ad7e5fd61dcb779f4b2fb3f5ff0
+revision_url: https://github.com/omdsh-dev/dsh-mnemon/commit/432d69c23d297ad7e5fd61dcb779f4b2fb3f5ff0
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  human_review: "the Sidebar memory pages | plugins/dsh-mnemon-source-runtime/src/client/pages.tsx:74-81; plugins/dsh-mnemon-source-memory-spaces/src/client/ui.tsx:28, :74-86 | the Runtime page lets a person edit an entry (`replace` with its old text) or remove it, and the Memory Spaces pages list content, entities and a graph with a confirmed Forget on each memory; the same Sidebar creates, merges and deletes spaces and switches providers, over the host RPC the agent's tools also use | tests/client-sidebar.spec.tsx, tests/client-source-pages.spec.tsx"
-  negative_eval: "branch-scoped runtime memory stays out of another branch | plugins/dsh-mnemon-source-runtime/tests/controller.spec.ts:516 projects branch-scoped memory entries only when the current branch matches | adds a shared entry and a `main`-only entry, asserts the projection on `main` contains both, the projection on `dev` contains the shared entry and not the `main` one and reports one hidden entry, and the unscoped projection contains both; `:538` asserts a `release`-only decision is absent on `main` while the user profile is present, and `plugins/dsh-mnemon-source-memory-spaces/tests/service.spec.ts:220` asserts medium and unknown evidence beyond the agent's limit is left out | plugins/dsh-mnemon-source-runtime/tests/controller.spec.ts:516"
+  negative_eval: "branch-scoped runtime memory stays out of another branch | plugins/dsh-mnemon-source-runtime/tests/controller.spec.ts:577 projects branch-scoped memory entries only when the current branch matches | adds a shared entry and a `main`-only entry, asserts the projection on `main` contains both, the projection on `dev` contains the shared entry and not the `main` one and reports one hidden entry, and the unscoped projection contains both; `:538` asserts a `release`-only decision is absent on `main` while the user profile is present, and `plugins/dsh-mnemon-source-memory-spaces/tests/service.spec.ts:220` asserts medium and unknown evidence beyond the agent's limit is left out | plugins/dsh-mnemon-source-runtime/tests/controller.spec.ts:516"
 stack_storage: "files, delegated"
 stack_retrieval: "lexical, vector, graph"
 stack_source: "reviewed"
@@ -64,7 +63,13 @@ Once working memory overflows, a branch-only decision is recalled on every
 branch. The projection also falls back to every branch whenever the current
 branch cannot be read, as in a detached HEAD during a rebase or bisect.
 
-Two marks: `human_review`, `negative_eval`.
+One mark: `negative_eval`. `human_review` is withheld, and the withdrawn
+record's own last clause is the reason: the Sidebar's edit, remove and Forget
+controls run *"over the host RPC the agent's tools also use"*. Two doors onto
+one live store is a correction surface; it is not a state a memory waits in, and
+nothing under `src/` or `plugins/` holds one — the only `pending` in the tree is
+an async-job status vocabulary mirrored from an upstream provider
+(`plugins/dsh-mnemon-source-memory-spaces/src/service.ts:287-293`).
 
 ## 2. Mental Model
 
@@ -302,5 +307,7 @@ the scope.
 - `sed -n 1,25p plugins/dsh-mnemon-source-runtime/src/git-branch.ts` — undefined on a detached HEAD
 
 ## History
+
+**2026-09-19** — re-pinned to [`432d69c23d297ad7e5fd61dcb779f4b2fb3f5ff0`](https://github.com/omdsh-dev/dsh-mnemon/commit/432d69c23d297ad7e5fd61dcb779f4b2fb3f5ff0), 15 commits on. `human_review` is **withdrawn**, on the clause the record already carried: the Sidebar's edit, remove and Forget controls go "over the host RPC the agent's tools also use". Every verb there acts on an entry already in the projection, and the tree was searched for an admission state at this pin and has none — the only `pending` is an async-job status vocabulary mirrored from an upstream provider. `negative_eval` stands and was re-anchored: the branch-scoping test is now at `controller.spec.ts:577`, and the previous line number lands on an unrelated concurrent-replacement case. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`1363ebffaf19c9ab4badf0137f6fe87acacaf989`](https://github.com/omdsh-dev/dsh-mnemon/commit/1363ebffaf19c9ab4badf0137f6fe87acacaf989) — first reading, at a commit dated 15 September 2026. Screened before opening: no auto-run surface, one build-time execution point, eighteen unpinned surfaces, and twenty dependency files inside the cooldown. Nothing was installed, built or run.
