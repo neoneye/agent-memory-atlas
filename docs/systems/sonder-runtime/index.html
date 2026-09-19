@@ -124,7 +124,7 @@ co-retrieved lessons and a probation path back.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Krilliac--Sonder-runtime" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -915,6 +915,31 @@ pruned value by exact hash and by embedding
 lesson text; purged when their source interaction is deleted.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/Krilliac/Sonder-runtime/commit/1a41a88d2442302421e1cf8c0893ca3edef537ee"><code class="commit-id" title="1a41a88d2442302421e1cf8c0893ca3edef537ee">1a41a88d…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin against the
+narrowed line, which asks whether a state decides membership or order.
+This one decides membership and never touches order:
+<code>quarantined_lessons</code> is computed from the usage statistics
+and its result is passed to the ranker as <code>exclude_ids</code>
+(<code>retriever.py:242</code>, <code>:247</code>), so a quarantined
+lesson is dropped before scoring rather than pushed down it. The state
+is derived per call rather than stored on the row, which this atlas
+usually treats as disqualifying — the distinction that matters is what
+it is derived <em>from</em> and what it does. Here it is derived from
+durable outcome records and it excludes, where the cases the atlas
+withholds derive a belief and then rank with it. The three gates are now
+in the record because the third is the part worth copying: beyond a raw
+loss floor and a blame-adjusted volume that stops co-failing lessons
+claiming the same failures as independent evidence, the run of losses
+must be improbable for the base loss rate of the lesson's own
+retrieval-frequency band — so a rarely-retrieved lesson is not punished
+for the unusual tasks that retrieval sends it. A quarantine with a
+stated null hypothesis rather than a threshold. Evidence is scoped to
+the epoch since the last grounded success, so a lesson can recover and
+can also relapse, and probation gives it a production path back to a
+win. Re-read from a fresh clone; nothing was installed and no suite was
+run.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/Krilliac/Sonder-runtime/commit/1a41a88d2442302421e1cf8c0893ca3edef537ee"><code class="commit-id" title="1a41a88d2442302421e1cf8c0893ca3edef537ee">1a41a88d…</code></a>
 — re-pinned after 1 commit. It touches fifteen files and none of them is
