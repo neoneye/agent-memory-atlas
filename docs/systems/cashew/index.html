@@ -133,7 +133,7 @@ decay pass reads.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>3</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -158,26 +158,31 @@ system."</em> It also draws a boundary most memory systems blur —
 <em>"Cashew itself doesn't override anything. The agent's prompt decides
 how much weight to put on graph evidence versus model
 defaults."</em></p>
-<p>Three marks, and all three are about forgetting rather than
-believing.</p>
+<p>Two marks, and both are about making the forgetting reviewable rather
+than about believing anything.</p>
 <p><strong>Decay is a flag, not a delete</strong>, and the gate in front
-of it is the design. A node can only decay if it is not permanent, is
-older than the threshold, has an access count of zero, and has no edge
-to a <em>live</em> neighbour — with already-decayed neighbours
-explicitly not counting, because they are <em>"effectively gone"</em>.
-Nothing that was ever read, and nothing the live subgraph still reaches,
-is eligible.</p>
+of it is the design — the mechanism both marks are about. A node can
+only decay if it is not permanent, is older than the threshold, has an
+access count of zero, and has no edge to a <em>live</em> neighbour —
+with already-decayed neighbours explicitly not counting, because they
+are <em>"effectively gone"</em>. Nothing that was ever read, and nothing
+the live subgraph still reaches, is eligible.</p>
 <p><strong>Every transition is audited by one writer.</strong>
 <code>decay_audit.py</code> exists so that all decay execution sites
 call the same helper, and it snapshots the node's content and counters
 from the same connection so the audit row is a record of what was lost
 rather than a pointer to a row that changed.</p>
-<p><strong>The tests are the third mark</strong>, and one of them is
+<p><strong>The tests are the second mark</strong>, and one of them is
 worth copying wholesale: before asserting a decayed node is absent from
 a search, it asserts the node's vector row is <em>still in the
 index</em>, with the comment <em>"proving search has to filter it, not
 that it was never there."</em></p>
-<p><code>trust_state</code> is withheld: there is no epistemic state
+<p><code>tombstone</code> is withheld despite the flag, and the reason
+is the rubric's own exclusion: a <code>decayed</code> column is keyed on
+the <em>record</em>. Nothing is keyed on the value, so an extractor that
+meets the same sentence again writes a fresh node with an access count
+of zero and no trace that its predecessor was let go.</p>
+<p><code>trust_state</code> is withheld too: there is no epistemic state
 here at all. The only signal is access count, and it runs in the other
 direction — reads earn permanence.</p>
 <h2 id="2-mental-model">2. Mental Model</h2>
@@ -302,10 +307,6 @@ dashboard with its own metrics, and <code>skills/</code> and
 Distributed on PyPI as <code>cashew-brain</code>, MIT-licensed.</p>
 <h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
 Trust</h2>
-<p><strong>Tombstone — awarded.</strong> The row survives, every read
-excludes it, and the gate that sets the flag is conservative in three
-independent ways at once: never read, old enough, and unreferenced by
-anything live.</p>
 <p><strong>Audit log — awarded.</strong> One writer, a snapshot taken
 from the node row on the caller's connection, and a lazily-created
 schema so an upgrade cannot lose the first events. One caveat belongs on
@@ -316,6 +317,17 @@ evidence record. The <code>permanent_but_decayed</code> integrity case
 is the rarer half: asserting the check returns 1 on a deliberately
 violated database proves the check can fail, which is the property a
 green integrity number otherwise cannot demonstrate.</p>
+<p><strong>Tombstone — withheld.</strong> The row survives, every read
+excludes it, and the gate that sets the flag is conservative in three
+independent ways at once: never read, old enough, and unreferenced by
+anything live. That is a careful soft delete, and a soft delete is keyed
+on the record. The mark asks for a durable record of a rejected
+<em>value</em> that a later write is checked against, and there is none:
+decay is never consulted on the write path, so re-extracting the same
+sentence produces a new node that starts over at an access count of
+zero. The distinction matters here rather than being a technicality — a
+node decays precisely because nobody read it, and the thing most likely
+to produce it again is the same extractor on the same source.</p>
 <p><strong>Trust state — withheld, and there is nothing to withhold it
 from.</strong> No field records whether a node is believed, confirmed,
 disputed or superseded. Access count is the only signal, and it earns
@@ -363,6 +375,10 @@ checker that cannot report anything else.</li>
 Never read, old enough, <em>and</em> no edge to a live neighbour — with
 an already-decayed neighbour not counting — is a garbage collector
 rather than a TTL.</li>
+<li><strong>Know which key your delete is on.</strong> A flag on the row
+stops that row coming back; it does not stop the same content arriving
+again from the same source. If you want the second thing, key the record
+on the value and consult it where writes enter.</li>
 <li><strong>Name which clock each caller may read.</strong> One
 docstring line forbidding the operational passes from using the
 biographical clock prevents a whole class of quiet drift.</li>
@@ -380,6 +396,10 @@ node promoted by a burst of reads that later turns out to be noise — is
 re-extraction the only route?</li>
 <li><code>mood_state</code> is a column on every node and did not
 surface in the retrieval paths this reading covered. What reads it?</li>
+<li>Decay is invisible to the extractors. Is there a case for having
+them check the decayed set — or the audit — before re-adding content
+that was let go, or is re-arrival the intended signal that something
+mattered after all?</li>
 </ul>
 <h2 id="appendix-file-index">Appendix: File Index</h2>
 <ul>
@@ -405,18 +425,21 @@ as <code>cashew-brain</code>. Screened with
 <code>pyproject.toml</code> declaring dependencies with no lockfile
 beside it and changed five days before the reading, and a
 <code>CLAUDE.md</code> addressed to a reading agent — read as data
-throughout. Nothing was installed, built or run. Three marks. The
-reading covered the node schema and its two flags, the decay gate and
-its cascade, the audit helper and its snapshot discipline, the
-permanence promotion, the retrieval filters on both edge endpoints, the
-two clocks and the rule separating them, and the two test cases the
-marks rest on; the dashboard, the daemon and the extractor family were
-read as context rather than as subject. MIT. Four marks are withheld
-with reasons in section 9, and the one worth repeating is
-<code>trust_state</code>: there is no field recording whether a node is
-believed, and the project's own philosophy says why — the graph makes
-evidence available and the agent's prompt decides what weight to give
-it.</p>
+throughout. Nothing was installed, built or run. Two marks. The reading
+covered the node schema and its two flags, the decay gate and its
+cascade, the audit helper and its snapshot discipline, the permanence
+promotion, the retrieval filters on both edge endpoints, the two clocks
+and the rule separating them, and the two test cases the marks rest on;
+the dashboard, the daemon and the extractor family were read as context
+rather than as subject. MIT. Five marks are withheld with reasons in
+section 9. <code>tombstone</code> is the near miss: the
+<code>decayed</code> flag is a careful soft delete keyed on the record,
+and the rubric's exclusion is exactly that — nothing is keyed on the
+value, and no write path consults the decayed set. The other one worth
+repeating is <code>trust_state</code>: there is no field recording
+whether a node is believed, and the project's own philosophy says why —
+the graph makes evidence available and the agent's prompt decides what
+weight to give it.</p>
         </article>
       </div>
     </main>

@@ -178,7 +178,7 @@ Where the atlas has an exact count — the seven mechanisms on
 | Explicit trust state | 148 of 587 |
 | Bi-temporal validity | 99 of 587 |
 | Human review surface | 79 of 587 |
-| Rejected-value tombstone | 57 of 587 |
+| Rejected-value tombstone | 56 of 587 |
 <!-- END GENERATED SPREAD -->
 
 Read the bottom two rows as what they are. A mechanism present in 38 systems of PLACEHOLDER_TOTAL_COUNT — or in 19 — is **not a best

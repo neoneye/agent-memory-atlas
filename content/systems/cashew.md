@@ -10,14 +10,13 @@ archive_name: "rajkripal--cashew"
 revision: 9c886cece87993869164770be85e2452be3e48cb
 revision_url: https://github.com/rajkripal/cashew/commit/9c886cece87993869164770be85e2452be3e48cb
 analyzed_at: 2026-09-19
-capabilities: "tombstone, audit_log, negative_eval"
+capabilities: "audit_log, negative_eval"
 stack_storage: "sqlite"
 stack_retrieval: "vector, graph"
 stack_source: "reviewed"
 capability_evidence:
-  tombstone: "a decay flag that only reaches a node nobody read and nothing live points at, filtered out of every retrieval while the row stays | core/decay.py:139-147, :176-215, :237-243, core/permanence.py:1-18, core/retrieval.py:83, :93, :103, :214-215, core/db.py:50, :54 | `decayed` is a column on `thought_nodes` and the retrieval paths test `(decayed IS NULL OR decayed = 0)` — on the node scans, and on both sides of the edge join so a traversal cannot arrive at a decayed node through a live one. The row is never removed, so its content, source file, domain and counters remain readable by anything that asks for them directly. What makes the flag safe is the gate in front of it: `auto_decay` takes only nodes that are not already decayed, not permanent, have an `access_count` of zero, are older than the age threshold, and have no edge to a *live* neighbour — with the rule that an already-decayed neighbour does not count because it is *effectively gone*. Cascading decay walks children under the same gate at a stricter thirty-day threshold and only when they have no other live parent. So nothing that was ever read, and nothing the live subgraph still reaches, can decay | promotion runs the other way and is deliberately one-way: `permanence.py` states it as binary and irreversible — its comment says you cannot erase traumas — driven by access count, and a permanent node is excluded from the decay gate"
   audit_log: "one writer for every live-to-decayed transition, taking its snapshot from the node row before the caller commits | core/decay_audit.py:1-13, :86-98, core/decay.py:22, :160, :240, core/sleep.py:40, :725 | the module states the contract in its own opening: a single helper that *all decay execution sites call so the `decay_audit` table records every transition from live → decayed*, with the decision logic left at the call sites and this module writing only audit rows. `log_decay_event` reads the node's content, source file, domain, type, access count and last-accessed from `thought_nodes` on the same connection, so the row it writes is a snapshot of what was decayed rather than an id to chase afterwards — and the caller commits, so the audit and the state change land together or not at all. Three call sites import it: two in `decay.py` (the direct and cascade paths) and one in `sleep.py`, which is the set the module's claim covers. The schema is created lazily by `ensure_decay_audit_schema` so a legacy database is upgraded before the first write rather than losing the first events | `gc_decay_audit` prunes the audit itself, which is worth knowing: the record of a forgetting is subject to its own retention"
-  negative_eval: "an absence asserted only after the fixture proves the thing that must be filtered is present | tests/test_embeddings.py:378-392, tests/test_permanence.py:195-228 | the decayed-node search case marks one node decayed, then — before searching — asserts its vector row is *still in the index*, with the comment saying why: *proving search has to filter it, not that it was never there*. Only then does it search, assert the decayed id is absent, and assert a live node on the same query still ranks. Presence of the filtered thing, absence in the result, and a positive control, in that order, in one test. The permanence suite adds a second control of a different kind: an integrity check reporting `permanent_but_decayed` is asserted to be 0 on a healthy database and **1** on one deliberately put into the violating state, so the checker is shown to detect the violation rather than only ever reporting zero | 42 test files; these two are the ones that pin the boundaries the other two marks rest on"
+  negative_eval: "an absence asserted only after the fixture proves the thing that must be filtered is present | tests/test_embeddings.py:378-392, tests/test_permanence.py:195-228 | the decayed-node search case marks one node decayed, then — before searching — asserts its vector row is *still in the index*, with the comment saying why: *proving search has to filter it, not that it was never there*. Only then does it search, assert the decayed id is absent, and assert a live node on the same query still ranks. Presence of the filtered thing, absence in the result, and a positive control, in that order, in one test. The permanence suite adds a second control of a different kind: an integrity check reporting `permanent_but_decayed` is asserted to be 0 on a healthy database and **1** on one deliberately put into the violating state, so the checker is shown to detect the violation rather than only ever reporting zero | 42 test files; these two are the ones that pin the boundary the decay flag draws, which is what the audit mark records transitions across"
 matrix:
   memory_unit: "A thought node — content, a type, a domain, a storage timestamp and an optional `referent_time` event clock, an access count and last-accessed stamp, a source file, tags, a mood state, a `decayed` flag and a `permanent` flag — linked by derivation edges"
   storage: "One SQLite database: `thought_nodes`, `derivation_edges`, `embeddings`, `metrics` and a lazily-created `decay_audit`, with an optional vector extension table"
@@ -29,7 +28,7 @@ matrix:
   background: "The sleep protocol — consolidation, cross-linking, permanence promotion, decay and audit garbage collection — in a batched, Numpy-backed pipeline with configurable work caps"
   trust: "No epistemic state. Access count is the signal that matters: it drives promotion to permanent and it gates decay, and a node that was read even once is out of the decay set entirely"
   strengths: "A decay gate that requires a node to be old, never read, and orphaned in the *live* subgraph before it can be forgotten, with cascading held to a stricter threshold and a single live parent enough to save a child; an audit helper that snapshots the node on the caller's connection so the record and the state change commit together; and an event clock the operational passes are forbidden by docstring from reading"
-  risks: "The decay audit is itself garbage-collected, so the record of a forgetting has a retention of its own; `permanent` is irreversible by design, so a node promoted by a burst of reads can never be demoted; and there is no scope predicate — the boundary is one database per user, which makes the domain field a label rather than a partition"
+  risks: "Decay is keyed on the row and never consulted on the write path, so re-extracting a decayed sentence produces a fresh node with no trace of the first; the decay audit is itself garbage-collected, so the record of a forgetting has a retention of its own; `permanent` is irreversible by design, so a node promoted by a burst of reads can never be demoted; and there is no scope predicate — the boundary is one database per user, which makes the domain field a label rather than a partition"
 ---
 
 ## 1. Executive Summary
@@ -42,9 +41,11 @@ the point of the system."* It also draws a boundary most memory systems blur —
 *"Cashew itself doesn't override anything. The agent's prompt decides how much
 weight to put on graph evidence versus model defaults."*
 
-Three marks, and all three are about forgetting rather than believing.
+Two marks, and both are about making the forgetting reviewable rather than
+about believing anything.
 
-**Decay is a flag, not a delete**, and the gate in front of it is the design.
+**Decay is a flag, not a delete**, and the gate in front of it is the design —
+the mechanism both marks are about.
 A node can only decay if it is not permanent, is older than the threshold, has
 an access count of zero, and has no edge to a *live* neighbour — with
 already-decayed neighbours explicitly not counting, because they are
@@ -56,12 +57,17 @@ all decay execution sites call the same helper, and it snapshots the node's
 content and counters from the same connection so the audit row is a record of
 what was lost rather than a pointer to a row that changed.
 
-**The tests are the third mark**, and one of them is worth copying wholesale:
+**The tests are the second mark**, and one of them is worth copying wholesale:
 before asserting a decayed node is absent from a search, it asserts the node's
 vector row is *still in the index*, with the comment *"proving search has to
 filter it, not that it was never there."*
 
-`trust_state` is withheld: there is no epistemic state here at all. The only
+`tombstone` is withheld despite the flag, and the reason is the rubric's own
+exclusion: a `decayed` column is keyed on the *record*. Nothing is keyed on the
+value, so an extractor that meets the same sentence again writes a fresh node
+with an access count of zero and no trace that its predecessor was let go.
+
+`trust_state` is withheld too: there is no epistemic state here at all. The only
 signal is access count, and it runs in the other direction — reads earn
 permanence.
 
@@ -196,10 +202,6 @@ agent to the graph. Distributed on PyPI as `cashew-brain`, MIT-licensed.
 
 ## 9. Reliability, Safety, and Trust
 
-**Tombstone — awarded.** The row survives, every read excludes it, and the gate
-that sets the flag is conservative in three independent ways at once: never
-read, old enough, and unreferenced by anything live.
-
 **Audit log — awarded.** One writer, a snapshot taken from the node row on the
 caller's connection, and a lazily-created schema so an upgrade cannot lose the
 first events. One caveat belongs on the record: `gc_decay_audit` prunes the
@@ -209,6 +211,17 @@ audit table, so the record of a forgetting is itself subject to retention.
 `permanent_but_decayed` integrity case is the rarer half: asserting the check
 returns 1 on a deliberately violated database proves the check can fail, which
 is the property a green integrity number otherwise cannot demonstrate.
+
+**Tombstone — withheld.** The row survives, every read excludes it, and the
+gate that sets the flag is conservative in three independent ways at once:
+never read, old enough, and unreferenced by anything live. That is a careful
+soft delete, and a soft delete is keyed on the record. The mark asks for a
+durable record of a rejected *value* that a later write is checked against, and
+there is none: decay is never consulted on the write path, so re-extracting the
+same sentence produces a new node that starts over at an access count of zero.
+The distinction matters here rather than being a technicality — a node decays
+precisely because nobody read it, and the thing most likely to produce it again
+is the same extractor on the same source.
 
 **Trust state — withheld, and there is nothing to withhold it from.** No field
 records whether a node is believed, confirmed, disputed or superseded. Access
@@ -257,6 +270,10 @@ retrieval quality.
 - **Gate forgetting on reachability, not just age.** Never read, old enough,
   *and* no edge to a live neighbour — with an already-decayed neighbour not
   counting — is a garbage collector rather than a TTL.
+- **Know which key your delete is on.** A flag on the row stops that row coming
+  back; it does not stop the same content arriving again from the same source.
+  If you want the second thing, key the record on the value and consult it
+  where writes enter.
 - **Name which clock each caller may read.** One docstring line forbidding the
   operational passes from using the biographical clock prevents a whole class
   of quiet drift.
@@ -273,6 +290,9 @@ retrieval quality.
   route?
 - `mood_state` is a column on every node and did not surface in the retrieval
   paths this reading covered. What reads it?
+- Decay is invisible to the extractors. Is there a case for having them check
+  the decayed set — or the audit — before re-adding content that was let go, or
+  is re-arrival the intended signal that something mattered after all?
 
 ## Appendix: File Index
 
@@ -289,4 +309,4 @@ retrieval quality.
 
 ## History
 
-**2026-09-19** — [`9c886cece87993869164770be85e2452be3e48cb`](https://github.com/rajkripal/cashew/commit/9c886cece87993869164770be85e2452be3e48cb) — first reading, at the head of `main`, version 1.2.1 on PyPI as `cashew-brain`. Screened with `scripts/screen_repo.py` before anything was read: a `tests/conftest.py` that executes on pytest collection, a `pyproject.toml` declaring dependencies with no lockfile beside it and changed five days before the reading, and a `CLAUDE.md` addressed to a reading agent — read as data throughout. Nothing was installed, built or run. Three marks. The reading covered the node schema and its two flags, the decay gate and its cascade, the audit helper and its snapshot discipline, the permanence promotion, the retrieval filters on both edge endpoints, the two clocks and the rule separating them, and the two test cases the marks rest on; the dashboard, the daemon and the extractor family were read as context rather than as subject. MIT. Four marks are withheld with reasons in section 9, and the one worth repeating is `trust_state`: there is no field recording whether a node is believed, and the project's own philosophy says why — the graph makes evidence available and the agent's prompt decides what weight to give it.
+**2026-09-19** — [`9c886cece87993869164770be85e2452be3e48cb`](https://github.com/rajkripal/cashew/commit/9c886cece87993869164770be85e2452be3e48cb) — first reading, at the head of `main`, version 1.2.1 on PyPI as `cashew-brain`. Screened with `scripts/screen_repo.py` before anything was read: a `tests/conftest.py` that executes on pytest collection, a `pyproject.toml` declaring dependencies with no lockfile beside it and changed five days before the reading, and a `CLAUDE.md` addressed to a reading agent — read as data throughout. Nothing was installed, built or run. Two marks. The reading covered the node schema and its two flags, the decay gate and its cascade, the audit helper and its snapshot discipline, the permanence promotion, the retrieval filters on both edge endpoints, the two clocks and the rule separating them, and the two test cases the marks rest on; the dashboard, the daemon and the extractor family were read as context rather than as subject. MIT. Five marks are withheld with reasons in section 9. `tombstone` is the near miss: the `decayed` flag is a careful soft delete keyed on the record, and the rubric's exclusion is exactly that — nothing is keyed on the value, and no write path consults the decayed set. The other one worth repeating is `trust_state`: there is no field recording whether a node is believed, and the project's own philosophy says why — the graph makes evidence available and the agent's prompt decides what weight to give it.
