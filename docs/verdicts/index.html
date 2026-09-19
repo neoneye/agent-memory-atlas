@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 591 reports.</strong></p>
+<p><strong>This page covers all 592 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -23762,6 +23762,75 @@ you are deciding where a canonical identity function should live.</li>
 <li>Do not copy when: you need "forget that, and stay forgotten". Here
 the same claim arriving again is treated as the world restating it, and
 it comes straight back.</li>
+</ul>
+<h3 id="muse-brain"><a
+href="../systems/muse-brain/"><code>muse-brain</code></a></h3>
+<ul>
+<li>Best idea: <strong>bind the scope key to the client, not to the
+query.</strong> The Postgres storage class takes its tenant as a
+constructor parameter, validates it against DNS-label rules and throws
+on anything else, and all 188 statement sites bind that same field.
+There is no call shape that reads another tenant — only a different
+client — which removes the whole class of site where someone forgets to
+pass a scope.</li>
+<li>Second idea: <strong>make a cross-boundary read need two independent
+yeses, both defaulting to no.</strong> A deployment-level allowlist says
+which tenants may reach which and defaults to empty; a per-project
+<code>visibility</code> flag says whether a record is shareable at all.
+The comment at the lookup states that both must pass and cites the
+tenant-key audit and the fix number that produced the rule.</li>
+<li>Third idea: <strong>change one variable per isolation test.</strong>
+The suite seeds the same fixture three times: a private cross-tenant
+project is excluded, a <em>shared</em> one is still excluded with no
+grant configured, and the same shared one appears only when a grant is
+present. The exclusion cannot be the fixture having nothing to find, and
+the inclusion cannot be the gate being absent.</li>
+<li>Fourth idea: <strong>say which retrieval path answered.</strong> A
+<code>search_mode</code> of <code>keyword_lookup</code> on the result
+stops a fallback being read as semantic grounding.</li>
+<li>Fifth idea: <strong>map the papers to the mechanisms.</strong>
+<code>docs/BIBLIOGRAPHY.md</code> ties sixteen arXiv papers each to the
+specific thing it produced — a self-evolving-agents survey to the
+captured-skill lifecycle, a paper on emotionally salient tags to the
+charge phases — and names six places the implementation claims to go
+further. Whether each mapping holds is a separate question; writing it
+down makes the claims checkable rather than atmospheric.</li>
+<li>Biggest risk: <strong>an audit table built for exactly this, with
+one operation writing to it.</strong> <code>agent_audit_events</code>
+carries an actor, a lease, a delegation chain, an operation, a payload
+hash, a diff and a result vocabulary including <code>shadow</code> — and
+the only production caller is letter delivery. Creating, editing or
+deleting an observation writes nothing to it, and the call is guarded by
+a feature check that silently skips when the backend lacks the
+method.</li>
+<li>Second risk: the skill registry's <code>review</code> action takes
+the decision — accepted, degraded, retired — and a
+<code>reviewed_by</code> label as parameters on the tool the agent
+itself calls. A reviewer name typed by the reviewed party is not an
+actor check, and the proposal and consolidation review verbs have the
+same shape.</li>
+<li>Third risk: no read path withholds. Captured skills carry a
+four-value lifecycle a health daemon moves them through, and the list
+query takes status as an optional filter defaulting to null, so a
+retired skill is returned unless the caller excludes it.</li>
+<li>Fourth risk: the licence is CC BY-NC-SA 4.0 on the whole repository,
+code included. Non-commercial is a use restriction rather than a
+copyleft term and Creative Commons does not recommend its licences for
+software, so commercial adoption is a legal question before it is a
+technical one.</li>
+<li>Most reusable component: <code>src/tenant-config.ts</code> with the
+two call sites that consume it — twenty lines of grant parsing and a
+fail-closed default, layered over a per-record opt-in.</li>
+<li>Maturity impression: seventeen migrations across thirty-six tables,
+thirty-three MCP tools, a Cloudflare Workers deployment with lease-based
+agent identity and revocation, thirty-nine Vitest files against storage
+doubles, release notes and audit documents per version, and a benchmark
+harness whose results directory holds only a <code>.gitkeep</code>.</li>
+<li>Study when: you are enforcing a tenant boundary in a multi-agent
+deployment and want a worked example of a scope key that cannot be
+varied per call.</li>
+<li>Do not copy when: you need a memory that can be discredited — every
+lifecycle here reports and none of them withholds.</li>
 </ul>
         </article>
       </div>

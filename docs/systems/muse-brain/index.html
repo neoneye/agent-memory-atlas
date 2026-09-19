@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Postgres-backed memory service
+for paired companion agents whose tenant is bound to the storage client
+at construction and validated against DNS-label rules, and where a
+cross-tenant read has to clear both a deployment allowlist and a
+per-project sharing opt-in.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="MUSE Brain — Agent Memory Atlas">
+    <meta property="og:description" content="A Postgres-backed memory
+service for paired companion agents whose tenant is bound to the storage
+client at construction and validated against DNS-label rules, and where
+a cross-tenant read has to clear both a deployment allowlist and a
+per-project sharing opt-in.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MUSE
+Brain — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Postgres-backed memory
+service for paired companion agents whose tenant is bound to the storage
+client at construction and validated against DNS-label rules, and where
+a cross-tenant read has to clear both a deployment allowlist and a
+per-project sharing opt-in.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>MUSE Brain — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "MUSE Brain",
+      "description": "A Postgres-backed memory service for paired companion agents whose tenant is bound to the storage client at construction and validated against DNS-label rules, and where a cross-tenant read has to clear both a deployment allowlist and a per-project sharing opt-in.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Relational memory worker</p>
+          <h1>MUSE Brain</h1>
+          <p class="document-deck">A Postgres-backed memory service for
+paired companion agents whose tenant is bound to the storage client at
+construction and validated against DNS-label rules, and where a
+cross-tenant read has to clear both a deployment allowlist and a
+per-project sharing opt-in.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/falcoschaefer99-eng/muse-brain">
+              <span>Source</span>
+              <strong>falcoschaefer99-eng/muse-brain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/falcoschaefer99-eng/muse-brain/commit/a5a98ae77f45af7bae83067828d7ae366b6f073a" title="a5a98ae77f45af7bae83067828d7ae366b6f073a">
+              <span>Analyzed revision</span>
+              <code>a5a98ae7…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/falcoschaefer99-eng--muse-brain" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>falcoschaefer99-eng--muse-brain</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>MUSE Brain is the memory service behind a pair of companion agents —
+one that knows the person, one that knows the craft — deployed as a
+Cloudflare Worker over Postgres, with thirty-six tables, thirty-three
+MCP tools and a set of daemons that absorb, consolidate and dream.</p>
+<p>Two marks, both about the boundary between the two minds.</p>
+<p><strong>The tenant is not a parameter.</strong> The Postgres client
+takes it in its constructor, validates it against DNS-label rules and
+throws otherwise, and every one of the file's statements binds that
+field. There is no call shape that reads another tenant; there is only a
+different client.</p>
+<p><strong>A cross-tenant read has to clear two gates, and both default
+closed.</strong> A deployment-level allowlist says which tenants may
+reach which, defaulting to empty — <em>"no tenant may cross-read
+another's data without an explicit grant"</em> — and a per-project
+<code>visibility</code> flag says whether a particular record is
+shareable at all. The comment at the lookup says both must pass, and
+cites the tenant-key audit that produced the rule.</p>
+<p><strong>The test for that is a three-case table with one moving
+part.</strong> A private cross-tenant project is excluded; a
+<em>shared</em> one is still excluded when no grant is configured; the
+same shared one appears only when a grant is present. The exclusion
+cannot be the fixture being empty, and the inclusion cannot be the gate
+being absent.</p>
+<p>What is not here is a state that withholds. The schema is full of
+lifecycle vocabularies — captured skills run candidate, accepted,
+degraded, retired; a skill-health daemon moves them — and the list query
+takes status as an optional filter that defaults to null. A retired
+skill is returned unless the caller asks otherwise.</p>
+<p>One thing to know before reading the source: the licence is
+<strong>CC BY-NC-SA 4.0</strong>. That is a non-commercial copyleft
+applied to a piece of infrastructure, and it covers the code as well as
+the prose.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>An observation is the atom: content plus <em>texture</em> — a JSON
+blob carrying mood, somatic markers and charge — plus a territory, tags,
+entity tags and an embedding. Observations link to each other
+directionally, and links carry a last-activated stamp so the dream and
+wake passes can walk chains.</p>
+<p>Around that sit the other twenty-odd tables: entities and relations,
+letters between the two minds, open loops, desires, tasks, project
+dossiers, captured skills. The word that recurs in the schema is
+<em>charge</em> — an observation moves from fresh to active to
+processing to metabolized, which is the system's model of having sat
+with something.</p>
+<p>The scope model is two-layer and worth stating plainly, because it is
+the part the marks rest on. A tenant is a mind. A project is shareable
+or not. A deployment decides which minds may see each other's shareable
+things.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an MCP tool surface on a Cloudflare Worker writes observations, letters, loops and skills through a storage client whose tenant is fixed at construction and validated against DNS-label rules, so all 188 statement sites bind the same field; a cross-tenant read has to clear two independent gates that both default closed — a deployment allowlist resolved per request into the tool context, and a per-project sharing flag — while daemons absorb, consolidate, dream and score skill health across a thirty-six table Postgres schema with pgvector and full-text indexes</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an MCP tool surface on a Cloudflare Worker writes observations, letters, loops and skills through a storage client whose tenant is fixed at construction and validated against DNS-label rules, so all 188 statement sites bind the same field; a cross-tenant read has to clear two independent gates that both default closed — a deployment allowlist resolved per request into the tool context, and a per-project sharing flag — while daemons absorb, consolidate, dream and score skill health across a thirty-six table Postgres schema with pgvector and full-text indexes
+flowchart TD
+    REQ[&quot;MCP request&lt;br/&gt;key-bound tenant&quot;] --&gt; RESOLVE[&quot;resolve allowed tenants + aliases&lt;br/&gt;grantedTenantsFor(env, tenant)&lt;br/&gt;default: empty set&quot;]
+    RESOLVE --&gt; CTX[&quot;ToolContext&lt;br/&gt;storage · lease · crossTenantGrants&quot;]
+
+    CTX --&gt; TOOLS[&quot;33 MCP tools&lt;br/&gt;mind_memory · mind_letter&lt;br/&gt;mind_skills · mind_runtime&quot;]
+
+    TOOLS --&gt; GATE{&quot;scope = all?&quot;}
+    GATE --&gt;|current| OWN[&quot;own tenant only&quot;]
+    GATE --&gt;|all| BOTH{&quot;granted tenant?&lt;br/&gt;AND project visibility = shared?&quot;}
+    BOTH --&gt;|both pass| CROSS[&quot;cross-tenant dossier surfaces&quot;]
+    BOTH --&gt;|either fails| OWN
+
+    OWN --&gt; STORE[&quot;PostgresStorage&lt;br/&gt;tenant fixed in constructor&lt;br/&gt;DNS-label validated, throws otherwise&quot;]
+    CROSS --&gt; STORE
+
+    STORE --&gt; DB[(&quot;Postgres + pgvector&lt;br/&gt;36 tables&lt;br/&gt;observations · links · entities&lt;br/&gt;letters · loops · captured_skills&lt;br/&gt;observation_versions · agent_audit_events&quot;)]
+
+    subgraph Daemons
+        ABS[&quot;absorption&lt;br/&gt;charge: fresh → metabolized&quot;]
+        CONS[&quot;consolidation candidates&lt;br/&gt;pending · accepted · rejected · deferred&quot;]
+        DREAM[&quot;dream / wake&lt;br/&gt;link chain traversal&quot;]
+        HEALTH[&quot;skill health&lt;br/&gt;candidate → accepted → degraded → retired&quot;]
+    end
+    DB --&gt; ABS --&gt; DB
+    DB --&gt; CONS --&gt; DB
+    DB --&gt; DREAM --&gt; DB
+    DB --&gt; HEALTH --&gt; DB
+
+    LET[&quot;mind_letter delivery&quot;] --&gt; AUD[(&quot;agent_audit_events&lt;br/&gt;actor · lease · delegation chain&lt;br/&gt;result · payload hash · diff&quot;)]</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Tenant binding:</strong>
+<code>muse-brain/src/storage/postgres.ts</code> (constructor and every
+statement), <code>src/storage/sqlite.ts</code> for the key-value
+backend.</li>
+<li><strong>Cross-tenant policy:</strong>
+<code>muse-brain/src/tenant-config.ts</code>, <code>src/index.ts</code>,
+<code>src/tools-v2/memory.ts</code>,
+<code>src/tools-v2/runtime.ts</code>.</li>
+<li><strong>Schema:</strong>
+<code>muse-brain/migrations/001_initial_schema.sql</code> through
+<code>017_agent_house_trust_layer.sql</code>.</li>
+<li><strong>Skill lifecycle:</strong>
+<code>muse-brain/src/tools-v2/skills.ts</code>.</li>
+<li><strong>Audit:</strong>
+<code>muse-brain/src/tools-v2/comms.ts</code>.</li>
+<li><strong>Tests:</strong>
+<code>muse-brain/test/mind-memory-unified.spec.ts</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Thirty-six tables is a lot, and the interesting thing about them is
+how consistently the tenant appears: it is the first or second column
+almost everywhere, and it is in the leading position of most composite
+indexes.</p>
+<p>Two tables look like history and are worth separating.
+<code>observation_versions</code> holds a numbered revision per
+observation with the content, the texture and a change reason — but the
+only production caller creates a version with the reason
+<code>texture_edit</code>, so it is an edit trail for one field rather
+than for the record. And the key-value backend deletes an observation's
+versions when the observation goes, so the history does not outlive its
+subject there.</p>
+<p><code>agent_audit_events</code> is the other, and it is built
+properly: actor agent, lease, platform, session, run, a delegation
+chain, the operation and tool, the resource, a result from allowed,
+denied, succeeded, failed or shadow, a reason, a payload hash and a
+diff. See section 9 for why it does not carry the mark.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Vector similarity over pgvector with full-text and trigram lookup
+beside it, link traversal and co-surfacing, then reranking by recency,
+novelty and stored retrieval hints. There is a separate reliability
+migration and a hints index, and a <code>search_mode</code> on the
+result that says which path answered — a keyword lookup identifies
+itself as one rather than being presented as semantic recall.</p>
+<p>Scope enters before any of that. The tenant is already fixed by the
+time a query is built; the only variable is whether a
+<code>scope: "all"</code> lookup may add another tenant's shareable
+projects, which needs the grant.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Tools write observations, letters, loops, desires and skills. Daemons
+then work over them: absorption moves an observation through its charge
+phases and accumulates processing notes, consolidation proposes merges
+into a candidate table with a pending/accepted/rejected/deferred status,
+and a skill-health daemon moves captured skills along their own
+lifecycle.</p>
+<p>Letters are the cross-tenant write, and they are the one operation
+that leaves an audit row.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server with thirty-three tools running on Cloudflare Workers,
+a TypeScript CLI, a runner with a speech-to-text service, lease-based
+agent identity with revocation, and deployment scripts. Provider-neutral
+core with optional Claude and Codex backends.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Scope enforced — awarded</strong>, on the constructor binding
+plus the two gates. The shape worth copying is the binding: making the
+tenant a field of the client rather than an argument of the query
+removes a whole class of call site where someone forgets to pass it.</p>
+<p><strong>Negative eval — awarded</strong>, on the three-case grant
+table and the paired ranking exclusions.</p>
+<p><strong>Trust state — withheld.</strong> The vocabularies exist and
+are real: a captured skill is candidate, accepted, degraded or retired,
+a review writes the transition, and a daemon watches health. But the
+list query takes status as an optional filter defaulting to null, so a
+retired skill is returned unless the caller excludes it. That is a state
+used for reporting and available for filtering, not a state that
+withholds — the same distinction that separates a label from a gate.</p>
+<p><strong>Tombstone — withheld.</strong> Nothing is keyed on a rejected
+value. A rejected consolidation candidate is a row with a status;
+nothing consults it when the next absorption pass proposes the same
+merge.</p>
+<p><strong>Audit log — withheld, and this one is close.</strong>
+<code>agent_audit_events</code> is designed for exactly this mark — a
+diff, a payload hash, an actor, a lease, a delegation chain, and a
+result vocabulary that includes <code>shadow</code>. It has one
+production writer: letter delivery, from <code>mind_letter</code>.
+Creating, editing or deleting an observation writes nothing to it, and
+the call is guarded by a feature check so a backend without the method
+silently skips. A table this well specified, with one operation reaching
+it, is a trust layer for agent-to-agent messaging rather than a mutation
+log for memory — and it is the most obvious thing in the repository to
+extend.</p>
+<p><strong>Human review — withheld</strong>, and the reason is a
+recurring pattern rather than an oversight. <code>mind_skills</code> has
+a <code>review</code> action, and its <code>decision</code> — one of
+accepted, degraded, retired — and its <code>reviewed_by</code> label are
+both parameters on the tool the agent itself calls. A reviewer name the
+reviewed party types is not an actor check. The same applies to the
+proposal and consolidation review verbs.</p>
+<p><strong>Bi-temporal — withheld.</strong> Timestamps are plentiful —
+created, last accessed, last surfaced, last activated — and all of them
+are record time. Nothing tracks when a thing was true apart from when it
+was written.</p>
+<p><strong>The licence is a limitation in its own right.</strong>
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 applies to the
+whole repository, code included. Non-commercial is a use restriction
+rather than a copyleft term, and Creative Commons does not recommend its
+licences for software, so anyone evaluating this for commercial use
+should treat adoption as a legal question rather than a technical one.
+Reading it, learning from it and citing it — which is what this report
+does — is not restricted.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper of its own</strong>, but the bibliography is unusual
+enough to describe. <code>docs/BIBLIOGRAPHY.md</code> maps sixteen arXiv
+papers to the specific mechanism each one produced — a survey of
+self-evolving agents to the captured-skill lifecycle, a paper on
+emotionally salient tags to the iron-grip memories and charge phases, an
+institutional-governance framework to the cross-tenant territory
+restrictions — and then names six places the implementation claims to go
+beyond the literature. Whether each mapping holds is a separate
+question; writing the map at all is rare, and it makes the claims
+checkable rather than atmospheric.</p>
+<p>Thirty-nine test files under Vitest, split into unit and integration
+configs. They run against storage doubles rather than a live Postgres,
+which is why the scope mark's evidence names the tool layer rather than
+the SQL: the 146 tenant clauses in the Postgres backend are not
+exercised by the suite.</p>
+<p>There is a benchmark harness with adapters and a master plan
+document. The results directory contains a <code>.gitkeep</code> and
+nothing else, so no benchmark result is committed.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Bind the scope key to the client, not to the query.</strong>
+A tenant that lives in the constructor cannot be omitted at a call site,
+and the validation runs once instead of everywhere.</li>
+<li><strong>Make a cross-boundary read need two independent
+yeses</strong>, one from the deployment and one from the record, and
+default both to no.</li>
+<li><strong>Change one variable per isolation test.</strong> The private
+case, the shared case without a grant, and the shared case with one are
+three tests that together prove what any one of them alone cannot.</li>
+<li><strong>Say which retrieval path answered.</strong> A
+<code>search_mode</code> of <code>keyword_lookup</code> on the result
+stops a fallback being read as semantic grounding.</li>
+<li><strong>If you build an audit table with a diff and a delegation
+chain, wire it to the writes.</strong> The schema is the easy half.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>agent_audit_events</code> carries everything a memory-mutation
+log needs and one operation writes to it. Is extending it to observation
+writes planned, and would the key-value backend's whole-collection
+rewrite still be append-only enough to trust?</li>
+<li><code>observation_versions</code> has a <code>change_reason</code>
+column and a single caller passing <code>texture_edit</code>. What
+happens to content edits — is the version row intended to cover
+them?</li>
+<li>The skill list defaults to no status filter. Is a degraded skill
+meant to keep surfacing until a caller excludes it, or is the default
+the thing the skill-health daemon was built to make unnecessary?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Tenant binding and statements:
+<code>muse-brain/src/storage/postgres.ts</code></li>
+<li>Key-value backend:
+<code>muse-brain/src/storage/sqlite.ts</code></li>
+<li>Cross-tenant policy: <code>muse-brain/src/tenant-config.ts</code>,
+<code>muse-brain/src/index.ts</code></li>
+<li>Tool surface: <code>muse-brain/src/tools-v2/memory.ts</code>,
+<code>tools-v2/skills.ts</code>, <code>tools-v2/comms.ts</code>,
+<code>tools-v2/runtime.ts</code>, <code>tools-v2/propose.ts</code></li>
+<li>Schema: <code>muse-brain/migrations/001_initial_schema.sql</code> …
+<code>017_agent_house_trust_layer.sql</code></li>
+<li>Leases: <code>muse-brain/src/security/leases.ts</code></li>
+<li>Bibliography: <code>muse-brain/docs/BIBLIOGRAPHY.md</code></li>
+<li>Tests: <code>muse-brain/test/mind-memory-unified.spec.ts</code>,
+<code>test/mind-letter-edges.spec.ts</code>,
+<code>test/leases.spec.ts</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/falcoschaefer99-eng/muse-brain/commit/a5a98ae77f45af7bae83067828d7ae366b6f073a"><code class="commit-id" title="a5a98ae77f45af7bae83067828d7ae366b6f073a">a5a98ae7…</code></a>
+— first reading, at the head of <code>main</code>. Screened with
+<code>scripts/screen_repo.py</code> before anything was read: one
+build-time execution path in a package's publish hook, four unpinned
+dependency surfaces across the three workspaces and the speech-to-text
+service, and three lockfiles unchanged for seventeen days; no
+instruction file addressed to a reading agent. Nothing was installed,
+built or run. Two marks. The reading covered the thirty-six-table schema
+across all seventeen migrations, the tenant binding in both storage
+backends, the cross-tenant grant resolution and its two call sites, the
+tool surface's memory, skills, comms and runtime modules, the audit and
+version tables and their callers, and the isolation tests; the limbic
+modules, the runner and the CLI were read as context rather than as
+subject. Five marks are withheld with reasons in section 9, and the two
+worth repeating are <code>audit_log</code>, where a well-specified
+mutation table has exactly one production writer and it is letter
+delivery, and <code>human_review</code>, where the skill registry's
+review decision and reviewer label are parameters on the tool the agent
+itself calls. The licence — CC BY-NC-SA 4.0 on the code — is recorded
+under Known Limitations as standing policy.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
