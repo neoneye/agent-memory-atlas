@@ -7,12 +7,12 @@ page_kind: system
 source_name: QwenLM/qwen-code
 source_url: https://github.com/QwenLM/qwen-code
 archive_name: "QwenLM--qwen-code"
-revision: d313505fdb7e31e795bab00f76ab8488ff72f90f
-revision_url: https://github.com/QwenLM/qwen-code/commit/d313505fdb7e31e795bab00f76ab8488ff72f90f
-analyzed_at: 2026-09-15
+revision: 537311b8a5d85fd12ab2cff84b418e3a908ca830
+revision_url: https://github.com/QwenLM/qwen-code/commit/537311b8a5d85fd12ab2cff84b418e3a908ca830
+analyzed_at: 2026-09-19
 capabilities: "human_review, negative_eval"
 capability_evidence:
-  human_review: "auto-learned skills — a newly created skill is staged and not loaded until the user accepts it | packages/core/src/memory/pending-skills.ts:124 (`acceptPendingSkill`), :154 (`rejectPendingSkill`), packages/core/src/skills/skill-paths.ts:25-32, packages/cli/src/ui/AppContainer.tsx:1986-2004 | the skill-review agent writes into the skills root, and every directory it newly created is moved to `.qwen/pending-skills/`, where skill discovery does not load it; the CLI dialog accepts, which moves it back, or discards it. An in-place edit to a skill the user already accepted takes effect without re-entering the flow, by design, so a later discard cannot delete an accepted skill | packages/core/src/memory/pending-skills.test.ts:37, :52, :65; skillReviewNudge.integration.test.ts"
+  human_review: "auto-learned skills — a newly created skill is staged and not loaded until the user accepts it | packages/core/src/memory/pending-skills.ts:124 (`acceptPendingSkill`), :154 (`rejectPendingSkill`), packages/core/src/skills/skill-paths.ts:25-33, packages/core/src/memory/manager.ts:1103-1150, packages/cli/src/ui/AppContainer.tsx:1999, :2012 | the skill-review agent writes into the skills root, and every directory it newly created is moved to `.qwen/pending-skills/`, which `skill-paths.ts` documents as `deliberately a SIBLING of .qwen/skills/ so loadSkillsFromDir never discovers unconfirmed skills (it scans the skills root only)`. The CLI dialog accepts, which moves it back, or discards it. The producer cannot resolve the wait through a declared verb: `acceptPendingSkillFromTask` and `rejectPendingSkillFromTask` are named for the task record they look the staged skill up in, not for a caller, and their only callers are the two handlers in `AppContainer.tsx`. The limit to state is the one every coding agent carries — a general `shell` tool could move the directory itself, which is a different thing from an approve verb on the tool surface. An in-place edit to a skill the user already accepted takes effect without re-entering the flow, by design, so a later discard cannot delete an accepted skill | packages/core/src/memory/pending-skills.test.ts:37, :52, :65; skillReviewNudge.integration.test.ts"
   negative_eval: "auto-memory recall — memories already surfaced this session and memories that restate an active tool's schema must not be selected again | packages/core/src/memory/recall.ts:357-393 (`excludedFilePaths`), packages/core/src/core/client.ts:1312 and :1472 | `falls back to heuristic selection when model-driven selection fails` passes `/tmp/user.md` as already surfaced and asserts it is absent from the selection while `/tmp/reference.md` is present; `keeps active tool schemas out of heuristic fallback` asserts the doc describing a tool in the recent-tools list is excluded from the model's candidates and from the selection while two related docs are selected. Both predate the 2026-08-10 pin. The recall evaluation harness added since asserts no-result queries stay silent under both delivery designs | packages/core/src/memory/recall.test.ts:630-653 and :655-690, recall-delivery-eval.test.ts:426"
 stack_storage: "files"
 stack_retrieval: ""
@@ -302,7 +302,11 @@ pending, and reviewed before use.
 That is closer to the [skills as procedural memory](../../patterns/skills-as-procedural-memory/)
 pattern's verified-execution gate than most systems manage — a review is not an
 execution proof, but a pending state that something must clear is more than a
-file appearing in a directory.
+file appearing in a directory. The staging is structural rather than a flag:
+`.qwen/pending-skills/` is a sibling of `.qwen/skills/` precisely so the loader
+cannot reach it, and the comment in `skill-paths.ts:27-31` says so. Accepting
+means moving the directory back, and the two functions that do it are called
+from one place, the CLI's review dialog.
 
 ## 5. Memory Data Model
 
@@ -575,6 +579,8 @@ re-extracts continuously that is the gap that will find you.
   `docs/design/2026-07-11-managed-memory-microcompaction.md`.
 
 ## History
+
+**2026-09-19** — re-pinned to [`537311b8a5d85fd12ab2cff84b418e3a908ca830`](https://github.com/QwenLM/qwen-code/commit/537311b8a5d85fd12ab2cff84b418e3a908ca830), 80 commits on. Both marks stand. `human_review` was producer-tested rather than carried forward, and a pair of functions new since the last reading needed the check: `acceptPendingSkillFromTask` and `rejectPendingSkillFromTask` (`packages/core/src/memory/manager.ts:1103`, `:1111`) are named for the task record they look a staged skill up in, not for a caller that could be a task, and their only callers are the two handlers in the CLI review dialog. The staging itself is structural rather than a flag — `.qwen/pending-skills/` is a sibling of `.qwen/skills/` so the loader scanning the skills root cannot reach it, which the code states in as many words. The record now names the limit every coding agent carries: a general `shell` tool could move the directory, which is not the same as an approve verb on the tool surface. `negative_eval` stands with `excludedFilePaths` re-anchored. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-15** — [`d313505fdb7e31e795bab00f76ab8488ff72f90f`](https://github.com/QwenLM/qwen-code/commit/d313505fdb7e31e795bab00f76ab8488ff72f90f) — 1,349 commits on, 2026-09-15, with the memory package at +7,732/-453 across 41 files, most of it tests. Screened before reading: two auto-run surfaces (`.vscode/settings.json`, `.vscode/tasks.json`), nineteen build-time execution points, forty-five unpinned surfaces and thirty-four dependency surfaces inside the cooldown; nothing was installed or run. Marks changed in both directions on code that predates the previous pin. `negative_eval` is added: `recall.test.ts` already asserted that already-surfaced and active-tool-schema documents are excluded from recall, each with a control, and the reading that withheld the mark looked only at write-authorization tests. `scope_enforced` is withdrawn: project, user and team memory are separate directories that recall unions, the project root is chosen by git root or workspace, and no stored scope key is filtered on a read, so the isolation is a partition plus a write sandbox. Since the pin: a recall evaluation harness with a labeled multilingual corpus and a frozen previous scorer as the regression gate, a delivery-design evaluation, forget selection scoped and quota-split per scope, uncapped candidate scans, workspace-scoped memory tasks in the daemon, and git helper programs guarded on internal git calls. Corpus-ranking sentences were rewritten.
 

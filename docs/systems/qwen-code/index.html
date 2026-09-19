@@ -110,14 +110,14 @@ switched off.</p>
               <strong>QwenLM/qwen-code</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/QwenLM/qwen-code/commit/d313505fdb7e31e795bab00f76ab8488ff72f90f" title="d313505fdb7e31e795bab00f76ab8488ff72f90f">
+            <a class="meta-pill revision-pill" href="https://github.com/QwenLM/qwen-code/commit/537311b8a5d85fd12ab2cff84b418e3a908ca830" title="537311b8a5d85fd12ab2cff84b418e3a908ca830">
               <span>Analyzed revision</span>
-              <code>d313505f…</code>
+              <code>537311b8…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-15</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/QwenLM--qwen-code" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -438,7 +438,12 @@ learned, held pending, and reviewed before use.</p>
 href="../../patterns/skills-as-procedural-memory/">skills as procedural
 memory</a> pattern's verified-execution gate than most systems manage —
 a review is not an execution proof, but a pending state that something
-must clear is more than a file appearing in a directory.</p>
+must clear is more than a file appearing in a directory. The staging is
+structural rather than a flag: <code>.qwen/pending-skills/</code> is a
+sibling of <code>.qwen/skills/</code> precisely so the loader cannot
+reach it, and the comment in <code>skill-paths.ts:27-31</code> says so.
+Accepting means moving the directory back, and the two functions that do
+it are called from one place, the CLI's review dialog.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>Entries typed <code>user | feedback | project | reference</code>,
 with <code>AutoMemorySourceRef</code> carrying <code>sessionId</code>,
@@ -748,6 +753,26 @@ the authoring path was not found.</li>
 <code>docs/design/2026-07-11-managed-memory-microcompaction.md</code>.</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — re-pinned to <a
+href="https://github.com/QwenLM/qwen-code/commit/537311b8a5d85fd12ab2cff84b418e3a908ca830"><code class="commit-id" title="537311b8a5d85fd12ab2cff84b418e3a908ca830">537311b8…</code></a>,
+80 commits on. Both marks stand. <code>human_review</code> was
+producer-tested rather than carried forward, and a pair of functions new
+since the last reading needed the check:
+<code>acceptPendingSkillFromTask</code> and
+<code>rejectPendingSkillFromTask</code>
+(<code>packages/core/src/memory/manager.ts:1103</code>,
+<code>:1111</code>) are named for the task record they look a staged
+skill up in, not for a caller that could be a task, and their only
+callers are the two handlers in the CLI review dialog. The staging
+itself is structural rather than a flag —
+<code>.qwen/pending-skills/</code> is a sibling of
+<code>.qwen/skills/</code> so the loader scanning the skills root cannot
+reach it, which the code states in as many words. The record now names
+the limit every coding agent carries: a general <code>shell</code> tool
+could move the directory, which is not the same as an approve verb on
+the tool surface. <code>negative_eval</code> stands with
+<code>excludedFilePaths</code> re-anchored. Screened again first;
+nothing was installed and no suite was run.</p>
 <p><strong>2026-09-15</strong> — <a
 href="https://github.com/QwenLM/qwen-code/commit/d313505fdb7e31e795bab00f76ab8488ff72f90f"><code class="commit-id" title="d313505fdb7e31e795bab00f76ab8488ff72f90f">d313505f…</code></a>
 — 1,349 commits on, 2026-09-15, with the memory package at +7,732/-453
