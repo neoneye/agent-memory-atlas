@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 592 reports.**
+**This page covers all 593 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5254,3 +5254,18 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: seventeen migrations across thirty-six tables, thirty-three MCP tools, a Cloudflare Workers deployment with lease-based agent identity and revocation, thirty-nine Vitest files against storage doubles, release notes and audit documents per version, and a benchmark harness whose results directory holds only a `.gitkeep`.
 - Study when: you are enforcing a tenant boundary in a multi-agent deployment and want a worked example of a scope key that cannot be varied per call.
 - Do not copy when: you need a memory that can be discredited — every lifecycle here reports and none of them withholds.
+
+### [`brain-db`](../systems/brain-db/)
+- Best idea: **put the tenant in the index key, not in a predicate.** Every secondary index over statements carries a leading `(namespace_id, space_id)` prefix, and the comment states the guarantee in the form that matters — a range scan for one namespace and space "can physically never traverse another tenant's rows". There is no query shape that reads the wrong rows and then discards them, because the iterator never arrives at them.
+- Second idea: **fold the namespace into the partition id.** The storage space id is a UUIDv5 of the space string under a UUIDv5 of the namespace under a frozen root, so the same user-supplied string in two namespaces resolves to disjoint ids — isolation at the id level as well as the key prefix — and the derivation is pinned by a golden test because changing it would re-key every space in every deployment.
+- Third idea: **four timestamps, two axes, and a worked example in the header.** Object time says when a fact became and stopped being true; record time says when the substrate ingested and stopped believing the claim. The type's own documentation works the divergence: learn in May that Alice changed jobs in February, and "a query 'what did I believe on April 1?' returns the superseded statement… a query 'what was true on April 1?' does not".
+- Fourth idea: **decide what an as-of query does with rows deleted since, and write the decision down.** A row tombstoned today but alive at the requested instant passes the as-of step anyway, "because the tombstone filter runs against current state, while the as-of filter runs against historical state, and the historical answer must win when the caller asked for it". Having no answer to that question is the common case; this one has an answer and a reason.
+- Fifth idea: **keep belief and confidence as separate fields and separate filter steps.** Confidence has its own threshold step; supersession and tombstoning have theirs and default to dropping. The store can say "on record, not believed", which a threshold alone cannot express.
+- Sixth idea: **give the hard delete its own reason code.** `Retract` is distinct from the four soft reasons so the reclamation worker takes only rows the caller asked to remove, while soft tombstones and superseded rows are kept for audit — and the retract handler stamps it regardless of the caller's audit byte, so the physical consequence is not left to a field the caller controls.
+- Biggest risk: the anonymous space is an all-zero sentinel and it is the type's `Default`, used by server-side workers acting without a per-request caller. A forgotten space therefore resolves to a shared bucket rather than raising — the opposite default from a fail-closed design, in a system whose isolation is otherwise structural.
+- Second risk: only statements carry record-axis timestamps. Memories, entities and relations pass the as-of step unfiltered, which the module states inline, so a time-travel query is partial today.
+- Third risk: the word "tombstone" here is a row flag. Nothing is keyed on the value a caller asked to forget, and encode's dedup is a near-duplicate check against live content, so re-encoding the same sentence after a hard forget produces a new memory.
+- Most reusable component: `crates/brain-planner/src/retrieval/filters/logic.rs` — a six-step filter chain whose order is declared binding, whose steps report survivor counts for EXPLAIN, and whose one documented exception is argued rather than assumed.
+- Maturity impression: Apache-2.0 pre-release v0.1.0 — fifteen crates and 242,000 lines of Rust, 2,729 test functions, three protocol fuzz targets, fault-injection suites named for bit flips, IO faults, random kills and recovery chaos, and a 148-file normative specification that runs ahead of the tree in places and says which decisions are still open.
+- Study when: you need a worked reference for bi-temporal statements, or for enforcing a tenant boundary structurally rather than by remembering a predicate.
+- Do not copy when: you need a rejection that survives re-ingestion — forgetting here is keyed on the row, and the same content arriving again is simply a new memory.

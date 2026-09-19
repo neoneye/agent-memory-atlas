@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Rust memory database whose
+statements carry four independent timestamps across two axes, whose
+every secondary index is prefixed with namespace and space so a range
+scan cannot physically reach another tenant, and whose default read
+drops superseded and tombstoned rows while an as-of query deliberately
+overrides that.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Brain — Agent Memory Atlas">
+    <meta property="og:description" content="A Rust memory database
+whose statements carry four independent timestamps across two axes,
+whose every secondary index is prefixed with namespace and space so a
+range scan cannot physically reach another tenant, and whose default
+read drops superseded and tombstoned rows while an as-of query
+deliberately overrides that.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Brain — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Rust memory database
+whose statements carry four independent timestamps across two axes,
+whose every secondary index is prefixed with namespace and space so a
+range scan cannot physically reach another tenant, and whose default
+read drops superseded and tombstoned rows while an as-of query
+deliberately overrides that.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Brain — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Brain",
+      "description": "A Rust memory database whose statements carry four independent timestamps across two axes, whose every secondary index is prefixed with namespace and space so a range scan cannot physically reach another tenant, and whose default read drops superseded and tombstoned rows while an as-of query deliberately overrides that.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Memory database</p>
+          <h1>Brain</h1>
+          <p class="document-deck">A Rust memory database whose
+statements carry four independent timestamps across two axes, whose
+every secondary index is prefixed with namespace and space so a range
+scan cannot physically reach another tenant, and whose default read
+drops superseded and tombstoned rows while an as-of query deliberately
+overrides that.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/arc-labs-ai/brain-db">
+              <span>Source</span>
+              <strong>arc-labs-ai/brain-db</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/arc-labs-ai/brain-db/commit/32a77b853f8f5a8245add13615b4484bba9e956a" title="32a77b853f8f5a8245add13615b4484bba9e956a">
+              <span>Analyzed revision</span>
+              <code>32a77b85…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-19</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/arc-labs-ai--brain-db" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>arc-labs-ai--brain-db</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>5</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Brain is a memory database rather than a memory library: a Rust
+server, a binary wire protocol, no shipped client, and a 148-file
+normative specification. Four record types — Memory, Entity, Statement,
+Relation — with provenance, confidence and bi-temporal validity, and
+retrieval that fuses semantic, lexical and entity-graph arms before a
+filter chain whose step order is declared binding.</p>
+<p>Five marks, and three of them are unusually cleanly implemented.</p>
+<p><strong>The scope is in the key.</strong> Every secondary index over
+statements carries a leading namespace-and-space prefix, and the comment
+states the guarantee in the form that matters: a range scan for one
+namespace and space <em>"can physically never traverse another tenant's
+rows."</em> That is not a predicate applied after a read — there is no
+read that reaches the wrong rows at all.</p>
+<p><strong>Four timestamps on two axes, and the header works the
+divergence through.</strong> Object time says when a fact became and
+stopped being true; record time says when the substrate ingested and
+stopped believing the claim. The example is worked out in the type's own
+documentation: learn in May that Alice changed jobs in February, and
+<em>"a query 'what did I believe on April 1?' returns the superseded
+statement… a query 'what was true on April 1?' does not."</em></p>
+<p><strong>Belief is a state, and it is separate from the
+number.</strong> Confidence is a float with its own filter step;
+supersession and tombstoning are stored record-axis state with their own
+steps, and both default to dropping. The system can say <em>I have this
+on record and do not believe it</em>, which is the thing the mark exists
+to test.</p>
+<p>The part worth studying even if you build nothing like this is the
+step where the two interact. A row tombstoned today but alive at the
+instant an as-of query names passes the as-of step anyway, because
+<em>"the tombstone filter runs against current state, while the as-of
+filter runs against historical state, and the historical answer must win
+when the caller asked for it."</em></p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is what arrived. Statements are what was extracted from it,
+and they are where every mechanism lives.</p>
+<p>A statement is a subject, a predicate and an object, plus four things
+most stores keep implicit: who extracted it, what evidence it rests on,
+how confident that extractor was, and when — on both clocks. Corrections
+do not edit; they mint a new statement, point it at its predecessor,
+close the predecessor's record axis and keep both in a chain with a
+shared root.</p>
+<p>Forgetting is two operations, not one. A soft forget tombstones and
+keeps the row for audit; a hard forget stamps a distinct reason so the
+reclamation worker knows it may physically reclaim this row and not the
+soft ones.</p>
+<p>Isolation is not a filter. A namespace comes from the credential and
+a space comes per request, and both are folded into ids and into index
+keys before any query exists.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a binary wire protocol carries one opcode per cognitive operation into a planner that estimates cost, checks idempotency and appends to a write-ahead log before applying; extraction produces statements carrying provenance, confidence and four timestamps on two axes, with every extraction and resolution appended to time-ordered audit tables; recall fuses semantic, lexical and entity-graph arms by reciprocal rank and then runs a six-step filter chain in a binding order — type, temporal on the object axis, confidence, tombstone, supersession, and an as-of step on the record axis that deliberately overrides the tombstone step when a caller asks what was believed at a past instant</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a binary wire protocol carries one opcode per cognitive operation into a planner that estimates cost, checks idempotency and appends to a write-ahead log before applying; extraction produces statements carrying provenance, confidence and four timestamps on two axes, with every extraction and resolution appended to time-ordered audit tables; recall fuses semantic, lexical and entity-graph arms by reciprocal rank and then runs a six-step filter chain in a binding order — type, temporal on the object axis, confidence, tombstone, supersession, and an as-of step on the record axis that deliberately overrides the tombstone step when a caller asks what was believed at a past instant
+flowchart TD
+    WIRE[&quot;binary wire protocol&lt;br/&gt;CBOR, one opcode per operation&quot;] --&gt; PLAN[&quot;planner&lt;br/&gt;cost estimate · idempotency check&quot;]
+    PLAN --&gt; WAL[(&quot;write-ahead log&lt;br/&gt;LSN · fsync&quot;)]
+    WAL --&gt; APPLY[&quot;apply&quot;]
+
+    APPLY --&gt; EXTRACT[&quot;extractors&quot;]
+    EXTRACT --&gt; STMT[(&quot;statement&lt;br/&gt;subject · predicate · object&lt;br/&gt;confidence · evidence · extractor&lt;br/&gt;valid_from/valid_to · event_at&lt;br/&gt;extracted_at/record_invalidated_at&lt;br/&gt;chain_root · supersedes · superseded_by&lt;br/&gt;tombstoned + reason&quot;)]
+    EXTRACT --&gt; AUD[(&quot;extractor_audit + entity_resolution_audit&lt;br/&gt;append-only, UUIDv7-ordered&lt;br/&gt;input hash · outputs · cost&lt;br/&gt;indexed by memory, extractor, time&quot;)]
+    MERGE[&quot;entity merge&quot;] --&gt; ML[(&quot;merge_log&lt;br/&gt;replayable in reverse&quot;)]
+
+    STMT --&gt; IDX[(&quot;secondary indexes&lt;br/&gt;LEADING (namespace_id, space_id)&lt;br/&gt;a scan cannot reach another tenant&quot;)]
+
+    Q[&quot;RECALL&quot;] --&gt; ARMS[&quot;semantic + lexical + entity-graph&quot;]
+    IDX --&gt; ARMS
+    ARMS --&gt; RRF[&quot;reciprocal-rank fusion&quot;]
+    RRF --&gt; F1[&quot;1 type&quot;]
+    F1 --&gt; F2[&quot;2 temporal — object axis&lt;br/&gt;event_at, valid_from..valid_to&quot;]
+    F2 --&gt; F3[&quot;3 confidence ≥ threshold&quot;]
+    F3 --&gt; F4[&quot;4 tombstone — dropped unless opted in&quot;]
+    F4 --&gt; F5[&quot;5 supersession — dropped unless opted in&quot;]
+    F5 --&gt; F6{&quot;6 as-of — record axis&lt;br/&gt;extracted_at ≤ t AND&lt;br/&gt;(record_invalidated_at IS NULL OR &gt; t)&quot;}
+    F6 --&gt;|&quot;alive at t, tombstoned today&quot;| KEEP[&quot;kept — the historical answer wins&quot;]
+    F6 --&gt; LIM[&quot;limit&quot;]
+    KEEP --&gt; LIM
+    LIM --&gt; OUT[&quot;ranked results + EXPLAIN survivor counts&quot;]</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<ul>
+<li><strong>Record types:</strong>
+<code>crates/brain-core/src/nodes/statement.rs</code>,
+<code>entity.rs</code>, <code>relation.rs</code>,
+<code>memory.rs</code>.</li>
+<li><strong>Ids and scope derivation:</strong>
+<code>crates/brain-core/src/ids.rs</code>.</li>
+<li><strong>Tables and index prefixes:</strong>
+<code>crates/brain-metadata/src/tables/</code>.</li>
+<li><strong>Supersession, tombstoning, cascade:</strong>
+<code>crates/brain-metadata/src/statement/</code>,
+<code>cascade.rs</code>.</li>
+<li><strong>Filter chain:</strong>
+<code>crates/brain-planner/src/retrieval/filters/logic.rs</code>.</li>
+<li><strong>Forget planning:</strong>
+<code>crates/brain-planner/src/planner/forget.rs</code>.</li>
+<li><strong>Write-ahead log and recovery:</strong>
+<code>crates/brain-storage/src/wal/</code>,
+<code>recovery.rs</code>.</li>
+<li><strong>Specification:</strong> <code>spec/</code>, notably
+<code>02_data_model</code>, <code>03_schema</code> and
+<code>20_tenancy</code>.</li>
+</ul>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The statement is the record worth reading in full. Beyond the four
+timestamps it carries a version, a <code>supersedes</code> and
+<code>superseded_by</code> pair, a <code>chain_root</code> that is
+self-referential until the statement is superseded, a tombstone flag
+with a typed reason, and an <code>is_stateful</code> flag copied from
+the predicate definition at write time.</p>
+<p>Two smaller decisions are worth lifting.</p>
+<p><code>SubjectRef</code> has three variants, and the third is the
+interesting one: a subject can be a resolved entity, the source memory
+itself — for statements about a memory rather than about a thing, such
+as when an event occurred — or <code>Pending</code>, holding an audit id
+when the resolver returned ambiguous. The comment notes that query paths
+excluding pending subjects skip those, so an unresolved reference is a
+distinguishable state rather than a guess.</p>
+<p><code>TombstoneReason</code> separates <code>Retract</code> from the
+four soft reasons for a stated operational purpose: the reclamation
+worker selects only rows the caller asked to remove, while soft
+tombstones and superseded rows <em>"are kept for audit."</em> The
+retract handler stamps that reason regardless of what the caller put in
+the audit byte, which is the small correct detail — the physical
+consequence is not left to a field the caller controls.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three arms fuse by reciprocal rank, then six filters run in an order
+the module calls binding, then a limit. EXPLAIN reports survivor counts
+per step, which makes the chain debuggable in the way a single opaque
+WHERE clause is not.</p>
+<p>The order is the design. Type first, then the object-time window,
+then confidence, then tombstone, then supersession, then as-of — and the
+last one is documented as the exception to the fourth, because history
+and current state are different questions and a caller who asked the
+historical one should get the historical answer.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Every operation is planned before it is executed: a cost estimate
+checked against a budget, an idempotency check on the request id, a
+write-ahead log append with fsync, then apply. A forget plan carries
+explicit booleans for what it will do — tombstone the arena slot, commit
+metadata, mark the HNSW entry removed, and for a hard forget zero the
+vector and the text.</p>
+<p>Corrections supersede. The supersede path stamps
+<code>record_invalidated_at</code> on the predecessor, and the tombstone
+path stamps it too, so a single predicate — that timestamp being unset —
+answers <em>is this the current belief</em> regardless of which route
+retired the old one.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>None, deliberately. Brain ships no client; the README says any
+language speaks the binary wire protocol directly, and the protocol
+section documents per-opcode field schemas. There is an admin port, a
+plugin surface with connectors and enrichers, and a Docker image.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Trust state — awarded.</strong> Confidence and belief are
+separate fields, separate filter steps, and separate questions.</p>
+<p><strong>Bi-temporal — awarded</strong>, on the fullest form in this
+reading: four timestamps, both axes reaching the read, and the
+interaction between the historical and current-state filters decided
+explicitly. The stated limit is that only statements carry the record
+axis today.</p>
+<p><strong>Scope enforced — awarded</strong>, on the key prefix rather
+than a predicate, plus an id derivation that folds the namespace so the
+same space string under two namespaces cannot collide. The caveat is the
+default: the anonymous space is an all-zero sentinel and it is the
+type's <code>Default</code>, used by server-side workers that act
+without a caller. That is a reasonable choice for a worker and a hazard
+for a forgotten request path, since the failure is a shared bucket
+rather than an error.</p>
+<p><strong>Audit log — awarded.</strong> Append-only, time-ordered by
+construction, with an input hash and the produced outputs, indexed three
+ways — and a merge log carrying enough to run an unmerge backwards.</p>
+<p><strong>Negative eval — awarded</strong>, on the four-case
+record-axis table and the end-to-end supersession case.</p>
+<p><strong>Tombstone — withheld.</strong> The word is here and the
+mechanism is careful, but the key is the row: <code>tombstoned</code>,
+<code>tombstoned_at</code> and <code>tombstone_reason</code> sit on a
+statement, and nothing is keyed on the value a caller asked to forget.
+Encode does de-duplicate — the planner asserts text encode dedup is
+always on — but that is a near-duplicate check against live content, not
+a consult against a record of what was rejected. Re-encoding the same
+sentence after a hard forget produces a new memory.</p>
+<p><strong>Human review — withheld.</strong> No approval surface exists;
+EXPLAIN and the admin port are read-only diagnostics. The nearest thing
+is the pending-resolution audit, which records that the resolver could
+not decide — a place a reviewer could stand, with no reviewer standing
+there.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>No paper</strong> and no <code>CITATION.cff</code>. The
+specification cites Zep and Graphiti's bi-temporal model as the thing
+being applied to a typed graph, which is an honest attribution rather
+than a claim of novelty.</p>
+<p>2,729 test functions across fifteen crates, three protocol fuzz
+targets, and fault-injection suites named for what they inject — bit
+flips, IO faults, random kills, recovery chaos, concurrent edges. A
+database that tests its recovery path by killing itself at random points
+is treating durability as something to be measured rather than
+asserted.</p>
+<p><code>spec/19_benchmarks</code> exists and the README shows a p99
+recall figure in its terminal banner. No benchmark result is committed
+to the tree, so that number is a screenshot rather than a measurement a
+reader can reproduce.</p>
+<p>The status badge says pre-release v0.1.0, and the tenancy
+specification marks several decisions as still open. Reading the spec as
+a description of the code would overstate what is built — the
+<code>SpaceId</code> type, for instance, appears in the metadata index
+prefixes and the executor context but not yet in the write-ahead log
+payloads.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<ul>
+<li><strong>Put the scope in the key.</strong> A leading
+<code>(namespace, space)</code> prefix makes cross-tenant traversal
+impossible rather than merely filtered, and it removes the question of
+whether every query remembered its predicate.</li>
+<li><strong>Derive the partition id from the namespace as well as the
+space</strong>, so two tenants cannot collide on the same user-supplied
+string — and pin the derivation with a golden test, because changing it
+re-keys everyone.</li>
+<li><strong>Keep belief and confidence as separate fields.</strong> A
+threshold cannot express <em>on record but not believed</em>, and a
+state cannot express <em>probably</em>.</li>
+<li><strong>Decide what an as-of query does with rows deleted
+since.</strong> Brain's answer — the historical filter overrides the
+current-state one when the caller asked for history — is one defensible
+choice; having no answer is not.</li>
+<li><strong>Give the hard delete its own reason code.</strong> The
+reclamation worker can then select exactly what a caller asked to
+remove, and soft tombstones survive for audit without a second
+flag.</li>
+<li><strong>Name what a fault-injection suite injects.</strong> Bit
+flips, IO faults and random kills are three different failure classes,
+and a suite per class reports which one broke.</li>
+</ul>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Only statements carry record-axis timestamps, so an as-of query
+passes memories, entities and relations through unfiltered. Is extending
+the axis to those planned, and what does an as-of answer mean today when
+a statement's subject entity has been merged since?</li>
+<li>The anonymous space is the <code>Default</code> for
+<code>SpaceId</code>. Would a distinct <code>Worker</code> sentinel,
+with the plain default made unconstructable, keep the worker convenience
+without the forgotten-request hazard?</li>
+<li>The specification is 148 files and the tree is v0.1.0. Which
+sections are descriptions of the code and which are the plan — is there
+a marker, or is reading both the only way to tell?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li>Record types: <code>crates/brain-core/src/nodes/statement.rs</code>,
+<code>nodes/entity.rs</code>, <code>nodes/relation.rs</code>,
+<code>nodes/memory.rs</code>, <code>nodes/kinds.rs</code></li>
+<li>Ids and scope derivation:
+<code>crates/brain-core/src/ids.rs</code></li>
+<li>Tables and index prefixes:
+<code>crates/brain-metadata/src/tables/statement.rs</code>,
+<code>tables/audit.rs</code>, <code>tables/extractor_audit.rs</code>,
+<code>tables/merge.rs</code></li>
+<li>Supersession and tombstoning:
+<code>crates/brain-metadata/src/statement/supersede.rs</code>,
+<code>statement/tombstone.rs</code>,
+<code>crates/brain-metadata/src/cascade.rs</code></li>
+<li>Filter chain:
+<code>crates/brain-planner/src/retrieval/filters/logic.rs</code> and
+<code>filters/tests.rs</code></li>
+<li>Forget: <code>crates/brain-planner/src/planner/forget.rs</code>,
+<code>crates/brain-planner/src/plan/forget.rs</code></li>
+<li>Durability: <code>crates/brain-storage/src/wal/</code>,
+<code>crates/brain-storage/src/recovery.rs</code>, and the fault suites
+under <code>crates/brain-storage/tests/</code></li>
+<li>Specification: <code>spec/02_data_model</code>,
+<code>spec/03_schema</code>, <code>spec/20_tenancy</code></li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/arc-labs-ai/brain-db/commit/32a77b853f8f5a8245add13615b4484bba9e956a"><code class="commit-id" title="32a77b853f8f5a8245add13615b4484bba9e956a">32a77b85…</code></a>
+— first reading, at the head of <code>main</code>, status pre-release
+v0.1.0. Screened with <code>scripts/screen_repo.py</code> before
+anything was read: one auto-run surface in a devcontainer configuration,
+no build-time execution path, no floating dependency surface, no
+instruction file addressed to a reading agent, and both
+<code>Cargo.lock</code> files unchanged for forty-seven days. Nothing
+was installed, built or run. Apache-2.0. Five marks. The reading covered
+the four record types and the statement's four timestamps, the
+supersession and tombstone paths and their shared record-invalidation
+stamp, the forget planner's soft and hard modes, the audit and merge
+tables, the index key prefixes and the space-id derivation, the six-step
+filter chain and its as-of step, and the filter test suite; the
+embedding, indexing, planner-cost, HTTP and plugin crates were read as
+context rather than as subject, and 242,000 lines across 677 files means
+this reading is of the memory model rather than of the whole tree. Two
+marks are withheld with reasons in section 9. The one worth repeating is
+<code>tombstone</code>: the word is used here for a row flag, and
+nothing is keyed on the value a caller asked to forget, so re-encoding
+the same sentence after a hard forget produces a new memory. The
+specification is 148 files against a v0.1.0 tree, so claims read there
+were checked against code before being repeated.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
