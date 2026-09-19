@@ -7,15 +7,15 @@ page_kind: system
 source_name: "Whooptie/NOVA_AI"
 source_url: https://github.com/Whooptie/NOVA_AI
 archive_name: "Whooptie--NOVA_AI"
-revision: 4ad85507ab637897cd84abc891f733f2e7fab189
-revision_url: https://github.com/Whooptie/NOVA_AI/commit/4ad85507ab637897cd84abc891f733f2e7fab189
-analyzed_at: 2026-09-16
+revision: da6b91611b3d973badb9f3a808a7eee332cf338c
+revision_url: https://github.com/Whooptie/NOVA_AI/commit/da6b91611b3d973badb9f3a808a7eee332cf338c
+analyzed_at: 2026-09-19
 capabilities: "tombstone, trust_state, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "concept graph, write path | core/semantic.py | add_sense tests status == rejected before the confidence/status branch and returns a blocked signal without touching the stored sense | tests/test_tombstone.py, test_add_sense_dedup_BLOKKEERT_rejected_status_BUG_32_FIX"
   trust_state: "concept graph, senses and relations | core/semantic.py | status field of unverified/confirmed/rejected, written from source, monotonic against automatic downgrade | tests/test_tombstone.py, reject_sense and reject_relation status assertions"
   audit_log: "concept graph, per-record | core/semantic.py | _audit_sense and _audit_relation append to the record's own audit_log with old_value/new_value, mirrored to logs/concepts.jsonl | none"
-  human_review: "concept graph, write and re-admission gates | core/semantic.py | the spoken confirmation before a relation is stored, and handle_reactivation_answer gating re-admission of a rejected value on an explicit ja/nee | tests/test_reactivatie_flow.py"
+  human_review: "the concept graph's write and re-admission gates, answered on the only channel there is | core/semantic.py:2052 handle_confirm, :2159-2168 the pending reactivation, :2183 handle_reactivation_confirm, core/intent_router.py:4245-4253 | a relation is not stored until the spoken answer comes back, and a rejected sense is not re-admitted until the question `Wil je dit echt opnieuw bevestigen? (ja/nee)` is answered. The producer cannot answer for the user because there is no producer surface: `handle_confirm` has exactly one caller, `intent_router.py:4253`, reached only when the transcribed turn is literally `ja` or `nee` and no other pending question holds the floor, and `core/` contains no MCP server, tool-call dispatcher or function-call surface of any kind — the single input channel is the user speaking | tests/test_reactivatie_flow.py, tests/test_intent_router_reactivatie_en_woordmatch.py"
   negative_eval: "concept graph, reasoning read path | tests/test_tombstone.py | part_of_chained and get_relations asserted to exclude refuted material while concepts.json still holds it, each paired with a pre-refutation positive control | tests/test_tombstone.py"
 stack_storage: "sqlite, files"
 stack_retrieval: "graph"
@@ -613,6 +613,8 @@ has yet written the delete.
 - Licence: `LICENSE.txt` ("Viewable, Not Reusable").
 
 ## History
+
+**2026-09-19** — re-pinned to [`da6b91611b3d973badb9f3a808a7eee332cf338c`](https://github.com/Whooptie/NOVA_AI/commit/da6b91611b3d973badb9f3a808a7eee332cf338c). All five marks stand. `human_review`'s record had one file and no line numbers behind it and now carries both, plus the producer test: `handle_confirm` (`core/semantic.py:2052`) has exactly one caller, `core/intent_router.py:4253`, reached only when the transcribed turn is literally `ja` or `nee` and nothing else holds the floor; the re-admission question and `handle_reactivation_confirm` are at `:2159-2168` and `:2183`. What settles it is the absence rather than a check: `core/` contains no MCP server, tool-call dispatcher or function-call surface, so the only channel an answer can arrive on is the user speaking. That is the same shape as parsing an adjudication out of the user's own message, and it is the strongest form this mark takes. The licence caveat in section 1 is unchanged and still governs what a reader may do with the rest. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`4ad85507ab637897cd84abc891f733f2e7fab189`](https://github.com/Whooptie/NOVA_AI/commit/4ad85507ab637897cd84abc891f733f2e7fab189) — re-read at a commit dated 16 September 2026. The previous pin could not be compared against this one: the GitHub comparison refuses with a 422 because `5d989252` is no longer an ancestor of `main`, so the branch was rewritten rather than advanced — and the head moved again between two requests a minute apart, so the rewriting is ongoing. The pinned commit itself survives, both upstream by sha and in the atlas's archive fork, so the previous reading remains checkable. Against the new head the two anchored files show a 2,741-line diff that is not a change: `git diff -w --ignore-cr-at-eol` between the pins is empty, and `core/semantic.py` went from zero carriage returns to 2,496, so the whole difference is a conversion from LF to CRLF. The tombstone mechanism and its test are therefore identical in content, and all five marks hold verbatim. Screened before reading, from a full clone: no auto-run surface, two build-time execution points, one unpinned dependency surface and one dependency file inside the seven-day cooldown. Nothing was installed, built or run.
 
