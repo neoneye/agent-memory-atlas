@@ -119,7 +119,7 @@ disk.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/klairtech--one-agent-many-hats" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -877,6 +877,28 @@ conservative flag</li>
 <code>test/registry-invariants.test.ts</code></li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/klairtech/one-agent-many-hats/commit/a90396cff12b1e2fbb8a14f74eef6c6c89105b4f"><code class="commit-id" title="a90396cff12b1e2fbb8a14f74eef6c6c89105b4f">a90396cf…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin, and the
+middle of the ladder turns out to be the point. The record said
+<code>select</code> skips <code>disabled</code>, which it does, but that
+is the least of the three admission tests in that loop. The third is
+<code>if (lesson.status !== 'active' &amp;&amp; !inCanarySlice(opts.runId, lesson.id)) continue</code>
+— a draft or canary lesson is injected into a deterministic half of
+runs, chosen by an FNV-1a hash of the run id and the lesson id rather
+than at random, and the comment gives the reason: <em>"so the runs
+without it are the control group."</em> The lesson is withheld from half
+the runs in order to measure whether it helps. Promotion then reads only
+what those runs produced — two accepts with confidence at or above 0.6
+promote, three rejects or confidence under 0.2 retire it as
+<em>"contradicted by outcomes"</em>, six injected runs with no match
+retire it as <em>"never matched — expired as noise"</em> — and
+<code>disabled</code> is terminal, returned unchanged before any other
+rule runs. Two details complete it: all three admission tests run before
+the relevance score is computed, and the confidence floor sits in the
+same guard as the state test while doing a different job, which is this
+mark's distinction stated in three consecutive lines of code. Nothing
+was installed and no suite was run.</p>
 <p><strong>2026-09-18</strong> — re-read at the same commit; nothing
 upstream has moved. All three marks re-derived and all three stand.
 <code>trust_state</code>: the lifecycle is at

@@ -118,7 +118,7 @@ exactly like an extractor that never fired.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-18</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/grpcer--ownmem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -463,6 +463,36 @@ claims</h3>
 grep -rn &quot;scopes&quot; lib/memory-ranker.mjs
 grep -rn -i &quot;arxiv\|doi&quot; README.md</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/grpcer/ownmem/commit/14f4edec52ebc5d1dcf7794f451d3e6d2c64e969"><code class="commit-id" title="14f4edec52ebc5d1dcf7794f451d3e6d2c64e969">14f4edec…</code></a>
+— <code>trust_state</code> re-tested at the unchanged pin. The record
+quoted the right sentence — <code>candidate</code> is <em>"the one state
+with no path into a delivered context"</em> — and anchored it to a JSON
+schema, where the machinery is not. Three files carry it.
+<code>memory-lifecycle.mjs</code> holds the frozen transition map: nine
+states, three terminal ones with empty successor sets, and a ladder that
+means something, since a candidate may only reach <code>shadow</code>,
+<code>advisory</code> or <code>rejected</code> and never
+<code>active</code> directly, while an <code>active</code> memory may
+only fall and can return to advisory only by way of <code>stale</code>.
+<code>memory-promotion-policy.mjs</code> bounds promotion by an
+authorised tier rather than by the ladder alone, comparing indices so
+nothing climbs past what the authority permits. And
+<code>memory-trust-store.mjs</code> makes the history checkable instead
+of asserted: a receipt's <code>lifecycle</code> must equal its own
+<code>transition.to</code>, the previous receipt's
+<code>lifecycle</code> must equal this one's
+<code>transition.from</code>, and a break raises <em>"memory trust
+history is discontinuous"</em>. The same file closes the gap that lets
+an approved state drift away from what was approved — once a memory is
+<code>active</code>, a change must be a <code>delta</code> or a
+<code>structured-merge</code>, not a wholesale rewrite. One aside worth
+keeping: <code>R0</code> has no producer and the comment above it says
+why it is kept rather than pruned, because it grades a promotion
+candidate whose blast radius is metadata alone and <em>"removing it
+would delete the one level the promotion design starts from"</em> — a
+dead enum member with a written defence, which is the rarer thing to
+find. Nothing was installed and no suite was run.</p>
 <p><strong>2026-09-18</strong> — <a
 href="https://github.com/grpcer/ownmem/commit/14f4edec52ebc5d1dcf7794f451d3e6d2c64e969"><code class="commit-id" title="14f4edec52ebc5d1dcf7794f451d3e6d2c64e969">14f4edec…</code></a>
 — re-read at the same commit; <code>main</code> has not moved. The
