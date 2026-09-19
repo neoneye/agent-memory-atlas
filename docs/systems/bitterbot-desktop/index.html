@@ -121,14 +121,14 @@ expired to archived while the migration maps forgotten to expired.</p>
               <strong>Bitterbot-AI/bitterbot-desktop</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Bitterbot-AI/bitterbot-desktop/commit/bc31e5e0f0ea17761b30a18514b1892d32f18775" title="bc31e5e0f0ea17761b30a18514b1892d32f18775">
+            <a class="meta-pill revision-pill" href="https://github.com/Bitterbot-AI/bitterbot-desktop/commit/cf9332b1d025d5963480e57655f68986c737aae3" title="cf9332b1d025d5963480e57655f68986c737aae3">
               <span>Analyzed revision</span>
-              <code>bc31e5e0…</code>
+              <code>cf9332b1…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Bitterbot-AI--bitterbot-desktop" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -546,8 +546,33 @@ merged</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/Bitterbot-AI/bitterbot-desktop/commit/cf9332b1d025d5963480e57655f68986c737aae3"><code class="commit-id" title="cf9332b1d025d5963480e57655f68986c737aae3">cf9332b1…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line. The mark
+holds and every finding in this report about the two lifecycle columns
+still holds at the new pin, re-checked in source:
+<code>LifecycleState</code> is active / archived / consolidated /
+forgotten and <code>Lifecycle</code> is generated / activated / frozen /
+consolidated / archived / expired
+(<code>src/memory/chunk-writer.ts:47-54</code>);
+<code>deriveLifecycleState</code> still maps an expired lifecycle to the
+archived state (<code>:99-101</code>); <code>memcube.ts:10</code> still
+declares a second <code>LifecycleState</code> with
+<code>consolidating</code> where the writer has
+<code>consolidated</code>; and <code>skill-version-resolver.ts</code>
+still filters <code>lifecycle_state != 'expired'</code> on both version
+queries, at <code>:257</code> and <code>:304</code>. The retrieval path
+and the purge sweep continue to name each value against the column that
+holds it (<code>manager-embedding-ops.ts:1119-1120</code>,
+<code>consolidation.ts:567-576</code>), which is what the skill resolver
+does not. <code>buildTemporalWhereClause</code> and
+<code>currentFactsOnly</code> still have no caller outside
+<code>temporal-filter.ts</code> itself. The evidence record is rewritten
+to carry these anchors rather than asserting the filter in prose, and to
+state the exception beside the mark instead of only in the risks field.
+Screened again first; nothing was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/Bitterbot-AI/bitterbot-desktop/commit/bc31e5e0f0ea17761b30a18514b1892d32f18775"><code class="commit-id" title="bc31e5e0f0ea17761b30a18514b1892d32f18775">bc31e5e0…</code></a>
+href="https://github.com/Bitterbot-AI/bitterbot-desktop/commit/cf9332b1d025d5963480e57655f68986c737aae3"><code class="commit-id" title="cf9332b1d025d5963480e57655f68986c737aae3">cf9332b1…</code></a>
 — first reading, at a commit dated 15 September 2026. Screened before
 opening, from a shallow clone; a dependency surface had changed inside
 the seven-day cooldown. Nothing was installed, built or run.</p>

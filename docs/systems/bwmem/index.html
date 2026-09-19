@@ -111,14 +111,14 @@ value, the new one and why.</p>
               <strong>Bitwarelabscom/bwmem</strong>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
-            <a class="meta-pill revision-pill" href="https://github.com/Bitwarelabscom/bwmem/commit/a0f7c194121f7b89afa0439bcca44c86d66d0e99" title="a0f7c194121f7b89afa0439bcca44c86d66d0e99">
+            <a class="meta-pill revision-pill" href="https://github.com/Bitwarelabscom/bwmem/commit/1d0acee29e3b5121f9097ea856e2e6017be8af69" title="1d0acee29e3b5121f9097ea856e2e6017be8af69">
               <span>Analyzed revision</span>
-              <code>a0f7c194…</code>
+              <code>1d0acee2…</code>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Bitwarelabscom--bwmem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -170,11 +170,30 @@ atlas found two reports into this same family.</p>
 <p><strong>The status vocabulary is enforced by the database.</strong>
 <code>fact_status</code> is constrained to <code>active</code>,
 <code>overridden</code>, <code>superseded</code> and
-<code>expired</code>, every read filters to <code>active</code>, and the
-partial index is built <code>WHERE fact_status = 'active'</code> — so
-the active set is the read set in the planner as well as in the
-predicate. A superseded fact keeps its row, its lineage and its place in
-the bitemporal history while leaving what the bot is handed.</p>
+<code>expired</code>, and the partial index is built
+<code>WHERE fact_status = 'active'</code> — so the active set is the
+read set in the planner as well as in the predicate. A superseded fact
+keeps its row, its lineage and its place in the bitemporal history while
+leaving what the bot is handed.</p>
+<p>Seven of the eight reads of the facts table carry the predicate —
+retrieval (<code>facts.service.ts:306</code>), full-text search
+(<code>:397</code>), the mention-count lookup (<code>:543</code>), the
+relevance pass (<code>:648</code>), the similarity check
+(<code>:689</code>), quality scoring
+(<code>quality-scorer.service.ts:402</code>), collision detection
+(<code>fact-collision.service.ts:421</code>) and the contradiction
+correlation (<code>contradiction.service.ts:230</code>). The eighth
+leaves it out on purpose, and the omission is the interesting part:
+<code>getFactsAsOf</code> (<code>:441-458</code>) answers what was
+believed at one time about the world at another, and composes
+<code>recorded_at</code>, <code>superseded_at</code>,
+<code>valid_from</code> and <code>valid_until</code> instead. Filtering
+that query to <code>active</code> would answer the question wrong — a
+fact superseded last week was the belief the week before, which is
+exactly what the caller asked for. This atlas more often finds the
+opposite: a predicate that holds on the main read and silently lapses on
+a second one. Here the one read without it is the one that should not
+have it.</p>
 <p><strong>Scope is the other thing done without a gap.</strong>
 <code>user_id</code> is stored on every fact, is the first bound
 parameter of every read, and is a required argument with no unscoped
@@ -351,8 +370,28 @@ question</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/Bitwarelabscom/bwmem/commit/1d0acee29e3b5121f9097ea856e2e6017be8af69"><code class="commit-id" title="1d0acee29e3b5121f9097ea856e2e6017be8af69">1d0acee2…</code></a>
+— <code>trust_state</code> re-tested against the narrowed line, and the
+record's universal claim was worth checking: it said <em>every</em> read
+path filters to <code>fact_status = 'active'</code>. Seven of the eight
+reads of the facts table do, and the eighth leaves it out deliberately —
+<code>getFactsAsOf</code>
+(<code>src/memory/facts.service.ts:441-458</code>) answers what was
+believed at one time about the world at another and composes
+<code>recorded_at</code>, <code>superseded_at</code> and the validity
+window instead, because filtering to <code>active</code> would answer
+that question wrong: a fact superseded last week was the belief the week
+before. The mark holds and is better stated with the exception in it.
+Every other anchor re-checked in source, including the
+<code>CHECK</code> constraint and the partial index. The evidence record
+now names the eight sites and carries a test citation,
+<code>tests/unit/temporary-fact-expiry.test.ts:80</code>, which asserts
+the expiry sweep only ever touches temporary, active rows — the field
+previously held prose rather than a test. Screened again first; nothing
+was installed and no suite was run.</p>
 <p><strong>2026-09-16</strong> — <a
-href="https://github.com/Bitwarelabscom/bwmem/commit/a0f7c194121f7b89afa0439bcca44c86d66d0e99"><code class="commit-id" title="a0f7c194121f7b89afa0439bcca44c86d66d0e99">a0f7c194…</code></a>
+href="https://github.com/Bitwarelabscom/bwmem/commit/1d0acee29e3b5121f9097ea856e2e6017be8af69"><code class="commit-id" title="1d0acee29e3b5121f9097ea856e2e6017be8af69">1d0acee2…</code></a>
 — first reading, at a commit dated 12 September 2026. Screened before
 opening, from a shallow clone: no auto-run surfaces, one build-time
 execution point, one unpinned dependency surface and two dependency
