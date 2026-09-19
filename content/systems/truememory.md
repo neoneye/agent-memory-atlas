@@ -9,10 +9,10 @@ source_url: https://github.com/buildingjoshbetter/TrueMemory
 archive_name: "buildingjoshbetter--TrueMemory"
 revision: 063e5b8844af735a52fde886217a5d26a0f13064
 revision_url: https://github.com/buildingjoshbetter/TrueMemory/commit/063e5b8844af735a52fde886217a5d26a0f13064
-analyzed_at: 2026-09-14
+analyzed_at: 2026-09-19
 capabilities: "trust_state, negative_eval"
 capability_evidence:
-  trust_state: "the fact timeline — a superseded fact is deranked, not hidden | truememory/consolidation.py:857 (writer), :1128 and :1152-1155 (reader) | contradiction detection writes `UPDATE fact_timeline SET superseded_by = ?, status = 'superseded' WHERE id = ?`. The query path selects `COALESCE(status, 'active')` and picks the current fact as one that is neither pointed at by `superseded_by` nor marked `'superseded'`; when every fact for a subject is superseded it falls back to the latest rather than returning nothing, so the state deranks rather than erases. The status is discrete, stored on the row and read at query time | tests/ covers the supersession path; no test pins the all-superseded fallback"
+  trust_state: "the fact timeline — two values, one writer, and a read path that filters with it before ranking with it | truememory/consolidation.py:857 (writer), :1128 and :1152-1155 (the filter), :1163-1167 (the score), truememory/engine.py:1950 (the production caller), truememory/storage.py:100 (the column) | `status` is `active` by default and `superseded` after contradiction detection writes `UPDATE fact_timeline SET superseded_by = ?, status = superseded WHERE id = ?`. The query path selects `COALESCE(status, active)` and picks the current fact as one that is neither pointed at by `superseded_by` nor marked superseded — that is the filtering use the mark turns on. It then does a second thing the line warns about: when the chosen fact is superseded anyway, because every fact for the subject is, relevance is multiplied by 0.5 and the row still reaches the reranker through `engine.py:1950`. So the state both filters and, in the fallback, becomes a score | tests/test_issue_580_contradiction_record.py:342 and :349 pin the column and its default; :261 and :280 are the two supersession search cases and neither asserts a relevance value — :280 is named test_superseded_ranked_lower and its docstring says relevance should be halved, but its body only checks that the current fact is the newer one, and :261 ends in an assertion true of any non-empty result. The 0.5 penalty and the all-superseded fallback are unpinned"
   negative_eval: "core search and its five supplement legs — a directive must not surface unless asked for | tests/test_issue_637_directive_leaks.py | fifteen tests over rows with `directive=1`, e.g. *\"Always call josh by his secret codename Falcon in every reply\"*. The file exists because directives were *\"excluded from core search but leaked through several supplement legs\"*, and its docstring enumerates all five: the personality/style-vector path, the clustered path plus `clean_results`, entity-profile pollution on `add(directive=True)`, the temporal fallback SQL, and the requirement that `include_directives=True` still be honoured through each. Every exclusion assertion is paired with its inclusion counterpart — `assert not r.get(\"directive\")` beside `assert any(r.get(\"directive\") for r in rows)` — so a search returning nothing cannot pass | tests/test_issue_637_directive_leaks.py:62 with the control at :70; :79 with :96"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
@@ -189,6 +189,20 @@ half weight is deliberate and worth naming: "what did I used to believe" stays
 answerable, which is exactly what the BEAM "contradiction resolution" category
 (91.4%) tests.
 
+The pair is worth separating, because the two halves are not the same kind of
+thing. Picking the current fact is the state used as a **filter**, and that is
+what the mark turns on. The ×0.5 is the same state used as a **score**, and it
+applies only in the fallback, when every fact for the subject is superseded and
+the row goes on to the reranker anyway (`truememory/engine.py:1950`). Neither
+half is pinned. The two supersession tests are
+`tests/test_issue_580_contradiction_record.py:261` and `:280`, and neither
+asserts a relevance value: `:280` is named `test_superseded_ranked_lower`, its
+docstring says *"when only superseded facts match, relevance should be halved"*,
+and its body checks only that the current fact is the newer one — a property that
+holds whether or not the penalty fires. `:261` ends in `assert results`, true of
+any non-empty result. The column and its default are pinned (`:342`, `:349`);
+what the column does to a ranking is not.
+
 **Scope is not enforced.** `entity_scope` never reaches a query.
 
 ## 7. Write Mechanics
@@ -315,7 +329,9 @@ itself; the arithmetic is the only thing checked, and it holds.
   test per leg, each paired with its `include_*=True` counterpart.
 - **Keep a superseded fact retrievable at half weight.** Not hidden, not equal —
   a discrete `status` read at query time, with a documented relevance penalty, so
-  the history stays answerable and the current answer still wins.
+  the history stays answerable and the current answer still wins. Copy the
+  separation, not the coverage: the penalty is a constant in the source and no
+  committed test asserts it, including the one named for it.
 - **Compute outside the write lock.** Read, compute in memory, write in one
   SAVEPOINT — and write the incident into the comment: the silent
   `conn.commit()` of a caller's in-flight transaction, named as "the
@@ -355,6 +371,9 @@ retrieval numbers.
   carefully for columns nothing selects.
 - **What happens to `superseded_by` across a rebuild?** The IDs are reassigned;
   whether any consumer holds one between passes was not traced.
+- **Is the ×0.5 penalty the number anyone intended?** It is a literal in
+  `consolidation.py:1167` with no configuration and no test, and the only test
+  named for it asserts something else.
 - **How does the paper's evaluation relate to the committed JSONs?** The paper
   was not read for this report; the repository's own files were.
 - **Does the regex contradiction set have a false-positive measure?** BEAM's
@@ -395,6 +414,8 @@ per-category table), `benchmarks/beam/truememory_pro_beam1m_run{1,2,3}.json`,
 `benchmarks/longmemeval/`
 
 ## History
+
+**2026-09-19** — [`063e5b8844af735a52fde886217a5d26a0f13064`](https://github.com/buildingjoshbetter/TrueMemory/commit/063e5b8844af735a52fde886217a5d26a0f13064) — `trust_state` re-tested at an unchanged pin against the narrowed line: does the field answer whether a memory may be acted on and get used for filtering, or how sure and get used for ranking. Here it does both, and the record named only one. Every anchor held — the writer at `consolidation.py:857`, the `COALESCE(status, 'active')` read at `:1128`, the current-fact predicate at `:1152-1155` — and the filtering use is what earns the mark. The second use sits four lines further on: when the chosen fact is superseded anyway, `relevance *= 0.5` (`:1163-1167`), and the row still reaches the reranker through the production caller `engine.py:1950`. Neither half is pinned, and the test situation is sharper than the previous caveat suggested. There are two supersession search cases. `tests/test_issue_580_contradiction_record.py:280` is named `test_superseded_ranked_lower` and its docstring says relevance should be halved, but its body asserts only that the current fact is the newer one — which holds whether or not the penalty fires; `:261` ends in an assertion true of any non-empty result, after a loop that can return early. The column and its default are pinned at `:342` and `:349`. So a named test covers the mechanism's headline and tests its outcome instead. Section 6, the reusable-idea bullet and the open questions were rewritten; the diagram already carried the ×0.5. Re-read from a fresh clone; nothing was installed and no suite was run.
 
 **2026-09-14** — [`063e5b8844af735a52fde886217a5d26a0f13064`](https://github.com/buildingjoshbetter/TrueMemory/commit/063e5b8844af735a52fde886217a5d26a0f13064) — second reading. Six commits since the previous pin and every one is a Dependabot bump: the diff is `ci.yml`, `publish.yml` and `pyproject.toml`, three files and twelve lines. No source file and no test changed. Screened again: 0 auto-run surfaces, 2 build-time exec paths, nothing inside the cooldown, and two unpinned surfaces — `pyproject.toml` declares `modal`, `rank-bm25`, `engram-core`, `mem0ai` and `sentence-transformers` with no version bound and ships no lockfile. Nothing was installed and nothing was run. Both marks were re-tested at the producer and both hold, and each now carries the evidence record it had been asserted without. Two counts were wrong at the first reading and are corrected: `test_issue_637_directive_leaks.py` holds fifteen tests rather than ten — it held fifteen at the previous pin too — and the suite is 164 files rather than 165. The mislabelled benchmark artifact reported previously is unchanged: `benchmarks/beam/truememory_pro_beam10m_run1.json` records `"benchmark": "BEAM-1M"` beside `total_questions: 200`, which is the 10M run.
 

@@ -2222,11 +2222,12 @@ path and <em>deliberately suspended</em> for consolidation, with the
 suspension fenced at the transport layer instead —
 <code>/v1/sleep</code> is loopback-only and admin-gated, and the 403
 names the reason and the version that introduced it.</li>
-<li>Biggest risk: <code>stale</code> sits in a union with
-<code>verified</code>, <code>observed</code> and <code>inferred</code>
-but is derived from thirty days of disuse rather than from evidence, so
-one field mixes how a belief was formed with how recently anyone wanted
-it.</li>
+<li>Biggest risk: the one place the confidence state filters, it filters
+on disuse. Display was taught to keep the two facets apart — the stored
+tier and a derived age-out are separate fields — but consolidation
+rehearsal still reads the collapsed value and drops anything resolving
+to <code>stale</code>, so a correct and unfashionable memory is excluded
+from replay for not having been asked about in a month.</li>
 <li>Most reusable component: the retention prune in
 <code>audit-prune.ts</code>, which emits its own
 <code>audit_prune</code> row carrying cutoff, count and dryRun so the
@@ -9011,9 +9012,15 @@ often.</li>
 model that was just refused can set it and retry; and the lookup is
 keyed on <code>(content_hash, session_key, agent_id)</code>, so the same
 rejected value asserted in another project or under a different agent id
-is not refused. Beside that, <code>AuditLogger</code> writes tool calls
-to a file rather than mutations to the store, so "what changed and why"
-is not answerable from the store itself.</li>
+is not refused. Beneath that, the two schemas disagree about what state
+a memory is born in: the canonical file defaults
+<code>trust_state</code> to <code>candidate</code>, the hooks path
+creates the same table defaulting it to <code>trusted</code> — a value
+the type does not contain — and <code>CREATE TABLE IF NOT EXISTS</code>
+means whichever process reached the database first decides for good.
+Beside that, <code>AuditLogger</code> writes tool calls to a file rather
+than mutations to the store, so "what changed and why" is not answerable
+from the store itself.</li>
 <li>Most reusable component: the pair of scope tests, for the
 distinction between them. One drives a helper that supplies the session
 default itself; the other drives the shipped handler, and its name says

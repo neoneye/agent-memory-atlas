@@ -119,7 +119,7 @@ proposing the merge again.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-15</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/kayba-ai--agentic-context-engine" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -249,10 +249,30 @@ a record of how it has gone:</p>
 <p><code>active</code> is the epistemic state and it earns
 <code>trust_state</code> narrowly: it is a discrete field, and
 <code>skills()</code> excludes inactive records unless a caller passes
-<code>include_invalid=True</code>, so a deactivated skill is genuinely
-withheld from use rather than merely flagged. The three outcome counters
-are scores rather than states, and by explicit instruction they gate
-nothing.</p>
+<code>include_invalid=True</code> (<code>:546-549</code>), so a
+deactivated skill is genuinely withheld from use rather than merely
+flagged. Every other read honours the same boundary without repeating
+the test at each call site — <code>as_prompt</code> renders only active
+skills per section (<code>:790-796</code>), the deduplication detector
+pairs only active skills
+(<code>ace/deduplication/detector.py:204</code>), <code>stats</code>
+counts them apart (<code>:810</code>), and <code>mark_used</code>
+declines to bump a retired skill's counter (<code>:504</code>), so a
+skill cannot accumulate usage after it stops being usable. The three
+outcome counters are scores rather than states, and by explicit
+instruction they gate nothing — which is the split the mark turns on,
+held here on both sides.</p>
+<p>Two facts about the flag are worth stating because they bound what it
+means. The transition is one-way in code: nothing sets
+<code>active</code> back to <code>True</code> except reading a skillbook
+back off disk (<code>:613</code>), so a retirement is reversed by
+editing the JSON rather than by calling anything. And the writer is the
+model's own tool surface — <code>remove_skill</code> is registered for
+the skill-manager agent
+(<code>ace/implementations/sm_tools.py:259-280</code>). That is a
+statement about <em>who</em> retires a skill, not about whether the
+retirement is honoured, which is why it bears on
+<code>human_review</code> and not on this mark.</p>
 <p>Removal has two levels and the distinction is the good part.
 <code>remove_skill(soft=True)</code> — the default — sets
 <code>active = False</code> <strong>and appends the insight source that
@@ -317,24 +337,25 @@ Paths</h2>
 </tr>
 <tr>
 <td>KEEP decisions consulted before pairing</td>
-<td><code>ace/deduplication/detector.py:234</code></td>
+<td><code>ace/deduplication/detector.py:233</code></td>
 </tr>
 <tr>
 <td><code>has_keep_decision</code>,
 <code>set_similarity_decision</code></td>
-<td><code>ace/core/skillbook.py:538</code>, <code>:548</code></td>
+<td><code>ace/core/skillbook.py:571</code>, <code>:561-569</code></td>
 </tr>
 <tr>
 <td>Decisions serialised with the skillbook</td>
-<td><code>ace/core/skillbook.py:558</code>, <code>:638</code></td>
+<td><code>ace/core/skillbook.py:581-596</code>,
+<code>:656-657</code></td>
 </tr>
 <tr>
 <td>Soft removal records its own justification</td>
-<td><code>ace/core/skillbook.py:485</code></td>
+<td><code>ace/core/skillbook.py:519-526</code></td>
 </tr>
 <tr>
 <td>Inactive skills excluded from listings</td>
-<td><code>ace/core/skillbook.py:523</code></td>
+<td><code>ace/core/skillbook.py:546-549</code></td>
 </tr>
 <tr>
 <td>The counter-usage instruction</td>
@@ -342,7 +363,8 @@ Paths</h2>
 </tr>
 <tr>
 <td>Pair detection, section-scoped by config</td>
-<td><code>ace/deduplication/detector.py:190</code></td>
+<td><code>ace/deduplication/detector.py:190</code>,
+<code>:206-210</code></td>
 </tr>
 </tbody>
 </table></div>
@@ -600,6 +622,34 @@ one the skill manager actually calls was not established.</li>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/kayba-ai/agentic-context-engine/commit/31f4e11897a93dd9ad90a3d0e2051de66b2255e0"><code class="commit-id" title="31f4e11897a93dd9ad90a3d0e2051de66b2255e0">31f4e118…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin against the
+narrowed line — a state answers whether a memory may be acted on and
+gets used for filtering, a number answers how sure and gets used for
+ranking. The mark holds on both sides and is stronger than the record
+said. <code>active</code> is honoured at five read points, not two:
+<code>skills()</code> (<code>ace/core/skillbook.py:546-549</code>),
+<code>as_prompt</code> (<code>:790-796</code>), the deduplication
+detector (<code>ace/deduplication/detector.py:204</code>),
+<code>stats</code> (<code>:810</code>), and <code>mark_used</code>
+(<code>:504</code>), which declines to bump a retired skill's counter —
+so a skill cannot accumulate usage after it stops being usable. The
+transition is one-way in code: nothing sets <code>active</code> back to
+True except deserialising a skillbook file (<code>:613</code>). The
+outcome counters remain scores that gate nothing, by explicit prompt
+instruction, which is the split the mark turns on. Separately, six
+anchors in the section 4 evidence table were stale — the file has moved
+since the reading that wrote them, and the 15 September re-pin did not
+re-check them. Soft removal is at <code>:519-526</code> not
+<code>:485</code>, the listing exclusion at <code>:546-549</code> not
+<code>:523</code>, the decision API at <code>:571</code> and
+<code>:561-569</code> not <code>:538</code> and <code>:548</code>,
+serialisation at <code>:581-596</code> and <code>:656-657</code> not
+<code>:558</code> and <code>:638</code>, and the KEEP consultation at
+<code>ace/deduplication/detector.py:233</code> not <code>:234</code>.
+Re-read from a fresh clone; nothing was installed and no suite was
+run.</p>
 <p><strong>2026-09-15</strong> — <a
 href="https://github.com/kayba-ai/agentic-context-engine/commit/31f4e11897a93dd9ad90a3d0e2051de66b2255e0"><code class="commit-id" title="31f4e11897a93dd9ad90a3d0e2051de66b2255e0">31f4e118…</code></a>
 — seven commits on, 2026-09-12. Screened before reading: two auto-run

@@ -9,10 +9,10 @@ source_url: https://github.com/kayba-ai/agentic-context-engine
 archive_name: "kayba-ai--agentic-context-engine"
 revision: 31f4e11897a93dd9ad90a3d0e2051de66b2255e0
 revision_url: https://github.com/kayba-ai/agentic-context-engine/commit/31f4e11897a93dd9ad90a3d0e2051de66b2255e0
-analyzed_at: 2026-09-15
+analyzed_at: 2026-09-19
 capabilities: "trust_state, negative_eval"
 capability_evidence:
-  trust_state: "the skillbook — `active` withholds a retired skill from every listing and from the prompt | ace/core/skillbook.py:508-525 (`remove_skill`), :546-549 (`skills`), :790 (`as_prompt`), ace/deduplication/detector.py:204 | `remove_skill(soft=True)`, the default and what a `REMOVE` operation applies, sets `active = False` and appends the justifying `InsightSource` to the skill's `occurrences`; `skills()` returns only active skills unless `include_invalid=True`, `as_prompt` renders only active skills per section, and the deduplication detector pairs only active skills. The MCP list handler exposes `include_invalid` to callers | tests/test_ace_core.py:61 (`test_remove_skill_soft`), :370 (`test_apply_remove`)"
+  trust_state: "the skillbook — a one-way `active` flag that withholds a retired skill from every listing, from the prompt and from the usage counter | ace/core/skillbook.py:312 (the default), :504 (`mark_used`), :508-528 (`remove_skill`), :546-549 (`skills`), :790-796 (`as_prompt`), :810 (`stats`), ace/deduplication/detector.py:204, ace/implementations/sm_tools.py:259-280 (the writer) | `remove_skill(soft=True)`, the default and what a REMOVE operation applies, sets `active = False` and appends the justifying `InsightSource` to the skill occurrences, so the record carries the evidence for its own retirement. Every read honours it: `skills()` returns only active skills unless `include_invalid=True`, `as_prompt` renders only active skills per section, `mark_used` declines to bump a retired skill counter, the deduplication detector pairs only active skills, and `stats` counts them separately. The transition is one-way in code — nothing anywhere sets `active` back to True except deserialising a skillbook file, so a retirement is undone by editing the JSON, not by a call. The writer is the model own tool surface: `remove_skill` is registered for the skill-manager agent, which is a fact about who retires a skill, not about the filtering the mark turns on | tests/test_ace_core.py:61 (`test_remove_skill_soft`), :370 (`test_apply_remove`)"
   negative_eval: "the skillbook listing — a soft-removed skill must not be listed as usable | ace/core/skillbook.py:546-549 | `test_remove_skill_soft` adds a skill, removes it softly, asserts it is still retrievable by id and marked inactive, then asserts `len(sb.skills()) == 0` for the active listing while `len(sb.skills(include_invalid=True)) == 1` — the second assertion is the control that shows the record exists and the first is not passing on an empty store. The test predates the 2026-08-02 pin | tests/test_ace_core.py:61-68"
 stack_storage: "files, memory"
 stack_retrieval: "vector"
@@ -115,9 +115,24 @@ gone:
 
 `active` is the epistemic state and it earns `trust_state` narrowly: it is a
 discrete field, and `skills()` excludes inactive records unless a caller passes
-`include_invalid=True`, so a deactivated skill is genuinely withheld from use
-rather than merely flagged. The three outcome counters are scores rather than
-states, and by explicit instruction they gate nothing.
+`include_invalid=True` (`:546-549`), so a deactivated skill is genuinely withheld
+from use rather than merely flagged. Every other read honours the same boundary
+without repeating the test at each call site — `as_prompt` renders only active
+skills per section (`:790-796`), the deduplication detector pairs only active
+skills (`ace/deduplication/detector.py:204`), `stats` counts them apart
+(`:810`), and `mark_used` declines to bump a retired skill's counter (`:504`),
+so a skill cannot accumulate usage after it stops being usable. The three
+outcome counters are scores rather than states, and by explicit instruction they
+gate nothing — which is the split the mark turns on, held here on both sides.
+
+Two facts about the flag are worth stating because they bound what it means.
+The transition is one-way in code: nothing sets `active` back to `True` except
+reading a skillbook back off disk (`:613`), so a retirement is reversed by
+editing the JSON rather than by calling anything. And the writer is the model's
+own tool surface — `remove_skill` is registered for the skill-manager agent
+(`ace/implementations/sm_tools.py:259-280`). That is a statement about *who*
+retires a skill, not about whether the retirement is honoured, which is why it
+bears on `human_review` and not on this mark.
 
 Removal has two levels and the distinction is the good part.
 `remove_skill(soft=True)` — the default — sets `active = False` **and appends the
@@ -175,13 +190,13 @@ similar pairs and consolidation silently does nothing.
 | Path | Location |
 | --- | --- |
 | `SimilarityDecision` and its fields | `ace/core/skillbook.py:291` |
-| KEEP decisions consulted before pairing | `ace/deduplication/detector.py:234` |
-| `has_keep_decision`, `set_similarity_decision` | `ace/core/skillbook.py:538`, `:548` |
-| Decisions serialised with the skillbook | `ace/core/skillbook.py:558`, `:638` |
-| Soft removal records its own justification | `ace/core/skillbook.py:485` |
-| Inactive skills excluded from listings | `ace/core/skillbook.py:523` |
+| KEEP decisions consulted before pairing | `ace/deduplication/detector.py:233` |
+| `has_keep_decision`, `set_similarity_decision` | `ace/core/skillbook.py:571`, `:561-569` |
+| Decisions serialised with the skillbook | `ace/core/skillbook.py:581-596`, `:656-657` |
+| Soft removal records its own justification | `ace/core/skillbook.py:519-526` |
+| Inactive skills excluded from listings | `ace/core/skillbook.py:546-549` |
 | The counter-usage instruction | `ace/implementations/prompts.py:480` |
-| Pair detection, section-scoped by config | `ace/deduplication/detector.py:190` |
+| Pair detection, section-scoped by config | `ace/deduplication/detector.py:190`, `:206-210` |
 
 ## 5. Memory Data Model
 
@@ -409,6 +424,8 @@ most of the field.
 | `benchmarks/`, `test_sm_tau_retail.py` | Harness, loaders and live scripts; no committed results |
 
 ## History
+
+**2026-09-19** — [`31f4e11897a93dd9ad90a3d0e2051de66b2255e0`](https://github.com/kayba-ai/agentic-context-engine/commit/31f4e11897a93dd9ad90a3d0e2051de66b2255e0) — `trust_state` re-tested at an unchanged pin against the narrowed line — a state answers whether a memory may be acted on and gets used for filtering, a number answers how sure and gets used for ranking. The mark holds on both sides and is stronger than the record said. `active` is honoured at five read points, not two: `skills()` (`ace/core/skillbook.py:546-549`), `as_prompt` (`:790-796`), the deduplication detector (`ace/deduplication/detector.py:204`), `stats` (`:810`), and `mark_used` (`:504`), which declines to bump a retired skill's counter — so a skill cannot accumulate usage after it stops being usable. The transition is one-way in code: nothing sets `active` back to True except deserialising a skillbook file (`:613`). The outcome counters remain scores that gate nothing, by explicit prompt instruction, which is the split the mark turns on. Separately, six anchors in the section 4 evidence table were stale — the file has moved since the reading that wrote them, and the 15 September re-pin did not re-check them. Soft removal is at `:519-526` not `:485`, the listing exclusion at `:546-549` not `:523`, the decision API at `:571` and `:561-569` not `:538` and `:548`, serialisation at `:581-596` and `:656-657` not `:558` and `:638`, and the KEEP consultation at `ace/deduplication/detector.py:233` not `:234`. Re-read from a fresh clone; nothing was installed and no suite was run.
 
 **2026-09-15** — [`31f4e11897a93dd9ad90a3d0e2051de66b2255e0`](https://github.com/kayba-ai/agentic-context-engine/commit/31f4e11897a93dd9ad90a3d0e2051de66b2255e0) — seven commits on, 2026-09-12. Screened before reading: two auto-run surfaces (`.claude/settings.json`, `.gitmodules`), six build-time execution points and three unpinned surfaces, none inside the cooldown; nothing was installed or run. One memory change: recursive `SkillManager` children, which shared the parent's live skillbook and operations list, work on a `Skillbook.clone()` and commit validated operations back atomically under the new `lock` property, with child-local skill ids remapped (#143). `negative_eval` is added and was missed: `test_remove_skill_soft` at the previous pin already asserted a soft-removed skill is absent from the active listing, with the `include_invalid` listing as its control. Both marks now carry evidence records.
 

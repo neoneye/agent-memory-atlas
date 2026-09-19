@@ -114,7 +114,7 @@ disclosed, and the worst category printed at 19.5%.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-14</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/buildingjoshbetter--TrueMemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -291,6 +291,23 @@ being treated as current without deleting it. The choice to keep
 superseded facts retrievable at half weight is deliberate and worth
 naming: "what did I used to believe" stays answerable, which is exactly
 what the BEAM "contradiction resolution" category (91.4%) tests.</p>
+<p>The pair is worth separating, because the two halves are not the same
+kind of thing. Picking the current fact is the state used as a
+<strong>filter</strong>, and that is what the mark turns on. The ×0.5 is
+the same state used as a <strong>score</strong>, and it applies only in
+the fallback, when every fact for the subject is superseded and the row
+goes on to the reranker anyway (<code>truememory/engine.py:1950</code>).
+Neither half is pinned. The two supersession tests are
+<code>tests/test_issue_580_contradiction_record.py:261</code> and
+<code>:280</code>, and neither asserts a relevance value:
+<code>:280</code> is named <code>test_superseded_ranked_lower</code>,
+its docstring says <em>"when only superseded facts match, relevance
+should be halved"</em>, and its body checks only that the current fact
+is the newer one — a property that holds whether or not the penalty
+fires. <code>:261</code> ends in <code>assert results</code>, true of
+any non-empty result. The column and its default are pinned
+(<code>:342</code>, <code>:349</code>); what the column does to a
+ranking is not.</p>
 <p><strong>Scope is not enforced.</strong> <code>entity_scope</code>
 never reaches a query.</p>
 <h2 id="7-write-mechanics">7. Write Mechanics</h2>
@@ -424,7 +441,9 @@ its <code>include_*=True</code> counterpart.</li>
 <li><strong>Keep a superseded fact retrievable at half weight.</strong>
 Not hidden, not equal — a discrete <code>status</code> read at query
 time, with a documented relevance penalty, so the history stays
-answerable and the current answer still wins.</li>
+answerable and the current answer still wins. Copy the separation, not
+the coverage: the penalty is a constant in the source and no committed
+test asserts it, including the one named for it.</li>
 <li><strong>Compute outside the write lock.</strong> Read, compute in
 memory, write in one SAVEPOINT — and write the incident into the
 comment: the silent <code>conn.commit()</code> of a caller's in-flight
@@ -469,6 +488,9 @@ maintained carefully for columns nothing selects.</li>
 <li><strong>What happens to <code>superseded_by</code> across a
 rebuild?</strong> The IDs are reassigned; whether any consumer holds one
 between passes was not traced.</li>
+<li><strong>Is the ×0.5 penalty the number anyone intended?</strong> It
+is a literal in <code>consolidation.py:1167</code> with no configuration
+and no test, and the only test named for it asserts something else.</li>
 <li><strong>How does the paper's evaluation relate to the committed
 JSONs?</strong> The paper was not read for this report; the repository's
 own files were.</li>
@@ -519,6 +541,32 @@ per-category table),
 <code>"benchmark": "BEAM-1M"</code>),
 <code>benchmarks/longmemeval/</code></p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/buildingjoshbetter/TrueMemory/commit/063e5b8844af735a52fde886217a5d26a0f13064"><code class="commit-id" title="063e5b8844af735a52fde886217a5d26a0f13064">063e5b88…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin against the
+narrowed line: does the field answer whether a memory may be acted on
+and get used for filtering, or how sure and get used for ranking. Here
+it does both, and the record named only one. Every anchor held — the
+writer at <code>consolidation.py:857</code>, the
+<code>COALESCE(status, 'active')</code> read at <code>:1128</code>, the
+current-fact predicate at <code>:1152-1155</code> — and the filtering
+use is what earns the mark. The second use sits four lines further on:
+when the chosen fact is superseded anyway, <code>relevance *= 0.5</code>
+(<code>:1163-1167</code>), and the row still reaches the reranker
+through the production caller <code>engine.py:1950</code>. Neither half
+is pinned, and the test situation is sharper than the previous caveat
+suggested. There are two supersession search cases.
+<code>tests/test_issue_580_contradiction_record.py:280</code> is named
+<code>test_superseded_ranked_lower</code> and its docstring says
+relevance should be halved, but its body asserts only that the current
+fact is the newer one — which holds whether or not the penalty fires;
+<code>:261</code> ends in an assertion true of any non-empty result,
+after a loop that can return early. The column and its default are
+pinned at <code>:342</code> and <code>:349</code>. So a named test
+covers the mechanism's headline and tests its outcome instead. Section
+6, the reusable-idea bullet and the open questions were rewritten; the
+diagram already carried the ×0.5. Re-read from a fresh clone; nothing
+was installed and no suite was run.</p>
 <p><strong>2026-09-14</strong> — <a
 href="https://github.com/buildingjoshbetter/TrueMemory/commit/063e5b8844af735a52fde886217a5d26a0f13064"><code class="commit-id" title="063e5b8844af735a52fde886217a5d26a0f13064">063e5b88…</code></a>
 — second reading. Six commits since the previous pin and every one is a
