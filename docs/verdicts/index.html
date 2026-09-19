@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 596 reports.</strong></p>
+<p><strong>This page covers all 597 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24114,6 +24114,79 @@ around.</li>
 <li>Do not copy when: you need to know why a memory was closed —
 supersession here is a timestamp, and nothing distinguishes a correction
 from a retraction.</li>
+</ul>
+<h3 id="guild"><a href="../systems/guild/"><code>guild</code></a></h3>
+<ul>
+<li>Best idea: <strong>write the status filter as an
+allow-list.</strong> Unless a caller passes the widening flag, the
+search path appends
+<code>status IN ('current','seed','exploring','imported')</code> —
+naming the four it admits rather than the five it excludes. Add a tenth
+status to the vocabulary tomorrow and it is invisible to search until
+somebody adds it to that list; the failure direction is silence rather
+than leakage.</li>
+<li>Second idea: <strong>keep the denominator on a nudge.</strong> Every
+hint firing writes a row whose <code>followed</code> column is null
+until a scorer runs some number of calls later and sets it to one or
+zero, and the schema comment says why the pending value exists: so a
+fired rule has "an obey count and not only an ignore count". A rule that
+stops landing is auto-disabled by a prune, and one carries a per-era
+severity payload so it demotes itself in the context where it was
+measured to hit the floor.</li>
+<li>Third idea: <strong>argue the threshold from named cases.</strong>
+Near-duplicate detection uses a fourteen-day window because agents doing
+topical audits write observations within days of each other and
+"extending beyond 2 weeks risks surfacing intentional re-assessments of
+slowly-evolving topics", and a Jaccard floor of 0.40 because a named
+reproducer pair scored about 0.55 while 0.30 "would catch even looser
+paraphrases but fires on entries that merely share a topic
+abbreviation". Two real cases, a measured score, and the rejected
+alternative.</li>
+<li>Fourth idea: <strong>fall back deterministically rather than
+partially.</strong> The vector arm is constructed only when embedding
+coverage clears a threshold; below it the appraisal "is identical to the
+Phase 0 BM25+stopwords path and never constructs a vector arm",
+attributed to an architecture decision record on partial coverage. A
+vector arm over a half-embedded corpus is worse than none.</li>
+<li>Fifth idea: <strong>record what the agent was doing when it wrote
+the note.</strong> <code>prompted_by</code> points an entry at the quest
+that caused it — provenance of an unusual kind, and close to knowing why
+the note exists at all.</li>
+<li>Biggest risk: <strong>two read paths, two defaults.</strong> Search
+admits four statuses by name; the listing beside it denies two instead.
+An entry marked <code>stale</code>, <code>promoted</code> or
+<code>parked</code> is visible to one and invisible to the other, and no
+committed test covers the listing path's default, so the divergence has
+nothing holding it.</li>
+<li>Second risk: the quest board keeps <code>task_events</code>, an
+append-only log with the acting agent on every row, and lore — which is
+the memory — keeps no counterpart. An update rewrites the row in place
+with no prior version kept, so the coordination half is auditable and
+the memory half is not.</li>
+<li>Third risk: <code>needs_review</code> is described in its tool
+schema as a flag for human review and is a parameter on the
+<code>inscribe</code> tool the writing agent itself calls, so the agent
+decides whether its own entry needs a person. It is surfaced on read,
+which makes it a label rather than a gate.</li>
+<li>Fourth risk: <code>valid_days</code> is commented as days before
+auto-stale, is written by three insert paths, and nothing found in this
+reading performs the transition — a declared intent rather than an
+enforced one.</li>
+<li>Most reusable component: <code>internal/lore/dedupe.go</code> —
+near-duplicate detection whose two constants each carry the reproducer
+that set them and the alternative that was rejected, which is what lets
+a later maintainer re-derive them instead of guessing.</li>
+<li>Maturity impression: Apache-2.0, a single compiled Go binary with no
+runtime dependencies, 349 source files against 143 test files, nine
+migrations, an embedded SQLite store per plane, atomic quest claims for
+parallel agents across different editors, and a committed
+<code>go.sum</code>.</li>
+<li>Study when: you have more than one read path over the same status
+column, or you are building a nudge layer and want to know whether your
+rules are working.</li>
+<li>Do not copy when: you need the memory half auditable — every
+mutation to an entry overwrites it, and the event log covers the task
+board instead.</li>
 </ul>
         </article>
       </div>
