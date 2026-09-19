@@ -7,12 +7,12 @@ page_kind: system
 source_name: "ali-ulu/levh"
 source_url: https://github.com/ali-ulu/levh
 archive_name: "ali-ulu--levh"
-revision: 6802ac81397abdf596cf8392b54dee461ec54226
-revision_url: https://github.com/ali-ulu/levh/commit/6802ac81397abdf596cf8392b54dee461ec54226
-analyzed_at: 2026-09-16
+revision: 9bdcb25f52387814f389c7cf816959b297d74d59
+revision_url: https://github.com/ali-ulu/levh/commit/9bdcb25f52387814f389c7cf816959b297d74d59
+analyzed_at: 2026-09-19
 capabilities: "human_review"
 capability_evidence:
-  human_review: "a candidate the gate declines to judge is held out of recall until a person admits or discards it, and both decisions are reachable from one route each that no automation calls | server/core/db/schema.py:151-178, server/core/engine/ingest.py:196-252, server/routes/memories.py:123-140 | `held_memories` is documented as candidates \"the admission gate answered 'review' for … \\\"review\\\" has always meant \\\"hold for a human\\\" -- this is the place that holds them\", with the invariant stated: \"These are NOT memories … They never appear in recall, and one becomes a memory only when a human admits it.\" `admit_held_memory` opens \"A human's decision to keep a held candidate\" and re-stores with `force=True` because \"[t]he decision being recorded here is the human's, and it overrides the gate by design\"; `discard_held_memory` keeps the row \"so the queue is an auditable record of what was decided rather than only of what is still waiting\". Each has exactly one caller in the tree — an HTTP route — and `mark_held_memory_decided` is a compare-and-set, so a second decision returns `already_decided` | tests/test_admission_held_queue.py:85-180"
+  human_review: "a candidate the gate declines to judge is held out of recall until a person admits or discards it, and both decisions are reachable from one route each that no automation calls | server/core/db/schema.py:168-195, server/core/engine/ingest.py:196, :238, server/core/db/held.py:77, server/routes/memories.py:123, :136, server/mcp_stdio.py | `held_memories` is documented as candidates \"the admission gate answered 'review' for … \\\"review\\\" has always meant \\\"hold for a human\\\" -- this is the place that holds them\", with the invariant stated: \"These are NOT memories … They never appear in recall, and one becomes a memory only when a human admits it.\" `admit_held_memory` opens \"A human's decision to keep a held candidate\" and re-stores with `force=True` because \"[t]he decision being recorded here is the human's, and it overrides the gate by design\"; `discard_held_memory` keeps the row \"so the queue is an auditable record of what was decided rather than only of what is still waiting\". Each has exactly one caller in the tree — an HTTP route — and `mark_held_memory_decided` is a compare-and-set, so a second decision returns `already_decided`. The producing agent cannot reach either: `server/mcp_stdio.py` contains the strings `admit` and `held` zero times, so nothing on the agent's stdio surface admits or discards a candidate | tests/test_admission_held_queue.py:85-180"
 stack_storage: "sqlite"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -259,5 +259,7 @@ finding all assume one exists.
 | `tests/test_admission_held_queue.py:85-180` | The defect, in test names |
 
 ## History
+
+**2026-09-19** — re-pinned to [`9bdcb25f52387814f389c7cf816959b297d74d59`](https://github.com/ali-ulu/levh/commit/9bdcb25f52387814f389c7cf816959b297d74d59), 13 commits on. The mark stands. Its anchors were re-resolved — the `held_memories` table and the comment block that states its invariant now run `schema.py:168-195`, and `admit_held_memory` and `discard_held_memory` are at `ingest.py:196` and `:238` — and the record gained the half of the producer test it was missing. The previous version established that each has exactly one caller, an HTTP route; what it did not check is whether the agent reaches that surface. It does not: `server/mcp_stdio.py` contains neither `admit` nor `held`, so the stdio tools the agent is given carry no verb that resolves a held candidate. The compare-and-set in `held.py:77` is unchanged. Screened again first; nothing was installed and no suite was run.
 
 **2026-09-16** — [`6802ac81397abdf596cf8392b54dee461ec54226`](https://github.com/ali-ulu/levh/commit/6802ac81397abdf596cf8392b54dee461ec54226) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: six files scanned, no auto-run surfaces, one build-time execution point, two unpinned surfaces and three dependency files inside the seven-day cooldown. Nothing was installed, built or run.
