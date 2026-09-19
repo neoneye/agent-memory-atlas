@@ -7,12 +7,11 @@ page_kind: system
 source_name: "Graphify-Labs/graphify"
 source_url: https://github.com/Graphify-Labs/graphify
 archive_name: "Graphify-Labs--graphify"
-revision: fe66389083369c3159aa391117185c8f58b4d07c
-revision_url: https://github.com/Graphify-Labs/graphify/commit/fe66389083369c3159aa391117185c8f58b4d07c
-analyzed_at: 2026-09-15
-capabilities: "trust_state, negative_eval"
+revision: b9cd9570728a5ff3485d2a1e36fe9a1272a368ae
+revision_url: https://github.com/Graphify-Labs/graphify/commit/b9cd9570728a5ff3485d2a1e36fe9a1272a368ae
+analyzed_at: 2026-09-19
+capabilities: "negative_eval"
 capability_evidence:
-  trust_state: "lesson aggregation — a node is preferred, tentative or contested, and the status is rendered beside it in query output | graphify/reflect.py:16, :347, :445-447, :799 | `aggregate_lessons` sorts nodes into `preferred`, `tentative` and `contested` buckets from the outcome documents saved against them: a node is promoted to `preferred` only once corroborated by enough distinct results, one seen useful once stays `tentative` (*seen useful only once (not yet corroborated)*), and conflicting outcomes make it `contested`. The rendered block carries the status and a staleness flag next to each node, so the reader is told how far to trust it | tests/test_reflect.py `test_corroboration_threshold_promotes_only_repeated_nodes`"
   negative_eval: "lesson aggregation — a node seen only in dead ends must not be offered as a source | tests/test_reflect.py:271-277 `test_negative_only_node_absent_from_sources` | aggregates a single `dead_end` document naming node `Bad`, asserts `Bad` appears in none of the `preferred`, `tentative` or `contested` buckets, and then asserts `agg[\"dead_ends\"][0][\"nodes\"] == [\"Bad\"]` — the node is present in the aggregate, so its absence from the source buckets is a filter rather than a lost input. `test_header_is_cautious` pins the register of the rendered prose from the other side | tests/test_reflect.py:277 is the control"
 stack_storage: "files"
 stack_retrieval: ""
@@ -26,7 +25,7 @@ matrix:
   scoping: "One `graphify-out/` per project directory — a filesystem boundary, not a stored key"
   integration: "A slash-command skill installed into fourteen agent harnesses, a CLI, and git post-commit/post-checkout hooks"
   background: "A git hook rebuilds the graph and refreshes `LESSONS.md`; `--if-stale` makes a redundant reflect a no-op"
-  trust: "`preferred | tentative | contested` stored on the sidecar behind a corroboration threshold of two, with a source-file content hash recomputed on every read to stamp `stale`"
+  trust: "A derived `preferred` / `tentative` / `contested` band, persisted on the sidecar behind a corroboration threshold of two and appended to the node line the model reads — the code calls that annotation display-only, and no read path withholds a node on it"
   strengths: "A committed test that the system's own lessons artifact cannot be re-ingested as evidence, and another that the header must say verify rather than reuse"
   risks: "Known dead ends are rendered for an agent to read and consulted by no code path; every memory doc is stamped with the same hardcoded contributor"
 ---
@@ -252,11 +251,14 @@ attaches status, score, uses, `last`, `source_file`, `code_fingerprint` and up t
 five provenance entries, then `write_learning_sidecar` emits it with
 `sort_keys=True, indent=2`.
 
-**Read.** `serve.py:52` loads the sidecar onto the graph at load time;
-`serve.py:927` appends `learning={status}{':stale'}` to each rendered node; and
-`serve.py:1128` moves a `preferred` node to the front of the exact-match list.
-That last line is the only place memory changes *ranking* rather than
-*presentation*.
+**Read.** `serve.py:81-84` loads the sidecar onto the graph at load time, under
+a comment saying the overlay exists so the read surface can annotate node lines
+*"display-only"*; `serve.py:1124-1129` appends
+`learning={status}{':stale'}` to each rendered node. There is no third step:
+memory changes presentation here and nothing else. The `preferred` list at
+`serve.py:1573-1583`, which does reorder the exact-match results, is a local
+variable of the same name holding file nodes whose label matches the query
+basename — unrelated to the lesson status.
 
 **Gate.** `lessons_fresh` (`reflect.py:527`) compares the output's mtime against
 every input's, so `reflect --if-stale` is a no-op when the git hook already
@@ -395,11 +397,22 @@ fourteen of them exist.
 
 ## 9. Reliability, Safety, and Trust
 
-**The trust states are real and they reach the reader.** `preferred`,
-`tentative` and `contested` are stored fields, `tentative` genuinely withholds
-(the docstring: *"seen useful only once (not yet corroborated)"*), and both the
-status and the staleness flag are rendered next to the node in query output. The
-atlas grants `trust_state` on that basis.
+**The lesson bands reach the reader, and they only ever label.** `preferred`,
+`tentative` and `contested` are computed in `_finalize_sources`
+(`reflect.py:330-347`) from a signed, time-decayed score and a count threshold,
+persisted to the sidecar, and read back by `load_learning_overlay` (`:840-855`).
+Every consumer then annotates: `serve.py:1124-1129` appends
+`learning={status}{':stale'}` to the node line the model sees, `cli.py:1776-1788`
+prints a lesson line, `exporters/html.py:545-558` sets a ring colour and hover
+text, and `report.py:71-83` collects the `preferred` entries into a "start here"
+section sorted by uses and then score. Nothing withholds a `tentative` or
+`contested` node from any read path — the attachment site says so in its own
+comment, *"so the query/MCP read surface can annotate NODE lines display-only"*
+(`serve.py:77-79`). The atlas therefore **withholds** `trust_state` here: these
+are named bands on a confidence score, used for ordering and advice, not a state
+that decides what may be acted on. The one real exclusion in this layer is of
+negative-only nodes, which never enter any bucket (`reflect.py:343`) — that is
+the dead-end path, and it is what `negative_eval` rests on.
 
 **Verification is against the artifact, not by judgement.** The staleness check
 is a content hash, computed the same way by the writer and the reader — a
@@ -576,6 +589,8 @@ yet had to answer what happens when two people disagree.
 
 ## History
 
-**2026-09-15** — [`fe66389083369c3159aa391117185c8f58b4d07c`](https://github.com/Graphify-Labs/graphify/commit/fe66389083369c3159aa391117185c8f58b4d07c) — second reading, 412 commits on. Screened again: no auto-run surface, one build-time execution point, two dependency surfaces inside the cooldown; nothing was installed and nothing was run. Both marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. The files the report is built on barely moved — `reflect.py` by two lines and `ingest.py` by seven. The 49,000 added lines went into extraction: `graphify/extractors/` and `extract.py` together gained about 7,800 lines, with new language and watch-mode test suites, which widens what the graph is built from without changing how lessons are graded or served.
+**2026-09-19** — [`b9cd9570728a5ff3485d2a1e36fe9a1272a368ae`](https://github.com/Graphify-Labs/graphify/commit/b9cd9570728a5ff3485d2a1e36fe9a1272a368ae) — **`trust_state` withdrawn.** Re-tested against the narrowed line — a state answers whether a memory may be acted on and gets used for filtering, a number answers how sure and gets used for ranking — the three lesson bands are the second thing. `_finalize_sources` (`graphify/reflect.py:330-347`) derives `preferred`, `tentative` and `contested` from a signed, time-decayed score and a count threshold, sorts each bucket by that score, and the bands are persisted to the sidecar and read back. Every consumer then annotates: `serve.py:1124-1129` appends `learning={status}` to the node line the model reads, `cli.py:1776-1788` prints a line, `exporters/html.py:545-558` sets a ring colour and hover text, `report.py:71-83` collects the preferred entries into a start-here section. Nothing withholds a tentative or contested node from any read path, and the site that attaches the overlay says so in its own comment — the sidecar is loaded *so the query/MCP read surface can annotate NODE lines display-only* (`serve.py:77-79`). The previous record's load-bearing sentence, that *tentative genuinely withholds*, cited a docstring that says only *seen useful only once (not yet corroborated)*; it describes what the band means, not what the code does with it. Two anchors went with it: `serve.py:52` and `:927` are not the load and annotate sites (they are `:81-84` and `:1124-1129`), and the claim that `serve.py:1128` moves a preferred node to the front of the exact-match list is a name collision — the reorder at `:1573-1583` uses a local `preferred` holding file nodes whose label matches the query basename, unrelated to the lesson status. `negative_eval` is unaffected and stands: negative-only nodes never enter any bucket (`reflect.py:343`), which is a genuine exclusion and is what that mark rests on. Screened again first; nothing was installed and no suite was run.
+
+**2026-09-15** — [`b9cd9570728a5ff3485d2a1e36fe9a1272a368ae`](https://github.com/Graphify-Labs/graphify/commit/b9cd9570728a5ff3485d2a1e36fe9a1272a368ae) — second reading, 412 commits on. Screened again: no auto-run surface, one build-time execution point, two dependency surfaces inside the cooldown; nothing was installed and nothing was run. Both marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. The files the report is built on barely moved — `reflect.py` by two lines and `ingest.py` by seven. The 49,000 added lines went into extraction: `graphify/extractors/` and `extract.py` together gained about 7,800 lines, with new language and watch-mode test suites, which widens what the graph is built from without changing how lessons are graded or served.
 
 **2026-07-31** — [`4fe11092ccbe9f543608f140c790f68d5d83cae4`](https://github.com/Graphify-Labs/graphify/commit/4fe11092ccbe9f543608f140c790f68d5d83cae4) — first reading.

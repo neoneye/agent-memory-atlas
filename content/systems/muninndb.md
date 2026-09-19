@@ -9,10 +9,10 @@ source_url: https://github.com/scrypster/muninndb
 archive_name: "scrypster--muninndb"
 revision: 34b505f46496cfc2929edc54f4301d6a9c2f42ab
 revision_url: https://github.com/scrypster/muninndb/commit/34b505f46496cfc2929edc54f4301d6a9c2f42ab
-analyzed_at: 2026-09-15
+analyzed_at: 2026-09-19
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
-  trust_state: "activation — a discrete trust level that can withhold an engram from results | internal/storage/types.go:420-440 `TrustLevel`, internal/auth/plasticity.go:87-89, :195-196, :639-640 | `TrustLevel` is a closed `uint8` enumeration including `TrustUntrusted` (*flagged as unreliable*), stored on the engram. With `ExcludeUntrusted` set in the plasticity configuration, ACTIVATE *silently skips engrams with TrustUntrusted*. The exclusion is configured rather than unconditional: the resolved field is a plain `bool` overridden only when the config supplies it | internal/auth/ plasticity tests"
+  trust_state: "activation — a discrete trust level that withholds an engram from results, enforced once in a shared admission predicate every injector reuses | internal/storage/types.go:420-428 (`TrustLevel`), internal/auth/plasticity.go:87-89, :195-196, :639-640 (the opt-in), internal/engine/activation/engine.go:2025-2028 (the retrieval filter), internal/engine/visibility_gate.go:141-145 (the injector filter), internal/engine/engine_entity_boost.go:242 and :251 (one injector using it) | `TrustLevel` is a closed `uint8` enumeration — unset, verified, inferred, external, untrusted — stored on the engram at a fixed record offset, with unset displaying as inferred for backward compatibility. With `ExcludeUntrusted` set in the plasticity configuration, ACTIVATE silently skips engrams marked untrusted. The exclusion is opt-in rather than unconditional: the config field is a `*bool` whose nil means include everything. What makes it hold is where the test lives. `ExcludeUntrusted` rides the request struct rather than the meta filters, so `PassesMetaFilter` cannot enforce it, and the comment beside the check says exactly that; instead `visibilityGate.Admits` carries lifecycle, meta, trust, structured predicate and lease checks together, and five separate result-injection paths — entity boost, supersession, version-head walk, annotation and the general injector — each construct that one gate. An added retrieval path that forgets the trust filter also forgets the other four, which is the design that keeps a predicate from drifting | internal/auth/ plasticity tests"
   bitemporal: "activation and contradiction reads — a request can ask what was valid as of a time | internal/engine/annotation.go:36 and :121, internal/engine/engine_contradiction.go:523, internal/engine/engine_currency.go:318 | engrams carry valid-from and valid-until beside their record timestamps, and `AsOf` is a field of the activation request that is threaded into the annotation pass and the contradiction pass; a contradiction declared after the requested `AsOf` is not applied to that read, and currency resolution compares `EffectiveValidFrom` rather than write order | internal/engine/ currency and contradiction tests"
   scope_enforced: "the storage API itself — a workspace prefix is a parameter of every read, not a filter applied afterwards | internal/storage/engram.go:1617 `ScanEngrams(ctx, ws [8]byte, …)`, :1716, internal/storage/transition.go:119 | storage methods take `ws [8]byte` as a required argument and key reads under that prefix, so a scan cannot be issued without naming a workspace; vaults sit above it at the transport layer and are checked there | internal/transport/mbp/vault_scope_test.go"
   audit_log: "per-engram provenance — source, actor, verb, reason and predecessor, appended by a background worker | internal/storage/engram.go:336-339 and :402-403, internal/mcp/types.go:646-653 `ProvenanceEntry` | every write submits a `provenance.ProvenanceEntry` to a persistent worker keyed by workspace and engram, recording the source type, agent, operation, free-text reason and — on an evolve — the `PredecessorID` it replaced. The limit is in the comment on both submit sites: *best effort — drops if full*, so under write pressure the audit can lose entries without failing the write | internal/storage/ provenance tests"
@@ -179,6 +179,27 @@ the source describes it as feeding *use-time effective importance* — so
 reachability and standing are separate quantities rather than one number doing
 both jobs, which is the failure this atlas records most often on the trust side.
 
+The filtering half is worth following to where it is written, because the answer
+is better than the mark requires. `ExcludeUntrusted` is a per-vault opt-in, a
+`*bool` whose nil means include everything
+(`internal/auth/plasticity.go:87-89`), resolved once per request
+(`:639-640`). Retrieval checks it directly
+(`internal/engine/activation/engine.go:2025-2028`). The interesting part is what
+happens *after* retrieval, where results get added by later passes. The trust
+flag rides the request struct rather than the meta filters, so
+`PassesMetaFilter` cannot enforce it — and rather than repeat the check at each
+injector, the project collects lifecycle, meta, trust, structured predicate and
+lease visibility into one `visibilityGate.Admits`
+(`internal/engine/visibility_gate.go:141-145`) that every injector constructs:
+entity boost (`engine_entity_boost.go:242`, `:251`), supersession
+(`engine_supersession.go:124`), the version-head walk
+(`engine_version_head.go:151`), annotation (`annotation.go:137`) and the general
+injector (`engine.go:3147`). The comment above the boost pass names the bug that
+taught them (`#569`): an `ExcludeUntrusted` vault getting flagged-unreliable
+memory re-injected through any shared rare entity. A predicate that has to be
+remembered at five call sites eventually is not; a predicate whose four
+companions fail with it is remembered by construction.
+
 Valid time is genuinely separate from record time. `EffectiveAt` in the
 provenance `Details` is documented as the valid-time boundary, `Timestamp` as
 when the write happened, and `stamp-valid-until` is its own operation in the
@@ -274,6 +295,14 @@ a model call would be asked about.
 **Keep the trust label out of the ranking it informs.** `TrustLevel` feeds
 effective importance; it is not the score.
 
+**Put every result-path predicate in one admission function, and make the
+injectors call it.** The trust filter, the lifecycle check, the meta filter, the
+structured predicate and lease visibility live together in
+`visibilityGate.Admits`, and five injection paths construct that gate rather
+than re-deriving any of them. The alternative is what the comment on the entity
+boost describes losing: a flagged-unreliable engram re-entering an
+`ExcludeUntrusted` vault through a shared rare entity.
+
 ### Avoid
 
 **Do not ship agent-harness hooks in a repository people will clone into their
@@ -340,6 +369,8 @@ learning, which a reader should assess separately.
 | `.claude/deep-review/` | Dated design documents for decay, strengths and the trigger stream |
 
 ## History
+
+**2026-09-19** — [`34b505f46496cfc2929edc54f4301d6a9c2f42ab`](https://github.com/scrypster/muninndb/commit/34b505f46496cfc2929edc54f4301d6a9c2f42ab) — `trust_state` re-tested at an unchanged pin against the narrowed line. Every anchor held and the mark is better earned than the record said. The previous evidence stopped at the opt-in — `ExcludeUntrusted` is a `*bool` whose nil means include everything — and did not follow the flag to where it is tested. Retrieval checks it at `internal/engine/activation/engine.go:2025-2028`. After that, results are added by later passes, and the flag rides the request struct rather than the meta filters, so `PassesMetaFilter` cannot enforce it; the comment beside the check says so. Instead lifecycle, meta, trust, the structured predicate and lease visibility are collected into one `visibilityGate.Admits` (`internal/engine/visibility_gate.go:141-145`) that five injection paths each construct: entity boost, supersession, the version-head walk, annotation and the general injector. The comment above the boost pass names the defect that taught them (`#569`) — an `ExcludeUntrusted` vault getting flagged-unreliable memory re-injected through any shared rare entity. This atlas keeps finding scope and trust predicates that hold on the main read path and leak on a second one; here the second paths cannot leak without losing four other checks at the same time, which is the structural answer rather than the vigilant one. Re-read from a fresh clone; nothing was installed and no suite was run.
 
 **2026-09-15** — [`34b505f46496cfc2929edc54f4301d6a9c2f42ab`](https://github.com/scrypster/muninndb/commit/34b505f46496cfc2929edc54f4301d6a9c2f42ab) — second reading, three commits on and 4,346 lines. Screened again: two auto-run findings, the project's own Claude Code hooks — node scripts under `.claude/hooks/` that guard drift and a contributor memory ledger on tool use, session start and compaction; nothing inside the cooldown; nothing installed or run. All five marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. Two limits surfaced in writing them and belong beside the marks: untrusted engrams are skipped only when `ExcludeUntrusted` is configured, and provenance is submitted to its worker *best effort — drops if full*. The addition since the previous pin is COG-29: a generated contradiction store (`internal/storage/contradicts_gen.go`) and a debt readout that surfaces declared, unresolved contradictions at session start — so a known conflict is shown rather than waiting to be retrieved — plus a fix fencing retroactive scans during a vault clear.
 

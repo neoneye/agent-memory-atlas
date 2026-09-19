@@ -122,7 +122,7 @@ evolution rules.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-15</strong>
+              <strong>2026-09-19</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/scrypster--muninndb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -304,6 +304,31 @@ source describes it as feeding <em>use-time effective importance</em> —
 so reachability and standing are separate quantities rather than one
 number doing both jobs, which is the failure this atlas records most
 often on the trust side.</p>
+<p>The filtering half is worth following to where it is written, because
+the answer is better than the mark requires.
+<code>ExcludeUntrusted</code> is a per-vault opt-in, a
+<code>*bool</code> whose nil means include everything
+(<code>internal/auth/plasticity.go:87-89</code>), resolved once per
+request (<code>:639-640</code>). Retrieval checks it directly
+(<code>internal/engine/activation/engine.go:2025-2028</code>). The
+interesting part is what happens <em>after</em> retrieval, where results
+get added by later passes. The trust flag rides the request struct
+rather than the meta filters, so <code>PassesMetaFilter</code> cannot
+enforce it — and rather than repeat the check at each injector, the
+project collects lifecycle, meta, trust, structured predicate and lease
+visibility into one <code>visibilityGate.Admits</code>
+(<code>internal/engine/visibility_gate.go:141-145</code>) that every
+injector constructs: entity boost
+(<code>engine_entity_boost.go:242</code>, <code>:251</code>),
+supersession (<code>engine_supersession.go:124</code>), the version-head
+walk (<code>engine_version_head.go:151</code>), annotation
+(<code>annotation.go:137</code>) and the general injector
+(<code>engine.go:3147</code>). The comment above the boost pass names
+the bug that taught them (<code>#569</code>): an
+<code>ExcludeUntrusted</code> vault getting flagged-unreliable memory
+re-injected through any shared rare entity. A predicate that has to be
+remembered at five call sites eventually is not; a predicate whose four
+companions fail with it is remembered by construction.</p>
 <p>Valid time is genuinely separate from record time.
 <code>EffectiveAt</code> in the provenance <code>Details</code> is
 documented as the valid-time boundary, <code>Timestamp</code> as when
@@ -396,6 +421,14 @@ component.</strong></p>
 <p><strong>Keep the trust label out of the ranking it informs.</strong>
 <code>TrustLevel</code> feeds effective importance; it is not the
 score.</p>
+<p><strong>Put every result-path predicate in one admission function,
+and make the injectors call it.</strong> The trust filter, the lifecycle
+check, the meta filter, the structured predicate and lease visibility
+live together in <code>visibilityGate.Admits</code>, and five injection
+paths construct that gate rather than re-deriving any of them. The
+alternative is what the comment on the entity boost describes losing: a
+flagged-unreliable engram re-entering an <code>ExcludeUntrusted</code>
+vault through a shared rare entity.</p>
 <h3 id="avoid">Avoid</h3>
 <p><strong>Do not ship agent-harness hooks in a repository people will
 clone into their own harness</strong> without saying so at the top of
@@ -494,6 +527,31 @@ stream</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-19</strong> — <a
+href="https://github.com/scrypster/muninndb/commit/34b505f46496cfc2929edc54f4301d6a9c2f42ab"><code class="commit-id" title="34b505f46496cfc2929edc54f4301d6a9c2f42ab">34b505f4…</code></a>
+— <code>trust_state</code> re-tested at an unchanged pin against the
+narrowed line. Every anchor held and the mark is better earned than the
+record said. The previous evidence stopped at the opt-in —
+<code>ExcludeUntrusted</code> is a <code>*bool</code> whose nil means
+include everything — and did not follow the flag to where it is tested.
+Retrieval checks it at
+<code>internal/engine/activation/engine.go:2025-2028</code>. After that,
+results are added by later passes, and the flag rides the request struct
+rather than the meta filters, so <code>PassesMetaFilter</code> cannot
+enforce it; the comment beside the check says so. Instead lifecycle,
+meta, trust, the structured predicate and lease visibility are collected
+into one <code>visibilityGate.Admits</code>
+(<code>internal/engine/visibility_gate.go:141-145</code>) that five
+injection paths each construct: entity boost, supersession, the
+version-head walk, annotation and the general injector. The comment
+above the boost pass names the defect that taught them
+(<code>#569</code>) — an <code>ExcludeUntrusted</code> vault getting
+flagged-unreliable memory re-injected through any shared rare entity.
+This atlas keeps finding scope and trust predicates that hold on the
+main read path and leak on a second one; here the second paths cannot
+leak without losing four other checks at the same time, which is the
+structural answer rather than the vigilant one. Re-read from a fresh
+clone; nothing was installed and no suite was run.</p>
 <p><strong>2026-09-15</strong> — <a
 href="https://github.com/scrypster/muninndb/commit/34b505f46496cfc2929edc54f4301d6a9c2f42ab"><code class="commit-id" title="34b505f46496cfc2929edc54f4301d6a9c2f42ab">34b505f4…</code></a>
 — second reading, three commits on and 4,346 lines. Screened again: two
