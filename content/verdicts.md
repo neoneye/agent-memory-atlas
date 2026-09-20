@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 618 reports.**
+**This page covers all 619 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5517,4 +5517,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `server.py:145-175`, the two history tables with their indexes and capping triggers — about thirty lines, and independent of everything else here.
 - Maturity impression: **PolyForm Noncommercial 1.0.0**, which puts any commercial use outside the grant and is the first fact for anyone evaluating substrates to build on. Python over SQLite, thirty files, bilingual, with a four-tier `who-can-use` guide matching install depth to intent down to *"use it as a smart notebook"*. No marks. The screening script could not see an execution surface in this tree and reported it unscreened rather than clean; it was read by hand.
 - Study when: you want the distinction its README draws for an agent reader — *"remembering is replaying what happened — carrying state is holding what those events left behind, reshaped by everything since"* — and a worked example of separating what gets injected from what merely gets kept.
+
+### [`zer0dex`](../systems/zer0dex/)
+
+- Best idea: **say which half the adopter still has to build, in the citation metadata.** The `CITATION.cff` abstract ends *"The package supplies the CLI and local server; wiring the query into model calls remains an agent-host step."* A reader evaluating this knows the integration cost in one sentence, from the file a project is least likely to oversell in.
+- Biggest risk: **the Markdown is the source and the vector store is a copy, and nothing detects drift between them.** A correction means editing the Markdown and re-seeding; a deleted paragraph's chunk stays retrievable until the store is rebuilt. Underneath that, retrieval is `mem0ai>=0.1.0` — a floating lower bound on a 0.1 release, and here the dependency *is* the memory rather than a detail of it.
+- Most reusable component: the heading splitter in `src/zer0dex/seed.py:53-70`, which emits a section only once the buffer holds a line that is non-empty and not itself a heading — three lines that remove the empty-section bug common to heading-based chunkers.
+- Maturity impression: Apache 2.0, ~1,000 lines of Python over mem0 and Chroma, self-labelled Alpha on a 0.1.x developer-preview line with a compatibility policy promising migration notes before documented breaks. One mark, `negative_eval`. The other six are withheld together — the package holds no memory object to carry them, and what exists belongs to [mem0](../systems/mem0/).
+- Study when: you want a worked example of a docs-consistency test. Thirty lines asserting the documentation still matches the code is the check nobody reviews for and the one that stops a README drifting into fiction.
 

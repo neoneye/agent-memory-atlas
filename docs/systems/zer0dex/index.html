@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A markdown memory index paired
+with semantic retrieval delegated to mem0 and Chroma, whose own citation
+abstract states that wiring the query into model calls remains an
+agent-host step.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="zer0dex — Agent Memory Atlas">
+    <meta property="og:description" content="A markdown memory index
+paired with semantic retrieval delegated to mem0 and Chroma, whose own
+citation abstract states that wiring the query into model calls remains
+an agent-host step.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="zer0dex — Agent Memory Atlas">
+    <meta name="twitter:description" content="A markdown memory index
+paired with semantic retrieval delegated to mem0 and Chroma, whose own
+citation abstract states that wiring the query into model calls remains
+an agent-host step.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>zer0dex — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "zer0dex",
+      "description": "A markdown memory index paired with semantic retrieval delegated to mem0 and Chroma, whose own citation abstract states that wiring the query into model calls remains an agent-host step.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The citation file says the query wiring is
+your job</p>
+          <h1>zer0dex</h1>
+          <p class="document-deck">A markdown memory index paired with
+semantic retrieval delegated to mem0 and Chroma, whose own citation
+abstract states that wiring the query into model calls remains an
+agent-host step.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/hermes-labs-ai/zer0dex">
+              <span>Source</span>
+              <strong>hermes-labs-ai/zer0dex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/hermes-labs-ai/zer0dex/commit/58776ccdef75bf1b26e0766fa21e9e14e1ac3e08" title="58776ccdef75bf1b26e0766fa21e9e14e1ac3e08">
+              <span>Analyzed revision</span>
+              <code>58776ccd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/hermes-labs-ai--zer0dex" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>hermes-labs-ai--zer0dex</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>zer0dex pairs two layers: a small Markdown index a person can read,
+and semantic retrieval from a local vector store. Apache 2.0, Python, 38
+files and about a thousand lines of source across three modules — a CLI,
+a seeder and a local server.</p>
+<p><strong>One mark: <code>negative_eval</code></strong>, and it is
+narrow.</p>
+<p>The retrieval layer is not this project's.
+<code>pyproject.toml</code> declares <code>mem0ai&gt;=0.1.0</code>,
+<code>chromadb&gt;=1.5.9</code> and <code>ollama&gt;=0.3.0</code>, and
+<a href="../mem0/">mem0</a> has its own report here. What zer0dex
+supplies is the layout, the chunker that feeds it and the process
+lifecycle around the server.</p>
+<p>The project says so itself, in the one place a project is least
+likely to oversell — its <code>CITATION.cff</code> abstract: <em>"The
+markdown layer keeps categories, durable summaries, and cross-topic
+pointers; the local mem0/Chroma layer holds the retrievable details. The
+package supplies the CLI and local server; <strong>wiring the query into
+model calls remains an agent-host step</strong>."</em> A memory system
+whose citation metadata tells you which half you still have to build is
+doing something most READMEs do not.</p>
+<p>It is also explicit that it is early: <em>"0.1.1 continues the 0.1.x
+developer-preview line. The project remains Alpha"</em>, with a
+compatibility policy committing to migration notes ahead of documented
+breaking changes.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Durable summaries and pointers live in Markdown the user maintains.
+Details live in a vector store the user never reads. Seeding is the
+bridge: the Markdown is chunked at section boundaries and pushed into
+mem0, so the two layers describe the same material at different
+resolutions.</p>
+<p>Nothing here decides what is true, what is stale or who may read it.
+A memory is a chunk of the operator's own notes.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — markdown the operator maintains is collected — only files with a markdown extension — chunked at level-two heading boundaries with a size cap, and seeded into a local mem0 store over chroma, while the package itself supplies a cli and a background server whose stale state records it detects and removes; retrieval belongs to mem0 and the step that puts a query result into a model call is left to the agent host, which the project states in its own citation abstract</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: markdown the operator maintains is collected — only files with a markdown extension — chunked at level-two heading boundaries with a size cap, and seeded into a local mem0 store over chroma, while the package itself supplies a cli and a background server whose stale state records it detects and removes; retrieval belongs to mem0 and the step that puts a query result into a model call is left to the agent host, which the project states in its own citation abstract
+flowchart TD
+    OP((&quot;operator&quot;)) --&gt; MD[(&quot;MEMORY.md · memory/&lt;br/&gt;categories · durable summaries&lt;br/&gt;cross-topic pointers&quot;)]
+    MD --&gt; COLL[&quot;collect_files&lt;br/&gt;markdown only — a .txt is not collected&quot;]
+    COLL --&gt; CHUNK[&quot;chunk_markdown&lt;br/&gt;split at &#39;## &#39; when the buffer holds&lt;br/&gt;non-heading content; then cap at 2000&quot;]
+    CHUNK --&gt; SEED[&quot;seed → mem0&quot;]
+    SEED --&gt; VEC[(&quot;mem0 &gt;= 0.1.0 over chroma &gt;= 1.5.9&lt;br/&gt;the retrievable detail layer&lt;br/&gt;reported under mem0&quot;)]
+
+    CLI[&quot;zer0dex CLI · 618 lines&quot;] --&gt; SRV[&quot;local background server · 201 lines&quot;]
+    SRV --&gt; STATE[(&quot;server state record&quot;)]
+    CLI --&gt;|&quot;detects and removes&quot;| STALE[&quot;stale or invalid state&lt;br/&gt;without touching any process&quot;]
+
+    VEC --&gt; Q[&quot;query&quot;]
+    Q -.-&gt;|&quot;wiring this into a model call&lt;br/&gt;remains an agent-host step&quot;| HOST((&quot;the agent host — not this package&quot;))
+    OLL[&quot;ollama &gt;= 0.3.0&quot;] --- VEC</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The collection boundary</strong> —
+<code>src/zer0dex/seed.py</code>. <code>collect_files</code> walks the
+given sources and takes Markdown; <code>tests/test_seed.py:20-27</code>
+pins it from both sides, asserting <code>a.md</code> and
+<code>b.md</code> are collected and <code>c.txt</code> is not. The
+must-include half is what stops a collector that returns nothing from
+passing.</p>
+<p><strong>The chunker</strong> — <code>seed.py:53-70</code>. Sections
+split on <code>## </code>, but only when the accumulated buffer already
+holds a line that is non-empty and not itself a heading:</p>
+<pre class="python"><code>current_has_content = any(
+    existing.strip() and not existing.lstrip().startswith(&quot;#&quot;)
+    for existing in current
+)</code></pre>
+<p>So a run of consecutive headings does not emit empty sections — the
+common bug in heading-based splitters. Oversized sections are then split
+again against a 2,000-character cap.</p>
+<p><strong>The lifecycle</strong> — <code>cli.py</code>, which is most
+of the package. A background server record can go stale, and the CLI
+removes it <em>"without touching any process"</em>
+(<code>cli.py:159</code>), distinguishing an invalid record from a stale
+one in its output (<code>:433</code>, <code>:441</code>,
+<code>:455</code>). For a local daemon that is the right care: a state
+file outliving its process is the normal failure, and killing something
+on the strength of a stale record is the dangerous fix.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Markdown sections on one side; whatever mem0 stores on the other.
+There is no status field, no confidence, no scope key, no supersession
+and no validity window — <code>grep -rl</code> over the Python finds
+<code>tombstone</code>, <code>supersede</code>, <code>confidence</code>,
+<code>scope</code>, <code>audit</code>, <code>review</code> and
+<code>approve</code> in no file.</p>
+<p>Two consequences follow, and they are the same consequence twice. A
+correction means editing the Markdown and re-seeding; nothing reconciles
+the vector store against a changed source, so a deleted paragraph's
+chunk remains retrievable until the store is rebuilt.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>mem0's, over Chroma, with Ollama for local embeddings. All three are
+floating constraints (<code>&gt;=</code>), which matters more here than
+in most projects because the dependency <em>is</em> the retrieval layer:
+what <code>mem0ai</code> resolves to on install day decides the
+behaviour this package is a front end for.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Seeding. There is no capture path, no extraction and no write policy:
+the operator writes Markdown and runs the seeder.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A CLI, a local server, a skill under
+<code>.agents/skills/zer0dex/</code>, an <code>AGENTS.md</code>, and a
+TypeScript hook example shipped as source rather than as a package.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>negative_eval</code></strong> — section 10.</p>
+<p><strong>Six marks are withheld together.</strong> This package holds
+no memory object with fields to carry them: no epistemic state, no
+rejected-value record, no scope key, no second clock, no append-only
+mutation record and nothing that waits for a person. Where such
+properties exist at all they are mem0's, and are credited <a
+href="../mem0/">there</a> rather than counted twice.</p>
+<p><strong>The staleness gap is worth naming.</strong> The Markdown is
+the source and the vector store is a copy; nothing detects that the copy
+has drifted from it. The project's own <code>stale</code> handling is
+about server state records, not about memory.</p>
+<p><strong>Alpha, and labelled.</strong> A 0.1.x developer preview with
+a compatibility policy is a better disclosure than most projects at this
+maturity offer, and a reader should take the version at its word.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Four test files, 853 lines, 122 assertions, with CI and a publish
+workflow. Nothing was installed and nothing was run.</p>
+<p>The must-not cases are about what enters the memory rather than what
+comes out of it:</p>
+<ul>
+<li><code>tests/test_seed.py:20-27</code> — a <code>.txt</code> beside
+two <code>.md</code> files is asserted absent from the collected set,
+with both <code>.md</code> files asserted present.</li>
+<li><code>:84-87</code> — empty and whitespace-only Markdown chunk to
+<code>[]</code> rather than to a single empty section.</li>
+</ul>
+<p><code>tests/test_docs_consistency.py</code> is the file worth
+copying: thirty lines asserting that the documentation still matches the
+code, which is the check that stops a README drifting into fiction
+between releases.</p>
+<p>No benchmark. A <code>CITATION.cff</code> with an abstract, and no
+paper behind it.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>State which half the user still has to build.</strong>
+<em>"wiring the query into model calls remains an agent-host step"</em>,
+in the citation metadata. A reader evaluating this knows in one sentence
+what integrating it costs.</li>
+<li><strong>Guard the heading splitter against consecutive
+headings.</strong> Checking that the buffer holds a non-heading line
+before emitting a section is three lines and removes the empty-section
+bug.</li>
+<li><strong>Remove a stale state record without touching the
+process.</strong> A state file outliving its process is the normal
+failure; acting on it as though the process were alive is the dangerous
+one.</li>
+<li><strong>Test that the docs still match the code.</strong> Thirty
+lines, and it catches the drift nobody reviews for.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A floating constraint on the component that is your
+memory.</strong> <code>mem0ai&gt;=0.1.0</code> means the retrieval
+semantics this package fronts are whatever installs today — and the
+lower bound is a 0.1 release.</li>
+<li><strong>A copy with no drift detection.</strong> Editing the
+Markdown and forgetting to re-seed leaves the vector store answering
+from text that no longer exists.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take it if you already want mem0 locally and would rather curate a
+Markdown index than an opaque store. Do not take it expecting retrieval
+to be wired into your agent: the citation file tells you it is not.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Nothing reconciles the vector store against edited Markdown. Is a
+re-seed meant to be destructive, and what marks a chunk whose source
+paragraph is gone?</li>
+<li>The dependencies are floating and the project is Alpha. Would
+pinning <code>mem0ai</code> be a compatibility commitment the 0.1.x
+policy could carry?</li>
+<li><code>hook_example.ts</code> ships as source. Is the host wiring
+intended to become part of the package, or to stay an example on
+purpose?</li>
+<li>The Markdown layer holds <em>"cross-topic pointers"</em>. Does
+anything validate that a pointer still resolves after an edit?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/zer0dex/seed.py</code></td>
+<td><code>collect_files</code>, <code>chunk_markdown</code> and the mem0
+seeding path</td>
+</tr>
+<tr>
+<td><code>src/zer0dex/cli.py</code></td>
+<td>most of the package: commands and the stale-state handling</td>
+</tr>
+<tr>
+<td><code>src/zer0dex/server.py</code></td>
+<td>the local background server</td>
+</tr>
+<tr>
+<td><code>src/zer0dex/hook_example.ts</code></td>
+<td>the host wiring, as an example rather than a package</td>
+</tr>
+<tr>
+<td><code>tests/test_seed.py</code></td>
+<td>the collection boundary and the chunker's empty cases</td>
+</tr>
+<tr>
+<td><code>tests/test_docs_consistency.py</code></td>
+<td>the documentation-matches-code check</td>
+</tr>
+<tr>
+<td><code>CITATION.cff</code></td>
+<td>the abstract stating which half the host must supply</td>
+</tr>
+<tr>
+<td><code>pyproject.toml</code></td>
+<td><code>mem0ai&gt;=0.1.0</code>, <code>chromadb&gt;=1.5.9</code>,
+<code>ollama&gt;=0.3.0</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Retrieval is the dependency's</td>
+<td>read <code>pyproject.toml:23-27</code></td>
+<td><code>mem0ai&gt;=0.1.0</code>, <code>chromadb&gt;=1.5.9</code>,
+<code>ollama&gt;=0.3.0</code>, all floating</td>
+</tr>
+<tr>
+<td>No epistemic vocabulary exists here</td>
+<td><code>grep -rl "tombstone|supersede|confidence|scope|audit|review|approve" --include='*.py' .</code></td>
+<td>Nothing for any of them</td>
+</tr>
+<tr>
+<td>The collection boundary is tested from both sides</td>
+<td>read <code>tests/test_seed.py:20-27</code></td>
+<td>Two <code>.md</code> asserted present, one <code>.txt</code>
+asserted absent</td>
+</tr>
+<tr>
+<td>The chunker guards against consecutive headings</td>
+<td>read <code>src/zer0dex/seed.py:53-70</code></td>
+<td>A section is emitted only when the buffer holds a non-empty,
+non-heading line</td>
+</tr>
+<tr>
+<td>The package is 1,006 lines of Python</td>
+<td><code>wc -l src/zer0dex/*.py</code></td>
+<td>618 CLI, 201 server, 186 seeder, 1 init</td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>head -3 LICENSE</code>;
+<code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>Stock Apache 2.0; the only match is the standard compliance
+clause</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/hermes-labs-ai/zer0dex/commit/58776ccdef75bf1b26e0766fa21e9e14e1ac3e08"><code class="commit-id" title="58776ccdef75bf1b26e0766fa21e9e14e1ac3e08">58776ccd…</code></a>
+— first reading, at 38 files. Taken from an unreported scout shortlist
+entry dated 2026-09-17 rather than from a fresh triage selection, the
+day's selection allocation having been spent. Screened before reading;
+nothing was installed and nothing was run. Apache 2.0, and the project
+labels itself Alpha on a 0.1.x developer-preview line. One mark,
+<code>negative_eval</code>. The remaining six are withheld together
+because this package holds no memory object to carry them: retrieval is
+<code>mem0ai</code>, declared as a floating constraint, and is credited
+to the <a href="../mem0/">mem0</a> report rather than counted twice —
+the fifth delegated-memory attribution in this batch.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
