@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 611 reports.</strong></p>
+<p><strong>This page covers all 612 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -24884,6 +24884,48 @@ the three declared namespace kinds are reserved and unused.</li>
 does not stop at <code>unwrap_err()</code> — it then asserts the file is
 absent from the directory the escape targeted, because an error proves
 the call complained and a partial write would satisfy that alone.</li>
+</ul>
+<h3 id="memo-local"><a
+href="../systems/memo-local/"><code>memo-local</code></a></h3>
+<ul>
+<li>Best idea: <strong>tombstone the source, not the row.</strong> Its
+own docstring states the problem the rubric was written for — deleting
+the memo row is futile because a scheduled re-ingest and <em>"the
+surviving <code>.md</code> resurrects the row on the next tick"</em>,
+and memo must not delete the user's Obsidian file. So it records a
+vault-relative glob the ingest path reads, written on delete, undone
+only by an explicit command. A durable record keyed on what
+re-extraction would read, so re-extraction cannot silently re-assert
+it.</li>
+<li>Biggest risk: <strong>supersession is decided only during
+maintenance.</strong> <code>belief.py</code> resolves which side of a
+contradiction wins and its header says it runs <em>"only in the
+maintenance path, never the 5s recall hook"</em> — so a memory
+contradicted since the last pass is returned like any other, and the
+recall path consults no state at all. Defensible as a latency decision;
+it is also why <code>trust_state</code> is withheld. Separately, two
+mechanisms in this codebase share the word tombstone, and
+<code>consolidation.py</code> records that an upsert clears the weaker
+one.</li>
+<li>Most reusable component: the pair of as-of tool families.
+<code>server_asof.py</code> does transaction-time reconstruction from
+the audit log — <em>"what the corpus looked like at a past point"</em> —
+while <code>server_asof_valid.py</code> filters each record's validity
+interval <em>"so a since-superseded fact resurfaces exactly as it stood
+in the world at <code>as_of</code>."</em> Two questions, two endpoints,
+and the second's header names the first and the difference.</li>
+<li>Maturity impression: MIT, Python over SQLite at 1,616 files, MCP
+with profile-gated tool families, hooks for several editors, launchd and
+systemd units. Four marks — <code>tombstone</code>,
+<code>bitemporal</code>, <code>audit_log</code>,
+<code>negative_eval</code>. The audit log is load-bearing rather than
+decorative: reconstruction is computed from it, so a missing entry
+surfaces as a wrong answer from a feature. Worth knowing before
+installing: the screen found six auto-run surfaces, which is how the
+product works rather than an oversight.</li>
+<li>Study when: a scheduled importer can re-create memories from files
+you do not own. Deleting the row is a no-op with extra steps, and this
+is the worked example of the alternative.</li>
 </ul>
         </article>
       </div>

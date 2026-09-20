@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 611 reports.**
+**This page covers all 612 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5461,4 +5461,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `src/agent-memory/src/audit/mod.rs` together with `tools/edit.rs`. The entry carries a timestamp, tool, path, ok flag, bytes, token estimate, error and a trace id, appended and never rewritten — and `edit.rs` emits eight of them, seven from failure branches each carrying its error. That is what makes a log answer "what went wrong" rather than only "what worked".
 - Maturity impression: Apache 2.0 from Alibaba Cloud, one Rust component of a 5,758-file agentic OS, Linux-only and requiring a kernel new enough for `openat2`; 37 MCP tools, hybrid BM25-plus-vector search with RRF, git versioning and tar.gz snapshots. Two marks — `audit_log`, `negative_eval`. `scope_enforced` is withheld because a namespace is a mount with its own index rather than a key composed into a read, and two of the three declared namespace kinds are reserved and unused.
 - Study when: you are writing a test for a sandbox escape. This one does not stop at `unwrap_err()` — it then asserts the file is absent from the directory the escape targeted, because an error proves the call complained and a partial write would satisfy that alone.
+
+### [`memo-local`](../systems/memo-local/)
+
+- Best idea: **tombstone the source, not the row.** Its own docstring states the problem the rubric was written for — deleting the memo row is futile because a scheduled re-ingest and *"the surviving `.md` resurrects the row on the next tick"*, and memo must not delete the user's Obsidian file. So it records a vault-relative glob the ingest path reads, written on delete, undone only by an explicit command. A durable record keyed on what re-extraction would read, so re-extraction cannot silently re-assert it.
+- Biggest risk: **supersession is decided only during maintenance.** `belief.py` resolves which side of a contradiction wins and its header says it runs *"only in the maintenance path, never the 5s recall hook"* — so a memory contradicted since the last pass is returned like any other, and the recall path consults no state at all. Defensible as a latency decision; it is also why `trust_state` is withheld. Separately, two mechanisms in this codebase share the word tombstone, and `consolidation.py` records that an upsert clears the weaker one.
+- Most reusable component: the pair of as-of tool families. `server_asof.py` does transaction-time reconstruction from the audit log — *"what the corpus looked like at a past point"* — while `server_asof_valid.py` filters each record's validity interval *"so a since-superseded fact resurfaces exactly as it stood in the world at `as_of`."* Two questions, two endpoints, and the second's header names the first and the difference.
+- Maturity impression: MIT, Python over SQLite at 1,616 files, MCP with profile-gated tool families, hooks for several editors, launchd and systemd units. Four marks — `tombstone`, `bitemporal`, `audit_log`, `negative_eval`. The audit log is load-bearing rather than decorative: reconstruction is computed from it, so a missing entry surfaces as a wrong answer from a feature. Worth knowing before installing: the screen found six auto-run surfaces, which is how the product works rather than an oversight.
+- Study when: a scheduled importer can re-create memories from files you do not own. Deleting the row is a no-op with extra steps, and this is the worked example of the alternative.
 

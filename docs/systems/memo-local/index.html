@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A local-first memory for coding
+agents that answers what the store held and what was true in the world
+as two separate as-of queries, and stops a re-ingest resurrecting a
+deleted note by excluding its source rather than by deleting the user's
+file.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="memo — Agent Memory Atlas">
+    <meta property="og:description" content="A local-first memory for
+coding agents that answers what the store held and what was true in the
+world as two separate as-of queries, and stops a re-ingest resurrecting
+a deleted note by excluding its source rather than by deleting the
+user's file.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="memo — Agent Memory Atlas">
+    <meta name="twitter:description" content="A local-first memory for
+coding agents that answers what the store held and what was true in the
+world as two separate as-of queries, and stops a re-ingest resurrecting
+a deleted note by excluding its source rather than by deleting the
+user's file.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>memo — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "memo",
+      "description": "A local-first memory for coding agents that answers what the store held and what was true in the world as two separate as-of queries, and stops a re-ingest resurrecting a deleted note by excluding its source rather than by deleting the user's file.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Deleting the row was futile, so it
+tombstones the source</p>
+          <h1>memo</h1>
+          <p class="document-deck">A local-first memory for coding
+agents that answers what the store held and what was true in the world
+as two separate as-of queries, and stops a re-ingest resurrecting a
+deleted note by excluding its source rather than by deleting the user's
+file.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jagoff/memo">
+              <span>Source</span>
+              <strong>jagoff/memo</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jagoff/memo/commit/b4d16ca593f0e9ede021e0b39d47ce08a4c15c5e" title="b4d16ca593f0e9ede021e0b39d47ce08a4c15c5e">
+              <span>Analyzed revision</span>
+              <code>b4d16ca5…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jagoff--memo" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>jagoff--memo</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>memo is a local-first persistent memory for coding agents — Claude
+Code, Codex, Cursor, Cline and others — in Python over SQLite, served
+over MCP. MIT, 1,616 files. The pitch is the familiar one about amnesia;
+the implementation is not.</p>
+<p><strong>Four marks: <code>tombstone</code>, <code>bitemporal</code>,
+<code>audit_log</code> and <code>negative_eval</code>.</strong></p>
+<p>The tombstone is the rare correct kind, and its docstring states the
+exact problem the rubric was written for:</p>
+<blockquote>
+<p>When the user deletes a vault-derived memory, deleting the memo row
+is futile on its own: the <code>com.memo.vault-ingest</code> agent
+re-runs <code>memo ingest</code> and the surviving <code>.md</code>
+resurrects the row on the next tick. memo must not destroy the user's
+Obsidian file, so instead a <em>tombstone</em> is recorded here.</p>
+</blockquote>
+<p>A durable record keyed on the source, consulted by the ingest path,
+so re-extraction cannot silently re-assert what the user removed.
+Written on delete, read on ingest, and reversible only by an explicit
+command.</p>
+<p>The bitemporal work is the other reason to read this. memo ships
+<strong>two separate families of as-of tools</strong> and the second
+one's header explains why: <code>server_asof.py</code> does
+<em>"TRANSACTION-time reconstruction... what the corpus looked like at a
+past point given the audit log"</em>, while
+<code>server_asof_valid.py</code> filters each record's validity
+interval <em>"so a since-superseded fact resurfaces exactly as it stood
+in the world at <code>as_of</code>."</em> Two questions, two endpoints,
+the difference spelled out in the source.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Three stores rather than one. The corpus holds memories.
+<code>history.db</code> records every save, update and delete. A
+per-vault exclusion file records what must not come back.</p>
+<p>The audit log is not a side channel here — it is the input to
+transaction-time reconstruction, so a missing entry would show up as a
+wrong answer from a feature rather than as a gap nobody notices.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — deleting a vault-derived memory removes the row and records an exclusion glob keyed on the source note, which the ingest path reads so the next scheduled re-ingest cannot resurrect it without an explicit un-exclude command; every save, update and delete is logged to a separate history database that is never rewritten and that transaction-time reconstruction replays to show what the corpus looked like at a past moment, while a second family of as-of tools filters each record's own validity interval to show what was true in the world then</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: deleting a vault-derived memory removes the row and records an exclusion glob keyed on the source note, which the ingest path reads so the next scheduled re-ingest cannot resurrect it without an explicit un-exclude command; every save, update and delete is logged to a separate history database that is never rewritten and that transaction-time reconstruction replays to show what the corpus looked like at a past moment, while a second family of as-of tools filters each record&#39;s own validity interval to show what was true in the world then
+flowchart TD
+    V[(&quot;user&#39;s Obsidian vault&lt;br/&gt;memo must not delete these files&quot;)] --&gt; ING[&quot;memo ingest&lt;br/&gt;scheduled re-run&quot;]
+    EXC[(&quot;ingest_excludes/&amp;lt;label&amp;gt;.txt&lt;br/&gt;one glob per line&quot;)] --&gt; ING
+    ING --&gt; CORP[(&quot;corpus&quot;)]
+
+    DEL[&quot;user deletes a vault-derived memory&quot;] --&gt; ROW[&quot;row removed&quot;]
+    DEL --&gt; ADD[&quot;IngestExcludeStore.add(rel_path)&quot;]
+    ADD --&gt; EXC
+    UNEXC[&quot;explicit: IngestExcludeStore.remove&quot;] -.-&gt;|&quot;the only way back&quot;| EXC
+
+    CORP --&gt; W1[&quot;write_ops → log_save&quot;]
+    CORP --&gt; W2[&quot;lifecycle_ops → log_update&quot;]
+    CORP --&gt; W3[&quot;delete_ops → log_delete&quot;]
+    W1 --&gt; H[(&quot;history.db&lt;br/&gt;every save/update/delete&lt;br/&gt;no UPDATE or DELETE against it&quot;)]
+    W2 --&gt; H
+    W3 --&gt; H
+
+    H --&gt; TM[&quot;time_machine.reconstruct&quot;]
+    TM --&gt; A1[&quot;server_asof&lt;br/&gt;TRANSACTION time:&lt;br/&gt;what the corpus looked like then&quot;]
+
+    CORP --&gt; A2[&quot;server_asof_valid&lt;br/&gt;VALID time: COALESCE(valid_at, created) &amp;lt;= as_of&lt;br/&gt;AND (invalid_at IS NULL OR invalid_at &amp;gt; as_of)&quot;]
+    A2 --&gt; RES[&quot;a since-superseded fact&lt;br/&gt;as it stood in the world then&quot;]
+
+    A1 --&gt; MCP((&quot;MCP client&quot;))
+    RES --&gt; MCP
+
+    BEL[&quot;belief.py — which side of a contradiction supersedes&lt;br/&gt;pure, read-only, maintenance path only&lt;br/&gt;never the 5s recall hook&quot;] -.-&gt;|&quot;shared by maintain and the nightly Dream pass&quot;| CORP</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The exclusion store</strong> —
+<code>src/memo/ingest_exclude.py:1-13</code>. State is
+<code>&lt;state_dir&gt;/ingest_excludes/&lt;label&gt;.txt</code>, one
+glob per line, one file per vault label, <em>"append-only-ish text
+files, deduped on read/write."</em> The module records its own
+provenance too: ported from a predecessor project on its deprecation,
+with a note naming the two helpers that <em>"died with it."</em></p>
+<p><strong>Both ends wired</strong> — <code>cli_ops.py:274</code> calls
+<code>add</code>, <code>cli_ops.py:283</code> calls <code>remove</code>,
+and <code>vault_ingest.py:81</code> constructs the store on the ingest
+path, with the module docstring at <code>:37</code> saying it exists
+<em>"so re-ingestion can't resurrect them."</em> Producer, consumer and
+a deliberate reversal.</p>
+<p><strong>The two clocks</strong> —
+<code>src/memo/server_asof_valid.py:1-13</code> carries the distinction
+verbatim, and the predicate with it:
+<code>COALESCE(valid_at, created) &lt;= as_of AND (invalid_at IS NULL OR invalid_at &gt; as_of)</code>.
+The same shape appears at <code>memory/search_ops.py:103</code> and
+<code>server_temporal.py:50</code> for edges. <code>COALESCE</code> is
+the honest part: a record whose world time was never supplied is
+filtered by when it was written.</p>
+<p><strong>The history log</strong> —
+<code>src/memo/history.py:126</code>, <code>:165</code>,
+<code>:198</code>: <code>log_save</code>, <code>log_update</code>,
+<code>log_delete</code>. The callers are the operations themselves —
+<code>memory/write_ops.py:1066</code>,
+<code>memory/lifecycle_ops.py:254</code> and <code>:312</code>,
+<code>memory/delete_ops.py:251</code> — so the three mutation verbs each
+log from the code that performs them. Nothing in the tree issues an
+<code>UPDATE</code> or <code>DELETE</code> against the history
+table.</p>
+<p><strong>The contradiction rule, in one place</strong> —
+<code>src/memo/belief.py:1-8</code>. <em>"Which side of a contradiction
+(if any) supersedes. Shared by <code>memo maintain</code> and the
+nightly Dream contradict pass so the recency-clobber fix lives in
+exactly one place. Pure and READ-ONLY over the store... Runs only in the
+maintenance path, never the 5s recall hook."</em> Four constraints in
+six lines: one implementation, no writes, and off the latency-critical
+path.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memory carries a validity interval — <code>valid_at</code> and
+<code>invalid_at</code> — beside its <code>created</code> record time,
+and for vault-derived memories a source path that the exclusion store
+can name. An entity graph sits alongside in <code>graph.py</code>.
+Supersession is decided by the belief module during maintenance rather
+than computed per read.</p>
+<p><code>terminal_receipt_tombstones</code> is a different thing under
+the same word: a capped table of receipt keys with a
+<code>tombstone_limit</code>, bounding how many are retained.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Search with an optional <code>as_of</code> that selects the
+valid-time filter, or the separate transaction-time tools that
+reconstruct from the audit log. The valid-time route goes <em>"straight
+through the live <code>Memory.search</code> / <code>Memory.ask</code>
+index with <code>as_of=</code>; no snapshot reconstruction"</em> — so
+the two routes differ in cost as well as in meaning.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Saves, updates and deletes each log to <code>history.db</code>. A
+vault delete additionally writes the exclusion glob. Consolidation and
+the nightly Dream passes rewrite and retire content during
+maintenance.</p>
+<p>One line worth reading against the tombstone above:
+<code>consolidation.py:484</code> notes that <em>"the upsert clears any
+delete tombstone"</em> — a different, weaker marker on the reindex path,
+and the shape the rubric warns about. The two coexist, and only the
+ingest-exclusion one survives a re-run.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server with profile-gated tool families, hooks and slash
+commands for several editors, launchd and systemd units, a statusline,
+and a web chat.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>tombstone</code>.</strong> Durable, keyed on the source
+note rather than on the deleted row — which is the point, since the row
+is what gets resurrected — consulted by the ingest path, and undone only
+by an explicit command.</p>
+<p><strong><code>bitemporal</code>.</strong> Two axes with a read on
+each, as two separate MCP tool families, with the difference between
+them written into the module header rather than left for a reader to
+infer.</p>
+<p><strong><code>audit_log</code>.</strong> Three verbs logged by the
+operations that perform them, into a separate database with no rewrite
+path, and load-bearing: transaction-time reconstruction is computed from
+it, so an incomplete log would surface as a wrong answer rather than as
+silence.</p>
+<p><strong><code>negative_eval</code></strong> — section 10.</p>
+<p><strong><code>trust_state</code> is withheld.</strong>
+<code>belief.py</code> decides which side of a contradiction supersedes,
+and it runs <em>"only in the maintenance path, never the 5s recall
+hook"</em>. So supersession is a retirement performed between sessions
+rather than a state the recall path consults; a memory contradicted an
+hour ago and not yet maintained is returned like any other. That is a
+defensible latency decision and it is not a state that withholds.</p>
+<p><strong><code>scope_enforced</code> is withheld.</strong> memo is
+single-user and local by design — <em>"100% on your own machine"</em> —
+so there is no principal to scope against and no stored scope key on a
+read path.</p>
+<p><strong><code>human_review</code> is withheld.</strong> Deletion and
+exclusion are user actions at a CLI, which is the user driving the tool
+rather than a memory waiting in a state until someone resolves it.</p>
+<p><strong>Worth knowing before installing.</strong> The screen found
+<strong>six auto-run surfaces</strong> — hooks, launchd and systemd
+units, an installer and editor command files. That is inherent to what
+the product does, and it is a larger execution surface than most systems
+in this corpus.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A large pytest suite with a conformance directory and an
+<code>eval/</code> tree. Nothing was installed and nothing was run: the
+screen reported six auto-run surfaces.</p>
+<p>The must-not cases are thematically tied to the tombstone, which is
+the sign that resurrection is treated as the real risk rather than an
+edge case:</p>
+<ul>
+<li><code>tests/test_consolidate_restore.py:294</code> — <em>"Keeping
+the id must not let a disk-only recovery resurrect an
+archive."</em></li>
+<li><code>tests/test_ingest_enhanced.py:981</code> — a regression case
+that images inside a <code>dir/**</code>-excluded subtree must not be
+ingested.</li>
+<li><code>tests/test_dream_profile.py:302</code> —
+<code>assert "old superseded rule" not in doc  # retired via contradict pair</code>,
+an assertion that a superseded rule is absent from generated
+output.</li>
+</ul>
+<p>The third is the strongest shape: material kept out of what the model
+is handed because it was superseded, asserted on the output rather than
+on the query that produced it.</p>
+<p>No paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Tombstone the source, not the row.</strong> If a scheduled
+importer can re-create a memory from a file you do not own, deleting the
+row is a no-op with extra steps. Record what must not be re-ingested,
+and let the importer read it.</li>
+<li><strong>Write the resurrection scenario into the docstring.</strong>
+<em>"the surviving <code>.md</code> resurrects the row on the next
+tick"</em> is why nobody will later simplify the exclusion away.</li>
+<li><strong>Ship the two as-of questions as two tools.</strong> "What
+did the store hold" and "what was true" are different questions with
+different costs, and one parameter cannot express both honestly.</li>
+<li><strong>Make the audit log load-bearing.</strong> A log that a
+feature reconstructs from is checked every time that feature runs; a log
+nothing reads is checked never.</li>
+<li><strong>Put the contradiction rule in one pure module and keep it
+off the hot path.</strong> <code>belief.py</code> names all four
+constraints in its first six lines.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Two things called tombstone in one codebase.</strong> The
+ingest exclusion survives a re-run; the delete marker that <em>"the
+upsert clears"</em> does not, and a reader who finds the wrong one first
+will draw the wrong conclusion.</li>
+<li><strong>Deciding supersession only in maintenance.</strong> It keeps
+recall fast and it means a contradiction found last night is
+authoritative and a contradiction found an hour ago is not.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take it for one person on one machine who wants durable agent memory
+with real temporal queries. Read the auto-run surfaces before
+installing; there are six, and they are how it works rather than an
+oversight.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The exclusion is keyed on a vault-relative glob. What happens when
+the user moves or renames an excluded note?</li>
+<li><code>belief.py</code> runs only in maintenance. Is a cheap
+read-path check for recently-contradicted records intended, or is the
+staleness window accepted?</li>
+<li><code>consolidation.py</code> clears a delete tombstone on upsert
+while the ingest exclusion survives. Are the two meant to converge?</li>
+<li>Transaction-time reconstruction pulls the corpus and the audit log
+into RAM with a stated bound. What is the intended behaviour past
+it?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/memo/ingest_exclude.py</code></td>
+<td>the exclusion store, and the resurrection problem it exists for</td>
+</tr>
+<tr>
+<td><code>src/memo/vault_ingest.py</code></td>
+<td>the ingest path that reads it</td>
+</tr>
+<tr>
+<td><code>src/memo/cli_ops.py</code></td>
+<td><code>add</code> on delete, <code>remove</code> as the deliberate
+reversal</td>
+</tr>
+<tr>
+<td><code>src/memo/server_asof.py</code></td>
+<td>transaction-time reconstruction tools</td>
+</tr>
+<tr>
+<td><code>src/memo/server_asof_valid.py</code></td>
+<td>valid-time tools, and the header distinguishing the two</td>
+</tr>
+<tr>
+<td><code>src/memo/history.py</code></td>
+<td><code>log_save</code>, <code>log_update</code>,
+<code>log_delete</code></td>
+</tr>
+<tr>
+<td><code>src/memo/memory/write_ops.py</code>,
+<code>lifecycle_ops.py</code>, <code>delete_ops.py</code></td>
+<td>the three callers</td>
+</tr>
+<tr>
+<td><code>src/memo/belief.py</code></td>
+<td>the shared contradiction rule and its four constraints</td>
+</tr>
+<tr>
+<td><code>src/memo/consolidation.py</code></td>
+<td>the weaker delete marker the upsert clears</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The exclusion has a producer and a consumer</td>
+<td><code>grep -rn "IngestExcludeStore|ingest_exclude" --include='*.py' src | grep -v 'ingest_exclude.py:'</code></td>
+<td>Written at <code>cli_ops.py:274</code>, removed at
+<code>:283</code>, read on the ingest path at
+<code>vault_ingest.py:81</code></td>
+</tr>
+<tr>
+<td>The history log is never rewritten</td>
+<td><code>grep -rn "UPDATE audit|DELETE FROM audit|UPDATE history|DELETE FROM history" --include='*.py' src</code></td>
+<td>Nothing</td>
+</tr>
+<tr>
+<td>All three mutation verbs log</td>
+<td><code>grep -rn "log_save|log_update|log_delete" --include='*.py' src/memo/memory</code></td>
+<td><code>write_ops.py:1066</code>, <code>lifecycle_ops.py:254</code>
+and <code>:312</code>, <code>delete_ops.py:251</code></td>
+</tr>
+<tr>
+<td>Both time axes are read</td>
+<td><code>grep -rn "as_of" --include='*.py' src/memo | grep -iE "WHERE|&lt;=|valid_at"</code></td>
+<td><code>server_asof_valid.py:6</code>,
+<code>memory/search_ops.py:103</code>,
+<code>server_temporal.py:50</code>; transaction time via
+<code>time_machine.reconstruct</code></td>
+</tr>
+<tr>
+<td>Supersession is not filtered at recall</td>
+<td><code>grep -rn "superseded" --include='*.py' src/memo/memory/*.py | grep -iE "WHERE|filter|exclude"</code></td>
+<td>Nothing; <code>belief.py:6-7</code> states it runs <em>"only in the
+maintenance path, never the 5s recall hook"</em></td>
+</tr>
+<tr>
+<td>Two mechanisms share the word tombstone</td>
+<td><code>grep -rn "tombstone" --include='*.py' src</code></td>
+<td>The ingest exclusion, a delete marker
+<code>consolidation.py:484</code> says an upsert clears, and a capped
+<code>terminal_receipt_tombstones</code> table</td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>head -3 LICENSE</code>;
+<code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>Stock MIT, no match</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/jagoff/memo/commit/b4d16ca593f0e9ede021e0b39d47ce08a4c15c5e"><code class="commit-id" title="b4d16ca593f0e9ede021e0b39d47ce08a4c15c5e">b4d16ca5…</code></a>
+— first reading, at 1,616 files. Screened before reading: <strong>six
+auto-run surfaces</strong> — hooks, launchd and systemd units, an
+installer and editor command files — two build-time execution points,
+two unpinned surfaces and nothing inside the cooldown. Nothing was
+installed and nothing was run, and the committed <code>eval/</code> tree
+was read rather than executed. MIT. Four marks: <code>tombstone</code>,
+<code>bitemporal</code>, <code>audit_log</code>,
+<code>negative_eval</code>. <code>trust_state</code> is withheld because
+the contradiction rule runs only during maintenance and the recall path
+consults no state; <code>scope_enforced</code> because the product is
+single-user by design. The repository's MCP name is
+<code>io.github.jagoff/memo</code>; the atlas had no report under that
+name before this one.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
