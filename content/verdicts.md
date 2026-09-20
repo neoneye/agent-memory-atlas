@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 617 reports.**
+**This page covers all 618 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5509,4 +5509,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `ResourceLeaseHistoryTable.kt`, for the three lines of schema and the paragraph explaining them — the table *"deliberately carries NO foreign key"* so it survives `ON DELETE CASCADE` **and** deletion of the holder work item, because an audit trail that vanishes with its subject answers nothing after an incident. Read it beside `SQLiteRoleTransitionRepository.deleteByItemId`, which does the opposite to the history of the work items themselves.
 - Maturity impression: MIT, Kotlin, 523 files, fourteen MCP tools with the gates in the tool handlers rather than in a prompt — *"Prompt-based frameworks hope the LLM follows instructions. This one blocks the call if it doesn't."* Schemas are opt-in, and without them there are *"no gates, no required notes."* One mark, `negative_eval`.
 - Study when: you are writing tests for a rejection. One case asserts *"Repository must not be called — validation rejected before execution"* — proving nothing was written, which an error-code assertion does not.
+
+### [`tideline-memory`](../systems/tideline-memory/)
+
+- Best idea: **archive the whole prior value before every overwrite, and cap the history in a trigger.** Profiles and self-concept are overwrite-style writes; before each `UPSERT` the previous value is stored in full, and an `AFTER INSERT` trigger keeps the thirty most recent versions per key *"防无限膨胀"* — to prevent unbounded growth. Two extra columns turn a destructive write into a rollback point while the injected table stays small enough to inject, and putting the bound in the database means it holds for every writer.
+- Biggest risk: **the behaviour is specified in prose and checked by nothing.** Five fixtures run to 931 lines — the cooldown one enumerates five precise rules for how a connection failure differs from an item failure — and between them they contain four `assert` statements, every one the same check that `server.py` exists on disk. There is no CI workflow in the repository. A change breaking all five rules would leave every fixture exiting zero.
+- Most reusable component: `server.py:145-175`, the two history tables with their indexes and capping triggers — about thirty lines, and independent of everything else here.
+- Maturity impression: **PolyForm Noncommercial 1.0.0**, which puts any commercial use outside the grant and is the first fact for anyone evaluating substrates to build on. Python over SQLite, thirty files, bilingual, with a four-tier `who-can-use` guide matching install depth to intent down to *"use it as a smart notebook"*. No marks. The screening script could not see an execution surface in this tree and reported it unscreened rather than clean; it was read by hand.
+- Study when: you want the distinction its README draws for an agent reader — *"remembering is replaying what happened — carrying state is holding what those events left behind, reshaped by everything since"* — and a worked example of separating what gets injected from what merely gets kept.
 

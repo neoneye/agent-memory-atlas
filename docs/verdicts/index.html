@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 617 reports.</strong></p>
+<p><strong>This page covers all 618 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25120,6 +25120,43 @@ them there are <em>"no gates, no required notes."</em> One mark,
 <em>"Repository must not be called — validation rejected before
 execution"</em> — proving nothing was written, which an error-code
 assertion does not.</li>
+</ul>
+<h3 id="tideline-memory"><a
+href="../systems/tideline-memory/"><code>tideline-memory</code></a></h3>
+<ul>
+<li>Best idea: <strong>archive the whole prior value before every
+overwrite, and cap the history in a trigger.</strong> Profiles and
+self-concept are overwrite-style writes; before each <code>UPSERT</code>
+the previous value is stored in full, and an <code>AFTER INSERT</code>
+trigger keeps the thirty most recent versions per key
+<em>"防无限膨胀"</em> — to prevent unbounded growth. Two extra columns
+turn a destructive write into a rollback point while the injected table
+stays small enough to inject, and putting the bound in the database
+means it holds for every writer.</li>
+<li>Biggest risk: <strong>the behaviour is specified in prose and
+checked by nothing.</strong> Five fixtures run to 931 lines — the
+cooldown one enumerates five precise rules for how a connection failure
+differs from an item failure — and between them they contain four
+<code>assert</code> statements, every one the same check that
+<code>server.py</code> exists on disk. There is no CI workflow in the
+repository. A change breaking all five rules would leave every fixture
+exiting zero.</li>
+<li>Most reusable component: <code>server.py:145-175</code>, the two
+history tables with their indexes and capping triggers — about thirty
+lines, and independent of everything else here.</li>
+<li>Maturity impression: <strong>PolyForm Noncommercial 1.0.0</strong>,
+which puts any commercial use outside the grant and is the first fact
+for anyone evaluating substrates to build on. Python over SQLite, thirty
+files, bilingual, with a four-tier <code>who-can-use</code> guide
+matching install depth to intent down to <em>"use it as a smart
+notebook"</em>. No marks. The screening script could not see an
+execution surface in this tree and reported it unscreened rather than
+clean; it was read by hand.</li>
+<li>Study when: you want the distinction its README draws for an agent
+reader — <em>"remembering is replaying what happened — carrying state is
+holding what those events left behind, reshaped by everything
+since"</em> — and a worked example of separating what gets injected from
+what merely gets kept.</li>
 </ul>
         </article>
       </div>

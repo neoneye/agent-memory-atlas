@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A memory substrate that archives
+the whole prior value before every overwrite and keeps the thirty most
+recent, whose test fixtures document their intended semantics in detail
+and contain four assertions, all of them the same path check.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Tideline — Agent Memory Atlas">
+    <meta property="og:description" content="A memory substrate that
+archives the whole prior value before every overwrite and keeps the
+thirty most recent, whose test fixtures document their intended
+semantics in detail and contain four assertions, all of them the same
+path check.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tideline — Agent Memory Atlas">
+    <meta name="twitter:description" content="A memory substrate that
+archives the whole prior value before every overwrite and keeps the
+thirty most recent, whose test fixtures document their intended
+semantics in detail and contain four assertions, all of them the same
+path check.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Tideline — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Tideline",
+      "description": "A memory substrate that archives the whole prior value before every overwrite and keeps the thirty most recent, whose test fixtures document their intended semantics in detail and contain four assertions, all of them the same path check.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The behaviour is specified in the fixture
+headers and asserted nowhere</p>
+          <h1>Tideline</h1>
+          <p class="document-deck">A memory substrate that archives the
+whole prior value before every overwrite and keeps the thirty most
+recent, whose test fixtures document their intended semantics in detail
+and contain four assertions, all of them the same path check.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/ennisaaaaaaaa-stack/tideline-memory">
+              <span>Source</span>
+              <strong>ennisaaaaaaaa-stack/tideline-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/ennisaaaaaaaa-stack/tideline-memory/commit/76490fe2c422f1213e735e63c289fef5ae8044f6" title="76490fe2c422f1213e735e63c289fef5ae8044f6">
+              <span>Analyzed revision</span>
+              <code>76490fe2…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/ennisaaaaaaaa-stack--tideline-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>ennisaaaaaaaa-stack--tideline-memory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Tideline (潮痕, "tide marks") is a memory substrate for agents, in
+Python over SQLite — thirty files, one 2,297-line server, and a set of
+prompts and scripts for nightly consolidation. It is licensed
+<strong>PolyForm Noncommercial 1.0.0</strong>, which matters before
+anything else here: any commercial use is outside the grant.</p>
+<p><strong>No marks.</strong> The reasons are structural rather than a
+list of near-misses, and one of them is worth the page.</p>
+<p>The architectural idea is stated well. Its README is addressed to an
+agent rather than to a person, and draws a distinction most memory
+systems do not: <em>"remembering is replaying what happened — carrying
+state is holding what those events left behind, reshaped by everything
+since."</em> The live tables hold the newest version of an agent's
+profile and self-concept for injection at session start; the
+unsummarised past stays outside the context window.</p>
+<p>The rollback layer under that is real. Profiles and self-concept are
+overwrite-style writes, and before each <code>UPSERT</code> the whole
+prior value is archived — with an <code>AFTER INSERT</code> trigger
+capping each key at its thirty most recent versions,
+<em>"防无限膨胀"</em>, to prevent unbounded growth.</p>
+<p><strong>And the behaviour is specified in prose and checked by
+nothing.</strong> Five test fixtures run to 931 lines, several with
+headers laying out precise semantics — the cooldown fixture enumerates
+five rules for how connection failures differ from item failures.
+Between them the five files contain <strong>four <code>assert</code>
+statements, and all four are the same check that <code>server.py</code>
+exists on disk.</strong> There is no CI workflow in the repository.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Two layers. A live layer of small overwritten tables —
+<code>profiles</code>, <code>self_concept</code>, <code>context</code>,
+<code>threads</code> — that is what gets injected. And a deep layer of
+narratives and snapshots that is not summarised and not injected, to be
+reached into when the agent needs the actual past.</p>
+<p>Consolidation happens between sessions, under prompts named for
+sleep: <code>dream_sleep</code>, <code>dream_digest</code>,
+<code>dream_solidify</code>.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the live tables hold one row per key and are what gets injected at session start, while narratives and snapshots keep the unsummarised past out of the context window; every overwrite of a profile or a self-concept field archives the whole prior value first, and a trigger then deletes all but the thirty most recent versions of that key, so rollback reaches back thirty writes and no further; nightly dream passes distil the live layer, and the test fixtures describe the intended semantics of all of it in their headers while asserting only that the server file exists</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the live tables hold one row per key and are what gets injected at session start, while narratives and snapshots keep the unsummarised past out of the context window; every overwrite of a profile or a self-concept field archives the whole prior value first, and a trigger then deletes all but the thirty most recent versions of that key, so rollback reaches back thirty writes and no further; nightly dream passes distil the live layer, and the test fixtures describe the intended semantics of all of it in their headers while asserting only that the server file exists
+flowchart TD
+    S((&quot;agent session&quot;)) --&gt; INJ[&quot;injection at session start&quot;]
+    LIVE[(&quot;live layer&lt;br/&gt;profiles · self_concept&lt;br/&gt;context · threads&lt;br/&gt;UNIQUE(field) — one row per key&quot;)] --&gt; INJ
+    INJ --&gt; S
+
+    S --&gt; W[&quot;overwrite write (UPSERT)&quot;]
+    W --&gt; ARCH[&quot;archive the WHOLE prior value first&quot;]
+    ARCH --&gt; H[(&quot;profiles_history · self_concept_history&lt;br/&gt;old_content · archived_at&quot;)]
+    W --&gt; LIVE
+    H --&gt; CAP{&quot;AFTER INSERT trigger&lt;br/&gt;keep hid DESC LIMIT 30 per key&quot;}
+    CAP --&gt; DROP[&quot;older versions deleted&lt;br/&gt;rollback reaches back 30 writes&quot;]
+
+    DEEP[(&quot;narratives · snapshots&lt;br/&gt;unsummarised, outside the context window&quot;)] -.-&gt;|&quot;reached into on demand&quot;| S
+
+    NIGHT[&quot;dream_sleep · dream_digest · dream_solidify&quot;] --&gt; LIVE
+    NIGHT --&gt; DEEP
+    SC[&quot;scan_conflicts · soft_clusters&lt;br/&gt;build_entity_graph · refresh_recurrence&quot;] --&gt; DEEP
+
+    FIX[&quot;5 fixtures, 931 lines&lt;br/&gt;headers specifying cooldown semantics&lt;br/&gt;in five numbered rules&quot;] -.-&gt;|&quot;4 asserts, all `SERVER.exists()`&quot;| NOTHING((&quot;nothing fails&lt;br/&gt;when behaviour changes&quot;))</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The archive-before-overwrite</strong> —
+<code>server.py:145-175</code>. <code>profiles_history</code> and
+<code>self_concept_history</code> each take <code>old_content</code> and
+<code>archived_at</code>, indexed <code>(key, hid DESC)</code>. The
+comment states the division: the live table holds only the newest
+version, <em>"每 session 注入用"</em> — for per-session injection — and
+the history is there for lookup and rollback on demand.</p>
+<p><strong>The cap, in a trigger</strong> — same block.
+<code>AFTER INSERT ON profiles_history</code> deletes every row for that
+<code>(entity, ptype)</code> outside the newest thirty, and the
+self-concept table has the matching trigger. Keeping the newest is the
+right direction for a rollback layer; the consequence, unstated in the
+comment, is that an agent's thirty-first-most-recent self-description is
+gone and there is no record that it existed.</p>
+<p><strong>The specification that is only a specification</strong> —
+<code>tests/fixture_phase13_cooldown.py:3-13</code>. Five numbered
+rules, precisely expressed: a connection-class failure opens a global
+window paid once and stops after the first failure,
+<em>"比「连败3条早退」更强的形状"</em> — a stronger shape than bailing
+after three consecutive failures — because a hung network then costs one
+ten-second wait rather than N; an item-class failure keeps the window
+shut and records per-item so other items still mint; any success clears
+the window; the night scan forces through with <code>force=True</code>;
+and the retry budget is cut to one attempt at ten seconds.</p>
+<p>The file is 240 lines. It contains one <code>assert</code>, and that
+assert checks that <code>server.py</code> is present.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>narratives</code> and <code>snapshots</code> for the deep
+layer; <code>profiles</code>, <code>self_concept</code>,
+<code>context</code> and <code>threads</code> for the live one, with
+<code>self_concept</code> carrying a <code>UNIQUE(field)</code> over
+three fields — <code>fact</code>, <code>terrain</code>,
+<code>self_reflection</code>. No status column, no supersession pointer,
+no validity window, no confidence and no decay: <code>grep -rl</code>
+over the Python finds <code>tombstone</code>, <code>supersede</code>,
+<code>audit</code> and <code>decay</code> in no file at all.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Keyword search with embeddings optional — the project's own
+requirements note says an unconfigured embedding setup
+<em>"降级为纯关键词搜索"</em>, degrades to pure keyword search, and
+needs no GPU and no cloud. An attention-heatmap guide sits in
+<code>docs/</code>.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Live writes overwrite and archive. Deep writes append narratives.
+Nightly scripts scan for conflicts, build an entity graph, refresh
+recurrence and compute soft clusters.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, a Kimi-code hook and shim, and three plugins — a
+memory mirror, a session epilogue and a provider.
+<code>docs/who-can-use.txt</code> is a four-tier guide, in Chinese,
+matching install depth to intent: everything for an agent owner,
+server-plus-scripts for a framework builder, server-only to try it, and
+<em>"当智能 笔记本用"</em> — use it as a smart notebook — for structured
+search alone. Naming the smallest useful configuration is a courtesy few
+projects extend.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No marks, and the categories are absent rather than nearly
+met.</strong> Nothing records a rejected value, nothing carries an
+epistemic state, there is one clock, there is no scope key — the design
+is one agent's own memory — nothing waits for a person, and there is no
+append-only mutation record. The history tables are a capped rollback
+layer, which is a different thing: thirty versions per key, oldest
+silently dropped by a trigger.</p>
+<p><strong><code>negative_eval</code> is the one worth explaining rather
+than listing.</strong> The fixtures are not tests. They are inspection
+harnesses: they run the server, they print, and a person reads the
+output. The semantics in their headers are more carefully specified than
+most projects manage — and a change that broke every one of those five
+cooldown rules would leave all five files exiting zero.</p>
+<p><strong>The licence.</strong> PolyForm Noncommercial 1.0.0 permits
+any noncommercial purpose and no commercial one. For a reader evaluating
+memory substrates to build on, that is the first fact rather than a
+footnote.</p>
+<p><strong>A screening limitation to state plainly.</strong>
+<code>screen_repo.py</code> reported that it could not see an execution
+surface in this tree — there is no manifest of a kind it parses — so it
+returned "unscreened rather than clean". The tree was read by hand
+instead: a <code>Dockerfile</code>, Python scripts, hooks under
+<code>kimi-code/</code>, and no CI workflow directory. Nothing was
+installed and nothing was run.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Five files under <code>tests/</code>, 931 lines, named
+<code>fixture_phase12</code> through <code>fixture_phase16</code>. Four
+<code>assert</code> statements in total, each of them
+<code>assert SERVER.exists(), f"server.py not found at {SERVER}"</code>;
+<code>fixture_phase16_provider_traj.py</code> has none. The cooldown
+fixture prints nine times.</p>
+<p>No CI: there is no <code>.github/workflows</code> directory. No
+benchmark, no eval harness and no paper.</p>
+<p>The gap is specific rather than general. This is not a project that
+has not thought about its behaviour — the headers are evidence that it
+has thought about it more carefully than most. It is a project whose
+thinking lives in prose that nothing executes, which is the same
+distance between intent and enforcement this atlas records elsewhere as
+a comment asserting what no test does.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Archive the whole prior value before an overwrite.</strong>
+Two extra columns and an index turn a destructive UPSERT into a rollback
+point, and the live table stays small enough to inject.</li>
+<li><strong>Cap the history in a trigger, not in application
+code.</strong> The bound then holds for every writer, including the next
+one.</li>
+<li><strong>Write the "who can use what" document.</strong> Four tiers
+matched to intent, with the smallest one being <em>use it as a smart
+notebook</em>, tells a reader whether to keep reading — and admitting
+that the smallest tier is useful costs nothing.</li>
+<li><strong>Separate what is injected from what is kept.</strong> The
+live layer is small because the deep layer exists, and the deep layer is
+honest because nothing summarised it.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Specifying behaviour in a fixture header and asserting none
+of it.</strong> Five numbered rules about cooldown semantics, 240 lines,
+and one assertion that a file exists. The rules are good; nothing
+defends them.</li>
+<li><strong>A capped history without a marker for what was
+dropped.</strong> Rollback reaches back thirty writes; at thirty-one
+there is no value and no record that there was one.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take the archive-before-overwrite pattern anywhere you have a table
+that is overwritten and occasionally wrong. Take the whole system only
+if your use is noncommercial, and write the assertions yourself.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>The history trigger keeps thirty versions per key. Was thirty chosen
+from observed rollback depth, and should exceeding it leave a
+marker?</li>
+<li>The fixtures specify behaviour precisely and assert nothing. Are
+they intended to become tests, or are they design records that happen to
+be executable?</li>
+<li>There is no CI. Is a workflow planned, and would the fixtures be
+what it runs?</li>
+<li><code>scan_conflicts.py</code> exists among the nightly scripts.
+What does a detected conflict do — surface, annotate, or nothing?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>server.py</code></td>
+<td>the whole MCP server, the schema, the history tables and their
+capping triggers</td>
+</tr>
+<tr>
+<td><code>prompts/dream_sleep.md</code>, <code>dream_digest.md</code>,
+<code>dream_solidify.md</code></td>
+<td>the nightly consolidation prompts</td>
+</tr>
+<tr>
+<td><code>scripts/scan_conflicts.py</code>,
+<code>soft_clusters.py</code>, <code>build_entity_graph.py</code>,
+<code>refresh_recurrence.py</code></td>
+<td>the between-session passes</td>
+</tr>
+<tr>
+<td><code>plugins/memory_mirror.py</code>,
+<code>session_epilogue.py</code>, <code>tideline_provider.py</code></td>
+<td>the integration surface</td>
+</tr>
+<tr>
+<td><code>docs/who-can-use.txt</code></td>
+<td>the four-tier install guide, in Chinese</td>
+</tr>
+<tr>
+<td><code>tests/fixture_phase12..16*.py</code></td>
+<td>931 lines, four assertions, all of them the same path check</td>
+</tr>
+<tr>
+<td><code>LICENSE</code></td>
+<td>PolyForm Noncommercial 1.0.0</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The fixtures assert almost nothing</td>
+<td><code>for f in tests/*.py; do printf '%s %s\\n' "$f" "$(grep -c assert $f)"; done</code></td>
+<td>1, 1, 1, 1, 0 across 931 lines; every one is
+<code>assert SERVER.exists()</code></td>
+</tr>
+<tr>
+<td>No assertion exists outside <code>tests/</code></td>
+<td><code>grep -rn "assert" --include='*.py' .</code></td>
+<td>Only the four path checks</td>
+</tr>
+<tr>
+<td>There is no CI</td>
+<td><code>ls .github/workflows</code></td>
+<td>No such directory</td>
+</tr>
+<tr>
+<td>The history is capped, not append-only</td>
+<td>read <code>server.py:155-175</code></td>
+<td><code>AFTER INSERT</code> triggers delete all but
+<code>hid DESC LIMIT 30</code> per key</td>
+</tr>
+<tr>
+<td>No epistemic vocabulary exists</td>
+<td><code>grep -rl "tombstone|supersede|audit|decay" --include='*.py' .</code></td>
+<td>Nothing for any of the four</td>
+</tr>
+<tr>
+<td>The licence is noncommercial-only</td>
+<td><code>head -3 LICENSE</code>;
+<code>grep -n -i 'noncommercial' LICENSE</code></td>
+<td>PolyForm Noncommercial 1.0.0; <em>"Any noncommercial purpose is a
+permitted purpose"</em></td>
+</tr>
+<tr>
+<td>The screen could not see the execution surface</td>
+<td><code>python3 scripts/screen_repo.py &lt;tree&gt;</code></td>
+<td>Reported the tree as <em>"unscreened rather than clean"</em>; read
+by hand instead</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/ennisaaaaaaaa-stack/tideline-memory/commit/76490fe2c422f1213e735e63c289fef5ae8044f6"><code class="commit-id" title="76490fe2c422f1213e735e63c289fef5ae8044f6">76490fe2…</code></a>
+— first reading, at 30 files. The screening script reported that it
+could not see an execution surface in this tree and returned "unscreened
+rather than clean", so the tree was read by hand: a Dockerfile, Python
+scripts, hooks under <code>kimi-code/</code>, and no CI directory.
+Nothing was installed and nothing was run. <strong>PolyForm
+Noncommercial 1.0.0</strong> — commercial use is outside the grant,
+which is the first thing a reader evaluating this should know. No marks:
+nothing records a rejected value, nothing carries an epistemic state,
+there is one clock, there is no scope key, nothing waits for a person,
+and the history tables are a rollback layer capped at thirty versions
+per key rather than an append-only record. The fixtures specify their
+intended semantics in unusually careful prose and contain four
+assertions between them, all of them the same check that
+<code>server.py</code> exists.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
