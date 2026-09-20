@@ -12,7 +12,7 @@ revision_url: https://github.com/inite-ai/inite-brain-service/commit/e57752a0479
 analyzed_at: 2026-09-19
 capabilities: "bitemporal, trust_state, scope_enforced, negative_eval"
 capability_evidence:
-  bitemporal: "validFrom/validUntil carry real-world validity, recordedAt/retractedAt carry knowledge time, and an as-of read gates the first without bounding the second | src/db/schema.surql:38-60, src/entities/entity-read-helpers.ts activeFactWhere, src/facts/facts.service.ts:955-1060 | a fact's interval is independent of when the system learned it, so a backdated claim is visible for a past `asOf` on both the profile and search; `listCompeting` takes the other axis, filtering `recordedAt`/`retractedAt` to reconstruct what was believed at a moment | test/entity-read-helpers.unit-spec.ts:104-165"
+  bitemporal: "validFrom/validUntil carry real-world validity, recordedAt/retractedAt carry knowledge time, and an as-of read gates the first without bounding the second | src/db/schema.surql:38-60, src/entities/entity-read.helpers.ts activeFactWhere, src/facts/facts.service.ts:955-1060 | a fact's interval is independent of when the system learned it, so a backdated claim is visible for a past `asOf` on both the profile and search; `listCompeting` takes the other axis, filtering `recordedAt`/`retractedAt` to reconstruct what was believed at a moment | test/entity-read-helpers.unit-spec.ts:104-165"
   trust_state: "a six-value stored status asserted by the schema, applied through one shared where-builder that two surfaces deleted their local copies in favour of | src/db/schema.surql:64-65 (the field and its ASSERT), :73 and :75 (the indexes), src/search/internals/where-builder.ts:85-86, src/entities/entity-read.helpers.ts:86-160 (`activeFactWhere`), src/facts/facts.service.ts:1116, src/mcp/code-memory-tools.ts:71, src/summarize-entity/summarize-entity.service.ts:178 | `status` defaults to active under `ASSERT $value INSIDE [active, competing, retracted, superseded, compacted, corroborating]`, so the vocabulary is closed by the database, indexed on its own and again with entityId and predicate. It is written by ingest, adjudication, compaction and the dreams pass, and each read excludes a subset by name: search drops `competing` unless the caller asks and tests `retractedAt IS NONE` beside it, while `activeFactWhere` composes the bitemporal window with `status != compacted` and `status != corroborating` — hiding the audit rows of a second claim so the incumbent that carries the corroboration counter is the one surfaced. The part worth copying is what happened to the copies: the MCP code-memory tool and the summarize-entity service both carry a comment saying they no longer filter status locally because the shared helper applies the full rule | test/entity-read-helpers.unit-spec.ts:104"
   scope_enforced: "a stored userId applied as an AND-condition on the search lane, fail-closed when the request carries no user | src/search/internals/where-builder.ts:101-110, src/search/internals/edge-fence.ts:32-45 | a request with no `userId` is narrowed to `userId IS NONE` — tenant-global memory only — and a request with one widens to `(userId IS NONE OR userId = $scopeUserId)`, never another user's rows; the edge fence repeats the idiom on graph expansion; the caller may widen by argument but cannot omit the clause | test/abac-row-filter.e2e-spec.ts:176-227"
   negative_eval: "a committed must-not retrieval assertion on the store with a positive control in the same case | test/abac-row-filter.e2e-spec.ts:176-227 | with a deny rule installed, search asserts the permitted object is present and the denied object is absent — `expect(objects).toContain('ground floor apartments')` beside `expect(objects).not.toContain('noisy ground floor neighbours')` — and the same pair is re-asserted against the entity profile and the entity timeline, with a golden case pinning that a policy-free key still gets the byte-identical pre-ABAC response | test/abac-row-filter.e2e-spec.ts:167"
@@ -160,7 +160,7 @@ the first.
 
 - `src/search/internals/where-builder.ts:85-115` — the fence stack, with each
   block commented and the fail-closed ones labelled.
-- `src/entities/entity-read-helpers.ts` — `activeFactWhere`, the profile's
+- `src/entities/entity-read.helpers.ts` — `activeFactWhere`, the profile's
   believed-and-valid closure, and its `asOf` branch.
 - `src/facts/facts.service.ts:751-800` — retract, with the ownership fence.
 - `src/facts/facts.service.ts:955-1060` — `listCompeting`, the knowledge-time
@@ -356,7 +356,7 @@ reviewer's console that can act.
 | `src/db/migrations/0027_operator_action.surql` | The human-action log and its complement |
 | `src/search/internals/where-builder.ts` | The fence stack |
 | `src/search/internals/edge-fence.ts` | The graph-expansion fence |
-| `src/entities/entity-read-helpers.ts` | The profile closure and its as-of branch |
+| `src/entities/entity-read.helpers.ts` | The profile closure and its as-of branch |
 | `src/entities/entity-forget.service.ts` | The erasure transaction |
 | `src/facts/facts.service.ts` | Retract and competing adjudication |
 | `src/audit/changefeed-consumer.service.ts` | The drain, its lease and its gate |
