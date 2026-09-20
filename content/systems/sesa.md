@@ -523,6 +523,17 @@ need them.
 | `examples/train_sesa.sh` | — | The only place every skill-bank parameter is set, 337-352 |
 | `quarl/utils/sesa_data_manager.py` | 319 | In-process problem pool; not persisted, so not memory by this atlas's bar |
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Nothing. The vendored `verl/` directory carries none either. |
+
+
 ## History
 
 **2026-09-18** — [`74de5d77a19774cfba53d6950d47633a2d632430`](https://github.com/Zenghuang-Fu/SESA-Self-Evolving-Search-Agents/commit/74de5d77a19774cfba53d6950d47633a2d632430) — re-read at the same commit. Nothing needed correcting, and the matrix's claim that the anti-leakage parameter is implemented and never called now has its evidence in the body rather than only in the frontmatter.

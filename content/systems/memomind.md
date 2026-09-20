@@ -358,6 +358,18 @@ trivial-observation skip `:92-123`), `patch_hindsight.py`
 **Related** — the atlas's [Hindsight](../hindsight/) report, whose stated
 epistemic weakness this project's Patch 3 independently corroborates
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Nothing, at 223 blobs, against an MIT badge and a `## License` section. |
+| No test file exists anywhere in the tree | the same tree, filtered for `tests?/`, `__tests__/`, `test_*`, `*_test.*` and `*.test.*` | Nothing. |
+
+
 ## History
 
 **2026-09-18** — [`d45a7a08dfec155f38c0bed41d1159f7c6234fc1`](https://github.com/24kchengYe/MemoMind/commit/d45a7a08dfec155f38c0bed41d1159f7c6234fc1) — re-read at the same commit. The headline holds verbatim: `install.sh:74` is `sed -i 's/password/trust/g' "$PG_HBA"` followed by `echo "  Database auth fixed (trust mode)"`, and `PATCHES.md` still names its four patches with file, change and reason.

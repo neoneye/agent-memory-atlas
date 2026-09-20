@@ -126,6 +126,22 @@ if ! python3 "$project_dir/scripts/list_superlatives.py" --check "$project_dir";
   exit 1
 fi
 
+# Negative existence claims are this atlas's dominant error class, and two sweeps
+# in September 2026 established which ones go wrong: claims about a *symbol* hold
+# (the author grepped, because that is how they reached the symbol), claims about
+# a *file* do not. Seven were false when checked against the tree at their own
+# pins, each asserted over a directory a careful reading never opened. Same
+# ratchet shape as the superlatives above, and for the same reason: dozens had
+# accrued, so a hard gate would only teach people to skip it. The total may fall
+# and may not rise.
+if ! python3 "$project_dir/scripts/list_unchecked_absences.py" --self-test; then
+  echo "list_unchecked_absences.py cannot demonstrate that its matcher still works." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/list_unchecked_absences.py" --check "$project_dir"; then
+  exit 1
+fi
+
 # check_anchors.py follows fragments and stops there, so a relative href that
 # points at nothing has never been checked. Thirty were broken when this was
 # written — mostly sibling reports written `./verel/` from inside

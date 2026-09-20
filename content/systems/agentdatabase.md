@@ -575,6 +575,17 @@ hundred records and nothing here addresses what happens three orders of magnitud
 | `OpenAIDatabase/data/derived/evaluation/memory_gold/reports/` | Committed run reports with hard gates and per-category accuracy |
 | `OpenAIDatabase/data/WHERE_IS_THE_DATA.md`, `MIRROR_STATUS.json` | The signpost for the next agent, and its machine-readable twin |
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Four `LICENSE` files, every one of them vendored under `CodexSkills/`; the eight root blobs are `.gitignore`, `AGENTS.md`, `HANDOFF.md`, `README.md`, `START-HERE.md`, `assemble_rk_results.py`, `ca1.json` and `checksums.txt`. No grant for this repository. |
+
+
 ## History
 
 **2026-09-19** — audited at the unchanged pin [`8514923810b38b861aa308feca47f43df34f2a20`](https://github.com/LinzeColin/AgentDatabase/commit/8514923810b38b861aa308feca47f43df34f2a20); nothing upstream moved. `human_review` is **withdrawn**, and the report's own third open question turned out to answer it. That question asked whether the canonical `memory query` path sees the curation overrides. It does not: `OpenAIDatabase/scripts/memory.py` contains the string `curation` zero times, and the only consumers are the analysis skill, `build_memory_migration_profile.py` and `migrate_memory_records.py`. So an override is a hand-written replacement of fields on a row already in the store, applied by a pipeline the query path never runs — authoring after the fact, on a surface most readers never see. The `original_statement_hash` written whenever the human text differs from the machine text remains the best idea in the file and keeps its credit. The other four marks stand. Screened again first; nothing was installed and no script was run.

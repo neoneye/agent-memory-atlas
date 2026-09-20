@@ -500,6 +500,17 @@ would assume are enforced, and those are the ones worth moving first.
 | `wiki/log.md`, `wiki/index.md` | Operation record and catalogue, both written by the model |
 | `L1/` | Private context — and tracked in git |
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Nothing, at 73 blobs — against the README closing *"MIT — Use it, fork it, adapt it, share it."* |
+
+
 ## History
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved. The

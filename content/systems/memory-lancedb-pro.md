@@ -424,6 +424,17 @@ checks. The mechanisms are the reason to read this; the tuning is unverified.
 `clawteam-scope.test.mjs`, `batch-dedup.test.mjs`,
 `autocapture-fallback-gating.test.mjs`)
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Nothing, at 353 blobs. |
+
+
 ## History
 
 **2026-09-15** — [`93899f88fd262e47165e949cb655974a7327ba13`](https://github.com/CortexReach/memory-lancedb-pro/commit/93899f88fd262e47165e949cb655974a7327ba13) — nine commits on, 2026-09-13, adding about 14,000 lines, half of them tests. Screened before reading: no auto-run surface, no build-time execution, one unpinned surface and one dependency file inside the cooldown; nothing was installed or run. `negative_eval` is added and was missed: `memory_fact_query hides expired facts unless history is requested` already asserted at the previous pin that a retired fact is absent from the current query with the history query as control; the consolidate release added a real-LanceDB test of the same exclusion on the store's live-only reads. Since the pin: a `consolidate` command that plans model verdicts over duplicate and superseded clusters and applies them only on confirmation or `--apply`, with a snapshot check before each cluster; reflection-derived rows routed through the same dedup and merge pipeline as extracted ones; the reflection distiller's input rendered as speaker-tagged blocks instead of a code fence a transcript's own code block could close; an opt-in transport through the host model runtime; and a noise-bank validation gate. The `pending` state is still produced by no writer. The line count is measured under `src/` only; all three marks carry evidence records.

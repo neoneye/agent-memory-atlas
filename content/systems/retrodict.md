@@ -257,6 +257,17 @@ repository does not, and no test asserts it.
 | `workspace_template/` | The seeded per-game workspace |
 | `docs/arc-agi-3-harness-comparison.md` | The cost and run-selection qualifications |
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Nothing, at 39 blobs. |
+
+
 ## History
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved. The

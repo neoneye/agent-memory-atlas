@@ -403,6 +403,18 @@ a memory you can always trust to be what was written, and can never repair.
 - Store layout: `~/.optmem/memory/{LOG.txt,TREE/,config}`, relocatable with
   `$MEMORY_DIR`.
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Nothing. The whole repository is 13 blobs. |
+| No test file exists anywhere in the tree | the same tree, filtered for `tests?/`, `__tests__/`, `test_*`, `*_test.*` and `*.test.*` | Nothing. |
+
+
 ## History
 
 **2026-09-15** — [`1fb164cf39028047781f72ac3bb1e5a691c1dcb0`](https://github.com/VictorTaelin/OptMem/commit/1fb164cf39028047781f72ac3bb1e5a691c1dcb0) — three commits on, 2026-07-30. Screened before reading: no auto-run surface, no build-time execution, one unpinned surface (`install.sh` fetches `memo` from `main`); nothing was installed or run. The default `WAKE_LINES` dropped from 208 to 96 (about 8k tokens in two parts), and every limit is stated in bytes. Still no licence file. `audit_log` kept, with the record naming `log_append` as the sole writer and the unrecorded summary layer.

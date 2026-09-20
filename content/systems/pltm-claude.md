@@ -406,6 +406,17 @@ print `:458`), `benchmarks/compare_with_mem0.py` (the apples-to-apples framing
 `C__Users_alber_CascadeProjects_LLTM_IMPROVEMENTS_NEEDED.md`,
 `migrate_atoms_to_typed.py`
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Nothing, at 435 blobs, against `license = {text = "MIT"}`. |
+
+
 ## History
 
 **2026-09-18** — [`5146bfbfd2f210674da5a3b16c04ac0ddf6803f0`](https://github.com/Alby2007/PLTM-Claude-repost-/commit/5146bfbfd2f210674da5a3b16c04ac0ddf6803f0) — re-read at the same commit. The quarantine handling was verified verbatim at `memory/memory_types.py:276-279` — `mem.strength = max(0.1, mem.strength * 0.5)` and the marker appended to `mem.context` — and `scope_enforced` now carries an evidence record, including the detail that the full-text arm applies `user_id` to the join rather than to the virtual table.

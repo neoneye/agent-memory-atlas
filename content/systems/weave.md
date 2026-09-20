@@ -403,6 +403,17 @@ And note the missing licence before building on it.
   `memory_stats`), `backend/src`, `frontend/`
 - **Tests:** `mcp/tests/memory_test.rs`, `mcp/tests/http_test.rs`
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Nothing, at 164 blobs. |
+
+
 ## History
 
 **2026-09-19** — [`ff8a6afa107947dd00f15c67db6a0aa7f90ca456`](https://github.com/Sidharth-Singh10/weave/commit/ff8a6afa107947dd00f15c67db6a0aa7f90ca456) — `trust_state` re-tested at the unchanged pin; the mark holds and one property deserves naming. The widening flag is *bounded*: `include_contradicted` changes the clause from `status = 'active'` to `status IN ('active', 'contradicted')`, so three of the four non-active states stay unreachable through it. That is a different guarantee from the usual `include_archived` or `include_inactive`, which tend to admit everything that is not active, and it means a caller who wants to see disagreement cannot accidentally also see what was rejected or quarantined. Beside it, the ordering is the vector distance alone, so neither the status nor the `confidence` REAL enters the rank — the two columns are selected together and only one of them decides admission, which is the split this mark tests for, expressed in one query. Nothing was installed and no suite was run.
