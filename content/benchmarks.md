@@ -1592,7 +1592,7 @@ sits between the memory and the model.
 #### A harness paper publishes the harness and not the measurement
 
 *Prime Agent: A Self-Improving RLM Harness*
-([arXiv:2608.23562](https://arxiv.org/abs/2608.23562), 24 August 2026) reports
+([arXiv:2608.23552](https://arxiv.org/abs/2608.23552), 24 August 2026) reports
 raising *"ARC-AGI-3 RHAE Best@1 from 30% to 95.5%"* and matching or exceeding
 other harnesses across long-context coding, GPU-kernel generation, emulator
 construction and autonomous nanoGPT speedruns. The memory design it wraps comes
