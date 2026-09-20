@@ -112,9 +112,20 @@ def is_secondary_limit(status: int, payload: dict | None, headers: dict) -> bool
     return headers.get("X-RateLimit-Remaining") == "0"
 
 
+#: Set by `--dry-run`. Listing which forks are missing is a read-only question
+#: about public repositories, and it used to require the same credential as
+#: creating them — so the only way to learn that 39 archive links were dead was
+#: to hold the token that would fix them, and nobody without it could even see
+#: the gap. Anonymous reads are rate-limited rather than forbidden, so the
+#: answer was always available; the gate was ours.
+READ_ONLY = False
+
+
 def token() -> str:
     tok = os.environ.get("GITHUB_TOKEN", "").strip()
     if not tok:
+        if READ_ONLY:
+            return ""
         sys.exit("Set GITHUB_TOKEN (repo scope, admin on the target organisation).")
     return tok
 
@@ -124,7 +135,9 @@ def request(method: str, url: str, body: dict | None = None) -> tuple[int, dict 
     req = urllib.request.Request(url, data=data, method=method)
     req.add_header("Accept", "application/vnd.github+json")
     req.add_header("User-Agent", "agent-memory-atlas-archive")
-    req.add_header("Authorization", f"Bearer {token()}")
+    tok = token()
+    if tok:
+        req.add_header("Authorization", f"Bearer {tok}")
     if data is not None:
         req.add_header("Content-Type", "application/json")
     try:
@@ -277,6 +290,10 @@ def main() -> int:
                     help="seconds to wait before resuming after a rate-limit stop (default 1200)")
     args = ap.parse_args()
 
+    if args.dry_run:
+        # Read-only from here: no fork is created, so no credential is needed.
+        globals()["READ_ONLY"] = True
+
     if args.suggest_helpers:
         return suggest_helpers()
 
@@ -289,15 +306,30 @@ def main() -> int:
             sys.exit(f"not in the corpus: {', '.join(sorted(missing))}")
 
     todo = []
+    unknown = []
     for key, (owner, repo, slugs) in sorted(repos.items()):
         name = fork_name(owner, repo)
         status, _, _ = request("GET", f"{API}/repos/{ORG}/{name}")
         if status == 200:
             continue                      # already archived; resumable by construction
+        if status != 404:
+            # 403 and 429 are "could not tell", not "absent". Treating them as
+            # absent is how an unauthenticated run reports every fork missing
+            # the moment it is rate-limited — a false absence claim produced by
+            # the instrument, which is the error class this repository spends
+            # the most effort on. Never fork on an inconclusive read either.
+            unknown.append((key, name, status))
+            continue
         todo.append((key, owner, repo, name, slugs))
 
-    print(f"{len(repos)} repositories cited, {len(repos) - len(todo)} already forked, "
-          f"{len(todo)} to fork.", file=sys.stderr)
+    print(f"{len(repos)} repositories cited, "
+          f"{len(repos) - len(todo) - len(unknown)} already forked, "
+          f"{len(todo)} missing.", file=sys.stderr)
+    if unknown:
+        codes = sorted({str(c) for _, _, c in unknown})
+        print(f"{len(unknown)} could not be checked (HTTP {', '.join(codes)}) and are "
+              f"neither counted as forked nor queued. Unauthenticated reads are "
+              f"rate-limited; re-run later or set GITHUB_TOKEN.", file=sys.stderr)
     if args.limit:
         todo = todo[: args.limit]
     if args.dry_run:
