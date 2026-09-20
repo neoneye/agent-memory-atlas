@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A markdown memory for coding
+agents whose evaluation suite turns public complaints into falsifiable
+probes with both required and forbidden markers, and exits zero when one
+reproduces the problem it was written for.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AgentMemory — Agent Memory Atlas">
+    <meta property="og:description" content="A markdown memory for
+coding agents whose evaluation suite turns public complaints into
+falsifiable probes with both required and forbidden markers, and exits
+zero when one reproduces the problem it was written for.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AgentMemory — Agent Memory Atlas">
+    <meta name="twitter:description" content="A markdown memory for
+coding agents whose evaluation suite turns public complaints into
+falsifiable probes with both required and forbidden markers, and exits
+zero when one reproduces the problem it was written for.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AgentMemory — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AgentMemory",
+      "description": "A markdown memory for coding agents whose evaluation suite turns public complaints into falsifiable probes with both required and forbidden markers, and exits zero when one reproduces the problem it was written for.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A failing probe is a finding, not a broken
+harness</p>
+          <h1>AgentMemory</h1>
+          <p class="document-deck">A markdown memory for coding agents
+whose evaluation suite turns public complaints into falsifiable probes
+with both required and forbidden markers, and exits zero when one
+reproduces the problem it was written for.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jayzeng/agentmemory">
+              <span>Source</span>
+              <strong>jayzeng/agentmemory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jayzeng/agentmemory/commit/901b60dd8f3ab1bd9eec4578aa9fcd4eed6a06d5" title="901b60dd8f3ab1bd9eec4578aa9fcd4eed6a06d5">
+              <span>Analyzed revision</span>
+              <code>901b60dd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jayzeng--agentmemory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>jayzeng--agentmemory</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AgentMemory is a local-first memory layer for coding agents: durable
+memory as plain Markdown files, a daily work log, a scratchpad, and
+optional local search through <a
+href="https://github.com/tobi/qmd">qmd</a>. MIT, TypeScript, 48 files,
+four source modules. The README states its own boundary — <em>"The
+public project is intentionally standalone. It does not require an
+account, remote service, payment flow, or proprietary runtime."</em></p>
+<p><strong>One mark: <code>negative_eval</code></strong>, and it is the
+hardest form the mark takes.</p>
+<p>The memory itself is small enough to read in a sitting;
+<code>eval/</code> is where the thinking is. The suite <em>"converts
+public AgentMemory feedback into falsifiable probes before product fixes
+are proposed"</em>, and each probe is a data record naming the issue it
+came from, the requirement it tests, the fixture it runs against, and an
+oracle with two halves:</p>
+<pre class="json"><code>&quot;oracle&quot;: {
+  &quot;requiredMarkers&quot;: [&quot;https://albatross.invalid/v3&quot;],
+  &quot;forbiddenMarkers&quot;: [&quot;https://old-gull.invalid/v1&quot;]
+}</code></pre>
+<p>That is the probe called
+<code>current-fact-excludes-superseded-fact</code>, over a fixture
+holding an endpoint and its correction. Both halves are declared, which
+is the distinction this atlas draws between a real must-not test and one
+a filter excluding everything would pass.</p>
+<p>The second idea is in the README, and it is about what a failing run
+means: <em>"The default command exits successfully even when a product
+issue is reproduced: failures are evaluation findings, not harness
+crashes."</em></p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory is files the user can read. <code>MEMORY.md</code> holds
+durable facts; a daily log and a scratchpad hold the rest. Retrieval is
+reading, optionally helped by a local index. There is no database, no
+status column and no server.</p>
+<p>Everything that would make the other marks possible — a
+rejected-value record, an epistemic state, a scope key — is absent by
+design at this size. What exists instead is a suite that states, in
+data, what the system is supposed to do and which complaints it has not
+yet answered.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — durable memory is plain markdown the user can read, with a daily log and a scratchpad beside it and optional local search through an external indexer; the evaluation suite is the part with structure — a schema-validated dataset in which every probe names the public issue it came from, the requirement it tests, an isolated fixture, and an oracle carrying both the markers that must appear and the markers that must not, run against temporary directories that never touch the user's own memory or index</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: durable memory is plain markdown the user can read, with a daily log and a scratchpad beside it and optional local search through an external indexer; the evaluation suite is the part with structure — a schema-validated dataset in which every probe names the public issue it came from, the requirement it tests, an isolated fixture, and an oracle carrying both the markers that must appear and the markers that must not, run against temporary directories that never touch the user&#39;s own memory or index
+flowchart TD
+    A((&quot;coding agent&quot;)) --&gt; MD[(&quot;MEMORY.md&lt;br/&gt;durable facts&quot;)]
+    A --&gt; LOG[(&quot;daily work log&quot;)]
+    A --&gt; SCR[(&quot;scratchpad&quot;)]
+    MD --&gt; INJ[&quot;context injection&quot;]
+    LOG --&gt; INJ
+    INJ --&gt; A
+    QMD[&quot;qmd — optional local index&quot;] -.-&gt; INJ
+
+    subgraph EV[&quot;eval/ — the part with structure&quot;]
+        SRC[&quot;4 cited public sources&quot;] --&gt; ISS[&quot;10 issues&quot;]
+        ISS --&gt; PR[&quot;16 probes&quot;]
+        PR --&gt; ORC{&quot;oracle&quot;}
+        ORC --&gt; REQ[&quot;requiredMarkers&lt;br/&gt;the control&quot;]
+        ORC --&gt; FOR[&quot;forbiddenMarkers&lt;br/&gt;the must-not&quot;]
+        PR --&gt; FIX[&quot;fixture: files written into&lt;br/&gt;an isolated temp directory&quot;]
+        VAL[&quot;validateFeedbackDataset&lt;br/&gt;version · license · sources&lt;br/&gt;unique ids · non-empty probes&quot;] -.-&gt;|&quot;schema-checked&quot;| PR
+    end
+
+    FIX --&gt; RUN[&quot;bun run eval:feedback&quot;]
+    RUN --&gt; RES{&quot;result&quot;}
+    RES --&gt;|passed| OK[&quot;the implementation met the requirement&quot;]
+    RES --&gt;|failed| FND[&quot;the probe reproduced the claimed problem&lt;br/&gt;exit code still 0 — a finding, not a crash&quot;]
+    RUN -.-&gt;|&quot;--strict&quot;| GATE[&quot;exit non-zero: treat as a CI gate&quot;]
+    EV -.-&gt;|&quot;isolated indexes only&quot;| NOTOUCH[&quot;never touches ~/.agent-memory&lt;br/&gt;or the normal qmd index&quot;]</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The probe record</strong> —
+<code>eval/datasets/external-feedback-v1.json</code>. Sixteen probes
+across ten issues from four cited sources. Each carries an
+<code>issueId</code>, a <code>title</code>, an <code>evaluator</code>, a
+prose <code>requirement</code>, a <code>fixture</code> of files to
+write, and the <code>oracle</code>. The one quoted above pairs a
+superseded endpoint with its replacement and requires the new one
+present <em>and</em> the old one absent.</p>
+<p><strong>The dataset is validated, not just parsed</strong> —
+<code>eval/dataset.ts</code>. <code>validateFeedbackDataset</code>
+asserts a version, a description, a <strong>license</strong>, a
+non-empty source list with unique ids and titles, non-empty issues,
+fixtures, and non-empty probes. An eval dataset that carries its own
+licence field and refuses to load without one is unusual, and it is the
+field that makes the probes redistributable.</p>
+<p><strong>The exit code</strong> — <code>eval/README.md</code>. A
+reproduced product issue leaves the command at zero;
+<code>--strict</code> is what turns the suite into a gate. The
+interpretation is spelled out — <em>"<code>failed</code>: the probe
+reproduced the claimed problem or missing capability"</em> — so a
+failing probe is a documented open issue rather than a broken build.</p>
+<p><strong>What is excluded, and why</strong> — the same file separates
+three kinds of evidence and keeps the third out of scoring:
+<em>"Qualitative observations cover maturity and custom-skill
+substitution. These require longitudinal adoption or interview evidence
+and are excluded from automated scoring."</em> Naming the evidence you
+cannot automate, and then not scoring it, is the rarer half of that
+sentence.</p>
+<p><strong>Isolation</strong> — live retrieval probes <em>"build an
+isolated qmd index... They use synthetic documents only and do not touch
+<code>~/.agent-memory</code> or the normal qmd index."</em> An eval that
+can corrupt the thing it measures is a hazard; this one says it does
+not.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Markdown. <code>MEMORY.md</code> for durable facts, a dated work log,
+a scratchpad. A superseded fact is marked in prose — the fixture above
+writes <code>Status: superseded</code> and a sentence saying what
+supersedes it — which is a convention the probe tests rather than a
+field the code enforces.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Reading files, with <code>qmd</code> as an optional local lexical
+index. The probes cover routing, hard context caps, priority under
+saturation, and cross-language lexical controls in Japanese, Chinese and
+English.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>The agent writes markdown. There is no write gate, no extraction
+pipeline and no consolidation pass.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An npm CLI, a Homebrew formula, skills, and committed git hooks.
+Distribution is deliberately plain.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>negative_eval</code></strong> — section 10.</p>
+<p><strong>The other six marks are absent, and the report of that is the
+honest finding.</strong> A superseded fact is superseded because a line
+of prose says so; nothing keys a rejection on the old value, nothing
+filters on a status, there is one clock and one user. The probe set
+knows this: <code>temporal-correctness</code> is an <em>issue id</em> in
+the dataset, which is to say a problem the project has written down and
+is measuring itself against rather than a mechanism it claims.</p>
+<p>That is worth separating from the usual version of the same sentence.
+Most systems with no trust state have not noticed; this one has a probe
+named for the gap.</p>
+<p><strong>One caution for a reader installing it.</strong> The screen
+found an auto-run surface — committed git hooks under
+<code>.githooks/</code>, inert until something points
+<code>core.hooksPath</code> at them — plus two build-time execution
+points from the npm lifecycle.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A <code>test/</code> directory and the <code>eval/</code> suite.
+Nothing was installed and nothing was run; the probe outcomes below are
+read from the dataset rather than from a run.</p>
+<p>The mark rests on the oracle shape. Two probes are must-nots by
+name:</p>
+<ul>
+<li><strong><code>current-fact-excludes-superseded-fact</code></strong>
+— <em>"Injected context must include the current endpoint and exclude
+the retired endpoint."</em> Required marker: the new URL. Forbidden
+marker: the old one. This is the rubric's harder version — a corrected
+value asserted absent, with the control that stops an over-broad filter
+passing.</li>
+<li><strong><code>expired-instruction-is-not-injected</code></strong> —
+an instruction past its life must not reach the model's context.</li>
+</ul>
+<p>Both are declared in JSON rather than written in code, which has a
+consequence worth naming: a new probe is a data record with a cited
+source and an oracle, not a function someone has to remember to call.
+The runner enforces the shape through
+<code>validateFeedbackDataset</code>, so a probe without a source or
+without an oracle cannot enter the set.</p>
+<p>The remaining fourteen cover prompt routing, advertised context caps,
+priority under saturation, decision survival across session loads,
+provenance, synthetic secrets, untrusted content, explicit cross-agent
+handoff, transcript import, README boundaries, and cross-language
+lexical retrieval.</p>
+<p>No paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Give every probe a required marker and a forbidden
+marker.</strong> One without the other is half a test: forbidden alone
+passes when you return nothing, required alone passes when you return
+everything.</li>
+<li><strong>Turn complaints into probes before fixing them.</strong>
+<em>"converts public feedback into falsifiable probes before product
+fixes are proposed"</em> — the probe outlives the fix and catches the
+regression.</li>
+<li><strong>Make a reproduced issue exit zero.</strong> A suite that
+cannot distinguish "the product has a known gap" from "the harness
+broke" teaches people to ignore it. Keep <code>--strict</code> for the
+gate.</li>
+<li><strong>Carry a licence field in the dataset and refuse to load
+without one.</strong> It is what makes a probe set something others can
+reuse.</li>
+<li><strong>Say which evidence you cannot automate, and then do not
+score it.</strong></li>
+<li><strong>Isolate the probes from the user's real store and index, and
+say so in the README.</strong></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Prose as a status field.</strong>
+<code>Status: superseded</code> in a markdown line is readable by a
+person and by a model, and it is not a predicate: nothing can filter on
+it, so the probe that checks the outcome is the only thing standing
+between a correction and its ghost.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take it if you want agent memory you can read in a text editor and
+are content for supersession to be a convention. Take <code>eval/</code>
+whatever else you use — the dataset shape transfers to any memory
+system, and it is about a hundred and thirty lines of validator around a
+JSON file.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>temporal-correctness</code> is an issue id with probes
+attached. Is a status field planned, or is the prose convention plus the
+probe considered sufficient?</li>
+<li>Probes are declared in JSON and validated on load. Is the dataset
+intended to accept third-party probes, and what would vouch for a source
+then?</li>
+<li>The default run exits zero on a reproduced issue. Is any published
+artifact produced from it — a scoreboard, a badge — so the open findings
+are visible without running it?</li>
+<li>Live retrieval probes are opt-in behind <code>--live-qmd</code>.
+What does the default report for those, and can a reader tell a deferred
+probe from a passing one?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>eval/datasets/external-feedback-v1.json</code></td>
+<td>sixteen probes, ten issues, four cited sources, and every
+oracle</td>
+</tr>
+<tr>
+<td><code>eval/dataset.ts</code></td>
+<td><code>validateFeedbackDataset</code> — the schema the probe set must
+satisfy</td>
+</tr>
+<tr>
+<td><code>eval/README.md</code></td>
+<td>the three evidence kinds, the exit-code decision, and the isolation
+guarantee</td>
+</tr>
+<tr>
+<td><code>eval/run.ts</code>, <code>eval/types.ts</code></td>
+<td>the runner and the evaluator vocabulary</td>
+</tr>
+<tr>
+<td><code>src/core.ts</code></td>
+<td>the memory itself: file paths, the log and the scratchpad</td>
+</tr>
+<tr>
+<td><code>src/external-command.ts</code></td>
+<td>the qmd integration</td>
+</tr>
+<tr>
+<td><code>.githooks/</code></td>
+<td>committed hooks, inert until <code>core.hooksPath</code> points at
+them</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Both halves of the oracle are declared</td>
+<td>read <code>eval/datasets/external-feedback-v1.json</code>, probe
+<code>current-fact-excludes-superseded-fact</code></td>
+<td><code>requiredMarkers</code> holds the current endpoint and
+<code>forbiddenMarkers</code> the retired one</td>
+</tr>
+<tr>
+<td>The dataset is schema-validated on load</td>
+<td>read <code>eval/dataset.ts:11-21</code></td>
+<td>version, description, <strong>license</strong>, non-empty sources
+with unique ids, issues, fixtures and probes all asserted</td>
+</tr>
+<tr>
+<td>A reproduced issue does not fail the command</td>
+<td>read <code>eval/README.md</code>, the Run and Interpretation
+sections</td>
+<td><em>"exits successfully even when a product issue is
+reproduced"</em>; <code>--strict</code> is the opt-in gate</td>
+</tr>
+<tr>
+<td>No epistemic field exists in the source</td>
+<td><code>grep -rl "tombstone|confidence|scope|audit|approve" --include='*.ts' src</code></td>
+<td>Nothing for any of them; <code>supersede</code> appears once and
+<code>review</code> once</td>
+</tr>
+<tr>
+<td>The probe set is small and countable</td>
+<td><code>python3 -c "import json;d=json.load(open('eval/datasets/external-feedback-v1.json'));print(len(d['sources']),len(d['issues']),len(d['probes']))"</code></td>
+<td>4 sources, 10 issues, 16 probes</td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>head -3 LICENSE</code>;
+<code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>Stock MIT, no match</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/jayzeng/agentmemory/commit/901b60dd8f3ab1bd9eec4578aa9fcd4eed6a06d5"><code class="commit-id" title="901b60dd8f3ab1bd9eec4578aa9fcd4eed6a06d5">901b60dd…</code></a>
+— first reading, at 48 files. Screened before reading: one auto-run
+surface (committed git hooks, inert until <code>core.hooksPath</code>
+points at them), two build-time execution points and one unpinned
+surface, nothing inside the cooldown; nothing was installed and nothing
+was run, so the probe outcomes are read from the dataset rather than
+from a run. MIT. One mark, <code>negative_eval</code>, on an oracle that
+declares both the markers that must appear and the markers that must
+not. The remaining marks are absent rather than withheld on a
+technicality — supersession here is a line of prose, and the project has
+a probe named for that gap rather than a mechanism that closes it. The
+slug carries a suffix because the atlas already holds a report for a
+different <code>agentmemory</code>, at <a
+href="../agentmemory/">rohitg00/agentmemory</a>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

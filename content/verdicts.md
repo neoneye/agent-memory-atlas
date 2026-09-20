@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 613 reports.**
+**This page covers all 614 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5477,4 +5477,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `crates/contextdb-engine/src/sync_types.rs`. `ConflictPolicy` is four values — `InsertIfNotExists`, `ServerWins`, `EdgeWins`, `LatestWins` — and `ConflictPolicies` is a per-table map beside a default. Per-table is the right granularity for memory: a fact that must never be overwritten once learned and a status that should track the newest observation want different answers.
 - Maturity impression: Apache 2.0, Rust, 256 files across ten crates; PostgreSQL-compatible SQL, pgvector `<=>` syntax and SQL/PGQ-style `GRAPH_TABLE MATCH` over one MVCC snapshot, with WebSocket sync between instances. One mark, `negative_eval`. The other six are withheld together for one reason rather than six — this is the layer those marks would be built on.
 - Study when: you are about to enforce a memory's status transitions in application code, where a second write path can bypass them, and want to see what enforcing them below the application looks like.
+
+### [`agentmemory-markdown`](../systems/agentmemory-markdown/)
+
+- Best idea: **give every probe a required marker and a forbidden marker.** The probe `current-fact-excludes-superseded-fact` runs against a fixture holding an endpoint and its correction, and its oracle declares `requiredMarkers` with the new URL beside `forbiddenMarkers` with the retired one. One without the other is half a test — forbidden alone passes when you return nothing, required alone passes when you return everything. Both halves are data, not code, so a new probe is a record with a cited source rather than a function someone must remember to call.
+- Biggest risk: **supersession is a line of prose.** The fixture writes `Status: superseded` and a sentence naming the replacement; nothing can filter on either, so the probe that checks the outcome is all that stands between a correction and its ghost. The project knows: `temporal-correctness` is an issue id in the dataset with probes attached, which is a gap written down rather than a mechanism claimed.
+- Most reusable component: `eval/` entire — about a hundred and thirty lines of validator around a JSON probe set. It converts public complaints into falsifiable probes *before* fixes are proposed, refuses to load a dataset without a licence field, and keeps the evidence it cannot automate out of scoring: *"Qualitative observations... require longitudinal adoption or interview evidence and are excluded from automated scoring."*
+- Maturity impression: MIT, TypeScript, 48 files and four source modules; an npm CLI with a Homebrew formula, and memory that is Markdown a person can read. One mark, `negative_eval`. The rest are absent rather than withheld on a technicality — at this size there is no status, no scope and no lifecycle, and the report says so.
+- Study when: you are writing an eval and deciding what a red run means. Here a reproduced product issue exits **zero** — *"failures are evaluation findings, not harness crashes"* — with `--strict` reserved for the CI gate, which is the distinction most suites conflate and then train people to ignore.
 
