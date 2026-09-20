@@ -47,7 +47,7 @@ clone of the superproject leaves all seven empty; the README's component table
 names `atoms` as the home of `memory`, and `openairymax/atoms` returns 404 on
 GitHub while atomgit.com returns 403 to a non-browser fetch. That is a false
 lead. The memory service is in `daemons`, which is published, and it was read
-here at the exact pin the superproject records.
+here at the exact pin the superproject records. It is **dual-licensed**: `LICENSE` offers `AGPL-3.0-or-later OR Apache-2.0` at the adopter's option, and says Apache 2.0 is the recommended choice for proprietary derivatives — so the copyleft is available rather than imposed.
 
 Two things in it are worth the visit and one is worth avoiding.
 

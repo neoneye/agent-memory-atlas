@@ -35,7 +35,7 @@ matrix:
 
 `honcho` is a FastAPI/Postgres memory service for stateful agents. Its core model is not "store arbitrary facts"; it stores messages/events, then derives peer-centric representations in the background. The system models workspaces, sessions, peers, messages, message embeddings, observer/observed collections, documents/observations, queue items, and active queue sessions.
 
-This is one of the more serious service architectures in the workspace. It has:
+This is one of the more serious service architectures in the workspace. It has: It is **AGPL-3.0**, which matters here more than usual because the thing on offer is a server.
 
 - Raw message event log.
 - Async derivation queue.

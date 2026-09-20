@@ -39,7 +39,7 @@ offers an `extract-learnings` skill that promotes durable insights into
 
 **The artifact worth the report is `extract-learnings/SKILL.md`** — a
 consolidation protocol specified with more care than most systems here give their
-code, and one line in it is the best sentence in this batch:
+code, and one line in it is the best sentence in this batch: **There is no licence file in the tree**, so the default applies and all rights are reserved — worth knowing before copying anything out of it.
 
 > "Convert the auditor's SUPERSEDED / REDUNDANT / LOW-VALUE / MERGE findings into
 > concrete REMOVE/MERGE proposals — **a run that only adds is a failure mode**."
@@ -343,6 +343,15 @@ selection algorithms and the fallthrough `:1-16`), `hooks/clear-handoff.py`,
 `get-token-insights/scripts/ingest_token_data.py` (`turns` `:114`,
 `turn_tool_calls` `:137`, `session_metrics` `:155`, `hook_executions` `:190`,
 `token_import_log` `:200`)
+
+## Appendix: Recorded Searches
+
+Checked at the pinned revision on 2026-09-20, without a clone.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING`, and each of `LICENSE`, `LICENSE.md`, `LICENSE.txt`, `COPYING` and `LICENCE` fetched directly from `raw.githubusercontent.com` at this revision | Nothing, by both checks. The grant is absent rather than merely unlocated, so the default applies and all rights are reserved. |
+
 
 ## History
 

@@ -53,7 +53,7 @@ built-in tool disabled (`providers/claude_agent.ts:2-21`); the Copilot
 provider exposes it on a loopback endpoint under a random 128-bit path
 (`copilot_mcp_endpoint.ts`). An external agent over `/mcp` needs an ETAPI
 bearer token, and the route's rate limiter spends its budget only on
-requests it would answer 401 to (`apps/server/src/routes/mcp.ts:51-60`).
+requests it would answer 401 to (`apps/server/src/routes/mcp.ts:51-60`). It is **AGPL-3.0**, as its predecessor was.
 
 **The record: a revision before every assistant edit.** `set_note_content`,
 `append_to_note` and `edit_note_content` call `note.saveRevision({ source:

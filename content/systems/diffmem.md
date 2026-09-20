@@ -39,7 +39,7 @@ embeddings, no BM25 — just git and an LLM."
 **The architectural idea is a real one.** Memory files hold only the *current*
 view — "current relationships, facts, or timelines" — so the surface a query
 scans stays small, and every prior state lives in the commit graph, reachable
-on demand:
+on demand: **There is no licence file in the tree**, so the default applies and all rights are reserved, whatever the README invites you to do with the idea.
 
 > "Git diffs and logs provide a natural way to track how memories evolve. Agents
 > can ask 'How has this fact changed over time?' without scanning entire
@@ -406,6 +406,15 @@ validation `:221-245`, `shell=True` `:257`, `subprocess.run` `:265`,
 **Documentation** — `README.md` (the git rationale, the production deployment,
 the roadmap with the catch-all entity defect), `repo_guide.md`,
 `src/diffmem/CONTEXT.md`, `src/diffmem/executor/CONTEXT.md`
+
+## Appendix: Recorded Searches
+
+Checked at the pinned revision on 2026-09-20, without a clone.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING`, and each of `LICENSE`, `LICENSE.md`, `LICENSE.txt`, `COPYING` and `LICENCE` fetched directly from `raw.githubusercontent.com` at this revision | Nothing, by both checks. The grant is absent rather than merely unlocated, so the default applies and all rights are reserved. |
+
 
 ## History
 

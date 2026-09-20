@@ -44,7 +44,7 @@ Navigation", not the RoPE technique — is a full conversation archive that
 compresses dropped messages into an accumulating `<thread_summary>` merged across
 successive trim cycles. **Long-term memory** is `.clio/ltm.json`, per project,
 holding five entry types (discoveries, problem-solutions, code patterns,
-workflows, failures) that are injected into the system prompt at session start.
+workflows, failures) that are injected into the system prompt at session start. It is **GPL-3.0**, so a derivative you distribute carries the same terms.
 
 The reason to read this repository is the **corroboration tier system**, which is
 the most thoroughly wired trust state in the atlas. Every LTM entry carries

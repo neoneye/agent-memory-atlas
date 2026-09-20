@@ -37,7 +37,7 @@ that extracts memories from the session transcript, semantic surfacing, and a
 session primer ("Last session: 2 hours ago. We implemented embeddings…").
 
 **The artifact worth the report is `src/types/schema.ts`'s version history**,
-which records what the schema *removed* and why:
+which records what the schema *removed* and why: **There is no licence file in the tree**, so the default applies and all rights are reserved.
 
 > "v3: Consolidated metadata — removed fragmented/unused fields:
 > `knowledge_domain` (overlaps with `project_id` + `domain`);
@@ -341,6 +341,15 @@ reasons `:20-34`, `confidence_score` `:43`, `context_type` enum `:46`, `status`
 (`:239`), `test-curation.ts`
 
 **Surfaces** — `src/server/`, `src/cli/`, `hooks/`, `skills/`
+
+## Appendix: Recorded Searches
+
+Checked at the pinned revision on 2026-09-20, without a clone.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING`, and each of `LICENSE`, `LICENSE.md`, `LICENSE.txt`, `COPYING` and `LICENCE` fetched directly from `raw.githubusercontent.com` at this revision | Nothing, by both checks. The grant is absent rather than merely unlocated, so the default applies and all rights are reserved. |
+
 
 ## History
 

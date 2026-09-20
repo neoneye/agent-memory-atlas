@@ -42,7 +42,7 @@ governor, a token ledger priced per model, a waste detector.
 The memory that matters here is `.wolf/cerebrum.md`, whose sections are User
 Preferences, Key Learnings, Do-Not-Repeat and a Decision Log. Those are claims
 about the user and the project that can be wrong, and the Do-Not-Repeat list is a
-record of corrections the user has already made.
+record of corrections the user has already made. It is **AGPL-3.0**, under a Cytostack copyright line.
 
 **The interesting thing technically is the split.** Everything mechanical —
 which files exist, what was read, what was written, which bugs were fixed — is

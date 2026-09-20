@@ -35,7 +35,7 @@ matrix:
 
 Basic Memory is a local-first knowledge system where Markdown files are the canonical memory and SQLite or PostgreSQL is a rebuildable projection for graph and search. Agents interact through MCP tools, while people can read, edit, move, version, and synchronize the same notes with ordinary filesystem tools.
 
-Its best architectural decision is the source-of-truth boundary. A note is not an opaque row hidden behind an embedding API: accepted Markdown owns the knowledge. Entities, observations, relations, full-text rows, semantic chunks, and materializations are derived state that must be kept coherent or rebuilt.
+Its best architectural decision is the source-of-truth boundary. A note is not an opaque row hidden behind an embedding API: accepted Markdown owns the knowledge. Entities, observations, relations, full-text rows, semantic chunks, and materializations are derived state that must be kept coherent or rebuilt. It is **AGPL-3.0**, which is the first thing to check against your plans if you intend to run it as a service.
 
 The tradeoff is coordination complexity. Human edits, agent writes, file watchers, APIs, cloud routing, graph projections, and two database backends all touch the same lifecycle. The code has grown serious transaction, checksum, reconciliation, and composition-root machinery to keep that promise.
 
