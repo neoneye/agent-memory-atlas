@@ -395,6 +395,18 @@ tuning knob.
 - `dashboard.py` — Streamlit UI: Ingest / Query / Memory Bank tabs, memory cards, stats, upload, delete.
 - `README.md`, `docs/` — the sample's documentation and the design narrative.
 
+## Appendix: Recorded Searches
+
+Checked on 2026-09-20 during a corpus-wide audit of absence claims. The subject
+is a sample directory inside a much larger repository, so the check lists the
+parent repository's tree at the pinned revision and filters to the sample's own
+prefix — there is no separate repository to clone.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No test or evaluation file exists anywhere in the sample | `GET /repos/GoogleCloudPlatform/generative-ai/git/trees/<this revision>?recursive=1`, filtered to paths under `gemini/agents/always-on-memory-agent` and then for `test`, `spec` or `eval` | Nothing. The sample is 9 files in total, so the absence is of the whole category rather than of one harness. |
+
+
 ## History
 
 **2026-09-18** — re-read at the same pin. The monorepo has moved since, but the

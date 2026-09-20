@@ -30,6 +30,18 @@ directory the reader never opened while being careful somewhere else: engram-for
 catalogued dozens of Rust tests in `src/` and then asserted over `.github/`;
 marsnme read the memory tools and asserted over two deployment subtrees.
 
+**Within the file class, a further split, and it is the one to act on.** A claim
+about a *single named file* is nearly always right: 55 of 55 "no citation file"
+claims held when `CITATION.cff` was fetched at each pin, and 22 of 23 licence
+claims held. A claim about a *category* of files — tests, CI, workflows — is
+where five of the seven failures sit, because a category has many spellings and
+many homes and there is no one path to fetch. The two named-file failures each
+have their own account: pro-long's licence claim was made over the `research/`
+subtree and published over the repository, and auto-company's was true at two
+pins and false at the third. So the rule this check encodes is *categories are
+unchecked until someone lists the tree*, and the rule for a named file is
+narrower: get the scope right, and re-run it at every re-pin.
+
 The worst shape is a false absence used as the *reason* for a conclusion. syke's
 said nothing asserts what the deletion gate does and concluded the behaviour was
 "unspecified rather than chosen"; the behaviour was chosen, committed and
@@ -183,7 +195,7 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 
 #: Ungrounded file-shaped absence claims standing when the ratchet was set
 #: (2026-09-20), out of 88 such claims in total. It was 53 when the ratchet was
-#: written and fell to 26 the same day: twelve reports whose licence and test
+#: written and fell to 24 the same day: twelve reports whose licence and test
 #: claims had just been checked against their trees gained an appendix recording
 #: that check, ten more followed, and the matcher itself stopped counting twenty
 #: behaviour claims it had been reading as file claims. Lower it as claims are
@@ -197,7 +209,7 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 #: That is deliberate — the question the predictor answers is whether the author
 #: went looking, not whether each sentence has its own footnote — and it is the
 #: reason this is a ratchet and not a verifier.
-UNGROUNDED_CEILING = 26
+UNGROUNDED_CEILING = 24
 
 
 def check(root: str) -> int:
