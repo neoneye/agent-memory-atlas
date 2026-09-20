@@ -387,8 +387,18 @@ def scan_gitattributes(root: Path, out: list) -> int:
     return 1
 
 
+#: Matched with `rglob`, so these are globs rather than plain names. The entry
+#: for requirements files is `requirements*.txt` and not `requirements.txt`,
+#: which is the spelling this list carried until 2026-09-20: `rglob` treats a
+#: plain name as an exact match, so the cooldown check could not see
+#: `requirements-dev.txt`, `requirements-host.txt` or any other variant, while
+#: the floating-version check twelve lines up has always globbed and did see
+#: them. Cambium is the live case — `Tools/requirements-host.txt` and
+#: `Tools/requirements-profile.txt` were scanned for unpinned versions and never
+#: once checked for age. The cooldown is the safety-relevant half of the two,
+#: because it is what stops a dependency changed this week from being installed.
 DEP_MANIFESTS = [
-    "package.json", "requirements.txt", "pyproject.toml", "Pipfile",
+    "package.json", "requirements*.txt", "pyproject.toml", "Pipfile",
     "Cargo.toml", "go.mod", "composer.json", "Gemfile",
 ]
 
