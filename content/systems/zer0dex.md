@@ -22,7 +22,7 @@ matrix:
   retrieval: "Delegated to mem0. The package supplies a CLI and a local server, and its own citation abstract states that wiring the query into model calls remains an agent-host step"
   write: "Seeding, not capture: Markdown is collected by extension, split at level-two headings and capped at 2,000 characters, then pushed into the store"
   update_delete: "None modelled. A correction means editing the Markdown and re-seeding, and nothing reconciles the store against a changed source, so a deleted paragraph's chunk stays retrievable until the store is rebuilt"
-  scoping: "None — single operator, one local store, no scope key"
+  scoping: "One key, and not spelled `scope` — every read and write forwards a `user_id` into mem0, and `--user-id` defaults to the literal `agent`, collapsing the per-user partition into one shared bucket unless the operator sets it"
   integration: "A CLI, a local background server, a skill directory and an `AGENTS.md`, plus a TypeScript hook shipped as example source rather than as a package"
   background: "A background server whose state record the CLI detects and removes when stale or invalid, without touching any process"
   trust: "None. No status, no confidence and no validity window; the Markdown layer is trusted because the operator wrote it"
@@ -117,9 +117,18 @@ strength of a stale record is the dangerous fix.
 ## 5. Memory Data Model
 
 Markdown sections on one side; whatever mem0 stores on the other. There is no
-status field, no confidence, no scope key, no supersession and no validity
-window — `grep -rl` over the Python finds `tombstone`, `supersede`,
-`confidence`, `scope`, `audit`, `review` and `approve` in no file.
+status field, no confidence, no supersession and no validity window — `grep -rl`
+over the Python finds `tombstone`, `supersede`, `confidence`, `audit`, `review`
+and `approve` in no file.
+
+**One scope key does exist**, and it is not spelled `scope`. Every read and
+write forwards a `user_id` into mem0 — `server.py:83` and `:120` on the read
+side, `:136` on the write — and it comes from `--user-id`, whose default at
+`server.py:152` is the literal string `agent`. So mem0's per-user partition is
+wired up and then collapsed into one shared bucket for every operator who does
+not set the flag. That is a single-tenant default in a component whose whole
+purpose is to be embedded in somebody else's agent, and it is the one
+configuration line worth changing before adopting this.
 
 Two consequences follow, and they are the same consequence twice. A correction
 means editing the Markdown and re-seeding; nothing reconciles the vector store
@@ -148,10 +157,16 @@ and a TypeScript hook example shipped as source rather than as a package.
 **`negative_eval`** — section 10.
 
 **Six marks are withheld together.** This package holds no memory object with
-fields to carry them: no epistemic state, no rejected-value record, no scope
-key, no second clock, no append-only mutation record and nothing that waits for
-a person. Where such properties exist at all they are mem0's, and are credited
+fields to carry them: no epistemic state, no rejected-value record, no second
+clock, no append-only mutation record and nothing that waits for a person.
+Where such properties exist at all they are mem0's, and are credited
 [there](../mem0/) rather than counted twice.
+
+**`scope_enforced` is withheld for that second reason rather than the first.**
+A stored scope key is present and is forwarded on every read, but the filter it
+drives is applied inside mem0; nothing in this repository consults it. Crediting
+it here would count [mem0](../mem0/)'s partition twice. The finding that belongs
+to this package is the default value, not the mechanism.
 
 **The staleness gap is worth naming.** The Markdown is the source and the vector
 store is a copy; nothing detects that the copy has drifted from it. The
@@ -241,7 +256,8 @@ Run from the root of the checkout at the pinned commit.
 | Claim | Command | Result at this pin |
 | --- | --- | --- |
 | Retrieval is the dependency's | read `pyproject.toml:23-27` | `mem0ai>=0.1.0`, `chromadb>=1.5.9`, `ollama>=0.3.0`, all floating |
-| No epistemic vocabulary exists here | `grep -rl "tombstone\|supersede\|confidence\|scope\|audit\|review\|approve" --include='*.py' .` | Nothing for any of them |
+| No epistemic vocabulary exists here | `grep -rl "tombstone\|supersede\|confidence\|audit\|review\|approve" --include='*.py' .` | Nothing for any of them |
+| ~~No scope key exists here~~ — **withdrawn 2026-09-20** | `grep -n "user_id" src/zer0dex/server.py` | `server.py:152` `--user-id` defaults to `"agent"`, and lines 83, 120 and 136 forward it into mem0 on every read and write. The original search was for the word `scope`, which this package does not use for the thing it has. |
 | The collection boundary is tested from both sides | read `tests/test_seed.py:20-27` | Two `.md` asserted present, one `.txt` asserted absent |
 | The chunker guards against consecutive headings | read `src/zer0dex/seed.py:53-70` | A section is emitted only when the buffer holds a non-empty, non-heading line |
 | The package is 1,006 lines of Python | `wc -l src/zer0dex/*.py` | 618 CLI, 201 server, 186 seeder, 1 init |
@@ -249,4 +265,4 @@ Run from the root of the checkout at the pinned commit.
 
 ## History
 
-**2026-09-20** — [`58776ccdef75bf1b26e0766fa21e9e14e1ac3e08`](https://github.com/hermes-labs-ai/zer0dex/commit/58776ccdef75bf1b26e0766fa21e9e14e1ac3e08) — first reading, at 38 files. Taken from an unreported scout shortlist entry dated 2026-09-17 rather than from a fresh triage selection, the day's selection allocation having been spent. Screened before reading; nothing was installed and nothing was run. Apache 2.0, and the project labels itself Alpha on a 0.1.x developer-preview line. One mark, `negative_eval`. The remaining six are withheld together because this package holds no memory object to carry them: retrieval is `mem0ai`, declared as a floating constraint, and is credited to the [mem0](../mem0/) report rather than counted twice — the fifth delegated-memory attribution in this batch.
+**2026-09-20** — [`58776ccdef75bf1b26e0766fa21e9e14e1ac3e08`](https://github.com/hermes-labs-ai/zer0dex/commit/58776ccdef75bf1b26e0766fa21e9e14e1ac3e08) — first reading, at 38 files. Taken from an unreported scout shortlist entry dated 2026-09-17 rather than from a fresh triage selection, the day's selection allocation having been spent. Screened before reading; nothing was installed and nothing was run. Apache 2.0, and the project labels itself Alpha on a 0.1.x developer-preview line. One mark, `negative_eval`. The remaining six are withheld together because this package holds no memory object to carry them: retrieval is `mem0ai`, declared as a floating constraint, and is credited to the [mem0](../mem0/) report rather than counted twice — the fifth delegated-memory attribution in this batch. Corrected the same day, before the report had stood a full day: the first reading said there is no scope key, having grepped for the word `scope`. There is one, spelled `user_id`, forwarded into mem0 on every read and write, and defaulting at `server.py:152` to the literal `agent` — a single-tenant default in a component built to be embedded in another agent. The mark stays withheld, but now because the filter is mem0's rather than because the key is absent. The stale overview bullet saying this repository was examined without a report, written 547 commits before the report existed, was removed at the same time.

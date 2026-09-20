@@ -219,11 +219,22 @@ file outliving its process is the normal failure, and killing something
 on the strength of a stale record is the dangerous fix.</p>
 <h2 id="5-memory-data-model">5. Memory Data Model</h2>
 <p>Markdown sections on one side; whatever mem0 stores on the other.
-There is no status field, no confidence, no scope key, no supersession
-and no validity window — <code>grep -rl</code> over the Python finds
+There is no status field, no confidence, no supersession and no validity
+window — <code>grep -rl</code> over the Python finds
 <code>tombstone</code>, <code>supersede</code>, <code>confidence</code>,
-<code>scope</code>, <code>audit</code>, <code>review</code> and
-<code>approve</code> in no file.</p>
+<code>audit</code>, <code>review</code> and <code>approve</code> in no
+file.</p>
+<p><strong>One scope key does exist</strong>, and it is not spelled
+<code>scope</code>. Every read and write forwards a <code>user_id</code>
+into mem0 — <code>server.py:83</code> and <code>:120</code> on the read
+side, <code>:136</code> on the write — and it comes from
+<code>--user-id</code>, whose default at <code>server.py:152</code> is
+the literal string <code>agent</code>. So mem0's per-user partition is
+wired up and then collapsed into one shared bucket for every operator
+who does not set the flag. That is a single-tenant default in a
+component whose whole purpose is to be embedded in somebody else's
+agent, and it is the one configuration line worth changing before
+adopting this.</p>
 <p>Two consequences follow, and they are the same consequence twice. A
 correction means editing the Markdown and re-seeding; nothing reconciles
 the vector store against a changed source, so a deleted paragraph's
@@ -246,10 +257,16 @@ Trust</h2>
 <p><strong><code>negative_eval</code></strong> — section 10.</p>
 <p><strong>Six marks are withheld together.</strong> This package holds
 no memory object with fields to carry them: no epistemic state, no
-rejected-value record, no scope key, no second clock, no append-only
-mutation record and nothing that waits for a person. Where such
-properties exist at all they are mem0's, and are credited <a
-href="../mem0/">there</a> rather than counted twice.</p>
+rejected-value record, no second clock, no append-only mutation record
+and nothing that waits for a person. Where such properties exist at all
+they are mem0's, and are credited <a href="../mem0/">there</a> rather
+than counted twice.</p>
+<p><strong><code>scope_enforced</code> is withheld for that second
+reason rather than the first.</strong> A stored scope key is present and
+is forwarded on every read, but the filter it drives is applied inside
+mem0; nothing in this repository consults it. Crediting it here would
+count <a href="../mem0/">mem0</a>'s partition twice. The finding that
+belongs to this package is the default value, not the mechanism.</p>
 <p><strong>The staleness gap is worth naming.</strong> The Markdown is
 the source and the vector store is a copy; nothing detects that the copy
 has drifted from it. The project's own <code>stale</code> handling is
@@ -386,8 +403,18 @@ seeding path</td>
 </tr>
 <tr>
 <td>No epistemic vocabulary exists here</td>
-<td><code>grep -rl "tombstone|supersede|confidence|scope|audit|review|approve" --include='*.py' .</code></td>
+<td><code>grep -rl "tombstone|supersede|confidence|audit|review|approve" --include='*.py' .</code></td>
 <td>Nothing for any of them</td>
+</tr>
+<tr>
+<td><del>No scope key exists here</del> — <strong>withdrawn
+2026-09-20</strong></td>
+<td><code>grep -n "user_id" src/zer0dex/server.py</code></td>
+<td><code>server.py:152</code> <code>--user-id</code> defaults to
+<code>"agent"</code>, and lines 83, 120 and 136 forward it into mem0 on
+every read and write. The original search was for the word
+<code>scope</code>, which this package does not use for the thing it
+has.</td>
 </tr>
 <tr>
 <td>The collection boundary is tested from both sides</td>
@@ -427,7 +454,17 @@ labels itself Alpha on a 0.1.x developer-preview line. One mark,
 because this package holds no memory object to carry them: retrieval is
 <code>mem0ai</code>, declared as a floating constraint, and is credited
 to the <a href="../mem0/">mem0</a> report rather than counted twice —
-the fifth delegated-memory attribution in this batch.</p>
+the fifth delegated-memory attribution in this batch. Corrected the same
+day, before the report had stood a full day: the first reading said
+there is no scope key, having grepped for the word <code>scope</code>.
+There is one, spelled <code>user_id</code>, forwarded into mem0 on every
+read and write, and defaulting at <code>server.py:152</code> to the
+literal <code>agent</code> — a single-tenant default in a component
+built to be embedded in another agent. The mark stays withheld, but now
+because the filter is mem0's rather than because the key is absent. The
+stale overview bullet saying this repository was examined without a
+report, written 547 commits before the report existed, was removed at
+the same time.</p>
         </article>
       </div>
     </main>

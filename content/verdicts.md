@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 619 reports.**
+**This page covers all 620 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5518,11 +5518,19 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Maturity impression: **PolyForm Noncommercial 1.0.0**, which puts any commercial use outside the grant and is the first fact for anyone evaluating substrates to build on. Python over SQLite, thirty files, bilingual, with a four-tier `who-can-use` guide matching install depth to intent down to *"use it as a smart notebook"*. No marks. The screening script could not see an execution surface in this tree and reported it unscreened rather than clean; it was read by hand.
 - Study when: you want the distinction its README draws for an agent reader — *"remembering is replaying what happened — carrying state is holding what those events left behind, reshaped by everything since"* — and a worked example of separating what gets injected from what merely gets kept.
 
+### [`xiaoo`](../systems/xiaoo/)
+
+- Best idea: **make semantic recall opt-in and cap recall per kind.** `RecallQuery` is 41 lines: separate caps for instructions, facts and prompt history, two booleans for session and durable memory, and an `Option<String>` semantic query whose comment states the default — *"Leave None to skip semantic recall."* Recall is a context budget the caller sets rather than a ranking it accepts, and the embedding path costs nothing when nobody asked for it.
+- Biggest risk: **the runtime audits what the agent does and nothing audits what it keeps.** `crates/cerberus` carries an execution audit with an `AuditEvent`, an `ExecObserver` and an `AuditSink`, plus an eBPF layer recording file and network access as typed records. `grep -rn "audit" crates/memory` returns nothing. A memory row is `id`, `kind`, `content`, `source`, `embedding`, `updated_at` — no status, no scope, no creation time distinct from the update, and no record that it ever changed. The one timestamp is the sharper half: after the first edit, a memory's age is unrecoverable.
+- Most reusable component: the SQLite layer at `crates/memory/src/store/sqlite_store.rs:59-88` — an FTS5 shadow kept in step by insert, delete **and** update triggers, which is the full set and the one most projects leave at two, beside an `embedding_cache` keyed on a content hash so re-embedding identical text is free.
+- Maturity impression: **MulanPSL-2.0** — permissive and OSI-approved, declared at `Cargo.toml:36` and in the README, granted in `License/LICENSE`, and reported by GitHub's API as no licence at all because the file sits in a subdirectory. Roughly 1,100 Rust files. No marks. Tests reach two of ten memory modules — 41 assertions over chunk boundaries and vector arithmetic — while `session.rs`, 1,036 lines that call a model, has none.
+- Study when: you are deciding what an audit subsystem should cover. This is the clean case of one built well and scoped to execution, with the memory writes — the cheapest possible second producer, answering when something became a fact and from what — left outside it.
+
 ### [`zer0dex`](../systems/zer0dex/)
 
 - Best idea: **say which half the adopter still has to build, in the citation metadata.** The `CITATION.cff` abstract ends *"The package supplies the CLI and local server; wiring the query into model calls remains an agent-host step."* A reader evaluating this knows the integration cost in one sentence, from the file a project is least likely to oversell in.
 - Biggest risk: **the Markdown is the source and the vector store is a copy, and nothing detects drift between them.** A correction means editing the Markdown and re-seeding; a deleted paragraph's chunk stays retrievable until the store is rebuilt. Underneath that, retrieval is `mem0ai>=0.1.0` — a floating lower bound on a 0.1 release, and here the dependency *is* the memory rather than a detail of it.
 - Most reusable component: the heading splitter in `src/zer0dex/seed.py:53-70`, which emits a section only once the buffer holds a line that is non-empty and not itself a heading — three lines that remove the empty-section bug common to heading-based chunkers.
-- Maturity impression: Apache 2.0, ~1,000 lines of Python over mem0 and Chroma, self-labelled Alpha on a 0.1.x developer-preview line with a compatibility policy promising migration notes before documented breaks. One mark, `negative_eval`. The other six are withheld together — the package holds no memory object to carry them, and what exists belongs to [mem0](../systems/mem0/).
+- Maturity impression: Apache 2.0, ~1,000 lines of Python over mem0 and Chroma, self-labelled Alpha on a 0.1.x developer-preview line with a compatibility policy promising migration notes before documented breaks. One mark, `negative_eval`. The other six are withheld together — the package holds no memory object to carry them, and what exists belongs to [mem0](../systems/mem0/), including the `user_id` partition every read forwards and `--user-id` defaults to the literal `agent`.
 - Study when: you want a worked example of a docs-consistency test. Thirty lines asserting the documentation still matches the code is the check nobody reviews for and the one that stops a README drifting into fiction.
 

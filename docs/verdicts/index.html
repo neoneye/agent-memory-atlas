@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 619 reports.</strong></p>
+<p><strong>This page covers all 620 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25158,6 +25158,45 @@ holding what those events left behind, reshaped by everything
 since"</em> — and a worked example of separating what gets injected from
 what merely gets kept.</li>
 </ul>
+<h3 id="xiaoo"><a href="../systems/xiaoo/"><code>xiaoo</code></a></h3>
+<ul>
+<li>Best idea: <strong>make semantic recall opt-in and cap recall per
+kind.</strong> <code>RecallQuery</code> is 41 lines: separate caps for
+instructions, facts and prompt history, two booleans for session and
+durable memory, and an <code>Option&lt;String&gt;</code> semantic query
+whose comment states the default — <em>"Leave None to skip semantic
+recall."</em> Recall is a context budget the caller sets rather than a
+ranking it accepts, and the embedding path costs nothing when nobody
+asked for it.</li>
+<li>Biggest risk: <strong>the runtime audits what the agent does and
+nothing audits what it keeps.</strong> <code>crates/cerberus</code>
+carries an execution audit with an <code>AuditEvent</code>, an
+<code>ExecObserver</code> and an <code>AuditSink</code>, plus an eBPF
+layer recording file and network access as typed records.
+<code>grep -rn "audit" crates/memory</code> returns nothing. A memory
+row is <code>id</code>, <code>kind</code>, <code>content</code>,
+<code>source</code>, <code>embedding</code>, <code>updated_at</code> —
+no status, no scope, no creation time distinct from the update, and no
+record that it ever changed. The one timestamp is the sharper half:
+after the first edit, a memory's age is unrecoverable.</li>
+<li>Most reusable component: the SQLite layer at
+<code>crates/memory/src/store/sqlite_store.rs:59-88</code> — an FTS5
+shadow kept in step by insert, delete <strong>and</strong> update
+triggers, which is the full set and the one most projects leave at two,
+beside an <code>embedding_cache</code> keyed on a content hash so
+re-embedding identical text is free.</li>
+<li>Maturity impression: <strong>MulanPSL-2.0</strong> — permissive and
+OSI-approved, declared at <code>Cargo.toml:36</code> and in the README,
+granted in <code>License/LICENSE</code>, and reported by GitHub's API as
+no licence at all because the file sits in a subdirectory. Roughly 1,100
+Rust files. No marks. Tests reach two of ten memory modules — 41
+assertions over chunk boundaries and vector arithmetic — while
+<code>session.rs</code>, 1,036 lines that call a model, has none.</li>
+<li>Study when: you are deciding what an audit subsystem should cover.
+This is the clean case of one built well and scoped to execution, with
+the memory writes — the cheapest possible second producer, answering
+when something became a fact and from what — left outside it.</li>
+</ul>
 <h3 id="zer0dex"><a
 href="../systems/zer0dex/"><code>zer0dex</code></a></h3>
 <ul>
@@ -25184,7 +25223,9 @@ and Chroma, self-labelled Alpha on a 0.1.x developer-preview line with a
 compatibility policy promising migration notes before documented breaks.
 One mark, <code>negative_eval</code>. The other six are withheld
 together — the package holds no memory object to carry them, and what
-exists belongs to <a href="../systems/mem0/">mem0</a>.</li>
+exists belongs to <a href="../systems/mem0/">mem0</a>, including the
+<code>user_id</code> partition every read forwards and
+<code>--user-id</code> defaults to the literal <code>agent</code>.</li>
 <li>Study when: you want a worked example of a docs-consistency test.
 Thirty lines asserting the documentation still matches the code is the
 check nobody reviews for and the one that stops a README drifting into

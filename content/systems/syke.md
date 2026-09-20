@@ -9,7 +9,7 @@ source_url: https://github.com/saxenauts/syke
 archive_name: "saxenauts--syke"
 revision: 62c1c9cf3204f3d12175b703b0d9cd952f06cf9b
 revision_url: https://github.com/saxenauts/syke/commit/62c1c9cf3204f3d12175b703b0d9cd952f06cf9b
-analyzed_at: 2026-09-16
+analyzed_at: 2026-09-20
 capabilities: ""
 capability_evidence: {}
 stack_storage: "sqlite"
@@ -225,9 +225,37 @@ internal failure strings — "private history failure", "private database failur
 — do not reach the model's view, which is a good instinct about what a prompt
 should not contain.
 
-There is no test file named for the safety layer, and nothing asserts what the
-gate does with a cycle that deletes memories — which is consistent with the
-behaviour being unspecified rather than chosen.
+**The safety layer is the most heavily tested thing in the repository**, and a
+first reading of this report said the opposite. `tests/test_db_safety.py` is 871
+lines over 21 cases, importing `capture_baseline`, `create_recovery_point`,
+`restore_recovery_point`, `rotate_recovery_points` and `validate_state_after_cycle`
+directly, and the deletion behaviour that looked unspecified is asserted by name.
+
+`test_semantic_gate_accepts_graph_changes_and_current_deletions:123-177` seeds
+four memories and two links, captures a baseline, then revises one memory,
+creates another, rewrites one link, deletes a link and deletes a memory — and
+asserts `result["valid"] is True` with
+`result["stats"]["removed_memory_ids"] == ["mem-delete"]`. So a cycle that
+deletes is not merely tolerated: the removal is enumerated in the gate's own
+statistics and the cycle still passes. Deletion is chosen behaviour, and the
+choice is committed.
+
+The gate's refusals are asserted from the other side in the same file. For
+identity, `test_semantic_gate_rejects_rows_outside_the_bound_identity:182-204`
+drops the `enforce_memories_identity_insert` trigger, inserts a row owned by
+`other-user`, and asserts `valid is False` with
+`stats["rows_outside_identity"]["memories"] == 1` — which is the executable
+version of the scoping claim in section 5, tested by defeating the trigger that
+would otherwise make it untestable. For schema, `:205-218` creates one extra
+table and asserts the cycle fails on *"current graph schema changed"*.
+
+Beyond the gate, the recovery path is specified against interruption rather than
+against the happy case: a restore is refused while a normal database user is
+open (`:760`), refused when the recovery point is damaged, without replacing the
+database (`:730`), refused over any final receipt (`:643`), and refused when no
+marker was written (`:697`), while `:789` asserts that a restore keeps later
+cross-process writes visible. Tests named for what a routine must *decline* to do
+are the ones worth copying, and most of this file is those.
 
 ## 11. For Your Own Build
 
@@ -254,8 +282,12 @@ morning.
 ## 12. Open Questions
 
 Whether unbounded deletion is intended. Forgetting is a legitimate function of a
-synthesis agent, and a cycle that removes a stale memory is doing its job; what
-is unspecified is where that stops. Nothing in the tree records a decision.
+synthesis agent, and a cycle that removes a stale memory is doing its job — the
+gate says so, accepting deletions and passing. What is unspecified is where that
+stops. `db_safety.py:1044-1058` computes `removed_memory_ids`, stores the sorted
+list and its length in the cycle statistics, and no branch anywhere compares
+either against a bound. A cycle that removed every memory would be reported in
+full and pass.
 
 What `syke ask` does when the FTS index and the graph disagree between cycles.
 The gate repairs and rebuilds the index at cycle end, but reads happen
@@ -275,6 +307,21 @@ consumer was traced here.
 | `syke/memory/memex_history.py` | An immutable history of the projection |
 | `syke/observe/seeds/` | Adapter seeds for eight harnesses |
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| ~~There is no test file named for the safety layer~~ — **withdrawn 2026-09-20** | `ls tests/` | `tests/test_db_safety.py`, 871 lines over 21 cases. The original reading listed the test files it had looked at and this was not among them. |
+| The gate accepts a deleting cycle and enumerates the removal | read `tests/test_db_safety.py:123-177` | `assert result["valid"] is True` beside `assert result["stats"]["removed_memory_ids"] == ["mem-delete"]` |
+| The gate refuses rows outside the bound identity | read `tests/test_db_safety.py:182-204` | The trigger is dropped, a foreign row inserted, and `valid is False` asserted with `rows_outside_identity` |
+| Deletion is counted and never bounded | `grep -n "removed_memory_ids" syke/db_safety.py` | `:1044` computes it, `:1057-1058` stores the count and the list; no comparison against a threshold anywhere in the file |
+| Scope is one coerced identity, not a boundary | `grep -n "bind_identity" -A 40 syke/db.py` | `UPDATE {table} SET user_id = ? WHERE user_id != ?` — foreign rows are relabelled to the bound user rather than refused |
+
+
 ## History
+
+**2026-09-20** — same pin, re-read after an audit of whole-repository absence claims. The first reading said there is no test file named for the safety layer and that nothing asserts what the gate does with a cycle that deletes memories, and drew a conclusion from it: that the behaviour was unspecified rather than chosen. Both halves were wrong. `tests/test_db_safety.py` is 871 lines over 21 cases, named for `syke.db_safety` and importing its five entry points directly, and `test_semantic_gate_accepts_graph_changes_and_current_deletions` asserts the deleting cycle passes with the removed id enumerated in the gate's statistics. Section 10 is rewritten around it and the recovery-path refusals beside it, and the deletion question in section 12 is narrowed to what actually remains unbounded: `removed_memory_ids` is computed and reported at `db_safety.py:1044-1058` and compared against nothing. No mark moves — `scope_enforced` stays withheld because `bind_identity` rewrites foreign rows to the bound user rather than refusing them, which is a single-identity coercion and not a boundary. A Recorded Searches appendix was added, this report having had none, which is the shape the error hid in.
 
 **2026-09-16** — [`62c1c9cf3204f3d12175b703b0d9cd952f06cf9b`](https://github.com/saxenauts/syke/commit/62c1c9cf3204f3d12175b703b0d9cd952f06cf9b) — first reading, at a commit dated 23 August 2026. Screened before opening, from a shallow clone: six files scanned, no auto-run surfaces, three build-time execution points, no unpinned surfaces and nothing inside the dependency cooldown. Nothing was installed, built or run.

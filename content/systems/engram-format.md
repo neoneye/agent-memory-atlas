@@ -9,7 +9,7 @@ source_url: https://github.com/El-AI-Intelligence/engram-format
 archive_name: "El-AI-Intelligence--engram-format"
 revision: f1e92dadff542c12d37613279619adbadd412303
 revision_url: https://github.com/El-AI-Intelligence/engram-format/commit/f1e92dadff542c12d37613279619adbadd412303
-analyzed_at: 2026-09-19
+analyzed_at: 2026-09-20
 capabilities: "trust_state"
 capability_evidence:
   trust_state: "the imagined and grounded flags behind one shared predicate, applied unconditionally on the link paths and opt-in everywhere else — including in the naming, where the short method is the unfiltered one | src/store.rs:100 (the definition of quarantined), :104-112 (`QuarantineFilter`, whose `#[default]` is `All`), :118-129 (`sql`, one clause with a table qualifier), :955 (unconditional), :1232, :1259, :1386, :1557 (the convenience entry points passing `All`), :1481-1486 (`digest_window` reporting both sides), src/engram.rs:220-260 | a row is quarantined when `imagined = 1 AND grounded = 0`; `Engram::new_imagined` is the public constructor that produces that state and `write_curated` persists a grounding change without the capture gates. The predicate has a single definition — `QuarantineFilter::sql` takes a table qualifier so the same clause serves a join — and `LiveOnly` adds it to the filtered list, layer and content searches, while `search_related`, `find_near_duplicates` and semantic-link generation apply it unconditionally, so a live memory never links into quarantine and a quarantined one gains no links. What a reader should know before relying on it is the default: `All` means no clause at all, it is the type `#[default]`, and `search_by_layer`, `search_by_content`, `list` and `search_by_tags` each hard-code it when delegating to their `_filtered` sibling — so the ergonomic name returns quarantined rows and excluding them takes the longer call | src/store.rs:3146 (near-duplicates exclude a quarantined pair), :3328 (a live memory never links into quarantine and a quarantined one gains no links)"
@@ -469,9 +469,38 @@ control is the sibling test in each case, not the same one, and no test
 asserts that a quarantined row is absent from a populated content or list
 result under `LiveOnly`. The mark is withheld on that basis.
 
-There is no retrieval-quality evaluation, no benchmark, no fixture vault and
-no CI in the repository; `rg -n 'arxiv|bibtex|@article|doi' README.md FORMAT.md`
-finds nothing, and the README links no paper. The tests one would want before
+There is no retrieval-quality evaluation, no benchmark and no fixture vault;
+`rg -n 'arxiv|bibtex|@article|doi' README.md FORMAT.md` finds nothing, and the
+README links no paper.
+
+**One workflow does exist**, and a first version of this section said none did.
+`.github/workflows/publish-npm.yml` is `on: workflow_dispatch` — manual trigger
+only, so nothing in this repository runs on a push or a pull request, and the
+Rust suite above is never executed by a machine. What the workflow does is
+publish the wasm package, and two details are worth taking.
+
+It publishes through npm **Trusted Publishing**: `permissions: id-token: write`
+and no token anywhere in the repository or its secrets, so GitHub Actions mints
+a short-lived registry credential from the workflow identity and npm records a
+provenance attestation. The file's own comment explains the failure that shaped
+it — npm 10.x, the version bundled with Node 22, *"signs provenance but never
+exchanges the token, so the PUT lands anonymous and npm returns the misleading
+E404"* — which is why the workflow installs npm 11 before publishing. A reader
+adopting OIDC publishing will hit exactly that and read exactly that error.
+
+And there is a gate before the publish step: `node smoke.mjs`, run against the
+built package. That file is 39 lines and eleven assertions, and this report's
+earlier claim that nothing outside the Rust suite exercises the format was wrong
+about it. It asserts the version constant, the `mem_` id shape, an entry
+round-trip **and** that `parse_entry('{"id": 42}')` throws `/invalid MemoryEntry/`,
+a sync-blob round-trip and that `parse_sync_blob("{}")` throws `/invalid SyncBlob/`,
+and five cases over `noise_reason` — `sleep 30` is *"transient command"*,
+`cd && cd` is *"cd bookkeeping"*, `ls` is a *"bookkeeping command"*,
+`Quarterly planning notes` returns `null`, and an unknown source throws. So the
+export surface is checked for what it must reject as well as what it must accept,
+at the last moment before the artifact leaves the repository. The step is wired
+to a manual trigger rather than to the branch, which is the limit worth stating:
+it gates releases, not commits. The tests one would want before
 trusting the format as a memory are a `LiveOnly` search over a populated
 vault with a control row, a hygiene case that checks the decay arithmetic
 against a hand-computed value rather than *"no crash,"* and a sync
@@ -581,6 +610,8 @@ that is a different repository and it is not public.
   (none).
 
 ## History
+
+**2026-09-20** — same pin, corrected the day after the reading during an audit of whole-repository absence claims. Section 10 said there is no CI in the repository. `.github/workflows/publish-npm.yml` exists: manual-trigger only, so the substance held — nothing runs on a push, and the Rust suite is never executed by a machine — but the file itself was missed, and with it a `node smoke.mjs` gate of eleven assertions run before every publish, including four that assert what the parser must reject. The claim was made from inside `src/`, which is where this error class lives: a reading deep in the code asserts over a directory it never listed. No mark moves; `negative_eval` stays withheld on the emptiness-shape reasoning above, which `smoke.mjs` does not disturb — its `noise_reason` cases are ingestion classification, and the one returning `null` is a positive control.
 
 **2026-09-19** — [`f1e92dadff542c12d37613279619adbadd412303`](https://github.com/El-AI-Intelligence/engram-format/commit/f1e92dadff542c12d37613279619adbadd412303) — `trust_state` re-tested. The record already listed which reads carry the quarantine clause and which do not, which is the right shape; what it did not say is why the second group lacks it, and the answer changes how a reader should hold the mark. `QuarantineFilter::All` means no clause at all — its `sql()` returns an empty string (`src/store.rs:121`) — and it is the type's `#[default]` (`:104-107`). More to the point, the four convenience entry points hard-code it: `search_by_layer` (`:1232`), `search_by_content` (`:1259`), `list` (`:1386`) and `search_by_tags` (`:1557`) each delegate to their `_filtered` sibling passing `QuarantineFilter::All`. So the short method name is the unfiltered one and excluding quarantined rows takes the longer call — the permissive behaviour is the ergonomic default twice over. The credit side is worth keeping beside that. The predicate has a single definition rather than being retyped: `QuarantineFilter::sql` takes a table qualifier so the same clause serves a join (`:118-129`), and the link paths apply it unconditionally (`:955`), so a live memory never links into quarantine and a quarantined one gains no links. `digest_window` uses the live and quarantined forms side by side to report each population (`:1481-1486`). The mechanism is well made; it is the entry points that decline to use it. Screened again first; nothing was installed and no suite was run.
 

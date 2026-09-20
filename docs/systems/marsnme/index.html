@@ -118,7 +118,7 @@ CHECK.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-13</strong>
+              <strong>2026-09-20</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/marsmanleo--marsnme" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -336,16 +336,31 @@ and worth a reader knowing before running it against a hosted service
 they have not read the source of.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>No paper, no benchmark, no test directory found</strong>, and
-the evidence offered is a user story from the creator — "Leo, MarsNMe
+<p><strong>No paper and no benchmark</strong>, and the evidence offered
+for the system working is a user story from the creator — "Leo, MarsNMe
 creator (3 months of daily use across 4 AI tools)" — which is honestly
 attributed as the author's own experience rather than presented as an
 independent result.</p>
-<p>At this size, with tools across two deployment targets, the untested
-surface that matters most is the handoff: a note that is delivered
-twice, or marked read without being delivered, loses a message between
-agents silently, and the <code>read_at</code> column is exactly what a
-test would assert on.</p>
+<p>Tests do exist, in two places away from the memory.
+<code>marsnme-supabase/scripts/tests/test_dream_runner_modes.py</code>
+is 90 lines of <code>unittest</code> that run
+<code>dream_runner.py</code> and <code>hermes_digest_runner.py</code> as
+subprocesses and assert the emitted JSON carries the mode the
+environment selected — <code>standard</code>, <code>lite</code> or
+<code>pro</code> — and that the run was skipped rather than executed.
+<code>marsnme-supabase/cloudflare-routing-worker/src/index.test.ts</code>
+is 427 lines of Vitest over the routing worker: a missing username route
+returns 404 with <code>user_not_found</code>, a malformed one returns
+400 with <code>invalid_username</code>, and a proxied request is
+asserted to preserve the authorization header, the
+<code>mcp-session-id</code> and the query string exactly.</p>
+<p>So the repository tests its dispatch and its edge routing, and
+neither file mentions <code>read_at</code>, a handoff or a delivery.</p>
+<p>That is the shape of the gap rather than an absence of testing. The
+untested surface that matters most is the handoff: a note that is
+delivered twice, or marked read without being delivered, loses a message
+between agents silently, and the <code>read_at</code> column is exactly
+what a test would assert on.</p>
 <p>The board shows what that absence costs. A search for a committed
 case naming <code>board_read</code> or <code>board_post</code> returns
 nothing, and the defect in section 1 is the kind a single test would
@@ -445,7 +460,53 @@ notes: three-layer recall, body-to-body handoff, auto
 <code>batch_promote</code>, the CoCo-only tool surface),
 <code>CHANGELOG.md</code>, <code>AGENTS.md</code>,
 <code>SECURITY.md</code></p>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><del>No test directory found</del> — <strong>withdrawn
+2026-09-20</strong></td>
+<td><code>find . -path ./node_modules -prune -o -name 'tests' -print -o -name '*.test.*' -print</code></td>
+<td><code>marsnme-supabase/scripts/tests/test_dream_runner_modes.py</code>
+and
+<code>marsnme-supabase/cloudflare-routing-worker/src/index.test.ts</code>.
+Both sit under deployment directories rather than beside the memory
+tools, which is how a reading centred on the tools missed them.</td>
+</tr>
+<tr>
+<td>Nothing tests the handoff</td>
+<td><code>grep -rn 'read_at|board_read|board_post|handoff' --include='*test*' .</code></td>
+<td>Nothing in either test file</td>
+</tr>
+<tr>
+<td>No paper and no benchmark</td>
+<td><code>grep -rn -i 'arxiv|doi|benchmark|@article' README.md</code></td>
+<td>Only the creator's own usage story</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — same pin, re-read after an audit of
+whole-repository absence claims. Section 10 said "no test directory
+found". There is one — <code>marsnme-supabase/scripts/tests/</code>,
+holding a 90-line <code>unittest</code> file over dream-runner mode
+dispatch — beside a 427-line Vitest suite for the Cloudflare routing
+worker. The claim was made over the wrong subtree: both sit under
+deployment directories rather than beside the memory tools the report
+reads. The section is rewritten to say what the tests cover, and the
+finding it was supporting survives intact and sharper, because neither
+file mentions <code>read_at</code>, a handoff or a delivery — the board
+defect in section 1 is still the kind a single committed case would have
+caught. No mark changes. A Recorded Searches appendix was added; this
+report had none, which is the shape this error class hides in.</p>
 <p><strong>2026-09-13</strong> — <a
 href="https://github.com/marsmanleo/marsnme/commit/25b7d6c1b4e698189b9db0e35a593b9a6a41b876"><code class="commit-id" title="25b7d6c1b4e698189b9db0e35a593b9a6a41b876">25b7d6c1…</code></a>
 — re-read, three commits past the previous pin. Screened again first:

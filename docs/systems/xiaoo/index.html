@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agent runtime whose sandbox
+records every process, file and network access through an eBPF-backed
+audit, and whose memory rows carry no status, no scope and no audit
+trail of their own.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="xiaoO — Agent Memory Atlas">
+    <meta property="og:description" content="An agent runtime whose
+sandbox records every process, file and network access through an
+eBPF-backed audit, and whose memory rows carry no status, no scope and
+no audit trail of their own.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="xiaoO — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agent runtime whose
+sandbox records every process, file and network access through an
+eBPF-backed audit, and whose memory rows carry no status, no scope and
+no audit trail of their own.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>xiaoO — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "xiaoO",
+      "description": "An agent runtime whose sandbox records every process, file and network access through an eBPF-backed audit, and whose memory rows carry no status, no scope and no audit trail of their own.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">eBPF watches what the agent does and
+nothing watches what it keeps</p>
+          <h1>xiaoO</h1>
+          <p class="document-deck">An agent runtime whose sandbox
+records every process, file and network access through an eBPF-backed
+audit, and whose memory rows carry no status, no scope and no audit
+trail of their own.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/FreshHillyer/xiaoO">
+              <span>Source</span>
+              <strong>FreshHillyer/xiaoO</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/FreshHillyer/xiaoO/commit/3acadbb33915d0df5793e80db4078d75dfb77e75" title="3acadbb33915d0df5793e80db4078d75dfb77e75">
+              <span>Analyzed revision</span>
+              <code>3acadbb3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/FreshHillyer--xiaoO" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>FreshHillyer--xiaoO</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>xiaoO calls itself the intelligence hub of AgentOS — a Rust agent
+runtime with a sandbox, a permission model, a skill system and a memory
+crate. Roughly 1,100 files. <strong>MulanPSL-2.0</strong>, which is
+worth stating first because GitHub's licence detector does not report
+it: the grant lives in <code>License/LICENSE</code> rather than at the
+root, and is declared in <code>Cargo.toml:36</code> and the README
+badge.</p>
+<p><strong>No marks</strong>, and the reason is a contrast rather than a
+shortfall.</p>
+<p>The runtime's governance is serious.
+<code>crates/cerberus/cerberus-core/src/audit</code> is <em>"an audit
+module for execution observability and security monitoring"</em> with
+two subsystems — a user-space execution audit carrying an
+<code>AuditEvent</code>, an <code>ExecObserver</code> trait and an
+<code>AuditSink</code>, and an eBPF layer with
+<code>file_access_record.rs</code> and
+<code>network_access_record.rs</code>. Tool execution runs under sandbox
+permission grants with a scope and a user approval.</p>
+<p><strong>None of it reaches the memory.</strong>
+<code>grep -rn "audit" crates/memory</code> returns nothing. A memory
+row is <code>id</code>, <code>kind</code>, <code>content</code>,
+<code>source</code>, <code>embedding</code>, <code>updated_at</code> —
+no status, no scope key, no creation time distinct from the update, and
+no record that it changed. Everything the agent <em>does</em> is
+watched; nothing it <em>keeps</em> is.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Memory is typed rather than flat. <code>RecallQuery</code> names the
+kinds it will assemble — instructions, facts, prompt history, session
+summary, durable memory — and caps each one separately. Semantic search
+is opt-in: leave <code>semantic_query</code> as <code>None</code> and
+the vector path is skipped entirely.</p>
+<p>So recall is a budget rather than a ranking. The caller says how many
+of each kind it wants, and the manager fills the packet.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — typed memory kinds are assembled into a recall packet under per-kind caps the caller sets, with the vector path skipped entirely unless a semantic query is supplied, over a sqlite table whose row carries no status, no scope and no creation time distinct from its update; alongside it the runtime runs an execution audit with a user-space event stream and an ebpf layer recording file and network access, and a sandbox permission grant with its own scope and user approval — none of which reaches the memory crate</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: typed memory kinds are assembled into a recall packet under per-kind caps the caller sets, with the vector path skipped entirely unless a semantic query is supplied, over a sqlite table whose row carries no status, no scope and no creation time distinct from its update; alongside it the runtime runs an execution audit with a user-space event stream and an ebpf layer recording file and network access, and a sandbox permission grant with its own scope and user approval — none of which reaches the memory crate
+flowchart TD
+    subgraph MEM[&quot;crates/memory — no audit, no scope, no status&quot;]
+        RQ[&quot;RecallQuery&lt;br/&gt;max_instruction_count&lt;br/&gt;max_fact_count&lt;br/&gt;max_prompt_history_count&lt;br/&gt;include_session_memory · include_durable_memory&quot;]
+        RQ --&gt; MGR[&quot;MemoryManager&quot;]
+        MGR --&gt; K1[&quot;InstructionMemory&quot;]
+        MGR --&gt; K2[&quot;FactMemory&quot;]
+        MGR --&gt; K3[&quot;TaskMemory&quot;]
+        MGR --&gt; K4[&quot;PromptHistoryEntry&quot;]
+        MGR --&gt; K5[&quot;SessionMemorySummary&quot;]
+        MGR --&gt; K6[&quot;DurableMemory&quot;]
+        RQ --&gt;|&quot;semantic_query: Some(..)&quot;| SEM[&quot;SemanticMemoryStore&lt;br/&gt;vector + keyword hybrid&quot;]
+        RQ -.-&gt;|&quot;None — skipped entirely&quot;| NOSEM((&quot;no vector path&quot;))
+        MGR --&gt; PKT[&quot;RecallPacket&quot;]
+    end
+
+    DB[(&quot;sqlite: memories&lt;br/&gt;id · kind · content · source&lt;br/&gt;embedding · updated_at&lt;br/&gt;FTS5 shadow, triggers on insert/delete/update&quot;)]
+    MGR --- DB
+    SEM --- DB
+
+    subgraph GOV[&quot;crates/cerberus — the governance that does exist&quot;]
+        UA[&quot;user-space execution audit&lt;br/&gt;AuditEvent · ExecObserver · AuditSink&quot;]
+        EB[&quot;eBPF layer&lt;br/&gt;file_access_record · network_access_record&quot;]
+        SP[&quot;sandbox permission grant&lt;br/&gt;scope + user approval&quot;]
+    end
+    GOV -.-&gt;|&quot;watches what the agent DOES&quot;| EXEC((&quot;tool execution&quot;))
+    GOV -.-&gt;|&quot;reaches none of it&quot;| MEM
+
+    TEST[&quot;tests: chunker 21 asserts, vector 20&quot;] -.-&gt;|&quot;2 of 10 modules&quot;| MEM</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The recall budget</strong> —
+<code>crates/memory/src/recall.rs</code>. <code>RecallQuery</code> is 41
+lines and is the whole retrieval contract: three per-kind count caps,
+two booleans for session and durable memory, and an
+<code>Option&lt;String&gt;</code> semantic query whose own comment
+states the default — <em>"Leave None to skip semantic recall."</em>
+Opt-in vector search is the right default for a runtime where the
+embedding path costs money and latency.</p>
+<p><strong>The table and its index</strong> —
+<code>crates/memory/src/store/sqlite_store.rs:59-88</code>. A
+<code>memories</code> table with an FTS5 shadow kept in step by three
+triggers covering insert, delete <em>and</em> update, which is the full
+set and the one most projects leave at two.</p>
+<p><strong>The audit that exists</strong> —
+<code>crates/cerberus/cerberus-core/src/audit/mod.rs:1-14</code>. Two
+complementary subsystems, named in the module header, with the
+user-space one <em>"capturing high-level execution events like request
+received"</em> and the eBPF one recording file and network access as
+typed records.</p>
+<p><strong>The gap, stated as a search</strong> —
+<code>grep -rn "audit" --include='*.rs' crates/memory</code> returns
+nothing at this commit. The memory crate does not import the audit
+crate, does not emit an <code>AuditEvent</code>, and has no log of its
+own.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Typed in Rust, flat in SQLite. The domain has
+<code>DurableMemory</code>, <code>FactMemory</code>,
+<code>InstructionMemory</code>, <code>TaskMemory</code>,
+<code>SessionMemorySummary</code>, <code>PromptHistoryEntry</code> and
+<code>TokenUsageBaseline</code>; the row has a <code>kind</code> string
+and a content blob.</p>
+<p>What is absent from the row is the whole of this atlas's mark set. No
+status field, so nothing can be recorded-but-not-believed. No scope
+column, so the store is single-tenant however many agents run above it.
+One timestamp, and it is the update — a memory's creation time is not
+recoverable. No supersession pointer and no rejected-value record:
+<code>tombstone</code>, <code>supersede</code> and
+<code>confidence</code> appear in no file of the memory crate.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Per-kind caps assembled into a <code>RecallPacket</code>, with an
+optional hybrid vector-plus-keyword search over the semantic store. FTS5
+supplies the keyword half.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A chunker, an embedding path with a content-hash cache
+(<code>embedding_cache</code> keyed on <code>content_hash</code>, so
+re-embedding identical text is free), and a session module of 1,036
+lines that reaches an LLM client — session memory is summarised by a
+model rather than assembled mechanically.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A gateway with memory automation, a skill system with its own
+auditor, the cerberus sandbox, and a serverside memory-management
+surface.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>No marks, and the categories fail at the row rather than at
+the edges.</strong> The memory row carries no epistemic state, no scope,
+no second clock and no rejection record, and nothing audits its
+mutations or holds one for review.</p>
+<p><strong><code>audit_log</code> is the one worth naming</strong>,
+because the machinery is present and pointed elsewhere. A runtime that
+records file and network access through eBPF has made a considered
+investment in knowing what happened; a memory store in the same
+repository with no mutation record has simply not been included in it.
+For a system whose memory feeds an agent's next decision, the asymmetry
+is the finding.</p>
+<p><strong>Test coverage is two modules of ten.</strong>
+<code>chunker.rs</code> has 21 assertions and <code>vector.rs</code> has
+20, including the degenerate cosine cases — an empty vector against a
+non-empty one returns <code>0.0</code> rather than dividing by zero.
+<code>session.rs</code>, at 1,036 lines and the module that calls a
+model, has none.</p>
+<p><strong>The licence is the practical thing to check first.</strong>
+MulanPSL-2.0 is permissive and OSI-approved, and GitHub's API reports
+this repository's licence as null because the file sits in a
+<code>License/</code> directory. A reader relying on the API would
+conclude there is no grant; <code>Cargo.toml:36</code> and the README
+both say otherwise.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Unit tests inline in two memory modules; the gateway has a
+<code>memory_automation_test.rs</code> beside its implementation.
+Nothing was installed and nothing was run.</p>
+<p>No case asserts that particular material must not be retrieved — the
+memory tests cover chunk boundaries and vector arithmetic, not recall
+behaviour. That is why <code>negative_eval</code> is absent rather than
+argued about.</p>
+<p>No benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make semantic recall opt-in with <code>None</code> meaning
+skip.</strong> An <code>Option&lt;String&gt;</code> that costs an
+embedding call when set and nothing when unset is a clearer contract
+than a boolean plus a threshold.</li>
+<li><strong>Cap recall per kind, not in total.</strong> Instructions and
+prompt history compete for context; a single limit lets one starve the
+other.</li>
+<li><strong>Key the embedding cache on a content hash.</strong>
+Re-embedding identical text is the easiest waste to remove.</li>
+<li><strong>Put all three FTS triggers in.</strong> Insert, delete and
+update — the update trigger is the one usually missing, and without it
+the index answers from content that changed.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Auditing the sandbox and not the store.</strong> If you have
+built an <code>AuditSink</code>, the memory writes are the cheapest
+possible second producer, and the questions they answer — when did this
+become a fact, and from what — are the ones a memory system gets asked
+after an incident.</li>
+<li><strong>One timestamp on a memory row.</strong>
+<code>updated_at</code> alone makes a memory's age unknowable after the
+first edit.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take the recall budget and the embedding cache. Take the runtime
+whole only if you want AgentOS, and read <code>License/LICENSE</code>
+yourself rather than trusting a licence badge generated from the
+API.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>cerberus</code> has an <code>AuditSink</code> trait and the
+memory crate has no audit. Was including memory writes considered, or is
+the audit scoped to execution on purpose?</li>
+<li>The row has <code>updated_at</code> and no creation time. Is a
+memory's age meant to be recoverable?</li>
+<li><code>session.rs</code> is 1,036 lines, calls a model and has no
+tests. Is the summarisation covered anywhere?</li>
+<li>Sandbox permissions carry a scope; memories do not. Does a
+multi-agent deployment share one store?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/memory/src/recall.rs</code></td>
+<td><code>RecallQuery</code> — the per-kind caps and the opt-in semantic
+query</td>
+</tr>
+<tr>
+<td><code>crates/memory/src/store/sqlite_store.rs</code></td>
+<td>the <code>memories</code> table, the FTS5 shadow and its three
+triggers</td>
+</tr>
+<tr>
+<td><code>crates/memory/src/manager.rs</code></td>
+<td>the typed memory kinds assembled into a
+<code>RecallPacket</code></td>
+</tr>
+<tr>
+<td><code>crates/memory/src/session.rs</code></td>
+<td>1,036 lines of model-assisted session memory, untested</td>
+</tr>
+<tr>
+<td><code>crates/memory/src/chunker.rs</code>,
+<code>vector.rs</code></td>
+<td>the two modules that carry tests</td>
+</tr>
+<tr>
+<td><code>crates/cerberus/cerberus-core/src/audit/</code></td>
+<td>the execution audit, user-space and eBPF</td>
+</tr>
+<tr>
+<td><code>License/LICENSE</code>, <code>Cargo.toml:36</code></td>
+<td>MulanPSL-2.0, where the API does not see it</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nothing audits memory</td>
+<td><code>grep -rn "audit" --include='*.rs' crates/memory</code></td>
+<td>Nothing</td>
+</tr>
+<tr>
+<td>The memory row has no status, scope or creation time</td>
+<td>read <code>crates/memory/src/store/sqlite_store.rs:59-66</code></td>
+<td><code>id</code>, <code>kind</code>, <code>content</code>,
+<code>source</code>, <code>embedding</code>,
+<code>updated_at</code></td>
+</tr>
+<tr>
+<td>No epistemic vocabulary in the memory crate</td>
+<td><code>grep -rl "tombstone|supersede|confidence" --include='*.rs' crates/memory</code></td>
+<td>Nothing for any of the three</td>
+</tr>
+<tr>
+<td>Two of ten memory modules carry tests</td>
+<td><code>grep -rc "assert" --include='*.rs' crates/memory/src/*.rs crates/memory/src/store/*.rs | grep -v ':0'</code></td>
+<td><code>chunker.rs:21</code>, <code>vector.rs:20</code></td>
+</tr>
+<tr>
+<td>The licence is MulanPSL-2.0, not absent</td>
+<td><code>find . -iname '*licen[cs]e*'</code>;
+<code>grep -n '^license' Cargo.toml</code>; README badge</td>
+<td><code>License/LICENSE</code>, <code>Cargo.toml:36</code>
+<code>license = "MulanPSL-2.0"</code>, and the README badge — while the
+GitHub API reports <code>license: null</code></td>
+</tr>
+<tr>
+<td>The audit that does exist is about execution</td>
+<td>read
+<code>crates/cerberus/cerberus-core/src/audit/mod.rs:1-14</code></td>
+<td><em>"execution observability and security monitoring"</em>, with
+eBPF file and network access records</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/FreshHillyer/xiaoO/commit/3acadbb33915d0df5793e80db4078d75dfb77e75"><code class="commit-id" title="3acadbb33915d0df5793e80db4078d75dfb77e75">3acadbb3…</code></a>
+— first reading, at roughly 1,100 files. Taken from an unreported scout
+shortlist entry dated 2026-09-11 rather than a fresh triage selection,
+the day's allocation having been spent. Screened before reading: no
+auto-run surface, three build-time execution points, one unpinned
+surface and nothing inside the cooldown; nothing was installed, built or
+run. <strong>MulanPSL-2.0</strong> — the GitHub API reports this
+repository as unlicensed because the grant sits in a
+<code>License/</code> directory, and the manifest and README both name
+it; the licence was checked by <code>find</code>, by the
+<code>Cargo.toml</code> field and by the README badge rather than by the
+API. No marks: the memory row carries no status, no scope, no creation
+time and no mutation record, and no committed case asserts what must not
+be retrieved. The finding worth the page is the asymmetry — the runtime
+audits process, file and network access through eBPF, and the memory
+crate references the audit subsystem nowhere.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

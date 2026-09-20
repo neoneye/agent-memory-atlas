@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **619 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **620 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -743,6 +743,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 
 <ul class="az">
 <li><a class="az-row" href="../systems/xerj/"><span class="az-id">XERJ</span><span class="az-what">Agent memory inside a search engine</span><code class="az-repo">xerj-org/xerj</code><span class="az-caps"><span class="az-cap">Bi-temporal</span><span class="az-cap">Scope enforced</span><span class="az-cap">Mutation audit</span><span class="az-cap">Negative evals</span></span></a></li>
+<li><a class="az-row" href="../systems/xiaoo/"><span class="az-id">xiaoO</span><span class="az-what">eBPF watches what the agent does and nothing watches what it keeps</span><code class="az-repo">FreshHillyer/xiaoO</code><span class="az-caps"></span></a></li>
 </ul>
 
 ## Y

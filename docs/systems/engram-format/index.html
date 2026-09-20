@@ -148,7 +148,7 @@ and the gates, not what the product does with them.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-19</strong>
+              <strong>2026-09-20</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/El-AI-Intelligence--engram-format" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -661,13 +661,48 @@ returned nothing; the positive control is the sibling test in each case,
 not the same one, and no test asserts that a quarantined row is absent
 from a populated content or list result under <code>LiveOnly</code>. The
 mark is withheld on that basis.</p>
-<p>There is no retrieval-quality evaluation, no benchmark, no fixture
-vault and no CI in the repository;
+<p>There is no retrieval-quality evaluation, no benchmark and no fixture
+vault;
 <code>rg -n 'arxiv|bibtex|@article|doi' README.md FORMAT.md</code> finds
-nothing, and the README links no paper. The tests one would want before
-trusting the format as a memory are a <code>LiveOnly</code> search over
-a populated vault with a control row, a hygiene case that checks the
-decay arithmetic against a hand-computed value rather than <em>"no
+nothing, and the README links no paper.</p>
+<p><strong>One workflow does exist</strong>, and a first version of this
+section said none did. <code>.github/workflows/publish-npm.yml</code> is
+<code>on: workflow_dispatch</code> — manual trigger only, so nothing in
+this repository runs on a push or a pull request, and the Rust suite
+above is never executed by a machine. What the workflow does is publish
+the wasm package, and two details are worth taking.</p>
+<p>It publishes through npm <strong>Trusted Publishing</strong>:
+<code>permissions: id-token: write</code> and no token anywhere in the
+repository or its secrets, so GitHub Actions mints a short-lived
+registry credential from the workflow identity and npm records a
+provenance attestation. The file's own comment explains the failure that
+shaped it — npm 10.x, the version bundled with Node 22, <em>"signs
+provenance but never exchanges the token, so the PUT lands anonymous and
+npm returns the misleading E404"</em> — which is why the workflow
+installs npm 11 before publishing. A reader adopting OIDC publishing
+will hit exactly that and read exactly that error.</p>
+<p>And there is a gate before the publish step:
+<code>node smoke.mjs</code>, run against the built package. That file is
+39 lines and eleven assertions, and this report's earlier claim that
+nothing outside the Rust suite exercises the format was wrong about it.
+It asserts the version constant, the <code>mem_</code> id shape, an
+entry round-trip <strong>and</strong> that
+<code>parse_entry('{"id": 42}')</code> throws
+<code>/invalid MemoryEntry/</code>, a sync-blob round-trip and that
+<code>parse_sync_blob("{}")</code> throws
+<code>/invalid SyncBlob/</code>, and five cases over
+<code>noise_reason</code> — <code>sleep 30</code> is <em>"transient
+command"</em>, <code>cd &amp;&amp; cd</code> is <em>"cd
+bookkeeping"</em>, <code>ls</code> is a <em>"bookkeeping command"</em>,
+<code>Quarterly planning notes</code> returns <code>null</code>, and an
+unknown source throws. So the export surface is checked for what it must
+reject as well as what it must accept, at the last moment before the
+artifact leaves the repository. The step is wired to a manual trigger
+rather than to the branch, which is the limit worth stating: it gates
+releases, not commits. The tests one would want before trusting the
+format as a memory are a <code>LiveOnly</code> search over a populated
+vault with a control row, a hygiene case that checks the decay
+arithmetic against a hand-computed value rather than <em>"no
 crash,"</em> and a sync round-trip of a tombstone against a concurrent
 edit.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
@@ -807,6 +842,21 @@ internal caller);
 (none).</li>
 </ul>
 <h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — same pin, corrected the day after the
+reading during an audit of whole-repository absence claims. Section 10
+said there is no CI in the repository.
+<code>.github/workflows/publish-npm.yml</code> exists: manual-trigger
+only, so the substance held — nothing runs on a push, and the Rust suite
+is never executed by a machine — but the file itself was missed, and
+with it a <code>node smoke.mjs</code> gate of eleven assertions run
+before every publish, including four that assert what the parser must
+reject. The claim was made from inside <code>src/</code>, which is where
+this error class lives: a reading deep in the code asserts over a
+directory it never listed. No mark moves; <code>negative_eval</code>
+stays withheld on the emptiness-shape reasoning above, which
+<code>smoke.mjs</code> does not disturb — its <code>noise_reason</code>
+cases are ingestion classification, and the one returning
+<code>null</code> is a positive control.</p>
 <p><strong>2026-09-19</strong> — <a
 href="https://github.com/El-AI-Intelligence/engram-format/commit/f1e92dadff542c12d37613279619adbadd412303"><code class="commit-id" title="f1e92dadff542c12d37613279619adbadd412303">f1e92dad…</code></a>
 — <code>trust_state</code> re-tested. The record already listed which

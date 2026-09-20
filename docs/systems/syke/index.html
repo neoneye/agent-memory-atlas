@@ -126,7 +126,7 @@ removed.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-20</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/saxenauts--syke" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -364,9 +364,42 @@ contract, auth flow, prompt building and adapter guides.
 — "private history failure", "private database failure" — do not reach
 the model's view, which is a good instinct about what a prompt should
 not contain.</p>
-<p>There is no test file named for the safety layer, and nothing asserts
-what the gate does with a cycle that deletes memories — which is
-consistent with the behaviour being unspecified rather than chosen.</p>
+<p><strong>The safety layer is the most heavily tested thing in the
+repository</strong>, and a first reading of this report said the
+opposite. <code>tests/test_db_safety.py</code> is 871 lines over 21
+cases, importing <code>capture_baseline</code>,
+<code>create_recovery_point</code>, <code>restore_recovery_point</code>,
+<code>rotate_recovery_points</code> and
+<code>validate_state_after_cycle</code> directly, and the deletion
+behaviour that looked unspecified is asserted by name.</p>
+<p><code>test_semantic_gate_accepts_graph_changes_and_current_deletions:123-177</code>
+seeds four memories and two links, captures a baseline, then revises one
+memory, creates another, rewrites one link, deletes a link and deletes a
+memory — and asserts <code>result["valid"] is True</code> with
+<code>result["stats"]["removed_memory_ids"] == ["mem-delete"]</code>. So
+a cycle that deletes is not merely tolerated: the removal is enumerated
+in the gate's own statistics and the cycle still passes. Deletion is
+chosen behaviour, and the choice is committed.</p>
+<p>The gate's refusals are asserted from the other side in the same
+file. For identity,
+<code>test_semantic_gate_rejects_rows_outside_the_bound_identity:182-204</code>
+drops the <code>enforce_memories_identity_insert</code> trigger, inserts
+a row owned by <code>other-user</code>, and asserts
+<code>valid is False</code> with
+<code>stats["rows_outside_identity"]["memories"] == 1</code> — which is
+the executable version of the scoping claim in section 5, tested by
+defeating the trigger that would otherwise make it untestable. For
+schema, <code>:205-218</code> creates one extra table and asserts the
+cycle fails on <em>"current graph schema changed"</em>.</p>
+<p>Beyond the gate, the recovery path is specified against interruption
+rather than against the happy case: a restore is refused while a normal
+database user is open (<code>:760</code>), refused when the recovery
+point is damaged, without replacing the database (<code>:730</code>),
+refused over any final receipt (<code>:643</code>), and refused when no
+marker was written (<code>:697</code>), while <code>:789</code> asserts
+that a restore keeps later cross-process writes visible. Tests named for
+what a routine must <em>decline</em> to do are the ones worth copying,
+and most of this file is those.</p>
 <h2 id="11-for-your-own-build">11. For Your Own Build</h2>
 <p>Bracket unsupervised mutation. Fingerprint before, snapshot before,
 gate after, reconcile on restart. Syke's version of this is worth
@@ -389,8 +422,13 @@ one you want at three in the morning.</p>
 <h2 id="12-open-questions">12. Open Questions</h2>
 <p>Whether unbounded deletion is intended. Forgetting is a legitimate
 function of a synthesis agent, and a cycle that removes a stale memory
-is doing its job; what is unspecified is where that stops. Nothing in
-the tree records a decision.</p>
+is doing its job — the gate says so, accepting deletions and passing.
+What is unspecified is where that stops.
+<code>db_safety.py:1044-1058</code> computes
+<code>removed_memory_ids</code>, stores the sorted list and its length
+in the cycle statistics, and no branch anywhere compares either against
+a bound. A cycle that removed every memory would be reported in full and
+pass.</p>
 <p>What <code>syke ask</code> does when the FTS index and the graph
 disagree between cycles. The gate repairs and rebuilds the index at
 cycle end, but reads happen continuously.</p>
@@ -432,7 +470,74 @@ hashed; no consumer was traced here.</p>
 </tr>
 </tbody>
 </table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><del>There is no test file named for the safety layer</del> —
+<strong>withdrawn 2026-09-20</strong></td>
+<td><code>ls tests/</code></td>
+<td><code>tests/test_db_safety.py</code>, 871 lines over 21 cases. The
+original reading listed the test files it had looked at and this was not
+among them.</td>
+</tr>
+<tr>
+<td>The gate accepts a deleting cycle and enumerates the removal</td>
+<td>read <code>tests/test_db_safety.py:123-177</code></td>
+<td><code>assert result["valid"] is True</code> beside
+<code>assert result["stats"]["removed_memory_ids"] == ["mem-delete"]</code></td>
+</tr>
+<tr>
+<td>The gate refuses rows outside the bound identity</td>
+<td>read <code>tests/test_db_safety.py:182-204</code></td>
+<td>The trigger is dropped, a foreign row inserted, and
+<code>valid is False</code> asserted with
+<code>rows_outside_identity</code></td>
+</tr>
+<tr>
+<td>Deletion is counted and never bounded</td>
+<td><code>grep -n "removed_memory_ids" syke/db_safety.py</code></td>
+<td><code>:1044</code> computes it, <code>:1057-1058</code> stores the
+count and the list; no comparison against a threshold anywhere in the
+file</td>
+</tr>
+<tr>
+<td>Scope is one coerced identity, not a boundary</td>
+<td><code>grep -n "bind_identity" -A 40 syke/db.py</code></td>
+<td><code>UPDATE {table} SET user_id = ? WHERE user_id != ?</code> —
+foreign rows are relabelled to the bound user rather than refused</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — same pin, re-read after an audit of
+whole-repository absence claims. The first reading said there is no test
+file named for the safety layer and that nothing asserts what the gate
+does with a cycle that deletes memories, and drew a conclusion from it:
+that the behaviour was unspecified rather than chosen. Both halves were
+wrong. <code>tests/test_db_safety.py</code> is 871 lines over 21 cases,
+named for <code>syke.db_safety</code> and importing its five entry
+points directly, and
+<code>test_semantic_gate_accepts_graph_changes_and_current_deletions</code>
+asserts the deleting cycle passes with the removed id enumerated in the
+gate's statistics. Section 10 is rewritten around it and the
+recovery-path refusals beside it, and the deletion question in section
+12 is narrowed to what actually remains unbounded:
+<code>removed_memory_ids</code> is computed and reported at
+<code>db_safety.py:1044-1058</code> and compared against nothing. No
+mark moves — <code>scope_enforced</code> stays withheld because
+<code>bind_identity</code> rewrites foreign rows to the bound user
+rather than refusing them, which is a single-identity coercion and not a
+boundary. A Recorded Searches appendix was added, this report having had
+none, which is the shape the error hid in.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/saxenauts/syke/commit/62c1c9cf3204f3d12175b703b0d9cd952f06cf9b"><code class="commit-id" title="62c1c9cf3204f3d12175b703b0d9cd952f06cf9b">62c1c9cf…</code></a>
 — first reading, at a commit dated 23 August 2026. Screened before

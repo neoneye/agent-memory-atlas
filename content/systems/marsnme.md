@@ -9,7 +9,7 @@ source_url: https://github.com/marsmanleo/marsnme
 archive_name: "marsmanleo--marsnme"
 revision: 25b7d6c1b4e698189b9db0e35a593b9a6a41b876
 revision_url: https://github.com/marsmanleo/marsnme/commit/25b7d6c1b4e698189b9db0e35a593b9a6a41b876
-analyzed_at: 2026-09-13
+analyzed_at: 2026-09-20
 capabilities: ""
 stack_storage: "postgres"
 stack_retrieval: "vector"
@@ -230,13 +230,26 @@ running it against a hosted service they have not read the source of.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**No paper, no benchmark, no test directory found**, and the evidence offered is
-a user story from the creator — "Leo, MarsNMe creator (3 months of daily use
+**No paper and no benchmark**, and the evidence offered for the system working
+is a user story from the creator — "Leo, MarsNMe creator (3 months of daily use
 across 4 AI tools)" — which is honestly attributed as the author's own experience
 rather than presented as an independent result.
 
-At this size, with tools across two deployment targets, the untested surface
-that matters most is the handoff: a note that is delivered twice, or marked read
+Tests do exist, in two places away from the memory. `marsnme-supabase/scripts/tests/test_dream_runner_modes.py`
+is 90 lines of `unittest` that run `dream_runner.py` and `hermes_digest_runner.py`
+as subprocesses and assert the emitted JSON carries the mode the environment
+selected — `standard`, `lite` or `pro` — and that the run was skipped rather
+than executed. `marsnme-supabase/cloudflare-routing-worker/src/index.test.ts` is
+427 lines of Vitest over the routing worker: a missing username route returns
+404 with `user_not_found`, a malformed one returns 400 with `invalid_username`,
+and a proxied request is asserted to preserve the authorization header, the
+`mcp-session-id` and the query string exactly.
+
+So the repository tests its dispatch and its edge routing, and neither file
+mentions `read_at`, a handoff or a delivery.
+
+That is the shape of the gap rather than an absence of testing. The untested
+surface that matters most is the handoff: a note that is delivered twice, or marked read
 without being delivered, loses a message between agents silently, and the
 `read_at` column is exactly what a test would assert on.
 
@@ -326,7 +339,20 @@ allowlist `:20-30`)
 handoff, auto `batch_promote`, the CoCo-only tool surface), `CHANGELOG.md`,
 `AGENTS.md`, `SECURITY.md`
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| ~~No test directory found~~ — **withdrawn 2026-09-20** | `find . -path ./node_modules -prune -o -name 'tests' -print -o -name '*.test.*' -print` | `marsnme-supabase/scripts/tests/test_dream_runner_modes.py` and `marsnme-supabase/cloudflare-routing-worker/src/index.test.ts`. Both sit under deployment directories rather than beside the memory tools, which is how a reading centred on the tools missed them. |
+| Nothing tests the handoff | `grep -rn 'read_at\|board_read\|board_post\|handoff' --include='*test*' .` | Nothing in either test file |
+| No paper and no benchmark | `grep -rn -i 'arxiv\|doi\|benchmark\|@article' README.md` | Only the creator's own usage story |
+
+
 ## History
+
+**2026-09-20** — same pin, re-read after an audit of whole-repository absence claims. Section 10 said "no test directory found". There is one — `marsnme-supabase/scripts/tests/`, holding a 90-line `unittest` file over dream-runner mode dispatch — beside a 427-line Vitest suite for the Cloudflare routing worker. The claim was made over the wrong subtree: both sit under deployment directories rather than beside the memory tools the report reads. The section is rewritten to say what the tests cover, and the finding it was supporting survives intact and sharper, because neither file mentions `read_at`, a handoff or a delivery — the board defect in section 1 is still the kind a single committed case would have caught. No mark changes. A Recorded Searches appendix was added; this report had none, which is the shape this error class hides in.
 
 **2026-09-13** — [`25b7d6c1b4e698189b9db0e35a593b9a6a41b876`](https://github.com/marsmanleo/marsnme/commit/25b7d6c1b4e698189b9db0e35a593b9a6a41b876) — re-read, three commits past the previous pin. Screened again first: one auto-run surface and two unpinned dependency surfaces, unchanged in kind from the previous reading; nothing was installed and nothing was run. Three commits understated the change: they add a `board_posts` table per profile schema and a wall of `board_read` / `board_post` / `board_ack` tools, with `session_boot` fetching unread posts and `session_close` posting. The finding is in `board_read`, which sets an addressing filter on a `URLSearchParams` key and then sets the same key again for the expiry window; `set` replaces, so the filter that makes a private note private never reaches the request, and the handler's only post-fetch filter removes acknowledged posts. `session_boot`'s copy of the same query sets the key once and is correct. No mark changes — `scope_enforced` stays withheld, now on a stored key whose predicate is written and discarded rather than on structural scoping alone. The stack row was promoted from seeded to reviewed and corrected while re-reading: retrieval is a Jina 1024-dimension embedding through a `search_memories_semantic` RPC, not the lexical arm the seeded guess recorded.
 
