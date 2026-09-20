@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An embedded Rust database for
+agent memory that enforces declared state transitions in the engine
+rather than in application code, and skips a synced row whose merge
+would break one instead of letting the conflict policy win.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="contextdb — Agent Memory Atlas">
+    <meta property="og:description" content="An embedded Rust database
+for agent memory that enforces declared state transitions in the engine
+rather than in application code, and skips a synced row whose merge
+would break one instead of letting the conflict policy win.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="contextdb — Agent Memory Atlas">
+    <meta name="twitter:description" content="An embedded Rust database
+for agent memory that enforces declared state transitions in the engine
+rather than in application code, and skips a synced row whose merge
+would break one instead of letting the conflict policy win.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>contextdb — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "contextdb",
+      "description": "An embedded Rust database for agent memory that enforces declared state transitions in the engine rather than in application code, and skips a synced row whose merge would break one instead of letting the conflict policy win.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A conflict policy cannot overrule a state
+machine</p>
+          <h1>contextdb</h1>
+          <p class="document-deck">An embedded Rust database for agent
+memory that enforces declared state transitions in the engine rather
+than in application code, and skips a synced row whose merge would break
+one instead of letting the conflict policy win.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/context-graph-ai/contextdb">
+              <span>Source</span>
+              <strong>context-graph-ai/contextdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/context-graph-ai/contextdb/commit/e6cf60cf972148bbbfe5a002151f40d191e551b9" title="e6cf60cf972148bbbfe5a002151f40d191e551b9">
+              <span>Analyzed revision</span>
+              <code>e6cf60cf…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/context-graph-ai--contextdb" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>context-graph-ai--contextdb</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>contextdb is an embedded database written for agent memory
+specifically — relational storage, bounded graph traversal and vector
+similarity under one MVCC transaction, in a single file and a single
+process, with bidirectional sync between instances over WebSocket.
+Apache 2.0, Rust, 256 files across ten crates.</p>
+<p><strong>One mark: <code>negative_eval</code>.</strong> That is the
+honest count for what this is, and the reason is worth stating plainly
+rather than treating as a shortfall: <strong>it holds no memories of its
+own.</strong> There is no status field to be an epistemic state, no
+rejected-value record, no scope key, and no second clock — because those
+belong to the schema its users write. contextdb is the layer the other
+six marks would be built <em>on</em>.</p>
+<p>What it does carry is a guarantee most of this corpus implements in
+application code, and the README states it as the pitch:</p>
+<pre><code>contextdb&gt; UPDATE decisions SET status = &#39;draft&#39; WHERE id = &#39;550e8400...&#39;;
+Error: invalid state transition: active -&gt; draft</code></pre>
+<p>The interesting part is what happens when that meets sync. A conflict
+policy of <code>EdgeWins</code> will try to force a remote row over a
+local one — and if the forced write is an illegal transition,
+<strong>the row is skipped and recorded as a conflict rather than
+applied.</strong> A merge strategy cannot overrule a declared invariant.
+For a memory shared across devices that is the difference between a
+lifecycle and a suggestion.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Every agent, device or service runs its own instance; they reconcile
+through a server. A table can declare a state machine, a DAG constraint
+or a cascade, and the engine enforces it on every write — including
+writes that arrive from another instance.</p>
+<p>Conflict resolution is chosen per table rather than globally:
+<code>InsertIfNotExists</code>, <code>ServerWins</code>,
+<code>EdgeWins</code>, <code>LatestWins</code>, with a default. For
+agent memory those are different policies for different kinds of
+knowledge — a fact that should never be overwritten once learned is not
+the same table as a status that should track the newest observation.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — relational rows, graph edges and vectors live under one MVCC transaction in a single file, and a table may declare a state machine that the executor validates on every update; a changeset arriving from another instance is applied under a per-table conflict policy chosen from insert-if-not-exists, server-wins, edge-wins or latest-wins, and a row whose merge would violate the declared transition is skipped and returned as a conflict rather than forced, so the merge strategy cannot overrule the invariant</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: relational rows, graph edges and vectors live under one MVCC transaction in a single file, and a table may declare a state machine that the executor validates on every update; a changeset arriving from another instance is applied under a per-table conflict policy chosen from insert-if-not-exists, server-wins, edge-wins or latest-wins, and a row whose merge would violate the declared transition is skipped and returned as a conflict rather than forced, so the merge strategy cannot overrule the invariant
+flowchart TD
+    subgraph ONE[&quot;one file, one process&quot;]
+        REL[(&quot;relational rows&quot;)]
+        GR[(&quot;graph edges&quot;)]
+        VEC[(&quot;vectors&quot;)]
+        MVCC[&quot;unified MVCC transaction&lt;br/&gt;snapshot isolation&quot;]
+        REL --- MVCC
+        GR --- MVCC
+        VEC --- MVCC
+    end
+
+    W[&quot;UPDATE ... SET status = ?&quot;] --&gt; EX[&quot;executor&quot;]
+    EX --&gt; VST{&quot;validate_update_state_transition&quot;}
+    VST --&gt;|&quot;illegal&quot;| ERR[&quot;Error: invalid state transition:&lt;br/&gt;active -&gt; draft&quot;]
+    VST --&gt;|&quot;legal&quot;| MVCC
+
+    PEER((&quot;another instance&quot;)) --&gt;|&quot;WebSocket&quot;| CS[&quot;changeset&quot;]
+    CS --&gt; POL{&quot;ConflictPolicies&lt;br/&gt;per_table + default&quot;}
+    POL --&gt; P1[&quot;InsertIfNotExists&quot;]
+    POL --&gt; P2[&quot;ServerWins&quot;]
+    POL --&gt; P3[&quot;EdgeWins&quot;]
+    POL --&gt; P4[&quot;LatestWins&quot;]
+    P1 --&gt; APPLY
+    P2 --&gt; APPLY
+    P3 --&gt; APPLY
+    P4 --&gt; APPLY
+    APPLY[&quot;apply_changes&quot;] --&gt; VST2{&quot;same state-machine check&quot;}
+    VST2 --&gt;|&quot;legal&quot;| MVCC
+    VST2 --&gt;|&quot;illegal&quot;| SKIP[&quot;skipped_rows += 1&lt;br/&gt;conflicts += 1&lt;br/&gt;the forced write does not land&quot;]
+
+    MVCC --&gt; Q[&quot;SQL · pgvector &amp;lt;=&amp;gt; · GRAPH_TABLE MATCH&quot;]
+    Q --&gt; APP((&quot;the memory system you build on it&quot;))</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The constraint, at the engine</strong> —
+<code>crates/contextdb-engine/src/executor.rs:1710</code> calls
+<code>validate_update_state_transition</code>, defined at
+<code>:2952</code>, which delegates to
+<code>db.relational_store().validate_state_transition(...)</code> at
+<code>:2978</code>. The implementation lives in
+<code>contextdb-relational/src/store.rs:411</code> with an in-memory
+counterpart at <code>mem.rs:86</code>, so the two backends answer the
+same question through the same named method rather than each deciding
+for itself.</p>
+<p><strong>The same check on the sync path.</strong>
+<code>apply_changes</code> runs a changeset under a policy and returns
+<code>applied_rows</code>, <code>skipped_rows</code> and
+<code>conflicts</code> (<code>sync_types.rs:150</code>). The integration
+test at
+<code>crates/contextdb-server/tests/sync_integration.rs:1150-1163</code>
+sets <code>ConflictPolicy::EdgeWins</code> — the policy that forces the
+remote row — and asserts two rows apply, one is skipped, and one
+conflict is returned, with the comment naming the cause: <em>"EdgeWins
+forces upsert attempt on row B — which fails due to state
+machine."</em></p>
+<p><strong>The policy map</strong> — <code>sync_types.rs:124-144</code>.
+<code>ConflictPolicy</code> is a four-value enum;
+<code>ConflictPolicies</code> is a <code>per_table</code> map plus a
+<code>default</code>, with a <code>uniform</code> constructor for the
+simple case. Per-table is the right granularity for memory: the table
+holding facts and the table holding their current status want different
+answers.</p>
+<p><strong>Tombstones, in the storage sense</strong> —
+<code>contextdb-vector/src/store.rs:99</code>,
+<code>tombstone_row(row_id, deleted_tx)</code>, and a comment in
+<code>contextdb-relational/src/store.rs:40</code> about counting
+<em>"live (non-tombstoned) postings, useful for leak detection."</em>
+These are MVCC delete markers keyed on a row id and a transaction, which
+is the correct meaning of the word in a storage engine and not the
+atlas's.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The schema is the user's. contextdb supplies the types — rows, edges,
+vectors — and the constraints it will enforce over them: state machines,
+DAG enforcement, cascading propagation. A memory system built here would
+declare its own status column and its own transition table, and the
+engine would hold them.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>PostgreSQL-compatible SQL, pgvector's <code>&lt;=&gt;</code> operator
+for vector distance, and SQL/PGQ-style
+<code>GRAPH_TABLE ... MATCH</code> for bounded traversal — the README is
+explicit that this is <em>"the subset that matters for bounded
+traversal, not the full standard"</em>. All three under one transaction,
+which is the pitch: one snapshot rather than three systems disagreeing
+about what exists.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are transactional and validated against whatever the table
+declares. Remote writes arrive as changesets and go through the same
+validation.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>A Rust library and CLI today; the README says Python and TypeScript
+bindings are on the roadmap and marks them as such rather than implying
+they exist.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>negative_eval</code></strong> — section 10.</p>
+<p><strong>Six marks are withheld for one reason.</strong>
+<code>tombstone</code>, <code>trust_state</code>,
+<code>bitemporal</code>, <code>scope_enforced</code>,
+<code>audit_log</code> and <code>human_review</code> all describe
+properties of a memory, and contextdb stores whatever it is given. The
+mark set measures systems that decide what to remember; this decides how
+to store and merge it. Two details are worth pinning so a later reading
+does not re-open them: the tombstones here are MVCC row markers keyed on
+<code>(row_id, deleted_tx)</code>, and MVCC supplies snapshot isolation
+— a transaction ordering — but no world-validity axis, so there is no
+second clock to read.</p>
+<p><strong>What it does give a memory system, and this is the
+substantive finding.</strong> A declared lifecycle that the database
+enforces is the difference between <code>trust_state</code> as a
+convention and <code>trust_state</code> as a guarantee — most systems in
+this corpus enforce their status transitions in application code, where
+a second write path can bypass them. And the sync behaviour closes the
+gap that usually follows: an invariant enforced locally but abandoned at
+merge time is not an invariant. Here the merge is the one that
+yields.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Acceptance, integration and per-crate tests, plus a
+<code>benches/</code> tree. Nothing was installed and nothing was
+run.</p>
+<p>The must-not cases are about visibility and about invariants
+surviving a merge:</p>
+<ul>
+<li><code>crates/contextdb-server/tests/sync_integration.rs:1158-1163</code>
+— under <code>EdgeWins</code>, <em>"row B should fail (invalid state
+transition)"</em>, asserted as <code>skipped_rows == 1</code> and one
+conflict, with rows A and C still applying. The test proves the policy
+did not win, and that the failure was isolated to the offending row
+rather than aborting the batch.</li>
+<li><code>crates/contextdb-engine/tests/sql_surface_tests.rs:3093</code>
+— <em>"failed sync pull must not make remote rows visible on the
+server"</em>. A partial sync must not leak.</li>
+<li><code>:3202</code> — <em>"duplicate logical edge should not leave a
+second relational row"</em>.</li>
+<li><code>:3356</code> — noop upserts <em>"must not leak memory"</em>,
+with the baseline in the message.</li>
+</ul>
+<p>The first is the one that matters for this atlas. A conflict policy
+that can override a declared constraint would make every lifecycle in
+every schema built here advisory, and it is asserted not to.</p>
+<p>No paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Put the lifecycle in the database.</strong> A status
+transition validated in the engine holds for every writer, including the
+sync path and the next tool somebody adds. In application code it holds
+for the writers that remembered.</li>
+<li><strong>Make the merge yield to the invariant, and test that it
+does.</strong> The interesting case is not that an illegal update fails
+— it is that an illegal update arriving from another device also fails,
+under the policy that exists to force writes through.</li>
+<li><strong>Choose conflict resolution per table.</strong> A fact
+learned once and a status tracking the newest observation want different
+answers, and a single global policy makes one of them wrong.</li>
+<li><strong>Isolate the failure to the row.</strong> Two rows applied
+and one skipped, with the conflict returned, is more useful than a
+rejected batch.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Reading "tombstone" in a storage engine as an epistemic
+one.</strong> Here it is an MVCC marker, correctly so, and it answers a
+different question than the atlas's mark of the same name.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take it if you are building a memory system rather than adopting one,
+and you want the lifecycle enforced below your application. It gives you
+the primitives the marks on other pages are made of; none of those
+decisions are made for you.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Conflict policy is per table. Is a per-column or per-row policy
+envisaged for a table whose status and content want different merge
+rules?</li>
+<li>MVCC gives snapshot isolation. Is a valid-time axis in scope, or is
+world validity expected to be a user column with user-written
+predicates?</li>
+<li><code>apply_changes</code> returns conflicts. Is a durable record of
+a rejected merge intended, or is the caller expected to keep one?</li>
+<li>Bindings for Python and TypeScript are on the roadmap. Will the
+state-machine errors surface as typed errors there, or as strings?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/contextdb-engine/src/executor.rs</code></td>
+<td><code>validate_update_state_transition</code> and its call site on
+the update path</td>
+</tr>
+<tr>
+<td><code>crates/contextdb-relational/src/store.rs</code></td>
+<td><code>validate_state_transition</code>, and the live-postings
+comment about MVCC tombstones</td>
+</tr>
+<tr>
+<td><code>crates/contextdb-relational/src/mem.rs</code></td>
+<td>the in-memory backend answering the same question by the same
+name</td>
+</tr>
+<tr>
+<td><code>crates/contextdb-engine/src/sync_types.rs</code></td>
+<td><code>ConflictPolicy</code>, <code>ConflictPolicies</code>, and the
+conflict list on a result</td>
+</tr>
+<tr>
+<td><code>crates/contextdb-engine/src/database.rs</code></td>
+<td>the conflict policies held on the database and the upsert path</td>
+</tr>
+<tr>
+<td><code>crates/contextdb-vector/src/store.rs</code></td>
+<td><code>tombstone_row(row_id, deleted_tx)</code></td>
+</tr>
+<tr>
+<td><code>crates/contextdb-server/tests/sync_integration.rs</code></td>
+<td>the EdgeWins-versus-state-machine case</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The state machine is enforced on both the local and the sync write
+path</td>
+<td><code>grep -rn "validate_state_transition|validate_update_state_transition" --include='*.rs' crates</code></td>
+<td><code>executor.rs:1710</code> and <code>:2952-2978</code>,
+<code>relational/src/store.rs:411</code>, <code>mem.rs:86</code>, and
+the sync case at
+<code>contextdb-server/tests/sync_integration.rs:1161</code></td>
+</tr>
+<tr>
+<td>Tombstones here are MVCC row markers</td>
+<td><code>grep -rn "tombstone" --include='*.rs' crates</code></td>
+<td><code>vector/src/store.rs:99</code>
+<code>tombstone_row(row_id, deleted_tx)</code> and its two call sites,
+plus a live-postings comment; nothing keyed on a value</td>
+</tr>
+<tr>
+<td>There is no valid-time axis</td>
+<td><code>grep -rln "as_of|valid_time|AS OF" --include='*.rs' crates</code></td>
+<td>Nothing; MVCC supplies transaction ordering only</td>
+</tr>
+<tr>
+<td>Conflict policy is a four-value enum with a per-table map</td>
+<td>read
+<code>crates/contextdb-engine/src/sync_types.rs:124-144</code></td>
+<td><code>InsertIfNotExists</code>, <code>ServerWins</code>,
+<code>EdgeWins</code>, <code>LatestWins</code>;
+<code>per_table: HashMap&lt;String, ConflictPolicy&gt;</code> beside a
+<code>default</code></td>
+</tr>
+<tr>
+<td>The sync crate is inside the engine, not separate</td>
+<td><code>grep -rln "sync" --include='*.rs' crates</code></td>
+<td><code>contextdb-engine/src/sync_types.rs</code>,
+<code>persistence.rs</code>, <code>database.rs</code>; there is no
+<code>contextdb-sync</code> crate, and a first search for one found
+nothing for that reason</td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>head -3 LICENSE</code>;
+<code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>Stock Apache 2.0; the only match is the standard compliance
+clause</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/context-graph-ai/contextdb/commit/e6cf60cf972148bbbfe5a002151f40d191e551b9"><code class="commit-id" title="e6cf60cf972148bbbfe5a002151f40d191e551b9">e6cf60cf…</code></a>
+— first reading, at 256 files across ten crates. Screened before
+reading; nothing was installed, built or run, and the committed
+<code>benches/</code> tree was read rather than executed. Apache 2.0.
+One mark, <code>negative_eval</code>. The other six are withheld
+together for one reason rather than six: this is a database and the
+schema belongs to its users, so there is no status, no rejected-value
+record, no scope key and no second clock of its own to read. The
+substantive finding is what it offers a memory system built on it — a
+lifecycle the engine enforces on every writer including the sync path,
+with a committed case asserting that a conflict policy chosen to force
+remote writes does not override it.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

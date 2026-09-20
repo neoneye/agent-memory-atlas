@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 612 reports.**
+**This page covers all 613 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5469,4 +5469,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: the pair of as-of tool families. `server_asof.py` does transaction-time reconstruction from the audit log — *"what the corpus looked like at a past point"* — while `server_asof_valid.py` filters each record's validity interval *"so a since-superseded fact resurfaces exactly as it stood in the world at `as_of`."* Two questions, two endpoints, and the second's header names the first and the difference.
 - Maturity impression: MIT, Python over SQLite at 1,616 files, MCP with profile-gated tool families, hooks for several editors, launchd and systemd units. Four marks — `tombstone`, `bitemporal`, `audit_log`, `negative_eval`. The audit log is load-bearing rather than decorative: reconstruction is computed from it, so a missing entry surfaces as a wrong answer from a feature. Worth knowing before installing: the screen found six auto-run surfaces, which is how the product works rather than an oversight.
 - Study when: a scheduled importer can re-create memories from files you do not own. Deleting the row is a no-op with extra steps, and this is the worked example of the alternative.
+
+### [`contextdb`](../systems/contextdb/)
+
+- Best idea: **put the lifecycle in the database, and make the merge yield to it.** A table can declare a state machine and the engine validates every update against it — *"Error: invalid state transition: active -> draft"* — including updates arriving from another instance. The case worth reading is the sync one: under `ConflictPolicy::EdgeWins`, the policy whose whole job is to force the remote row over the local one, a row whose merge would break the transition is **skipped and returned as a conflict** while the rest of the batch applies. An invariant enforced locally and abandoned at merge time is not an invariant.
+- Biggest risk: **it holds no memories of its own**, so every epistemic decision is still yours. There is no status, no rejected-value record, no scope key and no world-validity axis — MVCC gives transaction ordering only, and the tombstones are row markers keyed on `(row_id, deleted_tx)`, which reads as something stronger to anyone grepping the word.
+- Most reusable component: `crates/contextdb-engine/src/sync_types.rs`. `ConflictPolicy` is four values — `InsertIfNotExists`, `ServerWins`, `EdgeWins`, `LatestWins` — and `ConflictPolicies` is a per-table map beside a default. Per-table is the right granularity for memory: a fact that must never be overwritten once learned and a status that should track the newest observation want different answers.
+- Maturity impression: Apache 2.0, Rust, 256 files across ten crates; PostgreSQL-compatible SQL, pgvector `<=>` syntax and SQL/PGQ-style `GRAPH_TABLE MATCH` over one MVCC snapshot, with WebSocket sync between instances. One mark, `negative_eval`. The other six are withheld together for one reason rather than six — this is the layer those marks would be built on.
+- Study when: you are about to enforce a memory's status transitions in application code, where a second write path can bypass them, and want to see what enforcing them below the application looks like.
 
