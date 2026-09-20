@@ -344,7 +344,7 @@ reasons `:20-34`, `confidence_score` `:43`, `context_type` enum `:46`, `status`
 
 ## Appendix: Recorded Searches
 
-Checked at the pinned revision on 2026-09-20, without a clone.
+Checked at the pinned revision, without a clone.
 
 | Claim | Check | Result at this pin |
 | --- | --- | --- |

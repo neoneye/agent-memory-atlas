@@ -397,8 +397,7 @@ turns the project's philosophy from a paragraph into a property.
 
 ## Appendix: Recorded Searches
 
-Checked against the repository tree at the pinned revision on 2026-09-20,
-without a clone, during a corpus-wide verification of stated licences.
+Checked against the repository tree at the pinned revision, without a clone.
 
 | Claim | Check | Result at this pin |
 | --- | --- | --- |

@@ -502,9 +502,8 @@ would assume are enforced, and those are the ones worth moving first.
 
 ## Appendix: Recorded Searches
 
-Checked against the repository tree at the pinned revision on 2026-09-20,
-without a clone, during a corpus-wide audit of absence claims. The command is
-the check that was actually run, not a local equivalent.
+Checked against the repository tree at the pinned revision, without a clone.
+The command is the check that was actually run, not a local equivalent.
 
 | Claim | Check | Result at this pin |
 | --- | --- | --- |

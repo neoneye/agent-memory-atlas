@@ -611,7 +611,7 @@ that is a different repository and it is not public.
 
 ## Appendix: Recorded Searches
 
-Checked at the pinned revision on 2026-09-20, without a clone.
+Checked at the pinned revision, without a clone.
 
 | Claim | Check | Result at this pin |
 | --- | --- | --- |

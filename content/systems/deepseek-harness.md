@@ -608,8 +608,7 @@ the two or three mechanisms above, rather than the dependency.
 
 ## Appendix: Recorded Searches
 
-Checked against the repository tree at the pinned revision on 2026-09-20,
-without a clone, during a corpus-wide audit of absence claims.
+Checked against the repository tree at the pinned revision, without a clone.
 
 | Claim | Check | Result at this pin |
 | --- | --- | --- |
