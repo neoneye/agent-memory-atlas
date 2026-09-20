@@ -411,6 +411,15 @@ grep -rn "status" lib/cozo-schema-memory.ts | grep -v consolidation_runs   # 0 o
 ls tests | grep -i "memor\|consolidat\|dedupe\|cozo"  # 1 file
 ```
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision, without a clone.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No committed test reads the `memories` relation | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `tests?/`, `test_*`, `*_test.*`, `*.test.*` and `*.spec.*`, **and the same listing for the `plugin` submodule** at `44b284f4b9f7`, the sha the superproject pins | Nothing in the plugin submodule's 119 blobs is test-shaped at all. The span is stated because the trees API does not descend into a submodule, so a superproject-only listing would not have been an answer to "at all". |
+
+
 ## History
 
 **2026-09-17** — [`e68294a42824a08e761c338b1ce77d0d44e4fbed`](https://github.com/23blocks-OS/ai-maestro/commit/e68294a42824a08e761c338b1ce77d0d44e4fbed)
