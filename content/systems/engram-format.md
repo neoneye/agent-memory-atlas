@@ -42,7 +42,7 @@ and CLI surfaces, a browser vault, a relay for encrypted multi-device sync, a
 Python auto-capture observer and an *imagination engine*, and every one of
 those is closed and in a private repository, as the README says in its third
 paragraph. Apache-2.0; three commits between 30 August and 5 September 2026
-by one author; 7,374 lines of Rust in eleven files with 71 tests; version
+by one author; twelve `.rs` files under `src/` totalling 8,309 physical lines, 7,374 of them code by the count this report was written from, with 71 tests; version
 0.1.5 published to crates.io on 5 September 2026 as the crate's only release,
 while the README still instructs `version = "0.1.4"`. The screen found no
 auto-run surface; both manifests were inside the seven-day cooldown, and
@@ -609,7 +609,19 @@ that is a different repository and it is not public.
   (the adapter and tests only); `ls .github` (absent); `rg -n 'arxiv|bibtex|@article|doi' README.md FORMAT.md`
   (none).
 
+## Appendix: Recorded Searches
+
+Checked at the pinned revision on 2026-09-20, without a clone.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| The crate is twelve `.rs` files totalling 8,309 physical lines | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1` filtered to `*.rs`, then every file fetched and its newlines counted | `store.rs` 3954, `schema.rs` 1192, `qem.rs` 795, `embed.rs` 481, `entry.rs` 480, `engram.rs` 354, `noise.rs` 286, `adapter.rs` 280, `trait.rs` 239, `lib.rs` 101, `sync.rs` 84, `wasm.rs` 63. An earlier version of this line said eleven files and 7,374 lines; the file count was wrong, and the line figure is code-only rather than physical — the 935-line difference is blank lines and comments. |
+| One workflow exists and runs no tests | `.github/workflows/publish-npm.yml` fetched at this revision | `on: workflow_dispatch` only. Section 10 reads it in full. |
+
+
 ## History
+
+**2026-09-20** — same pin, second correction of the day. The size line said "7,374 lines of Rust in eleven files". There are **twelve** `.rs` files under `src/`, and they total **8,309** physical lines; 7,374 is a code-only count, the 935-line difference being blank lines and comments. The file count was simply wrong and is corrected; the line figure is kept with its convention now stated, because a bare "lines of Rust" is exactly the ambiguity that makes size claims unverifiable. The verdict entry, which said 7,377, was aligned to this report earlier today. A Recorded Searches appendix was added carrying the per-file counts.
 
 **2026-09-20** — same pin, corrected the day after the reading during an audit of whole-repository absence claims. Section 10 said there is no CI in the repository. `.github/workflows/publish-npm.yml` exists: manual-trigger only, so the substance held — nothing runs on a push, and the Rust suite is never executed by a machine — but the file itself was missed, and with it a `node smoke.mjs` gate of eleven assertions run before every publish, including four that assert what the parser must reject. The claim was made from inside `src/`, which is where this error class lives: a reading deep in the code asserts over a directory it never listed. No mark moves; `negative_eval` stays withheld on the emptiness-shape reasoning above, which `smoke.mjs` does not disturb — its `noise_reason` cases are ingestion classification, and the one returning `null` is a positive control.
 
