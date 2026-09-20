@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 615 reports.</strong></p>
+<p><strong>This page covers all 616 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25043,6 +25043,46 @@ nothing.</li>
 Read this beside <a href="../systems/lerim/">Lerim</a> from the same
 day, where an empty scope compiles to <code>0=1</code> and the test is
 named after the behaviour.</li>
+</ul>
+<h3 id="ai-brain-starter"><a
+href="../systems/ai-brain-starter/"><code>ai-brain-starter</code></a></h3>
+<ul>
+<li>Best idea: <strong>assert that your guard runs at all.</strong>
+<code>hooks/test_hook_smoke.py</code> opens <em>"Every hook must
+actually RUN. Nothing asserted that, and two never did"</em>, and names
+the class: <em>"A hook that raises at module import is the maximally
+silent failure... the hook is simply not there, while the install
+continues to report it as present."</em> The two it caught had been dead
+for their entire lives — one on an unsubstituted
+<code>America/user-local-tz</code> placeholder, and the secret scanner
+on a module-scope <code>import fcntl</code> that crashed on every
+Windows install <em>"and the file's own docstring says it supports
+Windows."</em></li>
+<li>Biggest risk: <strong>the harness holds no memory object.</strong> A
+note has a body and a floor; nothing records a correction, a rejection
+or a scope, so every guarantee here is about what may enter the vault
+rather than about what a memory is once it is there. The fabrication
+detectors also fail open by design — stated at the point of the trade —
+so a fabricated claim passes whenever the guard itself errors.</li>
+<li>Most reusable component:
+<code>hooks/check-fabricated-verification.py</code>. A Stop hook
+blocking a closing message that asserts <em>"a state it never confirmed
+with a tool call"</em>, with evidence defined by exclusion — tool
+outputs and the commands actually executed — on the stated ground that
+<em>"The model cannot self-verify from its own prose."</em> Its first
+detector flags a commit-SHA- or run-ID-shaped token appearing in zero
+executed commands and zero tool outputs.</li>
+<li>Maturity impression: MIT, Python, 1,050 files, twenty human
+contributors, with Spanish documentation beside the English and a
+taxonomy consumed from a pinned upstream rather than copied —
+<em>"Nothing in this repo hand-maintains a second floor list."</em> One
+mark, <code>negative_eval</code>. The secret detector's false-positive
+filter is a test file of its own, which is what keeps a detector
+enabled.</li>
+<li>Study when: you pair a dynamic gate with a static one. A Linux CI
+run cannot see a Windows-only import crash, so banning unguarded
+platform-only imports at the AST level is what makes the other
+platform's failure visible from this one.</li>
 </ul>
         </article>
       </div>

@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 615 reports.**
+**This page covers all 616 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5493,4 +5493,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `tests/test_injection_defense.py` and `tests/test_vault_security.py` together — roughly forty lines covering neutralisation with its control, traversal from two directions, and a rollback case requiring a database error to leave the existing note on disk untouched.
 - Maturity impression: Apache 2.0, Python, 137 files; Obsidian Markdown vaults mirrored into PostgreSQL with pgvector or SQLite WAL, hybrid RRF search, a wikilink graph, salience decay and an MCP server. Two marks — `audit_log`, `negative_eval`. The timeline is insert-only and logs failures beside successes; the one mutation it misses is deletion, which is moot because `delete_note` is implemented in both backends and called by nothing.
 - Study when: you are about to make a scope an optional parameter. Read this beside [Lerim](../systems/lerim/) from the same day, where an empty scope compiles to `0=1` and the test is named after the behaviour.
+
+### [`ai-brain-starter`](../systems/ai-brain-starter/)
+
+- Best idea: **assert that your guard runs at all.** `hooks/test_hook_smoke.py` opens *"Every hook must actually RUN. Nothing asserted that, and two never did"*, and names the class: *"A hook that raises at module import is the maximally silent failure... the hook is simply not there, while the install continues to report it as present."* The two it caught had been dead for their entire lives — one on an unsubstituted `America/user-local-tz` placeholder, and the secret scanner on a module-scope `import fcntl` that crashed on every Windows install *"and the file's own docstring says it supports Windows."*
+- Biggest risk: **the harness holds no memory object.** A note has a body and a floor; nothing records a correction, a rejection or a scope, so every guarantee here is about what may enter the vault rather than about what a memory is once it is there. The fabrication detectors also fail open by design — stated at the point of the trade — so a fabricated claim passes whenever the guard itself errors.
+- Most reusable component: `hooks/check-fabricated-verification.py`. A Stop hook blocking a closing message that asserts *"a state it never confirmed with a tool call"*, with evidence defined by exclusion — tool outputs and the commands actually executed — on the stated ground that *"The model cannot self-verify from its own prose."* Its first detector flags a commit-SHA- or run-ID-shaped token appearing in zero executed commands and zero tool outputs.
+- Maturity impression: MIT, Python, 1,050 files, twenty human contributors, with Spanish documentation beside the English and a taxonomy consumed from a pinned upstream rather than copied — *"Nothing in this repo hand-maintains a second floor list."* One mark, `negative_eval`. The secret detector's false-positive filter is a test file of its own, which is what keeps a detector enabled.
+- Study when: you pair a dynamic gate with a static one. A Linux CI run cannot see a Windows-only import crash, so banning unguarded platform-only imports at the AST level is what makes the other platform's failure visible from this one.
 

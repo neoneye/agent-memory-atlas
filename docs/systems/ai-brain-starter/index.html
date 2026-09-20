@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A verification harness around a
+note-taking agent whose hooks block bad writes before they land, and
+whose smoke gate exists because two of those hooks crashed at import and
+the install kept reporting them as present.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="AI Brain
+Starter — Agent Memory Atlas">
+    <meta property="og:description" content="A verification harness
+around a note-taking agent whose hooks block bad writes before they
+land, and whose smoke gate exists because two of those hooks crashed at
+import and the install kept reporting them as present.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI Brain
+Starter — Agent Memory Atlas">
+    <meta name="twitter:description" content="A verification harness
+around a note-taking agent whose hooks block bad writes before they
+land, and whose smoke gate exists because two of those hooks crashed at
+import and the install kept reporting them as present.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>AI Brain Starter — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "AI Brain Starter",
+      "description": "A verification harness around a note-taking agent whose hooks block bad writes before they land, and whose smoke gate exists because two of those hooks crashed at import and the install kept reporting them as present.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Two guards were dead on arrival for their
+entire lives</p>
+          <h1>AI Brain Starter</h1>
+          <p class="document-deck">A verification harness around a
+note-taking agent whose hooks block bad writes before they land, and
+whose smoke gate exists because two of those hooks crashed at import and
+the install kept reporting them as present.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/mycelium-hq/ai-brain-starter">
+              <span>Source</span>
+              <strong>mycelium-hq/ai-brain-starter</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/mycelium-hq/ai-brain-starter/commit/f22c46e4b061349a06bc23df0658fb2455b6c14f" title="f22c46e4b061349a06bc23df0658fb2455b6c14f">
+              <span>Analyzed revision</span>
+              <code>f22c46e4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/mycelium-hq--ai-brain-starter" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>mycelium-hq--ai-brain-starter</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>AI Brain Starter is a harness rather than a store. Memory is Markdown
+notes on disk that an assistant reads before answering; what the
+repository supplies is the machinery around them — deterministic hooks
+that block a bad write before it lands, a session-end ritual that files
+what mattered, and a vendored emotional taxonomy the journal tags
+entries with. MIT, Python, 1,050 files, twenty human contributors.</p>
+<p><strong>One mark: <code>negative_eval</code></strong>, and the suite
+behind it is the reason to read this page.</p>
+<p>The finding that matters is one the project made about itself.
+<code>hooks/test_hook_smoke.py</code> opens:</p>
+<blockquote>
+<p>Every hook must actually RUN. Nothing asserted that, and two never
+did.</p>
+<p>A hook that raises at module import is the maximally silent failure.
+There is no partial run, no half-written file, no wrong answer — the
+hook is simply not there, while the install continues to report it as
+present.</p>
+</blockquote>
+<p>The two it found had been dead for their entire lives. One carried
+<code>ZoneInfo("America/user-local-tz")</code> — an unsubstituted
+template placeholder, crashing on every platform. The other was
+<strong>the secret scanner</strong>: <code>import fcntl</code> at module
+scope, POSIX-only, so it crashed at import on every Windows install,
+<em>"and the file's own docstring says it supports Windows."</em></p>
+<p>For an atlas that spends its time asking whether a declared mechanism
+has a producer, this is the same question asked from the inside, and
+answered with a gate.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Notes are the memory. Hooks are the immune system. A write to the
+vault passes a set of deterministic checks — no secret in a note, no raw
+git in the vault, no skip-prefix, no shared-worktree edit — and the
+session ends with a ritual that files what happened.</p>
+<p>Nothing here scores, ranks or supersedes a memory. The bet is that
+memory compounds if you stop bad material entering it, rather than by
+grading material after it has.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — memory is markdown notes an assistant reads, and the machinery around them is a set of deterministic hooks that refuse a write before it lands — secrets in a note, raw git in the vault, a shared worktree edit — plus a stop hook that blocks a closing message asserting a state no tool call confirmed, by matching claimed evidence ids against the commands actually executed and the tool outputs actually returned this session; two gates sit under all of it because a hook that crashes at import is silently absent while the install still reports it present, and a dynamic run on one platform cannot see another platform's import crash</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: memory is markdown notes an assistant reads, and the machinery around them is a set of deterministic hooks that refuse a write before it lands — secrets in a note, raw git in the vault, a shared worktree edit — plus a stop hook that blocks a closing message asserting a state no tool call confirmed, by matching claimed evidence ids against the commands actually executed and the tool outputs actually returned this session; two gates sit under all of it because a hook that crashes at import is silently absent while the install still reports it present, and a dynamic run on one platform cannot see another platform&#39;s import crash
+flowchart TD
+    A((&quot;assistant&quot;)) --&gt; RD[&quot;reads notes before answering&quot;]
+    V[(&quot;vault: markdown notes&lt;br/&gt;journal entries tagged with a floor&quot;)] --&gt; RD
+
+    A --&gt; WR[&quot;write to the vault&quot;]
+    WR --&gt; HOOKS{&quot;deterministic hooks&quot;}
+    HOOKS --&gt; B1[&quot;block-secret-in-note&quot;]
+    HOOKS --&gt; B2[&quot;block-raw-vault-git&quot;]
+    HOOKS --&gt; B3[&quot;block-skip-prefix-in-vault-write&quot;]
+    HOOKS --&gt; B4[&quot;block-worktree-shared-edit&quot;]
+    B1 --&gt;|refuse| STOP1[&quot;the write does not land&quot;]
+    B2 --&gt;|refuse| STOP1
+    B3 --&gt;|refuse| STOP1
+    B4 --&gt;|refuse| STOP1
+    HOOKS --&gt;|pass| V
+
+    A --&gt; CLOSE[&quot;closing message&quot;]
+    CLOSE --&gt; FAB{&quot;check-fabricated-verification&lt;br/&gt;Stop hook, fails OPEN by design&quot;}
+    FAB --&gt; EV[(&quot;evidence = tool_result outputs&lt;br/&gt;+ tool_use inputs actually executed&quot;)]
+    FAB --&gt;|&quot;orphan evidence id:&lt;br/&gt;in zero commands AND zero outputs&quot;| BLOCKED[&quot;claim blocked&quot;]
+    FAB --&gt; DONE((&quot;turn ends&quot;))
+
+    subgraph GATES[&quot;two gates, because one cannot see the other&#39;s bug&quot;]
+        SM[&quot;SMOKE (dynamic)&lt;br/&gt;run each hook hermetically&lt;br/&gt;fail on a traceback&quot;]
+        PI[&quot;PLATFORM IMPORTS (static)&lt;br/&gt;ban an unguarded module-level&lt;br/&gt;import of a platform-only stdlib&quot;]
+    end
+    GATES -.-&gt;|&quot;catches the tz placeholder&quot;| B1
+    GATES -.-&gt;|&quot;catches `import fcntl` from a Linux runner&quot;| SCAN[&quot;scan-prior-sessions-for-secrets&quot;]
+
+    HR[(&quot;vendor/high-rise — pinned upstream&lt;br/&gt;&#39;Nothing in this repo hand-maintains&lt;br/&gt;a second floor list&#39;&quot;)] --&gt; FL[&quot;floors/ — regenerated stubs&quot;]
+    FL --&gt; V</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The two gates, and why there must be two</strong> —
+<code>hooks/test_hook_smoke.py:22-29</code>. The dynamic gate runs each
+hook hermetically and fails on a traceback. The static gate bans an
+unguarded module-level import of a platform-only stdlib module, and the
+header explains the necessity precisely: <em>"CI runs Linux, so the
+smoke pass CANNOT see a Windows-only import crash;
+<code>import fcntl</code> is invisible to it and sailed through every
+green build. The static half is what makes the Windows class visible
+from a Linux runner, and vice versa."</em></p>
+<p>The same header is careful about what these gates do <em>not</em> do:
+<em>"Neither gate asserts behaviour — that belongs in each hook's own
+suite. These two only assert that the hook EXISTS as a running
+program."</em></p>
+<p><strong>The fabrication check</strong> —
+<code>hooks/check-fabricated-verification.py:1-13</code>. A Stop hook
+that blocks a closing message asserting <em>"a state it never confirmed
+with a tool call."</em> Its evidence is defined by exclusion:
+<em>"NON-assistant transcript records (tool_result outputs) + the
+commands actually executed (tool_use inputs). <strong>The model cannot
+self-verify from its own prose.</strong>"</em></p>
+<p>Detector A is the sharp one — an orphan evidence id: a commit-SHA- or
+run-ID-shaped token, in backticks, in a verification context, appearing
+in <em>"ZERO executed commands AND ZERO tool outputs this
+session."</em></p>
+<p>Each detector <em>"fails OPEN (a guard that crash-blocks Stop is
+worse than the bug it catches)"</em> — the trade named at the point it
+is made.</p>
+<p><strong>The vendored vocabulary</strong> — <code>floors.md</code>.
+The 34-floor taxonomy is consumed from an upstream project, pinned under
+<code>vendor/high-rise/</code>, and the document is explicit that this
+repository <em>"<strong>consumes</strong> the framework as a downstream
+dependency. It does not keep its own copy of the list."</em> Changing it
+means changing it upstream, cutting a release, and running a sync
+script: <em>"Nothing in this repo hand-maintains a second floor
+list."</em></p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Markdown. A journal entry carries a <code>floor:</code> frontmatter
+field naming the state the writer was in, and wikilinks like
+<code>[[Fear]]</code> resolve to generated stub notes under
+<code>floors/</code>, each with elevator edges and a shadow-twin link.
+There is no status, no confidence, no validity window and no
+supersession — the word <code>tombstone</code> does not appear in the
+Python at all.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>The assistant reads the notes. There is no index of the atlas's usual
+kind here; retrieval is the agent's own file reading, shaped by the
+session-start context the hooks assemble.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write passes the block hooks or it does not happen. That is the
+whole write policy, and it is a deliberate one: the project's bet is on
+admission rather than on grading.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Hooks, slash commands, skills, git hooks, bootstrap scripts for two
+shells, a health MCP service and a memory API service, plus
+Spanish-language documentation (<code>para-equipos</code> beside
+<code>for-teams</code>).</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>negative_eval</code></strong> — section 10.</p>
+<p><strong><code>audit_log</code> is withheld.</strong>
+<code>audit</code> appears in sixty-seven files, and what it names is
+coverage reporting — <code>scripts/graphify_coverage_audit.py</code>
+produces a report rather than appending a ledger. No append-only record
+of memory mutations exists.</p>
+<p><strong><code>tombstone</code>, <code>trust_state</code>,
+<code>bitemporal</code>, <code>scope_enforced</code> and
+<code>human_review</code> are withheld</strong>, and together rather
+than individually: this harness holds no memory object with fields to
+carry them. A note has a floor and a body. The guarantees are about what
+may enter the vault, not about what a memory is once it is there.</p>
+<p><strong>Three auto-run surfaces</strong>, which is what a hook
+harness is: hooks, git hooks and bootstrap scripts for two shells.
+Nothing was installed or run for this reading, which for this repository
+means the guards are read rather than exercised — the same limitation
+the project's own smoke gate exists to close.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Thirty-eight test files inside <code>hooks/</code> alone, beside a
+<code>tests/</code> tree with fixtures, an integration directory and an
+<code>eval/</code> directory. Nothing was installed and nothing was
+run.</p>
+<p>The mark rests on what the per-hook suites assert. Three names carry
+the pattern this atlas keeps asking for:</p>
+<ul>
+<li><code>test_secret_patterns_anthropic.py</code> and
+<code>test_secret_patterns_nvidia.py</code> beside
+<strong><code>test_secret_patterns_fp_filter.py</code></strong> —
+coverage for what must be caught, and a separate file for what must
+<em>not</em> be flagged. A secret detector tested only on true positives
+is a detector nobody will keep enabled.</li>
+<li><code>test_close_catchall_not_silent.py</code> — a catch-all must
+not swallow its error, which is the failure mode that produced both dead
+hooks.</li>
+<li><code>test_bypass_reachability_watchdog.py</code> — a bypass must
+remain reachable, so the escape hatch is asserted to exist rather than
+assumed.</li>
+</ul>
+<p>And <code>test_check_fabricated_verification.py</code> covers the
+Stop hook above.</p>
+<p>The smoke file's closing line about its own history is the one worth
+carrying out of this report: <em>"the assertion below now enforces what
+the comment only asserted."</em></p>
+<p>No benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Assert that your guard runs at all.</strong> Behaviour tests
+assume the module imports. Two hooks here were absent for their whole
+lives while the installer reported them present, and the cheapest
+possible assertion — run it, check the exit code — was the one nobody
+was making.</li>
+<li><strong>Pair a dynamic gate with a static one.</strong> A Linux CI
+run cannot see a Windows-only import crash. Banning unguarded
+platform-only imports at the AST level is what makes the other
+platform's failure visible from this one.</li>
+<li><strong>Test the false positives separately from the true
+ones.</strong> A file named for the FP filter is a commitment that the
+detector stays usable.</li>
+<li><strong>Define evidence by exclusion.</strong> <em>"NON-assistant
+transcript records"</em> plus the commands actually executed is a
+definition a model cannot satisfy by writing more prose.</li>
+<li><strong>Name the fail-open trade where you make it.</strong> <em>"a
+guard that crash-blocks Stop is worse than the bug it catches"</em> is
+the sentence that stops someone tightening it later without
+thinking.</li>
+<li><strong>Consume a vocabulary, don't copy it.</strong> <em>"Nothing
+in this repo hand-maintains a second floor list."</em></li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Trusting an installer's report that a hook is
+present.</strong> Presence on disk and presence in the run are different
+facts.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take the hook harness if an agent writes into a store you care about
+and you want admission control rather than after-the-fact grading. Take
+<code>hooks/test_hook_smoke.py</code> and
+<code>check-fabricated-verification.py</code> regardless of what else
+you use; both are about two hundred lines and neither depends on the
+rest of the project.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Both dead hooks were found by adding a gate. Is the gate wired into
+CI on every platform the project claims to install on, or only on
+Linux?</li>
+<li>The fabrication check fails open by design. Is there a record of how
+often it would have blocked, so the trade can be revisited with
+evidence?</li>
+<li>A note has a floor and a body and no status. Is correcting a journal
+entry meant to be an edit, and does anything notice the edit?</li>
+<li>Sixty-seven files mention audit and none appends a ledger. Is a
+mutation record intended, given how much of this project is about what
+entered the vault?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hooks/test_hook_smoke.py</code></td>
+<td>the two gates, the two dead hooks, and why one gate cannot see the
+other's bug</td>
+</tr>
+<tr>
+<td><code>hooks/check-fabricated-verification.py</code></td>
+<td>the Stop hook blocking unverified closing claims, and its definition
+of evidence</td>
+</tr>
+<tr>
+<td><code>hooks/block-secret-in-note.py</code></td>
+<td>the write refusal closest to the memory itself</td>
+</tr>
+<tr>
+<td><code>hooks/test_secret_patterns_fp_filter.py</code></td>
+<td>the false-positive half of the detector's coverage</td>
+</tr>
+<tr>
+<td><code>hooks/test_bypass_reachability_watchdog.py</code></td>
+<td>the assertion that the escape hatch still exists</td>
+</tr>
+<tr>
+<td><code>floors.md</code>, <code>vendor/high-rise/</code></td>
+<td>the vendored taxonomy and the refusal to keep a second copy</td>
+</tr>
+<tr>
+<td><code>scripts/graphify_coverage_audit.py</code></td>
+<td>what "audit" means here — a report, not a ledger</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Two hooks were dead on arrival</td>
+<td>read <code>hooks/test_hook_smoke.py:11-20</code></td>
+<td><code>auto-capture-public-ships.py</code> on an unsubstituted
+<code>America/user-local-tz</code> placeholder, and
+<code>scan-prior-sessions-for-secrets.py</code> on a module-scope
+<code>import fcntl</code></td>
+</tr>
+<tr>
+<td>The static gate exists because the dynamic one cannot see the
+class</td>
+<td>read <code>hooks/test_hook_smoke.py:22-29</code></td>
+<td><em>"<code>import fcntl</code> is invisible to it and sailed through
+every green build"</em></td>
+</tr>
+<tr>
+<td>No append-only mutation record exists</td>
+<td><code>grep -rn "append|jsonl" --include='*.py' hooks/_lib scripts | grep -iE "audit|ledger|log_"</code></td>
+<td>Only <code>graphify_coverage_audit.py</code>, which builds a
+report</td>
+</tr>
+<tr>
+<td>No epistemic vocabulary in the Python</td>
+<td><code>grep -rl "tombstone" --include='*.py' .</code></td>
+<td>Nothing</td>
+</tr>
+<tr>
+<td>The false-positive filter is tested separately</td>
+<td><code>ls hooks | grep secret_patterns</code></td>
+<td><code>test_secret_patterns_anthropic.py</code>,
+<code>test_secret_patterns_nvidia.py</code>,
+<code>test_secret_patterns_fp_filter.py</code></td>
+</tr>
+<tr>
+<td>The floor list is not duplicated here</td>
+<td>read <code>floors.md</code></td>
+<td><em>"It does not keep its own copy of the list"</em>; the canonical
+table is pinned under <code>vendor/high-rise/</code></td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>head -3 LICENSE</code>;
+<code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>Stock MIT; the only Anthropic mentions in the tree are
+secret-pattern names</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/mycelium-hq/ai-brain-starter/commit/f22c46e4b061349a06bc23df0658fb2455b6c14f"><code class="commit-id" title="f22c46e4b061349a06bc23df0658fb2455b6c14f">f22c46e4…</code></a>
+— first reading, at 1,050 files. Screened before reading: three auto-run
+surfaces — hooks, git hooks and bootstrap scripts for two shells — four
+unpinned surfaces and nothing inside the cooldown; nothing was installed
+and nothing was run, which for a hook harness means the guards were read
+rather than exercised. MIT. One mark, <code>negative_eval</code>. The
+rest are withheld together: this is admission control around Markdown
+notes, and a note carries a floor and a body rather than a status, a
+scope or a clock. The material worth the page is the project's own
+account of two hooks that had never run, and the two-gate design added
+because a dynamic run on one platform cannot see another platform's
+import crash.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
