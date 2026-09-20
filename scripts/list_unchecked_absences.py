@@ -195,7 +195,7 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 
 #: Ungrounded file-shaped absence claims standing when the ratchet was set
 #: (2026-09-20), out of 88 such claims in total. It was 53 when the ratchet was
-#: written and fell to 24 the same day: twelve reports whose licence and test
+#: written and fell to 19 the same day: twelve reports whose licence and test
 #: claims had just been checked against their trees gained an appendix recording
 #: that check, ten more followed, and the matcher itself stopped counting twenty
 #: behaviour claims it had been reading as file claims. Lower it as claims are
@@ -209,7 +209,7 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 #: That is deliberate — the question the predictor answers is whether the author
 #: went looking, not whether each sentence has its own footnote — and it is the
 #: reason this is a ratchet and not a verifier.
-UNGROUNDED_CEILING = 24
+UNGROUNDED_CEILING = 19
 
 
 def check(root: str) -> int:

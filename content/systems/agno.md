@@ -468,6 +468,17 @@ reach `POST /memory/optimize` before someone finds the button.
 | `libs/agno/agno/learn/curate.py` | 185 | `prune`, `deduplicate` — user profile only |
 | `libs/agno/agno/learn/stores/protocol.py` | 127 | The six-method `LearningStore` Protocol |
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No memory benchmark exists in the repository — no LoCoMo, no LongMemEval | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `locomo`, `longmemeval`, `benchmark`, `evals?/` and `.csv`/`.jsonl` | No LoCoMo or LongMemEval path at 5,870 blobs. The one `benchmark`-named file is `cookbook/data_labeling/_22_dataset_curation/data/benchmark_sample.jsonl`, a labelling sample. Two `evals/` directories exist and neither is a memory benchmark: `cookbook/01_demo/evals/` is a demo, and `libs/agno/agno/os/routers/evals/` is the API surface that lets *users* run their own. The eval infrastructure ships; nothing points it at this framework's memory. |
+
+
 ## History
 
 **2026-09-19** — re-pinned to [`85b6d1d178b70d59e8f2c0d432d2a66b35004f31`](https://github.com/agno-agi/agno/commit/85b6d1d178b70d59e8f2c0d432d2a66b35004f31), 18 commits on. `human_review` is **withdrawn**, and the record it rested on had already narrowed itself to the thing that fails: *"a person lists, reads, corrects and deletes a user's memories against a running system; PROPOSE and HITL modes contribute nothing."* Editing a stored memory is authoring, not a gate, and the mark asks for a state a memory waits in until an actor the producing agent cannot be resolves it. The alternative was re-checked rather than assumed: `agno/memory/` and `agno/learn/` carry no `pending`, `proposed`, `approve` or `review` state on a memory at this pin, and the HITL machinery in `agno/db/` is run-status pausing. `scope_enforced` and `negative_eval` both stand — `recall(user_id, …)` still requires the user id, and the three isolation, supersession and relevance suites are all present. Screened again first; nothing was installed and no suite was run.

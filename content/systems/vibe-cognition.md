@@ -328,6 +328,17 @@ delegates `:179,188`), `cognition/journal_io.py`,
 
 **Dashboard** — `src/vibe_cognition/dashboard/`
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No paper and no benchmark of any kind in the repository | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for benchmark-shaped paths | Two hits, both this tool's own captured journal — `.cognition/journal.jsonl` and a per-author file beside it — which is data the system produced, not a benchmark of it. |
+
+
 ## History
 
 **2026-09-17** — [`208e7d2ec8eb402edede7b8b255012b712007a66`](https://github.com/haagndaazer/vibe-cognition/commit/208e7d2ec8eb402edede7b8b255012b712007a66) — re-read after 37 commits. Both anchored files moved and the producer was re-counted rather than assumed: `_append_journal` is defined once and called from exactly six mutation sites, matching the add, update and remove paths the evidence record names, so every graph mutation still writes the journal. The mark holds. Nothing was installed, built or run.

@@ -302,6 +302,17 @@ is the reader's to supply. No benchmark result is in the tree.
 - Tests: `tests/test_memories.py`, `tests/test_redact.py`,
   `tests/test_no_answering.py`, `tests/test_memory_drift.py`
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No benchmark result is in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for benchmark-shaped paths | Two hits, both the harness the section already names: `tests/eval/README.md` and `tests/eval/queries.sample.yaml`. No result file of any kind, which is the claim. |
+
+
 ## History
 
 **2026-09-19** — [`0616b2b6b663fde6b96cbd099a62c0701020f4ff`](https://github.com/raphasouthall/neurostack/commit/0616b2b6b663fde6b96cbd099a62c0701020f4ff) — first reading, at the head of `main`, version 0.19.0 on PyPI and npm. Screened with `scripts/screen_repo.py` before anything was read: one auto-run surface in an MCP server manifest, four build-time execution paths including an npm postinstall and a pytest conftest — the two files named `setup.py` are a client-configuration command rather than a distutils script, checked by reading their headers — one unpinned dependency surface, and a `CLAUDE.md` addressed to a reading agent, read as data throughout. Nothing was installed, built or run. Apache-2.0 with a third-party `NOTICE` and no rider. One mark. The reading covered the schema and its migration ladder, the memory table and its archive, all four removal paths and the single helper they share, the search path and its read-time expiry, the redaction pass and the reason it is not applied to deliberate writes, the drift, trigger and promotion machinery, and the memory and redaction test suites; the chunker, graph, community, export and CLI modules were read as context rather than as subject. Six marks are withheld with reasons in section 9. The one worth repeating is `tombstone`: the archive is careful, complete and restorable, and it is keyed on the row — nothing consults it when the same sentence is saved again.

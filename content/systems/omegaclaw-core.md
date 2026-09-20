@@ -451,6 +451,17 @@ still running over there.
 | `docs/reference-failure-modes.md` | Eight sections of self-diagnosis, including confirmation bias |
 | `src/loop.metta` | The continuous execution loop |
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No benchmark, no committed run output and no paper in the repository | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for benchmark-shaped paths | Nothing matched. |
+
+
 ## History
 
 **2026-09-17** — [`78c6691abe6aef48abf052803d26247e5462e293`](https://github.com/singnet/Omega/commit/78c6691abe6aef48abf052803d26247e5462e293) — re-pinned after 2 commits. Both anchored test files are byte-identical at both commits, so the mark stands on unchanged code and every anchor here is exact at the new pin. Nothing was installed, built or run.

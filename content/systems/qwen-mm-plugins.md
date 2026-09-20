@@ -528,6 +528,17 @@ asked.
 - `tests/test_build_memory.py` — 26 functions over the build
 - `tests/test_video_memory.py` — two functions over the server
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No committed benchmark, no eval harness and no accuracy number anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for benchmark-shaped paths | Two hits, neither a benchmark: `tests/assets/sample.csv` and a `seedance-characters.jsonl` asset under a music-video skill. |
+
+
 ## History
 
 **2026-09-13** — [`ad8139d58ebca5740df2be3a6871a2e9c1d31e36`](https://github.com/QwenLM/Qwen-MM-Plugins/commit/ad8139d58ebca5740df2be3a6871a2e9c1d31e36) — re-read, 168 commits past the previous pin. A second memory capability arrived: `omni-memory`, a semantic triple store with a dozen MCP tools and 489 lines of committed tests, described in section 1. `capabilities` stays empty and the reasoning is recorded rather than assumed. Its supersession mechanism has a real producer and real consumers — `stages.py:414-422` stamps the losing triple `status = "superseded"` with a `superseded_by` key after a stated precedence, and four reads in `mem_core.py` filter on it — but supersession is keyed on the row that lost rather than on the value that was wrong, and the status is derived by comparison rather than asserted about truth, so neither `tombstone` nor `trust_state` is earned. There is one timestamp per moment and no record-time axis, so `bitemporal` stays withheld; the new tests assert error-absence and behaviour rather than that particular material is not retrieved, so `negative_eval` does too. Screened again first; nothing was installed and no suite was run.

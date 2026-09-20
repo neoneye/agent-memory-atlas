@@ -341,6 +341,17 @@ The judgement that matters for a builder is about weight. Everything distinctive
 - Tag hierarchy: `memora/hierarchy.py`.
 - Tests cited: `tests/test_server.py`, `tests/test_storage.py`, `tests/test_embeddings.py`, `tests/test_memory_type_detection.py`.
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No memory-quality benchmark, and no paper, arXiv reference or citation file, exists in the repository | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for benchmark-shaped paths; and `CITATION.cff` fetched directly | Nothing matched, and `CITATION.cff` returns 404. |
+
+
 ## History
 
 **2026-09-18** — [`4b91fa74b922890b4e5fc3e391f9db6edb89daec`](https://github.com/agentic-box/memora/commit/4b91fa74b922890b4e5fc3e391f9db6edb89daec) — re-pinned from `c497d07`; 11 files and +1,853 lines, re-screened at the new pin. **Human review withdrawn.** The record described the supersession sweep as *"rehearsal before any edge is written"* — `dry_run: bool = True` at every entry point, with *"a person reads the proposed supersessions and re-runs with `dry_run=False`"*. The re-running party is not established to be a person: `memory_detect_supersessions` is decorated `@mcp.tool()` at `memora/server.py:2674-2681`, and `dry_run` is one of its five parameters, documented in its own docstring as *"If True, preview changes without writing (default: True)"*. A safe default the caller may override is a good default; it is not a gate, and the caller here is the model. `memory_merge` sits on the same surface.

@@ -464,6 +464,17 @@ question from whether you may ship it.
   `mcp-audit.test.ts`, `concurrency.test.ts`, `duplicates.test.ts`,
   `_helpers.ts`) and 69 `.test.ts` files beside the sources
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No memory benchmark and no published retrieval numbers in this repository | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `bench(mark)?s?/`, `evals?/`, `experiments?/`, `results?/`, `locomo`, `longmemeval` and `.csv`/`.jsonl` | Nothing matched. The README's six paper references are citations of other people's work, not results of this one. |
+
+
 ## History
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved. The

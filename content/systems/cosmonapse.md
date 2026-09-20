@@ -282,6 +282,17 @@ is answered by whatever you bind underneath it.
 | `packages/python-sdk/cosmonapse/engram/memory.py` | 407 | Dict backend for tests and dev |
 | `packages/python-sdk/cosmonapse/engram/client.py` | 297 | `EngramClient` |
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No benchmark exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `bench(mark)?s?/`, `evals?/`, `experiments?/`, `results?/`, `locomo`, `longmemeval` and `.csv`/`.jsonl` | Nothing matched. |
+
+
 ## History
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved. The
