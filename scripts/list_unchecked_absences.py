@@ -129,6 +129,19 @@ GAP_QUALIFIER = re.compile(
     re.I,
 )
 
+#: The restriction can also sit *before* the negation, as the thing the sentence
+#: is about: "the wrapper has no test file", "`mem_service_recent` having no
+#: test at all", "the memory package has no test of its own". Those are claims
+#: about one component and belong to the class that holds. The exclusion list is
+#: the point — "the repository has no tests" has the same grammar and is exactly
+#: what this check exists to find, so repository-scale nouns never qualify.
+SUBJECT_BEFORE = re.compile(
+    r"(`[^`]+`|\bthe\s+(?!repo\b|repository\b|tree\b|codebase\b|project\b)[a-z][a-z-]*"
+    r"(?:\s+[a-z][a-z-]*)?)"
+    r"(?:\s+(?:has|have|having|carries|carry|carrying|ships))?\s*$",
+    re.I,
+)
+
 RESTRICTED = re.compile(
     r"^[^.\n]{0,120}?\b(assert\w*|cover\w*|touch\w*|exercis\w*|pass\w*|"
     r"referenc\w*|writ\w*|check\w*|prove\w*|demonstrat\w*|"
@@ -230,6 +243,8 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
                     continue
                 if GAP_QUALIFIER.search(match.group(0)):
                     continue
+                if SUBJECT_BEFORE.search(line[:match.start()]):
+                    continue
                 word = _artifact_word(match.group(0))
                 grounded = word in commands
                 rows.append((f"{path.name}:{lineno}", match.group(0).strip(), grounded))
@@ -254,17 +269,22 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 #: went looking, not whether each sentence has its own footnote — and it is the
 #: reason this is a ratchet and not a verifier.
 #:
-#: What the remaining sixteen are, so the next pass does not chase them blindly.
-#: Roughly half are claims the matcher still over-counts because their restricting
-#: clause is phrased without one of the verbs `RESTRICTED` knows — bytechef's
-#: "class ... has no test file at all", agentrt's "`mem_service_recent` having no
-#: test at all", zep's "no tests for the Community Edition", cambium's "no
-#: non-test consumer". Those are scoped claims from the class that holds, and the
-#: fix is another verb or another shape in `RESTRICTED`, not an appendix. The rest
-#: are genuine and need a judgement read rather than a listing: "no eval harness",
-#: "no committed run output", "no precision or recall number" — a tree cannot
-#: settle any of those, because the artifact has no canonical name.
-UNGROUNDED_CEILING = 9
+#: **The remaining seven have each been checked by hand (2026-09-20) and none is
+#: a defect.** They are listed here so nobody re-investigates them:
+#:   aimaos, bytechef, mindcache  — scoped to a package, a class, a directory
+#:   reasonix                     — "works end to end without any test harness"
+#:                                   is about the user, not the repository
+#:   memoket-kite                 — the match is inside a History entry
+#:   cambium                      — true at its pin: zero dependency manifests at
+#:                                   `7181c94e`, three at the current one
+#:   lightmem                     — verified and grounded; the flag is the
+#:                                   frontmatter risks field repeating the claim
+#:
+#: Each survives because its restricting clause uses a shape the matcher does not
+#: know. Lowering the ceiling further means another shape in `RESTRICTED`,
+#: `GAP_QUALIFIER` or `SUBJECT_BEFORE` — not an appendix, and not a claim to
+#: rewrite.
+UNGROUNDED_CEILING = 7
 
 
 def check(root: str) -> int:
@@ -374,7 +394,19 @@ def self_test() -> int:
     if CLAIM.search("The table has no non-test consumer at all."):
         print("self-test failed: 'non-test' was read as a test-file claim", file=sys.stderr)
         return 1
-    print("self-test: 13 controls passed")
+    # A subject named before the negation scopes the claim.
+    scoped_before = "The wrapper class has no test file at all in the tree."
+    sb = CLAIM.search(scoped_before)
+    if sb is None or not SUBJECT_BEFORE.search(scoped_before[:sb.start()]):
+        print("self-test failed: a component-scoped claim was counted", file=sys.stderr)
+        return 1
+    # But a repository-scale subject must still count.
+    repo_subject = "The repository has no tests in the tree."
+    rs = CLAIM.search(repo_subject)
+    if rs is None or SUBJECT_BEFORE.search(repo_subject[:rs.start()]):
+        print("self-test failed: 'the repository has no tests' was discarded", file=sys.stderr)
+        return 1
+    print("self-test: 15 controls passed")
     return 0
 
 
