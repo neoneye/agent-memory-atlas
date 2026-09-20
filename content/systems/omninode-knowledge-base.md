@@ -9,7 +9,7 @@ source_url: https://github.com/OmniNode-ai/knowledge-base
 archive_name: "OmniNode-ai--knowledge-base"
 revision: cb724907605ed9a1c6ba1b574168153080a0d2a7
 revision_url: https://github.com/OmniNode-ai/knowledge-base/commit/cb724907605ed9a1c6ba1b574168153080a0d2a7
-analyzed_at: 2026-09-19
+analyzed_at: 2026-09-20
 capabilities: ""
 capability_evidence:
 stack_storage: "files"
@@ -31,7 +31,7 @@ matrix:
 
 ## 1. Executive Summary
 
-This is OmniNode's public architectural provenance record: 89 files, Apache-2.0,
+This is OmniNode's public architectural provenance record: 89 files, MIT,
 holding decision records, doctrine, pivots, deep dives and an architecture
 document, each a Markdown file with typed YAML frontmatter. It is in this atlas
 for the same reason [Cambium](../cambium/) and [breadcrumbs](../breadcrumbs/) are
@@ -395,7 +395,20 @@ turns the project's philosophy from a paragraph into a property.
 | `evidence/README.md` | The rule with no instances |
 | `CLAUDE.md` | The agent contract, dated against the code it describes |
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide verification of stated licences.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| ~~The repository is Apache-2.0~~ — **withdrawn 2026-09-20** | `LICENSE` fetched from `raw.githubusercontent.com` at this revision, and `pyproject.toml` beside it | `MIT License`, and `license = {text = "MIT"}` in the manifest. |
+| It was Apache-2.0 at the earlier pin | the same fetch at `37f76b1382` | The Apache License. The relicensing happened between the two pins. |
+
+
 ## History
+
+**2026-09-20** — same pin, one correction, from a corpus-wide verification of stated licences. Section 1 called the repository Apache-2.0. At this revision `LICENSE` opens `MIT License` and `pyproject.toml` declares `license = {text = "MIT"}`; at the earlier pin, `37f76b1382`, the same file was the Apache License. The project relicensed between the two readings and the label was carried forward. No mark changes, and a Recorded Searches appendix was added carrying both fetches.
 
 **2026-09-19** — [`cb724907605ed9a1c6ba1b574168153080a0d2a7`](https://github.com/OmniNode-ai/knowledge-base/commit/cb724907605ed9a1c6ba1b574168153080a0d2a7) — **`trust_state` is withdrawn**, at the unchanged pin, on a narrower reading of the mark than the one that awarded it. The test is not whether a vocabulary names a state that *means* a record is no longer current; it is whether that state is used to decide what may be acted on. Here it is not. The only two consumers of `status` in the tree are `scripts/validate.py`, where each artifact type's values are a Pydantic `Literal` that rejects a spelling outside the set, and `scripts/generate_indexes.py:159-170`, which walks every artifact of a type in date order and emits `- **[title](path)** — {status}`. There is no `continue`, no partition and no query: a superseded ADR appears in the generated index exactly like an accepted one, separated from it by the word after an em dash. `superseded_by` is a declared list that nothing traverses. So the vocabulary is validated, the value is displayed, and nothing reads it back to include or exclude anything — which is a labelling axis, not a trust state. The previous record carried the refutation in its own last clause (*"no test asserts a superseded record is excluded from a result, because there is no result to exclude it from"*), and so does the verdict entry, which already said *"no status is ever read back by code"*. The report keeps everything else: the generated schema that CI fails on when it drifts, the index-freshness check, the bounded duplicate-id exemption, and the accepted-claims-without-evidence finding. The repository is a well-kept decision ledger; it is not a memory an agent reads. One citation was repaired in passing — the first reading's History entry linked its own sha to a later commit's URL. Nothing was installed and no suite was run.
 

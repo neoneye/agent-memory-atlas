@@ -9,7 +9,7 @@ source_url: https://github.com/kiycoh/silica-core
 archive_name: "kiycoh--silica-core"
 revision: 3fd11a00ddb81cf3317922596017cfaefa0e5ddb
 revision_url: https://github.com/kiycoh/silica-core/commit/3fd11a00ddb81cf3317922596017cfaefa0e5ddb
-analyzed_at: 2026-09-15
+analyzed_at: 2026-09-20
 capabilities: ""
 stack_storage: "files, sqlite"
 stack_retrieval: "lexical, vector, graph"
@@ -48,7 +48,7 @@ below refers to that tree. It stays because the contested layer, the per-claim
 clock and the metric-discrimination harness are reusable designs whatever
 happened to the product.
 
-Silica is an AGPL-3.0 harness that governs a folder of markdown — an Obsidian
+Silica is an MIT-licensed harness that governs a folder of markdown — an Obsidian
 vault, a codebase's docs, research material — as agent-writable memory. About
 72,700 lines of Python across 208 modules, 955 commits since 25 May 2026, with a
 CLI, a Claude Code plugin, an MCP server and a web UI over one vault. It targets
@@ -469,7 +469,22 @@ that can refuse to serve a disputed claim rather than annotate it.
   `test_context_builder.py`, `test_cohesion.py` carry the negative retrieval
   assertions, `test_bitemporal_invariants.py` the stamp invariants
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide verification of stated licences.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| ~~Silica is an AGPL-3.0 harness~~ — **withdrawn 2026-09-20** | `GET /repos/kiycoh/silica-core/git/trees/<this revision>?recursive=1` filtered for `licen[cs]e`, then the file fetched from `raw.githubusercontent.com` at this revision | Exactly one licence file in 177 blobs, and it opens `MIT License`. `pyproject.toml` agrees: `license = "MIT"`. |
+| The project was AGPL-3.0 when this report was first written | the same fetch at the first reading's pin, `300fab2e1686e6401a059ec62161ba5a46fce356` | `GNU AFFERO GENERAL PUBLIC LICENSE`. The relicensing happened between the two pins. |
+
+
 ## History
+
+**2026-09-20** — same pin, one correction, from a corpus-wide verification of stated licences against the trees they were read from. The opening sentence called this an AGPL-3.0 harness. **It is MIT.** The single `LICENSE` file at this revision opens `MIT License` and `pyproject.toml` declares `license = "MIT"`; at the first reading's pin, `300fab2e`, the same file was the GNU Affero General Public License. The project relicensed from copyleft to permissive between the two pins and this report kept the old label on its first line — where a reader deciding whether they may build on it would stop.
+
+That is the same failure as the re-pin that moved this report to `3fd11a00`: the marks were re-derived and the prose was inherited. A licence is not a finding the evidence records force anyone to re-check, so nothing caught it. No mark changes. A Recorded Searches appendix was added, carrying both fetches so the next reader can see the change rather than take the label on trust.
 
 **2026-09-15** — [`3fd11a00ddb81cf3317922596017cfaefa0e5ddb`](https://github.com/kiycoh/silica-core/commit/3fd11a00ddb81cf3317922596017cfaefa0e5ddb) — 139 commits on, 2026-09-15. Screened before reading: five auto-run surfaces (plugin manifests and hooks), one build-time execution point, two unpinned surfaces and four dependency surfaces inside the cooldown; nothing was installed or run. The subject of this report is gone: [`3ee7a53ced625e033a5ca2b5befbc6945bb6999a`](https://github.com/kiycoh/silica-core/commit/3ee7a53ced625e033a5ca2b5befbc6945bb6999a) (2026-09-08) cut Silica to a five-tool evidence-retrieval core, deleting the write journal and undo, the contested layer, the claim stamping, the curation and memory tools and the `evals/` tree, and the package became `silica_core`. The three test files the `negative_eval` record cited no longer exist. All four marks are withdrawn at this pin — `bitemporal`, `audit_log`, `human_review`, `negative_eval` — and the body keeps the design as it was at the previous pin, framed as removed.
 
