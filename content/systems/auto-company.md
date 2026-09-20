@@ -9,7 +9,7 @@ source_url: https://github.com/MaxMiksa/Auto-Company
 archive_name: "MaxMiksa--Auto-Company"
 revision: e1dfce15a036be3627b4da394ae362f85b8f5b50
 revision_url: https://github.com/MaxMiksa/Auto-Company/commit/e1dfce15a036be3627b4da394ae362f85b8f5b50
-analyzed_at: 2026-09-19
+analyzed_at: 2026-09-20
 capabilities: "human_review"
 capability_evidence:
   human_review: "the consensus baton — two human-governed sections whose mutation halts the system, and a reset the cycle is refused by name | scripts/core/consensus-guard.sh:70-86, :140-142, :153-177, :179-192, scripts/core/consensus-format.py:98-100, scripts/core/auto-loop.sh:465 | `## Human Overrides` is captured to a baseline by `consensus-guard.sh begin` and compared byte for byte by `verify_cycle` after the cycle — `unchanged` diffs exactly that section against the backup — and a cycle that changed or deleted it has the pre-cycle consensus restored, a pause flag written with the reason `human_override_mutated`, and every subsequent cycle refused with 42. An unchecked `- [ ] P1:` item under `## Priority Issues` returns 41 from `preflight`, before the engine is invoked at all, so work waits on a box only a person ticks. The producer test is answered by execution context rather than by a label: `auto-loop.sh:465` exports `AUTO_COMPANY_CYCLE=1` around the agent's cycle, and `reset_consensus` opens by dying with *\"consensus reset is human-only\"* whenever that variable is `1`, so the one verb that could clear the board refuses to run from inside the loop — a flag the agent cannot set truthfully about itself | the consensus-guard suite"
@@ -27,7 +27,7 @@ matrix:
   background: "The loop itself — preflight, baseline, read, decide, execute, rewrite, verify, snapshot, sleep — with a circuit breaker on consecutive errors, a usage-ledger budget pause, an advisory lock on the pid file so two loops cannot own one checkout, and a pending marker that forces governance recovery after a kill"
   trust: "None on a claim. No status, confidence or provenance on anything the consensus records; the one discrete state in the file is a priority item's checkbox, which gates the whole cycle rather than any single read"
   strengths: "A human-owned region of the memory the agent cannot keep a change to — byte-compared around every cycle, restored and paused on violation — plus a blocking priority item checked before the model is invoked, snapshots of every successful consensus, and a governance suite that drives the real loop under SIGTERM and SIGKILL"
-  risks: "Only one of the two human sections is byte-compared, so a cycle may rewrite Priority Issues — including checking off a blocker — and pass verification; the agent-owned body is still validated by heading presence alone; and the README shows an MIT badge while the repository still contains no licence file"
+  risks: "Only one of the two human sections is byte-compared, so a cycle may rewrite Priority Issues — including checking off a blocker — and pass verification; the agent-owned body is still validated by heading presence alone; and the README showed an MIT badge over no licence file until the 2026-09-19 pin, which added a root MIT `LICENSE`"
 ---
 
 ## 1. Executive Summary
@@ -42,9 +42,13 @@ seven-day cooldown; nothing was installed or run, and the read was made from a
 full clone. The auto-run surface is worth naming: `.claude/settings.json` ships
 `"defaultMode": "bypassPermissions"` with Bash, Edit and Write allowed and
 nothing in `deny`, which is coherent for an unattended loop and is also what any
-reader gets by opening this repository in the same tool. **The README carries an
-MIT badge and the repository still contains no licence file**, which is stated
-here so a reader knows what they may do with what they read.
+reader gets by opening this repository in the same tool.
+
+**The licence is MIT**, and this report said for two readings that there was
+none. A root `LICENSE` exists at this pin — the MIT text, with copyright to two
+holders — and the README links it from both the badge at `:18` and a
+`## License` section at `:429`. It was genuinely absent at the first two pins
+and arrived with the 37 commits this reading re-pinned onto; see the History.
 
 **The whole memory is one markdown file.** `memories/consensus.md` is what the
 project calls the relay baton: each cycle spawns a fresh session, the loop
@@ -416,9 +420,7 @@ validation there is still heading presence. It does not protect Priority Issues
 from the cycle. And it cannot tell anyone that something was lost — only leave
 the evidence that it was.
 
-**Two things a reader should weigh.** The repository shows an MIT badge and
-still carries no licence file, so the terms are unstated in the tree. And
-`.claude/settings.json` ships `bypassPermissions` with Bash, Edit and Write
+**One thing a reader should weigh.** `.claude/settings.json` ships `bypassPermissions` with Bash, Edit and Write
 allowed, which is what an unattended loop needs and also what a curious reader
 inherits by opening the repository in the same tool.
 
@@ -523,7 +525,7 @@ exactly the mechanism most memory systems lack for their summaries.
   because the last value wins, which is why nobody would have noticed. The fix
   is `-cmatch`, with the reason stated as a property rather than a workaround:
   environment variable keys are case-sensitive.
-- **Shipping a licence badge without a licence file.** Still true at this pin.
+- **Shipping a licence badge without a licence file.** True at the first two pins and fixed at this one — the badge pointed at a `LICENSE` that did not exist, which is a dead link that reads as a grant.
 
 ### Fit
 
@@ -589,13 +591,26 @@ grep -rniE 'valid_from|valid_to|as_of|expires_at|superseded' scripts memories PR
 grep -rn 'assertNotIn' tests/*.py                               # 78 negative assertions in the suite; the
                                                                 # only content exclusion keeps an API key
                                                                 # out of the dashboard payload
-ls LICENSE* COPYING*                                            # still absent, against an MIT badge
+ls LICENSE* COPYING*                                            # LICENSE — MIT, added in the 37 commits
+                                                                # this pin moved onto; absent at both
+                                                                # earlier pins
 ```
 
 The `tenant`/`namespace` hits are the reason this list exists: a search word and
 an unrelated identifier can share a spelling, and a count is not a reading.
 
+The `LICENSE` line is the reason a recorded command is not the same as a checked
+one. It stood here across two re-pins reading *"still absent, against an MIT
+badge"* under a header promising the block had been re-run, while the five lines
+above it were genuinely re-run and had their scope widened. A command written
+down and not executed is worse than no command, because it reads as evidence.
+Corrected 2026-09-20.
+
 ## History
+
+**2026-09-20** — same pin, one correction, found by auditing published absence claims against the trees API. This report said in five places — the frontmatter risks field, section 1, section 9, an "Avoid" bullet reading *"Still true at this pin"*, and the previous History entry — that the repository shows an MIT badge over no licence file. A root `LICENSE` exists at this pin, carrying the MIT text and two copyright holders, and the README links it from the badge at `:18` and from a `## License` section at `:429`.
+
+The claim was not careless: `LICENSE` returns 404 at `ebfab9b4` and at `8a85f3b5`, the first two pins, and 200 at `e1dfce15`. It was true when written, true when re-asserted eight days later, and became false in the 37 commits the 2026-09-19 re-pin moved onto. The re-pin rewrote the capability evidence record from scratch and re-derived the producer test on `reset_consensus`, and carried the incidental prose forward untouched — which is the shape worth naming. The word doing the damage is *"still"*: it asserts continuity across a pin without re-running anything, and it is the word least likely to have been checked. No mark moves. The sharpest part is that the report *does* record the command: section 12's searches block carries `ls LICENSE* COPYING*` annotated *"still absent, against an MIT badge"*, under a header stating the block was re-run at this pin. The five lines above it had been re-run and widened in scope; this one was copied. A recorded command is evidence only if it was executed, and there is nothing in the page's shape that distinguishes the two.
 
 **2026-09-19** — re-pinned to [`e1dfce15a036be3627b4da394ae362f85b8f5b50`](https://github.com/MaxMiksa/Auto-Company/commit/e1dfce15a036be3627b4da394ae362f85b8f5b50), 37 commits and 156 files on. **The mark holds**, and the evidence record is rewritten around the part that answers the producer question, which the first reading — made on 2026-09-17, a day before the rubric narrowed — did not name. The byte-for-byte baseline is unchanged: `unchanged` in `consensus-format.py:98-100` diffs the `Human Overrides` section against the backup, and `verify_cycle` restores the pre-cycle consensus, writes a `human_override_mutated` pause flag and refuses every later cycle with 42. An unchecked `- [ ] P1:` still returns 41 from `preflight`, before the engine is invoked, so work waits on a box only a person ticks. What settles it is `reset_consensus`: `auto-loop.sh:465` exports `AUTO_COMPANY_CYCLE=1` around the agent's cycle, and the reset opens by dying with *"consensus reset is human-only"* when that flag is set. The gate is the execution context, not a string the caller supplies — the agent cannot present itself as not-the-cycle from inside the cycle. Screened again first; nothing installed or run.
 
@@ -607,6 +622,6 @@ an unrelated identifier can share a spelling, and a count is not a reading.
 
 **The new criticism is that only one of the two human sections is defended.** `human_overrides_unchanged` compares `HEADINGS[0]`; `## Priority Issues` must exist exactly once and its contents are the cycle's to rewrite, with the rule that only a person may resolve a blocker living in `PROMPT.md` as prose. The exposure is narrow — an unchecked P1 stops the loop before the model runs — but a blocker a person adds while a cycle is in flight can be checked off or deleted by that cycle and verification will pass. Three marks stay withheld with the reasons now stated as near-misses rather than as absences: the snapshots plus the guard log are a version series and an operations log rather than a record of what changed; the P1 checkbox is a discrete state that gates a whole cycle rather than filtering a read; and the suite's must-not assertions are about the store's bytes after a rollback and about the engine not being invoked. The appendix's searches were re-run at a wider scope than the loop script, and the `tenant`/`namespace` grep's two hits are both `argparse.Namespace`.
 
-**Verified rather than assumed:** all twenty-two digests in `i18n/source-hashes.json` match their sources at this pin, re-derived here with the same CRLF normalisation `source_digest` applies. That mechanism — a derived artifact carrying the hash of its source, and a fallback to the source when they disagree — is the best transferable idea in the repository and is now recorded in section 11. The README still carries an MIT badge over no licence file.
+**Verified rather than assumed:** all twenty-two digests in `i18n/source-hashes.json` match their sources at this pin, re-derived here with the same CRLF normalisation `source_digest` applies. That mechanism — a derived artifact carrying the hash of its source, and a fallback to the source when they disagree — is the best transferable idea in the repository and is now recorded in section 11. The README badge now resolves: a root MIT `LICENSE` arrived with these commits.
 
 **2026-09-08** — [`ebfab9b4bd5f0ab5ad452a1ff85285b3c141acdd`](https://github.com/MaxMiksa/Auto-Company/commit/ebfab9b4bd5f0ab5ad452a1ff85285b3c141acdd) — first reading, at the head of `main`, on a commit from 20 May 2026. Screened before anything was read: one auto-run surface, one build-time execution point, nothing inside the seven-day cooldown; nothing was installed or run, and the read was made from a full clone. No capability marks, and each of the seven was checked with a search recorded in the appendix rather than assumed from the system's size. The finding is the transactional guard around the consensus file — back up, validate three headings, keep a timed-out cycle that still updated it, restore on any hard failure — which is more than most single-file memory systems in this corpus do, and which is itself untested. The repository shows an MIT badge and carries no licence file; that is recorded in section 1 rather than treated as an exclusion. The reading covers the loop, the consensus mechanism, the prompt and charter that define the document's shape, and the dashboard; the per-platform installers, the thirty-six skills and the single sample project were treated as context.

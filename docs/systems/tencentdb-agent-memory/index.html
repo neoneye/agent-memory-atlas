@@ -119,7 +119,7 @@ mutation to an append-only audit table.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-16</strong>
+              <strong>2026-09-20</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/TencentCloud--tencentdb-agent-memory" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -533,6 +533,43 @@ nothing. There are contract files —
 <code>core/storage/__contract__/storage-backend.contract.ts</code> —
 which describe what a backend must do; nothing executes them.</p>
 <p>No suite was run for this review, and there was none to run.</p>
+<p><strong>There is CI, and it guards everything except
+behaviour.</strong> <code>.github/workflows/pr-ci.yml</code> runs on
+every pull request to <code>main</code> and holds five jobs: install,
+<code>npm pack</code> with the tarball uploaded as an artifact, a
+plugin-manifest validation that parses <code>openclaw.plugin.json</code>
+and checks the <code>openclaw</code> metadata in
+<code>package.json</code> field by field, a package size guard that
+fails over 2,048 KB, and a skill-queue isolation guard. The
+<code>"test": "vitest run"</code> script appears in none of them. The
+job comments are numbered 1, 2, 5, 6 and 7, so two numbers in the
+sequence have no job behind them.</p>
+<p>The isolation guard is the one to read, because it is the project
+taking the memory module seriously in the place a test would go.
+<code>MemoryCore/scripts/ci/check-skill-queue-isolation.sh</code> is 139
+lines whose header states its purpose as blocking <em>any diff that
+would pollute the memory module</em>, and it enforces two rules against
+<code>git diff base..HEAD</code>: four paths may not be touched at all —
+<code>src/core/state/types.ts</code>,
+<code>src/core/state/local-backend.ts</code>,
+<code>src/services/pipeline-worker.ts</code> and
+<code>src/integrations/redis/**</code>, the last distinguished by an
+<code>awk</code> prefix match from the permitted
+<code>src/integrations/redis-skill/</code> — and nothing under
+<code>src/core/skill/**</code> may add an import of
+<code>node:fs</code>, <code>fs</code> or <code>fs/promises</code>,
+because that code must go through the <code>StorageAdapter</code>. It
+exits 1 on a red line, 2 on a broken environment, and carries a
+documented bypass, <code>SKIP_SKILL_QUEUE_ISOLATION=1</code>, which its
+own comment marks as emergency-only and not recommended.</p>
+<p>So the team wrote, reviewed and wired up a check that says which
+files a pull request may not touch inside the memory module, and never
+wired up the command that would say whether the module works. That is a
+sharper version of the finding than "no tests": the CI habit exists, the
+memory module is the thing it was built to protect, and the protection
+is structural rather than behavioural. An import rule catches a
+contributor reaching past the storage abstraction; it does not catch the
+dedup fallback returning the wrong row.</p>
 <p>The PersonaMem row in the README is the only quantitative claim, and
 nothing in the repository supports it. A relative improvement of +59% on
 a memory benchmark is exactly the kind of number that deserves a
@@ -631,6 +668,20 @@ rg -ri &quot;personamem&quot; .               # README.md and README_CN.md only:
 rg -n &quot;tombstone&quot; --type ts         # 0
 rg -n &quot;valid_from|validFrom|as_of|asOf|bitemporal&quot; --type ts   # 0: no validity axis</code></pre>
 <h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — same pin, an addition rather than a
+correction, made while auditing published absence claims. The no-tests
+finding held on all three of the commands section 10 writes down. What
+the reading missed is <code>.github/workflows/pr-ci.yml</code>, which
+the report did not mention at all: five jobs covering install, pack,
+manifest validation, a package size guard and a skill-queue isolation
+guard, and no test job — the <code>vitest run</code> script is in none
+of them. Section 10 now records it, because the isolation guard is the
+project protecting the memory module in exactly the place a test would
+sit: 139 lines forbidding a pull request from touching four memory paths
+or adding an <code>fs</code> import under
+<code>src/core/skill/**</code>. No mark moves. The absence claim was
+checked because it carried its own commands; the CI was missed because
+nothing in the page's shape asked about <code>.github/</code>.</p>
 <p><strong>2026-09-16</strong> — <a
 href="https://github.com/TencentCloud/tencentdb-agent-memory/commit/8f2dc830317934e54548472bf62c5999f9bb1202"><code class="commit-id" title="8f2dc830317934e54548472bf62c5999f9bb1202">8f2dc830…</code></a>
 — re-pinned after 4 commits, all documentation: two
