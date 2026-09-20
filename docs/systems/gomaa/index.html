@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A hierarchical markdown-vault
+memory over Postgres or SQLite whose injection defence is tested in both
+directions, and whose wing-and-room scope is an argument the calling
+model may simply omit.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Gomaa — Agent Memory Atlas">
+    <meta property="og:description" content="A hierarchical
+markdown-vault memory over Postgres or SQLite whose injection defence is
+tested in both directions, and whose wing-and-room scope is an argument
+the calling model may simply omit.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Gomaa — Agent Memory Atlas">
+    <meta name="twitter:description" content="A hierarchical
+markdown-vault memory over Postgres or SQLite whose injection defence is
+tested in both directions, and whose wing-and-room scope is an argument
+the calling model may simply omit.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Gomaa — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Gomaa",
+      "description": "A hierarchical markdown-vault memory over Postgres or SQLite whose injection defence is tested in both directions, and whose wing-and-room scope is an argument the calling model may simply omit.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">The token is neutralised in prose and
+preserved in a code fence</p>
+          <h1>Gomaa</h1>
+          <p class="document-deck">A hierarchical markdown-vault memory
+over Postgres or SQLite whose injection defence is tested in both
+directions, and whose wing-and-room scope is an argument the calling
+model may simply omit.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/M4F-S/gomaa">
+              <span>Source</span>
+              <strong>M4F-S/gomaa</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/M4F-S/gomaa/commit/00ee124d765e890b73f1d4db14d801d39d1f58b8" title="00ee124d765e890b73f1d4db14d801d39d1f58b8">
+              <span>Analyzed revision</span>
+              <code>00ee124d…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/M4F-S--gomaa" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>M4F-S--gomaa</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Gomaa is a local-first memory engine for coding agents, Apache 2.0,
+Python, 137 files. It keeps memories as Obsidian Markdown in a vault a
+person can read and mirrors them into PostgreSQL with pgvector or a
+zero-config SQLite WAL database, with hybrid reciprocal-rank-fusion
+search, a wikilink graph, salience decay and an MCP server.</p>
+<p><strong>Two marks: <code>audit_log</code> and
+<code>negative_eval</code>.</strong></p>
+<p>The injection defence is the thing to take away, because it is tested
+in both directions. <code>test_prose_tokens_neutralized</code> asserts
+that chat-template control tokens do not survive in prose —
+<code>assert "&lt;|im_start|&gt;" not in neutralized</code> — and the
+very next case asserts the same token <strong>must</strong> survive
+inside a code fence, with the comment saying so. A neutraliser that
+stripped everything would pass the first and fail the second, which is
+the whole point of writing the second.</p>
+<p>The scope mechanism is the thing to be careful about. Memories carry
+a <code>wing</code> and a <code>room</code>, and both stores compose
+them through a <code>_scope_clause</code> helper — but the helper opens
+<code>if not scope: return "", []</code>, and the MCP handler passes
+<code>scope=args.get("scope")</code>. So the boundary is an argument the
+calling model supplies, and a model that omits it searches everything.
+<code>scope_enforced</code> is withheld on exactly that.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a Markdown note in a vault, indexed into a store.
+<code>wing</code> and <code>room</code> are the two levels of the
+hierarchy the README frames as the answer to <em>"Domain
+Cross-Contamination: Research notes, credentials, and task scratchpads
+collide."</em> Salience decays daily; notes that fall below a threshold
+and have not been touched in ninety days are archived rather than
+deleted.</p>
+<p>Every wired operation appends a row to a timeline table that is never
+updated or deleted.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — memories are markdown notes in a vault mirrored into postgres with pgvector or sqlite, searched by hybrid reciprocal rank fusion, and every wired operation appends a row to an insert-only timeline; the wing and room scope is composed into queries through a helper each store implements separately, and because that helper returns an empty clause for an absent scope and the MCP handler reads the scope from the model's own arguments, a call that omits it searches everything; consolidation applies salience decay at the store level and archives stale low-salience notes rather than deleting them</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: memories are markdown notes in a vault mirrored into postgres with pgvector or sqlite, searched by hybrid reciprocal rank fusion, and every wired operation appends a row to an insert-only timeline; the wing and room scope is composed into queries through a helper each store implements separately, and because that helper returns an empty clause for an absent scope and the MCP handler reads the scope from the model&#39;s own arguments, a call that omits it searches everything; consolidation applies salience decay at the store level and archives stale low-salience notes rather than deleting them
+flowchart TD
+    A((&quot;agent via MCP&quot;)) --&gt; H[&quot;handler: scope = args.get(&#39;scope&#39;)&quot;]
+    H --&gt;|&quot;scope supplied&quot;| SC[&quot;_scope_clause&lt;br/&gt;wing = ? AND room = ?&quot;]
+    H --&gt;|&quot;scope omitted → None&quot;| NOSC[&quot;returns &#39;&#39; — no predicate&lt;br/&gt;the search spans every wing&quot;]
+    SC --&gt; Q
+    NOSC --&gt; Q
+    Q[&quot;hybrid search: keyword + vector, RRF&quot;]
+
+    V[(&quot;Obsidian vault&lt;br/&gt;markdown a person can read&quot;)] --&gt; ST
+    ST[(&quot;store: Postgres + pgvector (HNSW)&lt;br/&gt;or SQLite WAL&quot;)]
+    Q --&gt; ST
+    ST --&gt; RES[&quot;results&quot;] --&gt; A
+
+    W[&quot;remember / ingest / publish_shared&quot;] --&gt; ADM{&quot;AdmissionControl.validate&lt;br/&gt;poisoning · contradictions&lt;br/&gt;low-quality data&quot;}
+    ADM --&gt;|&quot;(False, reason)&quot;| REJ[&quot;rejected — reason returned&lt;br/&gt;to the caller, not stored&quot;]
+    ADM --&gt;|&quot;(True, _)&quot;| ST
+
+    ST --&gt; TL[(&quot;timeline&lt;br/&gt;INSERT only, no UPDATE or DELETE&lt;br/&gt;remember · recall · consolidate&lt;br/&gt;ingest_session · publish_shared · error&quot;)]
+
+    CONS[&quot;consolidate(decay_rate, archive_threshold)&quot;] --&gt; AD[&quot;store.apply_decay&lt;br/&gt;salience *= decay_rate&quot;]
+    CONS --&gt; ENG[&quot;engine.run — archives stale notes&lt;br/&gt;below threshold, untouched 90 days&quot;]
+    AD --&gt; ST
+    ENG --&gt; ST
+
+    DEL[&quot;delete_note — declared in base,&lt;br/&gt;postgres and sqlite&quot;] -.-&gt;|&quot;no caller anywhere&quot;| NONE((&quot;unreachable&quot;))
+
+    INJ[&quot;injection defence&quot;] -.-&gt;|&quot;neutralised in prose,&lt;br/&gt;preserved in code fences&quot;| RES</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The scope helper, twice</strong> —
+<code>gomaa/stores/postgres.py:159-169</code> and
+<code>gomaa/stores/sqlite.py:115-122</code>. Each store carries its own
+copy of the same eleven lines: an empty result for an absent scope, then
+<code>wing = ?</code> and <code>room = ?</code> appended when present.
+Composed into the query at <code>postgres.py:312</code> and
+<code>:367</code> under <code>if scope_clause:</code>. Two
+implementations of one rule is the drift risk; they agree today.</p>
+<p><strong>Where the scope comes from</strong> —
+<code>gomaa/mcp_server.py:369</code> and <code>:379</code>,
+<code>scope=args.get("scope")</code>, reaching
+<code>core.py:302-318</code> as
+<code>self.db.search_semantic(emb, top_k, filters, scope=scope)</code>.
+The model decides whether to constrain its own search.</p>
+<p><strong>The admission gate</strong> —
+<code>gomaa/security.py:10-20</code>. <code>AdmissionControl</code>
+<em>"validates memory writes before they become persistent. Protects
+against poisoning, contradictions, and low-quality data."</em>
+<code>validate</code> returns <code>(bool, reason)</code>; the reason
+goes back to the caller and no durable record of the rejection is
+written.</p>
+<p><strong>The timeline</strong> —
+<code>stores/postgres.py:171-182</code>, an
+<code>INSERT INTO timeline (action, note_title, query, summary)</code>
+with a <code>created_at</code> default, read back newest-first by
+<code>get_timeline</code>. No <code>UPDATE</code> or <code>DELETE</code>
+against the table exists anywhere in the package. Its producers sit in
+<code>core.py</code> at <code>:210</code>, <code>:278</code>,
+<code>:330</code>, <code>:488</code>, <code>:550</code> and
+<code>:559</code>, and the action vocabulary is <code>remember</code>,
+<code>recall</code>, <code>consolidate</code>,
+<code>ingest_session</code>, <code>publish_shared</code>,
+<code>remind</code> and <code>error</code>.</p>
+<p><strong>Decay, and the parameter that does not apply it</strong> —
+<code>core.py:601</code> calls
+<code>db.apply_decay(decay_rate=...)</code>, which really multiplies
+salience (<code>sqlite.py:527</code>,
+<code>new_salience = row["salience"] * decay_rate</code>). Then
+<code>:609</code> calls the consolidation engine with the same value,
+where its docstring says <code>decay_factor</code> <em>"[is] accepted
+for interface parity with store-level consolidation; archiving uses
+archive_threshold."</em> The comment is accurate: the store does the
+decay, the engine does the archiving, and the engine takes the decay
+parameter only so the two signatures match.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A note with a title, content, wikilinks, tags, a <code>wing</code>, a
+<code>room</code> and a salience. Salience is a float that decays; there
+is no status field, no supersession pointer, no rejected-value record
+and no validity window. Pinned notes are <em>"permanent and immune to
+decay"</em> per the CLI flag.</p>
+<p><code>delete_note</code> is declared on the store interface and
+implemented in both backends, and <strong>nothing calls it</strong>.
+There is no deletion path from the CLI or the MCP surface; what the
+README frames as forgetting is decay plus archival.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Keyword and vector arms fused by reciprocal rank fusion, over
+Postgres with an HNSW index or SQLite. A shared-memory store can be
+searched alongside the private one for cross-agent fleet sharing.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write passes admission control, lands in the vault as Markdown and
+in the store as a row, and appends a timeline entry. Consolidation runs
+decay at the store and archival in the engine.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>An MCP server, a CLI, a dashboard, adapters for several agent
+frameworks, and asynchronous Google Drive sync with its own path-safety
+tests.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>audit_log</code>.</strong> The timeline is insert-only,
+has no mutation path anywhere in the package, and is written by every
+operation that is wired — including failures, under the
+<code>error</code> action. The one mutation it does not cover, deletion,
+is a method nothing calls.</p>
+<p><strong><code>negative_eval</code></strong> — section 10.</p>
+<p><strong><code>scope_enforced</code> is withheld.</strong> The key is
+stored, the helper is real and both stores apply it — and
+<code>if not scope</code> returns no predicate, while the handler reads
+the scope from the model's own arguments with <code>args.get</code>. The
+rubric's test for this mark is <em>write to project A, query from
+project B</em>; here a query that simply omits the scope returns both.
+Worth contrasting with the same night's reading of <a
+href="../lerim/">Lerim</a>, where an empty scope compiles to
+<code>0=1</code> and a test is named for it.</p>
+<p><strong><code>trust_state</code> is withheld.</strong> Admission
+control is a write gate rather than a state: a rejected write does not
+become a memory marked untrustworthy, it does not become a memory at
+all, and the reason is returned rather than stored. Salience is a float
+used for ranking and archival.</p>
+<p><strong><code>tombstone</code>, <code>bitemporal</code> and
+<code>human_review</code> are withheld.</strong> Nothing records a
+rejected value, there is one clock, and nothing waits for a person.</p>
+<p><strong>One thing a reader should know before deploying.</strong> The
+scope that separates <em>"research notes, credentials, and task
+scratchpads"</em> — the README's own example — is the one an agent can
+leave out of its query.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Twenty-nine test files, several of them security-specific: injection
+defence, vault security, Google Drive path safety, graph cycles, and two
+general security files. Nothing was installed and nothing was run.</p>
+<p>The mark rests on <code>tests/test_injection_defense.py</code>, and
+on the pairing:</p>
+<pre class="python"><code>def test_prose_tokens_neutralized(self):
+    assert &quot;&lt;|im_start|&gt;&quot; not in neutralized
+    assert &quot;[INST]&quot; not in neutralized
+    assert &quot;​&quot; in neutralized
+
+def test_code_blocks_preserved(self):
+    assert &quot;&lt;|im_start|&gt;&quot; in neutralized  # Must be preserved inside code fence</code></pre>
+<p>The first asserts chat-template control tokens do not survive in
+prose and that the zero-width marker replacing them is present. The
+second requires the same token to survive inside a code fence, and the
+comment states the requirement. A neutraliser that stripped every
+occurrence would satisfy the first and fail the second — which is why
+the second is the assertion that gives the first its meaning.</p>
+<p><code>tests/test_vault_security.py</code> adds the traversal cases
+from both directions — <code>test_path_traversal_wing_blocked</code> and
+<code>test_path_traversal_title_blocked</code>, so the scope field and
+the title are each checked as an attack surface — and
+<code>test_rollback_preserves_existing_file_on_db_error</code>, which
+requires a database failure not to destroy the note already on disk.</p>
+<p>No benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Test a sanitiser in both directions in the same
+file.</strong> The must-not is easy and the must-survive is what stops
+the trivial implementation from passing.</li>
+<li><strong>Check traversal through every field that reaches a
+path.</strong> Here both the scope name and the title are tested,
+because both become directory components.</li>
+<li><strong>Assert that a failed write leaves the existing file
+alone.</strong> A rollback test is cheap and the failure it catches is
+silent.</li>
+<li><strong>Log the errors into the same timeline as the
+successes.</strong> One <code>error</code> action beside
+<code>remember</code> and <code>recall</code> means the record answers
+what went wrong.</li>
+<li><strong>Say when a parameter exists only for signature
+symmetry.</strong> <em>"accepted for interface parity"</em> saved a
+reading from reporting an inert knob as a defect.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A scope the caller may omit.</strong>
+<code>args.get("scope")</code> plus
+<code>if not scope: return "", []</code> is a boundary that holds
+exactly as often as the model remembers it. Default it to the caller's
+own wing, or refuse the query.</li>
+<li><strong>The same eleven-line predicate in two stores.</strong> They
+agree now; nothing makes them agree later.</li>
+<li><strong>Declaring a delete you never wire.</strong>
+<code>delete_note</code> in the base class and both backends, with no
+caller, reads as a capability to anyone who greps for one.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take it if you want agent memory you can open in Obsidian with a real
+Postgres index behind it, and you control the callers well enough to
+always pass a scope. Take <code>test_injection_defense.py</code>
+regardless.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li><code>scope</code> is read from the model's arguments and defaults
+to nothing. Was an implicit default wing considered, or is the unscoped
+search the intended behaviour for a single-user install?</li>
+<li><code>delete_note</code> is implemented twice and called nowhere. Is
+a forget path planned, and would it append a timeline action?</li>
+<li>Admission control returns a rejection reason to the caller. Would a
+recorded rejection be useful, given the README's complaint that humans
+<em>"cannot audit, correct, or curate what the agent learned"</em>?</li>
+<li>The timeline has no actor column. With cross-agent fleet sharing, is
+per-agent attribution intended?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gomaa/stores/postgres.py</code></td>
+<td><code>_scope_clause</code>, the timeline insert,
+<code>apply_decay</code>, <code>delete_note</code></td>
+</tr>
+<tr>
+<td><code>gomaa/stores/sqlite.py</code></td>
+<td>the second copy of <code>_scope_clause</code>, and the salience
+multiply</td>
+</tr>
+<tr>
+<td><code>gomaa/mcp_server.py</code></td>
+<td><code>scope=args.get("scope")</code>, where the boundary becomes
+optional</td>
+</tr>
+<tr>
+<td><code>gomaa/security.py</code></td>
+<td><code>AdmissionControl.validate</code> and the salience scorer</td>
+</tr>
+<tr>
+<td><code>gomaa/consolidation.py</code></td>
+<td>the engine, and the docstring explaining which parameter it does not
+use</td>
+</tr>
+<tr>
+<td><code>gomaa/core.py</code></td>
+<td>the timeline producers and the consolidate path</td>
+</tr>
+<tr>
+<td><code>tests/test_injection_defense.py</code></td>
+<td>the neutralisation case and its control</td>
+</tr>
+<tr>
+<td><code>tests/test_vault_security.py</code></td>
+<td>traversal through wing and through title, and the rollback case</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>An absent scope yields no predicate</td>
+<td>read <code>gomaa/stores/postgres.py:159-161</code> and
+<code>sqlite.py:115-118</code></td>
+<td><code>if not scope: return "", []</code> in both</td>
+</tr>
+<tr>
+<td>The scope comes from the model's arguments</td>
+<td><code>grep -n "scope=" gomaa/mcp_server.py</code></td>
+<td><code>scope=args.get("scope")</code> at <code>:369</code> and
+<code>:379</code></td>
+</tr>
+<tr>
+<td>The timeline is never rewritten</td>
+<td><code>grep -rn "timeline" --include='*.py' gomaa | grep -iE "UPDATE|DELETE"</code></td>
+<td>Nothing</td>
+</tr>
+<tr>
+<td>Which actions are logged</td>
+<td><code>grep -n -A3 "log_timeline(" gomaa/core.py</code></td>
+<td><code>remember</code>, <code>recall</code>,
+<code>consolidate</code>, <code>ingest_session</code>,
+<code>publish_shared</code>, <code>remind</code>,
+<code>error</code></td>
+</tr>
+<tr>
+<td><code>delete_note</code> has no caller</td>
+<td><code>grep -rn "delete_note" --include='*.py' gomaa | grep -v "def delete_note"</code></td>
+<td>Nothing</td>
+</tr>
+<tr>
+<td>Decay is really applied, despite the parity comment</td>
+<td><code>grep -rn "decay_rate" --include='*.py' gomaa/stores gomaa/core.py</code></td>
+<td><code>core.py:601</code> calls <code>apply_decay</code>, and
+<code>sqlite.py:527</code> does
+<code>new_salience = row["salience"] * decay_rate</code></td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>head -3 LICENSE</code>;
+<code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>Stock Apache 2.0; the only match is the standard compliance
+clause</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/M4F-S/gomaa/commit/00ee124d765e890b73f1d4db14d801d39d1f58b8"><code class="commit-id" title="00ee124d765e890b73f1d4db14d801d39d1f58b8">00ee124d…</code></a>
+— first reading, at 137 files. Screened before reading; nothing was
+installed and nothing was run. Apache 2.0. Two marks,
+<code>audit_log</code> and <code>negative_eval</code>.
+<code>scope_enforced</code> is withheld because the wing-and-room key,
+though stored and applied by both stores, is read from the calling
+model's arguments and compiles to no predicate when omitted. One claim
+was checked and dropped before publication: the consolidation engine
+accepts a <code>decay_factor</code> it does not use, which reads as an
+inert knob until the docstring and <code>core.py:601</code> show the
+store applies the decay and the engine takes the parameter only for
+signature symmetry.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

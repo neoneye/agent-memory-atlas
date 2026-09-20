@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 614 reports.**
+**This page covers all 615 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5485,4 +5485,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `eval/` entire — about a hundred and thirty lines of validator around a JSON probe set. It converts public complaints into falsifiable probes *before* fixes are proposed, refuses to load a dataset without a licence field, and keeps the evidence it cannot automate out of scoring: *"Qualitative observations... require longitudinal adoption or interview evidence and are excluded from automated scoring."*
 - Maturity impression: MIT, TypeScript, 48 files and four source modules; an npm CLI with a Homebrew formula, and memory that is Markdown a person can read. One mark, `negative_eval`. The rest are absent rather than withheld on a technicality — at this size there is no status, no scope and no lifecycle, and the report says so.
 - Study when: you are writing an eval and deciding what a red run means. Here a reproduced product issue exits **zero** — *"failures are evaluation findings, not harness crashes"* — with `--strict` reserved for the CI gate, which is the distinction most suites conflate and then train people to ignore.
+
+### [`gomaa`](../systems/gomaa/)
+
+- Best idea: **test a sanitiser in both directions, in the same file.** `test_prose_tokens_neutralized` requires chat-template control tokens absent from neutralised prose; the very next case requires the identical token to survive inside a code fence, with the comment stating the requirement. A neutraliser that stripped every occurrence passes the first and fails the second, which is why the second is what gives the first its meaning. Beside it, path traversal is tested through the scope field *and* through the title, because both become directory components.
+- Biggest risk: **the scope is an argument the model may omit.** Memories carry a `wing` and a `room`, both stores compose them through a `_scope_clause` helper — and that helper opens `if not scope: return "", []` while the MCP handler passes `scope=args.get("scope")`. The rubric's test for this mark is write to project A, query from project B; here a query that simply leaves the scope out returns both. The README offers that hierarchy as the answer to *"research notes, credentials, and task scratchpads"* colliding.
+- Most reusable component: `tests/test_injection_defense.py` and `tests/test_vault_security.py` together — roughly forty lines covering neutralisation with its control, traversal from two directions, and a rollback case requiring a database error to leave the existing note on disk untouched.
+- Maturity impression: Apache 2.0, Python, 137 files; Obsidian Markdown vaults mirrored into PostgreSQL with pgvector or SQLite WAL, hybrid RRF search, a wikilink graph, salience decay and an MCP server. Two marks — `audit_log`, `negative_eval`. The timeline is insert-only and logs failures beside successes; the one mutation it misses is deletion, which is moot because `delete_note` is implemented in both backends and called by nothing.
+- Study when: you are about to make a scope an optional parameter. Read this beside [Lerim](../systems/lerim/) from the same day, where an empty scope compiles to `0=1` and the test is named after the behaviour.
 

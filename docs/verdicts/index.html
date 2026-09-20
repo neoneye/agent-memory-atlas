@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 614 reports.</strong></p>
+<p><strong>This page covers all 615 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25003,6 +25003,46 @@ means. Here a reproduced product issue exits <strong>zero</strong> —
 <em>"failures are evaluation findings, not harness crashes"</em> — with
 <code>--strict</code> reserved for the CI gate, which is the distinction
 most suites conflate and then train people to ignore.</li>
+</ul>
+<h3 id="gomaa"><a href="../systems/gomaa/"><code>gomaa</code></a></h3>
+<ul>
+<li>Best idea: <strong>test a sanitiser in both directions, in the same
+file.</strong> <code>test_prose_tokens_neutralized</code> requires
+chat-template control tokens absent from neutralised prose; the very
+next case requires the identical token to survive inside a code fence,
+with the comment stating the requirement. A neutraliser that stripped
+every occurrence passes the first and fails the second, which is why the
+second is what gives the first its meaning. Beside it, path traversal is
+tested through the scope field <em>and</em> through the title, because
+both become directory components.</li>
+<li>Biggest risk: <strong>the scope is an argument the model may
+omit.</strong> Memories carry a <code>wing</code> and a
+<code>room</code>, both stores compose them through a
+<code>_scope_clause</code> helper — and that helper opens
+<code>if not scope: return "", []</code> while the MCP handler passes
+<code>scope=args.get("scope")</code>. The rubric's test for this mark is
+write to project A, query from project B; here a query that simply
+leaves the scope out returns both. The README offers that hierarchy as
+the answer to <em>"research notes, credentials, and task
+scratchpads"</em> colliding.</li>
+<li>Most reusable component:
+<code>tests/test_injection_defense.py</code> and
+<code>tests/test_vault_security.py</code> together — roughly forty lines
+covering neutralisation with its control, traversal from two directions,
+and a rollback case requiring a database error to leave the existing
+note on disk untouched.</li>
+<li>Maturity impression: Apache 2.0, Python, 137 files; Obsidian
+Markdown vaults mirrored into PostgreSQL with pgvector or SQLite WAL,
+hybrid RRF search, a wikilink graph, salience decay and an MCP server.
+Two marks — <code>audit_log</code>, <code>negative_eval</code>. The
+timeline is insert-only and logs failures beside successes; the one
+mutation it misses is deletion, which is moot because
+<code>delete_note</code> is implemented in both backends and called by
+nothing.</li>
+<li>Study when: you are about to make a scope an optional parameter.
+Read this beside <a href="../systems/lerim/">Lerim</a> from the same
+day, where an empty scope compiles to <code>0=1</code> and the test is
+named after the behaviour.</li>
 </ul>
         </article>
       </div>
