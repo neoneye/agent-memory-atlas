@@ -7,12 +7,13 @@ page_kind: system
 source_name: "yachen4ever/yacmemo"
 source_url: https://github.com/yachen4ever/yacmemo
 archive_name: "yachen4ever--yacmemo"
-revision: 9b68276dbee9df61a57e515bfca3b58f419a07f7
-revision_url: https://github.com/yachen4ever/yacmemo/commit/9b68276dbee9df61a57e515bfca3b58f419a07f7
-analyzed_at: 2026-09-19
-capabilities: "human_review"
+revision: 4a12be944cd78edca28354feb2af14a11542bd83
+revision_url: https://github.com/yachen4ever/yacmemo/commit/4a12be944cd78edca28354feb2af14a11542bd83
+analyzed_at: 2026-09-20
+capabilities: "human_review, negative_eval"
 capability_evidence:
   human_review: "a person marks a detected collision resolved or dismissed in the web console, the agent's tool surface has no verb that does it, and every later search of that note stops carrying its warning | yacmemo/index_db.py:275-280, :299, yacmemo/store.py:1059-1098, yacmemo/webui/app.py:318, :350, yacmemo/search.py:121-133, yacmemo/tools.py | `resolve_collision(collision_id, status)` validates against `(\"open\", \"resolved\", \"dismissed\")` and is documented as a human decision made through the WebUI. Its two callers are the console POST route and `Store.record_audit_action`, whose own docstring calls it the record of a human's disposition and whose only caller is the console as well — no scheduler, detector or agent path reaches either. The seventeen tools `register_tools` declares include `memory_audit`, which *reports* collisions, and no resolve or dismiss verb, so the producing agent can see the queue and cannot empty it. The state is read on every search rather than only in the console: `Search._warnings_for` calls `collisions_for(path)`, whose `status` parameter defaults to `\"open\"`, so a disposition made in the console silently stops the warning appearing beside that note | the collision and search suites"
+  negative_eval: "three committed cases in the search evaluation, each asserting that particular material must not come back | scripts/eval_search.py:163-172 (N1), :174-192 (N2), :195-204 (N3), printed under a Negative assertions heading at :252, documented in docs/06-evaluation.md section 7 | N1 writes a note containing the token `hunter2`, calls `store.delete_note`, then asserts the title is absent from the hits for every channel the run has — `fts`, `hybrid`, and `vector` when an embedding endpoint is configured — so a deleted note is checked against each retrieval path separately rather than once. N2 creates a colliding pair, establishes that it does warn, dismisses it with `resolve_collision(c['id'], 'dismissed')`, and asserts `warned_before and not _warned()`: the positive control is inside the same expression as the negative, so the case cannot pass against a store that never warned at all. N3 builds a second store in a fresh temporary directory and asserts it cannot retrieve the first store's content. The limit worth stating is that this is a script rather than a suite — `pytest` does not collect it, N2 is skipped without embeddings, and the documentation rather than a gate is what says 'any ✗ is treated as a regression' | docs/06-evaluation.md section 7"
 stack_storage: "files, sqlite, lancedb"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -27,15 +28,15 @@ matrix:
   background: "A weekly curator on a systemd timer that reviews quality and writes a proposal report, and an incremental observation-collision detector on the write path"
   trust: "A deterministic duplicate guard with a counted override, collision warnings a person can dismiss, per-call usage logging, and git history over every mutation"
   strengths: "The duplicate guard is the best version of this idea in the corpus, because it anticipates the evasion. `normalize_title` strips trailing dates, `-2`-style counters, `v1`, `更新` and `（新）` before comparing, so the rename that would slip a second copy past a naive check is exactly what it collapses — and the refusal message names the near-matches with their scores and tells the caller to edit instead. The override ladder is better still: `force=true` is allowed, counted in `guard_events`, and once forced writes in the last 24 hours cross a configured threshold a second flag becomes mandatory, so bypassing is possible, visible and self-limiting rather than free. The design also refuses to hide: there is no status, tier or score anywhere in the search path that withholds a note, and a contradiction is surfaced beside its counterpart with a ⚠ rather than silently resolved. And there is no generative model in the memory subsystem at all — one 0.6B embedding call — so the store's behaviour is string math a reader can follow"
-  risks: "No record covers every mutation. Git commits do — and git history is not an audit record this atlas credits, because it lives outside the store and anyone with the directory can rewrite it. Of the two SQLite records, `guard_events` holds only refusals and forced bypasses, and `call_log` is written by the MCP tool wrapper, so a note saved or deleted through the web console leaves no row in it at all; it also carries an argument summary rather than a before-image, and self-trims to 20,000 rows. The curator is proposal-only by design — \"it has no write power over memories\" — but nothing in the system approves or applies a proposal either: the WebUI lists the report files and a person carries out the work by hand, so the loop is closed outside the software. The duplicate guard is keyed on title similarity only, so the same fact under two genuinely different titles is two memories and the guard says nothing. Scope is one directory per user rather than a predicate, and MIT is declared in `pyproject.toml` with no licence file in the tree"
+  risks: "No record covers every mutation. Git commits do — and git history is not an audit record this atlas credits, because it lives outside the store and anyone with the directory can rewrite it. Of the two SQLite records, `guard_events` holds only refusals and forced bypasses, and `call_log` now covers the web console and carries a `before_hash` — two of the three objections at the previous pin are closed. What remains is the one that decides the mark: `_trim` deletes every row beyond the newest 20,000, so the record is a bounded ring rather than append-only. The curator is proposal-only by design — \"it has no write power over memories\" — but nothing in the system approves or applies a proposal either: the WebUI lists the report files and a person carries out the work by hand, so the loop is closed outside the software. The duplicate guard is keyed on title similarity only, so the same fact under two genuinely different titles is two memories and the guard says nothing. Scope is one directory per user rather than a predicate, and MIT is declared in `pyproject.toml` with no licence file in the tree"
 ---
 
 ## 1. Executive Summary
 
 yacmemo describes itself as a personal memory layer with API-level consistency
 guards — "markdown 为本、全本地、agent 无关" (Markdown-native, fully local,
-agent-agnostic). Version 0.2.0, MIT by metadata, 11,424 lines of Python across 58 files, with
-139 test functions in the live suite and 148 more in the `legacy/v1_tests`
+agent-agnostic). Version 0.2.1, MIT by metadata, 11,695 lines of Python across 59 files, with
+146 test functions in the live suite and 148 more in the `legacy/v1_tests`
 tree that the runner does not collect. Documentation and interface are in Chinese; the
 code comments are in English.
 
@@ -207,17 +208,56 @@ without giving the agent filesystem access.
 The gap to be aware of is the one named above: the complete record is git, and
 the in-store records each cover a slice.
 
+**Mutation audit — still withheld, and the reason is now a single sentence
+rather than three.** At the previous pin `call_log` was written only by the MCP
+tool wrapper, so a note saved or deleted through the web console left no row at
+all, and each row carried an argument summary with no before-image. Both are
+closed here: `yacmemo/webui/app.py` logs the console's save, create, delete and
+profile operations with `client="webui"`, and `call_log` gained a
+`before_hash` column (`yacmemo/usage.py:29`) with an `ALTER TABLE` migration for
+existing databases at `:54-59`. `tests/test_usage.py` pins both the round trip
+and the migration, and `tests/test_webui.py:181,183` asserts a console save and
+a console delete each leave a row carrying a before-image.
+
+What stops the mark is `_trim` (`yacmemo/usage.py:63-67`), which runs inside
+`log_call` on every write and deletes every row outside the newest 20,000:
+
+    DELETE FROM call_log WHERE id NOT IN
+      (SELECT id FROM call_log ORDER BY ts DESC LIMIT ?)
+
+The rubric asks for an **append-only** record of memory mutations, and a log
+that silently discards its oldest rows is a bounded ring. The cap is a
+reasonable engineering choice for a local tool — 20,000 rows is a lot of
+history for one person — and it is still the property the mark is about. Worth
+saying plainly rather than leaving as a technicality: everything else this mark
+asks for is now present.
+
+The migration comment names this atlas as the prompt for the change, which is
+worth recording because it makes the timeline checkable rather than implied.
+
 The README carries an AIGC labelling block in its front matter — a content
 producer and propagation id, as Chinese regulation asks for on AI-generated
 material.
 
 ## 10. Tests, Evals, and Benchmarks
 
-139 test functions across thirteen files covering the store, guards, git
-snapshots, detectors, topics, profile, search, the index, the curator, the server
-and the WebUI, with a v1 suite kept under `legacy/`. `docs/06-evaluation.md`
-exists; the evaluation it describes was not run here, and nothing is installed or
-executed by this reading.
+146 test functions across fourteen files covering the store, guards, git
+snapshots, detectors, topics, profile, search, the index, the curator, the
+server, the WebUI and now the call log, with a v1 suite of a further 148
+functions kept under `legacy/` that the runner does not collect.
+
+**The evaluation script is where the negative cases live, and they are the
+reason this report gained a mark at this pin.** `scripts/eval_search.py` grew a
+`Negative assertions` section: a deleted note must not come back on any channel,
+a dismissed collision pair must not warn again, and a second store must not
+reach the first one's content. The second is the one worth copying — it asserts
+`warned_before and not _warned()`, so the case fails against a store that never
+warned in the first place, which is the control most emptiness assertions omit.
+
+What it is not is a suite. `pytest` does not collect `scripts/`, the collision
+case is skipped when no embedding endpoint is configured, and what treats a
+failure as a regression is a sentence in `docs/06-evaluation.md` section 7
+rather than a gate. Nothing was installed or executed by this reading.
 
 ## 11. For Your Own Build
 
@@ -268,28 +308,24 @@ covers was not established.
 
 ## Appendix: Recorded Searches
 
-Checked against the repository tree at the pinned revision on 2026-09-20,
-without a clone, during a corpus-wide audit of absence claims. The command is
-the check that was actually run, not a local equivalent.
+Checked at the pinned revision on 2026-09-20, without a clone.
 
 | Claim | Check | Result at this pin |
 | --- | --- | --- |
-| No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Nothing, at 112 blobs. |
-
-
-## Appendix: Recorded Searches
-
-Checked at the pinned revision on 2026-09-20, without a clone, after two
-figures in this report were reported as stale.
-
-| Claim | Check | Result at this pin |
-| --- | --- | --- |
-| ~~`register_tools` declares twenty-one tools~~ — **corrected 2026-09-20** | `yacmemo/tools.py` fetched at this revision; `@mcp.tool` decorators counted, then every `def` | **17** decorated tools against **21** function definitions. The four extra are helpers — `_client_from_ctx`, `register_tools`, `_logged`, `_fmt_search` — so the original figure counted definitions rather than registrations. None of the seventeen is a resolve or dismiss verb, which is what the `human_review` record rests on. |
-| ~~95 test functions~~ — **corrected 2026-09-20** | every `*.py` under a `tests?/` path fetched and `^\s*def test_` counted | **139** in the live suite across thirteen files, and **148** more under `legacy/v1_tests/`. The file count in the original sentence was right; only the function count had gone stale. |
-| The tree is 11,424 lines of Python | all 58 `.py` blobs in the tree fetched and their lines counted | 11,424. The previous figure, 4,764, predates the commits this report was re-pinned onto. |
-
+| Three committed negative-retrieval cases exist | `scripts/eval_search.py` fetched at this revision and read at `:160-205` | N1 deleted-note across `fts`, `hybrid` and `vector`; N2 dismissed collision with its own positive control; N3 a second store in a temp directory. |
+| `register_tools` declares seventeen tools, none of them adjudicating | `yacmemo/tools.py`; `@mcp.tool` decorators counted, then every `def`, then a search for `resolve`, `dismiss` and `approve` | **17** decorated tools against **21** definitions — the four extra are helpers — and no adjudicating verb among them. The earlier figure of twenty-one counted definitions rather than registrations. |
+| `call_log` is capped rather than append-only | `yacmemo/usage.py:63-67` | `_trim` runs inside `log_call` and deletes every row outside `ORDER BY ts DESC LIMIT 20000`. |
+| The console now writes to `call_log` with a before-image | `yacmemo/webui/app.py`, and `tests/test_webui.py:181,183` | Console save and delete each leave a row, and both are asserted to carry a non-empty `before_hash`. |
+| MIT is declared in the manifest and no licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING`; and `pyproject.toml` fetched at the same revision | No licence file, at 113 blobs. `pyproject.toml` carries `license = { text = "MIT" }`, so the grant is declared in metadata and not shipped as a file — unchanged from the previous pin. |
+| The suite is 146 functions in fourteen files | every `*.py` under a `tests?/` path fetched and `^\s*def test_` counted, `legacy/` excluded | 146 live, plus 148 under `legacy/v1_tests/`. At the previous pin it was 139, and the report had said 95. |
 
 ## History
+
+**2026-09-20** — re-pinned to [`4a12be944cd78edca28354feb2af14a11542bd83`](https://github.com/yachen4ever/yacmemo/commit/4a12be944cd78edca28354feb2af14a11542bd83) (v0.2.1), one commit and 18 files past the previous pin, at the maintainer's request. Re-screened first: two build-time execution points, two unpinned surfaces, six files inside the seven-day cooldown and no auto-run surface; nothing was installed or run. **`negative_eval` is awarded**, on three cases added to `scripts/eval_search.py` — a deleted note absent from every channel, a dismissed collision that must not warn again, and a second store that must not reach the first one's content. The second carries its positive control in the same expression, which is what makes the set worth the mark; the limit is that this is a script `pytest` does not collect.
+
+**`audit_log` stays withheld and the reason narrows from three objections to one.** The web console now writes to `call_log`, and rows carry a `before_hash` with a migration for existing databases — both gaps this report named at the previous pin, and the migration comment credits the atlas by name. What remains is `_trim`, which deletes every row beyond the newest 20,000 on each write, so the record is a bounded ring rather than append-only.
+
+Two figures corrected earlier the same day at the previous pin are restated here for this one: seventeen tools rather than twenty-one, and 146 live test functions rather than 139 — the count the earlier reading carried, 95, was stale by two pins.
 
 **2026-09-20** — same pin, three figures corrected and none of them load-bearing for a mark. `register_tools` declares **seventeen** tools, not twenty-one: the original count included the four helpers in `tools.py` alongside the seventeen `@mcp.tool` closures. The suite is **139** test functions rather than 95, with a further 148 under `legacy/v1_tests/` that the runner does not collect — the "thirteen files" in the same sentence was correct, which is why the error survived a reading. And the Python figure, 4,764 lines, predated the commits this report was re-pinned onto; it is 11,424 across 58 files.
 
