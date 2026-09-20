@@ -130,7 +130,7 @@ state.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-17</strong>
+              <strong>2026-09-20</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/vshulcz--deja-vu" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -431,6 +431,44 @@ recorded on a promoted note and is applied to rank and to wording, never
 to admission: a rejected note is returned, labelled <em>"tried and
 rejected."</em> The rubric asks for a state that withholds; nothing here
 withholds, and the project has argued that it should not.</p>
+<p><strong>Human review — withheld, and it fails the <em>easier</em>
+half of the test.</strong> This is worth stating in full, because the
+mechanism passes the part most systems fail and the report previously
+said nothing about it either way.</p>
+<p>The rubric's one question is <em>can the agent that wrote the memory
+also clear its review?</em> Here it cannot. The MCP server exposes a
+<strong>single tool</strong>, <code>deja</code>, whose <code>mode</code>
+enum is exactly <code>recall</code>, <code>context</code>,
+<code>blame</code>, <code>fix</code>, <code>how</code> and
+<code>remember</code> (<code>cmd/deja/mcp.go:318</code>).
+<code>promote</code> is not on it, and there is no second tool. The
+adjudicating surface is a CLI verb —
+<code>deja promote &lt;session&gt; --state rejected --note "&lt;correction&gt;"</code>
+(<code>cmd/deja/promote.go</code>) over the four states in
+<code>internal/sources/notes.go:429</code>: <code>accepted</code>,
+<code>rejected</code>, <code>superseded</code>, <code>stale</code>. So
+the producer test is satisfied in its strong form, by absence rather
+than by a check.</p>
+<p>What is missing is the other clause: <em>a memory waits in a state
+until</em> that actor resolves it. Nothing waits. A session is
+recallable the moment it exists, and <code>attachLifecycles</code>
+(<code>cmd/deja/lifecycle.go:72</code>) runs on the read path to
+<strong>mark</strong> a hit whose decision was later rejected —
+<code>lifecycleLine</code> renders it to the reader as <em>"tried and
+rejected"</em>. The hit is still returned. The rubric puts that case in
+its own exclusion list: <em>"A person who opens the stored document and
+rewrites it is authoring; the write has already landed. That is a real
+and useful affordance and it is the opposite of a gate."</em></p>
+<p>The code makes the same distinction against itself, which is why it
+is credible. <code>lifecycle.go:66-71</code> records that an earlier
+version printed that a promoted note <em>"now outranks the raw
+transcript in recall"</em> and that, measured, it did not — <em>"the
+correction only surfaced when its own wording matched the query, so
+asking about a reverted decision returned the transcript that made it,
+reading like current truth. The state belongs to the session; ranking
+was never going to carry it."</em> That is the same reasoning as the
+withheld <code>trust_state</code> above, and it is the project's, not
+this report's.</p>
 <p><strong>Scope — withheld, and it is the design.</strong>
 <code>Project</code>, <code>Harness</code> and session id are stored and
 are applied as filters when a caller asks. The default is the whole
@@ -639,7 +677,56 @@ rg -n &#39;gaveUpPenalty&#39; internal/search                                   
 rg -n &#39;valid_from|valid_to|as_of|ValidFrom|ValidTo&#39; internal            # none: start and update times, both record time
 find . -name &#39;*.json&#39; -path &#39;*bench*&#39;                                   # none: both harnesses committed, no result file
 rg -n -i &#39;arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi&#39; README.md docs  # none: no paper</code></pre>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Checked at the pinned revision on 2026-09-20, without a clone.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Check</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The agent's tool surface has no adjudicating verb</td>
+<td><code>cmd/deja/mcp.go</code> fetched at this revision;
+<code>tools/list</code> returns <code>dejaTool()</code> alone, and its
+<code>mode</code> enum read at <code>:318</code></td>
+<td>One tool, six modes: <code>recall</code>, <code>context</code>,
+<code>blame</code>, <code>fix</code>, <code>how</code>,
+<code>remember</code>. No <code>promote</code>, <code>approve</code> or
+<code>resolve</code>.</td>
+</tr>
+<tr>
+<td>The adjudicating surface is a CLI verb over four states</td>
+<td><code>cmd/deja/promote.go</code> (471 lines) and
+<code>internal/sources/notes.go:429</code></td>
+<td><code>NoteStates</code> is <code>accepted</code>,
+<code>rejected</code>, <code>superseded</code>, <code>stale</code>.</td>
+</tr>
+<tr>
+<td>A rejected session is still returned, labelled rather than
+withheld</td>
+<td><code>cmd/deja/lifecycle.go:60-90</code> read in full</td>
+<td><code>attachLifecycles</code> <em>marks</em> hits; nothing filters
+on the state, and the header comment says the state belongs to the
+session rather than to ranking.</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — same pin. Section 9 gained the
+<code>human_review</code> reasoning, which the report had not stated in
+either direction, and a Recorded Searches appendix carrying the three
+checks it rests on. The mark stays withheld and the reason is worth
+reading: the producer test passes in its strong form — the MCP server
+exposes one tool whose <code>mode</code> enum is <code>recall</code>,
+<code>context</code>, <code>blame</code>, <code>fix</code>,
+<code>how</code>, <code>remember</code>, so the agent has no
+adjudicating verb at all — and the mark fails on the clause before it,
+because nothing waits. <code>attachLifecycles</code> labels a rejected
+hit and still returns it. No mark changes.</p>
 <p><strong>2026-09-17</strong> — <a
 href="https://github.com/vshulcz/deja-vu/commit/6a33ce289d0553b69ba9772da753cb447501f4d7"><code class="commit-id" title="6a33ce289d0553b69ba9772da753cb447501f4d7">6a33ce28…</code></a>
 — re-pinned after 108 commits. All three anchored test files are

@@ -9,7 +9,7 @@ source_url: https://github.com/vshulcz/deja-vu
 archive_name: "vshulcz--deja-vu"
 revision: 6a33ce289d0553b69ba9772da753cb447501f4d7
 revision_url: https://github.com/vshulcz/deja-vu/commit/6a33ce289d0553b69ba9772da753cb447501f4d7
-analyzed_at: 2026-09-17
+analyzed_at: 2026-09-20
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "a narrowing test whose vacuity guard is a separate named test with the reason written into its comment | internal/search/session_scope_test.go:20-70, internal/redact/env_key_test.go:13-40, internal/search/regex_empty_match_test.go:25 | `TestSearchWithinASession` asserts a scoped search returns exactly one hit and that it is the right session; the very next test, `TestSearchWithoutSessionSeesBoth`, runs the same fixture without the flag and asserts both sessions answer, under the comment *\"Without the flag both sessions answer, so the test above is measuring the flag rather than a fixture that only had one match.\"* `TestSearchWithAnUnknownSessionFindsNothing` pins the fail-closed direction — *\"An id that names nothing answers with nothing rather than falling back to the whole store.\"* The redaction suite is built the same way: `TestEnvVarKeyIsRedacted` beside `TestLowercaseKeyNamesAreLeftAlone`, and `TestKVGateNeverHidesAMatch` | the same files, inside 4,361 committed test functions"
@@ -303,6 +303,38 @@ wording, never to admission: a rejected note is returned, labelled *"tried and
 rejected."* The rubric asks for a state that withholds; nothing here withholds,
 and the project has argued that it should not.
 
+**Human review — withheld, and it fails the *easier* half of the test.** This
+is worth stating in full, because the mechanism passes the part most systems
+fail and the report previously said nothing about it either way.
+
+The rubric's one question is *can the agent that wrote the memory also clear its
+review?* Here it cannot. The MCP server exposes a **single tool**, `deja`, whose
+`mode` enum is exactly `recall`, `context`, `blame`, `fix`, `how` and `remember`
+(`cmd/deja/mcp.go:318`). `promote` is not on it, and there is no second tool.
+The adjudicating surface is a CLI verb — `deja promote <session> --state
+rejected --note "<correction>"` (`cmd/deja/promote.go`) over the four states in
+`internal/sources/notes.go:429`: `accepted`, `rejected`, `superseded`, `stale`.
+So the producer test is satisfied in its strong form, by absence rather than by
+a check.
+
+What is missing is the other clause: *a memory waits in a state until* that
+actor resolves it. Nothing waits. A session is recallable the moment it exists,
+and `attachLifecycles` (`cmd/deja/lifecycle.go:72`) runs on the read path to
+**mark** a hit whose decision was later rejected — `lifecycleLine` renders it to
+the reader as *"tried and rejected"*. The hit is still returned. The rubric puts
+that case in its own exclusion list: *"A person who opens the stored document
+and rewrites it is authoring; the write has already landed. That is a real and
+useful affordance and it is the opposite of a gate."*
+
+The code makes the same distinction against itself, which is why it is credible.
+`lifecycle.go:66-71` records that an earlier version printed that a promoted note
+*"now outranks the raw transcript in recall"* and that, measured, it did not —
+*"the correction only surfaced when its own wording matched the query, so asking
+about a reverted decision returned the transcript that made it, reading like
+current truth. The state belongs to the session; ranking was never going to
+carry it."* That is the same reasoning as the withheld `trust_state` above, and
+it is the project's, not this report's.
+
 **Scope — withheld, and it is the design.** `Project`, `Harness` and session id
 are stored and are applied as filters when a caller asks. The default is the
 whole machine, because a memory that spans agents and projects is the value
@@ -442,7 +474,20 @@ find . -name '*.json' -path '*bench*'                                   # none: 
 rg -n -i 'arxiv|bibtex|@article|@misc|Citation|CITATION.cff|doi' README.md docs  # none: no paper
 ```
 
+## Appendix: Recorded Searches
+
+Checked at the pinned revision on 2026-09-20, without a clone.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| The agent's tool surface has no adjudicating verb | `cmd/deja/mcp.go` fetched at this revision; `tools/list` returns `dejaTool()` alone, and its `mode` enum read at `:318` | One tool, six modes: `recall`, `context`, `blame`, `fix`, `how`, `remember`. No `promote`, `approve` or `resolve`. |
+| The adjudicating surface is a CLI verb over four states | `cmd/deja/promote.go` (471 lines) and `internal/sources/notes.go:429` | `NoteStates` is `accepted`, `rejected`, `superseded`, `stale`. |
+| A rejected session is still returned, labelled rather than withheld | `cmd/deja/lifecycle.go:60-90` read in full | `attachLifecycles` *marks* hits; nothing filters on the state, and the header comment says the state belongs to the session rather than to ranking. |
+
+
 ## History
+
+**2026-09-20** — same pin. Section 9 gained the `human_review` reasoning, which the report had not stated in either direction, and a Recorded Searches appendix carrying the three checks it rests on. The mark stays withheld and the reason is worth reading: the producer test passes in its strong form — the MCP server exposes one tool whose `mode` enum is `recall`, `context`, `blame`, `fix`, `how`, `remember`, so the agent has no adjudicating verb at all — and the mark fails on the clause before it, because nothing waits. `attachLifecycles` labels a rejected hit and still returns it. No mark changes.
 
 **2026-09-17** — [`6a33ce289d0553b69ba9772da753cb447501f4d7`](https://github.com/vshulcz/deja-vu/commit/6a33ce289d0553b69ba9772da753cb447501f4d7) — re-pinned after 108 commits. All three anchored test files are byte-identical at both commits, so the mark stands on unchanged code and every anchor here is exact at the new pin. Nothing was installed, built or run.
 

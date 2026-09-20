@@ -149,9 +149,11 @@ appearing on every later hit.</p>
 <p>yacmemo describes itself as a personal memory layer with API-level
 consistency guards — "markdown 为本、全本地、agent 无关"
 (Markdown-native, fully local, agent-agnostic). Version 0.2.0, MIT by
-metadata, 11,833 lines of which 4,764 are Python, with 95 test
-functions. Documentation and interface are in Chinese; the code comments
-are in English.</p>
+metadata, 11,424 lines of Python across 58 files, with 139 test
+functions in the live suite and 148 more in the
+<code>legacy/v1_tests</code> tree that the runner does not collect.
+Documentation and interface are in Chinese; the code comments are in
+English.</p>
 <p>The shape is one server process on the machine that holds the data,
 speaking streamable HTTP, with a separate MCP mount and store root per
 user. Any client — Claude Code, Codex, Cursor — joins by adding a URL,
@@ -349,7 +351,7 @@ content producer and propagation id, as Chinese regulation asks for on
 AI-generated material.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>95 test functions across thirteen files covering the store, guards,
+<p>139 test functions across thirteen files covering the store, guards,
 git snapshots, detectors, topics, profile, search, the index, the
 curator, the server and the WebUI, with a v1 suite kept under
 <code>legacy/</code>. <code>docs/06-evaluation.md</code> exists; the
@@ -444,7 +446,70 @@ filtered for a path matching <code>licen[cs]e</code> or
 </tr>
 </tbody>
 </table></div>
+<h2 id="appendix-recorded-searches-1">Appendix: Recorded Searches</h2>
+<p>Checked at the pinned revision on 2026-09-20, without a clone, after
+two figures in this report were reported as stale.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Check</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><del><code>register_tools</code> declares twenty-one tools</del> —
+<strong>corrected 2026-09-20</strong></td>
+<td><code>yacmemo/tools.py</code> fetched at this revision;
+<code>@mcp.tool</code> decorators counted, then every
+<code>def</code></td>
+<td><strong>17</strong> decorated tools against <strong>21</strong>
+function definitions. The four extra are helpers —
+<code>_client_from_ctx</code>, <code>register_tools</code>,
+<code>_logged</code>, <code>_fmt_search</code> — so the original figure
+counted definitions rather than registrations. None of the seventeen is
+a resolve or dismiss verb, which is what the <code>human_review</code>
+record rests on.</td>
+</tr>
+<tr>
+<td><del>95 test functions</del> — <strong>corrected
+2026-09-20</strong></td>
+<td>every <code>*.py</code> under a <code>tests?/</code> path fetched
+and <code>^\s*def test_</code> counted</td>
+<td><strong>139</strong> in the live suite across thirteen files, and
+<strong>148</strong> more under <code>legacy/v1_tests/</code>. The file
+count in the original sentence was right; only the function count had
+gone stale.</td>
+</tr>
+<tr>
+<td>The tree is 11,424 lines of Python</td>
+<td>all 58 <code>.py</code> blobs in the tree fetched and their lines
+counted</td>
+<td>11,424. The previous figure, 4,764, predates the commits this report
+was re-pinned onto.</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — same pin, three figures corrected and
+none of them load-bearing for a mark. <code>register_tools</code>
+declares <strong>seventeen</strong> tools, not twenty-one: the original
+count included the four helpers in <code>tools.py</code> alongside the
+seventeen <code>@mcp.tool</code> closures. The suite is
+<strong>139</strong> test functions rather than 95, with a further 148
+under <code>legacy/v1_tests/</code> that the runner does not collect —
+the "thirteen files" in the same sentence was correct, which is why the
+error survived a reading. And the Python figure, 4,764 lines, predated
+the commits this report was re-pinned onto; it is 11,424 across 58
+files.</p>
+<p>All three are the same failure as the licence corrections made
+elsewhere in the corpus today: a re-pin re-derives the capability
+evidence, because the record forces it, and carries the counts and prose
+forward untouched. The <code>human_review</code> record is unaffected in
+substance and now reads on a firmer basis — seventeen tools, none of
+them a resolve or dismiss verb. A Recorded Searches appendix was added
+carrying all three counts.</p>
 <p><strong>2026-09-19</strong> — re-pinned to <a
 href="https://github.com/yachen4ever/yacmemo/commit/9b68276dbee9df61a57e515bfca3b58f419a07f7"><code class="commit-id" title="9b68276dbee9df61a57e515bfca3b58f419a07f7">9b68276d…</code></a>,
 30 commits and 59 files on. <strong>The mark holds</strong>, and the
@@ -457,7 +522,7 @@ only caller is the console route at
 <code>yacmemo/webui/app.py:318</code>. So both paths to a disposition
 still originate in the web console, and no scheduler, detector or agent
 path reaches either. Checked on the other side too, which the previous
-record did not: <code>register_tools</code> declares twenty-one tools
+record did not: <code>register_tools</code> declares seventeen tools
 including <code>memory_audit</code>, which reports collisions, and no
 resolve or dismiss verb — the agent sees the queue and has nothing that
 empties it. The consumption end is unchanged:

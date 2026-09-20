@@ -12,7 +12,7 @@ revision_url: https://github.com/yachen4ever/yacmemo/commit/9b68276dbee9df61a57e
 analyzed_at: 2026-09-19
 capabilities: "human_review"
 capability_evidence:
-  human_review: "a person marks a detected collision resolved or dismissed in the web console, the agent's tool surface has no verb that does it, and every later search of that note stops carrying its warning | yacmemo/index_db.py:275-280, :299, yacmemo/store.py:1059-1098, yacmemo/webui/app.py:318, :350, yacmemo/search.py:121-133, yacmemo/tools.py | `resolve_collision(collision_id, status)` validates against `(\"open\", \"resolved\", \"dismissed\")` and is documented as a human decision made through the WebUI. Its two callers are the console POST route and `Store.record_audit_action`, whose own docstring calls it the record of a human's disposition and whose only caller is the console as well — no scheduler, detector or agent path reaches either. The twenty-one tools `register_tools` declares include `memory_audit`, which *reports* collisions, and no resolve or dismiss verb, so the producing agent can see the queue and cannot empty it. The state is read on every search rather than only in the console: `Search._warnings_for` calls `collisions_for(path)`, whose `status` parameter defaults to `\"open\"`, so a disposition made in the console silently stops the warning appearing beside that note | the collision and search suites"
+  human_review: "a person marks a detected collision resolved or dismissed in the web console, the agent's tool surface has no verb that does it, and every later search of that note stops carrying its warning | yacmemo/index_db.py:275-280, :299, yacmemo/store.py:1059-1098, yacmemo/webui/app.py:318, :350, yacmemo/search.py:121-133, yacmemo/tools.py | `resolve_collision(collision_id, status)` validates against `(\"open\", \"resolved\", \"dismissed\")` and is documented as a human decision made through the WebUI. Its two callers are the console POST route and `Store.record_audit_action`, whose own docstring calls it the record of a human's disposition and whose only caller is the console as well — no scheduler, detector or agent path reaches either. The seventeen tools `register_tools` declares include `memory_audit`, which *reports* collisions, and no resolve or dismiss verb, so the producing agent can see the queue and cannot empty it. The state is read on every search rather than only in the console: `Search._warnings_for` calls `collisions_for(path)`, whose `status` parameter defaults to `\"open\"`, so a disposition made in the console silently stops the warning appearing beside that note | the collision and search suites"
 stack_storage: "files, sqlite, lancedb"
 stack_retrieval: "lexical, vector"
 stack_source: "reviewed"
@@ -34,8 +34,9 @@ matrix:
 
 yacmemo describes itself as a personal memory layer with API-level consistency
 guards — "markdown 为本、全本地、agent 无关" (Markdown-native, fully local,
-agent-agnostic). Version 0.2.0, MIT by metadata, 11,833 lines of which 4,764 are
-Python, with 95 test functions. Documentation and interface are in Chinese; the
+agent-agnostic). Version 0.2.0, MIT by metadata, 11,424 lines of Python across 58 files, with
+139 test functions in the live suite and 148 more in the `legacy/v1_tests`
+tree that the runner does not collect. Documentation and interface are in Chinese; the
 code comments are in English.
 
 The shape is one server process on the machine that holds the data, speaking
@@ -212,7 +213,7 @@ material.
 
 ## 10. Tests, Evals, and Benchmarks
 
-95 test functions across thirteen files covering the store, guards, git
+139 test functions across thirteen files covering the store, guards, git
 snapshots, detectors, topics, profile, search, the index, the curator, the server
 and the WebUI, with a v1 suite kept under `legacy/`. `docs/06-evaluation.md`
 exists; the evaluation it describes was not run here, and nothing is installed or
@@ -276,8 +277,24 @@ the check that was actually run, not a local equivalent.
 | No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Nothing, at 112 blobs. |
 
 
+## Appendix: Recorded Searches
+
+Checked at the pinned revision on 2026-09-20, without a clone, after two
+figures in this report were reported as stale.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| ~~`register_tools` declares twenty-one tools~~ — **corrected 2026-09-20** | `yacmemo/tools.py` fetched at this revision; `@mcp.tool` decorators counted, then every `def` | **17** decorated tools against **21** function definitions. The four extra are helpers — `_client_from_ctx`, `register_tools`, `_logged`, `_fmt_search` — so the original figure counted definitions rather than registrations. None of the seventeen is a resolve or dismiss verb, which is what the `human_review` record rests on. |
+| ~~95 test functions~~ — **corrected 2026-09-20** | every `*.py` under a `tests?/` path fetched and `^\s*def test_` counted | **139** in the live suite across thirteen files, and **148** more under `legacy/v1_tests/`. The file count in the original sentence was right; only the function count had gone stale. |
+| The tree is 11,424 lines of Python | all 58 `.py` blobs in the tree fetched and their lines counted | 11,424. The previous figure, 4,764, predates the commits this report was re-pinned onto. |
+
+
 ## History
 
-**2026-09-19** — re-pinned to [`9b68276dbee9df61a57e515bfca3b58f419a07f7`](https://github.com/yachen4ever/yacmemo/commit/9b68276dbee9df61a57e515bfca3b58f419a07f7), 30 commits and 59 files on. **The mark holds**, and the record is re-anchored because `resolve_collision` gained a second caller in the range. It is not a weakening: `Store.record_audit_action` (`yacmemo/store.py:1059-1098`) writes a human's disposition into the audit snapshot and then syncs the collision row, and its own only caller is the console route at `yacmemo/webui/app.py:318`. So both paths to a disposition still originate in the web console, and no scheduler, detector or agent path reaches either. Checked on the other side too, which the previous record did not: `register_tools` declares twenty-one tools including `memory_audit`, which reports collisions, and no resolve or dismiss verb — the agent sees the queue and has nothing that empties it. The consumption end is unchanged: `Search._warnings_for` reads `collisions_for(path)` with `status` defaulting to `"open"`, so a disposition stops the warning appearing beside that note on every later search. One detail worth keeping from the range: a comment at the sync site records that the disposition table has no delete interface, measured on 2026-09-18, which is why the snapshot is written before the status is changed. Screened again first; nothing installed or run.
+**2026-09-20** — same pin, three figures corrected and none of them load-bearing for a mark. `register_tools` declares **seventeen** tools, not twenty-one: the original count included the four helpers in `tools.py` alongside the seventeen `@mcp.tool` closures. The suite is **139** test functions rather than 95, with a further 148 under `legacy/v1_tests/` that the runner does not collect — the "thirteen files" in the same sentence was correct, which is why the error survived a reading. And the Python figure, 4,764 lines, predated the commits this report was re-pinned onto; it is 11,424 across 58 files.
+
+All three are the same failure as the licence corrections made elsewhere in the corpus today: a re-pin re-derives the capability evidence, because the record forces it, and carries the counts and prose forward untouched. The `human_review` record is unaffected in substance and now reads on a firmer basis — seventeen tools, none of them a resolve or dismiss verb. A Recorded Searches appendix was added carrying all three counts.
+
+**2026-09-19** — re-pinned to [`9b68276dbee9df61a57e515bfca3b58f419a07f7`](https://github.com/yachen4ever/yacmemo/commit/9b68276dbee9df61a57e515bfca3b58f419a07f7), 30 commits and 59 files on. **The mark holds**, and the record is re-anchored because `resolve_collision` gained a second caller in the range. It is not a weakening: `Store.record_audit_action` (`yacmemo/store.py:1059-1098`) writes a human's disposition into the audit snapshot and then syncs the collision row, and its own only caller is the console route at `yacmemo/webui/app.py:318`. So both paths to a disposition still originate in the web console, and no scheduler, detector or agent path reaches either. Checked on the other side too, which the previous record did not: `register_tools` declares seventeen tools including `memory_audit`, which reports collisions, and no resolve or dismiss verb — the agent sees the queue and has nothing that empties it. The consumption end is unchanged: `Search._warnings_for` reads `collisions_for(path)` with `status` defaulting to `"open"`, so a disposition stops the warning appearing beside that note on every later search. One detail worth keeping from the range: a comment at the sync site records that the disposition table has no delete interface, measured on 2026-09-18, which is why the snapshot is written before the status is changed. Screened again first; nothing installed or run.
 
 **2026-09-16** — [`2440aa563e1474d5a07b16d052373c28ed8a4a7c`](https://github.com/yachen4ever/yacmemo/commit/2440aa563e1474d5a07b16d052373c28ed8a4a7c) — first reading, at a commit dated 16 September 2026. Screened before opening, from a shallow clone: ten files scanned, no auto-run surfaces, two build-time execution points, two unpinned surfaces and five dependency files inside the seven-day cooldown. Nothing was installed, built or run.
