@@ -533,6 +533,17 @@ have.
 - `alfworld_runs/root/base_run_logs/env_results_trial_0..6.json` — the comparison run.
 - `webshop_runs/{base,reflexion}_run_logs_{1,2}/` — four WebShop runs.
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No unit test exists anywhere in the repository | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `tests?/`, `__tests__/`, `test_*`, `*_test.*`, `*.test.*` and `*.spec.*` | Six paths match and not one is a unit test: `figures/test_generation.png`; four `*_pass_at_k_1.jsonl` result files under `programming_runs/root/`; and `programming_runs/test_acc.py`, which computes accuracy over those results. The name `test` here belongs to the evaluation, which section 10 describes as unusually complete. |
+
+
 ## History
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved. The

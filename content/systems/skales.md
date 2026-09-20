@@ -430,6 +430,17 @@ repository is where a bug in it would be filed, not where it would be fixed.
 
 - `LICENSE` (BSL 1.1), `COMMERCIAL-LICENSE.md`
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No test of any kind — zero `.test.ts`, `.test.tsx` or `.spec.ts` files | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `tests?/`, `__tests__/`, `test_*`, `*_test.*`, `*.test.*` and `*.spec.*` | Five paths match, all of them Next.js API routes rather than tests: `api/calendar/apple/test/route.ts`, `api/calendar/outlook/test/route.ts`, `api/custom-endpoint/test/route.ts`, `api/ftp/test/route.ts` and `api/replicate/test/route.ts` — connection-test endpoints a user triggers to check an integration. A `tests?/` path pattern matches these and they are not a suite. |
+
+
 ## History
 
 **2026-09-17** — [`ce47854afe004af4e5c30df623f861fe140a5b4d`](https://github.com/skalesapp/skales/commit/ce47854afe004af4e5c30df623f861fe140a5b4d) — re-read three commits on and not one of them touches code. `apps`, `electron`, `pets`, `scripts`, `package.json` and `package-lock.json` are byte-identical by tree or blob sha, as are the licence, the security policy and every install guide; the changes are `CHANGELOG.md` (+475), `README.md`, and the public guide moved from the repository root into `docs/`. Marks unchanged at none, and every line anchor in this report still names the same code because the code did not move.

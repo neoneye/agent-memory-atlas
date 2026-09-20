@@ -74,7 +74,7 @@ from pathlib import Path
 #: sweeping it in here would bury the signal under several thousand rows.
 ARTIFACT = (
     r"(licen[cs]e file|`?LICEN[CS]E`?|`?COPYING`?|"
-    r"tests?\b|test (?:file|files|directory|suite|harness|tree)|`?tests?/`?|"
+    r"(?<!non-)tests?\b|test (?:file|files|directory|suite|harness|tree)|`?tests?/`?|"
     r"CI(?: configuration| pipeline| workflow)?\b|continuous integration|"
     r"(?:GitHub )?Actions? workflow|`?\.github`?|workflows?\b|"
     r"benchmark(?: file| suite| directory)?|fixture(?: vault| directory)?|"
@@ -107,6 +107,16 @@ CLAIM = re.compile(
 #: So a verb of restriction following the scope phrase disqualifies the match.
 #: Checked against the remainder of the sentence rather than a fixed window,
 #: because the restricting clause can be a dozen words along.
+#: The restriction can also sit *between* the artifact and the scope phrase:
+#: "no tests for the Community Edition in this tree" names the edition it is
+#: about before it names the tree. A qualifier in that gap narrows the claim the
+#: same way a verb after it does.
+GAP_QUALIFIER = re.compile(
+    r"\b(for the|for its|covering|naming|of the [a-z]+ (?:module|package|"
+    r"subsystem|edition|layer|crate)|under `)",
+    re.I,
+)
+
 RESTRICTED = re.compile(
     r"^[^.\n]{0,120}?\b(assert\w*|cover\w*|touch\w*|exercis\w*|pass\w*|"
     r"referenc\w*|writ\w*|check\w*|prove\w*|demonstrat\w*|"
@@ -198,6 +208,8 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
                     continue
                 if RESTRICTED.match(line[match.end():]):
                     continue
+                if GAP_QUALIFIER.search(match.group(0)):
+                    continue
                 word = _artifact_word(match.group(0))
                 grounded = word in commands
                 rows.append((f"{path.name}:{lineno}", match.group(0).strip(), grounded))
@@ -207,7 +219,7 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 
 #: Ungrounded file-shaped absence claims standing when the ratchet was set
 #: (2026-09-20), out of 88 such claims in total. It was 53 when the ratchet was
-#: written and fell to 16 the same day: twelve reports whose licence and test
+#: written and fell to 12 the same day: twelve reports whose licence and test
 #: claims had just been checked against their trees gained an appendix recording
 #: that check, ten more followed, and the matcher itself stopped counting twenty
 #: behaviour claims it had been reading as file claims. Lower it as claims are
@@ -232,7 +244,7 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 #: are genuine and need a judgement read rather than a listing: "no eval harness",
 #: "no committed run output", "no precision or recall number" — a tree cannot
 #: settle any of those, because the artifact has no canonical name.
-UNGROUNDED_CEILING = 16
+UNGROUNDED_CEILING = 12
 
 
 def check(root: str) -> int:
@@ -331,7 +343,18 @@ def self_test() -> int:
         print("self-test failed: 'citation' was read as the scope word 'CI'",
               file=sys.stderr)
         return 1
-    print("self-test: 11 controls passed")
+    # A qualifier between the artifact and the scope narrows the claim.
+    edition = "There are no tests for the Community Edition in this tree."
+    eh = CLAIM.search(edition)
+    if eh is None or not GAP_QUALIFIER.search(eh.group(0)):
+        print("self-test failed: a qualified claim was counted as a whole-repository one",
+              file=sys.stderr)
+        return 1
+    # "non-test" is not a claim about test files.
+    if CLAIM.search("The table has no non-test consumer at all."):
+        print("self-test failed: 'non-test' was read as a test-file claim", file=sys.stderr)
+        return 1
+    print("self-test: 13 controls passed")
     return 0
 
 
