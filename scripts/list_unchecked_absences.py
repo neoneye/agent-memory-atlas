@@ -120,11 +120,14 @@ RESTRICTED = re.compile(
 QUOTED = re.compile(r'"[^"]{0,800}?"|“[^”]{0,800}?”', re.S)
 
 #: A claim is *grounded* when the report shows the reader how it was established:
-#: a shell command naming the artifact, inside a fence or inline. This is the
+#: a shell command naming the artifact, inside a fence or inline. `curl` counts,
+#: because fetching one named path from `raw.githubusercontent.com` at the pinned
+#: revision is how a licence or citation claim is settled without a clone, and
+#: it is the third recorded form after a local search and a tree listing. This is the
 #: structural predictor the sweeps found — of the seven false claims, six sat in
 #: reports with no recorded search at all.
 COMMAND = re.compile(
-    r"(?:^|[\s`])(?:ls|find|grep|rg|rgrep|git ls-files|cat|head|test -[fed]|stat|fd)\s[^\n`]{0,160}",
+    r"(?:^|[\s`])(?:ls|find|grep|rg|rgrep|git ls-files|cat|head|test -[fed]|stat|fd|curl)\s[^\n`]{0,200}",
     re.M,
 )
 
@@ -159,10 +162,19 @@ def _artifact_word(claim: str) -> str:
         return "licen"
     if "test" in low:
         return "test"
-    if "ci" in low or "workflow" in low or "action" in low or ".github" in low:
+    # `"ci" in low` was a bare substring test and matched "citation",
+    # "decision" and "specific", so a claim about a missing citation file was
+    # asked to be grounded by a search of `.github/`. Word boundary required.
+    if re.search(r"\bci\b|workflow|action|\.github", low):
         return "github"
+    if "citation" in low or "paper" in low or "arxiv" in low:
+        return "citation"
     if "benchmark" in low:
-        return "benchmark"
+        # Reduced to the stem because a recorded filter is often written as the
+        # pattern it was run with — `bench(mark)?s?/` — in which the full word
+        # does not appear as a substring. Three grounded claims went on being
+        # counted as ungrounded until this was noticed.
+        return "bench"
     if "fixture" in low:
         return "fixture"
     return low.strip()[:12]
@@ -195,7 +207,7 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 
 #: Ungrounded file-shaped absence claims standing when the ratchet was set
 #: (2026-09-20), out of 88 such claims in total. It was 53 when the ratchet was
-#: written and fell to 19 the same day: twelve reports whose licence and test
+#: written and fell to 16 the same day: twelve reports whose licence and test
 #: claims had just been checked against their trees gained an appendix recording
 #: that check, ten more followed, and the matcher itself stopped counting twenty
 #: behaviour claims it had been reading as file claims. Lower it as claims are
@@ -209,7 +221,18 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 #: That is deliberate — the question the predictor answers is whether the author
 #: went looking, not whether each sentence has its own footnote — and it is the
 #: reason this is a ratchet and not a verifier.
-UNGROUNDED_CEILING = 19
+#:
+#: What the remaining sixteen are, so the next pass does not chase them blindly.
+#: Roughly half are claims the matcher still over-counts because their restricting
+#: clause is phrased without one of the verbs `RESTRICTED` knows — bytechef's
+#: "class ... has no test file at all", agentrt's "`mem_service_recent` having no
+#: test at all", zep's "no tests for the Community Edition", cambium's "no
+#: non-test consumer". Those are scoped claims from the class that holds, and the
+#: fix is another verb or another shape in `RESTRICTED`, not an appendix. The rest
+#: are genuine and need a judgement read rather than a listing: "no eval harness",
+#: "no committed run output", "no precision or recall number" — a tree cannot
+#: settle any of those, because the artifact has no canonical name.
+UNGROUNDED_CEILING = 16
 
 
 def check(root: str) -> int:
@@ -296,7 +319,19 @@ def self_test() -> int:
         print("self-test failed: a bare file claim was discarded as restricted",
               file=sys.stderr)
         return 1
-    print("self-test: 9 controls passed")
+    # A filter recorded as the pattern it was run with still grounds the claim.
+    pattern_row = ("| No benchmark exists anywhere in the tree | `GET /repos/o/r/git/trees/"
+                   "abc?recursive=1`, filtered for `bench(mark)?s?/` | Nothing matched. |")
+    if _artifact_word("no benchmark anywhere in") not in _grounding_tokens(pattern_row):
+        print("self-test failed: a filter written as a regex did not count as grounding",
+              file=sys.stderr)
+        return 1
+    # "citation" must not be read as "CI".
+    if _artifact_word("no citation file exists anywhere in the tree") == "github":
+        print("self-test failed: 'citation' was read as the scope word 'CI'",
+              file=sys.stderr)
+        return 1
+    print("self-test: 11 controls passed")
     return 0
 
 

@@ -337,6 +337,7 @@ the check that was actually run, not a local equivalent.
 | Claim | Check | Result at this pin |
 | --- | --- | --- |
 | No paper and no benchmark of any kind in the repository | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for benchmark-shaped paths | Two hits, both this tool's own captured journal — `.cognition/journal.jsonl` and a per-author file beside it — which is data the system produced, not a benchmark of it. |
+| No paper and no citation file exists anywhere in the tree | `curl -s -o /dev/null -w '%{http_code}' https://raw.githubusercontent.com/OWNER/REPO/REVISION/CITATION.cff`, then the same fetch of `README.md` searched for `arxiv.org`, `doi.org`, `@article` and `@inproceedings` | 404 for the citation file, and no match in the README. |
 
 
 ## History

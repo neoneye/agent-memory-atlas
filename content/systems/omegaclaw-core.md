@@ -460,6 +460,7 @@ the check that was actually run, not a local equivalent.
 | Claim | Check | Result at this pin |
 | --- | --- | --- |
 | No benchmark, no committed run output and no paper in the repository | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for benchmark-shaped paths | Nothing matched. |
+| No paper and no citation file exists anywhere in the tree | `curl -s -o /dev/null -w '%{http_code}' https://raw.githubusercontent.com/OWNER/REPO/REVISION/CITATION.cff`, then the same fetch of `README.md` searched for `arxiv.org`, `doi.org`, `@article` and `@inproceedings` | 404 for the citation file, and no match in the README. |
 
 
 ## History
