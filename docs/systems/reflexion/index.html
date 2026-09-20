@@ -511,7 +511,17 @@ it, which is the expected shape for a code benchmark and worth stating
 plainly for anyone cloning it.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p>There are no unit tests anywhere in the repository.</p>
+<p>Reflexion's own code carries no unit tests. The qualifier is
+load-bearing: the checkout has two submodules under
+<code>programming_runs/</code>, and one of them —
+<code>executors/leetcode_env</code>, which is
+<code>GammaTauAI/leetcode-hard-gym</code> at <code>228163ab</code> —
+ships <code>tests/utils/test_python_formatter.py</code> and
+<code>test_rust_formatter.py</code>. Those are the harness project's
+tests, not this one's, and they exercise code formatting rather than
+anything Reflexion contributes. A <code>find</code> over an initialised
+clone will nonetheless return them, which is why the claim is scoped to
+the superproject rather than to the tree on disk.</p>
 <p>The evaluation <em>artifacts</em>, on the other hand, are unusually
 complete for a research release: the AlfWorld and WebShop directories
 ship the actual per-trial env-config JSON from real runs.
@@ -737,7 +747,7 @@ equivalent.</p>
 </thead>
 <tbody>
 <tr>
-<td>No unit test exists anywhere in the repository</td>
+<td>No unit test exists in Reflexion's own tree</td>
 <td><code>GET /repos/&lt;owner&gt;/&lt;repo&gt;/git/trees/&lt;this revision&gt;?recursive=1</code>,
 filtered for <code>tests?/</code>, <code>__tests__/</code>,
 <code>test_*</code>, <code>*_test.*</code>, <code>*.test.*</code> and
@@ -750,9 +760,35 @@ filtered for <code>tests?/</code>, <code>__tests__/</code>,
 those results. The name <code>test</code> here belongs to the
 evaluation, which section 10 describes as unusually complete.</td>
 </tr>
+<tr>
+<td>The two submodules were checked separately</td>
+<td>the same listing filtered for <code>type: "commit"</code>, then each
+submodule's own tree at the sha the superproject pins</td>
+<td><code>programming_runs/lazzzy</code> (<code>GammaTauAI/lazzzy</code>
+at <code>404c06a5</code>) has none.
+<code>programming_runs/executors/leetcode_env</code>
+(<code>GammaTauAI/leetcode-hard-gym</code> at <code>228163ab</code>) has
+two, <code>tests/utils/test_python_formatter.py</code> and
+<code>test_rust_formatter.py</code> — the harness project's, not
+Reflexion's.</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — same pin, the day's second visit. The
+appendix added earlier today recorded a scan of the tree for unit tests
+and found none; that scan was of the <strong>superproject only</strong>.
+The trees API returns a submodule as <code>type: "commit"</code> and
+does not descend, and this checkout has two under
+<code>programming_runs/</code>.
+<code>GammaTauAI/leetcode-hard-gym</code>, pinned at
+<code>228163ab</code>, ships
+<code>tests/utils/test_python_formatter.py</code> and
+<code>test_rust_formatter.py</code>. They belong to the harness project
+rather than to Reflexion and they test code formatting, so the finding
+survives — but an initialised clone does contain unit tests, and the
+claim is now scoped to Reflexion's own tree and says where the others
+are. No mark changes.</p>
 <p><strong>2026-09-18</strong> — re-read at the same commit; nothing
 upstream has moved. The central claims re-verified in the tree: the read
 window is <code>memory[-3:]</code> at both injection and reflection in

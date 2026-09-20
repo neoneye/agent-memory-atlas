@@ -377,7 +377,15 @@ cloning it.
 
 ## 10. Tests, Evals, and Benchmarks
 
-There are no unit tests anywhere in the repository.
+Reflexion's own code carries no unit tests. The qualifier is load-bearing: the
+checkout has two submodules under `programming_runs/`, and one of them —
+`executors/leetcode_env`, which is `GammaTauAI/leetcode-hard-gym` at
+`228163ab` — ships `tests/utils/test_python_formatter.py` and
+`test_rust_formatter.py`. Those are the harness project's tests, not this
+one's, and they exercise code formatting rather than anything Reflexion
+contributes. A `find` over an initialised clone will nonetheless return them,
+which is why the claim is scoped to the superproject rather than to the tree
+on disk.
 
 The evaluation *artifacts*, on the other hand, are unusually complete for a
 research release: the AlfWorld and WebShop directories ship the actual
@@ -541,10 +549,13 @@ the check that was actually run, not a local equivalent.
 
 | Claim | Check | Result at this pin |
 | --- | --- | --- |
-| No unit test exists anywhere in the repository | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `tests?/`, `__tests__/`, `test_*`, `*_test.*`, `*.test.*` and `*.spec.*` | Six paths match and not one is a unit test: `figures/test_generation.png`; four `*_pass_at_k_1.jsonl` result files under `programming_runs/root/`; and `programming_runs/test_acc.py`, which computes accuracy over those results. The name `test` here belongs to the evaluation, which section 10 describes as unusually complete. |
+| No unit test exists in Reflexion's own tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `tests?/`, `__tests__/`, `test_*`, `*_test.*`, `*.test.*` and `*.spec.*` | Six paths match and not one is a unit test: `figures/test_generation.png`; four `*_pass_at_k_1.jsonl` result files under `programming_runs/root/`; and `programming_runs/test_acc.py`, which computes accuracy over those results. The name `test` here belongs to the evaluation, which section 10 describes as unusually complete. |
+| The two submodules were checked separately | the same listing filtered for `type: "commit"`, then each submodule's own tree at the sha the superproject pins | `programming_runs/lazzzy` (`GammaTauAI/lazzzy` at `404c06a5`) has none. `programming_runs/executors/leetcode_env` (`GammaTauAI/leetcode-hard-gym` at `228163ab`) has two, `tests/utils/test_python_formatter.py` and `test_rust_formatter.py` — the harness project's, not Reflexion's. |
 
 
 ## History
+
+**2026-09-20** — same pin, the day's second visit. The appendix added earlier today recorded a scan of the tree for unit tests and found none; that scan was of the **superproject only**. The trees API returns a submodule as `type: "commit"` and does not descend, and this checkout has two under `programming_runs/`. `GammaTauAI/leetcode-hard-gym`, pinned at `228163ab`, ships `tests/utils/test_python_formatter.py` and `test_rust_formatter.py`. They belong to the harness project rather than to Reflexion and they test code formatting, so the finding survives — but an initialised clone does contain unit tests, and the claim is now scoped to Reflexion's own tree and says where the others are. No mark changes.
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved. The
 central claims re-verified in the tree: the read window is `memory[-3:]` at both
