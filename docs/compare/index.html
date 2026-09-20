@@ -32449,10 +32449,13 @@ two</td>
 <td>Writes are a batch build, not an agent action: crawl, parse, regex
 safety block, structural thresholds, exact-hash duplicate check, LLM
 near-duplicate judgement, embed, copy the bundle, insert. Nothing an
-agent does at answer time writes back — there is no feedback, usage or
-outcome signal anywhere in the tree. Retrieval latency is a rewrite
-call, a fan-out and a gate call, each with its own deadline, and a
-failure injects nothing rather than raising</td>
+agent does at answer time writes back: no path in this tree persists a
+usage or outcome signal. The consumer plugin does emit one — it returns
+the injected skill ids in the segment metadata so the host can correlate
+skills shown against skills used — and nothing here consumes it.
+Retrieval latency is a rewrite call, a fan-out and a gate call, each
+with its own deadline, and a failure injects nothing rather than
+raising</td>
 <td>Exclusion is <code>deleted = 1</code> with the row retained:
 near-duplicate losers carry <code>superseded_by</code>, safety
 exclusions deliberately leave it NULL so the two are distinguishable.
@@ -44943,7 +44946,10 @@ day after the tree was last touched, and twelve unpinned surfaces across
 the requirements files and the plugin manifests; nothing installed,
 built or run, so no test in this repository was executed, and the
 published benchmark table was checked against the tree rather than
-recomputed because no result artifact is committed</li>
+recomputed because no result artifact is committed. Audited on
+2026-09-20 at the same pin: two sentences said no feedback signal exists
+anywhere in the tree, and the consumer plugin emits one for its host —
+what is absent is anything that persists it.</li>
 <li><a
 href="https://github.com/neo4j-labs/create-context-graph">neo4j-labs/create-context-graph</a>
 at <a

@@ -130,7 +130,7 @@ skills into the agent's context.</p>
             </a>
                         <div class="meta-pill">
               <span>Analyzed on</span>
-              <strong>2026-09-12</strong>
+              <strong>2026-09-20</strong>
             </div>
                                     <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/EverMind-AI--SkillCorpus" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
               <span>Archived fork</span>
@@ -197,12 +197,25 @@ whose flags are load-bearing and one whose flags are a cache of a
 decision held elsewhere — and here the decision genuinely is held
 elsewhere, which is why the design survives its own clobbering.</p>
 <p><strong>Nothing an agent does ever writes back.</strong> There is no
-feedback surface, no usage counter, no outcome signal, no promotion of a
-skill that worked: the corpus flows one way, from public repositories
-through a batch build to a read-only artifact. The data model says so in
-its own header — <code>SkillRecord</code> is adapted from another
-project's and "drops the 4 counters / lineage / evolution fields (no
-execution tracking or evolution)"
+usage counter, no outcome column and no promotion of a skill that
+worked: the corpus flows one way, from public repositories through a
+batch build to a read-only artifact.</p>
+<p>The qualification matters, because a feedback <em>signal</em> does
+exist and stops one step short of the corpus.
+<code>skillcorpus_plugin/plugin-raven/skillsearch_raven/__init__.py:101-110</code>
+returns <code>injected_skill_ids</code> and
+<code>skill_hits_by_source</code> in the segment metadata under a
+comment stating the purpose — <em>"Raven's after-turn feedback
+correlates skills shown against skills used, which needs the ids that
+went in"</em> — and the engine carries an after-turn feedback dispatcher
+and its routing key
+(<code>engine-python/skillsearch/types.py:29,:89</code>). What is absent
+is a consumer: no <code>INSERT</code>, <code>UPDATE</code> or commit
+anywhere in the engine is tied to feedback. The system is built to hand
+the signal to its host and to keep it out of the library. The data model
+says so in its own header — <code>SkillRecord</code> is adapted from
+another project's and "drops the 4 counters / lineage / evolution fields
+(no execution tracking or evolution)"
 (<code>skillcorpus/core/models.py:1-6</code>). Compared with the atlas's
 reference for this shape, Voyager, the verification gate that makes a
 skill library trustworthy has been moved off the agent's execution and
@@ -783,7 +796,49 @@ grep -rn &quot;DELETE FROM quality_judgments\|DROP TABLE&quot; --include=&quot;*
 grep -rn &quot;\.update(\|\.delete(&quot; --include=&quot;*.py&quot; skillcorpus/ scripts/
 grep -rn &quot;supersede(&quot; --include=&quot;*.py&quot; .
 find . -path ./.git -prune -o -type f \( -name &quot;*.json&quot; -o -name &quot;*.csv&quot; -o -name &quot;*.jsonl&quot; -o -name &quot;*.parquet&quot; \) -print</code></pre>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><del>No feedback, usage or outcome signal anywhere in the tree</del>
+— <strong>imprecise, corrected 2026-09-20</strong></td>
+<td><code>grep -rni "feedback|usage_count|outcome" --include='*.py' --include='*.ts' . | grep -vE '(^|/)tests?/'</code></td>
+<td>An after-turn feedback dispatcher and its routing key in the engine,
+and a plugin returning <code>injected_skill_ids</code> for the host to
+correlate</td>
+</tr>
+<tr>
+<td>Nothing persists a feedback signal</td>
+<td><code>grep -rn "feedback" --include='*.py' skillcorpus_plugin/engine-python | grep -iE "insert|update|write|commit|conn\."</code></td>
+<td>Nothing — the signal is emitted and never stored</td>
+</tr>
+<tr>
+<td>The data model dropped the counters deliberately</td>
+<td>read <code>skillcorpus/core/models.py:1-6</code></td>
+<td><em>"drops the 4 counters / lineage / evolution fields (no execution
+tracking or evolution)"</em></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — audited at the same pin. The matrix
+write field and section 4 both said there is no feedback, usage or
+outcome signal anywhere in the tree. There is one: the Raven plugin
+returns the injected skill ids in its segment metadata so the host can
+correlate skills shown against skills used, and the engine carries an
+after-turn feedback dispatcher and routing key. What is absent — and
+what the finding rests on — is a consumer: nothing in this tree persists
+the signal, and the data model's own header records that the counters
+were dropped on purpose. Both sentences now say that, and the report
+gains a Recorded Searches appendix; it had none.</p>
 <p><strong>2026-09-12</strong> — <a
 href="https://github.com/EverMind-AI/SkillCorpus/commit/c82ca38dfd49a74bba656305915b80b56e9f17fc"><code class="commit-id" title="c82ca38dfd49a74bba656305915b80b56e9f17fc">c82ca38d…</code></a>
 — first reading, at a commit dated 11 September 2026. Screened before
