@@ -190,6 +190,14 @@ def _artifact_word(claim: str) -> str:
     return low.strip()[:12]
 
 
+#: Only `content/systems/` is scanned, and that is a deliberate limit rather than
+#: an oversight. `content/overview.md` carries about twenty absence claims of
+#: exactly this shape in its exclusion bullets — "examined and has no report,
+#: because X does not appear in `src/`" — but it is one nine-thousand-line file
+#: holding hundreds of recorded commands, so a file-level grounding test passes
+#: trivially for every one of them and would report zero. Grounding those needs
+#: per-bullet granularity, which this matcher does not have. Measured on
+#: 2026-09-20: 20 claims, 0 reported ungrounded, which is the wrong answer.
 def collect(content: Path) -> list[tuple[str, str, bool]]:
     rows: list[tuple[str, str, bool]] = []
     for path in sorted((content / "systems").glob("*.md")):
