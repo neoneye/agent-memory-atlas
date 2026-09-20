@@ -219,7 +219,7 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 
 #: Ungrounded file-shaped absence claims standing when the ratchet was set
 #: (2026-09-20), out of 88 such claims in total. It was 53 when the ratchet was
-#: written and fell to 12 the same day: twelve reports whose licence and test
+#: written and fell to 9 the same day: twelve reports whose licence and test
 #: claims had just been checked against their trees gained an appendix recording
 #: that check, ten more followed, and the matcher itself stopped counting twenty
 #: behaviour claims it had been reading as file claims. Lower it as claims are
@@ -244,7 +244,7 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 #: are genuine and need a judgement read rather than a listing: "no eval harness",
 #: "no committed run output", "no precision or recall number" — a tree cannot
 #: settle any of those, because the artifact has no canonical name.
-UNGROUNDED_CEILING = 12
+UNGROUNDED_CEILING = 9
 
 
 def check(root: str) -> int:

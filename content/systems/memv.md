@@ -315,6 +315,17 @@ count `:108-122`), `src/memv/models.py` (the validity checks `:64`, `:100`,
 **Benchmark** — `benchmarks/longmemeval/{run,add,search,evaluate,dataset,config,_checkpoint}.py`,
 `benchmarks/results/` (empty), `benchmarks/data/`
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No committed benchmark result, despite a checkpointed harness in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `bench(mark)?s?/` and then for result-shaped paths inside it | A `benchmarks/longmemeval/` harness with `_checkpoint.py`, and exactly one result-shaped path: `benchmarks/results/.gitkeep`. The directory for the results is committed and empty, held open by a placeholder — the clearest possible statement that the runs were intended and none was kept. |
+
+
 ## History
 
 **2026-09-15** — [`21891376f0bf58c8523895c1bebe29df49125677`](https://github.com/vstorm-co/memv/commit/21891376f0bf58c8523895c1bebe29df49125677) — second reading. One commit since the previous pin, a documentation change raising the stated Python requirement to 3.10 across three files; no source changed. Screened again: two auto-run findings, both contributor tooling in `.claude/` — a hook running `ruff` on edited files and a macOS notification sound, and a committed `settings.local.json` that is a personal permission allowlist rather than configuration anyone else needs; nothing fetches remote code, and nothing was installed or run. Both marks were re-tested at the producer and hold, and each now carries the evidence record it had been asserted without. The one check that could have gone the other way: the knowledge store's `get_valid_at` and `get_current` apply the temporal predicates with no user filter, and a search for their callers finds only the store's own tests. The retrieval path the library exposes filters by user inside both indexes and applies the temporal check afterwards.

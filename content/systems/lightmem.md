@@ -456,6 +456,17 @@ find tests -name '*.py' | xargs wc -l                                    # 49 li
 find experiments -name '*.json' -o -name '*result*'                      # none: harnesses committed, no scores
 ```
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No result file for either benchmark is in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `results?/`, `output`, `scores?`, `metrics` and `.csv`/`.tsv` within `experiments/` | Nothing. The harnesses are there — `dataset/LOCOMO.py`, `dataset/longmemeval.py` and `experiments/egolife/eval/eval.py` — and no run of any of them is committed. |
+
+
 ## History
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved. Both

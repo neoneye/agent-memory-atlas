@@ -9,7 +9,7 @@ source_url: https://github.com/deepseek-ai/deepseek-harness
 archive_name: "deepseek-ai--deepseek-harness"
 revision: 0d1f50007f9bca3f52b06e1c3074fa14d5fb0720
 revision_url: https://github.com/deepseek-ai/deepseek-harness/commit/0d1f50007f9bca3f52b06e1c3074fa14d5fb0720
-analyzed_at: 2026-09-15
+analyzed_at: 2026-09-20
 capabilities: "scope_enforced, negative_eval"
 capability_evidence:
   scope_enforced: "the model-facing history tools, in the opt-in tool-session-query package | packages/session-query/tool-session-query/src/operations.ts:61-101, src/workspace-access.ts | cross-session search takes the caller session's stored cwd, refuses when it has none, adds a cwd filter to the provider request, authorizes each requested parent session, and drops any returned hit that is the caller or fails recordAuthorized; reads and traces authorize the target session against the caller first. No shipped bundle mounts the package | packages/session-query/tool-session-query/tests/tool-session-query.spec.ts:587, :602"
@@ -459,11 +459,24 @@ provider is called, unequal-length fractional remainders compared with implicit
 trailing zeroes, and fractional bounds across zero and pre-epoch. That is the
 class of bug that silently drops a matching memory, and it is pinned.
 
-What is absent is any retrieval-quality measurement. There is no fixture corpus
-with expected hits, no precision or recall number, and no benchmark of any kind
-in the tree — so nothing would notice if the index started returning worse
-results, only if it started returning unauthorized ones. For a system whose
-memory contribution is search, that is the eval this atlas would want first.
+What is absent is any retrieval-*quality* measurement. There is no fixture
+corpus with expected hits and no precision or recall number anywhere — so
+nothing would notice if the index started returning worse results, only if it
+started returning unauthorized ones. For a system whose memory contribution is
+search, that is the eval this atlas would want first.
+
+An earlier version of this paragraph said there is no benchmark of any kind in
+the tree, and that was wrong. `benchmarks/` is a 34-file suite with its own
+`package.json` and `AGENTS.md`, covering `session-open`, `conversation-fold`,
+`agent-continuation` with a synthetic history, `long-session-browser` and
+`active-stream-reconnect`, several of them documented in English and Chinese.
+Every one measures time and behaviour under load. None measures whether a
+search returned the right thing, and `benchmarks/` holds no committed result
+file at all.
+
+That sharpens the finding rather than retiring it. This project measures what
+it decided to measure, carefully and in two languages; the thing it does not
+measure is the one its memory contribution rests on.
 
 **No paper, arXiv reference or citation file exists in this repository.**
 
@@ -593,7 +606,21 @@ the two or three mechanisms above, rather than the dependency.
 `packages/session-query/tool-session-query/tests/sqlite-integration.spec.ts`,
 `packages/session/session-persistence/tests/persistence.spec.ts`.
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| ~~No benchmark of any kind is in the tree~~ — **withdrawn 2026-09-20** | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `bench(mark)?s?/`, `evals?/` and `experiments?/` | A top-level `benchmarks/` of 34 files — `session-open`, `conversation-fold`, `agent-continuation`, `long-session-browser`, `active-stream-reconnect` — all `*.bench.ts` measuring latency and load. The claim was made from inside the memory and search code. |
+| No committed benchmark result exists | the same tree, filtered inside `benchmarks/` for `results?/`, `output`, `scores?`, `metrics` and `.csv`/`.tsv` | Nothing. The suite runs and records nothing. |
+| No retrieval-quality measurement — no fixture corpus with expected hits, no precision or recall number | the same tree, with every file under `benchmarks/` read by name | No fixture corpus and no scored retrieval case. All five suites measure time and behaviour under load. |
+
+
 ## History
+
+**2026-09-20** — same pin, one correction, from a corpus-wide audit of absence claims. Section 10 said there is no benchmark of any kind in the tree. There is a 34-file `benchmarks/` suite with its own manifest, covering session open, conversation folding, agent continuation, long browser sessions and stream reconnection, several documented in English and Chinese. The claim was made from inside the memory and search code, which is where this error class lives: a careful reading asserts over a directory it never listed. The finding it supported survives and improves — every one of those suites measures time and behaviour under load, none measures whether a search returned the right thing, and `benchmarks/` holds no committed result file. No mark moves. A Recorded Searches appendix was added; this report had none.
 
 **2026-09-15** — [`0d1f50007f9bca3f52b06e1c3074fa14d5fb0720`](https://github.com/deepseek-ai/deepseek-harness/commit/0d1f50007f9bca3f52b06e1c3074fa14d5fb0720) — 4,884 commits on, 2026-09-15. Screened before reading: no auto-run surface, two build-time execution points, 151 unpinned surfaces and 303 dependency surfaces inside the seven-day cooldown, with `AGENTS.md` and `CLAUDE.md` read as data; nothing was installed or run. The framing stands: both shipped layers still set the search index to `openAt: never`, pinned by `apps/cli/tests/lazy-search-startup.compat.spec.ts`, and no bundle mounts `tool-session-query`, whose authorization cases are unchanged. What moved in the memory packages: the SQLite session-persistence backend was removed, leaving JSONL; released session formats v0 to v2 now migrate forward on open, closing the no-migration gap section 9 named; spill cleanup, a session turn outline projection and log export were added. Both marks kept with evidence records.
 

@@ -600,6 +600,17 @@ write, the edge write and the state file — which is to say most of
 - `backend/tests/test_api.py` — upload, traversal sanitisation, the 409 on
   concurrent ingest.
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No benchmark, no eval harness and no committed run of any kind exists in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `bench(mark)?s?/`, `evals?/`, `experiments?/`, `results?/`, `locomo`, `longmemeval` and `.csv`/`.jsonl` | Nothing matched. |
+
+
 ## History
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved. Two
