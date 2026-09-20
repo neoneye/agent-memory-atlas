@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An MCP work-item server that
+verifies an agent's actor claim against a did:web JWKS before admitting
+a note, records the verdict on the row, and never consults it again on
+any read.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Task
+Orchestrator — Agent Memory Atlas">
+    <meta property="og:description" content="An MCP work-item server
+that verifies an agent's actor claim against a did:web JWKS before
+admitting a note, records the verdict on the row, and never consults it
+again on any read.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Task
+Orchestrator — Agent Memory Atlas">
+    <meta name="twitter:description" content="An MCP work-item server
+that verifies an agent's actor claim against a did:web JWKS before
+admitting a note, records the verdict on the row, and never consults it
+again on any read.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Task Orchestrator — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Task Orchestrator",
+      "description": "An MCP work-item server that verifies an agent's actor claim against a did:web JWKS before admitting a note, records the verdict on the row, and never consults it again on any read.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">One history table outlives its subject and
+the other does not</p>
+          <h1>Task Orchestrator</h1>
+          <p class="document-deck">An MCP work-item server that verifies
+an agent's actor claim against a did:web JWKS before admitting a note,
+records the verdict on the row, and never consults it again on any
+read.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/jpicklyk/task-orchestrator">
+              <span>Source</span>
+              <strong>jpicklyk/task-orchestrator</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/jpicklyk/task-orchestrator/commit/9f2287166059d541b2627c8193b54e47fc03b102" title="9f2287166059d541b2627c8193b54e47fc03b102">
+              <span>Analyzed revision</span>
+              <code>9f228716…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-20</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/jpicklyk--task-orchestrator" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>jpicklyk--task-orchestrator</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Task Orchestrator is an MCP server giving agents a persistent
+work-item graph — items, notes, dependencies, role transitions — with
+the rules enforced at the tool boundary rather than in a prompt. Its own
+framing is the clearest summary: <em>"Prompt-based frameworks hope the
+LLM follows instructions. This one blocks the call if it doesn't."</em>
+MIT, Kotlin, 523 files.</p>
+<p>It earns a place here because its notes are durable agent-authored
+content, full-text indexed and read back across sessions, and because of
+what it does to them on the way in.</p>
+<p><strong>One mark: <code>negative_eval</code>.</strong> Three
+mechanisms that look like more are worth reading for exactly where they
+stop.</p>
+<p><strong>An actor claim is cryptographically verified.</strong>
+<code>ActorParsing.kt:96</code> calls
+<code>context.actorVerifier().verify(claim)</code>, and the verifier
+resolves a <code>did:web</code> document, extracts its JWKS and checks
+the proof. The result is a five-value <code>VerificationStatus</code> —
+<code>ABSENT</code>, <code>UNCHECKED</code>, <code>VERIFIED</code>,
+<code>REJECTED</code>, <code>UNAVAILABLE</code> — stored on the note and
+on the transition.</p>
+<p><strong>It gates the write and never the read.</strong> The ladder at
+<code>ActorParsing.kt:112-161</code> distinguishes a fresh verification
+from a stale-cache one from a JWKS fetch that failed, and refuses the
+call when the status is not <code>VERIFIED</code>. Nothing filters a
+query on it afterwards: a note recorded <code>REJECTED</code> comes back
+like any other.</p>
+<p><strong>And one audit table outlives its subject while the other does
+not.</strong> <code>ResourceLeaseHistoryTable</code> deliberately
+carries no foreign key so it survives <code>ON DELETE CASCADE</code>
+<em>and</em> deletion of the holder itself.
+<code>RoleTransitionsTable</code>, which records the state changes of
+the work items, is removed with them by <code>deleteByItemId</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>Work items hold notes; notes are what an agent writes down and a
+later agent reads. Every transition between roles is recorded with who
+caused it and what the server made of their identity. The gates —
+required notes, dependency ordering, actor attribution — live in the
+tool handlers, so an agent that does not comply gets an error rather
+than a silently accepted call.</p>
+<h2 id="3-architecture">3. Architecture</h2>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — an agent writing a note or advancing an item supplies an actor claim which the server resolves through a did:web document to a JWKS and verifies, refusing the call unless the status is verified while distinguishing a stale cache from a failed fetch; the verdict is stored on the note and on the role transition and no query filters on it afterwards, and of the two history tables the lease history deliberately carries no foreign key so it survives deletion of the item it describes while the transitions log is cascaded away with that item</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: an agent writing a note or advancing an item supplies an actor claim which the server resolves through a did:web document to a JWKS and verifies, refusing the call unless the status is verified while distinguishing a stale cache from a failed fetch; the verdict is stored on the note and on the role transition and no query filters on it afterwards, and of the two history tables the lease history deliberately carries no foreign key so it survives deletion of the item it describes while the transitions log is cascaded away with that item
+flowchart TD
+    AG((&quot;agent&quot;)) --&gt; CALL[&quot;manage_notes(upsert) · advance_item · claim_item&quot;]
+    CALL --&gt; AC[&quot;ActorParsing: actorVerifier().verify(claim)&quot;]
+    AC --&gt; DID[&quot;did:web resolver → DID document&quot;]
+    DID --&gt; JWKS[&quot;JWKS extractor&quot;]
+    JWKS --&gt; VS{&quot;VerificationStatus&quot;}
+    VS --&gt; V1[&quot;VERIFIED — fresh, or stale cache&quot;]
+    VS --&gt; V2[&quot;UNAVAILABLE + verifiedFromCache&quot;]
+    VS --&gt; V3[&quot;UNAVAILABLE — JWKS fetch failed&quot;]
+    VS --&gt; V4[&quot;REJECTED / UNCHECKED / ABSENT&quot;]
+    V4 --&gt;|&quot;not VERIFIED&quot;| ERR[&quot;the call is refused&quot;]
+    V1 --&gt; ADMIT
+    V2 --&gt; ADMIT
+    ADMIT[&quot;write admitted&quot;]
+
+    ADMIT --&gt; N[(&quot;notes&lt;br/&gt;body · actorId · actorKind · actorParent&lt;br/&gt;actorProof · verificationStatus · verificationVerifier&quot;)]
+    ADMIT --&gt; RT[(&quot;role_transitions&lt;br/&gt;from/to role · status labels · trigger&lt;br/&gt;summary · actor · verification&quot;)]
+    N --&gt; FTS[&quot;FTS5 index&quot;]
+    FTS --&gt; READ[&quot;later sessions read the notes&quot;]
+    READ -.-&gt;|&quot;no query filters on verificationStatus&quot;| N
+    READ --&gt; AG
+
+    RT -.-&gt;|&quot;deleteByItemId — cascaded away&lt;br/&gt;with the work item&quot;| GONE1[&quot;history gone&quot;]
+    LH[(&quot;resource_lease_history&lt;br/&gt;NO foreign key, deliberately&quot;)] -.-&gt;|&quot;survives ON DELETE CASCADE&lt;br/&gt;and deletion of the holder&quot;| KEPT[&quot;history kept&quot;]
+
+    GATES[&quot;server-enforced gates:&lt;br/&gt;required notes · dependency ordering&lt;br/&gt;actor attribution&quot;] --&gt; CALL</code></pre></details></figure>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>The verification ladder</strong> —
+<code>ActorParsing.kt:112-161</code>. Three documented outcomes in
+order: <code>VERIFIED</code>, whether fresh or from a stale cache;
+<code>UNAVAILABLE</code> carrying
+<code>metadata["verifiedFromCache"] == "true"</code>; and
+<code>UNAVAILABLE</code> without that flag, meaning the JWKS could not
+be fetched at all. <code>:143</code> computes
+<code>isVerified = verification.status == VerificationStatus.VERIFIED</code>
+and <code>:129</code> records that anything else <em>"the caller must
+surface... as an"</em> error. Distinguishing "I verified this earlier
+and cannot re-check now" from "I have never been able to check" is the
+distinction most implementations skip.</p>
+<p><strong>Where the verdict lands</strong> —
+<code>SQLiteNoteRepository.kt:103-105</code> and <code>:119-121</code>,
+writing <code>actorProof</code>, <code>verificationStatus</code> and
+<code>verificationVerifier</code> onto the row, and
+<code>SQLiteRoleTransitionRepository.kt:51</code> doing the same for a
+transition.</p>
+<p><strong>Where it does not</strong> — nothing. A search of the main
+source for <code>verificationStatus</code> outside the schema, the
+repositories and the parsing ladder returns only
+<code>ActorParsing</code>'s own admission decision. No read path narrows
+on it.</p>
+<p><strong>The two histories</strong> —
+<code>ResourceLeaseHistoryTable.kt:12-15</code>: <em>"Deliberately
+carries NO foreign key on holderItemId to WorkItemsTable... this table
+is an audit trail that must survive both <code>ON DELETE CASCADE</code>
+of the live ResourceLeasesTable rows and deletion of the holder work
+item itself, so holderItemId may reference a work item that no longer
+exists."</em> Its interval semantics are equally explicit: one row per
+hold interval, a same-holder TTL refresh extends the open row in place,
+and stealing an expired lease closes the prior interval with
+<code>release_reason = "expired"</code> before opening a new one.</p>
+<p><code>SQLiteRoleTransitionRepository.kt:121-123</code> is the
+contrast: <code>deleteByItemId</code> issues
+<code>RoleTransitionsTable.deleteWhere { itemId eq itemId }</code>.</p>
+<p><strong>The attribution hook</strong> —
+<code>claude-plugins/task-orchestrator/hooks/enforce-actor-attribution.mjs</code>
+is a PreToolUse hook that, when <code>actor_authentication</code> is
+enabled, <em>"blocks advance_item and manage_notes(upsert) calls that
+are missing an actor object"</em> — a client-side pre-check in front of
+the server-side verification, not a substitute for it.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p><code>work_items</code>, <code>notes</code> with an FTS5 index,
+<code>dependencies</code>, <code>role_transitions</code>,
+<code>resource_leases</code> and <code>resource_lease_history</code>. A
+note carries its body, an actor claim — id, kind, parent, proof — and
+the server's verification of that claim. There is no supersession
+pointer, no validity window and no status the note itself can hold
+beyond the verification verdict.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Full-text search over notes, plus graph traversal across
+dependencies. Neither consults the verification verdict.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>A write is refused unless the actor verifies, unless the required
+notes for a transition exist, and unless the dependency ordering permits
+it. Schemas are opt-in: <em>"Without schemas, all 14 tools work in
+schema-free mode — no gates, no required notes."</em></p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Fourteen MCP tools, plus a Claude plugin carrying hooks for actor
+attribution, plan capture, and a retrospective trigger with a marker, a
+cooldown and a Stop backstop.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong><code>negative_eval</code></strong> — section 10.</p>
+<p><strong><code>trust_state</code> is withheld, and this is the
+finding.</strong> The vocabulary is right: five discrete values on the
+row including <code>REJECTED</code>, derived from a cryptographic check
+rather than claimed. It gates admission and nothing else. A note stored
+when verification was <code>UNAVAILABLE</code> is indistinguishable, at
+every read path, from one stored <code>VERIFIED</code> — the field is
+present in the result and absent from every predicate. The rubric asks
+for a state that withholds a memory from being treated as true; this one
+decides whether the memory is written.</p>
+<p><strong><code>human_review</code> is withheld.</strong> The
+verification establishes <em>who wrote</em> a note, not that anyone else
+approved it. There is no state a note waits in and no second actor who
+resolves it. The identity work is real and it is authorship attestation
+rather than review.</p>
+<p><strong><code>audit_log</code> is withheld, on the contrast inside
+the codebase.</strong> <code>role_transitions</code> is never updated
+and records every state change with its actor and verification — and
+<code>deleteByItemId</code> removes an item's entire history with the
+item. The table beside it, <code>resource_lease_history</code>, was
+deliberately denormalised so that exact thing could not happen to it.
+When one project has written both, the second is the standard the first
+is being measured against.</p>
+<p><strong><code>tombstone</code>, <code>bitemporal</code> and
+<code>scope_enforced</code> are withheld.</strong> No rejected value is
+recorded against content, there is one clock, and the boundary is a
+project root rather than a key filtered on a read.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>A substantial Kotlin suite plus JavaScript hook tests. Nothing was
+installed and nothing was run.</p>
+<p>The mark rests on cases that assert refusals and non-effects:</p>
+<ul>
+<li><code>DidVerificationIntegrationTest.kt:434</code> — <em>"Expected
+REJECTED: loose-kid must not apply to multi-key DID documents
+(single-key guard)"</em>. A relaxed key-id match is asserted
+<strong>not</strong> to apply when the DID document holds more than one
+key, which is the case where relaxing it would let the wrong key
+verify.</li>
+<li><code>IdempotencyToolsTest.kt:427</code> — <em>"Cached call must not
+create a duplicate dependency"</em>.</li>
+<li><code>:682</code> — <em>"Without actor, requestId must not enable
+caching"</em>: the idempotency cache is asserted inert when there is no
+actor to key it to.</li>
+<li><code>:838</code> — <em>"Repository must not be called — validation
+rejected before execution"</em>, which asserts the absence of a side
+effect rather than the presence of an error.</li>
+</ul>
+<p>The last is the shape worth copying: checking that the repository was
+never reached proves the rejection happened <em>before</em> anything
+could be written, which an error-code assertion alone does not.</p>
+<p>No benchmark and no paper.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Distinguish "verified from a stale cache" from "could not
+verify at all."</strong> Collapsing both into a failure makes an offline
+moment look like an attack; collapsing both into success makes an attack
+look like an offline moment.</li>
+<li><strong>Assert that the repository was not called.</strong> An error
+assertion proves the caller was told no; a never-reached assertion
+proves nothing was written.</li>
+<li><strong>Build the audit trail so it survives the deletion of its
+subject.</strong> The lease-history table's missing foreign key is three
+lines of decision and a paragraph of rationale, and it is why that
+history answers questions after an incident.</li>
+<li><strong>Put the gates in the tool handler.</strong> A required note
+that <code>advance_item</code> checks is a rule; the same sentence in a
+prompt is a hope.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Storing a verdict you never read.</strong> Five verification
+states land on every note and no query mentions them. The check is doing
+work at admission, and the column is doing none afterwards.</li>
+<li><strong>Two history tables with opposite deletion
+semantics.</strong> One survives its subject by design and one is
+cascaded away; a reader who finds the second first will assume the first
+behaves the same way.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>Take it if several agents share a work graph and you want the
+ordering and the documentation requirements enforced where they cannot
+be talked out of. The actor verification is worth having on its own, and
+worth extending to the read path if you intend to trust what the notes
+say.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>A note's verification verdict is stored and never filtered on. Is a
+verified-only read mode intended, or is admission considered
+sufficient?</li>
+<li><code>role_transitions</code> is deleted with its work item while
+the lease history is built to outlive its holder. Is the difference
+deliberate?</li>
+<li>Schemas are opt-in and without them there are <em>"no gates, no
+required notes."</em> What fraction of installs runs with them, and is
+the ungated default the one most agents meet?</li>
+<li>The retrospective machinery has a marker, a cooldown and a Stop
+backstop. Is anything written down as a result, or is the retrospective
+only triggered?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>current/src/main/kotlin/.../tools/ActorParsing.kt</code></td>
+<td>the verification call and the three-outcome ladder</td>
+</tr>
+<tr>
+<td><code>.../infrastructure/config/JwksActorVerifier.kt</code>,
+<code>DidWebResolver.kt</code>,
+<code>DidDocumentJwksExtractor.kt</code></td>
+<td>did:web resolution to a JWKS and the proof check</td>
+</tr>
+<tr>
+<td><code>.../database/schema/ResourceLeaseHistoryTable.kt</code></td>
+<td>the audit trail with no foreign key, and why</td>
+</tr>
+<tr>
+<td><code>.../database/schema/RoleTransitionsTable.kt</code></td>
+<td>the transition record, its actor columns and verification
+columns</td>
+</tr>
+<tr>
+<td><code>.../repository/SQLiteRoleTransitionRepository.kt</code></td>
+<td><code>create</code>, the finders, and
+<code>deleteByItemId</code></td>
+</tr>
+<tr>
+<td><code>.../repository/SQLiteNoteRepository.kt</code></td>
+<td>where the verdict is written onto a note</td>
+</tr>
+<tr>
+<td><code>claude-plugins/task-orchestrator/hooks/enforce-actor-attribution.mjs</code></td>
+<td>the client-side pre-check</td>
+</tr>
+<tr>
+<td><code>current/src/test/.../DidVerificationIntegrationTest.kt</code></td>
+<td>the single-key guard case</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="appendix-recorded-searches">Appendix: Recorded Searches</h2>
+<p>Run from the root of the checkout at the pinned commit.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result at this pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The actor claim is really verified, not just stored</td>
+<td><code>grep -rn "\.verify(" --include='*.kt' current/src/main</code></td>
+<td><code>ActorParsing.kt:96</code> calls
+<code>context.actorVerifier().verify(claim)</code>;
+<code>JwksActorVerifier</code> implements it over a did:web-resolved
+JWKS. A first pass that looked only at the repositories saw
+<code>actorProof</code> being persisted and would have reported it
+unverified</td>
+</tr>
+<tr>
+<td>No read path filters on the verdict</td>
+<td><code>grep -rn "verificationStatus" --include='*.kt' current/src/main</code>
+excluding the schema, the repositories' row mapping and
+<code>VerificationResult.kt</code></td>
+<td>Only <code>ActorParsing</code>'s own admission ladder</td>
+</tr>
+<tr>
+<td>The two history tables differ on deletion</td>
+<td>read <code>ResourceLeaseHistoryTable.kt:12-15</code>;
+<code>grep -n "deleteWhere" .../SQLiteRoleTransitionRepository.kt</code></td>
+<td>The first deliberately carries no foreign key so it survives; the
+second is deleted by <code>deleteByItemId</code> at
+<code>:123</code></td>
+</tr>
+<tr>
+<td>Transitions are never updated</td>
+<td><code>grep -rn "RoleTransitionsTable" --include='*.kt' current/src/main | grep -i update</code></td>
+<td>Nothing; the repository exposes <code>create</code>, three finders
+and the delete</td>
+</tr>
+<tr>
+<td>The gates are opt-in</td>
+<td>read <code>README.md:287</code></td>
+<td><em>"Without schemas, all 14 tools work in schema-free mode — no
+gates, no required notes"</em></td>
+</tr>
+<tr>
+<td>The licence carries no rider</td>
+<td><code>head -3 LICENSE</code>;
+<code>grep -n -i 'anthropic|may not' LICENSE</code></td>
+<td>Stock MIT, no match</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="history">History</h2>
+<p><strong>2026-09-20</strong> — <a
+href="https://github.com/jpicklyk/task-orchestrator/commit/9f2287166059d541b2627c8193b54e47fc03b102"><code class="commit-id" title="9f2287166059d541b2627c8193b54e47fc03b102">9f228716…</code></a>
+— first reading, at 523 files. Screened before reading; nothing was
+installed, built or run. MIT. One mark, <code>negative_eval</code>. It
+is included here rather than excluded as workflow tooling because its
+notes are durable agent-authored content, full-text indexed and read
+back across sessions. <code>trust_state</code> is withheld although a
+five-value verification verdict sits on every note, because it gates the
+write and no read consults it; <code>human_review</code> because
+verification establishes authorship rather than approval; and
+<code>audit_log</code> on a contrast the codebase makes with itself —
+one history table is deliberately built to survive deletion of its
+subject and the one recording work-item transitions is cascaded away
+with it. One claim was checked and inverted before publication: the
+repositories persist an <code>actorProof</code> straight from the
+caller's object, which reads as an unverified claim until the parsing
+layer shows a did:web JWKS check standing in front of them.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

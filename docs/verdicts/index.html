@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 616 reports.</strong></p>
+<p><strong>This page covers all 617 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25083,6 +25083,43 @@ enabled.</li>
 run cannot see a Windows-only import crash, so banning unguarded
 platform-only imports at the AST level is what makes the other
 platform's failure visible from this one.</li>
+</ul>
+<h3 id="task-orchestrator"><a
+href="../systems/task-orchestrator/"><code>task-orchestrator</code></a></h3>
+<ul>
+<li>Best idea: <strong>distinguish "verified from a stale cache" from
+"could not verify at all."</strong> An agent's actor claim is checked
+against a <code>did:web</code>-resolved JWKS before a note is admitted,
+and the ladder in <code>ActorParsing.kt</code> separates a fresh
+verification, an <code>UNAVAILABLE</code> carrying
+<code>verifiedFromCache</code>, and an <code>UNAVAILABLE</code> where
+the fetch simply failed. Collapsing those makes an offline moment look
+like an attack, or an attack look like an offline moment.</li>
+<li>Biggest risk: <strong>the verdict gates the write and no read
+consults it.</strong> Five discrete states land on every note —
+including <code>REJECTED</code> — and a search of the source finds the
+field in the schema, in the row mapping, and in the admission decision,
+and in no predicate anywhere. A note stored while verification was
+unavailable is indistinguishable at query time from a verified one.
+<code>trust_state</code> is withheld on exactly that.</li>
+<li>Most reusable component: <code>ResourceLeaseHistoryTable.kt</code>,
+for the three lines of schema and the paragraph explaining them — the
+table <em>"deliberately carries NO foreign key"</em> so it survives
+<code>ON DELETE CASCADE</code> <strong>and</strong> deletion of the
+holder work item, because an audit trail that vanishes with its subject
+answers nothing after an incident. Read it beside
+<code>SQLiteRoleTransitionRepository.deleteByItemId</code>, which does
+the opposite to the history of the work items themselves.</li>
+<li>Maturity impression: MIT, Kotlin, 523 files, fourteen MCP tools with
+the gates in the tool handlers rather than in a prompt —
+<em>"Prompt-based frameworks hope the LLM follows instructions. This one
+blocks the call if it doesn't."</em> Schemas are opt-in, and without
+them there are <em>"no gates, no required notes."</em> One mark,
+<code>negative_eval</code>.</li>
+<li>Study when: you are writing tests for a rejection. One case asserts
+<em>"Repository must not be called — validation rejected before
+execution"</em> — proving nothing was written, which an error-code
+assertion does not.</li>
 </ul>
         </article>
       </div>

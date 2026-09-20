@@ -18,7 +18,7 @@ is worth your time. Reading it end to end is not the point; find the system you
 are weighing.
 
 <!-- BEGIN GENERATED VERDICT COUNT -->
-**This page covers all 616 reports.**
+**This page covers all 617 reports.**
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 the biggest risk, the most reusable component, an impression of maturity, and
 the two that matter most to a reader deciding — when to study it and when to
@@ -5501,4 +5501,12 @@ Disclosure: RainBox is the atlas author's own project; this verdict is a self-as
 - Most reusable component: `hooks/check-fabricated-verification.py`. A Stop hook blocking a closing message that asserts *"a state it never confirmed with a tool call"*, with evidence defined by exclusion — tool outputs and the commands actually executed — on the stated ground that *"The model cannot self-verify from its own prose."* Its first detector flags a commit-SHA- or run-ID-shaped token appearing in zero executed commands and zero tool outputs.
 - Maturity impression: MIT, Python, 1,050 files, twenty human contributors, with Spanish documentation beside the English and a taxonomy consumed from a pinned upstream rather than copied — *"Nothing in this repo hand-maintains a second floor list."* One mark, `negative_eval`. The secret detector's false-positive filter is a test file of its own, which is what keeps a detector enabled.
 - Study when: you pair a dynamic gate with a static one. A Linux CI run cannot see a Windows-only import crash, so banning unguarded platform-only imports at the AST level is what makes the other platform's failure visible from this one.
+
+### [`task-orchestrator`](../systems/task-orchestrator/)
+
+- Best idea: **distinguish "verified from a stale cache" from "could not verify at all."** An agent's actor claim is checked against a `did:web`-resolved JWKS before a note is admitted, and the ladder in `ActorParsing.kt` separates a fresh verification, an `UNAVAILABLE` carrying `verifiedFromCache`, and an `UNAVAILABLE` where the fetch simply failed. Collapsing those makes an offline moment look like an attack, or an attack look like an offline moment.
+- Biggest risk: **the verdict gates the write and no read consults it.** Five discrete states land on every note — including `REJECTED` — and a search of the source finds the field in the schema, in the row mapping, and in the admission decision, and in no predicate anywhere. A note stored while verification was unavailable is indistinguishable at query time from a verified one. `trust_state` is withheld on exactly that.
+- Most reusable component: `ResourceLeaseHistoryTable.kt`, for the three lines of schema and the paragraph explaining them — the table *"deliberately carries NO foreign key"* so it survives `ON DELETE CASCADE` **and** deletion of the holder work item, because an audit trail that vanishes with its subject answers nothing after an incident. Read it beside `SQLiteRoleTransitionRepository.deleteByItemId`, which does the opposite to the history of the work items themselves.
+- Maturity impression: MIT, Kotlin, 523 files, fourteen MCP tools with the gates in the tool handlers rather than in a prompt — *"Prompt-based frameworks hope the LLM follows instructions. This one blocks the call if it doesn't."* Schemas are opt-in, and without them there are *"no gates, no required notes."* One mark, `negative_eval`.
+- Study when: you are writing tests for a rejection. One case asserts *"Repository must not be called — validation rejected before execution"* — proving nothing was written, which an error-code assertion does not.
 
