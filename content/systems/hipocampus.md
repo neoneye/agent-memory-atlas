@@ -483,6 +483,17 @@ than a moving one.
   `platforms/opencode/plugin/hipocampus.js`
 - `templates/` — the six seeded files
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No CI workflow exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `.github/workflows/`, `.gitlab-ci.yml`, `.travis.yml` and `azure-pipelines` | Nothing. The one `*.test.mjs` file is run by hand from the README instruction. |
+
+
 ## History
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved.

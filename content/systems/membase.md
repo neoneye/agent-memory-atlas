@@ -543,6 +543,17 @@ sitting untouched for a year.
 | `tests/test_ltm.py` | The long-term memory test, with no assertions |
 | `tests/test_multi_memory.py` | Buffer dictionary tests |
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No CI configuration exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `.github/workflows/`, `.gitlab-ci.yml`, `.travis.yml` and `azure-pipelines` | Nothing. Nine test files exist and no workflow runs them. |
+
+
 ## History
 
 **2026-09-18** — [`9e03b75a453118f4faf4ed3539279435e03bd603`](https://github.com/unibaseio/membase/commit/9e03b75a453118f4faf4ed3539279435e03bd603) — re-read at the same commit, and this one confirms rather than corrects. Both headline defects are still exactly as described: `ChromaKnowledgeBase.retrieve` compares `results["distances"][0][i]` against `similarity_threshold` and skips anything *below* it, so a threshold keeps the least similar documents; and the same branch sets `where_document = {"$contains": query}` whenever a threshold is given, so asking for more semantic precision silently switches the search to whole-query substring matching. `find_optimal_threshold` still sweeps 0.3 to 0.9 through that same call. The LICENSE file the README grants MIT under is still absent from the tree.

@@ -365,6 +365,17 @@ is no record that a value was ever rejected.
 | `examples/quickstart.js` | 54 | The worked example |
 | `sql/rls.sql` | 36 | Posture A enabled, Posture B commented out |
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No test file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `tests?/`, `__tests__/`, `test_*`, `*_test.*` and `*.test.*` | Nothing. The whole repository is 9 blobs. |
+
+
 ## History
 
 **2026-09-18** — [`b711e6d76009d0713c5d5c211c2ab5c83d01ca53`](https://github.com/reescalder/agent-memory-supabase/commit/b711e6d76009d0713c5d5c211c2ab5c83d01ca53) — re-read at the same commit. Nothing upstream had moved, so every finding here is the atlas's own, and the previous reading's code claims all held; what it had not done was trace each field to its writer. Doing that produced three findings. `valid_from` has no writer anywhere in the repository, so the validity axis the report praises collapses onto the record axis for every row the shipped client creates — the mark stands on the schema and the `memory_history()` reader, with that limit now in its evidence record. The dedup branch overwrites the matched row in place, with no supersession and no copy of the replaced content, so the untested 0.95 threshold is a data-loss knob rather than a ranking one. And the supersession sequence deactivates the old row before inserting its replacement across three untransacted calls, so a failed insert loses the memory with no pointer left to find it by. The `updated_at` trigger reaches its stated goal by its first branch; its nine-field list is only reached on access-counter updates, where none of those fields can have changed. Both marks now carry evidence records, and `scope_enforced` is upheld with its reasoning written down: the key reaches every read query, and the NULL default is a caller widening its own scope, which the capability does not rule on. `stack_source` goes from seeded to reviewed.

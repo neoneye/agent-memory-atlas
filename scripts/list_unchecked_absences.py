@@ -84,6 +84,24 @@ CLAIM = re.compile(
     re.I,
 )
 
+#: The scope phrase is not the end of the sentence. "No test in the tree asserts
+#: that one tenant cannot read another's events" reads as a whole-repository
+#: claim up to "tree" and is a claim about one *behaviour* — the class that holds,
+#: and the class this check must not bury the signal under. Seven of the first
+#: 108 matches were this shape, every one of them correct: memori's non-ASCII
+#: string, temporalstore's cross-tenant read, bytechef's two-knowledge-base
+#: search, deepcode's live provider, agentrt's `mem_service_recent`.
+#:
+#: So a verb of restriction following the scope phrase disqualifies the match.
+#: Checked against the remainder of the sentence rather than a fixed window,
+#: because the restricting clause can be a dozen words along.
+RESTRICTED = re.compile(
+    r"^[^.\n]{0,120}?\b(assert\w*|cover\w*|touch\w*|exercis\w*|pass\w*|"
+    r"referenc\w*|writ\w*|check\w*|prove\w*|demonstrat\w*|"
+    r"that|which|for the|against)\b",
+    re.I,
+)
+
 #: A quotation is the subject's claim about itself, not the atlas's about the
 #: tree. Same rule and same bound as `list_superlatives.py`, for the same reason:
 #: the edit a ratchet invites for a false positive is to alter the quotation.
@@ -154,6 +172,8 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
             for match in CLAIM.finditer(line):
                 if any(lo <= offset + match.start() < hi for lo, hi in spans):
                     continue
+                if RESTRICTED.match(line[match.end():]):
+                    continue
                 word = _artifact_word(match.group(0))
                 grounded = word in commands
                 rows.append((f"{path.name}:{lineno}", match.group(0).strip(), grounded))
@@ -162,10 +182,12 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 
 
 #: Ungrounded file-shaped absence claims standing when the ratchet was set
-#: (2026-09-20), out of 108 such claims in total. It was 53 when the ratchet was
-#: written and fell to 46 the same day, as twelve reports whose licence and test
+#: (2026-09-20), out of 88 such claims in total. It was 53 when the ratchet was
+#: written and fell to 26 the same day: twelve reports whose licence and test
 #: claims had just been checked against their trees gained an appendix recording
-#: that check. Lower it as claims are checked;
+#: that check, ten more followed, and the matcher itself stopped counting twenty
+#: behaviour claims it had been reading as file claims. Lower it as claims are
+#: checked;
 #: `--check` fails if it rises. Never raise it to admit a new claim — check the
 #: claim and record the command beside it, or narrow the claim to the subtree
 #: that was actually read.
@@ -175,7 +197,7 @@ def collect(content: Path) -> list[tuple[str, str, bool]]:
 #: That is deliberate — the question the predictor answers is whether the author
 #: went looking, not whether each sentence has its own footnote — and it is the
 #: reason this is a ratchet and not a verifier.
-UNGROUNDED_CEILING = 46
+UNGROUNDED_CEILING = 26
 
 
 def check(root: str) -> int:
@@ -244,7 +266,25 @@ def self_test() -> int:
         print("self-test failed: a recorded tree listing did not count as grounding",
               file=sys.stderr)
         return 1
-    print("self-test: 7 controls passed")
+    # A restricting clause after the scope phrase makes it a behaviour claim.
+    restricted = "No test in the tree asserts that one tenant cannot read another's events."
+    hit = CLAIM.search(restricted)
+    if hit is None:
+        print("self-test failed: the restricted fixture no longer matches at all",
+              file=sys.stderr)
+        return 1
+    if not RESTRICTED.match(restricted[hit.end():]):
+        print("self-test failed: a behaviour claim was counted as a file claim",
+              file=sys.stderr)
+        return 1
+    # And a bare whole-repository claim must survive the same test.
+    bare = "There are no tests in the repository."
+    bh = CLAIM.search(bare)
+    if bh and RESTRICTED.match(bare[bh.end():]):
+        print("self-test failed: a bare file claim was discarded as restricted",
+              file=sys.stderr)
+        return 1
+    print("self-test: 9 controls passed")
     return 0
 
 

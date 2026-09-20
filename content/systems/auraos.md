@@ -492,6 +492,17 @@ atlas has it either.
 | `recovery_ngrok.txt` | Ten ngrok account recovery codes, committed |
 | `.tmp.driveupload/` | 2,214 files and 368 MB of Google Drive upload temporaries |
 
+## Appendix: Recorded Searches
+
+Checked against the repository tree at the pinned revision on 2026-09-20,
+without a clone, during a corpus-wide audit of absence claims. The command is
+the check that was actually run, not a local equivalent.
+
+| Claim | Check | Result at this pin |
+| --- | --- | --- |
+| No test file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `tests?/`, `__tests__/`, `test_*`, `*_test.*` and `*.test.*` | Nothing, at 2,887 blobs. `.github/workflows/pylint.yml` exists, so the repository has CI and nothing for it to run. |
+
+
 ## History
 
 **2026-09-13** — [`81dffa9ba95334b3ded57f9237750372ab80815d`](https://github.com/AdultSwimmer/AuraOS/commit/81dffa9ba95334b3ded57f9237750372ab80815d) — re-read, 14 commits past the previous pin, and the memory mechanism is unchanged. Not one `.py`, `.js`, `.ts`, `.sql` or `.json` file differs across the range: the 52,502 added lines are transcripts, screenshots, PDFs and Word documents assembling a dispute with a model provider, plus community boilerplate. No mark changes and `capabilities` stays empty. The one correction is to the licence note: an MIT licence carrying an unsubstituted `Copyright (c) $year Anthony Dulong` was committed on 26 August 2026 and deleted on 3 September, so the tree at this commit still has no licence file. Screened again first: no auto-run surface, two build-time execution surfaces and three unpinned requirements files; nothing was installed and nothing was run.

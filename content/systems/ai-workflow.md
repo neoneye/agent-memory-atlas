@@ -508,6 +508,7 @@ the check that was actually run, not a local equivalent.
 | Claim | Check | Result at this pin |
 | --- | --- | --- |
 | No licence file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for a path matching `licen[cs]e` or `COPYING` | Nothing, at 54 blobs. |
+| No test file exists anywhere in the tree | `GET /repos/<owner>/<repo>/git/trees/<this revision>?recursive=1`, filtered for `tests?/`, `__tests__/`, `test_*`, `*_test.*` and `*.test.*` | Nothing. Two workflows exist, `ci.yml` and `release.yml`, so the absence is of tests rather than of automation. |
 
 
 ## History
