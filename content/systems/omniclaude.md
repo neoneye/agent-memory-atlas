@@ -9,7 +9,7 @@ source_url: https://github.com/OmniNode-ai/omniclaude
 archive_name: "OmniNode-ai--omniclaude"
 revision: 6f062cd55e9141360d2fa7cda151df040874522a
 revision_url: https://github.com/OmniNode-ai/omniclaude/commit/6f062cd55e9141360d2fa7cda151df040874522a
-analyzed_at: 2026-09-17
+analyzed_at: 2026-09-20
 capabilities: "negative_eval"
 capability_evidence:
   negative_eval: "the pattern retrieval path — what `_load_patterns_from_api` and `handle` admit into the injected block | tests/hooks/test_context_injection_api_source.py:439, :77, :229 | `test_mixed_valid_and_invalid_patterns` mocks `urllib.request.urlopen` with a page holding one well-formed pattern and one missing its `id`, runs the real `_load_patterns_from_api`, and asserts `len(result.patterns) == 1` and `result.patterns[0].pattern_id == 'PAT-VALID'` — the exclusion is asserted by the identity of what survived, and the same call proves the arrangement can return something. The positive control is `test_includes_patterns_when_api_returns_them` (`pattern_count > 0`, then `== 1`); `test_no_filter_warning_when_some_patterns_pass` runs the full `handle()` path with two patterns at 0.90 and 0.10 against a 0.7 floor and asserts one survives | the same file's `_make_handler` patches only the transport, so the parse, the confidence filter and the caps all execute; the weaker half is that the identity assertion sits on the fetch-and-validate call rather than on the assembled block, where the surviving case asserts a count"
@@ -125,7 +125,7 @@ Deterministic, salted, and configured from `contracts/contract_experiment_cohort
 
 Three details are better than they need to be. The **seed is recorded on the injection row**, so an assignment can be recomputed and audited rather than trusted. The **effective control percentage and salt are recorded too**, so a later change to either does not retroactively mislabel earlier sessions. And the **control arm emits a record**, which is what makes the arms comparable at all — a trial whose control sessions leave no trace can only be analysed by absence.
 
-The gap is the identity. The function exists to be sticky and the call site is `assign_cohort(session_id, config=cfg.cohort)`; `user_id` and `repo_path` are never passed anywhere in the repository. So `identity_type` is always `SESSION_ID` and cohort membership is redrawn per session. For a treatment whose effect is *within* a session — better patterns in this prompt, fewer tool calls now — that is defensible. For a shared store that treated sessions are continuously teaching, it is not: the control arm is measuring an agent whose memory the same user's treatment sessions helped build.
+The gap is the identity. The function exists to be sticky and the one production call site, `handler_context_injection.py:409`, is `assign_cohort(session_id, config=cfg.cohort)` — no `user_id`, no `repo_path`. The parameters are not forgotten: `tests/hooks/test_cohort_assignment.py:531-558` passes them at five call sites and exercises the precedence between them, including blank and whitespace-only values. They are tested and unwired, which is a different state from dead, and a worse one to leave alone — the capability works and nothing reaches it. So `identity_type` is always `SESSION_ID` and cohort membership is redrawn per session. For a treatment whose effect is *within* a session — better patterns in this prompt, fewer tool calls now — that is defensible. For a shared store that treated sessions are continuously teaching, it is not: the control arm is measuring an agent whose memory the same user's treatment sessions helped build.
 
 A smaller one sits above it: cohort assignment is inside `if session_id:`, so a session with no id skips assignment entirely and proceeds to injection. Sessions that cannot be assigned are silently treatment.
 
@@ -323,7 +323,19 @@ Adopt the whole loop only if you are already running the other half. And read th
 - Searches recorded: every command registered in `hooks.json` was resolved against `plugins/onex/hooks/scripts/` and all 28 exist; the directory holds 120 files, so most of what is on disk is unregistered — shared helpers (`common.sh`, `error-guard.sh`, `hook-gate.sh`) among them, which is why the count is not a count of dark hooks and the inventory's `disabled_hooks` section, four entries, is. `assign_cohort` has one production caller, `handler_context_injection.py:409`. `grep -rn "context_injection" plugins/onex/hooks/hooks.json` returns nothing.
 - The store this depends on: [OmniIntelligence](../omniintelligence/), `GET /api/v1/patterns`.
 
+## Appendix: Recorded Searches
+
+Run from the root of the checkout at the pinned commit.
+
+| Claim | Command | Result at this pin |
+| --- | --- | --- |
+| The production call passes neither identity | `grep -rn "assign_cohort(" . \| grep -v /tests/` | One hit, `src/omniclaude/hooks/handler_context_injection.py:409`, `assign_cohort(session_id, config=cfg.cohort)` |
+| ~~Neither is passed anywhere in the repository~~ — **imprecise, corrected 2026-09-20** | `grep -rn "user_id=\|repo_path=" . \| grep -i cohort` | Five call sites in `tests/hooks/test_cohort_assignment.py:531-558`, covering both parameters, their precedence, and blank and whitespace-only values |
+| The seed, salt and effective control percentage are recorded on the row | `grep -n "effective_salt\|effective_control_percentage" src/omniclaude/hooks/handler_context_injection.py` | `:424-425` and `:503`, written beside the assignment |
+
 ## History
+
+**2026-09-20** — audited at the same pin. One sentence in section 6 said `user_id` and `repo_path` are *"never passed anywhere in the repository"*. They are passed at five call sites in `tests/hooks/test_cohort_assignment.py`, which exercises the precedence between them and the handling of blank values; what is true, and what the finding rests on, is that the single production call site passes neither. The sentence now says that, and the report gains a Recorded Searches appendix — it had none, which is how an absence claim nobody could re-run reached the site.
 
 **2026-09-17** — [`6f062cd55e9141360d2fa7cda151df040874522a`](https://github.com/OmniNode-ai/omniclaude/commit/6f062cd55e9141360d2fa7cda151df040874522a) — third reading, 84 commits along the default `dev` branch. The trial itself did not move: `cohort_assignment.py`, `handler_context_injection.py`, `injection_limits.py`, `models_injection_tracking.py` and the three test files the appendix named are byte-identical to the last pin, and the single production caller at `handler_context_injection.py:409` still passes only the session id, so the sticky-identity criticism holds for the third time. Screened at this pin: one auto-run surface (the consumer plugin's marketplace manifest, read), 11 build-time execution paths, no unpinned manifest, and both `pyproject.toml` and `uv.lock` inside the seven-day cooldown, so nothing was installed and nothing was run.
 
