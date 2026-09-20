@@ -53,6 +53,18 @@ pre-existing instances teaches people to skip it. Nothing here can verify an
 absence — that needs one network call per claim — so the gate stops the pool
 growing while the pool is worked down by hand.
 
+**A second hole, found 2026-09-20 by the check catching its own author.** A
+recorded search is only as wide as its traversal. Reflexion's report claimed no
+unit tests *anywhere in the repository* and carried an appendix row recording a
+tree listing that confirmed it — a listing of the **superproject**. The GitHub
+trees API returns a submodule as `type: "commit"` and does not descend, and
+Reflexion has two; one of them ships two unit tests. The claim needed scoping to
+Reflexion's own tree, and the row needed to say which span it covered. So a
+grounded claim is not a verified one: before trusting an absence, check whether
+the subject has submodules, and make the recorded search say whether it looked
+inside them. See also agentrt, where a superproject scan reports nine of ten
+cited symbols as absent because the memory daemon is a submodule.
+
 **The hole this gate does not close**, stated rather than hidden: a recorded
 command is evidence only if it was *re-executed*. auto-company carried
 `ls LICENSE* COPYING*` annotated "still absent, against an MIT badge" inside a
