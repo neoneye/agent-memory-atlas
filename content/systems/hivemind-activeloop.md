@@ -213,7 +213,7 @@ grep -n 'author\|project' src/shell/grep-core.ts                           # bot
 grep -rniE 'denylist|blocklist|blacklist' src/                             # 0: unpull records no exclusion the next pull consults
 find . -path ./.git -prune -o \( -iname '*locomo*' -o -iname '*benchmark*' -o -iname '*eval*' \) -print   # one knowledge doc matching on "retrieval"
 find . -path ./.git -prune -o \( -iname 'CITATION*' -o -iname '*.bib' -o -iname '*.cff' \) -print          # 0: no paper of its own
-grep -rni 'arxiv|bibtex|@article|@misc|citation|doi' . | grep -v package-lock   # the LoCoMo dataset paper only; "the paper" in skillopt comments cites SkillOpt, uncited
+grep -rniE 'arxiv|bibtex|@article|@misc|citation|doi' . | grep -v package-lock   # the LoCoMo dataset paper only; "the paper" in skillopt comments cites SkillOpt, uncited
 find . -path ./.git -prune -o \( -iname 'CLAUDE.md' -o -iname 'AGENTS.md' -o -iname '.cursorrules' \) -print  # 0; CLAUDE.md is gitignored and cited by seven source comments
 python3 -c "…count SAFE_BUILTINS…"                                         # 74 allowlisted builtins
 ```

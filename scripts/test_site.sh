@@ -142,6 +142,18 @@ if ! python3 "$project_dir/scripts/list_unchecked_absences.py" --check "$project
   exit 1
 fi
 
+# An appendix command is the mechanism that makes an absence claim re-runnable,
+# and a grep without -E treats | as a literal, so the search proves nothing and
+# the empty result gets recorded as evidence. This gate reads the form only; it
+# cannot tell whether a command that runs reported the truth.
+if ! python3 "$project_dir/scripts/list_inert_recorded_commands.py" --self-test; then
+  echo "list_inert_recorded_commands.py cannot demonstrate that its matcher still works." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/list_inert_recorded_commands.py" --check "$project_dir"; then
+  exit 1
+fi
+
 # check_anchors.py follows fragments and stops there, so a relative href that
 # points at nothing has never been checked. Thirty were broken when this was
 # written — mostly sibling reports written `./verel/` from inside

@@ -591,7 +591,7 @@ whose whole premise is that it does not re-implement search.
 ```sh
 grep -rn 'confidence' engine/crates --include='*.rs' \
   | grep -v 'graph_api.rs\|autoindex\|/tests/\|xerj-mcp'
-grep -rni 'trust_state|"verified"|"approved"|"pending"|"rejected"|review_status' \
+grep -rni 'trust_state\|"verified"\|"approved"\|"pending"\|"rejected"\|review_status' \
   engine/crates --include='*.rs' | grep -v '/tests/'
 grep -rni 'approve\|adjudicat\|curat' engine/crates/xerj-console-api/src --include='*.rs'
 grep -rni 'tombstone\|do not re-add\|never re-assert\|deny.?list\|blocklist' \

@@ -250,7 +250,7 @@ grep -rn "temporal_edges" --include='*.ts' . | grep -v migrations               
 grep -rn "applyOntologyProposal\|rejectOntologyProposal" --include='*.ts' --include='*.tsx' .   # routes + dashboard home.tsx:213-214
 grep -rn "archived" --include='*.test.ts' .                                         # entity and imported-source archival only; no archived-memory recall exclusion test
 grep -rn "test:workspace\|bun run test\b\|bun test" .github/workflows/              # 0 matches for the workspace suite; named files only
-grep -rn -i 'arxiv|bibtex|@article|@misc|CITATION|doi\.org' README.md docs web/docs # one research-tracking arxiv reference in docs/specs/dependencies.yaml; no paper, no CITATION.cff
+grep -rn -i 'arxiv\|bibtex\|@article\|@misc\|CITATION\|doi\.org' README.md docs web/docs # one research-tracking arxiv reference in docs/specs/dependencies.yaml; no paper, no CITATION.cff
 find memorybench -name '*result*' -o -name '*report*.json' -o -name '*run*.json'    # 0 committed result artifacts; memorybench/.gitignore:5 ignores /data/
 grep -rn "97\.6" --include='*.md' --include='*.json' --include='*.ts' .             # README.md:10,12,140 and web/docs benchmarking.md:17 — no data file
 ```

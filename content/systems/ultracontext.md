@@ -489,8 +489,8 @@ grep -rn 'findRootContextByPublicId' --include='*.ts' . | grep -v node_modules  
 grep -rn 'redact' --include='*.mjs' --include='*.ts' . | grep -v node_modules    # defined once, called twice, both on normalized.raw
 grep -rln 'redact' --include='*.test.*' . | grep -v node_modules                 # nothing: the redactor has no test
 grep -rn 'isResumePairTested' --include='*.mjs' . | grep -v node_modules         # exported and asserted in tests; no runtime caller
-grep -rn -i 'status|confidence|verified|superseded|stale' packages/core/src packages/storage/src apps/api/src  # HTTP status codes and key verification only
-grep -rn -i 'arxiv|bibtex|CITATION' README.md                                    # nothing: no paper
+grep -rn -iE 'status|confidence|verified|superseded|stale' packages/core/src packages/storage/src apps/api/src  # HTTP status codes and key verification only
+grep -rn -iE 'arxiv|bibtex|CITATION' README.md                                    # nothing: no paper
 ```
 
 ## History
