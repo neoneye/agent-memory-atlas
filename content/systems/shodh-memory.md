@@ -7,9 +7,9 @@ page_kind: system
 source_name: "varun29ankuS/shodh-memory"
 source_url: https://github.com/varun29ankuS/shodh-memory
 archive_name: "varun29ankuS--shodh-memory"
-revision: 3a3395f1e80d4a145a208066098f59c2ebc72394
-revision_url: https://github.com/varun29ankuS/shodh-memory/commit/3a3395f1e80d4a145a208066098f59c2ebc72394
-analyzed_at: 2026-09-11
+revision: e44fdce67e9e86973074bc4c3e18c87b22c1e146
+revision_url: https://github.com/varun29ankuS/shodh-memory/commit/e44fdce67e9e86973074bc4c3e18c87b22c1e146
+analyzed_at: 2026-09-21
 capabilities: "audit_log"
 capability_evidence:
   audit_log: "the shared column-family database | a RocksDB column family separate from the per-user instances, with a rotation pass | an append-only audit of cross-user state beside the per-user stores it records | unknown"
@@ -258,9 +258,35 @@ equivalent defects are found by an outside reader.
 **No paper.** No arXiv reference, DOI or citation file; the cognitive claims cite
 literature in prose and in module headers rather than a publication of their own.
 
-The evaluation surface is unusual for a system with no LLM. `src/recall_harness/`
-is an in-tree harness "designed to drive baseline-comparison CI gates and
-embedder swap decisions", with a JSON report schema and baseline comparison, and
+The evaluation surface is unusual for a system with no LLM, and it is wired
+rather than aspirational. `src/recall_harness/` is an in-tree harness, and
+twenty-four workflows drive it. `recall.yml` runs on `pull_request` to `main`
+over `src/**`, `tests/recall/**` and `Cargo.toml`, comparing the 100-case
+`locomo-gate` suite against a checked-in baseline at
+`tests/recall/locomo-gate-baseline.json`. That is a retrieval-quality regression
+gate on every pull request, with the budget expressed as an allowed percentage
+of baseline.
+
+**The held-out set is deliberately not a gate.** `locomo-recall.yml` runs the
+same binary over the full 1,531-question LoCoMo suite and says why it is
+`workflow_dispatch` only: *"None of the pipeline changes were diagnosed against
+LoCoMo, so recall@k here tests whether a fix tuned on the 108 smoke cases
+GENERALIZES"*, and it is *"Manual only and NOT gated (no baseline) — it reports
+numbers."* Keeping the tuning set and the generalisation set apart, and refusing
+to gate on the one you did not tune against, is the distinction most projects
+collapse.
+
+**The ablation was measuring against the wrong control, and the fix is the
+interesting part.** The harness's matrix compared every arm to a baseline
+without the reranker and reported no intervals. `paired_bootstrap_ci`
+(`src/recall_harness/metrics.rs`) now returns the mean paired difference and a
+95% percentile-bootstrap interval, pairing on the question so that *"the
+variance between easy and hard questions cancels, and only the variance of the
+arm's effect is left"*. Two committed cases test the statistic rather than the
+system: identical arms must return exactly zero, and a constant shift must be
+recovered with no width, because *"a nonzero width here would mean the
+resampling is not paired"*.
+
 `benchmarks/` holds LoCoMo and LongMemEval converters, a LoCoMo gate builder and
 layer/multiple-choice evaluators.
 
@@ -348,8 +374,10 @@ repository and one of the most useful in this atlas.
   co-occurrence "dominates by construction, not by accident" and that tier
   population is not measurable — so the shape of a real store is not knowable
   from the code.
-- **Does the recall harness run in CI?** It is described as designed to drive
-  CI gates; no committed baseline or report was found.
+- **Does anything gate on the held-out set?** The 100-case `locomo-gate` suite
+  gates pull requests; the 1,531-case LoCoMo suite is dispatched by hand and
+  reports numbers against no baseline, by choice. Whether the held-out set ever
+  becomes a gate, and what regression budget it would carry, is open.
 - **What replaced the dead entity resolver?** The audit says only one resolver
   runs; which one, and whether its behaviour matches the dead one's documented
   intent, is the follow-up question.
@@ -399,8 +427,18 @@ Run from the root of the checkout at the pinned commit.
 | The upsert path still skips the PMI gate | `grep -n "CoOccurs" src/memory/mod.rs` | `:9677` mints a `CoOccurs` edge with a provenance record and no PMI, hub-cap or fragment-mask check |
 | Edge validity is a boolean skip, not a clock | `grep -rn "invalidated_at" --include="*.rs" src` | `.is_some()` skips at `:6092` and `:6266`; set to `Utc::now()` at `:6391` — record time |
 | Scope is a partition, not a predicate | the matrix `scoping` row, re-checked | One RocksDB instance per user; no scope key on a record and no predicate on a query |
+| The recall harness gates pull requests against a committed baseline | `ls .github/workflows` then read `recall.yml`'s `on:` block and `tests/recall/locomo-gate-baseline.json` | 24 workflows; `recall.yml` triggers on `pull_request` to `main`; the baseline is 1,855 bytes and present at this pin and the previous one |
+| The held-out LoCoMo suite is not a gate | read `locomo-recall.yml`'s `on:` block | `workflow_dispatch` only, stated in the file as *"Manual only and NOT gated (no baseline)"* |
 
 ## History
+
+**2026-09-21** — re-pinned to [`e44fdce67e9e86973074bc4c3e18c87b22c1e146`](https://github.com/varun29ankuS/shodh-memory/commit/e44fdce67e9e86973074bc4c3e18c87b22c1e146), three commits on, +939/−144 over ten files, all of them in the retrieval path or the harness around it. Read from the GitHub API rather than a clone; nothing was installed or run.
+
+**A published Open Question was a false absence claim, and it was false at the previous pin too.** It asked whether the recall harness runs in CI and answered that *"no committed baseline or report was found"*. At that pin `tests/recall/locomo-gate-baseline.json` was already 1,855 bytes and `recall.yml` already triggered on `pull_request` to `main` over `src/**`, `tests/recall/**` and `Cargo.toml`. The appendix's five recorded searches covered the graph and scope claims and none covered this one, which is why it survived a re-read: an absence stated in an Open Question carries no command behind it and no gate checks it.
+
+What the commits add is described in section 10: a paired bootstrap interval for the ablation matrix, replacing a comparison that measured every arm against a baseline without the reranker and reported no intervals, with two committed cases that test the statistic rather than the system. Beside it, `every_stored_memory_is_present_in_both_indexes` asserts stored, vector-indexed and lexically-indexed counts are equal rather than bounded, and records that the assertion was verified to fail against a mutant that skips one vector insert and returns `Ok`.
+
+Marks unchanged at `audit_log`. The PR gate is a regression budget on retrieval quality, not an assertion that particular material stays out of a populated result, so `negative_eval` is still withheld.
 
 **2026-09-11** — [`3a3395f1e80d4a145a208066098f59c2ebc72394`](https://github.com/varun29ankuS/shodh-memory/commit/3a3395f1e80d4a145a208066098f59c2ebc72394) — re-read, 219 files and 52,576 insertions past the previous pin in a single commit. `audit_log` re-verified and unchanged; `scope_enforced` correctly absent, since one RocksDB instance per user is a partition rather than a key on a record.
 
