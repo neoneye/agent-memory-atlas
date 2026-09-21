@@ -260,9 +260,9 @@ Correction does not exist. There is no supersession and no contradiction
 detection, and the JSON-side removals are index- and age-based rather than
 content-based.
 
-**The graph has exactly one deletion and it removes everything.** This report
-previously said there is no delete path into the graph; there is, and its shape
-is worth more than its absence would have been. `ChatAgent.clearMemory` runs
+**The graph has exactly one deletion and it removes everything.** There is a
+delete path into the graph, and its shape is worth more than its absence would
+have been. `ChatAgent.clearMemory` runs
 `self.graph_store.query("MATCH (n) DETACH DELETE n")`, and the Streamlit app
 exposes it as a button labelled *"Clear Memory DB"*. Two properties follow. The
 only granularity available is *all of it*, so a wrong triplet is still permanent

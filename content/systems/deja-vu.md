@@ -305,7 +305,7 @@ and the project has argued that it should not.
 
 **Human review — withheld, and it fails the *easier* half of the test.** This
 is worth stating in full, because the mechanism passes the part most systems
-fail and the report previously said nothing about it either way.
+fail.
 
 The rubric's one question is *can the agent that wrote the memory also clear its
 review?* Here it cannot. The MCP server exposes a **single tool**, `deja`, whose

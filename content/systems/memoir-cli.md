@@ -466,8 +466,8 @@ retract one. `memoir_forget` is registered at `src/mcp.js:583` and its own
 description is unambiguous about what it does: it *"permanently hides it from the
 pinned block, `memoir_why`, and every synced machine (an absolute tombstone;
 there is no un-forget)"*, with `purge=true` redacting the text in place. The
-asymmetry an earlier version of this report described — an agent that could add
-to memory and not retract from it — no longer holds, and with it goes
+asymmetry that would define this design — an agent that could add to memory and
+not retract from it — does not hold, and with it goes
 `human_review`: the CLI's confirm prompt still prints the decision and states
 that hiding cannot be undone, but a confirmation is a permission step rather than
 a state a memory waits in, `--yes` satisfies it for scripts, and the model now

@@ -167,7 +167,7 @@ def programs(self):
 
 Every stored skill plus every hand-written primitive is concatenated, and this is what makes skills compose — a new program can call an old one. It is unbounded: the string grows with every skill learned, with no budget, no relevance filter and no eviction.
 
-**Where it goes is not the prompt, which this report previously got wrong.** `skill_manager.programs` is passed to `self.env.step(code, programs=...)` (`voyager.py:217`, `:241`) — it is the JavaScript preamble the generated code is evaluated against inside the Mineflayer bridge, sent on every step. The action agent's *prompt* is assembled separately in `action.py:91` from six to eight named base primitives plus the retrieved list, and that list is `retrieve_skills`, capped at `k = min(count, 5)`. So the model's context is bounded and the environment payload is not: the cost of a large library lands on every environment step rather than on the context window.
+**Where it goes is not the prompt.** `skill_manager.programs` is passed to `self.env.step(code, programs=...)` (`voyager.py:217`, `:241`) — it is the JavaScript preamble the generated code is evaluated against inside the Mineflayer bridge, sent on every step. The action agent's *prompt* is assembled separately in `action.py:91` from six to eight named base primitives plus the retrieved list, and that list is `retrieve_skills`, capped at `k = min(count, 5)`. So the model's context is bounded and the environment payload is not: the cost of a large library lands on every environment step rather than on the context window.
 
 ### Versioning that keeps history but loses access
 

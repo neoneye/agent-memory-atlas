@@ -473,8 +473,7 @@ There is no retrieval-quality evaluation, no benchmark and no fixture vault;
 `rg -n 'arxiv|bibtex|@article|doi' README.md FORMAT.md` finds nothing, and the
 README links no paper.
 
-**One workflow does exist**, and a first version of this section said none did.
-`.github/workflows/publish-npm.yml` is `on: workflow_dispatch` — manual trigger
+**One workflow does exist.** `.github/workflows/publish-npm.yml` is `on: workflow_dispatch` — manual trigger
 only, so nothing in this repository runs on a push or a pull request, and the
 Rust suite above is never executed by a machine. What the workflow does is
 publish the wasm package, and two details are worth taking.
