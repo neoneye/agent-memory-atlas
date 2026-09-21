@@ -1155,10 +1155,17 @@ when the work happens.
   Ends with a worked episode and the checks that would justify the structure
   over plain episode text.
 - [2026-09-21-ngram-memory-tables.md](2026-09-21-ngram-memory-tables.md) —
-  what DeepSeek's Engram and Qwen's n-gram embedding actually are, with every
-  figure read from the published `config.json` rather than a write-up: 320M rows
-  / 51.2B params at block 2 for Qwen3.8-Flash-Next, 768M rows / 196.6B over two
-  layers for DeepSeek V4.1 Flash, which V4-Flash does not have. Why Engram is
-  neither Titans nor ROME — the key is an exact n-gram, so a row is addressable
-  and a write is reversible — and why that breaks the atlas's stated test for
-  excluding parametric memory.
+  what DeepSeek's Engram and Qwen's n-gram embedding actually are, followed
+  through one lookup with the real addresses: the hash, the prime-sized heads
+  (reproducing DeepSeek's published 384,006,168 and 384,016,682 rows exactly and
+  Qwen's sixteen head sizes from the GGUF), the gate that keeps a collision out
+  of the residual stream. 320M rows / 51.2B params at one block for
+  Qwen3.8-Flash-Next, 768M rows / 196.6B over two for DeepSeek V4.1 Flash, which
+  V4-Flash does not have. llama.cpp's `qwen4exp` consumes the table under
+  Gemma 3n's tensor name; its `deepseek4` has no Engram at all. ENGRAFT's
+  overlay dissected: a 9,036,620-byte file of 14,032 rows whose hits land on
+  the subject's tokens and never on the answer position, the README's own
+  example sentence among the 134 failures, and the specular control that read
+  922 rows and changed nothing. Why Engram is neither Titans nor ROME — the key
+  is an exact n-gram, so a row is addressable and a write is reversible — and
+  why that breaks the atlas's stated test for excluding parametric memory.
