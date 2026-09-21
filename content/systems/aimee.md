@@ -63,14 +63,39 @@ answers *was this in force on 12 June*. The recall path filters candidates by
 scope and records why it dropped each one, with row-level security under it.
 Rejection and restoration go through three RPCs over one queue, and the verdict
 gates what the write path will admit next — which is the `tombstone` mark, not a
-review one. `human_review` is withheld for two reasons that compound. The row is
-already active before any of it: `memory.reject` sets
-`lifecycle_state='archived'` and `activation_suppressed=1` on a row in recall
-(`server-go/modules/memory/domain.go:159`), so the surface corrects rather than
-admits. And the three ops sit in the same route table as `memory.search` and
-`memory.delete`, dispatched through `rh_dispatch_op` with identical flags
-(`src/server/server_http_routes.c:1686-1688`), so nothing distinguishes the
-caller that rejects from the caller that wrote. The audit store is
+review one. **`human_review` is withheld on the admission half of the test alone.** The
+mark asks whether a memory waits in a state until an actor the producing agent
+cannot be resolves it. Aimee answers the second half unusually well and the
+first half not at all.
+
+The actor distinction is real and graded. `memory.reject` sits at
+`CAP_MEMORY_WRITE`, the tier `memory.store` already holds, but `memory.restore`
+and `memory.delete` sit at `CAP_MEMORY_ADMIN`, because *"writing and destroying
+are different privileges"* (`src/server/server_auth.c:45-56`). The model's own
+surface cannot reach that tier: the MCP `forget` verb is *"MODEL authority:
+retire, do not destroy … Only a user/operator path — which must additionally
+clear `CAP_MEMORY_ADMIN` — hard-deletes"* (`src/server/server_mcp.c:518-524`),
+and `memory_delete_command` takes the request's authenticated account because
+*"only a person's delete DESTROYS"* (`src/headers/server.h:457-460`). Authority
+resolves through `server_account_is_person()`, *"never from the request body and
+never from which socket the request arrived on"*.
+
+What is missing is the wait. A memory is admitted first and adjudicated
+afterwards: `memory.reject` sets `lifecycle_state='archived'` and
+`activation_suppressed=1` on a row already in recall
+(`server-go/modules/memory/domain.go:159`). The Memory Center that drives it —
+`frontend/src/pages/Memory.tsx`, posting to `/v1/memory/review`, `/reject`,
+`/restore` and `/delete` over a same-origin session and a CSRF token — is a
+correction surface over live rows, which is the affordance the mark's definition
+names as the opposite of a gate.
+
+The one queue that does hold something in `pending` drains without a person.
+`learning_proposals` (`src/modules/db2/c/schema.sql:413`) carries `state`,
+`target_memory_id` and `action_json`, and `learning_queue_sink` commits once
+`corroboration_count >= required`, with a high-confidence path that can commit
+on the first signal (`src/modules/learning/learning_router.c:270-300`). The
+operator's verb in that loop is REVERTED — *"an operator rejects a proposal that
+had already committed"* (`:258`). The audit store is
 append-only by two independent mechanisms, says out loud which of them an
 attacker can remove, and receives memory mutations from a trigger in the same
 transaction as the row change. And the recall tests are built so that an empty
@@ -763,6 +788,28 @@ attributes it to the extractor rather than to an adversary.
 | `docs/validation/flag-rollout-readiness.md` | The six-point flip gate and the WIRED / INERT TOGGLE audit |
 
 ## History
+
+**2026-09-21** — same pin, re-read to settle the `human_review` reasoning
+against the control-web GUI, which the previous reading had not traced. The
+Memory Center (`frontend/src/pages/Memory.tsx`) and its `/v1/memory/review`
+listing endpoint appear nowhere in it, and neither does `learning_proposals`,
+the one queue in the tree that holds a row in `pending`.
+**The mark stays withheld and one of its two stated reasons was wrong.**
+
+The claim that *"nothing distinguishes the caller that rejects from the caller
+that wrote"* is withdrawn. It rested on the three ops sharing a route table with
+identical flags, but that field is `0` for every entry in the block and the
+comment above it reads *"caps derived from the op"* — so identical flags carry
+no information about authorisation at all. The derived capabilities differ:
+`memory.reject` at `CAP_MEMORY_WRITE`, `memory.restore` and `memory.delete` at
+`CAP_MEMORY_ADMIN`, a tier the MCP surface clears. This contradicted the
+report's own section 8, which already cited `server_account_is_person()`.
+
+What survives is the admission test, and the GUI does not change it: the Memory
+Center adjudicates rows that are already in recall. `learning_proposals`, newly
+described, is the sharper evidence — it is a real pending queue that drains on
+`corroboration_count >= required` rather than on anyone's decision, and the
+operator's verb there is REVERTED, after the commit.
 
 **2026-09-19** — re-pinned to [`bedabac667c5c00f9f14fe6f47efd3b369a46922`](https://github.com/RakuenSoftware/aimee/commit/bedabac667c5c00f9f14fe6f47efd3b369a46922). `human_review` is **withdrawn**, on two grounds that compound. `memory.reject` acts on a row that is already active — it sets `lifecycle_state='archived'` and `activation_suppressed=1` (`server-go/modules/memory/domain.go:159`) — so it corrects rather than admits, and the mark asks for a memory that waits before it can be believed. And `memory.review_list`, `memory.reject` and `memory.restore` sit in the same route table as `memory.search` and `memory.delete`, dispatched through `rh_dispatch_op` with identical flags (`src/server/server_http_routes.c:1686-1688`), so nothing in the routing distinguishes the caller that rejects from the caller that wrote. The queue, the tombstone it writes and the restore that records who restored are all real and keep their credit under `tombstone` and `audit_log` — which is where the strength of this design actually lives. The other six marks stand. Screened again first; nothing was installed and no suite was run.
 

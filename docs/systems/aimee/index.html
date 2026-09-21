@@ -169,20 +169,50 @@ candidates by scope and records why it dropped each one, with row-level
 security under it. Rejection and restoration go through three RPCs over
 one queue, and the verdict gates what the write path will admit next —
 which is the <code>tombstone</code> mark, not a review one.
-<code>human_review</code> is withheld for two reasons that compound. The
-row is already active before any of it: <code>memory.reject</code> sets
+<strong><code>human_review</code> is withheld on the admission half of
+the test alone.</strong> The mark asks whether a memory waits in a state
+until an actor the producing agent cannot be resolves it. Aimee answers
+the second half unusually well and the first half not at all.</p>
+<p>The actor distinction is real and graded. <code>memory.reject</code>
+sits at <code>CAP_MEMORY_WRITE</code>, the tier
+<code>memory.store</code> already holds, but <code>memory.restore</code>
+and <code>memory.delete</code> sit at <code>CAP_MEMORY_ADMIN</code>,
+because <em>"writing and destroying are different privileges"</em>
+(<code>src/server/server_auth.c:45-56</code>). The model's own surface
+cannot reach that tier: the MCP <code>forget</code> verb is <em>"MODEL
+authority: retire, do not destroy … Only a user/operator path — which
+must additionally clear <code>CAP_MEMORY_ADMIN</code> —
+hard-deletes"</em> (<code>src/server/server_mcp.c:518-524</code>), and
+<code>memory_delete_command</code> takes the request's authenticated
+account because <em>"only a person's delete DESTROYS"</em>
+(<code>src/headers/server.h:457-460</code>). Authority resolves through
+<code>server_account_is_person()</code>, <em>"never from the request
+body and never from which socket the request arrived on"</em>.</p>
+<p>What is missing is the wait. A memory is admitted first and
+adjudicated afterwards: <code>memory.reject</code> sets
 <code>lifecycle_state='archived'</code> and
-<code>activation_suppressed=1</code> on a row in recall
-(<code>server-go/modules/memory/domain.go:159</code>), so the surface
-corrects rather than admits. And the three ops sit in the same route
-table as <code>memory.search</code> and <code>memory.delete</code>,
-dispatched through <code>rh_dispatch_op</code> with identical flags
-(<code>src/server/server_http_routes.c:1686-1688</code>), so nothing
-distinguishes the caller that rejects from the caller that wrote. The
-audit store is append-only by two independent mechanisms, says out loud
-which of them an attacker can remove, and receives memory mutations from
-a trigger in the same transaction as the row change. And the recall
-tests are built so that an empty result fails them.</p>
+<code>activation_suppressed=1</code> on a row already in recall
+(<code>server-go/modules/memory/domain.go:159</code>). The Memory Center
+that drives it — <code>frontend/src/pages/Memory.tsx</code>, posting to
+<code>/v1/memory/review</code>, <code>/reject</code>,
+<code>/restore</code> and <code>/delete</code> over a same-origin
+session and a CSRF token — is a correction surface over live rows, which
+is the affordance the mark's definition names as the opposite of a
+gate.</p>
+<p>The one queue that does hold something in <code>pending</code> drains
+without a person. <code>learning_proposals</code>
+(<code>src/modules/db2/c/schema.sql:413</code>) carries
+<code>state</code>, <code>target_memory_id</code> and
+<code>action_json</code>, and <code>learning_queue_sink</code> commits
+once <code>corroboration_count &gt;= required</code>, with a
+high-confidence path that can commit on the first signal
+(<code>src/modules/learning/learning_router.c:270-300</code>). The
+operator's verb in that loop is REVERTED — <em>"an operator rejects a
+proposal that had already committed"</em> (<code>:258</code>). The audit
+store is append-only by two independent mechanisms, says out loud which
+of them an attacker can remove, and receives memory mutations from a
+trigger in the same transaction as the row change. And the recall tests
+are built so that an empty result fails them.</p>
 <p>What the report cannot claim is coverage. At over a million lines
 this is the largest tree in the corpus by an order of magnitude, and the
 sections below state where the trace stops.</p>
@@ -997,6 +1027,32 @@ count</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
+<p><strong>2026-09-21</strong> — same pin, re-read to settle the
+<code>human_review</code> reasoning against the control-web GUI, which
+the previous reading had not traced. The Memory Center
+(<code>frontend/src/pages/Memory.tsx</code>) and its
+<code>/v1/memory/review</code> listing endpoint appear nowhere in it,
+and neither does <code>learning_proposals</code>, the one queue in the
+tree that holds a row in <code>pending</code>. <strong>The mark stays
+withheld and one of its two stated reasons was wrong.</strong></p>
+<p>The claim that <em>"nothing distinguishes the caller that rejects
+from the caller that wrote"</em> is withdrawn. It rested on the three
+ops sharing a route table with identical flags, but that field is
+<code>0</code> for every entry in the block and the comment above it
+reads <em>"caps derived from the op"</em> — so identical flags carry no
+information about authorisation at all. The derived capabilities differ:
+<code>memory.reject</code> at <code>CAP_MEMORY_WRITE</code>,
+<code>memory.restore</code> and <code>memory.delete</code> at
+<code>CAP_MEMORY_ADMIN</code>, a tier the MCP surface clears. This
+contradicted the report's own section 8, which already cited
+<code>server_account_is_person()</code>.</p>
+<p>What survives is the admission test, and the GUI does not change it:
+the Memory Center adjudicates rows that are already in recall.
+<code>learning_proposals</code>, newly described, is the sharper
+evidence — it is a real pending queue that drains on
+<code>corroboration_count &gt;= required</code> rather than on anyone's
+decision, and the operator's verb there is REVERTED, after the
+commit.</p>
 <p><strong>2026-09-19</strong> — re-pinned to <a
 href="https://github.com/RakuenSoftware/aimee/commit/bedabac667c5c00f9f14fe6f47efd3b369a46922"><code class="commit-id" title="bedabac667c5c00f9f14fe6f47efd3b369a46922">bedabac6…</code></a>.
 <code>human_review</code> is <strong>withdrawn</strong>, on two grounds
