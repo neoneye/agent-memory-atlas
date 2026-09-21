@@ -1139,9 +1139,10 @@ when the work happens.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
-- [2026-09-21-narrative-graphs-triaged-for-memory.md](2026-09-21-narrative-graphs-triaged-for-memory.md) —
-  eight graph representations of narrative and event data, each cited to its
-  paper and triaged for agent memory. Four patterns transfer: type the episode
+- [2026-09-21-structures-for-what-happened.md](2026-09-21-structures-for-what-happened.md) —
+  a register of ways to structure what happened — events, episodes, stories —
+  each cited to its paper and triaged for agent memory; eight rows so far, all
+  graphs, open to any structure that claims the job. Four patterns transfer: type the episode
   as situation, task, action, consequence and constrain the transitions (STAC);
   a stance is an event with a holder (actor–event–perspectivization); write the
   retrieval key as the question a later moment would ask (coherence graph); a

@@ -1,8 +1,10 @@
-# Narrative graphs, triaged for memory
+# Structures for what happened, triaged for memory
 
-Eight ways of putting narrative or event data into a graph, each with what an
-agent memory can take from it and what it must not. The register is the body;
-the design patterns and anti-patterns it yields come first.
+Eight ways of structuring what happened — events, episodes, stories — each
+with what an agent memory can take from it and what it must not. All eight
+are graphs; the register is open to any structure that claims the job. The
+register is the body; the design patterns and anti-patterns it yields come
+first.
 
 ## What transfers
 
