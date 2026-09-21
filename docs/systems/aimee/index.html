@@ -125,7 +125,7 @@ append-only store.</p>
               <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
             </a>
                       </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>6</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>7</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip is-present" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip is-present" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip is-present" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -168,61 +168,60 @@ separate from its transaction timestamps, with a function that answers
 candidates by scope and records why it dropped each one, with row-level
 security under it. Rejection and restoration go through three RPCs over
 one queue, and the verdict gates what the write path will admit next —
-which is the <code>tombstone</code> mark, not a review one.
-<strong><code>human_review</code> is withheld on the admission half of
-the test alone.</strong> The mark asks whether a memory waits in a state
-until an actor the producing agent cannot be resolves it. Aimee answers
-the second half unusually well and the first half not at all.</p>
-<p>The second half is answered well. The review surface is the web GUI —
-the Memory Center at <code>frontend/src/pages/Memory.tsx</code>, posting
-to <code>/v1/memory/review</code>, <code>/reject</code>,
-<code>/restore</code> and <code>/delete</code> over a same-origin
-session and a CSRF token — and the capabilities behind it are graded so
-that destroying is not the same privilege as writing:
-<code>memory.reject</code> at <code>CAP_MEMORY_WRITE</code>,
-<code>memory.restore</code> and <code>memory.delete</code> at
-<code>CAP_MEMORY_ADMIN</code>
-(<code>src/server/server_auth.c:45-56</code>), with
-<code>memory_delete_command</code> taking the request's authenticated
-account because <em>"only a person's delete DESTROYS"</em> and resolving
-it through <code>server_account_is_person()</code>
-(<code>src/headers/server.h:457-460</code>). A person can adjudicate,
-and the code knows which caller is a person.</p>
-<p><strong>What is missing is the wait, and it is missing on all three
-admission paths.</strong> A memory row is born admitted:
+which is the <code>tombstone</code> mark, not a review one.</p>
+<p><strong><code>human_review</code> is earned, on the typed-fact
+lifecycle rather than on any review screen.</strong> The mark asks
+whether a memory waits in a state until an actor the producing agent
+cannot be resolves it, and aimee's authority ladder answers both halves
+in the write path. Ranks are <code>MODEL = 10</code>,
+<code>SYSTEM = 20</code>, <code>USER = 30</code>,
+<code>OPERATOR = 40</code> (<code>fact_mutation.h:26-31</code>), and an
+assertion lands
+<code>actor-&gt;rank &gt;= FACT_ACTOR_SYSTEM ? PERSISTENT : CANDIDATE</code>
+(<code>fact_mutation.c:763</code>). So a fact the model composes is a
+<strong>candidate</strong>, and <code>promote_candidate</code> carries
+the same floor (<code>:813-818</code>), which the model at rank 10
+cannot reach. It cannot clear its own queue.</p>
+<p>The wait is real because the candidate is invisible.
+<code>fact_recall.go:69</code> and <code>:142</code>, together with
+eleven reads on the C side, restrict to
+<code>lifecycle_state IN ('persistent','promoted')</code>. A
+model-authored fact is not returned by recall until something above it
+re-asserts the same triple.</p>
+<p>What closes the usual escape is that the rank cannot be borrowed.
+Model-composed text stays at MODEL authority <em>"whoever was
+authenticated while it ran, so the request identity must not raise its
+rank"</em> (<code>fact_ingest.c:190-197</code>) — a fix with a committed
+test behind it, because the earlier behaviour let an authenticated human
+in the session launder the agent's words into the human's. That is the
+difference between a gate and a flag the caller sets.</p>
+<p><code>src/tests/test_fact_lifecycle.c:178-188</code> shows the queue
+filling and draining in one case: a <code>FACT_AUTHORITY_MODEL</code>
+commit is asserted to be <code>CANDIDATE</code> at class B, and a
+<code>FACT_AUTHORITY_USER</code> assertion on the same triple is
+asserted to upgrade it to class A at confidence 1.0.</p>
+<p>Two honest bounds on the mark. Promotion is <strong>implicit</strong>
+— re-assertion at a higher authority, not an approve verb — so nothing
+presents a queue to a person and asks. And rank 20 is
+<code>SYSTEM</code>, an internal actor, so a system-sourced assertion
+can also clear a candidate; the floor excludes the model, not every
+machine. The Memory Center (<code>frontend/src/pages/Memory.tsx</code>,
+posting to <code>/v1/memory/review</code>, <code>/reject</code>,
+<code>/restore</code> and <code>/delete</code>) is the
+<em>correction</em> surface over rows already live, with
+<code>memory.restore</code> and <code>memory.delete</code> graded to
+<code>CAP_MEMORY_ADMIN</code> above <code>memory.reject</code>'s
+<code>CAP_MEMORY_WRITE</code> (<code>server_auth.c:45-56</code>) and
+<code>memory_delete_command</code> resolving a person through
+<code>server_account_is_person()</code>. The gate and the review screen
+are different mechanisms, and only the first is what earns this
+mark.</p>
+<p>Memory rows themselves have no such gate:
 <code>memories.lifecycle_state</code> carries no <code>CHECK</code>
-constraint and defaults to <code>'active'</code>
-(<code>src/modules/db2/c/schema.sql</code>). The <code>'pending'</code>
-state the GUI filters on is an open commitment with a TTL, not a queue —
-<code>retrieval.go:166</code> recalls pending rows rather than
-withholding them. And a typed fact does start as a
-<code>candidate</code> excluded from the durable reads
-(<code>fact_mutation.c:835</code>, <code>:1409</code> read
-<code>lifecycle_state IN ('persistent','promoted')</code>), but what
-promotes it is re-assertion, not adjudication:
-<code>promote_candidate</code> fires when the same value is written
-again by an actor whose rank is at or above
-<code>FACT_ACTOR_SYSTEM</code> — the floor, which the system actor
-itself clears (<code>fact_mutation.c:813-818</code>). The one
-threshold-based promoter, <code>db2_fact_promote_durable</code>, has no
-caller outside a test.</p>
-<p>So every path admits without asking anyone, and the Memory Center
-adjudicates rows that are already live. That is the affordance the
-mark's definition names as the opposite of a gate.</p>
-<p>The one queue that does hold something in <code>pending</code> drains
-without a person. <code>learning_proposals</code>
-(<code>src/modules/db2/c/schema.sql:413</code>) carries
-<code>state</code>, <code>target_memory_id</code> and
-<code>action_json</code>, and <code>learning_queue_sink</code> commits
-once <code>corroboration_count &gt;= required</code>, with a
-high-confidence path that can commit on the first signal
-(<code>src/modules/learning/learning_router.c:270-300</code>). The
-operator's verb in that loop is REVERTED — <em>"an operator rejects a
-proposal that had already committed"</em> (<code>:258</code>). The audit
-store is append-only by two independent mechanisms, says out loud which
-of them an attacker can remove, and receives memory mutations from a
-trigger in the same transaction as the row change. And the recall tests
-are built so that an empty result fails them.</p>
+constraint and defaults to <code>'active'</code>, and the
+<code>'pending'</code> state the Memory Center filters on is an open
+commitment that <code>retrieval.go:166</code> recalls rather than
+withholds.</p>
 <p>What the report cannot claim is coverage. At over a million lines
 this is the largest tree in the corpus by an order of magnitude, and the
 sections below state where the trace stops.</p>
@@ -1037,34 +1036,35 @@ count</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
-<p><strong>2026-09-21</strong> — same pin, re-read twice to settle
-<code>human_review</code> against the web GUI, which the original
-reading had never traced. <strong>The mark stays withheld and the
-reasoning is rebuilt around admission.</strong></p>
-<p>Two earlier grounds are withdrawn. The claim that the three ops
-<em>"sit in the same route table … with identical flags"</em>, so
-<em>"nothing distinguishes the caller that rejects from the caller that
-wrote"</em>, was wrong twice over: that field is <code>0</code> for
-every entry in the block under a comment reading <em>"caps derived from
-the op"</em>, and the derived capabilities differ. The replacement
-reasoning, which argued the point through the MCP surface, was beside
-the point — MCP is not where human review lives and was never meant to
-be. The review surface is the Memory Center
-(<code>frontend/src/pages/Memory.tsx</code>) and the
-<code>/v1/memory/*</code> web API behind it, and a person there
-genuinely can adjudicate.</p>
-<p>What settles the mark is the write path, not either API. A memory row
-defaults to <code>lifecycle_state='active'</code> with no
-<code>CHECK</code> constraint; the <code>'pending'</code> state the GUI
-filters on is an open commitment that <code>retrieval.go:166</code>
-recalls rather than withholds; and a typed-fact <code>candidate</code> —
-which the durable reads do exclude — is promoted by
-<em>re-assertion</em> from any actor at or above
-<code>FACT_ACTOR_SYSTEM</code> (<code>fact_mutation.c:813-818</code>),
-the producer clearing its own queue.
-<code>db2_fact_promote_durable</code>, the threshold-based promoter, has
-no caller outside a test. Nothing waits for a person, so there is
-nothing for the review surface to gate.</p>
+<p><strong>2026-09-21</strong> — same pin, re-read three times over
+<code>human_review</code>. <strong>The mark is awarded</strong>, having
+been withheld at the previous two pins and defended twice on reasoning
+that is now withdrawn.</p>
+<p>Three grounds are gone. <em>"Nothing distinguishes the caller that
+rejects from the caller that wrote"</em> rested on a flags field that is
+<code>0</code> for every entry in its block under a comment reading
+<em>"caps derived from the op"</em>. The replacement, which argued the
+distinction through the MCP surface, was answering a question the mark
+does not ask — human review is not MCP and was never meant to be. And
+the third, <em>"the producer clears its own queue"</em>, was simply
+false: <code>FACT_ACTOR_MODEL</code> is 10 and the promotion floor
+<code>FACT_ACTOR_SYSTEM</code> is 20
+(<code>fact_mutation.h:26-31</code>), so the model cannot promote its
+own candidate.</p>
+<p>What earns it is the typed-fact lifecycle, described in section 1: a
+model-authored assertion lands <code>CANDIDATE</code>
+(<code>fact_mutation.c:763</code>), no recall returns it
+(<code>fact_recall.go:69</code>, <code>:142</code>, and eleven C reads
+restrict to <code>persistent</code>/<code>promoted</code>), the model
+cannot raise it, and its authority cannot be borrowed from whoever
+happens to be authenticated during the turn
+(<code>fact_ingest.c:190-197</code>).
+<code>test_fact_lifecycle.c:178-188</code> pins both halves.</p>
+<p>Recorded because it bounds the mark rather than decorating it:
+promotion is implicit — re-assertion at higher authority, not an approve
+verb — and rank 20 is <code>SYSTEM</code>, so an internal source can
+also clear a candidate. The floor excludes the model, not every
+machine.</p>
 <p><strong>2026-09-19</strong> — re-pinned to <a
 href="https://github.com/RakuenSoftware/aimee/commit/bedabac667c5c00f9f14fe6f47efd3b369a46922"><code class="commit-id" title="bedabac667c5c00f9f14fe6f47efd3b369a46922">bedabac6…</code></a>.
 <code>human_review</code> is <strong>withdrawn</strong>, on two grounds

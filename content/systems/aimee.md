@@ -10,13 +10,14 @@ archive_name: "RakuenSoftware--aimee"
 revision: bedabac667c5c00f9f14fe6f47efd3b369a46922
 revision_url: https://github.com/RakuenSoftware/aimee/commit/bedabac667c5c00f9f14fe6f47efd3b369a46922
 analyzed_at: 2026-09-19
-capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
+capabilities: "tombstone, trust_state, bitemporal, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "memory_rejection_tombstones, consulted before every memory write and backstopped by a database trigger | server-go/modules/memory/domain.go:135-150, server-go/modules/memory/mutations.go:26-77, src/modules/db2/c/schema.sql:144-185, src/modules/db2/c/fact_mutation.c:82-98 | `Reject` inserts the rejected value into `memory_rejection_tombstones` keyed on object kind, memory key, content and scope; a later write consults the active tombstones for the same key and content and fails closed with `write blocked by rejection tombstone`, and the typed-fact path keeps `fm_tombstone_blocks`; the schema trigger backstops both | src/tests/test_fact_lifecycle.c (the tombstoned re-extraction case), scripts/memory-governance-pg-test.sql (both trigger backstops)"
   trust_state: "lifecycle_state on memories and the typed-fact lifecycle, both read by every recall | server-go/modules/memory/domain.go:463-523, server-go/modules/memory/fact_recall.go, src/modules/db2/c/fact_lifecycle.c:88-125, src/modules/db2/c/memory_lifecycle.h:16-24, src/modules/db2/c/memory_scope_query.h:32-38 | a memory is `active`, `pending`, `fulfilled`, `superseded` or `archived` and only `active` rows enter an answer candidate set; a typed fact carries the lifecycle the C header still names and the Go recall filters on it | server-go/modules/memory/fact_recall_test.go:69-100, src/tests/test_fact_lifecycle.c"
   bitemporal: "memories.valid_from/valid_until against created_at/updated_at, read by ValidAt and the recall predicate | server-go/modules/memory/fact_recall.go:20-45, server-go/modules/memory/domain.go:93-94,:570-594, src/modules/db2/c/schema.sql:129 | the row carries `valid_at`/`invalid_at` as a pair separate from `created_at`, `ValidAt` answers whether a memory held at an instant with open bounds, and the fact query applies `(valid_at <= $2) AND (invalid_at > $2)` when an instant is given | server-go/modules/memory/fact_recall_test.go:101 (`TestMemoryValidAtUsesOpenBitemporalBounds`), src/tests/test_integration.sh (the over-the-wire `memory.get --as-of` assertions)"
   scope_enforced: "a normalized scope on every read, a placement that owns only its scopes, and Postgres row-level security over the memory rows and the membership graph | server-go/modules/memory/scope.go:44, server-go/modules/memory/data.go, src/modules/db2/c/memory_scope_query.h:16-38, src/modules/db2/c/schema.sql (the `ROW LEVEL SECURITY` blocks) | `normalizeScope` refuses a scope a placement does not own — the server placement only user memory, the KB placement only KB scopes — before any SQL runs, the scope filter is a predicate in the recall SQL, and the database enforces row scope with `FORCE ROW LEVEL SECURITY` | server-go/modules/memory/data_test.go:152-224 (`TestServerPlacementOwnsOnlyUserMemory`, `TestKBPlacementOwnsOnlyKBScopes`, `TestKBVisibleSearchExpandsScopeInGo`), scripts/memory-governance-pg-test.sql"
   audit_log: "the WORM audit store, the Postgres intent queue that feeds it, and the trigger that puts memory mutations into it | src/modules/audit/audit_worm.c:22-55, src/modules/db2/c/schema.sql:211-255,:7500-7508,:16178-16184,:16271-16286, src/modules/db2/c/schema_grants.sql:97-109,:305-307, src/modules/db2/c/kb_audit_worm.c, src/kb/kb_vault_rewrap.c, src/server/obs_bus_adapter.c, src/modules/guardrails/guardrails_action_audit.c | 949 lines around an `audit_event` table — `seq`, `ts`, `hash_version`, actor role/principal/issuer/subject, `transport_cn`, `action`, `subject`, `verdict`, `detail`, `key_id`, `event_id`, `prev_hash`, `row_hash` — with `BEFORE UPDATE` and `BEFORE DELETE` triggers raising `'WORM: audit_event is append-only'`, a single-writer mutex so the chain is total-ordered and `seq` gap-free, and an HMAC-SHA256 row hash over a length-prefixed injective encoding that deliberately excludes `ts`. The comment names the limit of each layer: the triggers *\\\"are NOT the adversarial guarantee (a process with file write access can drop them) — that is the hash-chain …\\\"*. Memory mutations reach it by trigger rather than by call site: `evidence_memories` fires `memory_mutation_worm_append`, a `SECURITY DEFINER` wrapper over `kb_audit_worm_append` → `kb_audit_worm_submit`, in the same transaction as the row change — *\\\"a WORM failure aborts the memory mutation\\\"* — landing `memory.assert` / `memory.reject` / `memory.invalidate` / `memory.restore` intents in `kb_audit_outbox`, which carries its own `BEFORE UPDATE`, `BEFORE DELETE` and `BEFORE TRUNCATE` WORM triggers; a separately credentialed worker claims them and appends the SQLite chain. Provisioning is stricter than a writer grant: the runtime role is `REVOKE ALL` on the queue and delivery tables and re-granted `SELECT` only, holds EXECUTE on `kb_audit_worm_submit` and `kb_audit_worm_pending` and not on `kb_audit_worm_append` — *\\\"runtime can submit immutable intents through the definer and inspect queue state, but cannot write the queue or delivery ledger\\\"*. Alongside it, `memory_provenance(memory_id, session_id, action, details, created_at)` records per-memory mutations and is exposed as a `memory_provenance` MCP tool | src/tests/test_memory_advanced.c:687-699 reads back a `dedupe_merge` provenance row and asserts it names the canonical; scripts/memory-governance-pg-test.sql:120-131 asserts the memory governance flow left at least five `memory.*` rows in `kb_audit_outbox` and the rejected row retained"
+  human_review: "the typed-fact lifecycle — a model-authored assertion lands as `candidate` and no recall returns it until an actor the model cannot be re-asserts it | src/modules/db2/c/fact_mutation.c, src/modules/db2/c/fact_ingest.c, server-go/modules/memory/fact_recall.go | ranks are MODEL=10 < SYSTEM=20 < USER=30 < OPERATOR=40 (`fact_mutation.h:26-31`); a write lands `actor->rank >= FACT_ACTOR_SYSTEM ? PERSISTENT : CANDIDATE` (`fact_mutation.c:763`), and `promote_candidate` needs the same floor (`:813-818`), so the model cannot clear its own. Model-composed text is pinned to MODEL rank whoever is authenticated while the turn runs — *\"the request identity must not raise its rank\"* (`fact_ingest.c:190-197`). `fact_recall.go:69` and `:142`, plus eleven C reads, restrict to `lifecycle_state IN ('persistent','promoted')` | src/tests/test_fact_lifecycle.c:178-188 — a `FACT_AUTHORITY_MODEL` commit is asserted `CANDIDATE` at class B, then a `FACT_AUTHORITY_USER` assertion on the same triple is asserted to upgrade it to class A, so the queue is shown filling and draining in one case"
   negative_eval: "TestTypedFactRecallPolicyLivesInGo, a populated block with the excluded facts named | server-go/modules/memory/fact_recall_test.go:69-100 | five facts seeded — a role, an email, a password, a low-confidence hobby and an over-length note — and a recall without sensitive access returns exactly the role; with sensitive access it returns the role and the email and still never the password, the hobby or the note | server-go/modules/memory/fact_recall_test.go:69-100"
 stack_storage: "postgres, sqlite"
 stack_retrieval: "vector, lexical, graph"
@@ -63,52 +64,51 @@ answers *was this in force on 12 June*. The recall path filters candidates by
 scope and records why it dropped each one, with row-level security under it.
 Rejection and restoration go through three RPCs over one queue, and the verdict
 gates what the write path will admit next — which is the `tombstone` mark, not a
-review one. **`human_review` is withheld on the admission half of the test alone.** The
-mark asks whether a memory waits in a state until an actor the producing agent
-cannot be resolves it. Aimee answers the second half unusually well and the
-first half not at all.
+review one.
 
-The second half is answered well. The review surface is the web GUI — the
-Memory Center at `frontend/src/pages/Memory.tsx`, posting to
-`/v1/memory/review`, `/reject`, `/restore` and `/delete` over a same-origin
-session and a CSRF token — and the capabilities behind it are graded so that
-destroying is not the same privilege as writing: `memory.reject` at
-`CAP_MEMORY_WRITE`, `memory.restore` and `memory.delete` at `CAP_MEMORY_ADMIN`
-(`src/server/server_auth.c:45-56`), with `memory_delete_command` taking the
-request's authenticated account because *"only a person's delete DESTROYS"* and
-resolving it through `server_account_is_person()`
-(`src/headers/server.h:457-460`). A person can adjudicate, and the code knows
-which caller is a person.
+**`human_review` is earned, on the typed-fact lifecycle rather than on any
+review screen.** The mark asks whether a memory waits in a state until an actor
+the producing agent cannot be resolves it, and aimee's authority ladder answers
+both halves in the write path. Ranks are `MODEL = 10`, `SYSTEM = 20`,
+`USER = 30`, `OPERATOR = 40` (`fact_mutation.h:26-31`), and an assertion lands
+`actor->rank >= FACT_ACTOR_SYSTEM ? PERSISTENT : CANDIDATE`
+(`fact_mutation.c:763`). So a fact the model composes is a **candidate**, and
+`promote_candidate` carries the same floor (`:813-818`), which the model at rank
+10 cannot reach. It cannot clear its own queue.
 
-**What is missing is the wait, and it is missing on all three admission
-paths.** A memory row is born admitted: `memories.lifecycle_state` carries no
-`CHECK` constraint and defaults to `'active'`
-(`src/modules/db2/c/schema.sql`). The `'pending'` state the GUI filters on is
-an open commitment with a TTL, not a queue — `retrieval.go:166` recalls pending
-rows rather than withholding them. And a typed fact does start as a
-`candidate` excluded from the durable reads
-(`fact_mutation.c:835`, `:1409` read `lifecycle_state IN ('persistent','promoted')`),
-but what promotes it is re-assertion, not adjudication: `promote_candidate`
-fires when the same value is written again by an actor whose rank is at or
-above `FACT_ACTOR_SYSTEM` — the floor, which the system actor itself clears
-(`fact_mutation.c:813-818`). The one threshold-based promoter,
-`db2_fact_promote_durable`, has no caller outside a test.
+The wait is real because the candidate is invisible. `fact_recall.go:69` and
+`:142`, together with eleven reads on the C side, restrict to
+`lifecycle_state IN ('persistent','promoted')`. A model-authored fact is not
+returned by recall until something above it re-asserts the same triple.
 
-So every path admits without asking anyone, and the Memory Center adjudicates
-rows that are already live. That is the affordance the mark's definition names
-as the opposite of a gate.
+What closes the usual escape is that the rank cannot be borrowed. Model-composed
+text stays at MODEL authority *"whoever was authenticated while it ran, so the
+request identity must not raise its rank"* (`fact_ingest.c:190-197`) — a fix
+with a committed test behind it, because the earlier behaviour let an
+authenticated human in the session launder the agent's words into the human's.
+That is the difference between a gate and a flag the caller sets.
 
-The one queue that does hold something in `pending` drains without a person.
-`learning_proposals` (`src/modules/db2/c/schema.sql:413`) carries `state`,
-`target_memory_id` and `action_json`, and `learning_queue_sink` commits once
-`corroboration_count >= required`, with a high-confidence path that can commit
-on the first signal (`src/modules/learning/learning_router.c:270-300`). The
-operator's verb in that loop is REVERTED — *"an operator rejects a proposal that
-had already committed"* (`:258`). The audit store is
-append-only by two independent mechanisms, says out loud which of them an
-attacker can remove, and receives memory mutations from a trigger in the same
-transaction as the row change. And the recall tests are built so that an empty
-result fails them.
+`src/tests/test_fact_lifecycle.c:178-188` shows the queue filling and draining
+in one case: a `FACT_AUTHORITY_MODEL` commit is asserted to be `CANDIDATE` at
+class B, and a `FACT_AUTHORITY_USER` assertion on the same triple is asserted to
+upgrade it to class A at confidence 1.0.
+
+Two honest bounds on the mark. Promotion is **implicit** — re-assertion at a
+higher authority, not an approve verb — so nothing presents a queue to a person
+and asks. And rank 20 is `SYSTEM`, an internal actor, so a system-sourced
+assertion can also clear a candidate; the floor excludes the model, not every
+machine. The Memory Center (`frontend/src/pages/Memory.tsx`, posting to
+`/v1/memory/review`, `/reject`, `/restore` and `/delete`) is the *correction*
+surface over rows already live, with `memory.restore` and `memory.delete` graded
+to `CAP_MEMORY_ADMIN` above `memory.reject`'s `CAP_MEMORY_WRITE`
+(`server_auth.c:45-56`) and `memory_delete_command` resolving a person through
+`server_account_is_person()`. The gate and the review screen are different
+mechanisms, and only the first is what earns this mark.
+
+Memory rows themselves have no such gate: `memories.lifecycle_state` carries no
+`CHECK` constraint and defaults to `'active'`, and the `'pending'` state the
+Memory Center filters on is an open commitment that `retrieval.go:166` recalls
+rather than withholds.
 
 What the report cannot claim is coverage. At over a million lines this is the
 largest tree in the corpus by an order of magnitude, and the sections below
@@ -798,29 +798,30 @@ attributes it to the extractor rather than to an adversary.
 
 ## History
 
-**2026-09-21** — same pin, re-read twice to settle `human_review` against the
-web GUI, which the original reading had never traced. **The mark stays withheld
-and the reasoning is rebuilt around admission.**
+**2026-09-21** — same pin, re-read three times over `human_review`. **The mark
+is awarded**, having been withheld at the previous two pins and defended twice
+on reasoning that is now withdrawn.
 
-Two earlier grounds are withdrawn. The claim that the three ops *"sit in the
-same route table … with identical flags"*, so *"nothing distinguishes the caller
-that rejects from the caller that wrote"*, was wrong twice over: that field is
-`0` for every entry in the block under a comment reading *"caps derived from the
-op"*, and the derived capabilities differ. The replacement reasoning, which
-argued the point through the MCP surface, was beside the point — MCP is not
-where human review lives and was never meant to be. The review surface is the
-Memory Center (`frontend/src/pages/Memory.tsx`) and the `/v1/memory/*` web API
-behind it, and a person there genuinely can adjudicate.
+Three grounds are gone. *"Nothing distinguishes the caller that rejects from the
+caller that wrote"* rested on a flags field that is `0` for every entry in its
+block under a comment reading *"caps derived from the op"*. The replacement,
+which argued the distinction through the MCP surface, was answering a question
+the mark does not ask — human review is not MCP and was never meant to be. And
+the third, *"the producer clears its own queue"*, was simply false:
+`FACT_ACTOR_MODEL` is 10 and the promotion floor `FACT_ACTOR_SYSTEM` is 20
+(`fact_mutation.h:26-31`), so the model cannot promote its own candidate.
 
-What settles the mark is the write path, not either API. A memory row defaults
-to `lifecycle_state='active'` with no `CHECK` constraint; the `'pending'` state
-the GUI filters on is an open commitment that `retrieval.go:166` recalls rather
-than withholds; and a typed-fact `candidate` — which the durable reads do
-exclude — is promoted by *re-assertion* from any actor at or above
-`FACT_ACTOR_SYSTEM` (`fact_mutation.c:813-818`), the producer clearing its own
-queue. `db2_fact_promote_durable`, the threshold-based promoter, has no caller
-outside a test. Nothing waits for a person, so there is nothing for the review
-surface to gate.
+What earns it is the typed-fact lifecycle, described in section 1: a
+model-authored assertion lands `CANDIDATE` (`fact_mutation.c:763`), no recall
+returns it (`fact_recall.go:69`, `:142`, and eleven C reads restrict to
+`persistent`/`promoted`), the model cannot raise it, and its authority cannot be
+borrowed from whoever happens to be authenticated during the turn
+(`fact_ingest.c:190-197`). `test_fact_lifecycle.c:178-188` pins both halves.
+
+Recorded because it bounds the mark rather than decorating it: promotion is
+implicit — re-assertion at higher authority, not an approve verb — and rank 20
+is `SYSTEM`, so an internal source can also clear a candidate. The floor
+excludes the model, not every machine.
 
 **2026-09-19** — re-pinned to [`bedabac667c5c00f9f14fe6f47efd3b369a46922`](https://github.com/RakuenSoftware/aimee/commit/bedabac667c5c00f9f14fe6f47efd3b369a46922). `human_review` is **withdrawn**, on two grounds that compound. `memory.reject` acts on a row that is already active — it sets `lifecycle_state='archived'` and `activation_suppressed=1` (`server-go/modules/memory/domain.go:159`) — so it corrects rather than admits, and the mark asks for a memory that waits before it can be believed. And `memory.review_list`, `memory.reject` and `memory.restore` sit in the same route table as `memory.search` and `memory.delete`, dispatched through `rh_dispatch_op` with identical flags (`src/server/server_http_routes.c:1686-1688`), so nothing in the routing distinguishes the caller that rejects from the caller that wrote. The queue, the tombstone it writes and the restore that records who restored are all real and keep their credit under `tombstone` and `audit_log` — which is where the strength of this design actually lives. The other six marks stand. Screened again first; nothing was installed and no suite was run.
 
