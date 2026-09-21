@@ -173,7 +173,7 @@ Where the atlas has an exact count — the seven mechanisms on
 | Mechanism | Systems carrying it |
 | --- | --- |
 | Negative retrieval assertion | 344 of 621 |
-| Scope enforced in retrieval | 293 of 621 |
+| Scope enforced in retrieval | 294 of 621 |
 | Append-only mutation audit | 211 of 621 |
 | Explicit trust state | 160 of 621 |
 | Bi-temporal validity | 105 of 621 |

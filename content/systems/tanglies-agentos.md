@@ -7,20 +7,22 @@ page_kind: system
 source_name: "Tanglies/AgentOS"
 source_url: https://github.com/Tanglies/AgentOS
 archive_name: "Tanglies--AgentOS"
-revision: cea6420c92bda3331d99ee68de4e96c1a2d61e7c
-revision_url: https://github.com/Tanglies/AgentOS/commit/cea6420c92bda3331d99ee68de4e96c1a2d61e7c
-analyzed_at: 2026-09-11
-capabilities: ""
+revision: 08a3af6487df29a548271aaa681e1e06e6ac5ae0
+revision_url: https://github.com/Tanglies/AgentOS/commit/08a3af6487df29a548271aaa681e1e06e6ac5ae0
+analyzed_at: 2026-09-21
+capabilities: "scope_enforced"
 stack_storage: "sqlite"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
+capability_evidence:
+  scope_enforced: "the long-term memory read and delete paths, filtered on workspace and user rather than on a flag the model supplies | src/agentos/runtime/repositories.py, src/agentos/runtime/long_term_memory.py, src/agentos/runtime/memory_tools.py | `_visibility_clause` (`repositories.py:901-917`) returns a predicate whose every branch carries `workspace_id = ?`, and it is interpolated into the `WHERE` of all six consuming statements — get by id (`:965`), list (`:982`), search (`:1050`), delete by id (`:1070`), clear (`:1085`) and count (`:1097`). The absent-user branch narrows to `scope = 'workspace'` rather than widening. The tenant ids come from `get_workspace_id()` / `get_user_id()` through `_scope_ids` (`long_term_memory.py:123-130`); the model's two tools take only `content`/`query` and a `scope` string, and cannot name a workspace or a user (`memory_tools.py:43`, `:78`) | tests/test_long_term_memory.py exercises recall and injection, and pins that an agent with `long_term_auto_recall=False` gets no memory block over a populated store (`:240-248`) against the positive at `:229-235`; no committed case asserts that one workspace cannot read another's rows"
 matrix:
   memory_unit: "A row of up to 4,000 characters of text with an id, an optional session id and a timestamp"
   storage: "One SQLite table at `.agentos/memory.db`; short-term session history is a separate in-process LRU"
   retrieval: "`LIKE` substring scoring over English words and Chinese bigrams, weighted by term length, top five by default"
   write: "A `remember` tool the model calls when it judges something worth keeping, and a REST endpoint"
   update_delete: "Hard delete by id and a clear-all; no edit, no deduplication, no record of what was removed"
-  scoping: "None — `session_id` is a column the tool never sets and no query reads; every session sees every memory"
+  scoping: "A workspace and user predicate on every read and delete, resolved from request context rather than from the model; `session_id` is still written and never read"
   integration: "FastAPI service with an agent runtime, tool registry, planning, delegation to sub-agents, and web and local tools"
   background: "None"
   trust: "None; recalled memories enter the system prompt as reference text with no framing as untrusted"
@@ -32,9 +34,11 @@ matrix:
 
 AgentOS is a Python agent platform — FastAPI, a tool-calling runtime, planning, delegation to sub-agents, local file and shell tools behind a sandbox, and web tools — published by one author in fourteen commits, all on 11 September 2026, as version 0.1, which its README calls the engineering base. MIT-licensed. It is unrelated to openEuler's AgentOS.
 
-Its long-term memory is 204 lines: one SQLite table, a `remember` tool the model calls, a `recall` tool, and an automatic recall that runs once at the start of each run and places the matches in the system prompt for every model call in it. Retrieval is keyword matching, and the module says so in its first paragraph — no embeddings, no model call, a known cost in recall for paraphrase and cross-language queries. Chinese queries are split into overlapping two-character bigrams, because, as the code notes, SQLite's built-in FTS5 tokenizer does not recall two-character Chinese words.
+Its long-term memory is 290 lines: one SQLite table, a `remember` tool the model calls, a `recall` tool, and an automatic recall that runs once at the start of each run and places the matches in the system prompt for every model call in it. Retrieval is keyword matching, and the module says so in its first paragraph — no embeddings, no model call, a known cost in recall for paraphrase and cross-language queries. Chinese queries are split into overlapping two-character bigrams, because, as the code notes, SQLite's built-in FTS5 tokenizer does not recall two-character Chinese words.
 
-It carries none of the atlas's seven marks, and the one that matters is the absence of scope — which is a stated design, not an oversight. The module's opening table contrasts short-term memory, scoped to one `session_id`, with long-term memory, *shared across sessions*; the `session_id` column on a long-term row is provenance, the `remember` tool never sets it, and no query reads it. So every memory the model writes in any session is recalled into every other. Together with three defaults — long-term memory on, automatic recall on, and `fetch_url` always registered — that makes the store a path from any web page the agent reads into the system prompt of every later conversation. Whether a given model will write what a page tells it to is a question about the model. Nothing in the tree stands in the way.
+It carries one of the atlas's seven marks, `scope_enforced`, and the shape of the rest is unchanged: a memory is a row of text with no status, no second timestamp and no record of its removal. The store is now multi-tenant. `_visibility_clause` (`src/agentos/runtime/repositories.py:901-917`) returns a predicate whose every branch carries `workspace_id = ?`, and it is interpolated into the `WHERE` of all six statements that read or delete a memory. The tenant ids reach it from the request context through `_scope_ids`, and the model's two memory tools take only `content` or `query` and a `scope` string — they cannot name a workspace or a user. The branch that matters most is the one for a caller with no user id: it narrows to `scope = 'workspace'` rather than widening to everything, which is the direction this failure usually runs.
+
+**An audit log arrived and the memory path does not use it.** `src/agentos/runtime/audit.py` is 170 lines answering four fixed questions — who, when, what to what, with what result — persisted to `audit_logs` with its context taken from contextvars so a caller cannot forget to pass it. API keys, workspaces, agents, quota, tool policy and the dashboard all write to it. `long_term_memory.py`, `memory_tools.py` and `memory.py` contain no reference to it at all, so `audit_log` is withheld on a mechanism that exists and is wired everywhere except here.
 
 ## 2. Mental Model
 
@@ -66,7 +70,7 @@ One FastAPI process with the runtime in it. `api/app.py` builds the `LongTermMem
 
 ## 5. Memory Data Model
 
-`memories(id INTEGER PRIMARY KEY, content TEXT NOT NULL, session_id TEXT, created_at TEXT NOT NULL)`, indexed on `created_at`. That is the whole model: no type, no source, no confidence, no status, no owner.
+`memories(id INTEGER PRIMARY KEY, content TEXT NOT NULL, session_id TEXT, workspace_id INTEGER, user_id INTEGER, scope TEXT NOT NULL DEFAULT 'workspace', created_at TEXT NOT NULL)`, indexed on `(workspace_id, created_at DESC)` and `(workspace_id, user_id, scope)`. That is the whole model: no type, no source, no confidence, no status, no owner.
 
 ## 6. Retrieval Mechanics
 
@@ -125,13 +129,24 @@ A readable starting point for a single-user, local experiment with agent memory,
 
 **Searches recorded for the negative claims**
 
+Re-run at this pin.
+
 ```sh
-rg -n "session_id" src/agentos/runtime/long_term_memory.py src/agentos/runtime/memory_tools.py   # written on insert and selected, never in a WHERE; the tool passes none
-rg -n "user_id|tenant|owner" src/agentos/runtime/long_term_memory.py                               # 0: no scope key
-rg -n "UPDATE memories|tombstone|history" src/agentos/runtime/long_term_memory.py                  # 0: no edit and no record of deletion
-ls .github                                                                                         # absent: no CI
+rg -n "session_id" src/agentos/runtime/long_term_memory.py      # still written on insert and never in a WHERE
+rg -n "UPDATE memories|tombstone|history" src/agentos/runtime/long_term_memory.py   # 0: no edit and no record of deletion
+rg -n "audit" src/agentos/runtime/long_term_memory.py src/agentos/runtime/memory_tools.py src/agentos/runtime/memory.py   # 0: the audit log has no producer on the memory path
+rg -n "workspace_id|user_id" src/agentos/runtime/long_term_memory.py   # 24, where the previous pin had none
+ls .github/workflows                                            # ci.yml — CI exists, where the previous pin had none
 ```
 
 ## History
+
+**2026-09-21** — re-pinned to [`08a3af6487df29a548271aaa681e1e06e6ac5ae0`](https://github.com/Tanglies/AgentOS/commit/08a3af6487df29a548271aaa681e1e06e6ac5ae0), 46 commits on. Screened before reading: two VS Code entries, neither carrying `runOptions.runOn: folderOpen`, one `conftest.py` that executes at pytest collection, and three dependency surfaces changed the same day — `pyproject.toml` and both frontend manifests, all inside the seven-day cooldown. A `.gitattributes` appeared and was read before checkout: line-ending normalisation and binary markers, no `filter=`. Nothing was installed and nothing was run.
+
+Every file the report cites changed, and nine modules are new. **`scope_enforced` is earned**, where the previous pin had no marks at all: `memories` gained `workspace_id`, `user_id` and a `scope` column, and the predicate reaches all six read and delete statements. The design note the previous reading quoted — that a global store was deliberate — no longer describes the code.
+
+Two other negatives move. `.github/workflows/ci.yml` exists, so the recorded `ls .github` result is superseded. And `audit.py` is new, which turns a plain absence into a producer finding: the audit log is real and six subsystems write to it, while the three memory modules reference it nowhere.
+
+Unchanged and re-checked: no edit path, no deletion record, `session_id` still written and never read, one timestamp, and no status column — so `tombstone`, `trust_state` and `bitemporal` stay withheld. `negative_eval` stays withheld on a distinction worth stating: the suite does assert that a populated store yields no memory block when `long_term_auto_recall=False`, against a positive at `:229-235`, but that tests a configuration flag rather than a predicate keeping particular material out of a populated result, and no committed case asserts that one workspace cannot read another's rows.
 
 **2026-09-11** — [`cea6420c92bda3331d99ee68de4e96c1a2d61e7c`](https://github.com/Tanglies/AgentOS/commit/cea6420c92bda3331d99ee68de4e96c1a2d61e7c) — first reading. Screened with `scripts/screen_repo.py`: two editor-configuration findings, `.vscode/settings.json` enabling pytest discovery and `.vscode/tasks.json` defining six manual tasks, none set to run on folder open; one `conftest.py`; one manifest inside the seven-day cooldown and one unpinned surface; an `AGENTS.md` of project conventions for coding assistants, read as data. The folder was not opened in an editor, and nothing was installed or run.

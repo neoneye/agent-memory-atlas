@@ -16029,20 +16029,32 @@ tokenizer.</strong> A run of Chinese characters plus its overlapping
 bigrams, matched as substrings and weighted by length, recalls
 two-character words that SQLite's FTS5 tokenizer misses — and the module
 states its own limits in its first paragraph.</li>
-<li>Biggest risk: <strong>one global store the model writes and every
-session reads by default.</strong> The module documents long-term memory
-as shared across sessions, <code>session_id</code> is written as
-provenance and never read, automatic recall is on, and
-<code>fetch_url</code> is always registered — so text from a fetched
-page can become a system-prompt line in every later conversation. No
-mark.</li>
+<li>Biggest risk: <strong>a store the model writes and every later
+session in the workspace reads by default.</strong> Scope is no longer
+the gap it was — a <code>workspace_id</code> predicate reaches every
+read and delete, which earns the one mark, <code>scope_enforced</code>.
+What the predicate does not narrow is time or provenance:
+<code>session_id</code> is still written and never read, automatic
+recall is on, and <code>fetch_url</code> is always registered, so text
+from a fetched page can still become a system-prompt line in every later
+conversation in that workspace. The tenant wall moved; the injection
+path did not.</li>
 <li>Most reusable component: <code>extract_terms</code> in
 <code>long_term_memory.py</code>, for keyword matching over mixed
 English and Chinese text.</li>
-<li>Maturity impression: MIT, fourteen commits by one author on 11
-September 2026, version 0.1 by its own description; 204 lines of
-long-term memory in a 4,679-line platform with 3,642 lines of tests and
-no CI. The one negative recall test asserts an empty result.</li>
+<li>Maturity impression: MIT, version 0.1 by its own description,
+re-pinned 46 commits on; 290 lines of long-term memory, now with CI at
+<code>.github/workflows/ci.yml</code> where the first reading found
+none. One mark, <code>scope_enforced</code>: <code>memories</code>
+gained <code>workspace_id</code>, <code>user_id</code> and a
+<code>scope</code> column, and <code>_visibility_clause</code> puts a
+<code>workspace_id = ?</code> predicate into the <code>WHERE</code> of
+all six statements that read or delete one — with the no-user-id branch
+narrowing to the workspace rather than widening, and the model's tools
+unable to name a tenant. <code>audit_log</code> is withheld on a sharper
+footing than absence: <code>audit.py</code> is real and six subsystems
+write to it, while the three memory modules reference it nowhere. The
+one negative recall test still asserts an empty result.</li>
 <li>Study when: you want the smallest readable example of model-written
 memory with automatic recall — and of why scope has to come first.</li>
 <li>Do not copy when: more than one person, or any web access, will
