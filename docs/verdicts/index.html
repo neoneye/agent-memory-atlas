@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 621 reports.</strong></p>
+<p><strong>This page covers all 622 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25316,6 +25316,47 @@ this code — whenever a revert is specified as "remove what is not in the
 backup", the backup's exclusion rules quietly become deletion rules, and
 every size cap, binary check and file-count limit turns into a list of
 things the revert will destroy.</li>
+</ul>
+<h3 id="t-mem"><a href="../systems/t-mem/"><code>t-mem</code></a></h3>
+<ul>
+<li>Best idea: <strong>write down the question at index time, and never
+let it be read back.</strong> T-Mem generates <em>triggers</em> —
+rehearsed queries a memory ought to be reachable from — in four families
+over two granularities, so a record can be found by a question sharing
+none of its surface form. The rule that makes it safe is architectural:
+triggers are searched and then discarded, contributing only the identity
+of what they point at. A design that indexes by generated text without
+that separation has built a way for a model's invented paraphrase to
+come back as a record.</li>
+<li>Biggest risk: <strong>an index file is executable input, and nothing
+can ever be corrected.</strong> Indexes are written with
+<code>pickle.dump</code> and read with <code>pickle.load</code>, with
+trigger embeddings loaded via <code>np.load(allow_pickle=True)</code> —
+so any process consuming an index it did not build is executing whatever
+produced it, with no signature or validation in the repository.
+Underneath that, <code>def delete</code>, <code>def forget</code> and
+<code>def remove</code> appear nowhere in the tree: a wrong extraction
+is permanent, and the rehearsed queries that reach a memory outlive any
+claim it was generated from.</li>
+<li>Most reusable component:
+<code>T_mem/prompts/trigger_prompts.py</code>, which carries the
+paper-to-code mapping in its header and shows how each of the four
+families is elicited. Beside it, <code>utils/cost_ledger.py</code> logs
+one JSONL row per successful completion on the stated ground that
+coarser aggregation is recoverable and finer detail is not.</li>
+<li>Maturity impression: MIT, 14,140 lines of Python across 67 files,
+EMNLP 2026 Main Conference, with the arXiv id verified to resolve to the
+claimed title. No marks. <strong>No test file exists anywhere in the
+tree</strong>, and CI installs the package and runs
+<code>compileall</code> on three Python versions — a syntax check, not a
+test run. The LoCoMo-Plus subset the paper contributes ships no
+committed result, so the headline gap cannot be recomputed from the
+repository.</li>
+<li>Study when: you are deciding how a memory gets <em>found</em> rather
+than how it is stored. The reachability framing — descriptive recall
+where query and record share surface form, associative recall where they
+share none — names a gap most retrieval designs do not distinguish, and
+the fix is separable from everything else here.</li>
 </ul>
         </article>
       </div>

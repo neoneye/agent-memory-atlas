@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A conversational-memory pipeline
+that indexes every scene and item by generated triggers — anticipated
+future queries at two granularities — and never lets a trigger be
+returned as evidence.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="T-Mem — Agent Memory Atlas">
+    <meta property="og:description" content="A conversational-memory
+pipeline that indexes every scene and item by generated triggers —
+anticipated future queries at two granularities — and never lets a
+trigger be returned as evidence.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="T-Mem — Agent Memory Atlas">
+    <meta name="twitter:description" content="A conversational-memory
+pipeline that indexes every scene and item by generated triggers —
+anticipated future queries at two granularities — and never lets a
+trigger be returned as evidence.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>T-Mem — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "T-Mem",
+      "description": "A conversational-memory pipeline that indexes every scene and item by generated triggers \u2014 anticipated future queries at two granularities \u2014 and never lets a trigger be returned as evidence.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Rehearse the question at write time, keep
+it off the evidence path</p>
+          <h1>T-Mem</h1>
+          <p class="document-deck">A conversational-memory pipeline that
+indexes every scene and item by generated triggers — anticipated future
+queries at two granularities — and never lets a trigger be returned as
+evidence.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/Sherlockwz/T-Mem">
+              <span>Source</span>
+              <strong>Sherlockwz/T-Mem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/Sherlockwz/T-Mem/commit/dd9e1527bc75908485809580c9520af5a9a42879" title="dd9e1527bc75908485809580c9520af5a9a42879">
+              <span>Analyzed revision</span>
+              <code>dd9e1527…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/Sherlockwz--T-Mem" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>Sherlockwz--T-Mem</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>T-Mem is the code behind <em>Memory That Anticipates, Not
+Archives</em> (<a
+href="https://arxiv.org/abs/2606.15405">arXiv:2606.15405</a>, 13 June
+2026), accepted to the EMNLP 2026 Main Conference. MIT, 14,140 lines of
+Python across 67 files, with a <code>CITATION.cff</code> and a project
+page.</p>
+<p>Its argument is stated sharply enough to test. Long-term memory today
+is <strong>reachability-bounded</strong>: a memory can only be found
+when the query resembles it, lexically or in embedding space. That
+covers <strong>descriptive</strong> recall, where query and memory share
+surface form, and misses <strong>associative</strong> recall, where they
+share none and are connected only by a latent arc — the question that
+should surface a memory without quoting any of it.</p>
+<p><strong>The answer is to write down the question, not just the
+answer.</strong> At write time T-Mem generates <em>triggers</em>:
+rehearsed queries that a memory ought to be reachable from. They come at
+two granularities and four families — Entity and Bridge over items,
+Scene and Horizon over scenes, the last carrying channels named
+<code>PERSONAL_ARC</code> and <code>AVOIDANCE_HABIT</code>. The README
+calls this "the engineering counterpart of episodic future
+thinking".</p>
+<p><strong>The commitment that makes it safe is architectural.</strong>
+Triggers stay <em>off the evidence path</em>: they are indexed and
+searched, and they are never returned to the answering model. The README
+states the principle as decoupling "<em>how</em> a memory is reached
+from <em>what</em> is reached", and it answers the obvious objection to
+indexing by generated text — that a model's invented paraphrase becomes
+something a later reader mistakes for a record. Here it structurally
+cannot.</p>
+<p><strong>No capability marks, and the reason is uniform rather than a
+series of near misses.</strong> This is a build-once pipeline over a
+benchmark. Nothing is corrected, superseded or removed —
+<code>def delete</code>, <code>def forget</code> and
+<code>def remove</code> appear nowhere in the tree. There is no second
+time axis. <code>user_id_list</code> is written on every scene and item
+and never consulted on a read. The only <code>confidence</code> lives on
+a trigger, which is retrieval-only, so it ranks reachability and gates
+no belief. A system that never revises is not being penalised for an
+oversight; it was built to answer a benchmark, and the questions the
+marks ask do not arise.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A turn becomes a memory by being segmented, typed and then
+<em>rehearsed</em>. Stage 1 cuts the dialogue into scenes; stage 2
+extracts atomic items anchored to a host scene; stage 3 builds the
+lexical and vector indexes; stage 4 generates the associative triggers.
+From that point a memory has two independent surfaces: the text it
+contains, and the set of questions it was rehearsed to answer.</p>
+<p>Nothing ever stops being a memory. There is no expiry, no
+supersession and no deletion, so the store is append-only by omission
+rather than by design — the pipeline runs once over a fixed corpus and
+is then queried.</p>
+<p>The recall path is hierarchical and type-segregated. Topic labels
+pre-filter but never reach the answering model; scenes and items are
+retrieved at their own granularity and fused; triggers are searched and
+then discarded, contributing only the identity of what they point
+at.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — a scene and its items are indexed twice over — once by their own text for descriptive recall, and once by generated triggers that rehearse questions the memory should answer for associative recall; at query time both surfaces are searched and fused, but only scenes and items cross into the answer, with topic labels used to pre-filter and triggers discarded once they have named what they point at</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: a scene and its items are indexed twice over — once by their own text for descriptive recall, and once by generated triggers that rehearse questions the memory should answer for associative recall; at query time both surfaces are searched and fused, but only scenes and items cross into the answer, with topic labels used to pre-filter and triggers discarded once they have named what they point at
+flowchart TD
+    T[&quot;a dialogue turn&quot;] --&gt; S[&quot;stage 1: scene segmentation&quot;]
+    S --&gt; I[&quot;stage 2: atomic items, anchored to a host scene&quot;]
+    S --&gt; TL[&quot;topic labels&quot;]
+    I --&gt; IDX[&quot;stage 3: BM25 + embedding indexes&quot;]
+    S --&gt; IDX
+    I --&gt; TR[&quot;stage 4: trigger generation&quot;]
+    S --&gt; TR
+    TR --&gt; TF[&quot;four families: Entity, Bridge, Scene, Horizon&quot;]
+    TF --&gt; TIDX[&quot;trigger index, .npy embeddings&quot;]
+
+    Q[&quot;a later question&quot;] --&gt; PF{&quot;topic pre-filter&quot;}
+    PF --&gt; DR[&quot;descriptive: BM25 + vector over scene and item text&quot;]
+    PF --&gt; AR[&quot;associative: vector over trigger text&quot;]
+    AR --&gt; RES[&quot;resolve trigger to the memory it points at&quot;]
+    DR --&gt; RRF[&quot;reciprocal rank fusion, optional reranker&quot;]
+    RES --&gt; RRF
+    RRF --&gt; EV[&quot;evidence: scenes and items only&quot;]
+    EV --&gt; ANS[&quot;answering model&quot;]
+    TL -. &quot;never on the QA channel&quot; .-&gt; ANS
+    TF -. &quot;never returned as evidence&quot; .-&gt; ANS</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>There is no service. T-Mem is eight numbered stage modules under
+<code>T_mem/main/</code>, driven by four shell scripts in
+<code>scripts/</code> — <code>build_memory.sh</code> to construct,
+<code>eval_locomo.sh</code> and <code>eval_locomo_plus.sh</code> to
+evaluate, <code>download_data.sh</code> to fetch the corpus. An operator
+runs stages; nothing runs between them.</p>
+<p>What has to be running is a model provider. <code>T_mem/llm/</code>
+holds three clients — completion, embedding and reranker — each speaking
+to a configured endpoint, and every construction stage is an LLM pass.
+Nothing is local: with no endpoint configured, no memory can be built
+and none queried.</p>
+<p>Persistence is files. A memory graph is JSON per conversation, a BM25
+index is a pickle per conversation
+(<code>memory_graph_bm25_index_conv_&lt;id&gt;.pkl</code>), and trigger
+embeddings are <code>.npy</code>. There is no database, no schema and no
+migration.</p>
+<p><code>T_mem/utils/cost_ledger.py</code> is worth naming here because
+it is the piece most directly reusable outside this design. It appends
+one JSONL row per <em>successful model completion</em>, is a no-op
+unless <code>T_MEM_COST_LOG</code> points somewhere writable, and
+swallows its own exceptions so accounting can never break the pipeline.
+Its docstring gives the reason for the granularity: anything coarser
+"can be re-aggregated offline from these rows, but the reverse is
+impossible".</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Segment and extract</strong> —
+<code>T_mem/main/stage1_memory_extraction.py</code>
+(<code>scene_extraction_from_conversation</code>),
+<code>stage2_extraction.py</code>,
+<code>T_mem/extractors/conv_scene_extractor.py</code>,
+<code>topic_extractor.py</code>.</p>
+<p><strong>Index</strong> — <code>stage3_index.py</code>
+(<code>build_item_searchable_text</code>,
+<code>build_scene_searchable_text</code>,
+<code>build_topic_searchable_text</code>,
+<code>build_bm25_index_for_single_conv</code>).</p>
+<p><strong>Rehearse</strong> —
+<code>stage4_associative_extract.py</code> with
+<code>T_mem/prompts/trigger_prompts.py</code>; the paper-to-code mapping
+is written into that file's header (Entity and Bridge are fields of
+<code>EntityBridgeTrigger</code>; Horizon is
+<code>horizon_channels</code>).</p>
+<p><strong>Retrieve</strong> — <code>stage6_retrieval.py</code>, 1,407
+lines: <code>search_with_bm25</code>, <code>search_with_emb</code>,
+<code>reciprocal_rank_fusion</code>, and the entity-bridge trigger
+recaller in <code>T_mem/retrievers/trigger_recaller.py</code>.</p>
+<p><strong>Answer and score</strong> — <code>stage8_qa_locomo.py</code>,
+<code>stage8_qa_locomo_plus.py</code>,
+<code>benchmark_eval/locomo_plus/judge/run_judge.py</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Five object types, and the interesting part is which of them may be
+seen by the answering model.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Object</th>
+<th>Role</th>
+<th>Reaches the answer?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scene</td>
+<td>a cohesive exchange</td>
+<td>yes, as evidence</td>
+</tr>
+<tr>
+<td>Item</td>
+<td>an atomic fact anchored to a host scene</td>
+<td>yes, as evidence</td>
+</tr>
+<tr>
+<td>Topic label</td>
+<td>multi-label tag for scope extraction and pre-filtering</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Trigger</td>
+<td>a rehearsed query, four families</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Persona</td>
+<td>per-speaker standing traits</td>
+<td>yes, as ambient context</td>
+</tr>
+</tbody>
+</table></div>
+<p>A scene and an item each carry <code>user_id_list</code> — the
+speakers involved — and that is the only identity-shaped field in the
+model. There is no status column, no validity interval, no supersession
+pointer and no deletion marker. <code>.npy</code> and pickle files hold
+the derived indexes; the JSON graph is the record.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Three passes, fused. Topic labels pre-filter the candidate set. Scene
+and item searches then run at their own granularity —
+<code>search_with_bm25</code> and <code>search_with_emb</code> both
+filter on <code>doc_type</code>, which is what keeps the layers
+segregated — and the ranked lists are combined by
+<code>reciprocal_rank_fusion</code>, <code>1 / (k + rank + 1)</code>
+summed per document. An optional reranker narrows what survives.</p>
+<p>The associative arm is the distinctive one. Trigger embeddings are
+searched like any other text, and a hit resolves to the item or scene
+the trigger was generated for. The trigger itself is dropped. A memory
+can therefore be reached by a question that shares no token and no
+entity with it, which is the regime the paper says prevailing systems
+miss.</p>
+<p>One detail to know before reusing the fusion. When a document carries
+no <code>id</code>, <code>reciprocal_rank_fusion</code> falls back to
+<code>hash(str(doc))</code>. Python's string hash is salted per process
+unless <code>PYTHONHASHSEED</code> is fixed, so that fallback identity
+is stable within a run and not across runs — fine for fusing inside one
+query, not something to persist or compare between processes.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes do not block an agent because there is no agent. Construction
+is a batch pipeline invoked from a shell script, and every stage is an
+LLM pass over a whole corpus: segmentation, item extraction, topic
+labelling, trigger generation. The unit of work is a conversation,
+processed with a semaphore for concurrency, and stages skip a
+conversation whose output file already exists — which is the only
+incrementality in the design.</p>
+<p>Nothing writes during a conversation, and there is no lag to quote
+because there is no online path. A memory becomes retrievable when the
+stage that indexes it finishes.</p>
+<p>No background pass rewrites the store. There is no consolidation, no
+decay and no re-extraction; the graph built by stage 4 is the graph
+queried by stage 6.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is none, and the report should be plain about it: T-Mem is a
+research pipeline, not a memory an agent can call. <code>grep</code> for
+<code>mcp</code>, <code>fastapi</code>, <code>flask</code> and
+<code>@app</code> across the package returns nothing; the only entry
+points are <code>argparse</code> mains in <code>T_mem/io/</code> and the
+stage-8 QA scripts.</p>
+<p>This matters for anyone reading the atlas to choose something. The
+ideas here are portable and the code is not a component. Adopting the
+trigger design means implementing it inside your own write path, not
+depending on this package.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>An index file is executable input.</strong>
+<code>stage3_index.py:240</code> writes indexes with
+<code>pickle.dump</code>, <code>stage6_retrieval.py:1125</code> and
+<code>:1140</code> read them with <code>pickle.load</code>, and
+<code>T_mem/index/trigger_index.py:311</code> loads embeddings with
+<code>np.load(path, allow_pickle=True)</code>. Unpickling runs arbitrary
+code, so any process that consumes an index it did not build — a shared
+artifact, a downloaded release, a cached directory on a multi-user
+machine — is executing whatever produced it. Nothing in the repository
+signs or validates an index before loading. For a build-your-own
+benchmark run this is a non-issue; for anyone tempted to distribute
+prebuilt indexes it is the first thing to change.</p>
+<p><strong>Failure is mostly absent rather than handled.</strong> The
+pickle loads catch <code>EOFError</code> and
+<code>UnpicklingError</code>, which covers a truncated file and not a
+malicious one. The cost ledger deliberately swallows every exception so
+accounting cannot break a run — correct for accounting, and worth
+noticing that it means a silently empty ledger is indistinguishable from
+a cheap run.</p>
+<p>There is no trust state on a memory, no provenance beyond which
+speakers were present, and no audit of anything. The single occurrence
+of the word <em>tombstone</em> is a comment on an in-memory list slot
+set to <code>None</code> during persona consolidation, and the single
+occurrence of <em>audit</em> is a design note about appending a
+replacement chunk rather than popping an anchor.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>There is no test file anywhere in the tree</strong> — no
+<code>test_*.py</code>, no <code>*_test.py</code>, no
+<code>tests/</code> directory. CI exists and does not test:
+<code>.github/workflows/ci.yml</code> installs the package and runs
+<code>python -m compileall -q T_mem benchmark_eval scripts</code> across
+Python 3.10, 3.11 and 3.12. That is a syntax check on three
+interpreters, which catches a broken import and nothing about
+behaviour.</p>
+<p>The evaluation the project cares about is external.
+<code>benchmark_eval/</code> holds a LoCoMo harness and an LLM-as-judge,
+and the paper contributes <strong>LoCoMo-Plus (Cognitive)</strong>, a
+subset built to isolate associative recall, with the README reporting a
+per-system accuracy drop from LoCoMo to LoCoMo-Plus across seven
+systems.</p>
+<p><strong>No result is committed.</strong> The comparison exists as
+<code>assets/figure6_locomo_gap.png</code>; the repository holds eleven
+PNGs, five shell scripts and one JSON —
+<code>docs/demo/demo_data.json</code>, which drives the project page's
+pipeline explorer and carries <code>conversation</code>,
+<code>scenes</code> and <code>qa_examples</code> rather than scores. So
+a reader cannot recompute the headline from anything in the tree, and
+that matters more than usual here because the benchmark subset is itself
+a contribution of the paper: the artifact that would let someone check
+the gap is the artifact that is missing.</p>
+<p><code>negative_eval</code> is withheld for the simplest possible
+reason — there is no committed assertion of any kind to examine.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Index a memory by the question it should answer, not only by
+what it says.</strong> This is the whole idea and it is separable from
+the rest of the design. At write time, generate a small number of
+queries the memory ought to be reachable from, and index those alongside
+the content. It buys reach into questions that share no surface form
+with the record.</li>
+<li><strong>Keep the generated index text off the evidence
+path.</strong> The rule that makes the first pattern safe. A trigger can
+be searched, matched and then must be discarded, contributing only the
+identity of what it points at. Any design that lets a model's invented
+paraphrase come back as a retrieved record has built a machine for
+laundering invention into memory.</li>
+<li><strong>Separate the reaching granularity from the returning
+granularity.</strong> Scenes and items are searched at their own level
+and never merged into one undifferentiated pool, so a precise fact and
+the exchange that produced it compete on their own terms rather than by
+length.</li>
+<li><strong>Log cost at the finest granularity you can, and say
+why.</strong> One JSONL row per successful completion, on the stated
+ground that coarser aggregation is recoverable and finer detail is not.
+Two lines of reasoning in a docstring that settle a question most
+projects re-litigate.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong><code>pickle</code> as an index format.</strong> It makes
+every consumer of an index execute its producer. A JSON or
+<code>.npz</code> index with an explicit schema costs little and removes
+the class entirely.</li>
+<li><strong><code>hash()</code> on a string as a fallback
+identity.</strong> Salted per process, so it is not comparable across
+runs. If a document may lack an id, mint a content hash.</li>
+<li><strong>A CI job that compiles.</strong> It reads as coverage in a
+badge and asserts nothing about behaviour. Better to have no CI than one
+that implies testing.</li>
+<li><strong>Publishing a benchmark subset without committing the
+result.</strong> The subset is the contribution; the numbers are what
+let a reader check it.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits someone building their own memory who wants the trigger
+idea, not someone shopping for a component. There is no API, no server
+and no package boundary to depend on — the value is a design you
+reimplement inside your own write path, and the code is worth reading as
+the reference for how the four families are prompted.</p>
+<p>It does not suit production use as it stands, and the gap is not
+polish. A memory that cannot be corrected, superseded or deleted is a
+research instrument: the benchmark never asks it to be wrong. Anyone
+taking triggers into a system that must revise will have to answer a
+question this code does not — what happens to a memory's rehearsed
+queries when the memory itself turns out to be false, since the triggers
+that reach it were generated from a claim that no longer holds.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Index files are unpickled without validation</strong>, so
+consuming an index is executing its producer.</li>
+<li><strong>Nothing can be corrected or removed.</strong> No delete,
+forget or supersede path exists, so a wrong extraction is permanent for
+the life of the store.</li>
+<li><strong>No tests at all</strong>, and a CI job whose only assertion
+is that the sources compile.</li>
+<li><strong>The contributed benchmark subset ships no committed
+result</strong>, so its headline cannot be recomputed from the
+repository.</li>
+<li><strong>Thirteen unpinned requirements and no lockfile</strong>, so
+a build resolves whatever the index offers that day.</li>
+<li><strong><code>user_id_list</code> looks like scope and is
+not.</strong> It is written on every scene and item and consulted by no
+read, which is exactly the shape that gets mistaken for a tenancy
+boundary by a later reader.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the idea, read the prompts, write your own. The trigger design
+is the contribution and <code>T_mem/prompts/trigger_prompts.py</code> is
+the most useful file in the repository — it carries the paper-to-code
+mapping in its header and shows how each family is elicited.
+Reimplementing the write-time rehearsal inside an existing memory is a
+bounded change: generate, index separately, and refuse to return.</p>
+<p>What you cannot borrow is an operating memory. There is no
+incremental write, no correction, no scoping and no interface, so
+anything built on this package directly would be building on a benchmark
+harness.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li><strong>What happens to triggers when their memory is
+corrected?</strong> The design has no revision path, so the question is
+unforced here and becomes the first one to answer in any system that
+adopts it: rehearsed queries generated from a claim outlive the
+claim.</li>
+<li><strong>How many triggers per memory, and at what cost?</strong> The
+count is configurable (<code>trigger_count</code> in the prompt builder)
+and the cost ledger exists to measure it, but no committed run reports
+the trade between reach and token spend.</li>
+<li><strong>Does the associative arm help when the descriptive arm
+already succeeds?</strong> The reported gap is between benchmarks rather
+than between arms on the same question set; whether triggers ever
+displace a correct descriptive hit is not something the repository
+settles.</li>
+<li><strong>Is <code>user_id_list</code> intended as a future scope
+key?</strong> It is populated faithfully through extraction and topic
+aggregation and read by nothing.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>T_mem/main/stage6_retrieval.py</code></td>
+<td>1,407 lines; BM25, embedding search, RRF, trigger expansion</td>
+</tr>
+<tr>
+<td><code>T_mem/main/stage4_associative_extract.py</code></td>
+<td>trigger generation, the paper's contribution</td>
+</tr>
+<tr>
+<td><code>T_mem/prompts/trigger_prompts.py</code></td>
+<td>the four families, with the paper-to-code mapping in the header</td>
+</tr>
+<tr>
+<td><code>T_mem/main/stage3_index.py</code></td>
+<td>searchable-text builders and the pickle index writer</td>
+</tr>
+<tr>
+<td><code>T_mem/retrievers/trigger_recaller.py</code></td>
+<td>the entity-bridge recall path</td>
+</tr>
+<tr>
+<td><code>T_mem/index/trigger_index.py</code></td>
+<td>trigger embeddings, loaded with <code>allow_pickle=True</code></td>
+</tr>
+<tr>
+<td><code>T_mem/persona/profile_memory.py</code></td>
+<td>per-speaker standing traits</td>
+</tr>
+<tr>
+<td><code>T_mem/utils/cost_ledger.py</code></td>
+<td>per-completion JSONL cost accounting</td>
+</tr>
+<tr>
+<td><code>benchmark_eval/locomo_plus/judge/run_judge.py</code></td>
+<td>the LLM-as-judge for the contributed subset</td>
+</tr>
+<tr>
+<td><code>.github/workflows/ci.yml</code></td>
+<td>install and <code>compileall</code> on three Python versions</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>grep -rE "def delete|def forget|def remove" --include="*.py" .</code>
+— no match; there is no removal path.</li>
+<li><code>grep -rE "valid_from|valid_until|as_of" --include="*.py" .</code>
+— no match; one time axis.</li>
+<li><code>grep -rn "user_id_list" --include="*.py" .</code> — written in
+stage 1 and aggregated in <code>topic_extractor.py</code>; it appears in
+no read predicate.</li>
+<li><code>find . -name "test_*.py" -o -name "*_test.py" -o -type d -name tests</code>
+— no match anywhere in the tree.</li>
+<li>Every file not ending <code>.py</code>, <code>.md</code>,
+<code>.png</code>, <code>.jpg</code>, <code>.svg</code> was listed: one
+JSON (<code>docs/demo/demo_data.json</code>), five shell scripts, four
+YAML, <code>requirements.txt</code>, <code>pyproject.toml</code>,
+<code>LICENSE</code>, <code>CITATION.cff</code>. No result or score
+file.</li>
+<li><code>grep -rniE "mcp|fastapi|flask|@app" --include="*.py" T_mem/</code>
+— no match; the only entry points are <code>argparse</code> mains.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-21</strong> — <a
+href="https://github.com/Sherlockwz/T-Mem/commit/dd9e1527bc75908485809580c9520af5a9a42879"><code class="commit-id" title="dd9e1527bc75908485809580c9520af5a9a42879">dd9e1527…</code></a>
+— first reading, at the head of the default branch. Screened before
+anything was read: no auto-running configuration, no build-time
+execution point, no <code>.gitattributes</code> and no
+<code>.gitmodules</code>, and two unpinned surfaces —
+<code>pyproject.toml</code> with no lockfile beside it and thirteen
+requirements specified with <code>&gt;=</code>. Nothing was installed
+and nothing was run, so the reported accuracies are the paper's and are
+not reproduced here. The paper was checked rather than assumed: <a
+href="https://arxiv.org/abs/2606.15405">arXiv:2606.15405</a> resolves to
+<em>T-Mem: Memory That Anticipates, Not Archives</em>, published 13 June
+2026, which is the title and identifier the README and
+<code>CITATION.cff</code> claim. No capability marks.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

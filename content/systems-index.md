@@ -7,7 +7,7 @@ page_kind: methodology
 layout: wide
 ---
 
-Every one of the **621 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
+Every one of the **622 reports**, by name. Generated from each report's own frontmatter, so this list cannot drift from what the atlas actually holds — unlike the [verdicts](../verdicts/), which are hand-written, and where the difference between *complete by construction* and *complete as a fact about today* is drawn out.
 
 Looking for something else? The [capability index](../capabilities/) groups systems by the seven rubric mechanisms, the [comparative matrix](../compare/#2-comparative-matrix) puts eleven columns side by side, and the [pattern library](../patterns/) starts from the mechanism rather than the system.
 
@@ -671,6 +671,7 @@ Looking for something else? The [capability index](../capabilities/) groups syst
 ## T
 
 <ul class="az">
+<li><a class="az-row" href="../systems/t-mem/"><span class="az-id">T-Mem</span><span class="az-what">Rehearse the question at write time, keep it off the evidence path</span><code class="az-repo">Sherlockwz/T-Mem</code><span class="az-caps"></span></a></li>
 <li><a class="az-row" href="../systems/task-orchestrator/"><span class="az-id">Task Orchestrator</span><span class="az-what">One history table outlives its subject and the other does not</span><code class="az-repo">jpicklyk/task-orchestrator</code><span class="az-caps"><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/teamai-cli/"><span class="az-id">teamai-cli</span><span class="az-what">A team&#x27;s learnings, voted on by the agents that used them</span><code class="az-repo">Tencent/teamai-cli</code><span class="az-caps"><span class="az-cap">Scope enforced</span><span class="az-cap">Negative evals</span></span></a></li>
 <li><a class="az-row" href="../systems/telemem/"><span class="az-id">TeleMem</span><span class="az-what">A charter its own published numbers do not yet meet</span><code class="az-repo">TeleAI-UAGI/telemem</code><span class="az-caps"><span class="az-cap">Scope enforced</span></span></a></li>
