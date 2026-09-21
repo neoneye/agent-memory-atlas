@@ -85,6 +85,18 @@ scheduler or agent path sets it. And `Search._warnings_for` reads
 judged a pair, the ⚠ stops appearing on every future hit for that note. That is
 the mark: a human verdict, stored, consulted by the retrieval path.
 
+**The agent is not left staring at a queue it cannot affect, and the split is
+deliberate.** What it cannot do is *rule* on a pair: `open`, `resolved` and
+`dismissed` are set from the console alone. What it can do is make the collision
+stop existing — edit or merge until the two notes no longer collide, and
+`prune_stale_collisions` (`yacmemo/store.py:892`) drops the pair on the next
+index pass. That is not silent: the count comes back in the editing tool's own
+return message (`yacmemo/tools.py:185-186`, `:210-211`) and again in
+`memory_audit` (`:286-287`). The module docstring states the rule the split
+enforces — *"collisions are annotated, never auto-resolved"* (`store.py:9`) — so
+what clears automatically is a pair that is no longer a collision, never a
+verdict on one that still is.
+
 Where it is thinner is the record. Every write, edit, move and delete makes a git
 commit, so the memory repository is always clean and a mistaken deletion is
 recoverable — good practice, but git history is not an audit record this atlas
