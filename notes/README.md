@@ -1139,3 +1139,14 @@ when the work happens.
 - [2026-07-28-declined-proposals.md](2026-07-28-declined-proposals.md) —
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
+- [2026-09-21-narrative-graphs-triaged-for-memory.md](2026-09-21-narrative-graphs-triaged-for-memory.md) —
+  a register of eight graph representations of narrative and event data, each
+  cited to its paper and triaged for agent memory: the umbrella, event
+  evolutionary, actor–event–perspectivization, coherence, STAC-typed causal,
+  narrative map, trope and hierarchical multimodal. Two axes decide most
+  verdicts — instance or type, per-episode or per-corpus — and the STAC
+  labels with their transition rule are the one thing to steal. Checking the
+  papers overturned five descriptions: the event graph is type-level, the
+  coherence graph is windowed rather than quadratic, perspectivization means
+  goal expressions only, the trope graph has three edge types not four, and
+  the comics graph's levels are panel, sequence and event.
