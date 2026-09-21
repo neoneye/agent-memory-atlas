@@ -374,6 +374,83 @@ derivative text and indexes. Marking it historical does not satisfy deletion.
 Multimodal linking is relevant when an agent uses screenshots or documents;
 the unproven part is reliable automated extraction at memory-system scale.
 
+### Event-centric graph with viewpoint attributions
+
+**Source:** Plötzky and Balke, *It's the Same Old Story! Enriching
+Event-Centric Knowledge Graphs by Narrative Aspects*, 2022,
+[arXiv:2205.03876](https://arxiv.org/abs/2205.03876).
+
+**What it is.** A lightweight layer over an event-centric knowledge graph that
+records *who says what about an event* beside the event's objective facts. The
+motivating case is a conflict where "the start of the conflict or respective
+troop sizes" are agreed while the roles assigned to participants are not, so the
+structure carries subjective attributions per participant and viewpoint, and
+ships indexes built for querying them. The evaluation is query processing —
+whether viewpoint-dependent queries can be answered efficiently — not downstream
+task accuracy.
+
+*Instance-level, per-collection. The novelty is a second layer over the facts
+rather than a different node type.*
+
+**Verdict: the one idea in this register that agent memory is missing
+outright.** Every entry above stores what happened; this one stores who claims
+it and lets a reader query by claimant. A personal assistant needs exactly that
+distinction — a preference the user stated, an inference the assistant drew and
+a fact a tool returned are three different kinds of claim, and flattening them
+into one store is how a wrong inference becomes indistinguishable from a stated
+fact. Take the attribution, not the indexes: at one-user scale the query volume
+that motivates them does not exist. No code was found for this paper.
+
+### Grounding free text to an eventuality graph
+
+**Source:** Jiayang, Qiu, Chan, Liu et al., *EventGround: Narrative Reasoning by
+Grounding to Eventuality-centric Knowledge Graphs*, 2024,
+[arXiv:2404.00209](https://arxiv.org/abs/2404.00209).
+
+**What it is.** Not a graph but the step before using one: how to get from
+running prose to the right nodes of a large eventuality graph. It names two
+obstacles plainly — the *event representation* problem and the *sparsity*
+problem — and answers them with parsing plus partial information extraction,
+dropping arguments until a match exists. The grounded subgraph is then handed to
+a GNN or an LLM for reasoning, and the paper's argument for the approach is
+interpretability: the evidence can be pointed at.
+
+*Instance-level text against a corpus-level graph. It is the retrieval half of
+the problem, not a representation.*
+
+**Verdict: the right problem, blocked on the same volume objection.** Mapping a
+session's prose onto stored structure is exactly what an agent memory does at
+recall time, and "drop arguments until something matches" is a usable
+degradation strategy for a sparse store. But EventGround grounds *to* a
+pre-built corpus graph — ASER — and a single user has no such graph. Read it for
+the sparsity handling; do not expect the grounding target to exist. Code is at
+`HKUST-KnowComp/EventGround`: real `src/` and a 30MB `dataset/`, **no licence
+file**, and no push since April 2024.
+
+### Co-generated scene graph
+
+**Source:** Ghorbani, *Aether Weaver: Multimodal Affective Narrative
+Co-Generation with Dynamic Scene Graphs*, 2025,
+[arXiv:2507.21893](https://arxiv.org/abs/2507.21893).
+
+**What it is.** A generation system, not an analysis one. A Narrator LLM writes
+text and multimodal prompts; a Director maintains a dynamic scene graph so
+visual rendering stays spatio-temporally and relationally consistent; a
+Narrative Arc Controller shapes the high-level structure and an Affective Tone
+Mapper keeps emotional expression aligned across modalities. Evaluation is
+qualitative across genres, compared against cascaded baselines.
+
+*Instance-level, per-story, and generative rather than descriptive: the graph is
+written in order to produce the story, not derived from one that happened.*
+
+**Verdict: out of scope, and the cleanest illustration of the boundary.** The
+scene graph here is ground truth by construction — a character is where the
+graph says because nothing outside it can disagree. Agent memory makes claims
+about a world that answers back, which is why its machinery is mostly for having
+been wrong. A consistency score over a co-generated world measures internal
+agreement and can measure nothing else. Nothing transfers; the entry earns its
+place by marking where the register stops.
+
 ## A small episode, and what would justify keeping the structure
 
 An illustrative session: a user asks the assistant to enable a project
@@ -445,10 +522,11 @@ the atlas pattern page it overlaps, if one exists.
   hierarchical graph paper [v2 §3](https://arxiv.org/html/2506.10008v2).
   Papers were read for definitions and construction, not reproduced; reported
   evaluations are not independent evidence of performance in agent memory.
-- Not yet triaged: event-centric knowledge graphs
-  ([arXiv:2205.03876](https://arxiv.org/abs/2205.03876)), EventGround
-  ([arXiv:2404.00209](https://arxiv.org/abs/2404.00209)), and a second
-  visual-narrative paper ([arXiv:2507.21893](https://arxiv.org/abs/2507.21893)).
+- Those three are now triaged and in the register. They were read as abstracts
+  and repository metadata, not in full: the viewpoint-attribution and
+  co-generation entries rest on their abstracts alone, and the EventGround entry
+  adds only what its repository shows — `src/`, a 30MB `dataset/`, no licence
+  file, last pushed April 2024.
 - Corpus comparisons rely on the linked atlas reports at their recorded pins,
   not new inspections of those systems' source code. Word searches are a way
   to find examples, not a census of mechanisms. No prevalence claim is made
