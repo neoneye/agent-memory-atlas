@@ -1142,11 +1142,14 @@ when the work happens.
 - [2026-09-21-structures-for-what-happened.md](2026-09-21-structures-for-what-happened.md) —
   a register of ways to structure what happened — events, episodes, stories —
   each cited to its paper and triaged for agent memory; eight rows so far, all
-  graphs, open to any structure that claims the job. Four patterns transfer: type the episode
-  as situation, task, action, consequence and constrain the transitions (STAC);
-  a stance is an event with a holder (actor–event–perspectivization); write the
-  retrieval key as the question a later moment would ask (coherence graph); a
-  summary keeps an edge to what it summarizes (hierarchical multimodal). Three
-  do not: a type-level schema mistaken for a memory, corpus statistics at
-  one-user volume, and narrative as a text blob on a node — which is how 39
-  reports here use the word.
+  graphs, open to any structure that claims the job. Four transfers, each an
+  adaptation rather than a paper's result: episode roles of situation, task,
+  action and consequence with sequence kept apart from causation (STAC);
+  stances attributed to a holder and a source (actor–event–perspectivization);
+  question-based retrieval keys with their evidence (coherence graph); and
+  summaries linked to versioned evidence so correction can find dependents
+  (hierarchical multimodal). Three ways to mistake a representation for a
+  memory: a generalization substituted for its instances, a frequency treated
+  as a personal prior, and prose expected to do the work of explicit relations.
+  Ends with a worked episode and the checks that would justify the structure
+  over plain episode text.
