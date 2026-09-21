@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 622 reports.</strong></p>
+<p><strong>This page covers all 623 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25357,6 +25357,75 @@ than how it is stored. The reachability framing — descriptive recall
 where query and record share surface form, associative recall where they
 share none — names a gap most retrieval designs do not distinguish, and
 the fix is separable from everything else here.</li>
+</ul>
+<h3 id="zcode"><a href="../systems/zcode/"><code>zcode</code></a></h3>
+<ul>
+<li>Best idea: <strong>a delete grammar that parses the command instead
+of matching it.</strong> The memory sub-agent may run <code>rm</code>,
+and <code>isContainedMarkdownBashRemoval</code> admits it only after the
+project's own shell analyser returns exactly one invocation whose
+<code>argv[0]</code> is <code>rm</code>, with no redirects and no
+environment assignments, no
+<code>-r</code>/<code>-R</code>/<code>--recursive</code> found by a
+regex over short-option clusters, no <code>*</code>, <code>?</code> or
+<code>[</code> in any argument, and every remaining argument absolute,
+ending <code>.md</code>, and resolving inside the memory root. Beside
+it, the denylist that guards memory writes normalises each path segment
+before comparing: lowercase, strip bidi and zero-width controls,
+truncate at <code>:</code> for NTFS alternate data streams, trim
+trailing dots and spaces — three transformations answering three named
+bypasses.</li>
+<li>Biggest risk: <strong>the permission rule grants rather than gates,
+and nothing tests it.</strong> <code>applyMemoryFilePermission</code>
+overrides the decision to <code>allow</code> with
+<code>ruleId: "memory.file.markdown"</code>, removing the confirmation a
+user would otherwise see for a Write or Edit inside the memory root. The
+guard is correct — it calls the denylist resolver, not the
+containment-only one — but no manifest in the repository declares a
+<code>test</code> script, no test runner is configured, there is no CI
+directory, and <code>apps/zcode-cli/.husky/pre-commit</code> invokes
+<code>pnpm test</code> anyway. A single inverted condition in
+<code>resolveSafeMemoryFilePath</code> turns the feature into an
+unprompted write, and nothing in the tree would notice.</li>
+<li>Most reusable component: <code>memory-file-path.ts</code> — 83 lines
+holding two resolvers, the sensitive-segment set and the normaliser. It
+answers a question most agent harnesses answer badly: how to let a model
+write to disk on its own initiative without letting it write anything
+that later executes. It transplants into any harness that already has a
+path policy.</li>
+<li>Second risk: <strong>the delete path and the write path
+disagree.</strong> <code>rm</code> is admitted through
+<code>resolveContainedMemoryFilePath</code>, which checks containment
+only; <code>Write</code> and <code>Edit</code> go through
+<code>resolveSafeMemoryFilePath</code>, which adds the denylist. So a
+Markdown file already sitting under a denied segment inside the memory
+root can be removed but not written. The blast radius is small and the
+asymmetry is uncommented, unlike nearly every other decision in this
+code.</li>
+<li>Maturity impression: Apache-2.0, a 126 MB TypeScript monorepo opened
+as a single <code>feat: open source</code> commit, of which memory is
+about 1,370 lines across two packages. No marks: one mtime and no
+validity interval, no status field, no record of a deleted value, and
+scoping that is a hashed per-project directory rather than a key on a
+record or a predicate on a read. The desktop side is a viewer —
+<code>IMemoryService</code> declares only
+<code>listProjectMemories</code> and <code>readProjectMemoryFile</code>
+— so it does not reach <code>human_review</code> either, though its
+<code>O_NOFOLLOW</code> stable-handle read with dev/ino/size/mtime/ctime
+comparison across three snapshots is the most careful file read in the
+subsystem. Four test files exist in the whole tree and none touches
+memory.</li>
+<li>Study when: you are deciding how much of a memory system belongs in
+the permission layer rather than the storage layer. The store here is
+deliberately dull — one Markdown file per fact, four frontmatter types,
+an index pasted into the system prompt and no search at all — and every
+interesting decision is about which writes qualify and which tools the
+writer may reach.</li>
+<li>Do not copy when: you need to <em>find</em> a memory rather than be
+reminded one exists. Recall is a 200-line index of 150-character hooks
+and a model choosing what to open; there is no scorer, no fallback when
+a hook is wrong, and no way for the store to express doubt about what it
+holds.</li>
 </ul>
         </article>
       </div>

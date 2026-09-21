@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A coding-agent harness whose
+durable memory is per-project Markdown files: recalled as an index
+pasted into the system prompt, written by a confined background
+sub-agent, and deleted through a shell grammar that parses the command
+rather than matching it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="ZCode — Agent Memory Atlas">
+    <meta property="og:description" content="A coding-agent harness
+whose durable memory is per-project Markdown files: recalled as an index
+pasted into the system prompt, written by a confined background
+sub-agent, and deleted through a shell grammar that parses the command
+rather than matching it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ZCode — Agent Memory Atlas">
+    <meta name="twitter:description" content="A coding-agent harness
+whose durable memory is per-project Markdown files: recalled as an index
+pasted into the system prompt, written by a confined background
+sub-agent, and deleted through a shell grammar that parses the command
+rather than matching it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>ZCode — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "ZCode",
+      "description": "A coding-agent harness whose durable memory is per-project Markdown files: recalled as an index pasted into the system prompt, written by a confined background sub-agent, and deleted through a shell grammar that parses the command rather than matching it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Memory files the agent may write without
+asking</p>
+          <h1>ZCode</h1>
+          <p class="document-deck">A coding-agent harness whose durable
+memory is per-project Markdown files: recalled as an index pasted into
+the system prompt, written by a confined background sub-agent, and
+deleted through a shell grammar that parses the command rather than
+matching it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/zai-org/ZCode">
+              <span>Source</span>
+              <strong>zai-org/ZCode</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/zai-org/ZCode/commit/872ad960de7ec172591f7e1952f7849229f94521" title="872ad960de7ec172591f7e1952f7849229f94521">
+              <span>Analyzed revision</span>
+              <code>872ad960…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/zai-org--ZCode" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>zai-org--ZCode</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>ZCode is Z.ai's coding-agent harness, opened as a single
+<code>feat: open source</code> commit under Apache-2.0: a TypeScript
+monorepo of roughly 126 MB spanning a CLI, a desktop Electron app, a web
+client and a server. Its durable memory is a small part of that — about
+1,370 lines across two packages — and is worth reading anyway, because
+the interesting engineering is not in the storage format but in the
+<strong>permission machinery wrapped around it</strong>.</p>
+<p>The memory itself is unremarkable by design: one Markdown file per
+fact, with <code>name</code>, <code>description</code> and
+<code>metadata.type</code> frontmatter drawn from a closed set of four
+types, and a <code>MEMORY.md</code> index whose entries are one line
+each. There is no database, no embedding, no ranking. Recall is the
+index file pasted into the system prompt; anything deeper happens
+because the model chooses to <code>Read</code> a filename it saw
+there.</p>
+<p>What surrounds that is careful. Memory Markdown writes are
+<strong>auto-allowed</strong> — the confirmation a user would otherwise
+see is removed — and that grant is conditioned on containment, an
+<code>.md</code> suffix, and a denylist of path segments whose
+normaliser strips Unicode bidi controls, truncates at <code>:</code> for
+NTFS alternate data streams, and trims trailing dots and spaces. The
+background writer runs as a sub-agent under its own tool policy, and its
+delete path is a parsed shell grammar rather than a string check.</p>
+<p>The gap is verification. There is no test runner configured anywhere
+in the repository, no manifest declares a <code>test</code> script, and
+there is no CI directory — while
+<code>apps/zcode-cli/.husky/pre-commit</code> runs
+<code>pnpm test</code>. Four test files exist in the entire tree, none
+of them touching memory. Every mechanism below has a producer on a
+reachable path; none of them has a committed case proving it holds.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory in ZCode is <strong>a file the model wrote about the user,
+which the model will later be reminded exists</strong>.</p>
+<p>That phrasing is exact, and the second half is where the design
+differs from most of this corpus. Nothing retrieves. At session start
+the runtime reads one file — <code>MEMORY.md</code> — formats it, and
+injects it into the request context under a header stating that the
+instructions it contains override default behaviour. Every other memory
+file is invisible until the model decides, from the index line alone,
+that it is worth opening. Relevance is therefore judged by the model
+against a 150-character hook, not by a scorer against a query.</p>
+<p>Writing is separated from the conversation. After a turn, the runtime
+schedules a <strong>memory extraction sub-agent</strong> on an auxiliary
+model, hands it the recent messages and a manifest of existing memory
+files, and confines it: <code>Read</code>, <code>Grep</code>,
+<code>Glob</code>, read-only Bash, <code>Write</code>/<code>Edit</code>
+restricted to Markdown inside the memory root, and <code>rm</code>
+restricted to individual absolute <code>.md</code> paths inside the same
+root. <code>Agent</code>, every <code>mcp__</code> tool and anything
+declaring a network side effect are refused outright.</p>
+<p>There is no epistemic state. A memory is not a candidate, is never
+verified, and carries no confidence. The prompt handles staleness by
+instruction — check the file exists, grep for the flag, trust what you
+observe now — and the store keeps no record of whether that check
+happened.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — After a turn ends, ZCode either skips extraction or runs a confined sub-agent whose every Write, Edit and rm is admitted by a path and command policy; what it writes is read back next session only as an index line in the system prompt.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: After a turn ends, ZCode either skips extraction or runs a confined sub-agent whose every Write, Edit and rm is admitted by a path and command policy; what it writes is read back next session only as an index line in the system prompt.
+flowchart TD
+  T[&quot;Main agent turn ends&quot;] --&gt; S{&quot;Extraction enabled&lt;br/&gt;and memory root resolved?&quot;}
+  S -- no --&gt; X[&quot;Nothing scheduled&quot;]
+  S -- yes --&gt; G{&quot;Did this turn already&lt;br/&gt;write to the memory root?&quot;}
+  G -- yes --&gt; C1[&quot;Skip; advance cursor&quot;]
+  G -- no --&gt; P{&quot;Any non-synthetic user text&lt;br/&gt;of 3+ words since the cursor?&quot;}
+  P -- no --&gt; C2[&quot;Skip; advance cursor&quot;]
+  P -- yes --&gt; M[&quot;Scan manifest: up to 200 files,&lt;br/&gt;30-line preview each&quot;]
+  M --&gt; A[&quot;Memory sub-agent, auxiliary model,&lt;br/&gt;max 5 turns&quot;]
+  A --&gt; POL{&quot;Tool policy&quot;}
+  POL -- &quot;Agent, mcp__*, network&quot; --&gt; D1[&quot;Denied&quot;]
+  POL -- &quot;Write or Edit&quot; --&gt; W{&quot;ends in .md, contained,&lt;br/&gt;no sensitive segment?&quot;}
+  POL -- &quot;Bash&quot; --&gt; B{&quot;read-only,&lt;br/&gt;or single rm of contained .md?&quot;}
+  W -- no --&gt; D2[&quot;Denied&quot;]
+  B -- no --&gt; D3[&quot;Denied&quot;]
+  W -- yes --&gt; F[&quot;Memory file written&quot;]
+  B -- yes --&gt; F
+  F --&gt; I[&quot;MEMORY.md index updated&lt;br/&gt;by the same sub-agent&quot;]
+  I --&gt; R[&quot;Next session: index pasted&lt;br/&gt;into the system prompt&quot;]
+  R --&gt; RD[&quot;Model may Read a named file&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Two packages carry memory, and they do not talk to each other.</p>
+<p><code>apps/zcode-cli/packages/core/src/memory/</code> is the agent
+side, 1,003 lines across eight files: path resolution and the
+sensitive-segment denylist (<code>memory-file-path.ts</code>), the
+project directory derivation (<code>project-root.ts</code>), the
+manifest scanner (<code>recall/manifest.ts</code>), the index formatter
+(<code>index-content.ts</code>), the extraction scheduler
+(<code>extraction.ts</code>) and the confined agent loop
+(<code>memory-agent-loop.ts</code>). Beside it,
+<code>subagent/persistent-memory.ts</code> gives each declared sub-agent
+profile its own memory root at one of three scopes.</p>
+<p><code>packages/services/src/memory/</code> is the desktop side, 370
+lines, and is <strong>read-only</strong>: <code>IMemoryService</code>
+declares exactly <code>listProjectMemories</code> and
+<code>readProjectMemoryFile</code>. No write, update, delete or approve
+method exists on that interface or anywhere calling it.</p>
+<p>Operationally this costs nothing to stand up. There is no server, no
+queue, no migration and no index to rebuild; the store is a directory,
+and an operator who deletes it loses the memories and nothing else. The
+one runtime dependency is a model — extraction issues its own provider
+requests, which <code>NOTICE.md</code> states plainly as a cost
+consequence of enabling the feature.</p>
+<p>Defaults differ by distribution. <code>NOTICE.md</code> records that
+the standalone CLI enables memory by default while the desktop app ships
+it off; the desktop side of that is visible in code, where
+<code>packages/services/src/node.ts:2253</code> reads
+<code>settings.memoryEnabled === true</code> and
+<code>onboardingRecordService.ts:156</code> defaults the same field to
+<code>false</code>. Headless CLI runs are a third case:
+<code>prompt-command.ts:232</code> sets <code>extractionEnabled</code>
+from a <code>--memory-bench</code> flag, so a non-interactive run reads
+memory and does not write it.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Where a memory lives.</strong>
+<code>resolveProjectMemoryRoot</code>
+(<code>project-root.ts:10-24</code>) joins <code>cliStorageRoot</code>,
+<code>memories</code>, <code>projects</code>, a
+<code>&lt;slug&gt;-&lt;hash&gt;</code> pair and <code>memory</code>. The
+hash is the first 16 hex characters of a SHA-256 over either an explicit
+<code>workspaceIdentity</code> or the resolved workspace path,
+lowercased on <code>win32</code> only; the slug is the directory
+basename sanitised to 48 characters, or the literal <code>project</code>
+when an identity was supplied.</p>
+<p><strong>What may be written there.</strong>
+<code>resolveContainedMemoryFilePath</code> resolves the requested path
+through the workspace path policy and requires the result to be a
+non-escaping relative path under the root.
+<code>resolveSafeMemoryFilePath</code> adds the denylist. The
+distinction matters, because the two are used in different places and
+the difference is load-bearing — see section 9.</p>
+<p><strong>How a write stops asking.</strong>
+<code>applyMemoryFilePermission</code>
+(<code>tool/executor/memory-file-permission.ts:19-46</code>) is called
+from <code>permission-flow.ts:93</code> and again from
+<code>permission-input-recheck.ts:56</code>. It returns the incoming
+decision untouched unless the target is a memory <code>.md</code> path
+that clears <code>resolveSafeMemoryFilePath</code>, then overrides to
+<code>allow</code> with <code>ruleId: "memory.file.markdown"</code>.</p>
+<p><strong>When extraction runs.</strong>
+<code>scheduleProjectMemoryExtraction</code>
+(<code>runtime/helpers/project-memory-extraction.ts:32-81</code>)
+returns early while shutting down, when <code>extractionEnabled</code>
+is <code>false</code>, when no memory root resolves, on a remote
+workspace, or without a session store. It captures the active
+conversation branch — honouring a rewind's branch cut and kept message
+ids — and schedules a snapshot ending at the latest message.</p>
+<p><strong>What the writer may do.</strong>
+<code>evaluateMemoryAgentToolPolicy</code>
+(<code>memory-agent-loop.ts:121-163</code>) decides per tool call, on
+the execution boundary rather than by narrowing the catalogue: the
+provider request keeps the main agent's real tool list
+(<code>memory-agent-loop.ts:70-71</code>), and refusals come back as
+tool errors the model can read.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A memory is a Markdown file with YAML frontmatter:</p>
+<pre class="markdown"><code>---
+name: &lt;short-kebab-case-slug&gt;
+description: &lt;one-line summary, used to decide relevance during recall&gt;
+metadata:
+  type: user | feedback | project | reference
+---</code></pre>
+<p><code>MEMORY_RECALL_TYPES</code> (<code>recall/types.ts:1</code>)
+fixes the vocabulary at <code>user</code>, <code>feedback</code>,
+<code>project</code>, <code>reference</code>, and the manifest parser
+accepts the type at either <code>metadata.type</code> or a bare
+top-level <code>type</code>, discarding anything outside the set.
+<code>MemoryManifestEntry</code> carries <code>description</code>,
+<code>filePath</code>, <code>filename</code>, <code>mtimeMs</code> and
+<code>type</code> — five fields, of which exactly one is a
+timestamp.</p>
+<p>That single timestamp is the whole temporal model, and it is
+filesystem mtime rather than anything the system records. There is no
+validity interval, no record time distinct from event time, and no
+supersession pointer. A memory that stops being true is expected to be
+edited or removed in place.</p>
+<p>Bodies are free text with two conventions the prompt asks for and
+nothing enforces: <code>**Why:**</code> and
+<code>**How to apply:**</code> lines for the <code>feedback</code> and
+<code>project</code> types, and <code>[[name]]</code> wiki-links between
+memories. No parser in the tree reads either. The links are advisory —
+the prompt explicitly says a <code>[[name]]</code> matching nothing is
+acceptable, marking a memory worth writing later — so the graph they
+describe exists only in the model's reading.</p>
+<p><code>MEMORY.md</code> is excluded from the manifest by basename
+(<code>recall/manifest.ts:77</code>) and is not a memory: the prompt
+calls it an index and forbids putting content in it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval, in the sense this atlas usually means. Two
+code paths read memory, and neither takes a query.</p>
+<p>The first is context assembly.
+<code>loadProjectMemoryIndexContent</code>
+(<code>runtime/methods/context.ts:168-195</code>) reads
+<code>MEMORY.md</code>, runs it through
+<code>formatProjectMemoryIndexContent</code>, and — worth noting — seeds
+<code>runtime.readFileState</code> with the result, so a later
+<code>Edit</code> of the index does not fail the harness rule requiring
+a prior <code>Read</code>. <code>buildProjectMemoryIndexContent</code>
+(<code>context/sections/request-user-context.ts:72-86</code>) then wraps
+it as <em>Contents of .../MEMORY.md (user's auto-memory, persists across
+conversations)</em> inside a block prefixed with the instruction that
+these contents override default behaviour.</p>
+<p>Truncation is by two limits at once
+(<code>index-content.ts:3-4</code>): 200 lines and 25,000 characters,
+whichever binds first, and the truncated text carries an appended
+warning naming which limit was hit and telling the reader to move detail
+into topic files. That warning is a genuinely good touch — the failure
+it describes is silent everywhere else.</p>
+<p>The second path is the manifest scan, and it exists <strong>only for
+the writer</strong>. <code>scanMemoryManifest</code> walks the memory
+root, admits <code>.md</code> files and symlinks resolving to files,
+reads the first 30 lines of each for frontmatter, sorts by
+<code>mtimeMs</code> descending and slices to 200. Its single caller is
+<code>executeProjectMemoryExtraction</code>, which passes the result to
+<code>buildMemoryExtractionPrompt</code> under the heading <em>Existing
+memory files</em> so the sub-agent updates rather than duplicates. The
+main agent never sees it.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes do not block the agent.
+<code>scheduleProjectMemoryExtraction</code> hands a promise to a
+scheduler that coalesces: if a run is in flight, the new snapshot
+replaces any pending one rather than queueing, so a fast conversation
+produces one extraction per idle moment and not one per turn. The lag
+before a memory is retrievable is therefore a model round-trip plus
+whatever the sub-agent spends inside its five-turn budget, and a memory
+written after the next session already began will not be in that
+session's index.</p>
+<p>Two gates decide whether the model is invoked at all
+(<code>extraction.ts:68-83</code>).
+<code>containsDirectMemoryWrite</code> skips when the main agent already
+wrote to the memory root in this window — the user asked to remember
+something and it was saved inline, so a second pass would duplicate it.
+<code>containsEligibleUserProse</code> skips unless some non-synthetic,
+non-<code>model-only</code> user message since the cursor carries at
+least three words. Both skips still advance the cursor; a failed run
+does not.</p>
+<p>Nothing rewrites the store wholesale. There is no consolidation pass,
+no summarisation of old memories, no compaction. The only mutations are
+the ones the sub-agent issues: <code>Write</code>, <code>Edit</code>, or
+<code>rm</code>.</p>
+<p>The <code>rm</code> grammar
+(<code>memory-agent-loop.ts:182-211</code>) deserves quoting in full
+because it is a parser, not a pattern. The command must analyse to
+exactly one invocation, <code>argv[0]</code> must be <code>rm</code>,
+redirects and environment assignments are rejected, <code>-r</code>,
+<code>-R</code> and <code>--recursive</code> are rejected by regex over
+short-option clusters, any argument containing <code>*</code>,
+<code>?</code> or <code>[</code> is rejected, every remaining argument
+must be absolute, end in <code>.md</code>, and resolve inside the memory
+root, and at least one path must remain.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Memory reaches the model in three distinct ways, which is one more
+than most harnesses here.</p>
+<p><code>buildMemorySection</code>
+(<code>context/sections/memory.ts:8-23</code>) emits a system-target
+section named <code>Memory</code> with
+<code>cacheHint: "dynamic"</code>, carrying the frontmatter template,
+the four type definitions in one line each, the index convention, and a
+short what-not-to-save rule. This is the main agent's copy, and it is
+terse.</p>
+<p><code>buildPersistentAgentMemoryPrompt</code>
+(<code>subagent/persistent-memory-prompt.ts</code>) is the long form,
+140 lines of template used for sub-agent profiles that declare a
+<code>memory</code> scope. It carries XML-tagged type definitions with
+worked examples, a what-not-to-save list, a <em>Before recommending from
+memory</em> section requiring the model to check that a named file or
+flag still exists, and a passage separating memory from plans and tasks.
+Scope guidance is appended per scope: <code>user</code> memories should
+stay general, <code>project</code> memories are shared through version
+control, <code>local</code> memories are machine-specific.</p>
+<p><code>buildMemoryExtractionPrompt</code>
+(<code>extraction.ts:42-66</code>) is the third, and it is the
+operational one: it names the allowed tools, states that everything else
+will be denied, and gives a turn-budget strategy — all reads in parallel
+on turn one, all writes in parallel on turn two — because
+<code>Edit</code> requires a prior <code>Read</code> and the budget is
+five.</p>
+<p>This prompt material tracks the memory instructions Anthropic ships
+in Claude Code closely enough to be worth stating as a fact about the
+tree: the same four types, the same <code>MEMORY.md</code> index
+convention, the same <code>[[name]]</code> linking, the same
+what-not-to-save categories and the same staleness warning, in largely
+the same wording. Elsewhere in the repository
+<code>packages/services/src/zcode-session/importedClaudeSessionRepair.ts</code>
+and <code>packages/services/test/importedClaudeRecovery.test.ts</code>
+handle importing Claude Code sessions. <code>NOTICE.md</code> section
+four states that the root Apache-2.0 licence covers first-party code and
+does not extend to copied code or third-party material, without
+identifying which files it means.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The grant is the mechanism, and its guard is the right
+one.</strong> Two resolvers exist:
+<code>resolveContainedMemoryFilePath</code> checks containment, and
+<code>resolveSafeMemoryFilePath</code> adds the sensitive-segment
+denylist. The permission override calls the stricter one; the looser one
+is used only to <em>identify</em> whether a call targets memory at all.
+That ordering is easy to get backwards and is correct here.</p>
+<p>The denylist itself (<code>memory-file-path.ts:5-25</code>) names
+<code>.git</code>, <code>hooks</code>, <code>.husky</code>,
+<code>.githooks</code>, <code>node_modules</code>, <code>.vscode</code>,
+<code>.idea</code>, <code>head</code>, <code>config</code>,
+<code>objects</code>, <code>refs</code>, <code>.zcode</code>,
+<code>skills</code>, <code>commands</code>, <code>agents</code>,
+<code>.cargo</code>, <code>.devcontainer</code>, <code>.yarn</code> and
+<code>.mvn</code> — a list chosen so that a model writing "memory"
+cannot write anything that later executes.
+<code>normalizeSensitiveSegment</code> lowercases, strips
+<code>U+200C</code>–<code>U+200F</code>,
+<code>U+202A</code>–<code>U+202E</code>,
+<code>U+206A</code>–<code>U+206F</code> and <code>U+FEFF</code>, takes
+the substring before the first <code>:</code>, and trims trailing dots
+and spaces. Each of those three transformations answers a specific
+bypass: a bidi override hiding a segment name, an NTFS alternate data
+stream suffix, and Windows path normalisation of <code>hooks.</code> to
+<code>hooks</code>.</p>
+<p><strong>The asymmetry.</strong> The delete grammar calls
+<code>resolveContainedMemoryFilePath</code>
+(<code>memory-agent-loop.ts:207</code>) — containment only. The write
+path calls the denylist version. So a Markdown file already sitting
+under a denied segment inside the memory root can be removed but not
+written. The blast radius is confined to Markdown under the memory root,
+which is why this is a remark rather than a finding, but the two paths
+disagree and only one of them was reasoned through.</p>
+<p><strong>A defended branch that cannot fire.</strong>
+<code>preservesExistingPermissionDecision</code>
+(<code>memory-file-permission.ts:74-86</code>) preserves an existing
+<code>deny</code> except <code>mode.plan.nonReadOnly</code>, preserves
+<code>alwaysAsk</code>, and preserves two named <code>ask</code> rules.
+Its comment states that the <code>alwaysAsk</code> branch is
+unreachable, since only <code>Write</code> and <code>Edit</code> reach
+memory targets and neither declares the flag — and keeps it anyway,
+naming the failure it would prevent if someone added it. That is the
+opposite of the unwired mechanism this atlas usually finds: a guard
+written for a state that does not exist yet, with the reasoning recorded
+beside it.</p>
+<p><strong>The desktop viewer reads carefully and only reads.</strong>
+<code>readProjectMemoryFileFromStableHandle</code>
+(<code>packages/services/src/memory/projectMemoryStableRead.ts</code>)
+<code>lstat</code>s before opening, opens with <code>O_NOFOLLOW</code>,
+<code>lstat</code>s again, compares <code>dev</code>, <code>ino</code>,
+<code>size</code>, <code>mtimeNs</code> and <code>ctimeNs</code> across
+three snapshots including one taken after the read completes, and bounds
+the read at 5 MiB. Its comments name the attack: a path validated and
+then replaced by a symlink before the read. This is a viewer, not a
+review surface — there is no approve, edit or delete on
+<code>IMemoryService</code> — so it does not earn
+<code>human_review</code>, and the care is worth recording separately
+from the mark.</p>
+<p><strong>No capability marks.</strong> Nothing records a rejected
+value, so there is no tombstone; <code>rm</code> leaves no trace that
+would stop the next extraction re-asserting the same fact. There is no
+discrete epistemic status, so no <code>trust_state</code>. One mtime, so
+no <code>bitemporal</code>. Scoping is a filesystem partition rather
+than a key on a record or a predicate on a read, which this atlas
+deliberately does not count. Telemetry spans are emitted around
+extraction but are observability, not an append-only record in the
+system's own store. And with no test runner, there is no committed case
+of any kind, negative or otherwise.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>There are four test files in the repository:
+<code>packages/services/test/importedClaudeRecovery.test.ts</code>,
+<code>nonCliAcpRetirement.test.ts</code>,
+<code>providerConfigMigration.test.ts</code> and
+<code>packages/ui/test/nonCliAcpRetirement.test.ts</code>. They use
+<code>node:test</code> with <code>node:assert/strict</code>, they are
+real tests with meaningful assertions, and none of them touches
+memory.</p>
+<p>Nothing runs them. Parsing every <code>package.json</code> in the
+tree outside <code>node_modules</code> finds <strong>zero</strong>
+manifests declaring a <code>test</code> or <code>test:*</code> script.
+No <code>vitest.config</code> or <code>jest.config</code> exists
+anywhere. There is no <code>.github</code> directory, so no CI.
+Meanwhile <code>apps/zcode-cli/.husky/pre-commit</code> is two lines,
+<code>pnpm lint</code> and <code>pnpm test</code>, invoking a script no
+manifest defines.</p>
+<p>No paper, no benchmark, no evaluation harness and no committed result
+relate to memory. <code>--memory-bench</code> exists as a CLI flag
+enabling extraction in headless runs, and
+<code>drainMemoryExtractions</code> accepts a <code>null</code> timeout
+with the comment that a benchmark waits for natural completion rather
+than the bounded 60-second cancel — so a benchmark was anticipated. None
+is in the tree.</p>
+<p>The honest summary is that every mechanism in sections 5 through 9
+was read, not verified. The denylist normaliser, the <code>rm</code>
+grammar, the permission override and the extraction skip conditions are
+each the kind of logic that is one inverted condition away from doing
+the opposite, and each is uncovered.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Parse the command, do not match it.</strong>
+<code>isContainedMarkdownBashRemoval</code> runs the project's own shell
+analyser, requires a single invocation, rejects redirects and
+environment assignments before looking at arguments, rejects recursion
+by regex over option clusters, rejects glob metacharacters, and requires
+every remaining argument to be an absolute contained <code>.md</code>
+path. An allowlist on a command string is a different and much weaker
+artefact.</p>
+<p><strong>Normalise before comparing against a denylist.</strong> Three
+transformations, each answering a named bypass, in three lines. Any
+project comparing path segments against a forbidden set needs this and
+most do not have it.</p>
+<p><strong>Confine the writer at the execution boundary, not in the
+catalogue.</strong> The memory sub-agent is offered the main agent's
+full tool list and refused per call, with the refusal text explaining
+the rule. The model can learn the boundary within its five turns instead
+of hallucinating around a truncated schema.</p>
+<p><strong>Make the truncation say so.</strong> When the index exceeds
+200 lines or 25,000 characters, the injected text carries a warning
+naming the limit and prescribing the fix.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>A permission rule that grants.</strong> The mechanism here
+removes a confirmation rather than adding one. It is correctly guarded,
+and it is also the single place where a mistake in
+<code>resolveSafeMemoryFilePath</code> becomes an unprompted write. Any
+design of this shape needs the guard covered by tests; this one has
+none.</p>
+<p><strong>Two resolvers, one denylist.</strong> Having a strict and a
+loose path-resolution function in the same module invites using the
+wrong one, and the delete path already uses the loose one.</p>
+<p><strong>Injecting memory as an override instruction.</strong> Memory
+content is model-written text about the user, wrapped in a header
+stating the contents override default behaviour. Anything that reaches a
+memory file reaches the model with that framing.</p>
+<h3 id="fit">Fit</h3>
+<p>This design suits a harness whose memory should be inspectable and
+disposable: files you can read, diff, and delete with no index to
+rebuild and no service to run. It is a poor fit for anyone who needs to
+<em>find</em> a memory rather than be reminded one exists — at 200 index
+lines the model is choosing from hooks, and there is no fallback when
+the hook is wrong. It is also a poor fit where a memory's correctness
+matters more than its presence, because nothing in the store can express
+doubt. Adopters wanting either property should read the denylist and the
+<code>rm</code> grammar here, and build retrieval and trust
+elsewhere.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<p><strong>Verification is absent, not thin.</strong> Not one manifest
+defines a test script and no runner is configured, while a git hook
+calls one. The four committed tests cover session import and config
+migration.</p>
+<p><strong>The delete path is less strict than the write path.</strong>
+Stated precisely in section 9. It is a small window and it is real.</p>
+<p><strong>A declared status with no producer.</strong>
+<code>MemoryExtractionExecutionStatus</code>
+(<code>extraction.ts:8</code>) admits <code>"no-op"</code>, and the only
+executor returns <code>"success"</code>, <code>"aborted"</code> or
+<code>"error"</code>. The scheduler treats <code>"no-op"</code> exactly
+as it treats <code>"success"</code>, so nothing currently depends on the
+gap — but a reader comparing the type to the behaviour will find a state
+that cannot occur.</p>
+<p><strong>Extraction can outlive the user's attention.</strong>
+<code>shutdown()</code> aborts through an <code>AbortController</code>,
+and the comment beside it (<code>extraction.ts:172-174</code>) records
+the bug it fixed: closing a session left the process running, so a
+pending extraction could still call the model and write files after the
+user had moved on. The bounded 60-second drain is the containment.</p>
+<p><strong>Memory writes are model-authored text under an override
+header.</strong> No trust field, no review, no provenance beyond mtime.
+A wrong memory is a wrong instruction until someone reads the
+directory.</p>
+<p><strong>The store has no forgetting policy.</strong> Files
+accumulate; the only pressure is the 200-entry manifest cap and the
+index truncation warning, both of which cut off what the model
+<em>sees</em> rather than what is kept.</p>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the guards, not the store. <code>memory-file-path.ts</code>
+and the <code>rm</code> grammar in <code>memory-agent-loop.ts</code> are
+300 lines that solve a problem most agent harnesses solve badly or not
+at all: letting a model write to disk on its own initiative without
+letting it write anything that runs. They transplant cleanly into any
+harness with a path policy and a shell parser.</p>
+<p>Do not borrow the retrieval story unless the constraints match. An
+index in the prompt plus model-issued reads works when memories are few,
+hooks are well-written and the model is strong. It degrades quietly: the
+failure is a memory that exists, is listed, and is never opened, and
+nothing in the system reports that.</p>
+<p>Build the tests you adopt this with. The mechanisms are sound as read
+and entirely unverified. A project taking this design should port
+<code>memory-file-path.ts</code> together with the cases it does not
+have — a bidi-hidden segment, an NTFS stream suffix, a trailing-dot
+segment, a relative escape, a non-Markdown target, and an
+<code>rm</code> carrying a glob.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is the delete path's use of the containment-only resolver
+deliberate? The two call sites are eight lines apart in different
+modules and the asymmetry is not commented, unlike most decisions in
+this code.</li>
+<li>What was <code>"no-op"</code> meant to distinguish? Its handling
+suggests an intended status for a run where the model output <em>Nothing
+to save.</em>, which the executor does not detect.</li>
+<li>Does <code>pnpm test</code> fail the pre-commit hook, or is the hook
+not installed in practice? The husky payload is inert in a fresh clone
+until <code>prepare</code> runs, and nothing in the tree answers what
+happens after it does.</li>
+<li>Is there a benchmark behind <code>--memory-bench</code> and the
+<code>null</code> drain timeout that was not opened with the rest of the
+source?</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/memory/extraction.ts</code></td>
+<td>301</td>
+<td>Extraction prompt, skip conditions, coalescing scheduler</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/memory/memory-agent-loop.ts</code></td>
+<td>292</td>
+<td>Confined sub-agent loop and per-call tool policy, including the
+<code>rm</code> grammar</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/memory/recall/manifest.ts</code></td>
+<td>137</td>
+<td>Manifest scan, frontmatter parse, 200-file and 30-line limits</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/memory/memory-file-path.ts</code></td>
+<td>83</td>
+<td>Two resolvers, the sensitive-segment denylist and its
+normaliser</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/memory/index-content.ts</code></td>
+<td>67</td>
+<td>Index truncation at 200 lines and 25,000 characters, with the
+warning</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/memory/origin-session.ts</code></td>
+<td>51</td>
+<td>Origin-session bookkeeping for an extraction snapshot</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/memory/project-root.ts</code></td>
+<td>33</td>
+<td><code>&lt;slug&gt;-&lt;sha256[0:16]&gt;</code> directory
+derivation</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/memory/directory.ts</code></td>
+<td>26</td>
+<td>Non-fatal memory-directory creation</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/memory/recall/types.ts</code></td>
+<td>11</td>
+<td><code>MEMORY_RECALL_TYPES</code> and
+<code>MemoryManifestEntry</code></td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/subagent/persistent-memory-prompt.ts</code></td>
+<td>169</td>
+<td>The long memory prompt and per-scope guidance</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/subagent/persistent-memory.ts</code></td>
+<td>110</td>
+<td>Three-scope sub-agent memory roots and tool projection</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/tool/executor/memory-file-permission.ts</code></td>
+<td>86</td>
+<td>The auto-allow rule and what it refuses to override</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/runtime/helpers/project-memory-extraction.ts</code></td>
+<td>178</td>
+<td>Scheduling, telemetry, five-turn cap, 60-second drain</td>
+</tr>
+<tr>
+<td><code>apps/zcode-cli/packages/core/src/context/sections/memory.ts</code></td>
+<td>50</td>
+<td>The main agent's memory system-prompt section</td>
+</tr>
+<tr>
+<td><code>packages/services/src/memory/memoryService.ts</code></td>
+<td>238</td>
+<td>Read-only listing and reading for the desktop viewer</td>
+</tr>
+<tr>
+<td><code>packages/services/src/memory/projectMemoryStableRead.ts</code></td>
+<td>97</td>
+<td><code>O_NOFOLLOW</code> stable-handle read with identity checks</td>
+</tr>
+<tr>
+<td><code>packages/services/src/memory/memory.ts</code></td>
+<td>35</td>
+<td><code>IMemoryService</code> and its two error codes</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Commands run at the repository root, for the absence claims
+above.</p>
+<pre class="sh"><code># No manifest anywhere declares a test script (0 results).
+python3 -c &#39;import json,os
+for dp,dn,fn in os.walk(&quot;.&quot;):
+    dn[:] = [d for d in dn if d not in (&quot;node_modules&quot;,&quot;.git&quot;)]
+    if &quot;package.json&quot; in fn:
+        p = os.path.join(dp,&quot;package.json&quot;)
+        try: s = json.load(open(p)).get(&quot;scripts&quot;,{})
+        except Exception: continue
+        t = [k for k in s if k == &quot;test&quot; or k.startswith(&quot;test:&quot;)]
+        if t: print(p, t)&#39;
+
+# Every test-like file in the tree (4 results, none under a memory path).
+find . \( -name &quot;*.test.ts&quot; -o -name &quot;*.test.tsx&quot; -o -name &quot;*.spec.ts&quot; \
+  -o -name &quot;*.spec.tsx&quot; -o -name &quot;*.test.mts&quot; -o -name &quot;*.test.js&quot; \
+  -o -name &quot;*.spec.js&quot; \) -not -path &quot;*/node_modules/*&quot;
+
+# No test runner is configured (0 results).
+find . \( -name &quot;vitest.config*&quot; -o -name &quot;jest.config*&quot; \) -not -path &quot;*/node_modules/*&quot;
+
+# No CI directory.
+ls -a .github
+
+# No writer on the desktop memory service (0 results).
+grep -rnE &quot;writeProjectMemory|deleteProjectMemory|updateProjectMemory|approveMemory&quot; \
+  --include=&quot;*.ts&quot; --include=&quot;*.tsx&quot; . | grep -v node_modules
+
+# &quot;no-op&quot; appears only in the type and the scheduler, never as a returned value.
+grep -rn &#39;&quot;no-op&quot;&#39; --include=&quot;*.ts&quot; . | grep -v node_modules</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-21</strong> — <a
+href="https://github.com/zai-org/ZCode/commit/872ad960de7ec172591f7e1952f7849229f94521"><code class="commit-id" title="872ad960de7ec172591f7e1952f7849229f94521">872ad960…</code></a>
+— first reading, at the repository's only commit. Screened before
+anything was read: 2 auto-run surfaces
+(<code>.vscode/settings.json</code> and <code>.vscode/tasks.json</code>,
+neither declaring <code>runOn: folderOpen</code>), 2 build-time
+execution points (<code>prepare: husky</code> and a
+<code>postinstall</code> rebuilding node-pty prebuilds), 35 dependency
+surfaces inside the seven-day cooldown and 29 unpinned manifests;
+<code>.gitattributes</code> was read before checkout and carries no
+<code>filter=</code>, and there is no <code>.gitmodules</code>.
+<code>AGENTS.md</code> is present and was treated as data. Nothing was
+installed, built or executed — which matters more than usual here,
+because no test runner is configured in the tree and the mechanisms
+described above are read rather than exercised. No capability marks.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
