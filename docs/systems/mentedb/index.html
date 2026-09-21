@@ -345,19 +345,35 @@ review surface and not a committed test.</p>
 Benchmarks</h2>
 <p>Substantial Rust test suites — <code>integration.rs</code> at 1,910
 lines, <code>realistic.rs</code> at 1,119, <code>scenarios.rs</code> at
-1,089 — plus <code>benchmarks/longmemeval/</code>, which carries a
-requirements file pinning nothing and calling OpenAI and Anthropic, so
-the benchmark is a harness rather than a committed result.</p>
+1,089 — plus <code>benchmarks/longmemeval/</code>, whose
+<code>requirements.txt</code> pins nothing and whose runner calls OpenAI
+and Anthropic, so re-running it is neither free nor reproducible from
+the tree alone.</p>
+<p><strong>The result is committed, and it recomputes.</strong>
+<code>benchmarks/longmemeval/results/</code> holds four files: the raw
+per-question hypotheses, the official judge's labels
+(<code>hypotheses_baseline-shared_q0-500.jsonl.eval-results-gpt-4o-2024-08-06</code>,
+500 rows), a Markdown report and
+<code>longmemeval_s_results.jsonl</code>. Counting
+<code>label == 1</code> across the judge file gives
+<strong>460/500</strong>, which is the README's headline of 92.0%
+exactly. The README publishes the per-category distribution rather than
+the single number — 100% on single-session assistant questions down to
+85.7% on multi-session reasoning — and names that weakest category
+itself.</p>
 <p>The two tests that matter are described in section 1. What makes the
 AS OF one count is that its three negatives each sit beside a positive
 over the same three-memory store, so none can pass against a retriever
 that returned nothing — the failure mode that makes most negative
 assertions in this corpus worthless.</p>
-<p>No paper: a grep of the README, <code>ARCHITECTURE.md</code>,
-<code>VISION.md</code> and <code>docs/</code> for <code>arxiv</code>,
-<code>bibtex</code>, <code>@article</code>, <code>Citation</code> and
-<code>doi</code> returns nothing, and there is no
-<code>CITATION.cff</code>.</p>
+<p>No paper of its own, and no <code>CITATION.cff</code>. A grep of the
+README, <code>ARCHITECTURE.md</code>, <code>VISION.md</code> and
+<code>docs/</code> for <code>arxiv</code>, <code>bibtex</code>,
+<code>@article</code>, <code>Citation</code> and <code>doi</code>
+returns exactly one match — the <a
+href="https://arxiv.org/abs/2410.10813">LongMemEval</a> link in the
+benchmark section, which is the benchmark's paper rather than
+MenteDB's.</p>
 <p>Nothing was run. The screen reports two cargo <code>build.rs</code>
 build-time execution points and a floating benchmark requirements
 file.</p>
@@ -462,13 +478,14 @@ parse tests (709, 731)</li>
 production-bug regression (84-122)</li>
 <li><code>crates/mentedb/tests/scenarios.rs</code>,
 <code>realistic.rs</code>, <code>process_turn.rs</code></li>
-<li><code>benchmarks/longmemeval/</code></li>
+<li><code>benchmarks/longmemeval/</code> — the harness, and
+<code>results/</code> with the committed judge labels</li>
 </ul>
 <h3 id="commands-behind-the-absence-claims">Commands behind the absence
 claims</h3>
 <pre class="sh"><code>grep -rn -i &quot;tombstone&quot; crates --include=&quot;*.rs&quot;
 grep -rn -iE &quot;review|approve|human&quot; crates --include=&quot;*.rs&quot; | grep -v tests
-grep -rn -i &quot;arxiv|bibtex|@article|citation|doi&quot; README.md ARCHITECTURE.md VISION.md docs/
+grep -rn -iE &quot;arxiv|bibtex|@article|citation|doi&quot; README.md ARCHITECTURE.md VISION.md docs/
 ls CITATION.cff</code></pre>
 <h2 id="history">History</h2>
 <p><strong>2026-09-13</strong> — <a

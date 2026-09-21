@@ -46705,6 +46705,28 @@ project whose only <code>test/</code> matches were Next.js
 in all three errors is structural rather than careless: none of the
 three reports had a Recorded Searches appendix</strong>, so nothing in
 their shape marked the claim as unchecked. All three have one now.</li>
+<li><strong>A report called a committed benchmark a harness, and the
+judge's own labels were in the tree.</strong> The <a
+href="../systems/mentedb/">MenteDB</a> report's section 10 said
+<code>benchmarks/longmemeval/</code> <em>"carries a requirements file
+pinning nothing and calling OpenAI and Anthropic, so the benchmark is a
+harness rather than a committed result."</em> The first half is true and
+the conclusion does not follow. At the pinned commit
+<code class="commit-id" title="4ba993dcf52f0a17065a9a2484fe59777dcd45d4">4ba993dc…</code>,
+<code>benchmarks/longmemeval/results/</code> holds four files, including
+the official judge's per-question labels —
+<code>hypotheses_baseline-shared_q0-500.jsonl.eval-results-gpt-4o-2024-08-06</code>,
+500 rows. Counting <code>label == 1</code> gives 460/500, so the
+README's 92.0% recomputes from the artifact exactly. Two things produced
+the error: the requirements file was read as evidence about the
+<em>results</em>, which it says nothing about, and the report's own
+recorded command for the adjacent claim was
+<code>grep -rn -i "arxiv|bibtex|@article|citation|doi"</code> — a basic
+regular expression in which <code>|</code> is a literal character, so it
+can never match, while the line above it in the same block correctly
+used <code>-iE</code>. It returned nothing honestly and proved nothing.
+Both are corrected, and the paper claim survives in a scoped form: the
+one arXiv link in the README is LongMemEval's, not MenteDB's.</li>
 <li><strong>A claim about two committed benchmark files was true of one
 of them.</strong> The <a href="../systems/sage-memory/">SAGE</a> report
 said the documented make targets reproduce neither LongMemEval result

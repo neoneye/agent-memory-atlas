@@ -231,18 +231,29 @@ a review surface and not a committed test.
 ## 10. Tests, Evals, and Benchmarks
 
 Substantial Rust test suites — `integration.rs` at 1,910 lines, `realistic.rs` at
-1,119, `scenarios.rs` at 1,089 — plus `benchmarks/longmemeval/`, which carries a
-requirements file pinning nothing and calling OpenAI and Anthropic, so the
-benchmark is a harness rather than a committed result.
+1,119, `scenarios.rs` at 1,089 — plus `benchmarks/longmemeval/`, whose
+`requirements.txt` pins nothing and whose runner calls OpenAI and Anthropic, so
+re-running it is neither free nor reproducible from the tree alone.
+
+**The result is committed, and it recomputes.** `benchmarks/longmemeval/results/`
+holds four files: the raw per-question hypotheses, the official judge's labels
+(`hypotheses_baseline-shared_q0-500.jsonl.eval-results-gpt-4o-2024-08-06`, 500
+rows), a Markdown report and `longmemeval_s_results.jsonl`. Counting
+`label == 1` across the judge file gives **460/500**, which is the README's
+headline of 92.0% exactly. The README publishes the per-category distribution
+rather than the single number — 100% on single-session assistant questions down
+to 85.7% on multi-session reasoning — and names that weakest category itself.
 
 The two tests that matter are described in section 1. What makes the AS OF one
 count is that its three negatives each sit beside a positive over the same
 three-memory store, so none can pass against a retriever that returned nothing —
 the failure mode that makes most negative assertions in this corpus worthless.
 
-No paper: a grep of the README, `ARCHITECTURE.md`, `VISION.md` and `docs/` for
-`arxiv`, `bibtex`, `@article`, `Citation` and `doi` returns nothing, and there is
-no `CITATION.cff`.
+No paper of its own, and no `CITATION.cff`. A grep of the README,
+`ARCHITECTURE.md`, `VISION.md` and `docs/` for `arxiv`, `bibtex`, `@article`,
+`Citation` and `doi` returns exactly one match — the
+[LongMemEval](https://arxiv.org/abs/2410.10813) link in the benchmark section,
+which is the benchmark's paper rather than MenteDB's.
 
 Nothing was run. The screen reports two cargo `build.rs` build-time execution
 points and a floating benchmark requirements file.
@@ -339,14 +350,14 @@ parts that exist.
 - `crates/mentedb/tests/integration.rs` — AS OF (1856-1900), `valid_until` (135)
 - `crates/mentedb/tests/memory_dedup.rs` — the production-bug regression (84-122)
 - `crates/mentedb/tests/scenarios.rs`, `realistic.rs`, `process_turn.rs`
-- `benchmarks/longmemeval/`
+- `benchmarks/longmemeval/` — the harness, and `results/` with the committed judge labels
 
 ### Commands behind the absence claims
 
 ```sh
 grep -rn -i "tombstone" crates --include="*.rs"
 grep -rn -iE "review|approve|human" crates --include="*.rs" | grep -v tests
-grep -rn -i "arxiv|bibtex|@article|citation|doi" README.md ARCHITECTURE.md VISION.md docs/
+grep -rn -iE "arxiv|bibtex|@article|citation|doi" README.md ARCHITECTURE.md VISION.md docs/
 ls CITATION.cff
 ```
 
