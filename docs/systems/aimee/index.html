@@ -173,32 +173,42 @@ which is the <code>tombstone</code> mark, not a review one.
 the test alone.</strong> The mark asks whether a memory waits in a state
 until an actor the producing agent cannot be resolves it. Aimee answers
 the second half unusually well and the first half not at all.</p>
-<p>The actor distinction is real and graded. <code>memory.reject</code>
-sits at <code>CAP_MEMORY_WRITE</code>, the tier
-<code>memory.store</code> already holds, but <code>memory.restore</code>
-and <code>memory.delete</code> sit at <code>CAP_MEMORY_ADMIN</code>,
-because <em>"writing and destroying are different privileges"</em>
-(<code>src/server/server_auth.c:45-56</code>). The model's own surface
-cannot reach that tier: the MCP <code>forget</code> verb is <em>"MODEL
-authority: retire, do not destroy … Only a user/operator path — which
-must additionally clear <code>CAP_MEMORY_ADMIN</code> —
-hard-deletes"</em> (<code>src/server/server_mcp.c:518-524</code>), and
-<code>memory_delete_command</code> takes the request's authenticated
-account because <em>"only a person's delete DESTROYS"</em>
-(<code>src/headers/server.h:457-460</code>). Authority resolves through
-<code>server_account_is_person()</code>, <em>"never from the request
-body and never from which socket the request arrived on"</em>.</p>
-<p>What is missing is the wait. A memory is admitted first and
-adjudicated afterwards: <code>memory.reject</code> sets
-<code>lifecycle_state='archived'</code> and
-<code>activation_suppressed=1</code> on a row already in recall
-(<code>server-go/modules/memory/domain.go:159</code>). The Memory Center
-that drives it — <code>frontend/src/pages/Memory.tsx</code>, posting to
-<code>/v1/memory/review</code>, <code>/reject</code>,
+<p>The second half is answered well. The review surface is the web GUI —
+the Memory Center at <code>frontend/src/pages/Memory.tsx</code>, posting
+to <code>/v1/memory/review</code>, <code>/reject</code>,
 <code>/restore</code> and <code>/delete</code> over a same-origin
-session and a CSRF token — is a correction surface over live rows, which
-is the affordance the mark's definition names as the opposite of a
-gate.</p>
+session and a CSRF token — and the capabilities behind it are graded so
+that destroying is not the same privilege as writing:
+<code>memory.reject</code> at <code>CAP_MEMORY_WRITE</code>,
+<code>memory.restore</code> and <code>memory.delete</code> at
+<code>CAP_MEMORY_ADMIN</code>
+(<code>src/server/server_auth.c:45-56</code>), with
+<code>memory_delete_command</code> taking the request's authenticated
+account because <em>"only a person's delete DESTROYS"</em> and resolving
+it through <code>server_account_is_person()</code>
+(<code>src/headers/server.h:457-460</code>). A person can adjudicate,
+and the code knows which caller is a person.</p>
+<p><strong>What is missing is the wait, and it is missing on all three
+admission paths.</strong> A memory row is born admitted:
+<code>memories.lifecycle_state</code> carries no <code>CHECK</code>
+constraint and defaults to <code>'active'</code>
+(<code>src/modules/db2/c/schema.sql</code>). The <code>'pending'</code>
+state the GUI filters on is an open commitment with a TTL, not a queue —
+<code>retrieval.go:166</code> recalls pending rows rather than
+withholding them. And a typed fact does start as a
+<code>candidate</code> excluded from the durable reads
+(<code>fact_mutation.c:835</code>, <code>:1409</code> read
+<code>lifecycle_state IN ('persistent','promoted')</code>), but what
+promotes it is re-assertion, not adjudication:
+<code>promote_candidate</code> fires when the same value is written
+again by an actor whose rank is at or above
+<code>FACT_ACTOR_SYSTEM</code> — the floor, which the system actor
+itself clears (<code>fact_mutation.c:813-818</code>). The one
+threshold-based promoter, <code>db2_fact_promote_durable</code>, has no
+caller outside a test.</p>
+<p>So every path admits without asking anyone, and the Memory Center
+adjudicates rows that are already live. That is the affordance the
+mark's definition names as the opposite of a gate.</p>
 <p>The one queue that does hold something in <code>pending</code> drains
 without a person. <code>learning_proposals</code>
 (<code>src/modules/db2/c/schema.sql:413</code>) carries
@@ -1027,32 +1037,34 @@ count</td>
 </tbody>
 </table></div>
 <h2 id="history">History</h2>
-<p><strong>2026-09-21</strong> — same pin, re-read to settle the
-<code>human_review</code> reasoning against the control-web GUI, which
-the previous reading had not traced. The Memory Center
-(<code>frontend/src/pages/Memory.tsx</code>) and its
-<code>/v1/memory/review</code> listing endpoint appear nowhere in it,
-and neither does <code>learning_proposals</code>, the one queue in the
-tree that holds a row in <code>pending</code>. <strong>The mark stays
-withheld and one of its two stated reasons was wrong.</strong></p>
-<p>The claim that <em>"nothing distinguishes the caller that rejects
-from the caller that wrote"</em> is withdrawn. It rested on the three
-ops sharing a route table with identical flags, but that field is
-<code>0</code> for every entry in the block and the comment above it
-reads <em>"caps derived from the op"</em> — so identical flags carry no
-information about authorisation at all. The derived capabilities differ:
-<code>memory.reject</code> at <code>CAP_MEMORY_WRITE</code>,
-<code>memory.restore</code> and <code>memory.delete</code> at
-<code>CAP_MEMORY_ADMIN</code>, a tier the MCP surface clears. This
-contradicted the report's own section 8, which already cited
-<code>server_account_is_person()</code>.</p>
-<p>What survives is the admission test, and the GUI does not change it:
-the Memory Center adjudicates rows that are already in recall.
-<code>learning_proposals</code>, newly described, is the sharper
-evidence — it is a real pending queue that drains on
-<code>corroboration_count &gt;= required</code> rather than on anyone's
-decision, and the operator's verb there is REVERTED, after the
-commit.</p>
+<p><strong>2026-09-21</strong> — same pin, re-read twice to settle
+<code>human_review</code> against the web GUI, which the original
+reading had never traced. <strong>The mark stays withheld and the
+reasoning is rebuilt around admission.</strong></p>
+<p>Two earlier grounds are withdrawn. The claim that the three ops
+<em>"sit in the same route table … with identical flags"</em>, so
+<em>"nothing distinguishes the caller that rejects from the caller that
+wrote"</em>, was wrong twice over: that field is <code>0</code> for
+every entry in the block under a comment reading <em>"caps derived from
+the op"</em>, and the derived capabilities differ. The replacement
+reasoning, which argued the point through the MCP surface, was beside
+the point — MCP is not where human review lives and was never meant to
+be. The review surface is the Memory Center
+(<code>frontend/src/pages/Memory.tsx</code>) and the
+<code>/v1/memory/*</code> web API behind it, and a person there
+genuinely can adjudicate.</p>
+<p>What settles the mark is the write path, not either API. A memory row
+defaults to <code>lifecycle_state='active'</code> with no
+<code>CHECK</code> constraint; the <code>'pending'</code> state the GUI
+filters on is an open commitment that <code>retrieval.go:166</code>
+recalls rather than withholds; and a typed-fact <code>candidate</code> —
+which the durable reads do exclude — is promoted by
+<em>re-assertion</em> from any actor at or above
+<code>FACT_ACTOR_SYSTEM</code> (<code>fact_mutation.c:813-818</code>),
+the producer clearing its own queue.
+<code>db2_fact_promote_durable</code>, the threshold-based promoter, has
+no caller outside a test. Nothing waits for a person, so there is
+nothing for the review surface to gate.</p>
 <p><strong>2026-09-19</strong> — re-pinned to <a
 href="https://github.com/RakuenSoftware/aimee/commit/bedabac667c5c00f9f14fe6f47efd3b369a46922"><code class="commit-id" title="bedabac667c5c00f9f14fe6f47efd3b369a46922">bedabac6…</code></a>.
 <code>human_review</code> is <strong>withdrawn</strong>, on two grounds
