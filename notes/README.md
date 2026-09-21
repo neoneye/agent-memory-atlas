@@ -1154,3 +1154,11 @@ when the work happens.
   as a personal prior, and prose expected to do the work of explicit relations.
   Ends with a worked episode and the checks that would justify the structure
   over plain episode text.
+- [2026-09-21-ngram-memory-tables.md](2026-09-21-ngram-memory-tables.md) —
+  what DeepSeek's Engram and Qwen's n-gram embedding actually are, with every
+  figure read from the published `config.json` rather than a write-up: 320M rows
+  / 51.2B params at block 2 for Qwen3.8-Flash-Next, 768M rows / 196.6B over two
+  layers for DeepSeek V4.1 Flash, which V4-Flash does not have. Why Engram is
+  neither Titans nor ROME — the key is an exact n-gram, so a row is addressable
+  and a write is reversible — and why that breaks the atlas's stated test for
+  excluding parametric memory.
