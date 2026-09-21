@@ -1140,13 +1140,12 @@ when the work happens.
   suggestions considered and rejected, with the reasoning and what would change
   the decision.
 - [2026-09-21-narrative-graphs-triaged-for-memory.md](2026-09-21-narrative-graphs-triaged-for-memory.md) —
-  a register of eight graph representations of narrative and event data, each
-  cited to its paper and triaged for agent memory: the umbrella, event
-  evolutionary, actor–event–perspectivization, coherence, STAC-typed causal,
-  narrative map, trope and hierarchical multimodal. Two axes decide most
-  verdicts — instance or type, per-episode or per-corpus — and the STAC
-  labels with their transition rule are the one thing to steal. Checking the
-  papers overturned five descriptions: the event graph is type-level, the
-  coherence graph is windowed rather than quadratic, perspectivization means
-  goal expressions only, the trope graph has three edge types not four, and
-  the comics graph's levels are panel, sequence and event.
+  eight graph representations of narrative and event data, each cited to its
+  paper and triaged for agent memory. Four patterns transfer: type the episode
+  as situation, task, action, consequence and constrain the transitions (STAC);
+  a stance is an event with a holder (actor–event–perspectivization); write the
+  retrieval key as the question a later moment would ask (coherence graph); a
+  summary keeps an edge to what it summarizes (hierarchical multimodal). Three
+  do not: a type-level schema mistaken for a memory, corpus statistics at
+  one-user volume, and narrative as a text blob on a node — which is how 39
+  reports here use the word.
