@@ -1,75 +1,106 @@
 # Structures for what happened, triaged for memory
 
-Eight ways of structuring what happened — events, episodes, stories — each
-with what an agent memory can take from it and what it must not. All eight
-are graphs; the register is open to any structure that claims the job. The
-register is the body; the design patterns and anti-patterns it yields come
-first.
+Seven graph-based approaches, plus the umbrella term *narrative graph*,
+triaged for remembering what an agent and a user did. They serve different
+jobs: recording an episode, supplying a prior, generating a story, or showing
+a history. This is a register of representations, not a comparison of complete
+memory systems, and it remains open to non-graph structures.
+
+The useful transfers are episode roles, attributed stances, question-based
+retrieval keys and evidence-linked summaries. Their value is a hypothesis for
+agent memory; the papers below do not establish that they improve long-term
+assistant recall, correction or forgetting.
 
 ## What transfers
 
-Four patterns, each carried by one entry below.
+Four patterns to try, with the source and the adaptation kept distinct.
 
-- **Type the episode, and constrain the transitions.** Label every clause of
-  what happened as *situation*, *task*, *action* or *consequence*, and require
-  that a consequence follows an action and an action follows a task. That is
-  the shape of an agent's work, and it answers the question a fact store
-  cannot: not *what is true now* but *what did we try, and what happened*.
+- **Keep the attempt and its outcome together.** Use *situation*, *task*,
+  *action* and *consequence* as episode roles, allowing repeated actions,
+  missing roles and unresolved outcomes. Distinguish sequence from causation.
+  This makes “what did we try, and what happened?” a direct retrieval target.
   From the [STAC-typed causal graph](#stac-typed-causal-graph-situation-task-action-consequence).
-- **A stance is an event with a holder.** "Prefers X", "rejected Y", "must
-  do Z" are not facts about the world; they are facts about who holds them.
-  Store them as a typed node with an explicit actor, or they cannot be scoped
-  or corrected as the user's. From the
-  [actor–event–perspectivization graph](#actorevent-perspectivization-graph).
-- **Write the retrieval key as the question a later moment would ask.** At
-  write time, generate the questions a future reader would need this passage
-  to answer, in the reader's words, and index those. It costs about six
-  times the text. From the [coherence graph](#coherence-graph-retrospective-questions).
-- **A summary keeps an edge to what it summarizes.** Layer segment, event and
-  arc, with an explicit *instantiates* edge from each level to the one
-  below, so a summary cannot outlive its evidence. From the
-  [hierarchical multimodal graph](#hierarchical-multimodal-graph).
+- **Attribute a stance to its holder and its source.** “Prefers X”, “rejected
+  Y” and “must do Z” need an actor, a scope, a time and evidence. A stated
+  preference, an imposed obligation and an assistant's inference are different
+  claims. Extending goal-event attribution to these other stances is this
+  note's proposal. From the
+  [actor–event–perspectivization graph](#actoreventperspectivization-graph).
+- **Index an episode by questions it can answer.** Generate a few retrieval
+  questions grounded in retained evidence. The source paper connects two
+  already-seen passages; anticipating a future session's questions is an
+  adaptation, with its own quality and cost to measure. From the
+  [coherence graph](#coherence-graph-retrospective-questions).
+- **A summary keeps links to what supports it.** Link summaries to versioned
+  evidence so correction or deletion can find their dependents. Those links
+  enable invalidation; a read filter and an update policy must enforce it.
+  From the [hierarchical multimodal graph](#hierarchical-multimodal-graph).
 
 ## What does not
 
-Three anti-patterns, and the clause of the scope bar each one fails.
+Three ways to mistake a useful representation for a sufficient memory.
 
-- **A schema mistaken for a memory.** A graph whose nodes are *kinds* of
-  event — `(eats, subj)`, `Hero`, `Big bad` — holds no episode. Nothing about
-  a session survives in it, so it fails the bar at the first clause. Two
-  entries below are this: the [event evolutionary graph](#event-evolutionary-graph-script-graph-eventuality-graph)
-  and the [trope graph](#trope-graph).
-- **Corpus statistics at one-user volume.** Edge weights that mean "what
-  usually follows what" need thousands of episodes. One developer and one
-  assistant produce a handful, and a prior learned from five samples is
-  confident nonsense. Same two entries, second reason.
-- **Narrative as a text blob on a node.** The story is in the edges: a
-  causal link, a coherence weight, a stance with a holder. A `narrative`
-  column beside `facts[]` keeps the prose and throws the structure away. 39
-  reports in this corpus use the word, and in every one read for this note it
-  names a text field. The edge form exists here too, without the vocabulary:
+- **A generalization substituted for its instances.** The
+  [event evolutionary graph](#event-evolutionary-graph-script-graph-eventuality-graph)
+  collapses occurrences into event types and transition counts. A
+  [trope graph](#trope-graph) abstracts a story into roles and conflicts.
+  Both can be useful stored knowledge; neither, as described, retains the
+  evidence needed to recover and correct a particular agent episode.
+- **A frequency treated as a reliable personal prior.** A transition seen a
+  few times is weak evidence for “what usually follows what”. Reliability
+  depends on counts per transition, task diversity and uncertainty, not a
+  universal minimum number of sessions. A pretrained corpus prior avoids
+  learning everything locally, but its applicability still needs testing.
+  This applies to the event evolutionary graph; TropeTwist is not a
+  corpus-frequency estimator.
+- **Prose expected to do the work of explicit relations.** A `narrative`
+  field can preserve an excellent account. It does not by itself provide
+  queryable links for “which attempt produced this observation?” or “which
+  summaries depend on this source?”. Conversely, an edge is not proof of
+  causation. The atlas already contains several shapes:
+  [moltbrain](../content/systems/moltbrain.md) has a narrative field;
+  [agent-working-memory](../content/systems/agent-working-memory.md) uses
+  narrative cohesion in graph-based retraction propagation;
   [hindsight](../content/systems/hindsight.md) and
-  [memomind](../content/systems/memomind.md) keep causal links between
-  memories, and MemoMind boosts them at recall.
+  [memomind](../content/systems/memomind.md) retain causal links, which
+  MemoMind boosts at recall. These examples support a distinction between
+  mechanisms, not a claim that the corpus uses the word only for text.
 
 ## How to read the register
 
-Two axes decide most verdicts.
+The [atlas scope bar](../content/contributing.md#proposing-a-memory-system)
+asks whether something is stored beyond a session, retrieved later, and could
+in principle be scoped, corrected or forgotten. It does not require episodic
+memory: a durable generalization can qualify. The narrower question here is
+whether a representation preserves **what happened in a particular episode**.
+
+Two axes help place each proposal.
 
 **Instance or type.** Does a node stand for *this* thing that happened, or for
-a kind of thing that happens? Memory needs instances. A type-level graph is a
-schema, and a schema is not a memory.
+a kind of thing that happens? Episodic recall needs identifiable occurrences.
+Type-level knowledge can sit beside them, but cannot replace their evidence.
 
-**Per-episode or per-corpus.** Is the structure built from one session, or
-mined across thousands of documents? A corpus-level structure needs a corpus,
-which one user and one assistant will not have for a long time. That rules
-out several entries on volume alone, not on merit.
+**Construction unit.** Is it built from a document or episode, extracted
+from a collection, mined across a corpus, or authored and generated? Those
+have different costs. A corpus prior can be imported; a graph over many
+episodes can still use bounded candidate selection.
 
-A third consideration cuts across both: **extraction cost**. Every entry
-assumes something turns prose into structure, and the papers pay that cost
-very differently — one by hand, one with a fine-tuned classifier, several
-with a frontier model per pair of passages. A personal assistant pays it per
-session, by model, forever.
+| Structure | What its nodes identify | Construction | Candidate role in memory |
+| --- | --- | --- | --- |
+| Event evolutionary graph | Event types | Mined corpus | Prior beside episode records |
+| Actor–event–perspectivization graph | Event mentions and participants | Document parsing | Attribution of goals and stances |
+| Coherence graph | Text chunks | Selected passage pairs | Retrieval keys and context links |
+| STAC-typed causal graph | Rewritten narrative clauses | Episode/document extraction | Attempt–outcome organization |
+| Narrative map | Articles representing events | A selected collection | Review surface |
+| Trope graph | Abstract roles and narrative elements | Authored examples and generation | Story schema |
+| Hierarchical multimodal graph | Panels, entities and event units | Manual annotation | Evidence-linked hierarchy |
+
+A third consideration is **construction and maintenance cost**: parsing,
+annotation, model calls, indexing, and repair after a correction. The papers
+pay for construction differently. An agent can capture tool-call identifiers
+and returned observations directly; interpreting their significance still
+requires work. None of these representations alone supplies scope enforcement,
+trust state or deletion propagation.
 
 ## The register
 
@@ -80,9 +111,10 @@ structural features of a story, encoded as a graph. No paper owns the phrase;
 the trope paper and the political-discourse paper below each call their own
 structure a "narrative graph" and mean different things by it.
 
-The one commitment the members share is that **the story lives in the
-edges** — a coherence weight, a causal link, a want with an actor — and not
-in text attached to a node.
+The common move is to make some relations explicit — temporal, causal,
+semantic or structural — alongside whatever text the nodes preserve. The
+edge semantics differ enough that “uses a narrative graph” explains little
+without naming them.
 
 *Superset of everything below.*
 **Verdict: n/a** — too general to adopt or reject.
@@ -106,16 +138,15 @@ directed, weighted by conditional probability
 base of "event evolutionary principles" for predicting the next event in a
 chain.
 
-*Type-level, per-corpus. Narrative maps are a near relative with instance
-nodes and different edge semantics.*
+*Type-level, per-corpus. An aggregate over occurrences, not a record of them.*
 
-**Verdict: wrong for storage anywhere; possibly right as a prior beside an
-organizational memory.** A node like `(eats, subj)` has no episode in it, so
-nothing about a session survives — only a statistic learned from sessions.
-As a prior over "what usually follows what" it needs volume a single
-developer does not produce. A team memory over thousands of sessions is a
-different calculation, and even there the graph sits beside the memory, not
-in it.
+**Verdict: a possible prior, insufficient as the episode record.** A node
+like `(eats, subj)` cannot identify which occurrence a user is correcting.
+The aggregate may persist and be retrieved, so it does not inherently fail
+the atlas's scope bar. It loses the episode-specific identity and evidence
+this note needs. An imported graph could inform predictions even for one
+user; a locally learned one needs enough support per transition. Either
+belongs beside identifiable episode records.
 
 ### Actor–event–perspectivization graph
 
@@ -127,10 +158,11 @@ Sciences Communications*, 2025.
 **What it is.** Each sentence is parsed to Abstract Meaning Representation
 with IBM's transition-based parser. Predicates become event nodes; their
 argument fillers become actor nodes; edges from event to actor carry PropBank
-roles (ARG0 agent, ARG1 patient, ...), and an event that is itself an
-argument of another event gets a hierarchical edge to it. "Perspectivization"
-is narrower than the word suggests: it is the operationalization of *goal
-expressions* — events under two VerbAtlas frames, `require_need_want_hope`
+roles (often ARG0 agent, ARG1 patient; the roles are predicate-specific).
+An event that is itself an argument of another event gets a hierarchical
+edge to it. "Perspectivization" is narrower than the word suggests: it is the
+operationalization of *goal expressions* — events under two VerbAtlas frames,
+`require_need_want_hope`
 and `oblige_force` ("we need to", "we must"), with an actor in ARG0 — and the
 events those goal-events embed. The output is a narrative trace table from
 which actor networks are drawn. Corpus: the State of the European Union
@@ -139,16 +171,18 @@ addresses, 2010–2023.
 *Instance-level, per-document. A plain event graph with actors and
 goal-holding on top.*
 
-**Verdict: the idea yes, the machinery no.** The move worth keeping is that
-a want or a must is an *event with an actor*, not a property of the world.
-That is exactly the distinction a personal assistant loses when it stores
-"prefers X" or "rejected Y" as ordinary facts: those are facts about the
-user, with the user as ARG0, and a store that cannot say who holds them
-cannot scope or correct them as the user's. The corpus's
-[rejected-value tombstone](../content/patterns/rejected-value-tombstone.md)
-is a special case — a rejected value is a stance with a holder. Take the
-typed node with an explicit holder; skip the AMR pipeline, which is built
-for speeches and heavy for a session log.
+**Verdict: borrow attribution; justify the parser separately.** The paper
+makes goal expressions attributable to actors. For memory, extend that idea
+to preferences, decisions and rejections, recording both who holds the stance
+and who reported it. “The assistant inferred that the user prefers X” must
+remain distinct from the user's statement. An explicit subject in a fact
+record can do this too; a graph node is not required.
+
+The [rejected-value tombstone](../content/patterns/rejected-value-tombstone.md)
+adds an operational requirement beyond attribution: a durable value-level
+record is consulted to prevent reassertion. A rejection event alone does not
+provide that gate. AMR is an extraction option for unstructured text; a session
+with known speakers and tool actors may not need it.
 
 ### Coherence graph (retrospective questions)
 
@@ -165,21 +199,27 @@ is this". GPT-4 generates them per node pair in two turns; a second pass
 discards questions answerable from the later chunk alone, or hallucinated.
 The number of surviving questions per edge is the signal in the recap task;
 in plot retrieval the questions themselves are matched against the query.
-The definition ranges over every earlier node, but the realization uses a
-window of four preceding nodes "such that the graph realization is
-proportional to the input instead of being quadratic": about six times the
-text in tokens, at $0.03 per thousand input tokens with GPT-4 in 2024.
+For plot retrieval and long-document QA, construction is limited to four
+preceding nodes. Appendix A.1 reports roughly `6T` thousand processing tokens
+and a total cost of `$0.03T` for a source of `T` thousand tokens. That is the
+paper's construction estimate at its historical pricing, not a sixfold
+storage multiplier or a current API token rate.
 
 *Instance-level, per-document. Orthogonal to the event graphs — it links
 chunks without committing to a relation type.*
 
-**Verdict: the edge transfers, the graph does not.** A question the later
-moment asks of the earlier one is a retrieval key written at write time: it
-says what a future reader would need this passage for, in the reader's words
-rather than the passage's. At six times the text per session that is
-affordable. The window is what makes it so; across sessions the store is the
-whole history, the window is gone, and the quadratic cost returns. Use it as
-a per-session key generator, not as a cross-session graph.
+**Verdict: try bounded question-based indexing.** NarCo derives a question
+from two passages already available. Generating questions from one episode
+for a future reader is a related proposal, not the method the paper tested.
+Keep the answer's evidence reference with each key, and check that the
+question neither invents an outcome nor assumes an unsupported cause.
+
+Cross-session linking becomes quadratic only if every pair is considered.
+A recency window or a fixed number of retrieved candidates can bound pair
+generation to `O(Nk)` for `N` chunks and `k` candidates per chunk, excluding
+candidate-search cost. That trades coverage for cost. Compare retrieval
+against the original episode text before paying for the extra index; the
+paper's budget alone does not establish affordability for an assistant.
 
 ### STAC-typed causal graph (situation, task, action, consequence)
 
@@ -197,30 +237,36 @@ changes state) — adapted from Minto's structured-thinking scheme from
 business writing. The classifier is RoBERTa embeddings concatenated with
 seven hand-defined linguistic features (genericity, eventivity, boundedness,
 initiativity, time start, time end, impact) into XGBoost, trained on 1,000
-annotated sentences. Edges come from a five-step loop: learn which label
-transitions are valid ("bonds"), propose causal pairs, prune with a
+annotated sentences. Edges come from a five-step loop: prompt the model with
+the valid label relationships ("bonds"), propose causal pairs, prune with a
 counterfactual test — *if A had not occurred, would B still happen?* —
 reconnect isolated vertices, compile. Evaluated on 100 chapters and short
 stories published 1800–1950, against GPT-4o and Claude 3.5 building the same
-graphs directly.
+graphs directly. Section 3.4 permits 11 of the 16 label-pair types, including
+action → action and situation → situation; STAC is not a mandatory four-step
+chain. The counterfactual prompt assesses textual plausibility, not causality
+established by intervention.
 
-*Instance-level, per-episode. The narrowest thing here, and the only one whose
-shape matches what an agent actually does.*
+*Instance-level, per-document. Its roles are a useful candidate vocabulary
+for episodes of agent work.*
 
-**Verdict: right, and the one to steal — the labels and the bond, not the
-pipeline.** Four fields on an episode, and a rule that a consequence follows
-an action and an action follows a task. [funes](../content/systems/funes.md)
-argues for exactly this without the vocabulary, quoting its own rationale
-document: *"A log also keeps what a knowledge base throws away — the
-superseded passage is often the answer itself: what did we try before, and
-why did we move off it?"* The nearest pattern in this corpus, the
-[rejected-value tombstone](../content/patterns/rejected-value-tombstone.md),
-keeps the consequence — this value was rejected — without the action that
-produced it. The expensive half of the paper's pipeline is mostly given away
-in the agent setting: episodes arrive already segmented, a tool call is an
-action and its result is a consequence, so the vertex rewriting the paper
-needs a frontier model for is close to free. That inference is this note's,
-not the paper's.
+**Verdict: the strongest candidate here for organizing attempts and
+outcomes.** Use the roles as optional, repeatable parts of an episode. An
+action can produce no observation, several observations or a delayed result;
+an observed change can have causes outside the agent's actions. Preserve
+`precedes`, `result_of_call` and an inferred `causes` as different relations.
+
+[funes](../content/systems/funes.md) argues for keeping superseded attempts
+and the reasons for moving away from them. That supports preserving history,
+not specifically STAC typing. A rejected-value tombstone prevents a value
+from returning; linking it to an episode can additionally explain the attempt
+and decision behind it.
+
+Tool logs supply action boundaries and call–response links cheaply. A tool
+response is an observation, not necessarily proof that the intended change
+happened: a timeout can leave the outcome unknown. Task boundaries, user
+intent, delayed effects and causal attribution still need extraction or
+verification. This adaptation is the note's, not the paper's result.
 
 ### Narrative map
 
@@ -239,14 +285,16 @@ constraints over the topic clusters. Built for intelligence analysts,
 computational journalists and misinformation researchers: the map is the
 reading surface.
 
-*Instance-level, per-collection. Close to an event evolutionary graph in
-shape, but with instance nodes and acyclic by construction.*
+*Instance-level, per-collection. Its coherence weights organize a reading
+path; they are not transition counts or causal claims.*
 
-**Verdict: wrong for storage, right for review.** The input is "everything
-about one issue", which in memory terms is a query result, not a store. Worth
-remembering if the assistant ever needs to show a person how a decision was
-reached across many sessions — a different feature from remembering it, and
-one that could be built over any of the instance-level stores above.
+**Verdict: useful as a derived review surface.** A map could help a person
+trace a decision across sessions. Its coherence objective and coverage
+constraints select a readable account; they do not guarantee preservation of
+every failed attempt or dissenting observation. Keep the underlying records
+and make omissions inspectable. Coherence is not a causal explanation, and
+the single-start/single-end constraint should be relaxed for ongoing work.
+The map can itself be stored, but should not be the sole episode record.
 
 ### Trope graph
 
@@ -254,24 +302,28 @@ one that could be built over any of the instance-level stores above.
 Generation*, Foundations of Digital Games 2022, procedural content generation
 workshop, [arXiv:2204.09672](https://arxiv.org/abs/2204.09672).
 
-**What it is.** Nodes are thirteen tropes taken from TvTropes, in three base
-types — heroes, conflicts, enemies — plus plot devices: Hero, Five-man band,
+**What it is.** Nodes use thirteen tropes taken from TvTropes, grouped as
+heroes, conflicts, enemies and plot devices: Hero, Five-man band,
 The chosen one, Superhero, Conflict, Enemy, Empire, Big bad, Dragon, Plot
 device, Chekhov's gun, MacGuffin, May help in quest. Three edge types: a
-directed relation `A → B`, a reflexive one `A ↔ B` (a hero in conflict with
-themselves), and entailment `A ♦— B` ("A entails B": an empire entails a
-dragon, which entails a chosen one). Subgraphs such as conflict patterns and
-plot-device patterns are the units the quality metrics count. Graph grammars
+directed relation `A → B`, a bidirectional relation `A ↔ B` (called
+“reflexive” in the paper), and entailment `A ♦— B` ("A entails B": an empire
+entails a dragon, which entails a chosen one). Subgraphs such as conflict
+patterns and plot-device patterns are the units the quality metrics count. Graph grammars
 are the encoding; MAP-Elites is the search; the targets are hand-made
 structures for three games; the fitness terms are coherence, cohesion and
 interestingness.
 
-*Type-level, per-corpus (a corpus of games).*
+*Schema-level abstractions of individual stories; authored and generated,
+not mined transition statistics over a corpus.*
 
-**Verdict: wrong, and instructive about why.** A trope graph holds no
-episodes; it constrains what *may* be generated. That is a schema with
-fitness functions, and it fails the atlas's bar at the first clause — nothing
-survives a session because nothing about a session was ever in it.
+**Verdict: a story-design representation, not an episode record.** It can
+describe an existing game as well as constrain generated variants, so it is
+not merely a list of event types. But its roles and conflict patterns omit
+the source-linked occurrences needed to recover an agent's actual attempts.
+Its mismatch is the level of abstraction and purpose, not insufficient
+corpus size. A stored trope graph could meet the atlas's general scope bar
+without answering this note's episodic question.
 
 ### Hierarchical multimodal graph
 
@@ -287,52 +339,104 @@ dialogue, captions, with semantic-role, spatial and action–agent edges. The
 sequence level is a temporal graph over panels and event segments
 (*precedes*), which is where flashbacks and ellipses are handled. The event
 level is a semantic graph with macro-events, events and sub-events nested
-(*subevent-of*, *precedes*, *co-occurs*). Cross-level edges are
-*instantiates* and *refers-to*, so an entity keeps one identity from panel to
-arc. Built by hand: the author annotated two Manga109 story arcs — 111
+(*subevent-of*, *precedes*, *co-occurs*). Panels link to event segments via
+*instantiates*; segments, events and macro-events are grouped through
+*subevent-of*. Identity-preserving *refers-to* edges connect entities across
+levels. Built by hand: the author annotated two Manga109 story arcs — 111
 panels, 102 event segments, 39 events, 12 macro-events — and ran four
 symbolic reasoning tasks over them in NetworkX.
 
 *Instance-level, per-document. Orthogonal to everything above: a layering
 that could wrap any of the instance-level entries.*
 
-**Verdict: the layering transfers, the multimodality does not, and the
-extraction is nobody's yet.** Segment / event / arc with explicit
-*instantiates* edges is a summarization hierarchy where the summary still
-points at what it summarizes — which is the thing several systems in this
-corpus get wrong by letting a summary outlive its evidence. The paper pays
-its extraction by hand, at 111 panels; a memory system would pay it per
-session, by model, and the paper says nothing about how well a model does it.
+**Verdict: borrow the traceable hierarchy; add a maintenance policy.** A
+memory adaptation could link summaries to episode records and records to
+source spans. Use relations such as `summarizes` and `supported_by` for those
+jobs; the paper does not call every cross-level link *instantiates*.
+
+A pointer makes dependencies discoverable. To prevent unsupported recall,
+source correction must invalidate affected derivatives, and reads must
+withhold them until they are recomputed or revalidated. Forgetting also needs
+to reach derivative text and indexes. A retained historical summary may
+remain useful if clearly marked; it must not masquerade as current evidence.
+These lifecycle rules are this note's extension, not a result of the paper.
+Multimodal linking is relevant when an agent uses screenshots or documents;
+the unproven part is reliable automated extraction at memory-system scale.
+
+## A small episode, and what would justify keeping the structure
+
+An illustrative session: a user asks the assistant to enable a project
+setting. The update call times out. A later read confirms that the setting
+was enabled. The user then says to keep that setting off for this project,
+and a second update plus a read confirms it is off.
+
+| Record or relation | What to preserve |
+| --- | --- |
+| Task and scope | The original request, user, project and source message |
+| First action | The attempted update, arguments, timestamp and call ID |
+| First observation | Timeout linked to the call; outcome still unknown |
+| Later observation | Read reports “on”; this confirms state, not by itself which action caused it |
+| User stance | “Keep it off”, its holder, project scope, time and source; distinct from the earlier request |
+| Second attempt and observation | Update to “off”, followed by a read confirming “off” |
+| Retrieval key | “Why is this setting off in this project?” linked to the user decision and episode |
+| Summary | The account above, linked to the exact evidence revisions it summarizes |
+
+The current setting, the user's standing instruction and the history of
+attempts are three different things to retrieve. The instruction supersedes
+the earlier request for future action; it does not make the earlier request
+or the observed “on” state historically false. No causal edge should be
+invented just to complete the four STAC roles. These records and links can
+live in ordinary tables; none requires a graph database.
+
+Before adopting the extra structure, compare it with a simpler baseline:
+the same scoped, source-linked episode text retrieved directly. Use later
+questions held out from key generation, and check:
+
+- Does it recover the failed or uncertain attempt as well as the final state?
+- Does it distinguish what the user said from what the assistant inferred?
+- Does a project-specific instruction stay within its project, including
+  when recall follows an edge to another record?
+- After a source correction or deletion, can an old summary or generated
+  question still expose the removed claim?
+- Does any retrieval gain justify extraction tokens, latency, index size and
+  the cost of repairing derivatives?
+
+These are proposed checks, not experiments run for this note. If simple
+episode records answer them adequately, the graph adds no demonstrated value.
 
 ## Adding an entry
 
-Cite the paper and state what the paper calls its nodes and edges in the
-paper's own words. Place it on the two axes, then give a verdict with a
-reason that is not a restatement of the axes. If the verdict is "wrong for
-memory", say which clause of the scope bar it fails — survives the session,
-retrievable later, scopeable, correctable, forgettable — because "wrong"
-without that is an opinion. If something transfers, add it to the pattern
-list at the top with the one entry it comes from.
+Cite the paper, preferably the version and section, and use its terminology
+for nodes and edges. Identify the construction unit and intended job. Keep
+the paper's mechanism separate from the proposed memory adaptation, its cost
+and the evidence that would justify it. Distinguish failing the atlas's scope
+bar from being insufficient for episodic recall. If something transfers, add
+it to the pattern list with its source and the conditions on the transfer.
 
 ## Sources and limits
 
-- The class list was taken from an unsigned, machine-written topic page and
-  then checked against each paper on 2026-09-21. Every description above is
-  the paper's; the page's paraphrases are not used.
-- Each paper was read to the depth of its definitions and construction
-  sections, not end to end. No evaluation claim above has been checked beyond
-  what the paper states.
+- The initial class list came from an unsigned, machine-written topic page.
+  It is a starting list, not a systematic survey or an exhaustive taxonomy.
+  Definitions and construction details were checked against the papers on
+  2026-09-21; the verdicts and memory adaptations are this note's judgements.
+- The key qualifications can be checked in STAC
+  [v1 §3.4](https://arxiv.org/html/2504.07459v1#S3.SS4), NarCo
+  [v2 §3 and Appendix A.1](https://arxiv.org/html/2402.13551v2),
+  the discourse paper [v2 §2](https://arxiv.org/html/2411.00702v2),
+  TropeTwist [v2 §§3–4](https://arxiv.org/html/2204.09672v2), and the
+  hierarchical graph paper [v2 §3](https://arxiv.org/html/2506.10008v2).
+  Papers were read for definitions and construction, not reproduced; reported
+  evaluations are not independent evidence of performance in agent memory.
+
 - Not yet triaged: event-centric knowledge graphs
   ([arXiv:2205.03876](https://arxiv.org/abs/2205.03876)), EventGround
   ([arXiv:2404.00209](https://arxiv.org/abs/2404.00209)), and a second
   visual-narrative paper ([arXiv:2507.21893](https://arxiv.org/abs/2507.21893)).
-- The claim that this corpus keeps `narrative` as node text rests on a grep
-  (39 reports) and four of them read: [moltbrain](../content/systems/moltbrain.md),
-  [byterover](../content/systems/byterover.md),
-  [agent-working-memory](../content/systems/agent-working-memory.md) and
-  [claude-self-reflect](../content/systems/claude-self-reflect.md). Hindsight
-  and MemoMind came from a second grep for causal links whose other hits were
-  not checked, so no count of edge-carrying systems is claimed.
-- The atlas does not otherwise use this vocabulary, or say why not — the same
-  omission [symbolic prior art](2026-07-28-symbolic-prior-art.md) records for
-  belief revision and truth maintenance.
+- Corpus comparisons rely on the linked atlas reports at their recorded pins,
+  not new inspections of those systems' source code. Word searches are a way
+  to find examples, not a census of mechanisms. No prevalence claim is made
+  about prose narratives or graph-based memory.
+- [Symbolic prior art](2026-07-28-symbolic-prior-art.md) raises a related
+  question for belief revision and truth maintenance: what can memory design
+  borrow from established representations without inheriting their full
+  machinery?
