@@ -1143,7 +1143,8 @@ when the work happens.
   a register of ways to structure what happened — events, episodes, stories —
   each cited to its paper and triaged for agent memory; eight rows so far, all
   graphs, open to any structure that claims the job. Four transfers, each an
-  adaptation rather than a paper's result: episode roles of situation, task,
+  adaptation rather than a paper's result and each mapped to the atlas pattern
+  page it overlaps: episode roles of situation, task,
   action and consequence with sequence kept apart from causation (STAC);
   stances attributed to a holder and a source (actor–event–perspectivization);
   question-based retrieval keys with their evidence (coherence graph); and

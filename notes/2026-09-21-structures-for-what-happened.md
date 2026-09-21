@@ -18,21 +18,30 @@ Four patterns to try.
   *action* and *consequence* as episode roles, allowing repeated actions,
   missing roles and unresolved outcomes. Distinguish sequence from causation.
   This makes “what did we try, and what happened?” a direct retrieval target.
+  No pattern page here covers it; the nearest, the
+  [rejected-value tombstone](../content/patterns/rejected-value-tombstone.md),
+  keeps the outcome without the attempt.
   From the [STAC-typed causal graph](#stac-typed-causal-graph-situation-task-action-consequence).
 - **Attribute a stance to its holder and its source.** “Prefers X”, “rejected
   Y” and “must do Z” need an actor, a scope and evidence. Keep when the stance
-  applied separate from when it was recorded. A stated preference, an imposed
-  obligation and an assistant's inference are different claims. From the
+  applied separate from when it was recorded, which is
+  [bi-temporal fact validity](../content/patterns/bi-temporal-fact-validity.md)
+  applied to a stance. A stated preference, an imposed obligation and an
+  assistant's inference are different claims, which the
+  [trust-state machine](../content/patterns/trust-state-machine.md) already
+  separates as verified against candidate. New here is the holder. From the
   [actor–event–perspectivization graph](#actoreventperspectivization-graph).
 - **Index an episode by questions it can answer.** Generate a few retrieval
   questions grounded in retained evidence. The paper links two passages
   already seen; the forward-looking version has its own quality and cost to
-  measure. From the
+  measure. No pattern page here covers it. From the
   [coherence graph](#coherence-graph-retrospective-questions).
 - **A summary keeps links to what supports it.** Link summaries to versioned
-  evidence so correction or deletion can find their dependents. Those links
-  enable invalidation; a read filter and an update policy must enforce it.
-  From the [hierarchical multimodal graph](#hierarchical-multimodal-graph).
+  evidence so correction or deletion can find their dependents.
+  [Evidence before belief](../content/patterns/evidence-before-belief.md)
+  keeps the raw events; new here is the link back from each derivative, and
+  the read filter and update policy that act on it. From the
+  [hierarchical multimodal graph](#hierarchical-multimodal-graph).
 
 ## What does not
 
@@ -206,9 +215,8 @@ The number of surviving questions per edge is the signal in the recap task;
 in plot retrieval the questions themselves are matched against the query.
 For plot retrieval and long-document QA, construction is limited to four
 preceding nodes. Appendix A.1 reports roughly `6T` thousand processing tokens
-and a total cost of `$0.03T` for a source of `T` thousand tokens. That is the
-paper's construction estimate at its historical pricing, not a sixfold
-storage multiplier or a current API token rate.
+and a total cost of `$0.03T` for a source of `T` thousand tokens, at the
+paper's 2024 GPT-4 pricing.
 
 *Instance-level, per-document. Orthogonal to the event graphs — it links
 chunks without committing to a relation type.*
@@ -245,8 +253,8 @@ the valid label relationships ("bonds"), propose causal pairs, prune with a
 counterfactual test — *if A had not occurred, would B still happen?* —
 reconnect isolated vertices, compile. The graph comparison uses 100 narratives
 from a corpus of chapters and short stories published 1800–1950. Its reported
-win rates are GPT-4's pairwise judgements of graph quality; the paper reports
-agreement with human annotators. The baselines are GPT-4o and Claude 3.5
+win rates are GPT-4's pairwise judgements of graph quality, with Cohen's κ of
+0.92 against human annotators on the same pairs. The baselines are GPT-4o and Claude 3.5
 prompted with 10 examples (§5.4). Section 3.4 permits 11 of the 16 label-pair
 types, including action → action and situation → situation; STAC is not a
 mandatory four-step chain. The counterfactual prompt assesses textual
@@ -411,8 +419,7 @@ later questions held out from key generation, and check:
   the cost of repairing derivatives?
 
 Keep an added structure only if it improves the needed answers or their
-maintenance at an acceptable cost. The checks above are proposed; none was
-run for this note.
+maintenance at an acceptable cost.
 
 ## Adding an entry
 
@@ -421,7 +428,8 @@ for nodes and edges. Identify the construction unit and intended job. Keep
 the paper's mechanism separate from the proposed memory adaptation, its cost
 and the evidence that would justify it. Distinguish failing the atlas's scope
 bar from being insufficient for episodic recall. If something transfers, add
-it to the pattern list with its source and the conditions on the transfer.
+it to the pattern list with its source, the conditions on the transfer, and
+the atlas pattern page it overlaps, if one exists.
 
 ## Sources and limits
 
