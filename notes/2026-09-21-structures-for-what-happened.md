@@ -6,14 +6,12 @@ jobs: recording an episode, supplying a prior, generating a story, or showing
 a history. This is a register of representations, not a comparison of complete
 memory systems, and it remains open to non-graph structures.
 
-The useful transfers are episode roles, attributed stances, question-based
-retrieval keys and evidence-linked summaries. Their value is a hypothesis for
-agent memory; the papers below do not establish that they improve long-term
-assistant recall, correction or forgetting.
+Every transfer below is this note's adaptation, not a result a paper tested.
+The checks that would justify one are at the end.
 
 ## What transfers
 
-Four patterns to try, with the source and the adaptation kept distinct.
+Four patterns to try.
 
 - **Keep the attempt and its outcome together.** Use *situation*, *task*,
   *action* and *consequence* as episode roles, allowing repeated actions,
@@ -23,13 +21,12 @@ Four patterns to try, with the source and the adaptation kept distinct.
 - **Attribute a stance to its holder and its source.** “Prefers X”, “rejected
   Y” and “must do Z” need an actor, a scope, a time and evidence. A stated
   preference, an imposed obligation and an assistant's inference are different
-  claims. Extending goal-event attribution to these other stances is this
-  note's proposal. From the
+  claims. From the
   [actor–event–perspectivization graph](#actoreventperspectivization-graph).
 - **Index an episode by questions it can answer.** Generate a few retrieval
-  questions grounded in retained evidence. The source paper connects two
-  already-seen passages; anticipating a future session's questions is an
-  adaptation, with its own quality and cost to measure. From the
+  questions grounded in retained evidence. The paper links two passages
+  already seen; the forward-looking version has its own quality and cost to
+  measure. From the
   [coherence graph](#coherence-graph-retrospective-questions).
 - **A summary keeps links to what supports it.** Link summaries to versioned
   evidence so correction or deletion can find their dependents. Those links
@@ -63,8 +60,7 @@ Three ways to mistake a useful representation for a sufficient memory.
   narrative cohesion in graph-based retraction propagation;
   [hindsight](../content/systems/hindsight.md) and
   [memomind](../content/systems/memomind.md) retain causal links, which
-  MemoMind boosts at recall. These examples support a distinction between
-  mechanisms, not a claim that the corpus uses the word only for text.
+  MemoMind boosts at recall.
 
 ## How to read the register
 
@@ -208,18 +204,15 @@ storage multiplier or a current API token rate.
 *Instance-level, per-document. Orthogonal to the event graphs — it links
 chunks without committing to a relation type.*
 
-**Verdict: try bounded question-based indexing.** NarCo derives a question
-from two passages already available. Generating questions from one episode
-for a future reader is a related proposal, not the method the paper tested.
-Keep the answer's evidence reference with each key, and check that the
+**Verdict: try bounded question-based indexing.** Keep the answer's
+evidence reference with each key, and check that the
 question neither invents an outcome nor assumes an unsupported cause.
 
 Cross-session linking becomes quadratic only if every pair is considered.
 A recency window or a fixed number of retrieved candidates can bound pair
 generation to `O(Nk)` for `N` chunks and `k` candidates per chunk, excluding
 candidate-search cost. That trades coverage for cost. Compare retrieval
-against the original episode text before paying for the extra index; the
-paper's budget alone does not establish affordability for an assistant.
+against the original episode text before paying for the extra index.
 
 ### STAC-typed causal graph (situation, task, action, consequence)
 
@@ -266,7 +259,7 @@ Tool logs supply action boundaries and call–response links cheaply. A tool
 response is an observation, not necessarily proof that the intended change
 happened: a timeout can leave the outcome unknown. Task boundaries, user
 intent, delayed effects and causal attribution still need extraction or
-verification. This adaptation is the note's, not the paper's result.
+verification.
 
 ### Narrative map
 
@@ -292,8 +285,8 @@ path; they are not transition counts or causal claims.*
 trace a decision across sessions. Its coherence objective and coverage
 constraints select a readable account; they do not guarantee preservation of
 every failed attempt or dissenting observation. Keep the underlying records
-and make omissions inspectable. Coherence is not a causal explanation, and
-the single-start/single-end constraint should be relaxed for ongoing work.
+and make omissions inspectable. The single-start/single-end constraint
+should be relaxed for ongoing work.
 The map can itself be stored, but should not be the sole episode record.
 
 ### Trope graph
@@ -321,9 +314,6 @@ not mined transition statistics over a corpus.*
 describe an existing game as well as constrain generated variants, so it is
 not merely a list of event types. But its roles and conflict patterns omit
 the source-linked occurrences needed to recover an agent's actual attempts.
-Its mismatch is the level of abstraction and purpose, not insufficient
-corpus size. A stored trope graph could meet the atlas's general scope bar
-without answering this note's episodic question.
 
 ### Hierarchical multimodal graph
 
@@ -351,15 +341,13 @@ that could wrap any of the instance-level entries.*
 
 **Verdict: borrow the traceable hierarchy; add a maintenance policy.** A
 memory adaptation could link summaries to episode records and records to
-source spans. Use relations such as `summarizes` and `supported_by` for those
-jobs; the paper does not call every cross-level link *instantiates*.
+source spans, under relations such as `summarizes` and `supported_by`.
 
 A pointer makes dependencies discoverable. To prevent unsupported recall,
 source correction must invalidate affected derivatives, and reads must
 withhold them until they are recomputed or revalidated. Forgetting also needs
 to reach derivative text and indexes. A retained historical summary may
 remain useful if clearly marked; it must not masquerade as current evidence.
-These lifecycle rules are this note's extension, not a result of the paper.
 Multimodal linking is relevant when an agent uses screenshots or documents;
 the unproven part is reliable automated extraction at memory-system scale.
 
@@ -401,8 +389,8 @@ questions held out from key generation, and check:
 - Does any retrieval gain justify extraction tokens, latency, index size and
   the cost of repairing derivatives?
 
-These are proposed checks, not experiments run for this note. If simple
-episode records answer them adequately, the graph adds no demonstrated value.
+If simple episode records answer them adequately, the graph adds no
+demonstrated value.
 
 ## Adding an entry
 
@@ -418,7 +406,7 @@ it to the pattern list with its source and the conditions on the transfer.
 - The initial class list came from an unsigned, machine-written topic page.
   It is a starting list, not a systematic survey or an exhaustive taxonomy.
   Definitions and construction details were checked against the papers on
-  2026-09-21; the verdicts and memory adaptations are this note's judgements.
+  2026-09-21.
 - The key qualifications can be checked in STAC
   [v1 §3.4](https://arxiv.org/html/2504.07459v1#S3.SS4), NarCo
   [v2 §3 and Appendix A.1](https://arxiv.org/html/2402.13551v2),
