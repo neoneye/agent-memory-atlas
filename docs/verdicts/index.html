@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 620 reports.</strong></p>
+<p><strong>This page covers all 621 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25236,6 +25236,70 @@ exists belongs to <a href="../systems/mem0/">mem0</a>, including the
 Thirty lines asserting the documentation still matches the code is the
 check nobody reviews for and the one that stops a README drifting into
 fiction.</li>
+</ul>
+<h3 id="codex-dev-mcp-suite"><a
+href="../systems/codex-dev-mcp-suite/"><code>codex-dev-mcp-suite</code></a></h3>
+<ul>
+<li>Best idea: <strong>make the cross-scope read a different tool rather
+than a wider argument.</strong> <code>memory_recall</code> is scoped to
+one project slug and <code>memory_global_recall</code> crosses the whole
+vault. A caller cannot widen by omitting a field or passing
+<code>null</code> — it has to name a second tool, which is visible in a
+transcript and in a tool allowlist. Beside it, <code>memory_dedup</code>
+emits <code>suggested merge</code> lines with a score and named reasons
+and deletes nothing, with a committed case asserting
+<code>Deleted note</code> is absent from its output.</li>
+<li>Biggest risk: <strong><code>checkpoint_restore</code> with
+<code>clean: true</code> deletes the files the snapshot declined to
+take.</strong> <code>create()</code> skips anything over 2 MB and
+anything containing a NUL byte, and <code>walk()</code> stops collecting
+at 4,000 files without counting it; <code>computeDiff()</code> then
+calls every current file absent from the manifest <code>added</code>,
+and the clean path unlinks all of them. Those are the same files.
+Running the tool the README recommends before a risky refactor, then
+reverting, removes every image, PDF and database file in the project and
+reports it as <code>removed N newer files</code>. The
+<code>skipped</code> counter that closes the gap is computed at capture
+and never read at restore.</li>
+<li>Most reusable component: the note format — Markdown with YAML
+frontmatter beside a JSON index per project, wikilinks resolved on save
+rather than on a later pass. Every failure mode in the report is
+diagnosable with <code>cat</code> and repairable by hand, which is what
+a file-backed store buys in exchange for the concurrency it gives
+up.</li>
+<li>Biggest risk, second: <strong>three of the tools it advertises do
+not exist.</strong> Each server answers <code>tools/list</code> from one
+literal array and dispatches <code>tools/call</code> through a separate
+<code>switch</code>, and nothing cross-checks them: 42 tools are
+declared, 39 have a handler. <code>memory_import_session</code>,
+<code>pack_dense_brief</code> and <code>journal_standup</code> are
+declared with full input schemas — so every MCP client offers them to
+the model — and no implementation exists anywhere in the tree. Release
+3.5.0 is <em>named</em> after those three, the CHANGELOG lists each
+under <strong>Added</strong> with a benefit claim, and
+<code>docs/ROADMAP.md</code> marks all three done. Three other items in
+the same release are fully wired, so this is not a release that shipped
+nothing. The README's tool table is the one document that gets it right:
+it lists none of them.</li>
+<li>Maturity impression: MIT, version 3.5.1, 84 files and roughly 7,400
+lines of JavaScript with one runtime dependency. 285 assertion calls
+across 113 cases in 13 test files — twelve of which the runner executes,
+<code>project-memory/test.rerank.mjs</code> being reachable by no runner
+at all — run in CI on three Node versions with a tarball install smoke
+job. One mark, <code>negative_eval</code>. Two qualifications on that
+suite: the runner discovers <code>tests/</code> relative to the working
+directory and executes relative to its own, so an invocation from
+anywhere but the repository root silently skips eight of the twelve
+suites and still exits 0; and the clean-restore case seeds two small
+text files, so its fixture contains nothing the capture path would skip.
+The published <em>113 / 113 unit test (100% PASS)</em> is a count of the
+tree rather than of a run — the runner reaches 111 of those cases — and
+no case names any of the three missing tools.</li>
+<li>Study when: you are designing an undo. The lesson generalises past
+this code — whenever a revert is specified as "remove what is not in the
+backup", the backup's exclusion rules quietly become deletion rules, and
+every size cap, binary check and file-count limit turns into a list of
+things the revert will destroy.</li>
 </ul>
         </article>
       </div>

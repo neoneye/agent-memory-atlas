@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="Four file-backed MCP servers whose
+current release is named after three tools that are advertised to every
+client and throw Unknown tool when called, and whose snapshot declines
+to capture binaries and large files that its restore then deletes as
+newer.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Dev MCP
+Suite — Agent Memory Atlas">
+    <meta property="og:description" content="Four file-backed MCP
+servers whose current release is named after three tools that are
+advertised to every client and throw Unknown tool when called, and whose
+snapshot declines to capture binaries and large files that its restore
+then deletes as newer.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Dev MCP
+Suite — Agent Memory Atlas">
+    <meta name="twitter:description" content="Four file-backed MCP
+servers whose current release is named after three tools that are
+advertised to every client and throw Unknown tool when called, and whose
+snapshot declines to capture binaries and large files that its restore
+then deletes as newer.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Dev MCP Suite — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Dev MCP Suite",
+      "description": "Four file-backed MCP servers whose current release is named after three tools that are advertised to every client and throw Unknown tool when called, and whose snapshot declines to capture binaries and large files that its restore then deletes as newer.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Three headline tools are in the menu and
+not in the code</p>
+          <h1>Dev MCP Suite</h1>
+          <p class="document-deck">Four file-backed MCP servers whose
+current release is named after three tools that are advertised to every
+client and throw Unknown tool when called, and whose snapshot declines
+to capture binaries and large files that its restore then deletes as
+newer.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/verrysimatupang99/codex-dev-mcp-suite">
+              <span>Source</span>
+              <strong>verrysimatupang99/codex-dev-mcp-suite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/verrysimatupang99/codex-dev-mcp-suite/commit/8a39bce80c9e977c7889df7399ec3f1c4959055d" title="8a39bce80c9e977c7889df7399ec3f1c4959055d">
+              <span>Analyzed revision</span>
+              <code>8a39bce8…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-21</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/verrysimatupang99--codex-dev-mcp-suite" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>verrysimatupang99--codex-dev-mcp-suite</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Dev MCP Suite is four stdio MCP servers in one npm package,
+<strong>MIT</strong>, 84 files and roughly 7,400 lines of JavaScript
+with one runtime dependency — the MCP SDK itself.
+<code>project-memory</code> keeps an Obsidian-style Markdown vault with
+wikilinks and a keyword index. <code>devjournal</code> keeps a
+per-project JSONL timeline and one canonical handoff.
+<code>checkpoint</code> snapshots files outside git.
+<code>context-pack</code> produces briefings and a repository audit. No
+database, no daemon, no network unless an embedding endpoint is
+configured.</p>
+<p>The design is legible, and that is not incidental. Every durable
+artifact is a file a person can open, diff and repair by hand: a note is
+Markdown with YAML frontmatter, an index is JSON, a journal is JSONL, a
+checkpoint is content-hashed blobs beside a manifest. That is a real
+property and it is worth the reading.</p>
+<p><strong>Three of the tools it advertises do not exist.</strong> Each
+server answers <code>tools/list</code> from a literal array and
+dispatches <code>tools/call</code> through a <code>switch</code> whose
+<code>default</code> branch throws <code>Unknown tool</code>. Forty-two
+tools are declared; thirty-nine have a <code>case</code>.
+<code>memory_import_session</code>
+(<code>project-memory/server.js:439</code>),
+<code>pack_dense_brief</code> (<code>context-pack/server.js:243</code>)
+and <code>journal_standup</code> (<code>devjournal/server.js:197</code>)
+are declared with descriptions and full input schemas, so every MCP
+client puts them in the model's tool menu — and no handler for any of
+them exists anywhere in the tree. There is no
+<code>importSession</code>, no <code>denseBrief</code>, no
+<code>standup</code>. Calling one throws.</p>
+<p>They are not obscure. Release 3.5.0 is titled <em>Token-Dense
+Briefing, Standup Digest &amp; Semantic Session Import</em> after
+exactly these three, the CHANGELOG lists each under
+<strong>Added</strong> with a benefit claim, and
+<code>docs/ROADMAP.md</code> marks all three ✅ under "Status Terkini".
+Three more items in the same release — <code>pack_search</code>,
+<code>pack_find_todos</code>, the unified <code>checkpoint_diff</code> —
+are fully wired, so this is not a release that shipped nothing. The
+README's tool table is the one document that gets it right: it lists
+none of the three. The wire protocol advertises what the README does
+not.</p>
+<p><strong>One mark, <code>negative_eval</code></strong>, and the rest
+are withheld for the same underlying reason: a note has no status. There
+is no field distinguishing a proposed memory from an accepted one, a
+superseded value from a current one, or a line the agent wrote from a
+line the auto-indexer scraped out of a chat transcript. Deletion unlinks
+the file. Nothing records that it existed.</p>
+<p><strong>The finding that matters is in <code>checkpoint</code>, and
+it destroys data.</strong> <code>checkpoint_create</code> declines to
+store three classes of file — anything past a 4,000-file cap, anything
+over 2 MB, anything containing a NUL byte — and records only the second
+and third in a <code>skipped</code> counter nobody surfaces at restore
+time. <code>checkpoint_restore</code> with <code>clean: true</code> then
+walks the tree, calls anything absent from the manifest "added since the
+checkpoint", and unlinks it (<code>checkpoint/server.js:291-296</code>).
+Those are the same files. Running the tool the README recommends before
+a risky refactor, and then reverting, deletes every image, PDF, database
+file and large asset in the project, and reports the count as
+<code>removed N newer files</code>.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A thing becomes a memory the moment a tool call succeeds, and it
+becomes one without any claim being made about it.
+<code>memory_save</code> takes a title and a body, writes
+<code>notes/&lt;id&gt;.md</code>, adds a row to <code>index.json</code>,
+and returns (<code>project-memory/server.js:531-547</code>). There is no
+pending state, no review, no confidence, no source. The
+<code>kind</code> field — <code>note</code>, <code>decision</code>,
+<code>task</code>, <code>log</code>, <code>snippet</code> — is a free
+string supplied by the caller and used for display.</p>
+<p>A memory stops being one only through <code>memory_delete</code>,
+which unlinks the file and deletes the index entry
+(<code>:757-768</code>). Nothing is left behind, which means nothing
+downstream can know a note was removed rather than never written — and
+<code>memory_auto_index</code> will happily re-derive an equivalent note
+on its next run, because it dedups against nothing.</p>
+<p>The interesting path is the second one.
+<code>memory_auto_index</code> reads the last three git commits, the
+current branch, and — this is the part worth pausing on — the five most
+recently modified files under <code>.codex/sessions</code>,
+<code>.codex</code>, <code>.gemini/logs</code>, <code>.gemini</code>,
+<code>.agents/logs</code> or <code>logs</code>. It matches each line
+against a bilingual keyword regex whose alternatives include
+<code>architecture</code>, <code>arsitektur</code>,
+<code>migration</code>, <code>migrasi</code>, <code>decision</code>,
+<code>keputusan</code>, <code>strategy</code>, <code>strategi</code>,
+<code>refactor</code>, <code>database</code>, <code>schema</code> and
+<code>tradeoff</code>. It takes up to 300 characters of the matching
+line verbatim, and saves it as a note titled <em>Session Digest</em>
+(<code>project-memory/auto-indexer.js:12-91</code>, the keyword list at
+<code>:54</code>, the note built at <code>:133-137</code>). Those files
+are conversation transcripts. Whatever flowed through the session — a
+web page the agent read, a tool result, a pasted error — is eligible to
+become a durable memory on a keyword match, and arrives carrying no
+marker that distinguishes it from a note the agent composed on
+purpose.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — the snapshot declines four classes of file — ignored directory, anything past the 4,000-file cap, anything over 2 MB, anything holding a NUL byte — and records only two of them in a counter nobody reads at restore; the revert then recomputes membership from the live tree, classifies every file absent from the manifest as added since the checkpoint, and unlinks it, so the set the capture skipped and the set the clean restore deletes are the same set</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: the snapshot declines four classes of file — ignored directory, anything past the 4,000-file cap, anything over 2 MB, anything holding a NUL byte — and records only two of them in a counter nobody reads at restore; the revert then recomputes membership from the live tree, classifies every file absent from the manifest as added since the checkpoint, and unlinks it, so the set the capture skipped and the set the clean restore deletes are the same set
+flowchart TD
+    subgraph CAP[&quot;checkpoint_create — what the snapshot keeps&quot;]
+      W[&quot;walk the project tree&quot;] --&gt; G1{&quot;name in DEFAULT_IGNORE?&quot;}
+      G1 -- yes --&gt; D1[&quot;never visited&quot;]
+      G1 -- no --&gt; G2{&quot;4000 files already collected?&quot;}
+      G2 -- yes --&gt; D2[&quot;dropped, counted nowhere&quot;]
+      G2 -- no --&gt; G3{&quot;larger than 2 MB?&quot;}
+      G3 -- yes --&gt; D3[&quot;skipped++&quot;]
+      G3 -- no --&gt; G4{&quot;contains a NUL byte?&quot;}
+      G4 -- yes --&gt; D4[&quot;skipped++&quot;]
+      G4 -- no --&gt; S[&quot;recorded in cp.files&quot;]
+    end
+    S --&gt; M[(&quot;manifest.json&quot;)]
+    D1 --&gt; ABS[&quot;absent from cp.files&quot;]
+    D2 --&gt; ABS
+    D3 --&gt; ABS
+    D4 --&gt; ABS
+    M --&gt; R[&quot;checkpoint_restore, clean = true&quot;]
+    R --&gt; DIFF{&quot;computeDiff: is rel in cp.files?&quot;}
+    ABS --&gt; DIFF
+    DIFF -- &quot;present&quot; --&gt; KEEP[&quot;rewritten from the snapshot&quot;]
+    DIFF -- &quot;absent&quot; --&gt; ADD[&quot;classified as added&quot;]
+    ADD --&gt; UNLINK[&quot;fs.unlink&quot;]
+    UNLINK --&gt; LOSS[&quot;reported as &#39;removed N newer files&#39;&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Four independent processes, each a <code>Server</code> from
+<code>@modelcontextprotocol/sdk</code> over
+<code>StdioServerTransport</code>, each launched by the MCP client.
+Nothing has to be running beforehand and nothing runs between calls. An
+operator stands this up with one command and stops it by closing the
+client.</p>
+<p>State lives under <code>~/.ai-shared-memory/</code> by default —
+<code>vault/</code> for notes, <code>checkpoints/</code> for snapshots —
+overridable with <code>MEMORY_VAULT_DIR</code> and
+<code>CHECKPOINT_DIR</code>. The vault path in
+<code>project-memory/server.js:41-43</code> disagrees with the module's
+own header comment, which still documents
+<code>~/.codex/memories/vault</code> (<code>:11</code>).</p>
+<p>The project key is <code>projectSlug(dir)</code>: the directory
+basename, sanitized, plus the first eight hex characters of a SHA-1 of
+the resolved absolute path
+(<code>project-memory/server.js:54-60</code>). Two checkouts of the same
+repository in different directories are different projects; the same
+directory reached through a symlink resolves to the same one.</p>
+<p>Network is optional and confined to two places: an OpenAI-compatible
+<code>/v1/embeddings</code> endpoint and an optional LLM reranker, both
+configured by environment variable. With neither set, the suite performs
+no network I/O at all, and <code>lib/update-check.js</code> is the only
+other component that would.</p>
+<p>The <code>init</code> wizard (<code>lib/init-wizard.js</code>,
+<code>bin/init.mjs</code>) writes MCP server entries into whichever
+client configuration files it finds — Codex CLI's
+<code>config.toml</code>, Claude Code, Cursor, Windsurf, Hermes,
+Antigravity. That is the component with the widest blast radius on a
+user's machine, and it is the one with the fewest assertions behind it:
+<code>tests/init-wizard.test.mjs</code> carries four.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Save a note</strong> —
+<code>project-memory/server.js:531</code> <code>save()</code>, then
+<code>buildFrontmatter</code> (<code>:105</code>),
+<code>ensureGraphState</code> (<code>project-memory/graph.js</code>),
+and <code>embedOne</code>
+(<code>project-memory/embedding.js</code>).</p>
+<p><strong>Recall</strong> — <code>project-memory/server.js:570</code>,
+with <code>graphBoost</code> at <code>:115</code>, <code>rerank</code>
+in <code>project-memory/rerank.js</code>, and the offline vector in
+<code>project-memory/local-embed.js</code>.</p>
+<p><strong>Cross-project recall</strong> — <code>globalRecall()</code>
+at <code>:693</code>, over <code>loadGlobalNotes(VAULT_ROOT)</code> from
+<code>project-memory/global-index.js:18</code>.</p>
+<p><strong>Auto-derive from transcripts</strong> —
+<code>project-memory/auto-indexer.js:94</code>
+<code>runAutoIndexer</code>, saved by
+<code>project-memory/server.js:895</code> <code>autoIndex()</code>.</p>
+<p><strong>Snapshot and revert</strong> —
+<code>checkpoint/server.js</code> <code>walk()</code>
+(<code>:50</code>), <code>create()</code> (<code>:185-207</code>),
+<code>computeDiff()</code> (<code>:219</code>), <code>restore()</code>
+(<code>:274</code>, with the clean branch and its unlink at
+<code>:291-296</code>).</p>
+<p><strong>Compress a journal</strong> —
+<code>devjournal/compress.js:12</code>
+<code>compressJournalEntries</code>.</p>
+<p><strong>Audit a repository</strong> —
+<code>context-pack/server.js:418</code> <code>audit()</code>, with the
+pattern tables at <code>:38-60</code>.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A note is a file. Its frontmatter carries <code>id</code>,
+<code>title</code>, <code>kind</code>, <code>tags</code>,
+<code>aliases</code>, <code>created</code> and <code>dir</code>; the
+body is the Markdown the caller supplied under an
+<code># &lt;title&gt;</code> heading. <code>index.json</code> holds the
+same fields plus <code>keywords</code>, <code>file</code>, and — when an
+embedding was produced — <code>embedding</code> and
+<code>embModel</code>.</p>
+<p><strong>There is one time field, and the caller sets it.</strong>
+<code>memory_save</code> accepts an optional <code>created</code>
+argument documented as "Optional ISO timestamp to backdate the note",
+validated by a regex that checks only for a leading
+<code>YYYY-MM-DD</code> (<code>project-memory/server.js:540</code>).
+There is no separate ingest time. <code>created</code> is the tiebreaker
+on every sort in the file (<code>:181</code>, <code>:616</code>,
+<code>:622</code>, <code>:628</code>, <code>:719</code>,
+<code>:740</code>), so a model that backdates a note controls its
+position in recall, and nothing anywhere records when the write actually
+happened. That is why <code>bitemporal</code> is withheld: not a missing
+valid-time dimension, but a single transaction time that is not recorded
+at all.</p>
+<p><strong>No status, anywhere.</strong> No column, no frontmatter key,
+no enum. A note is present or it is unlinked. <code>trust_state</code>
+is withheld because there is no field to carry it, and
+<code>tombstone</code> because deletion leaves nothing —
+<code>del()</code> unlinks and returns, and no subsequent write consults
+what was removed.</p>
+<p>Journal entries are JSONL: <code>timestamp</code>,
+<code>entryType</code>, <code>title</code>, <code>text</code>,
+<code>tags</code>, <code>files</code>. A checkpoint manifest record is
+<code>{ id, label, created, files, stored, skipped }</code>, where
+<code>files</code> maps a relative path to
+<code>{ hash, size }</code>.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p><code>memory_recall</code> tokenizes the query, scores index rows on
+keyword overlap, adds a small <code>graphBoost</code> of 0.05 per
+wikilink whose target substring-matches a query token
+(<code>project-memory/server.js:115-122</code>), and optionally reranks
+by cosine over embeddings. <code>mode</code> selects <code>auto</code>,
+<code>semantic</code> or <code>keyword</code>.</p>
+<p><strong>The offline "vector" engine is a lexical method.</strong>
+<code>project-memory/local-embed.js</code> builds a 384-element vector
+by hashing each whole word into one bucket with weight 2.0, hashing
+every character trigram of that word into the same 384 buckets with
+weight 1.0, applying <code>1 + log(tf)</code>, and L2-normalizing. It is
+a hashed bag of words and trigrams. Cosine over it cannot relate two
+texts that share no character trigrams, which is what "semantic"
+ordinarily promises — the README's <em>Intelligent Local-First Semantic
+Search</em> heading and its "384-dimensional... vector engine" describe
+a representation whose only similarity signal is surface form. The
+dimension matches <code>all-MiniLM-L6-v2</code>; the content does not.
+It is a reasonable fuzzy-match fallback, and the character trigrams give
+it genuine robustness to typos and inflection that plain keyword
+matching lacks. It is not an embedding.</p>
+<p>Collisions are not incidental at this size: words and trigrams share
+one 384-bucket space, so a long note's vector is dominated by trigram
+mass, and any two buckets collide at a rate a 384-dimensional dense
+embedding would not.</p>
+<p><code>memory_global_recall</code> runs the same scoring over every
+project in the vault, ordering same-project notes first. It is a
+separate tool rather than a flag, which is the right shape.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes block the agent and there is no lag.</strong>
+<code>save()</code> awaits the file write, the index write, the Obsidian
+folder check and <code>ensureGraphState</code> before returning, so a
+note is retrievable by the next tool call. When a remote embedding
+endpoint is configured, <code>embedOne</code> is awaited inside that
+path (<code>:549</code>), which puts a network round trip on the
+critical path of every save; when it is not, the local hash vector is
+effectively free.</p>
+<p><strong>No background pass rewrites the store.</strong> There is no
+daemon, no consolidation, no decay, no scheduled job.
+<code>memory_auto_index</code> is the only pass that writes without a
+human-authored body, and it runs only when an agent calls it.</p>
+<p>That pass appends unconditionally. <code>autoIndex()</code> saves an
+<code>Auto-Index</code> note titled with the date and the branch, plus
+one note per distinct matched keyword, on every invocation, with no
+check against what it wrote last time
+(<code>project-memory/server.js:895-916</code>). Call it twice and the
+vault holds two copies; delete one and call it again and it returns.</p>
+<p><code>runAutoIndexer</code> accepts a <code>dryRun</code> parameter
+and never reads it (<code>project-memory/auto-indexer.js:94</code>); the
+dry-run gate lives in the caller. The same shape appears in
+<code>devjournal/compress.js:12</code>, where
+<code>maxTokens = 500</code> is destructured and never consulted — the
+compressor truncates at fixed counts of 10 decisions, 10 blockers and 15
+files, and reports an <code>estimatedTokenCount</code> computed as
+<code>length / 4</code> that nothing checks against the budget it
+accepted. Both were found by scanning free functions for destructured
+defaults with no reference in the body; the scan does not cover class
+methods, so the list is a floor.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Forty-two tools declared across four servers, thirty-nine of them
+callable; the three that are not are named in section 1, and the gap is
+invisible to a client because <code>tools/list</code> and the
+<code>tools/call</code> switch are separate literals nothing
+cross-checks. Every tool that touches project state takes a
+<code>dir</code> argument described as "Project directory (defaults to
+CWD)".</p>
+<p><strong>That is the scoping story, and it is why
+<code>scope_enforced</code> is withheld.</strong> The project slug is
+derived from <code>dir</code>, and <code>dir</code> is a string the
+model supplies. An agent that knows or guesses another project's path
+reads that project's notes through ordinary <code>memory_recall</code>;
+no predicate refuses it, because the predicate <em>is</em> the argument.
+<code>memory_global_recall</code> then crosses every project explicitly.
+The design is coherent — a local single-user tool where the agent is
+trusted with the filesystem anyway — but it is a convention, not an
+enforcement, and a report comparing it against systems that filter on a
+stored <code>scope</code> column should say which it is.</p>
+<p><code>context-pack</code>'s <code>pack_audit</code> is the surface
+with the sharpest edge. <code>isIgnored(rel)</code> builds a shell
+command by interpolation —
+<code>execSync(`git check-ignore -q -- "${rel}"`)</code>
+(<code>context-pack/server.js:460</code>) — where <code>rel</code> comes
+from walking a directory the model named. A file whose name contains a
+double quote and a shell metacharacter executes as part of that command.
+Creating such a filename is legal on macOS and Linux, so auditing an
+untrusted checkout is enough. Every other <code>execSync</code> in the
+file uses a constant command string with <code>cwd</code>, which is the
+safe form and is what this call should have been.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The capture-restore asymmetry.</strong> Stated once more
+because it is the reason to read this report: <code>create()</code>
+skips files over <code>MAX_FILE_BYTES</code> (2,000,000) and files
+containing a NUL byte, incrementing <code>skipped</code>, and
+<code>walk()</code> stops collecting at <code>MAX_FILES</code> (4000)
+without counting anything (<code>checkpoint/server.js:35-36</code>,
+<code>:60</code>, <code>:194-196</code>). <code>computeDiff()</code>
+classifies every current file absent from <code>cp.files</code> as
+<code>added</code> (<code>:224</code>), and
+<code>restore({ clean: true })</code> unlinks every entry in
+<code>added</code>. The three skip conditions and the delete condition
+are the same set. The tool description promises to "Delete files created
+after the checkpoint" (<code>:131</code>); what it deletes is every
+binary and every large file that was present all along.</p>
+<p><strong>Failures are swallowed in ways that read as success.</strong>
+<code>restore()</code> wraps each file write in
+<code>catch { /* ignore */ }</code> and reports
+<code>Restored N files</code> with no denominator, though
+<code>Object.keys(cp.files).length</code> is in scope. The
+<code>clean</code> loop increments <code>removed</code> unconditionally
+after an <code>unlink</code> whose rejection is discarded, so the
+reported count is an upper bound. <code>compressJournalEntries</code>
+wraps its entire body in one <code>try</code>, and
+<code>JSON.parse</code> on a single malformed line of
+<code>log.jsonl</code> therefore returns
+<code>No log entries found</code> — a total, silent loss of the journal
+presented as an empty one.</p>
+<p><strong>The secret scanner reads a prefix.</strong>
+<code>pack_audit</code> scans files smaller than 65,536 bytes and reads
+the first 16,384 of them (<code>context-pack/server.js:38-60</code>,
+<code>:506-512</code>). A credential past byte 16,384, or in any
+qualifying file over 64 KB, is not seen, and the report says nothing
+about having read a prefix. The directory walk is capped at depth 6.
+<code>isGitTracked</code> returns <code>true</code> when a path has no
+<code>git status --porcelain</code> entry — "assume tracked if no
+status" (<code>:453-457</code>) — which is right for clean tracked files
+and wrong for files inside an untracked directory, since porcelain
+collapses those to the directory name.</p>
+<p><strong>Transcript ingestion is an injection path into durable
+memory</strong>, described in section 2. The role field is read from
+<code>parsed.type || parsed.role || parsed.source</code> and written
+into the note body as text; nothing distinguishes a line the user typed
+from a line a fetched web page contributed.</p>
+<p><code>audit_log</code> and <code>human_review</code> are withheld
+with no near-miss to report: there is no mutation record of any kind,
+and <code>memory_dedup</code> — which does the right thing by emitting
+<code>suggested merge</code> lines and never deleting
+(<code>project-memory/server.js:672-691</code>) — is advisory prose
+returned to the same agent that holds <code>memory_delete</code>. A
+suggestion the requester can act on unilaterally is not a review
+gate.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>285 assertion calls across 113 cases in 13 committed test
+files</strong>, twelve of which <code>run-tests.mjs</code> executes —
+four server suites and eight top-level ones.
+<code>project-memory/test.rerank.mjs</code> is the thirteenth, and no
+runner reaches it: the server loop runs
+<code>&lt;server&gt;/test.mjs</code> by exact name and
+<code>EXTRA_TESTS</code> only globs <code>tests/</code>, so its three
+assertions are committed and never executed. The suite runs against a
+hand-rolled harness (<code>_testkit/harness.mjs</code>, 133 lines) that
+spawns each server and speaks MCP to it. These are integration tests
+through the real tool surface, which is the right level, and CI runs
+them on Node 18, 20 and 22 with a separate tarball smoke job that
+installs the package and checks every binary reports the manifest's
+version.</p>
+<p><strong><code>negative_eval</code> is earned, and it is not
+vacuous.</strong> <code>devjournal/test.mjs:112-115</code> logs
+<code>Set up auth</code> as type <code>done</code> and
+<code>Refresh undecided</code> as type <code>blocker</code>, queries
+<code>journal_timeline</code> with <code>type: blocker</code>, and
+asserts the blocker present and the done entry absent. The control is at
+<code>:120</code>, where <code>journal_search</code> asserts the same
+excluded entry is still retrievable — so the absence is the filter and
+not an empty store. Two more carry the same shape:
+<code>memory_dedup suggests merges without deleting notes</code>
+(<code>project-memory/test.mjs:444-450</code>) asserts the suggestion
+text present and <code>Deleted note</code> absent, and the delete case
+at <code>:475-477</code> asserts a removed id absent from a list
+populated by earlier saves in the same file.</p>
+<p><strong>The test runner's discovery and execution disagree about the
+working directory.</strong> <code>EXTRA_TESTS</code> is built from
+<code>fs.existsSync("tests")</code> and
+<code>fs.readdirSync("tests")</code> — relative to
+<code>process.cwd()</code> — and each result is then run as
+<code>path.join(__dirname, t)</code> (<code>run-tests.mjs:13-14</code>,
+<code>:39</code>). Invoked from the repository root, as CI does, both
+agree and all eight top-level suites run. Invoked from anywhere else,
+discovery finds nothing, the eight suites are silently skipped, the
+summary prints only the four server rows, and the process exits 0. The
+failure is a green run that asserted about half of what it appears
+to.</p>
+<p><strong>The clean-restore test cannot see the defect in section
+9.</strong> <code>checkpoint/test.mjs</code> seeds a fixture of exactly
+two small text files (<code>src/a.txt</code>, <code>README.md</code>,
+<code>:12-14</code>) and asserts at <code>:47-53</code> that a
+<code>clean</code> restore reverts a modification, restores a deletion
+and removes a new file. Each assertion holds. The fixture contains no
+binary, nothing over 2 MB and nothing near 4,000 files — that is,
+nothing <code>create()</code> would skip — so the case is green against
+code that deletes every skipped file. It asserts the outcome on inputs
+chosen so the mechanism cannot misbehave.</p>
+<p><strong>The published pass count is a count of the tree, not of a
+run.</strong> <code>docs/ROADMAP.md:17</code> claims <em>"113 / 113 unit
+test (100% PASS)"</em> and <code>CHANGELOG.md:7</code> repeats
+<em>"113/113 unit tests pass"</em>. There are exactly 113
+<code>it(</code> cases in the tree — and <code>run-tests.mjs</code> can
+reach only 111 of them, because the two in
+<code>project-memory/test.rerank.mjs</code> are in the file no runner
+lists. The denominator was counted from the files rather than taken from
+a run.</p>
+<p>More to the point, none of those 113 cases touches the three tools
+release 3.5.0 is named after: searching every test file for
+<code>import_session</code>, <code>dense_brief</code> and
+<code>standup</code> returns nothing. The suite reports 100% while three
+advertised tools throw, because passing was never a claim about them.
+That is not a gate that cannot fail — it is coverage that stops short of
+exactly what the version number is about, which is the more ordinary and
+more common failure.</p>
+<p><strong>No paper, no benchmark, no committed result.</strong> A
+case-insensitive search of the tree for <code>arxiv</code>,
+<code>bibtex</code>, <code>@article</code>, <code>@misc</code>,
+<code>citation</code> and <code>doi</code> returns nothing; there is no
+<code>CITATION.cff</code>; and the single occurrence of
+<code>benchmark</code> is a non-goal in a design document
+(<code>docs/superpowers/specs/2026-06-15-provider-chain-v1-1-design.md:87</code>).
+The README's claim that <code>journal_compress</code> cuts token costs
+by about 90 percent has no measurement in the repository, and the
+function that would produce one accepts a token budget it never
+reads.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Make cross-scope reads a different tool, not a
+flag.</strong> <code>memory_recall</code> is per-project and
+<code>memory_global_recall</code> crosses the vault. A caller cannot
+widen the scope by omitting an argument or passing <code>null</code>; it
+has to name a different tool, which is visible in a transcript and in a
+tool allowlist. This is cheaper than a scope column and gets much of the
+benefit.</li>
+<li><strong>Let the dedup pass suggest and refuse to act.</strong>
+<code>memory_dedup</code> emits <code>suggested merge</code> lines with
+a score and named reasons — title match, Jaccard body overlap,
+link-neighbourhood overlap — and deletes nothing. A committed test
+asserts the absence of <code>Deleted note</code> from its output.
+Automatic merging of memories is a good way to lose the one that was
+right.</li>
+<li><strong>Keep the store openable.</strong> Markdown with YAML
+frontmatter, JSON indexes, JSONL journals, content-hashed blobs. Every
+failure mode in this report is diagnosable with <code>cat</code>, and
+every one of them is repairable by hand. Systems in this corpus that
+wrap the same amount of behaviour in a database buy concurrency and lose
+that.</li>
+<li><strong>Report what the snapshot declined to take.</strong> The
+inverse of the defect here. <code>create()</code> already computes
+<code>skipped</code>; the fix to the data-loss path is to carry the
+skipped set into the manifest and exclude it from <code>added</code> in
+<code>computeDiff</code>, which is a few lines and turns a destructive
+operation into a correct one.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>A destructive operation whose input set is the complement of
+a lossy capture.</strong> <code>clean</code> deletes what the snapshot
+does not contain, and the snapshot is allowed to not contain things for
+reasons unrelated to when the file appeared. Any time a revert is
+defined as "remove what is not in the backup", the backup's exclusion
+rules become deletion rules.</li>
+<li><strong>A caller-settable creation timestamp as the only time
+field.</strong> Accepting a backdate is defensible when importing
+history; making it the sole temporal field, with no recorded write time,
+means a wrong or adversarial value cannot be detected or undone.</li>
+<li><strong>String interpolation into <code>execSync</code> with a
+filename.</strong> Every other shell call in
+<code>context-pack/server.js</code> passes a constant command and a
+<code>cwd</code>.</li>
+<li><strong>One <code>try</code> around a whole parse loop.</strong> A
+single malformed JSONL line reporting as "no entries" is worse than an
+error, because the caller acts on it.</li>
+<li><strong>Naming a hashed bag of trigrams an embedding.</strong> The
+technique is fine and the honesty cost is zero — calling it fuzzy
+lexical matching would describe it accurately and still sell the
+feature.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a solo developer working in one repository at a time on a
+personal machine, who wants a memory they can read in a text editor and
+who will not be running <code>checkpoint_restore</code> with
+<code>clean: true</code> on a project containing images or databases.
+The maintenance budget is genuinely low: no database to migrate, no
+service to keep up, one dependency.</p>
+<p>It does not suit shared or multi-tenant use, and the reason is
+structural rather than a missing feature. Scoping is an argument, not a
+predicate; there is no audit record; and the auto-indexer reads chat
+transcripts into durable memory with no provenance marker. A second
+person, or a second agent with different trust, has nothing to rely on.
+Nor does it suit anyone who needs to know what a memory used to say —
+there is no supersession and no deletion record, so the only history is
+the one the filesystem happens to keep.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Three declared tools have no implementation</strong> —
+<code>memory_import_session</code>, <code>pack_dense_brief</code>,
+<code>journal_standup</code>. They reach every client's tool list, are
+announced as done in the CHANGELOG and the roadmap, and throw when
+called. An agent that picks one from its menu gets an error, not a
+fallback.</li>
+<li><strong>Data loss on
+<code>checkpoint_restore({ clean: true })</code></strong> for every
+binary file, every file over 2 MB, and every file past the 4,000 cap.
+Highest-severity finding in this report.</li>
+<li><strong>Silent snapshot truncation at 4,000 files</strong>, with no
+counter and no message. A large project is checkpointed in part and the
+operator is told <code>Files stored: 4000</code> with no indication that
+more existed.</li>
+<li><strong>Shell metacharacters in filenames reach
+<code>execSync</code></strong> through <code>pack_audit</code>.</li>
+<li><strong>Chat transcripts become durable memories on a keyword
+match</strong>, carrying no provenance and no status, and are recalled
+alongside deliberate notes.</li>
+<li><strong><code>memory_auto_index</code> appends duplicates on every
+run</strong> and re-derives notes that were deliberately deleted.</li>
+<li><strong>The whole journal reads as empty</strong> if one line of
+<code>log.jsonl</code> fails to parse.</li>
+<li><strong>Five manifests declare
+<code>@modelcontextprotocol/sdk</code> as <code>^1.0.0</code> with no
+lockfile</strong> anywhere in the tree, so an install resolves whatever
+the registry offers that day.</li>
+<li><strong>The secret scanner's prefix read and depth-6 walk are not
+disclosed</strong> in its own output, so a clean <code>pack_audit</code>
+is weaker evidence than it appears.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the shape, not the code. The file layout — a note per file
+with frontmatter, one JSON index per project, wikilinks resolved at save
+time — is a sound design for a single-user agent memory and takes an
+afternoon to reimplement with the corrections in section 11. What a
+reader would be adopting along with the code is a checkpoint
+implementation with a destructive bug, a retrieval path whose offline
+mode is lexical under a semantic name, and a scoping model that is an
+argument.</p>
+<p>If the goal is a vault an agent can write into and a human can read,
+this is a good worked example to read first and a poor one to depend on
+unmodified. If the goal is memory that several agents or people share,
+the absent status field is not a gap to fill but a different design.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is the 4,000-file cap in <code>walk()</code> intended as a
+performance bound or a storage bound? It is enforced with
+<code>break</code> inside the per-directory loop, so the recursion
+continues to traverse the rest of the tree after the cap is reached,
+doing no work. Either the cap or the traversal appears to be
+unintended.</li>
+<li><code>findGlobalCandidates</code>
+(<code>project-memory/global-index.js:33</code>) is exported and has no
+caller in the tree; the only other occurrences are in the design
+document that specified it
+(<code>docs/superpowers/plans/2026-06-18-v1-5-0-knowledge-graph.md:290</code>,
+<code>:343</code>, <code>:366</code>). It implements a cheaper
+cross-project filter than the one <code>globalRecall</code> actually
+runs. Whether it was superseded or never wired is not recoverable from
+the tree.</li>
+<li>The vault default in code (<code>~/.ai-shared-memory/vault</code>)
+and the one in the module header (<code>~/.codex/memories/vault</code>)
+disagree. Which is canonical matters to anyone migrating an existing
+vault.</li>
+<li><code>memory_import_session</code> is registered at
+<code>project-memory/server.js:439</code> and
+<code>backfill-sessions-v2.mjs</code> exists at the root; what
+relationship they have to the auto-indexer's transcript path was not
+traced.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project-memory/server.js</code></td>
+<td>931 lines; 16 tools, the vault, the index, recall and global
+recall</td>
+</tr>
+<tr>
+<td><code>project-memory/auto-indexer.js</code></td>
+<td>git log, mtimes and chat-transcript scraping into notes</td>
+</tr>
+<tr>
+<td><code>project-memory/local-embed.js</code></td>
+<td>the 384-bucket word-and-trigram hash vector</td>
+</tr>
+<tr>
+<td><code>project-memory/global-index.js</code></td>
+<td>cross-project note loading; <code>findGlobalCandidates</code> has no
+caller</td>
+</tr>
+<tr>
+<td><code>project-memory/dedup.js</code></td>
+<td>Jaccard-based duplicate scoring, suggestion only</td>
+</tr>
+<tr>
+<td><code>project-memory/graph.js</code></td>
+<td>wikilink resolution and backlinks</td>
+</tr>
+<tr>
+<td><code>checkpoint/server.js</code></td>
+<td>318 lines; snapshot, diff, restore, and the <code>clean</code>
+path</td>
+</tr>
+<tr>
+<td><code>context-pack/server.js</code></td>
+<td>747 lines; briefings, impact, guard, telemetry, audit</td>
+</tr>
+<tr>
+<td><code>devjournal/server.js</code></td>
+<td>415 lines; timeline, handoff, resume, standup</td>
+</tr>
+<tr>
+<td><code>devjournal/compress.js</code></td>
+<td>fixed-count truncation with an unread token budget</td>
+</tr>
+<tr>
+<td><code>lib/init-wizard.js</code></td>
+<td>writes MCP entries into six clients' configuration files</td>
+</tr>
+<tr>
+<td><code>run-tests.mjs</code></td>
+<td>the runner whose discovery is CWD-relative</td>
+</tr>
+<tr>
+<td><code>_testkit/harness.mjs</code></td>
+<td>133-line MCP client and assertion harness</td>
+</tr>
+<tr>
+<td><code>docs/superpowers/</code></td>
+<td>10 design documents; specs and plans, including features not in the
+tree</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li>Searched the tree case-insensitively for <code>arxiv</code>,
+<code>bibtex</code>, <code>@article</code>, <code>@misc</code>,
+<code>citation</code> and <code>doi</code> with one
+<code>grep -rinE</code> excluding <code>.git</code> — no match, and no
+<code>CITATION.cff</code>.</li>
+<li><code>grep -rinE "benchmark|locomo" . --exclude-dir=.git</code> —
+one match, a non-goal line in a design document.</li>
+<li><code>grep -rn "findGlobalCandidates" . --exclude-dir=.git</code> —
+four matches: the definition and three lines of the design
+document.</li>
+<li><code>find . -name "*.js" -o -name "*.mjs" | xargs wc -l</code> —
+7,369 lines across 50 files.</li>
+<li>A scan of every <code>function</code> declaration for destructured
+defaults unreferenced in the body returned <code>dryRun</code> in
+<code>auto-indexer.js</code> and <code>maxTokens</code> in
+<code>compress.js</code>. It does not cover class methods.</li>
+<li><code>grep -rn "import_session\|importSession\|dense_brief\|denseBrief\|standup" . --exclude-dir=.git</code>
+— thirteen matches, every one a <code>tools/list</code> declaration, a
+CHANGELOG entry or a roadmap line. None is an implementation.</li>
+<li>A full inventory of the four servers' methods
+(<code>grep -rn "^  async [a-zA-Z]*" */server.js</code>, 50 distinct
+names) contains nothing that implements those three tools.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-21</strong> — <a
+href="https://github.com/verrysimatupang99/codex-dev-mcp-suite/commit/8a39bce80c9e977c7889df7399ec3f1c4959055d"><code class="commit-id" title="8a39bce80c9e977c7889df7399ec3f1c4959055d">8a39bce8…</code></a>
+— first reading, at version 3.5.1. Screened before reading: 0 auto-run
+surfaces, 0 build-time execution points, 5 unpinned manifests, all
+declaring <code>@modelcontextprotocol/sdk</code> at <code>^1.0.0</code>
+with no lockfile beside them; no <code>.gitattributes</code> and no
+<code>.gitmodules</code> at this commit. Nothing was installed and
+nothing was run — every claim here was read from the source and its
+committed tests, including the test-runner and clean-restore findings,
+which are read from <code>run-tests.mjs</code> and
+<code>checkpoint/test.mjs</code> rather than observed in a run. One
+mark, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
