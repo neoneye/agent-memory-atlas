@@ -139,6 +139,21 @@ weighting rather than by state.
 so old material resurfaces at some rate — the opposite intervention, aimed at
 the same failure of recency-plus-similarity being the only signal.
 
+**[mini-AGI](../../systems/mini-agi/)** carries all three moves on a unit that is
+not text at all, which is why it is worth reading beside the others. Its working
+set is 32 expert weight files chosen per chunk, and `choose_by_demand` refuses to
+swap unless a candidate beats the weakest resident by `margin` (0.10), while
+`dwell_chars` (2,048) makes a newly admitted expert immune to eviction for a
+fixed span — a displacement threshold and a sticky window, under those names, for
+the same reason the prompt-side implementations have them: *"on text that has not
+changed, this settles to no movement at all."* It adds the piece RisuAI supplies
+separately, as a terminating version: a cold-start sweep admits one
+never-resident expert per chunk, in index order, until every expert has had one
+turn, then stops for good — because an expert that has never been resident has
+never trained, so its router row is noise and pure relevance would never elect
+it. The reasoning generalises directly to a memory that ranks on learned
+signals, and the termination is the part to copy.
+
 Absent everywhere else. No extraction-based system in this atlas carries per-unit
 activation state, and several describe the repetition it prevents as a known
 annoyance.

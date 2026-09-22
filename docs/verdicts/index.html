@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 624 reports.</strong></p>
+<p><strong>This page covers all 625 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25497,6 +25497,82 @@ anywhere on the read path, <code>skills_list</code> returns names and
 step counts without the description a human actually wrote, and nothing
 records whether a skill has ever worked — so relevance is a guess over a
 filename, and it degrades silently as the store fills.</li>
+</ul>
+<h3 id="mini-agi"><a
+href="../systems/mini-agi/"><code>mini-agi</code></a></h3>
+<ul>
+<li>Best idea: <strong>delete on staleness and refuse the score that
+looks right</strong>, with the reason written down. <code>prune()</code>
+removes an expert whose weights nothing has admitted to the working set
+inside a trailing survival window, and never reads its gate: <em>"the
+gate is not merely uninformative about whether an expert will be wanted
+again, it is anti-predictive: the smallest gates belong to the busiest
+experts. One that behaves as a sink — chosen constantly, contributing
+little per character — reads as dead on a gate test, while a high-gate
+expert nothing has asked for in hundreds of thousands of segments reads
+as alive."</em> Any memory system choosing between an importance score
+and a last-touched timestamp is making the same decision with less
+evidence.</li>
+<li>Biggest risk: <strong>the write reaches disk on the path documented
+as keeping nothing.</strong> <code>cmd_read</code> prints <em>"not saved
+(pass --save to keep what it learned)"</em>, and calls
+<code>build_paged(wdir, device, args.resident, args.ram_capacity, args.context)</code>
+with five positional arguments, so <code>read_only</code> takes its
+default of <code>False</code> — while that function's own docstring
+warns that <em>"paging an expert in marks it dirty whether or not
+anything touched it, so a plain read would otherwise write expert files
+back under the run."</em> Every displaced expert is handed back with
+<code>dirty=True</code>, and <code>Tiers._trim</code> writes a dirty
+entry out whenever the RAM cache exceeds <code>ram_capacity</code>.
+Inert on a fresh 64-expert model against the shipped
+<code>ram_cache: 96</code>; live on the published one, which the README
+puts at 174–175 experts.</li>
+<li>Most reusable component: <code>AutoGrow.step</code> in
+<code>minagi/pool.py</code> — capacity is added only when four
+conditions hold in the pool plus a fifth the reader supplies, and every
+refusal produces a one-line reason that is printed and logged
+(<code>"50 experts are still inside their trial, of 50 allowed at once - the last additions have not been judged yet"</code>).
+All five are wired and all five are engaged by the shipped config. It is
+what a memory system's write admission control should look like and
+almost never does.</li>
+<li>Second risk: <strong>the two surfaces gate persistence in opposite
+directions.</strong> <code>serve.py</code> learns from every chat
+exchange and writes the weights directory every eight optimiser steps
+unless <code>--no-learn</code> is passed; <code>train.py read</code>
+keeps nothing unless <code>--save</code> is. The surface a person types
+personal facts into is the opt-out one. And the forgetting check the
+reader prints — <em>"reading this cost ground on the held-out set - that
+is what forgetting looks like, measured rather than assumed"</em> — runs
+after the model has already been changed and does not gate the
+save.</li>
+<li>Maturity impression: MIT, about 10,300 lines of Python across 31
+files, with a git history beginning three days before this pin against a
+committed sample log covering 855 evaluations, so the tree considerably
+predates the repository. No marks, and <code>capabilities: ""</code> is
+the whole answer: there is no scope key anywhere in the tree, no
+epistemic status on anything, no record of what was read, no tombstone
+and no test — <code>git ls-files</code> matching <code>test</code>,
+<code>spec</code> or <code>eval</code> returns nothing, and a grep for a
+line beginning <code>assert</code>, <code>def test_</code>,
+<code>import pytest</code> or <code>import unittest</code> returns
+nothing. Five <code>tools/*.py</code> are cited in source comments as
+guards and none is committed, including the script behind the forgetting
+table the README calls <em>"the measurement the whole design rests
+on"</em>.</li>
+<li>Study when: you are weighing whether to put any part of a memory
+into weights. This is the clean case — no document store, no adapter
+versioning, no retrieval over text — so every consequence of the choice
+shows up undiluted, and sections 5, 7 and 9 of the report are the
+argument against weight-resident correctable memory made from an
+implementation rather than from first principles.</li>
+<li>Do not copy when: anything you store might have to be named again.
+There is no unit below the whole model, so a correction has nothing to
+address, a deletion request is answered by retraining from a corpus you
+were asked to destroy, and <code>ingest.py</code> has no filter
+excluding <code>.env</code>, <code>id_rsa</code> or <code>.netrc</code>
+from a directory you point it at — while the project's own
+<code>.gitignore</code> carries a <code># secrets</code> section listing
+exactly those.</li>
 </ul>
         </article>
       </div>

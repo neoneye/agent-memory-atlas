@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A byte-level model that learns by
+taking a gradient step on everything it reads, including your half of
+the conversation, where the store is a directory of weight files and
+nothing written into it can ever be named again.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="mini-AGI — Agent Memory Atlas">
+    <meta property="og:description" content="A byte-level model that
+learns by taking a gradient step on everything it reads, including your
+half of the conversation, where the store is a directory of weight files
+and nothing written into it can ever be named again.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="mini-AGI — Agent Memory Atlas">
+    <meta name="twitter:description" content="A byte-level model that
+learns by taking a gradient step on everything it reads, including your
+half of the conversation, where the store is a directory of weight files
+and nothing written into it can ever be named again.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>mini-AGI — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "mini-AGI",
+      "description": "A byte-level model that learns by taking a gradient step on everything it reads, including your half of the conversation, where the store is a directory of weight files and nothing written into it can ever be named again.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Continual learning as the only memory</p>
+          <h1>mini-AGI</h1>
+          <p class="document-deck">A byte-level model that learns by
+taking a gradient step on everything it reads, including your half of
+the conversation, where the store is a directory of weight files and
+nothing written into it can ever be named again.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/volotat/mini-AGI">
+              <span>Source</span>
+              <strong>volotat/mini-AGI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/volotat/mini-AGI/commit/201852d3cf40c7471ecf4a7ee91311c9c69e7b15" title="201852d3cf40c7471ecf4a7ee91311c9c69e7b15">
+              <span>Analyzed revision</span>
+              <code>201852d3…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-22</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/volotat--mini-AGI" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>volotat--mini-AGI</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>mini-AGI is a byte-level language model that trains from scratch on
+one 8 GB card and never stops training. It is MIT-licensed, about 10,300
+lines of Python across 31 files, and its git history begins on 19
+September 2026 — three days before this pin — while
+<code>runs/samples.txt</code> carries 855 evaluations over 409 million
+characters, so the tree is considerably older than the repository that
+holds it.</p>
+<p>It is in this atlas because of what it does with a conversation.
+<code>serve.py</code> is a Flask chat server; when a reply finishes,
+<code>remember(user_text, bot_text)</code> marks the exchange up in the
+corpus's own <code>&lt;user&gt;</code>/<code>&lt;bot&gt;</code> form and
+feeds it to a <code>LiveLearner</code>, which takes an AdamW step for
+every 2,048 characters of stream and writes the weights directory back
+to disk every eight steps. The page calls that counter <strong>long-term
+memory</strong>, and the description is exact: there is no store beside
+the weights, no record of the exchange, and no path by which anything
+learned can later be named.</p>
+<p>That makes it the second system here whose memory <em>is</em>
+weights, after <a href="../second-me/">Second Me</a> — and a stricter
+case than that one, because Second Me keeps the documents in SQLite
+beside the model and can at least delete the row. Here the granularity
+problem the atlas sets out under <a
+href="../../compare/#weights-as-memory-at-adapter-granularity">weights
+as memory</a> arrives in its pure form: the unit of identity is the
+whole model, a correction has nothing to name, and the only deletion in
+the system removes an expert because <em>nothing routed to it
+lately</em>, which is a statement about capacity and not about
+truth.</p>
+<p>The surprise is that the machinery around that store is memory-system
+machinery, built carefully and for the right reasons. There are three
+tiers with an LRU between them; a retrieval step that scores a
+per-expert key vector against the hidden states of the text just read,
+with hysteresis so the working set does not churn; a growth rule with
+five brakes, all five wired and all five engaged by the shipped config;
+and an eviction rule that deliberately refuses to read the gate, with
+the reason written down — <em>the smallest gates belong to the busiest
+experts</em>, so a gate test deletes the sink and spares the dead. Read
+as a capacity manager this is a good design. Read as a memory it has no
+scope, no trust state, no audit of what was read, no test, and no
+delete.</p>
+<p>Two findings matter more than the rest, and both are about a write
+reaching disk when the operator has been told it will not.
+<code>python3 train.py read ~/notes</code> is documented as <em>"a dry
+read - nothing kept"</em>, and <code>cmd_read</code> calls
+<code>build_paged(wdir, device, args.resident, args.ram_capacity, args.context)</code>
+positionally, so <code>read_only</code> takes its default of
+<code>False</code> whatever <code>--save</code> says — while
+<code>build_paged</code>'s own docstring warns that <em>"paging an
+expert in marks it dirty whether or not anything touched it, so a plain
+read would otherwise write expert files back under the run."</em> And
+<code>serve.py</code> learns and saves by <strong>default</strong>;
+<code>--no-learn</code> is the opt-out. The surface an engineer runs
+deliberately asks permission to persist; the surface into which a person
+types personal facts does not.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory here is created by being read. There is no extraction step,
+no candidate state, and no moment at which a claim becomes a belief —
+the gradient step <em>is</em> the transition, and it happens to every
+character equally.</p>
+<p>What follows from that is the whole epistemic shape of the system. A
+fact the model was told is indistinguishable at rest from a fact it
+inferred, from a sentence it hallucinated in its own reply and then read
+back, and from the contents of a <code>.env</code> file that happened to
+be under a directory somebody pointed it at. <code>minagi/live.py</code>
+says so in its own header: <em>"Learning from a conversation is learning
+partly from the model's own output"</em>, and the file goes on to record
+that an earlier, denser variant cost about +0.65 nats on held-out
+against +0.02 for real documents of the same length, and that whether
+the current regime still costs anything is <em>"UNKNOWN and would have
+to be measured."</em> That is an honest statement of an unmeasured risk,
+and it is also the admission that the write path cannot tell the model's
+own invention from evidence.</p>
+<p>Forgetting has two meanings here and neither is the one a memory
+system needs. The first is catastrophic forgetting, which the project
+measures and mitigates: running the trunk at 0.1x the experts' learning
+rate takes the damage from reading half a million characters of one
+subject from +2.2300 nats on the seven unread subjects to +0.0067. The
+second is expert pruning, which deletes a file from
+<code>weights/experts/</code> when nothing has admitted it to the card
+inside the survival window. Neither can be aimed. You cannot forget a
+sentence; you can only fail to route to a region of parameters for long
+enough that the region is deleted, taking whatever else it held.</p>
+<p>The one real gate in the design is persistence, and it is placed
+inconsistently. In-process the model is mutated immediately and
+unconditionally; what <code>--save</code> controls is whether
+<code>weights_store.save</code> runs. In <code>cmd_read</code> that gate
+also holds off growth and pruning, for a stated reason — a dry read that
+pruned would leave the directory naming expert files that were no longer
+there. The forgetting check it prints at the end (<em>"reading this cost
+ground on the held-out set - that is what forgetting looks like,
+measured rather than assumed"</em>) is printed <strong>before</strong>
+the save and does not gate it: the operator decided at the command line,
+before the evidence existed.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Every path into mini-AGI's memory is a gradient step on raw text, and the only exits are an untargetable expert deletion and the survival of a region nobody routed to; the three points where a write reaches disk are marked, one of them on the path documented as keeping nothing.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Every path into mini-AGI&#39;s memory is a gradient step on raw text, and the only exits are an untargetable expert deletion and the survival of a region nobody routed to; the three points where a write reaches disk are marked, one of them on the path documented as keeping nothing.
+flowchart TD
+  CHAT[&quot;Chat exchange&lt;br/&gt;serve.py remember()&quot;] --&gt; STREAM
+  FILES[&quot;A directory of files&lt;br/&gt;train.py read&quot;] --&gt; STREAM
+  CORPUS[&quot;A packed corpus&lt;br/&gt;train.py stream&quot;] --&gt; STREAM
+  STREAM[&quot;One character stream&lt;br/&gt;buf trimmed to context&quot;]
+  STREAM --&gt; STEP{&quot;pending &gt;= chunk&lt;br/&gt;2,048 characters&quot;}
+  STEP -- &quot;no&quot; --&gt; STREAM
+  STEP -- &quot;yes&quot; --&gt; GRAD[&quot;AdamW step&lt;br/&gt;trunk at 0.1x, experts at 1x&quot;]
+  GRAD --&gt; VRAM[&quot;Resident experts mutated&lt;br/&gt;in VRAM&quot;]
+  VRAM --&gt; DIRTY[&quot;Displaced expert parked&lt;br/&gt;tiers.put(dirty=True)&quot;]
+  DIRTY --&gt; TRIM{&quot;RAM cache over&lt;br/&gt;ram_cache = 96?&quot;}
+  TRIM -- &quot;yes&quot; --&gt; DISK[(&quot;weights/experts/eNNNNN.npz&lt;br/&gt;written back&quot;)]
+  TRIM -- &quot;no&quot; --&gt; HOLD[&quot;Held in RAM,&lt;br/&gt;lost on exit&quot;]
+  GRAD --&gt; GATE{&quot;persistence gate&quot;}
+  GATE -- &quot;serve.py: default ON&lt;br/&gt;every 8 steps&quot; --&gt; DISK
+  GATE -- &quot;read: --save only&quot; --&gt; DISK
+  GATE -- &quot;read: no --save&quot; --&gt; NOTE[&quot;Manifest untouched —&lt;br/&gt;but read_only was never passed&quot;]
+  NOTE -.-&gt; DISK
+  DISK --&gt; PRUNE{&quot;nothing routed here&lt;br/&gt;for survival_chars?&quot;}
+  PRUNE -- &quot;yes&quot; --&gt; DEL[&quot;os.remove — permanent,&lt;br/&gt;and not aimed at any fact&quot;]
+  PRUNE -- &quot;no&quot; --&gt; KEEP[&quot;Kept. No other exit exists:&lt;br/&gt;no delete, no correction,&lt;br/&gt;no record of what was read&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>Standing it up costs a CUDA card with 8 GB, Python 3.10 or newer, and
+four packages the README names in prose —
+<code>torch numpy pyyaml matplotlib</code> — because there is no
+dependency manifest in the tree at all. <code>screen_repo.py</code>
+reports <strong>NOTHING SCANNED</strong>, and reading the tree by hand
+explains it rather than contradicting it: 45 committed files, no
+<code>requirements.txt</code>, no <code>pyproject.toml</code>, no
+<code>setup.py</code>, no lockfile, no Makefile, no
+<code>.github/workflows</code> (only a <code>FUNDING.yml</code>), no
+<code>.gitattributes</code> and no <code>.gitmodules</code>. The
+reference environment is named in prose as torch 2.6.0+cu124 with numpy
+1.24.4, which is a pin a reader can act on and not one a tool can
+check.</p>
+<p>The store is a directory, and <code>minagi/store.py</code> opens by
+saying so: <em>"The weights directory IS the model."</em> It holds
+<code>manifest.json</code>, <code>core.npz</code> (embeddings,
+attention, norms, halting head), <code>routers.npz</code>,
+<code>optim.npz</code>, and <code>experts/eNNNNN.npz</code> — one file
+per expert, each carrying <code>w1</code>, <code>w3</code>,
+<code>w2</code> and that expert's own Adam moments. Only experts are
+split out, because an expert is the unit that is paged, grown and
+pruned. Writes are atomic: every file is written to a <code>.tmp</code>
+and renamed. There is exactly one copy — <code>store.py</code>'s
+<code>best_val</code> states the reason, that a snapshot <em>"would
+double a figure that is already 236 MB and grows with the pool"</em> —
+so the directory is both the live model and the only fallback.</p>
+<p>Three tiers sit above it, in <code>minagi/paged.py:48</code>
+(<code>Tiers</code>): disk holds the whole pool, an
+<code>OrderedDict</code> keeps <code>ram_cache</code> experts as CPU
+tensors with true LRU eviction, and <code>resident</code> slots hold the
+working set on the card. Config defaults are 32 resident, 96 in RAM,
+growing from 64 experts with a 10 GB disk ceiling — about 397 experts at
+25.2 MB each.</p>
+<p>Two entry points write to it. <code>serve.py</code> (907 lines) is a
+Flask app on 127.0.0.1 with a server-sent-events chat endpoint.
+<code>train.py</code> (2,294 lines) carries four subcommands, of which
+<code>read</code> is the one the project runs and <code>stream</code> is
+the same mechanism pointed at a packed corpus. <code>minagi/</code> is
+the model: <code>paged.py</code> (1,124) is the pool and the paging,
+<code>pool.py</code> (823) the dense pool and <code>AutoGrow</code>,
+<code>recur.py</code> (655) the recurrent block and the loaders,
+<code>stream.py</code> (491) the corpus reader, <code>store.py</code>
+(451) persistence, <code>plasticity.py</code> (358) the learning-rate
+controller, <code>live.py</code> (190) the live learner,
+<code>ingest.py</code> (151) the file walker.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>A chat turn becomes memory.</strong>
+<code>serve.py:383</code> <code>api_chat</code> builds the prompt from
+the message list, streams the reply under a process-wide
+<code>LOCK</code>, and on completion calls <code>serve.py:343</code>
+<code>remember(last_user, "".join(reply))</code>. That calls
+<code>minagi/live.py</code> <code>exchange_text</code> to wrap the turn
+in <code>&lt;user&gt;</code>/<code>&lt;bot&gt;</code> markers — the same
+markup the chat corpus uses — and hands it to
+<code>LiveLearner.feed</code>. Only this turn goes in; the prompt
+already carried the conversation, so re-feeding it would re-read the
+earliest turns once per exchange.</p>
+<p><strong>A step.</strong> <code>LiveLearner.feed</code> appends
+character ids to <code>self.buf</code>, and every time
+<code>pending</code> reaches <code>chunk</code> it trims
+<code>buf</code> to the last <code>context</code> characters and calls
+<code>_step</code>. <code>_step</code> runs the forward on
+<code>ids[:-1]</code> predicting <code>ids[1:]</code>, clips the
+gradient to 1.0, and steps an AdamW with two parameter groups —
+<code>trunk</code> at <code>lr * trunk_lr_mult</code> and
+<code>pool</code> at <code>lr</code>. The whole exchange is about ninety
+characters against a default chunk of 2,048, so roughly twenty-odd turns
+pass before the first optimiser step; <code>serve.py</code> reports
+<code>pending</code> and <code>chunk</code> on every reply because
+<em>"silence there is indistinguishable from learning being
+broken."</em></p>
+<p><strong>Persistence.</strong> After each step <code>remember</code>
+checks <code>learner.due_to_save()</code> —
+<code>unsaved &gt;= save_every</code>, default 8 — and calls
+<code>LiveLearner.save</code>, which delegates to
+<code>store.save</code>. For a paged pool that routes to
+<code>_save_paged</code>: <code>pool.flush()</code> parks every resident
+expert and writes everything dirty, then core, routers and optimiser
+bundles are written and the manifest is rebuilt around whatever files
+exist. There is no validation gate on this path. The <code>stream</code>
+subcommand advances the directory only when held-out improves
+(<code>train.py:311</code>, <code>if val &lt; best</code>); the live and
+<code>read</code> paths write on a timer.</p>
+<p><strong>A file read.</strong> <code>train.py:557</code>
+<code>cmd_read</code> collects paths through
+<code>minagi/ingest.py</code> <code>collect</code>, which walks each
+argument, skips a fixed set of directory names and any directory whose
+name starts with <code>.</code>, and then decides text-or-binary by
+sampling 4,096 bytes and requiring valid UTF-8, no NUL byte and over 90%
+printable characters. Each file is read beginning to end, because <em>"a
+document has an order."</em> The loop is the same chunk-and-step
+mechanism, with growth and pruning attached every
+<code>grow_every</code> steps and checkpoints on a timer.</p>
+<p><strong>Deletion.</strong> <code>paged.py:900</code>
+<code>prune(step, survival, protect)</code> walks the pool, keeps
+anything resident, anything younger than <code>survival</code> and
+anything addressed inside the trailing window, and for everything else
+calls <code>os.remove</code> on the expert file, drops it from RAM and
+from the dirty set, then reindexes the gate, the telemetry vectors, the
+segment router and every call-site router. Files are named by
+<code>uid</code>, never by position, so pruning never renames
+anything.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>There are two units and neither is a memory.</p>
+<p>The <strong>expert</strong> is a file. <code>manifest.json</code>
+describes each one with <code>id</code>, <code>file</code>,
+<code>params</code>, <code>bytes</code>, <code>moments</code> and
+<code>gate</code>, and the pool carries eight parallel tensors beside
+it: <code>use</code>, <code>age</code>, <code>born</code>,
+<code>gate_seen</code>, <code>last_seen</code>, <code>ever</code>,
+<code>since</code>, <code>admits</code>, plus <code>uid</code> and a
+<code>keys</code> matrix. <code>born</code> is the step an expert
+joined; <code>last_seen</code> is the segment anything last wanted it;
+<code>since</code> is when it was admitted to the card;
+<code>ever</code> is whether it has been resident at all. All of these
+are transaction time in the bi-temporal sense — when the system did
+something — and there is no second axis anywhere, because there is no
+fact whose validity could begin before the model read it.</p>
+<p>The <strong>character stream</strong> is the other unit, and it is
+not persisted. <code>LiveLearner</code> holds <code>buf</code>, trimmed
+to the context window, and it dies with the process; what survives is
+the delta the stream left in the weights. Nothing in the tree records
+which file, which conversation or which sentence produced any part of
+that delta. The closest artifact is
+<code>runs/expert_history.jsonl</code>, appended once per checkpoint by
+<code>train.py:935</code> <code>log_history</code> with the pool's full
+telemetry, and <code>runs/history.jsonl</code>, appended by the
+<code>stream</code> subcommand with typed events — <code>start</code>,
+<code>step</code>, <code>val</code>, <code>pruned</code>,
+<code>grew</code> (carrying <code>AutoGrow</code>'s refusal reason),
+<code>saved</code>, <code>done</code>. Both are genuinely append-only
+and both are about capacity. A reader with either in hand can say when
+the pool grew and why growth was held; neither can answer what the model
+read, which is the question the <a
+href="../../patterns/append-only-memory-audit/">append-only memory
+audit</a> mark exists for, so it is withheld. <code>runs/</code> is
+gitignored apart from <code>samples.txt</code>, so neither file is in
+the tree to inspect.</p>
+<p>No scope key of any kind exists. A search for <code>user_id</code>,
+<code>session_id</code>, <code>tenant</code>, <code>account</code>,
+<code>auth</code>, <code>login</code> and <code>principal</code> across
+every <code>.py</code> in the tree returns four hits, all of them the
+English word <em>account</em> inside comments. The Flask app has no
+session, and <code>STATE</code> is a module-level dict holding one
+model.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval here selects weights rather than text, and it is the most
+memory-shaped part of the system.</p>
+<p>Before each chunk the pool is asked what the text wants.
+<code>paged.py:479</code> <code>demand(x, sites, top_k)</code> scores
+the whole pool, and its docstring names the mistake it exists to avoid:
+scoring the routers on raw character embeddings <em>"looks reasonable
+and is useless: an embedding carries no context, so every subject asks
+for very nearly the same experts."</em> So demand is scored on the
+hidden states the call sites actually routed on while reading the
+<strong>previous</strong> chunk, sampled as they went and one chunk
+stale by construction — a read cannot see the text it is about to
+predict.</p>
+<p>Two terms are summed. The router term applies each call site's router
+weights to those states plus the depth embedding, softmaxes, and
+accumulates the top-k mass. The key term is a cosine similarity:
+<code>keys</code> holds one normalised vector per expert, the hidden
+states are normalised, and <code>softmax(|h·k| * 8.0)</code> is top-k'd
+into a second tally. The key term is scaled by what an expert has earned
+— its gate relative to the largest, floored at <code>key_floor</code> —
+<em>before</em> the per-character choice rather than after, because
+<em>"discounting the tally would still let an untrained expert win the
+choice and only then be marked down."</em> An expert inside its trial
+window is exempted from that handicap, since the gate it would be judged
+on only moves when it is chosen. Both terms are normalised separately so
+that <em>"where the router has no opinion the key term still
+speaks."</em></p>
+<p><code>choose_by_demand</code> turns the score into a working set with
+two brakes that any retrieval cache would recognise: a candidate must
+beat the weakest evictable resident by <code>margin</code> (0.10) to
+displace it, and a newly admitted expert is safe for
+<code>dwell_chars</code> (2,048). One mechanism is deliberately not
+demand-driven — a terminating cold-start sweep admits exactly one
+never-resident expert per chunk, in index order, until every expert has
+had a turn, and then stops for good, because an expert that has never
+been resident has never trained, so its router row is noise and it could
+never be wanted.</p>
+<p>While generating, <code>serve.py</code> re-chooses every
+<code>reselect_chars</code> (64) and the comment records that the call
+used to pass a single character — <em>"harmless by accident"</em>, since
+<code>demand</code> ignores the tensor it is handed whenever it has
+collected states, which during a reply it always has.</p>
+<p>What none of this does is retrieve a claim. There is no query, no
+result set, no ranking over content, and nothing that could be asserted
+to stay out of one.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Writes block the agent and the lag is zero-to-never.</strong>
+<code>remember</code> runs inside the same <code>LOCK</code> the reply
+stream held, so the chat request does not complete until the step has
+been attempted. The model is different the instant the step lands, so
+there is no retrieval lag in the usual sense. There is also no guarantee
+the write survives: the first twenty-odd exchanges take no step at all,
+and a process killed before <code>save_every</code> steps have
+accumulated loses what was learned since the last save.</p>
+<p><strong>No background pass rewrites the store</strong>, and nothing
+is ever consolidated, summarised or extracted. Growth and pruning run
+inline on the reading loop; the learning-rate controller
+(<code>minagi/plasticity.py</code>) runs at each held-out evaluation.
+This is a real simplification and the project is right to claim it: one
+mechanism, at one granularity, for a book and for a conversation.</p>
+<p>Three things about the write reach disk in ways worth stating
+precisely.</p>
+<p><strong>The chat server persists by default.</strong>
+<code>serve.py</code>'s flag is <code>--no-learn</code>, and its help
+text is the clearest statement of the alternative: <em>"serve without
+learning. The weights are then opened read-only and nothing is written
+back."</em> Absent that flag, <code>ro = not learn</code> is
+<code>False</code>, the pool is opened read-write, and the weights
+directory advances every eight steps.</p>
+<p><strong>The CLI reader does not persist — except that it
+does.</strong> <code>cmd_read</code> prints <em>"not saved (pass --save
+to keep what it learned)"</em> when the flag is absent, and
+<code>--save</code> really does gate <code>weights_store.save</code>,
+growth and pruning. It does not gate the tier writeback.
+<code>cmd_read</code> calls <code>build_paged</code> with five
+positional arguments (<code>train.py:645</code>) and never passes
+<code>read_only</code>, which defaults to <code>False</code> at
+<code>train.py:1799</code>. Every time the working set changes, the
+displaced expert is handed back with
+<code>tiers.put(..., dirty=True)</code> (<code>paged.py:744</code>), and
+<code>Tiers._trim</code> writes a dirty entry to disk whenever the RAM
+cache exceeds <code>ram_capacity</code>. With the shipped
+<code>pool.ram_cache: 96</code> this is inert on a fresh 64-expert model
+and live on the published one, which the README puts at 174–175 experts.
+The condition is <em>pool larger than the RAM cache</em>, and on the
+project's own model it holds.</p>
+<p><strong>A save is not validated on the live path.</strong>
+<code>LiveLearner.save</code> writes unconditionally; only the
+<code>stream</code> subcommand compares against <code>best</code> first,
+and only <code>stream</code> has the divergence recovery that reloads
+the directory and halves the rate. Since there is one copy and no
+snapshot, a chat session that damages the model overwrites the thing it
+would have to be restored from.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>There is no agent, no tool schema and no MCP surface. A
+case-insensitive search for <code>mcp</code>, <code>tool_call</code>,
+<code>function_call</code>, <code>tool_use</code>, <code>openai</code>
+and <code>anthropic</code> across every <code>.py</code>,
+<code>.yaml</code> and <code>.md</code> in the tree returns nothing —
+this model calls no other model, at any point. The integration surface
+is a browser page and a CLI.</p>
+<p><code>serve.py</code> binds 127.0.0.1 by default and exposes
+<code>/api/chat</code> (SSE), <code>/api/state</code>, and a single-file
+HTML page that shows which experts are resident by <code>uid</code>,
+their normalised gates, how far the stream is from its next step, and a
+<strong>long-term memory</strong> counter. <code>uid</code> is what the
+page shows rather than the index, for a reason the code explains:
+pruning renumbers the pool, so the same index means different experts at
+different times.</p>
+<p>The most unusual integration is
+<code>corpora/self_knowledge.yaml</code> — 551 lines of
+question-and-answer pairs about the model's own architecture, templated
+with live values (<code>{ram_cache}</code>, <code>{resident}</code>),
+built into a training lane that the project raised from 0.25% to 12.5%
+of reading. When the served model answers <em>"how do you decide which
+experts to use?"</em>, it is reciting a corpus, not introspecting. This
+is worth naming precisely because it is the shape a reader of a memory
+atlas will misread: the model's account of itself is training data, so
+it can be stale, and nothing checks it against the running system.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Nothing learned can be deleted.</strong> This is the central
+property and it is not a gap in an otherwise complete design — it is
+what the design is. A search for <code>unlearn</code>,
+<code>undo</code>, <code>rollback</code>, <code>revert</code>,
+<code>restore_checkpoint</code> and <code>snapshot</code> across the
+tree returns four things: the <code>stream</code> subcommand's
+divergence recovery, which reloads the single weights directory and
+halves the learning rate; <code>precision.unpack_bf16</code>, whose
+docstring says it undoes the packing; and two comments. None of them can
+reach a fact. The atlas's usual question for a store — what does a
+deletion request reach — has one answer here: the whole model, by
+retraining from scratch, which requires still holding the corpus the
+request asked you to destroy.</p>
+<p><strong>The file reader has no secret filter.</strong>
+<code>ingest._walk</code> skips directories whose name begins with
+<code>.</code>, so <code>~/.ssh</code> and <code>~/.aws</code> are
+passed over when a parent is walked. It does not skip <em>files</em>.
+<code>os.path.splitext(".env")</code> returns an empty extension,
+<code>SKIP_EXT</code> cannot match it, and <code>looks_like_text</code>
+accepts any printable UTF-8 — so a <code>.env</code> sitting beside the
+source in a project directory is read in full, and a file named directly
+on the command line bypasses the hidden-directory rule entirely
+(<code>if os.path.isfile(p): out.append(p)</code>). The project's own
+<code>.gitignore</code> carries a <code># secrets</code> section listing
+<code>.env</code> and <code>.env.*</code>; the reader that trains on
+your disk has no equivalent. In a document store this is a bad
+afternoon. Here it is permanent.</p>
+<p><strong>Self-training is acknowledged and unmeasured.</strong>
+<code>live.py</code> states that the model reads its own argmax back as
+evidence, that a denser earlier variant cost +0.65 nats, that whether
+the current regime still costs anything is unknown, and that a smaller
+learning rate is not the fix — <em>"on the model's own argmax that
+direction is to confirm it; a lower rate confirms it more slowly."</em>
+Naming an unmeasured risk in the source is better practice than most of
+this corpus manages, and it remains unmeasured.</p>
+<p><strong>Where the engineering is genuinely careful.</strong> Adam
+moments travel in the expert's own file, so a paged expert never
+inherits a stranger's momentum. Residency is matched by identity rather
+than by slot position, so a re-sorted demand list does not churn the
+card. Expert files are named by <code>uid</code> so pruning never
+renames. Every write is <code>.tmp</code>-then-rename.
+<code>_save_paged</code> warns when the pool holds experts with no file
+on disk. <code>read_only</code> raises rather than silently skipping if
+a write is attempted. Routers are reallocated rather than reshaped in
+place, with the autograd crash that motivated it recorded in the
+comment. Pruning refuses to empty the pool and keeps the most recently
+wanted expert if every rule would have deleted everything.</p>
+<p><strong>No capability marks.</strong> <code>tombstone</code>,
+<code>bitemporal</code>, <code>scope_enforced</code> and
+<code>negative_eval</code> have no candidate mechanism.
+<code>trust_state</code> is withheld because <code>born</code>,
+<code>last_seen</code>, <code>gate</code> and the derived
+<code>dying()</code> are usage lifecycle, not epistemic status — nothing
+withholds a memory from being treated as true, because nothing
+distinguishes memories. <code>audit_log</code> is withheld on the axis
+question set out in section 5: <code>runs/history.jsonl</code> really is
+a named append-only event record with typed kinds and refusal reasons,
+and every event it records is a mutation of <em>capacity</em>, with no
+path recording what was read. <code>human_review</code> is withheld
+because <code>--save</code> is a flag set before the reading starts
+rather than a state a memory waits in; the forgetting measurement that
+would inform the decision is printed after the model has already been
+changed and does not gate the save; and the surface a person actually
+types into persists without asking.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>There is no test in this repository.</strong>
+<code>git ls-files</code> matching <code>test</code>, <code>spec</code>
+or <code>eval</code> returns nothing, and a grep for a line beginning
+<code>assert</code>, <code>def test_</code>, <code>import pytest</code>
+or <code>import unittest</code> across every <code>.py</code> returns
+nothing. This is not a suite that cannot fail; it is the absence of one,
+and it is worth stating against a codebase whose comments repeatedly
+cite tests as guarantees — <code>serve.py:313</code> says
+<em>"tests/test_sample_routing.py is the guard"</em> over a tree with
+zero files under <code>tools/</code> or <code>tests/</code>.</p>
+<p>The same applies to the analysis tooling. Five distinct
+<code>tools/*.py</code> are cited in source comments —
+<code>birth_probe.py</code>, <code>plot_progress.py</code>,
+<code>capture_routing.py</code>, <code>chess_legality.py</code>,
+<code>plot_routing.py</code> — and the README's data pipeline cites a
+sixth, <code>tools/expand_corpus.py</code>. None are committed. The
+consequence is specific and it bears on the project's headline result:
+the forgetting table that the README calls <em>"the measurement the
+whole design rests on"</em> — +2.5871 nats with the working set frozen,
++2.2300 with swapping at full trunk rate, +0.0067 at 0.1x — is published
+as prose and a PNG, and <strong>the script that produced it is not in
+the tree at this commit</strong>. The raw numbers behind
+<code>assets/mitigations.png</code> and
+<code>assets/probe_massed.png</code> are not committed either. A reader
+cannot recompute any of it from this repository.</p>
+<p>What <em>is</em> committed is <code>runs/samples.txt</code>, 102,872
+lines covering the whole run: per-round held-out loss with its standard
+error, per-subject breakdown, repeat rate, expert count, and two
+readings of nine fixed prompts. It is an unusually honest evaluation
+artifact — the raw greedy reading is always written first, because it
+<em>"is the only one that says what the model predicts"</em>, and the
+repetition guard's reading is labelled as describing the guard. The
+README's variance discipline is the same: it states that the same
+configuration run twice lands about 0.014 apart because expert dispatch
+is non-deterministic on CUDA, and that <em>"about 0.03"</em> is the
+threshold for a real difference rather than the printed standard
+error.</p>
+<p>There is no paper. <code>arxiv</code>, <code>bibtex</code>,
+<code>@article</code>, <code>Citation</code> and <code>doi</code> across
+the tree return a <code>## Citation</code> block naming the repository
+itself and a seventeen-entry reference list of prior work — Shazeer 2017
+for the expert pool, PonderNet for adaptive depth, RoFormer,
+ZeRO-Offload, Chinchilla — which is attribution, not a result. <strong>I
+ran nothing.</strong> Every claim on this page is read from source at
+the pinned commit.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Refuse the metric that is anti-predictive, and write down
+why.</strong> <code>paged.py</code> prunes on staleness and refuses a
+gate term, with the reasoning stated: <em>"the smallest gates belong to
+the busiest experts. One that behaves as a sink - chosen constantly,
+contributing little per character - reads as dead on a gate test, while
+a high-gate expert nothing has asked for in hundreds of thousands of
+segments reads as alive."</em> Every memory system with a decay or
+importance score has this problem in some form, and most of them pick
+the plausible field. The transferable move is the sentence, not the
+metric: name the case where the obvious score is inverted.</p>
+<p><strong>One definition, two thresholds.</strong> Staleness is
+computed once in <code>dying()</code>; the pruner deletes past 1.0 of
+the survival window and the growth brake refuses past
+<code>dying_at</code> (0.65). A single predicate with two cut points
+cannot drift apart the way two predicates do.</p>
+<p><strong>Publish the arms that lost.</strong> The forgetting table
+carries three configurations, two of which are bad, and the README says
+which single config value separates 50.68% from 99.84%. A memory system
+that claims a consolidation or decay policy helps should be able to show
+the same table.</p>
+<p><strong>Make the protection terminate.</strong> The cold-start sweep
+admits one never-resident expert per chunk until every expert has had
+one turn, then stops for good — <em>"no randomness, and no permanent
+tax."</em> Exploration reserves in retrieval usually run forever and
+cost forever.</p>
+<p><strong>Say what a mechanism is not measured on.</strong>
+<code>live.py</code>'s header is a model of this: it names the risk,
+gives the number from the regime that was measured, says the current
+regime is unknown, and says why the obvious mitigation does not work.
+Compare that with the usual alternative of silence.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>A persistence flag that gates the index and not the
+data.</strong> <code>--save</code> gates the manifest, growth and
+pruning; it does not gate the tier writeback, and the default that would
+have (<code>read_only</code>) is one positional argument away from the
+call that needed it. The general shape — a writer and a reader composing
+a safety property separately — is worth checking for wherever a "dry
+run" exists.</p>
+<p><strong>Opt-out persistence on the surface a person talks
+to.</strong> The asymmetry between <code>serve.py</code>'s
+<code>--no-learn</code> and <code>cmd_read</code>'s <code>--save</code>
+is backwards with respect to what each surface receives.</p>
+<p><strong>Citing tests that are not committed.</strong> Five
+<code>tools/*.py</code> and one <code>tests/*.py</code> are named in
+source comments as guards, and none exist at this commit. A comment that
+names a test is a claim a reader will not check.</p>
+<p><strong>A store with one copy and no gate on the write.</strong>
+<code>best_val</code>'s reasoning about disk cost is sound and the
+conclusion — that the directory is both the live model and the fallback
+— means the live path can overwrite its own recovery point.</p>
+<h3 id="fit">Fit</h3>
+<p>This is not a memory system to adopt, and the project does not offer
+it as one. It is worth reading if you are weighing whether to put any
+part of a memory into weights, because it is the clean case: no document
+store, no adapter versioning, no retrieval over text, so every
+consequence of the choice shows up undiluted. Read sections 5, 7 and 9
+together and you have the argument against weight-resident memory for
+anything that must be correctable, made from an implementation rather
+than from first principles.</p>
+<p>As a <em>model</em>, the audience is narrow and well-chosen: one
+person, one card, one machine, data they own, no compliance surface, and
+a willingness to accept that the thing cannot be edited. For that
+audience the design is coherent and the honesty is well above average.
+The moment a second person, a second project or a deletion request
+enters the picture, nothing here transfers — there is no key to add a
+predicate to.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Irreversibility is total.</strong> Anything read is
+unnameable afterwards. There is no per-record delete, no supersession,
+no tombstone, and no way to answer "where did this come from". For a
+personal model on your own hardware that is a stated trade; anywhere
+else it is disqualifying.</li>
+<li><strong>The dry read is not dry on the published model.</strong>
+<code>cmd_read</code> never passes <code>read_only</code>, so a pool
+larger than <code>ram_cache</code> writes trained expert files back
+under a command that prints <em>"not saved"</em>.</li>
+<li><strong>Secrets are read as text.</strong> No filter excludes
+<code>.env</code>, <code>id_rsa</code>, <code>credentials</code> or
+<code>.netrc</code> from <code>train.py read</code>, and a directly
+named file skips even the hidden-directory rule.</li>
+<li><strong>Self-training is a measured risk left unmeasured in the
+current regime</strong>, by the project's own account.</li>
+<li><strong>No tests, on a tree whose comments cite them.</strong>
+Nothing establishes that pruning keeps what it should, that the margin
+prevents churn, or that a reload after a save produces the same model —
+the last of which <code>live.py</code> records as a bug class that has
+already bitten (<em>"the directory then claims the default vocabulary of
+8192 while holding 265, and will not load again"</em>).</li>
+<li><strong>Pruning is permanent and not aimed.</strong>
+<code>prune</code>'s own docstring names the cost: <em>"an expert which
+is genuinely rare rather than dead is deleted, and deletion is
+permanent."</em> With <code>survival_chars</code> at 100 million and the
+run at 409 million characters, the window is wide — but rarity and
+deadness are the same signal to this rule.</li>
+<li><strong>The headline result is not reproducible from the
+tree</strong>, because the script that produced it is not
+committed.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the reasoning, not the code. Nothing here is packaged for
+reuse — no manifest, no public API, no versioning — and the parts that
+are genuinely excellent are decisions rather than modules.</p>
+<p>Three of them transfer directly to an ordinary token-store memory.
+The eviction rule that reads staleness and refuses the
+correlated-but-inverted score is the same shape as choosing between
+"last accessed" and "importance" in a consolidation pass. The growth
+brake with five conditions, each producing a one-line refusal reason
+that is logged, is exactly what a memory system's write admission
+control should look like and almost never does. And the discipline of
+publishing the losing arms beside the winning one is the difference
+between a claim and a measurement.</p>
+<p>The thing not to borrow is the boundary. If any part of your memory
+must be correctable — and the atlas's position is that almost all of it
+must be — then the part that lives in weights needs to be the part
+nobody will ask you to delete, and you need to have said in advance what
+a deletion request will not reach. mini-AGI does not say that, and it is
+the one sentence its README is missing.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li><strong>Does the current live regime cost held-out loss?</strong>
+<code>live.py</code> says it is unknown. The instrument already exists —
+<code>cmd_read</code>'s before/after mixture scoring — and pointing it
+at a chat session rather than a directory would answer it.</li>
+<li><strong>What does the dry-read writeback actually change?</strong>
+The condition is established from the code; the magnitude is not. A run
+on the published 175-expert model with <code>ram_cache</code> at 96
+would show how many expert files a no-save read rewrites.</li>
+<li><strong>Is the cold-start sweep reached before the trial ends on a
+large pool?</strong> <code>choose_by_demand</code> admits one
+never-resident expert per chunk, and <code>prune</code> promises a
+newborn <em>"one fair turn"</em> inside <code>survival</code>. At 397
+experts and one admission per 2,048 characters the sweep takes about
+800,000 characters, well inside a 100-million-character survival window
+— but the two rates are not coupled anywhere, and nothing asserts the
+relationship holds if either config value moves.</li>
+<li><strong>What happens to <code>runs/history.jsonl</code> on the path
+the project runs?</strong> The typed event log lives only in
+<code>stream</code>; <code>read</code> writes periodic telemetry
+snapshots instead. Whether that is deliberate is not recorded.</li>
+<li><strong>Where did the tree come from?</strong> 16 commits since 19
+September 2026 against a sample log covering 855 evaluations. The code
+predates its history, and the <code>tools/</code> directory the comments
+reference presumably exists somewhere it has not been published.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>train.py</code></td>
+<td>2294</td>
+<td>Four subcommands; <code>cmd_read</code> is the documented path,
+<code>cmd_stream</code> the one with the typed event log</td>
+</tr>
+<tr>
+<td><code>minagi/paged.py</code></td>
+<td>1124</td>
+<td><code>Tiers</code>, <code>PagedPool</code>, <code>demand</code>,
+<code>choose_by_demand</code>, <code>prune</code>, <code>flush</code> —
+the whole paging and deletion mechanism</td>
+</tr>
+<tr>
+<td><code>serve.py</code></td>
+<td>907</td>
+<td>Flask chat server, <code>remember</code>, the resident-expert view,
+the long-term-memory counter</td>
+</tr>
+<tr>
+<td><code>minagi/pool.py</code></td>
+<td>823</td>
+<td>The dense pool and <code>AutoGrow</code> with its five brakes and
+refusal reasons</td>
+</tr>
+<tr>
+<td><code>minagi/recur.py</code></td>
+<td>655</td>
+<td>The recurrent block, <code>load_any</code>, <code>load_recur</code>,
+<code>choose_for</code></td>
+</tr>
+<tr>
+<td><code>minagi/stream.py</code></td>
+<td>491</td>
+<td>Corpus reading, interleaving, the held-out evaluator</td>
+</tr>
+<tr>
+<td><code>minagi/store.py</code></td>
+<td>451</td>
+<td>The weights directory: layout, atomic writes,
+<code>_save_paged</code>, <code>best_val</code></td>
+</tr>
+<tr>
+<td><code>minagi/plasticity.py</code></td>
+<td>358</td>
+<td>The learning-rate controller — two weighted fits, effect size over
+t-statistic</td>
+</tr>
+<tr>
+<td><code>minagi/live.py</code></td>
+<td>190</td>
+<td><code>LiveLearner</code>, <code>exchange_text</code>, and the
+unmeasured-risk header</td>
+</tr>
+<tr>
+<td><code>minagi/ingest.py</code></td>
+<td>151</td>
+<td>The file walker and the text/binary decision; no secret filter</td>
+</tr>
+<tr>
+<td><code>config.yaml</code></td>
+<td>161</td>
+<td>Every threshold named above, all five growth brakes engaged</td>
+</tr>
+<tr>
+<td><code>corpora/self_knowledge.yaml</code></td>
+<td>551</td>
+<td>The model's account of itself, as training data</td>
+</tr>
+<tr>
+<td><code>runs/samples.txt</code></td>
+<td>102872</td>
+<td>The whole run's evaluation history — the one committed result
+artifact</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Commands run at the repository root, for the absence claims
+above.</p>
+<pre class="sh"><code># No test exists anywhere in the tree (0 results each).
+git ls-files | grep -iE &#39;test|spec|eval&#39;
+grep -rnE &quot;^\s*(assert|def test_|import pytest|import unittest)&quot; --include=&#39;*.py&#39; .
+
+# No scope key of any kind (4 results, all the English word &quot;account&quot; in comments).
+grep -rniE &quot;\b(user_id|session_id|tenant|account|auth|login|principal)\b&quot; --include=&#39;*.py&#39; .
+
+# No correction, unlearning or snapshot path (the `stream` divergence reload, and nothing else).
+grep -rniE &quot;unlearn|undo|rollback|revert|restore_checkpoint|snapshot&quot; --include=&#39;*.py&#39; .
+
+# Nothing copies the weights directory aside before writing it (0 results).
+grep -rniE &quot;shutil\.copy|backup|\.bak&quot; --include=&#39;*.py&#39; .
+
+# Every tools/*.py cited in a comment, against what is committed (5 cited, 0 present).
+grep -rnoE &quot;tools/[A-Za-z_]+\.py&quot; --include=&#39;*.py&#39; --include=&#39;*.md&#39; . | sort -u
+git ls-files | grep -c &#39;^tools/&#39;
+
+# No dependency manifest, hook, devcontainer or checkout filter (0 results).
+find . -path ./.git -prune -o \( -name &#39;requirements*.txt&#39; -o -name &#39;pyproject.toml&#39; \
+  -o -name &#39;setup.py&#39; -o -name &#39;setup.cfg&#39; -o -name &#39;conftest.py&#39; -o -name &#39;Makefile&#39; \
+  -o -name &#39;*.lock&#39; -o -name &#39;.envrc&#39; -o -name &#39;.gitattributes&#39; -o -name &#39;Dockerfile*&#39; \
+  -o -name &#39;devcontainer.json&#39; \) -print
+
+# No paper: the only Citation block names this repository (17 arXiv links are prior work).
+grep -rniE &quot;arxiv|bibtex|@article|@misc|citation|doi&quot; --include=&#39;*.md&#39; --include=&#39;*.cff&#39; .
+
+# No agent surface and no second model, anywhere including the README (0 results).
+grep -rniE &quot;\bmcp\b|tool_call|function_call|tool_use|openai|anthropic&quot; \
+  --include=&#39;*.py&#39; --include=&#39;*.yaml&#39; --include=&#39;*.md&#39; .
+
+# read_only is never passed by the reader that documents itself as keeping nothing.
+grep -rn &quot;read_only&quot; --include=&#39;*.py&#39; .
+grep -rn &quot;build_paged&quot; --include=&#39;*.py&#39; .</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-22</strong> — <a
+href="https://github.com/volotat/mini-AGI/commit/201852d3cf40c7471ecf4a7ee91311c9c69e7b15"><code class="commit-id" title="201852d3cf40c7471ecf4a7ee91311c9c69e7b15">201852d3…</code></a>
+— first reading, at the head of the default branch. Screened before
+anything was read: the tool reported <strong>NOTHING SCANNED</strong> —
+no manifest, hook or agent file at any path it knows — and a hand read
+of all 45 committed files explains that rather than contradicting it: no
+dependency manifest of any kind, no <code>conftest.py</code>, no
+<code>Makefile</code>, no <code>.envrc</code>, no
+<code>.gitattributes</code>, no <code>.gitmodules</code>, and
+<code>.github/</code> holding only <code>FUNDING.yml</code>. No auto-run
+surface, no build-time execution point, and no agent-directed file.
+Nothing was installed, built or executed; no training run, no serve, no
+benchmark, so every claim here is read from source. No capability
+marks.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
