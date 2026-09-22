@@ -128,7 +128,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 623 reports.</strong></p>
+<p><strong>This page covers all 624 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25426,6 +25426,77 @@ reminded one exists. Recall is a 200-line index of 150-character hooks
 and a model choosing what to open; there is no scorer, no fallback when
 a hook is wrong, and no way for the store to express doubt about what it
 holds.</li>
+</ul>
+<h3 id="cua"><a href="../systems/cua/"><code>cua</code></a></h3>
+<ul>
+<li>Best idea: <strong>give every remembered step a postcondition, and
+keep the raw recording under the prose.</strong> A vision model captions
+each input event into observation, think, action and
+<strong>expectation</strong> — three descriptions of what happened and
+one claim about what should follow, which is the field that lets a later
+agent check a step against the screen instead of replaying it blindly.
+Underneath, <code>_process_recording</code> writes the <code>.mp4</code>
+and <code>events.json</code> before the first model call and keeps each
+<code>raw_event</code> beside its caption, so the fallible layer sits on
+an infallible one and a skill whose captions are wrong can be re-derived
+rather than re-recorded.</li>
+<li>Biggest risk: <strong>a captioning failure is silent and produces a
+skill that looks healthy at rest.</strong> <code>_caption_step</code>
+returns
+<code>{"observation": "", "think": "", "action": &lt;event type&gt;, "expectation": ""}</code>
+from three separate paths — a non-200 from either provider, a reply the
+<code>{...}</code> regex cannot parse, and a bare
+<code>except Exception: pass</code> around the whole body. The step is
+appended to the trajectory anyway, rendered into <code>SKILL.md</code>
+as a heading above three empty bold labels, counted in the step total,
+and the command prints its success line. A recording made with an
+expired key is byte-shaped like a good skill and contains no guidance at
+all.</li>
+<li>Most reusable component: the record-to-procedure pipeline, lines 395
+to 918 of <code>skills.py</code> — receive a framed
+<code>[length][JSON][MP4]</code> blob, cut one frame per input event
+with <code>ffmpeg</code> at the event timestamp minus 0.1s, caption into
+a fixed four-field schema, and render one Markdown section per step. It
+is a good answer to capturing procedural knowledge from someone who will
+not write documentation, and it is separable from everything else in
+this repository.</li>
+<li>Second risk: <strong>the MCP permission model is careful and its
+default discards the benefit.</strong> <code>Permission</code> is a flat
+enum of 24 values with convenience groups including
+<code>skills:readonly</code>, and tools are registered conditionally, so
+a read-only server genuinely exposes no delete tool rather than one that
+refuses. Then
+<code>if not permissions: permissions = set(Permission)</code> — a
+server started without <code>--permissions</code> and without
+<code>CUA_MCP_PERMISSIONS</code> logs <em>"No permissions specified,
+granting all permissions"</em> and puts <code>computer:shell</code> and
+<code>skills:delete</code> in the default menu. A default of nothing
+with an explicit <code>all</code> costs one flag and inverts the failure
+direction. A separate defect in one of those handlers was reported to
+the maintainers privately under <code>SECURITY.md</code>, which asks
+that vulnerabilities not be filed as public issues.</li>
+<li>Maturity impression: MIT, a large monorepo spanning Swift
+virtualization, a Rust input driver, Python and TypeScript agent
+libraries, a sandbox fleet and a benchmark suite, of which the memory is
+<code>skills.py</code> at 918 lines, its MCP surface, and a second
+1,532-line TypeScript implementation over the same directory sharing no
+code with the first. Nineteen committed cases cover listing, reading,
+deleting and replaying against a temporary directory; none passes a name
+containing a path separator, none exercises <code>_caption_step</code>,
+and none asserts that anything must <em>not</em> be returned. No marks.
+<code>CITATION.cff</code> names the software rather than a paper, and
+the benchmark apparatus measures computer-use task completion, not
+whether a recorded skill improves it.</li>
+<li>Study when: you want procedural memory captured by demonstration
+rather than by writing. The interface is a screen recording, the output
+is a file a person can read, and the generated layer never discards the
+evidence it was generated from.</li>
+<li>Do not copy when: a store will grow past what a model can choose
+from by name. There is no scoring, no embedding and no similarity
+anywhere on the read path, <code>skills_list</code> returns names and
+step counts without the description a human actually wrote, and nothing
+records whether a skill has ever worked — so relevance is a guess over a
+filename, and it degrades silently as the store fills.</li>
 </ul>
         </article>
       </div>

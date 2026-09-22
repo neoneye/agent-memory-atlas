@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A computer-use agent platform
+whose durable memory is a human screen recording that a vision model
+turns into a per-step Markdown procedure, read back only when a later
+agent asks for it by name.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Cua — Agent Memory Atlas">
+    <meta property="og:description" content="A computer-use agent
+platform whose durable memory is a human screen recording that a vision
+model turns into a per-step Markdown procedure, read back only when a
+later agent asks for it by name.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cua — Agent Memory Atlas">
+    <meta name="twitter:description" content="A computer-use agent
+platform whose durable memory is a human screen recording that a vision
+model turns into a per-step Markdown procedure, read back only when a
+later agent asks for it by name.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Cua — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Cua",
+      "description": "A computer-use agent platform whose durable memory is a human screen recording that a vision model turns into a per-step Markdown procedure, read back only when a later agent asks for it by name.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A recorded demonstration, captioned into a
+skill</p>
+          <h1>Cua</h1>
+          <p class="document-deck">A computer-use agent platform whose
+durable memory is a human screen recording that a vision model turns
+into a per-step Markdown procedure, read back only when a later agent
+asks for it by name.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/trycua/cua">
+              <span>Source</span>
+              <strong>trycua/cua</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/trycua/cua/commit/9bbfa7dd3e27ca7f1861ede70aaca390174493f9" title="9bbfa7dd3e27ca7f1861ede70aaca390174493f9">
+              <span>Analyzed revision</span>
+              <code>9bbfa7dd…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-22</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/trycua--cua" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>trycua--cua</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Cua is a computer-use agent platform — MIT, a large monorepo spanning
+Swift virtualization for macOS, a Rust input driver, Python and
+TypeScript agent libraries, a sandbox fleet and a benchmark suite.
+Almost none of that is memory, and the parts whose filenames suggest
+otherwise are not: <code>pipeline/shared_memory.py</code> is
+interprocess buffering, <code>callbacks/image_retention.py</code> trims
+screenshots out of the current context window, and
+<code>callbacks/trajectory_saver.py</code> writes runs to disk for
+training and replay with nothing reading them back into a prompt.</p>
+<p>The durable memory is <code>cua skills</code>, and its own module
+docstring states the claim: skills are <em>"recorded demonstrations that
+can guide agent behavior."</em> A person records a screen session. The
+recording arrives as a framed blob over a WebSocket, <code>ffmpeg</code>
+extracts one frame per input event, and a vision model captions each
+frame into four fields — observation, think, action, expectation. The
+result is written as a <code>SKILL.md</code> with one section per step,
+beside the source video, the raw events, the extracted frames and a
+<code>trajectory.json</code>. A later agent reads it through an MCP
+tool.</p>
+<p>This is the skill-memory shape, sourced unusually. Most systems in
+that family distil a skill from a task the agent itself completed; here
+the source is a human demonstration and the distillation is a captioning
+pass over video frames. The per-step <strong>expectation</strong> field
+is the part worth taking: it is a postcondition, which is what most
+procedural memory lacks and what makes a step checkable rather than
+merely repeatable.</p>
+<p>Two findings sit against it. The MCP <code>skills_delete</code> tool
+passes a model-supplied name straight into a recursive delete with no
+containment check, on a server whose permissions default to all —
+reported privately to the maintainers rather than described further
+here. And every captioning failure is silent: a non-200 response, an
+unparseable reply or any exception yields four empty strings, the step
+is still written, and the command still prints a success line with a
+step count.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A skill is <strong>a recording of someone doing the task, with a
+model's commentary attached, offered to a later agent that asks for it
+by name.</strong></p>
+<p>Each clause carries weight. <em>A recording</em> — the memory's
+substrate is video and input events, which are facts about what happened
+and cannot be wrong. <em>A model's commentary</em> — the prose a later
+agent actually reads is generated, and can be. <em>Asks for it by
+name</em> — nothing surfaces a skill automatically; a model calls
+<code>skills_list</code>, sees names and step counts, and decides
+whether to call <code>skills_read</code>.</p>
+<p>That separation is the design's best property and is worth stating as
+a rule the code follows rather than a claim it makes: the fallible layer
+sits on top of an infallible one, and both are kept. A skill whose
+captions are wrong can be re-derived from the video and events beside
+them, because <code>_process_recording</code> writes
+<code>events.json</code> and the <code>.mp4</code> before the first
+model call.</p>
+<p>There is no epistemic state on a skill and no notion of one having
+worked. A skill recorded once and never used again is indistinguishable,
+in the store, from one that has guided a hundred runs.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — A human screen recording becomes a skill through frame extraction and per-step vision-model captioning; a later agent reaches it only by naming it through an MCP tool, and any captioning failure writes an empty step without stopping the save.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: A human screen recording becomes a skill through frame extraction and per-step vision-model captioning; a later agent reaches it only by naming it through an MCP tool, and any captioning failure writes an empty step without stopping the save.
+flowchart TD
+  H[&quot;Person records a screen session&quot;] --&gt; WS[&quot;WebSocket receives&lt;br/&gt;4-byte length, JSON events, MP4&quot;]
+  WS --&gt; SAVE[&quot;Write video and events.json&lt;br/&gt;before any model call&quot;]
+  SAVE --&gt; LOOP[&quot;For each input event&quot;]
+  LOOP --&gt; FF[&quot;ffmpeg: one frame at&lt;br/&gt;event timestamp minus 0.1s&quot;]
+  FF -- &quot;extraction failed&quot; --&gt; EMPTY[&quot;Empty caption,&lt;br/&gt;step still appended&quot;]
+  FF -- &quot;frame written&quot; --&gt; VLM[&quot;Vision model captions:&lt;br/&gt;observation, think, action, expectation&quot;]
+  VLM -- &quot;non-200, unparseable, or exception&quot; --&gt; EMPTY
+  VLM -- &quot;parsed&quot; --&gt; CAP[&quot;Caption recorded&quot;]
+  EMPTY --&gt; MD
+  CAP --&gt; MD[&quot;SKILL.md: one section per step&lt;br/&gt;plus a generated agent prompt&quot;]
+  MD --&gt; DONE[&quot;Prints success and a step count&lt;br/&gt;either way&quot;]
+  DONE --&gt; STORE[(&quot;~/.cua/skills/name/&quot;)]
+  STORE -.-&gt; L[&quot;skills_list: names, titles, step counts&quot;]
+  L --&gt; R[&quot;Model chooses a name&quot;]
+  R --&gt; RD[&quot;skills_read returns SKILL.md&lt;br/&gt;and every step file&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The memory lives in two CLIs and an MCP server, and in nothing else.
+The Python implementation is
+<code>libs/python/cua-cli/cua_cli/commands/skills.py</code> at 918
+lines, with the MCP surface in <code>commands/mcp.py</code> at 1,092. A
+separate TypeScript implementation,
+<code>libs/typescript/cua-cli/src/commands/skills.ts</code> at 1,532
+lines, operates on the same directory. The agent library does not
+participate: nothing under <code>libs/python/agent</code> imports
+<code>cua_cli</code>, and no code there reads the skills directory.</p>
+<p>Standing it up costs a Python install and three things at record
+time: a browser extension or screen recorder that speaks the framed
+WebSocket protocol, <code>ffmpeg</code> on <code>PATH</code>, and an API
+key for either OpenAI or Anthropic. At read time it costs nothing — a
+directory and an MCP server.</p>
+<p>Beside skills, <code>cua_cli/utils/trajectory_recorder.py</code>
+keeps a second durable artifact for <code>cua do</code> invocations,
+laid out as one directory per session with a numbered directory per turn
+holding a screenshot and the agent response. Its docstring says the
+format is for the hosted trajectory viewer. Nothing else in the tree
+reads that directory, so it is an export, not a memory.</p>
+<p>The operational property worth naming is that the two CLI
+implementations share a storage location and not a code path. Every
+invariant below — the name validation, the uniqueness suffix, the delete
+semantics — is implemented twice, and the report notes where they
+disagree.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Record.</strong> <code>cmd_record</code> starts a WebSocket
+server, receives the recording, and prompts for a name and a description
+if they were not passed. Names entered interactively are validated in a
+loop until they are alphanumeric plus hyphen and underscore; a
+<code>--name</code> argument is not validated. Uniqueness is then
+enforced by suffix —
+<code>while (SKILLS_DIR / final_name).exists()</code> appends
+<code>-1</code>, <code>-2</code> and so on, so recording over an
+existing skill creates a sibling rather than replacing it.</p>
+<p><strong>Process.</strong> <code>_process_recording</code> unpacks
+<code>[4-byte big-endian length][JSON][MP4]</code>, writes the video and
+<code>events.json</code> first, then iterates events. For each it runs
+<code>ffmpeg -ss &lt;timestamp - 0.1s&gt; -frames:v 1</code> into a
+temporary directory, calls <code>_caption_step</code>, and copies the
+frame to <code>step_&lt;n&gt;_full.jpg</code>. On a non-zero ffmpeg exit
+or a missing frame it appends a step whose caption fields are empty
+strings and continues.</p>
+<p><strong>Caption.</strong> <code>_caption_step</code> builds one
+prompt per step carrying the task description, the event type and the
+event data as JSON, sends it with the frame to either the OpenAI or the
+Anthropic endpoint, and extracts the first <code>{...}</code> span from
+the reply with a regex before parsing it. Three separate paths return
+four empty strings: a non-200 status on either provider, no regex match
+or a parse failure, and a bare <code>except Exception: pass</code>
+wrapping the whole body.</p>
+<p><strong>Render.</strong> The trajectory is written to
+<code>trajectory.json</code> with a metadata block carrying the task
+description, the step total, the screen dimensions, the duration and
+<code>created_at</code>. Then <code>SKILL.md</code> is assembled:
+frontmatter with <code>name</code> and <code>description</code>, a
+<code>## Steps</code> section rendering each caption as
+<strong>Context</strong>, <strong>Intent</strong> and <strong>Expected
+Result</strong>, and an <code>## Agent Prompt</code> section that
+concatenates the description with a flat
+<code>Step N: &lt;action&gt;</code> list and the instruction to
+<em>"[f]ollow this workflow pattern, adapting as needed for the current
+screen state."</em></p>
+<p><strong>Read.</strong> <code>_register_skills_tools</code> registers
+up to four tools behind a <code>Permission</code> enum.
+<code>skills_list</code> walks the directory, takes each skill's first
+<code># </code> heading as a title and counts <code>step_*.md</code>
+files. <code>skills_read</code> returns the SKILL.md text plus the
+content of every step file. <code>skills_delete</code> removes the
+directory. <code>skills_record</code> is registered but performs no
+recording: it returns a message telling the caller to run
+<code>cua skills record</code> from a terminal.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>A skill is a directory. Its <code>SKILL.md</code> frontmatter has
+exactly two keys, <code>name</code> and <code>description</code>, which
+is what the parser at <code>skills.py:186-187</code> looks for and all
+the writer emits. There is no version, no status, no provenance for the
+model that produced the captions, and no timestamp.</p>
+<p>A timestamp does exist, one level down: <code>trajectory.json</code>
+carries <code>created_at</code> in its metadata block, and
+<code>cmd_list</code> reads it back to render a date column. So the
+listing can tell you when a skill was made, and the skill itself cannot.
+That is a single record time with no validity time beside it.</p>
+<p>The step record is the interesting unit. Each entry in
+<code>trajectory.json</code> holds a <code>step_idx</code>, the four
+caption fields, the <code>raw_event</code> that produced it and the path
+to the full frame. Keeping <code>raw_event</code> beside the caption is
+what makes the distilled prose auditable — the event says a click
+happened at coordinates, the caption says what the model thought the
+click was for, and a reader can see both.</p>
+<p>What the model is asked for is worth quoting, because the schema is
+the design: <code>Observation</code> describes the screenshot,
+<code>Think</code> explains the user's likely intention,
+<code>Action</code> describes what is being done, and
+<code>Expectation</code> is <em>"[w]hat should happen after this
+action."</em> Three of those are descriptions of the past. The fourth is
+a claim about the future, and it is the only field a later agent can
+test against the screen in front of it.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>There is no retrieval mechanism. A grep for <code>embed</code>,
+<code>cosine</code>, <code>bm25</code>, <code>rerank</code> and
+<code>similarity</code> across both skills implementations and the MCP
+server returns nothing, and the appendix records the command.</p>
+<p>What exists is a listing and a fetch. <code>skills_list</code>
+returns a JSON array of <code>{name, title, steps}</code> — no
+description, which is a small loss, since the description is the one
+field a human wrote and the title is whatever the first Markdown heading
+says. The model picks a name from that array and calls
+<code>skills_read</code>, which returns the whole SKILL.md and the full
+text of every <code>step_*.md</code> file with no cap.</p>
+<p>Two consequences follow. Relevance is entirely the model's judgement
+over a name and a step count, so a skill named badly at record time is a
+skill that will not be found. And a long recording returns a large
+payload in one tool result, since nothing paginates or truncates.</p>
+<p>The design does one thing here that this atlas has praised elsewhere:
+scope widening is a separate tool rather than a wider argument. There is
+no <code>all=true</code> flag on <code>skills_read</code>; crossing the
+store means calling <code>skills_list</code>, which is a distinct entry
+in the permission enum and in any client allowlist.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes block, and they block for a while. Captioning is one model
+call per input event, issued sequentially inside a progress loop, so a
+recording of eighty interactions is eighty round trips before the
+command returns. There is no queue, no background worker and no
+resumption — an interrupted <code>cua skills record</code> leaves the
+video and <code>events.json</code> on disk with a partial or absent
+<code>SKILL.md</code>.</p>
+<p>Nothing rewrites the store afterwards. There is no consolidation
+pass, no re-captioning, no merge of similar skills and no garbage
+collection. A skill is written once and then only read or deleted.</p>
+<p>The failure mode deserves its own paragraph, because it is the one a
+user would not notice. Every error path in <code>_caption_step</code>
+returns
+<code>{"observation": "", "think": "", "action": event type, "expectation": ""}</code>.
+The step is appended to the trajectory regardless, rendered into
+<code>SKILL.md</code> as a heading followed by three empty bold labels,
+and counted in the <code>Steps:</code> line the command prints on
+success. A recording made with an expired API key produces a file that
+looks structurally identical to a good skill, is listed with the right
+step count, and contains no guidance at all.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The MCP server is the whole integration surface, and its permission
+model is the thing to read. <code>Permission</code> is a flat enum of 24
+values across sandbox management, computer control and skills, with
+convenience groups including <code>skills:all</code> and
+<code>skills:readonly</code>. Tools are registered conditionally, so a
+server started with <code>skills:readonly</code> genuinely does not
+expose a delete tool rather than exposing one that refuses.</p>
+<p>That is good design undone by its default. When neither
+<code>--permissions</code> nor <code>CUA_MCP_PERMISSIONS</code> is set,
+the server logs <em>"No permissions specified, granting all
+permissions"</em> and assigns <code>set(Permission)</code>. The
+documented convenience groups therefore describe a configuration most
+invocations will not use, and the fail-open direction puts
+<code>computer:shell</code> and <code>skills:delete</code> in the
+default tool menu.</p>
+<p><code>skills_record</code> is registered under its own permission and
+does not record. Its body returns a JSON object whose
+<code>message</code> field instructs the caller to run
+<code>cua skills record &lt;name&gt;</code> in a terminal, with a
+four-step list of what to do next. The documentation table at
+<code>docs/content/docs/reference/cua-cli/mcp-server.mdx:112</code> maps
+<code>skills:record</code> to <code>skills_record</code> without
+qualification, and the CLI README lists it among the individual
+permissions. This is not an unwired mechanism — the handler exists and
+is reachable — but what it does is print instructions, and a reader of
+the permission list would not expect that.</p>
+<p>Separately, <code>cua_agent/human_tool/</code> and
+<code>adapters/human_adapter.py</code> implement a human-in-the-loop
+<em>completion provider</em>: a FastAPI service where a person answers
+model requests, with a <code>CompletionCall</code> carrying pending,
+completed and failed states. It is a model substitute, not a memory
+review surface, and it is named here because the directory name invites
+the other reading.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>The captions are model output that becomes durable
+instruction text.</strong> This is the structural risk and it compounds
+with what Cua is for. A computer-use agent looks at screens; a
+demonstration recorded on a page containing adversarial text produces
+frames containing that text, which the captioning model reads and may
+transcribe into <code>Observation</code> or <code>Think</code>. The
+result is a Markdown file a later agent is told to follow. Nothing
+between the frame and the file inspects the text, and the
+<code>## Agent Prompt</code> section the writer generates ends with an
+instruction to follow the pattern.</p>
+<p><strong>No one approves the memory before it is stored.</strong> A
+person is in the loop twice — they perform the demonstration, and they
+type the name and description — and neither point shows them the
+generated captions. <code>cmd_record</code> calls
+<code>_process_recording</code> and then prints a path.
+<code>cua skills replay</code> exists and opens the source video in a
+browser, so the recording can be reviewed; the prose cannot, short of
+opening the file. This is why <code>human_review</code> is withheld: the
+human authored the input, and the memory is what the model wrote about
+it.</p>
+<p><strong>The delete tool does not constrain its target.</strong>
+<code>skills_delete</code> builds <code>SKILLS_DIR / name</code> from a
+model-supplied <code>name</code> and calls <code>shutil.rmtree</code> on
+it after an existence check, with no resolution or containment test. The
+precise mechanics were reported privately to the maintainers under the
+policy in <code>SECURITY.md</code>, which asks that vulnerabilities not
+be opened as public issues, and are not elaborated here. Two things
+about it belong in an architecture report. The first is that validation
+for exactly this input exists eight lines away in the sibling CLI path,
+applied to the interactive prompt and skipped for the
+<code>--name</code> argument and for every MCP call — the project knows
+the rule and applies it in one of three places. The second is that the
+TypeScript implementation builds the same path by string interpolation
+rather than a path join, so the two ports of one feature do not fail
+identically; a single fix in one language leaves the other standing.</p>
+<p><strong>No capability marks.</strong> Deletion is removal with
+nothing recording what was removed, so there is no tombstone and a
+re-recording of a skill someone deleted as wrong is admitted without
+comment. There is no status field of any kind, so no
+<code>trust_state</code>. One record time in
+<code>trajectory.json</code> and no validity time, so no
+<code>bitemporal</code>. One global directory per machine with no key on
+a skill and no predicate on a read, so no <code>scope_enforced</code> —
+the near-miss being that <code>skills.py</code> contains no
+<code>project_id</code>, <code>workspace</code>, <code>scope</code>,
+<code>tenant</code> or <code>user_id</code> at all, which is a cleaner
+absence than a scope stored and ignored. No append-only record of
+mutations, so no <code>audit_log</code>. And the committed tests assert
+presence, never absence, so no <code>negative_eval</code>.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><code>libs/python/cua-cli/tests/commands/test_skills.py</code> is 235
+lines over nineteen cases, and <code>test_mcp.py</code> is 232. They are
+real tests against a temporary skills directory: argument registration,
+dispatch to each handler, listing an empty directory, listing and
+reading a seeded skill, JSON output, reading and deleting a name that
+does not exist, <code>clean</code> removing everything, and replay.</p>
+<p>What they do not cover is the whole of section 9. No case passes a
+name containing a path separator or a traversal sequence to any handler.
+No case exercises <code>_caption_step</code>, so none of its three
+silent-failure paths is asserted. No case asserts that something must
+<em>not</em> be returned, which is the shape <code>negative_eval</code>
+asks for. And the MCP tests check the permission enum's string values
+rather than the behaviour of the default-to-all branch.</p>
+<p>Cua ships a substantial benchmark apparatus —
+<code>libs/cua-bench</code>, with trainers and task adapters — and a
+<code>CITATION.cff</code> naming the software rather than a paper. The
+README's citation block is a <code>@software</code> entry. No paper, no
+ablation and no committed evaluation result relates to skills: the
+benchmarks measure computer-use task completion, not whether a recorded
+skill improves it. That is a scoped claim about this repository and not
+about work done elsewhere.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Give every step an expectation.</strong> Three of the four
+caption fields describe what happened; <code>Expectation</code> states
+what should follow. A procedural memory whose steps carry postconditions
+can be checked against the screen at replay time instead of being
+replayed blindly; a step without one can be repeated but not
+verified.</p>
+<p><strong>Keep the raw input beside the distilled text.</strong>
+<code>events.json</code> and the <code>.mp4</code> are written before
+the first model call, and each trajectory entry keeps its
+<code>raw_event</code> next to the caption. A generated memory that
+retains its source can be re-derived when the generator improves or is
+found to have been wrong; one that does not is a one-way compression of
+something you no longer have.</p>
+<p><strong>Make widening a different tool.</strong> Crossing the store
+means calling <code>skills_list</code>, a separate permission and a
+separate entry in a client allowlist, rather than passing a flag to the
+read.</p>
+<p><strong>Register tools conditionally.</strong> A server started
+read-only does not expose a delete tool that refuses — it exposes no
+delete tool. The model cannot attempt what is not in the menu.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Defaulting an allowlist to everything.</strong> The
+permission enum, the groups and the conditional registration are all
+careful, and
+<code>if not permissions: permissions = set(Permission)</code> discards
+the benefit for every invocation that does not opt in. A default of
+nothing, with an explicit <code>all</code>, costs one flag and inverts
+the failure direction.</p>
+<p><strong>Swallowing a generation failure into an empty field.</strong>
+Returning empty strings from three separate error paths and continuing
+means a degraded memory is byte-shaped like a healthy one. A step whose
+caption failed should be marked, or the save should fail.</p>
+<p><strong>Implementing one store twice.</strong> Two CLIs over one
+directory, sharing no code, means every invariant is asserted twice or
+once. Here the name validation, and the way the path is built, already
+differ.</p>
+<h3 id="fit">Fit</h3>
+<p>This suits a team that wants an operator's knowledge captured without
+asking them to write it down — the recording is the interface, and what
+comes out is a readable file rather than an opaque vector. It fits badly
+where skills must be found rather than named: with no description in the
+listing and no scoring anywhere, a store of 200 skills is a store the
+model will not navigate. It fits badly again where the demonstration
+environment is not trusted, because the captioning pass turns whatever
+was on screen into durable prose. A reader wanting the
+recording-to-procedure pipeline should take it and add a review step, a
+retrieval story, and a containment check on every handler that takes a
+name.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<p><strong>An unvalidated identifier reaching a destructive
+call.</strong> Reported privately per <code>SECURITY.md</code>. The
+generalisable form is in section 9: a check that exists in one of three
+paths through the same feature.</p>
+<p><strong>The default permission set is everything.</strong> Documented
+groups describe a configuration the default invocation does not use.</p>
+<p><strong>A silent captioning failure produces a well-formed empty
+skill.</strong> Three error paths, one outcome, no marker, and a success
+message with the step count.</p>
+<p><strong>A tool that is registered and does not do its job.</strong>
+<code>skills_record</code> returns instructions. Its permission is
+documented and its handler is reachable; what is missing is the
+recording.</p>
+<p><strong>Generated text from an untrusted screen becomes instruction
+text.</strong> The risk is inherent to captioning a computer-use
+demonstration and is not mitigated anywhere in the pipeline.</p>
+<p><strong>No update path.</strong> Re-recording a skill under the same
+name produces <code>name-1</code>, so a corrected demonstration sits
+beside the flawed one and <code>skills_list</code> shows both with
+nothing to distinguish them.</p>
+<p><strong>Two implementations, one directory.</strong> A fix landed in
+Python does not reach the TypeScript CLI, and the failure modes are not
+identical.</p>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the pipeline, not the store. Record, cut a frame per input
+event, caption into a four-field schema of which one is a postcondition,
+and keep the raw events beside the prose — that sequence is a good
+answer to capturing procedural knowledge from someone who will not write
+documentation, and it occupies lines 395 through 918 of
+<code>skills.py</code> — <code>cmd_record</code>,
+<code>_process_recording</code> and <code>_caption_step</code> end to
+end.</p>
+<p>Do not borrow the read path. Three tools and a name are not
+retrieval, and the absence is structural rather than incidental: there
+is no description in the listing, no scoring, and no way for a skill to
+indicate whether it ever worked. Anything adopting this needs a
+retrieval layer built alongside it.</p>
+<p>Build the guards. A containment check on every handler that takes a
+name, an explicit permission default, and a marker on a step whose
+caption failed are three small pieces of work that the committed tests
+do not currently require and would close most of section 12.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li>Is the MCP default of all permissions deliberate for local
+single-user use, or a convenience that outlived its context? The enum
+and the groups suggest the latter.</li>
+<li>Was <code>skills_record</code> meant to proxy the recording over the
+MCP connection? The docstring describes starting a WebSocket server and
+names a default port, and the body returns terminal instructions
+instead.</li>
+<li>Which CLI is canonical? Both are shipped, both write the same
+directory, and the repository does not say which one a fix should land
+in first.</li>
+<li>Does anything consume the <code>Expectation</code> field? It is
+written into <code>SKILL.md</code> and into
+<code>trajectory.json</code>, and no code in the tree reads it back —
+the checking it would enable is left to whichever model reads the
+file.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>libs/python/cua-cli/cua_cli/commands/skills.py</code></td>
+<td>918</td>
+<td>Record, process, caption, render, list, read, replay, delete,
+clean</td>
+</tr>
+<tr>
+<td><code>libs/python/cua-cli/cua_cli/commands/mcp.py</code></td>
+<td>1092</td>
+<td>The <code>Permission</code> enum, the groups, the default-to-all
+branch and the four skills tools</td>
+</tr>
+<tr>
+<td><code>libs/typescript/cua-cli/src/commands/skills.ts</code></td>
+<td>1532</td>
+<td>A second implementation over the same directory</td>
+</tr>
+<tr>
+<td><code>libs/python/cua-cli/cua_cli/utils/trajectory_recorder.py</code></td>
+<td>262</td>
+<td>Per-turn recording of <code>cua do</code> runs for the hosted
+viewer; not read back</td>
+</tr>
+<tr>
+<td><code>libs/python/cua-cli/tests/commands/test_skills.py</code></td>
+<td>235</td>
+<td>Nineteen cases over a temporary skills directory</td>
+</tr>
+<tr>
+<td><code>libs/python/cua-cli/tests/commands/test_mcp.py</code></td>
+<td>232</td>
+<td>Permission parsing and enum values</td>
+</tr>
+<tr>
+<td><code>libs/python/agent/cua_agent/callbacks/trajectory_saver.py</code></td>
+<td>660</td>
+<td>Run artifacts for training and replay — not memory</td>
+</tr>
+<tr>
+<td><code>libs/python/agent/cua_agent/callbacks/image_retention.py</code></td>
+<td>95</td>
+<td>Context-window trimming — not memory</td>
+</tr>
+<tr>
+<td><code>libs/python/agent/cua_agent/human_tool/server.py</code></td>
+<td>245</td>
+<td>A human-as-model completion service — not memory review</td>
+</tr>
+<tr>
+<td><code>SECURITY.md</code></td>
+<td>35</td>
+<td>Private vulnerability reporting, and what belongs in an RFC
+instead</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Commands run at the repository root, for the absence claims
+above.</p>
+<pre class="sh"><code># No scoring, ranking or embedding on the skills read path (0 results).
+grep -rnE &quot;embed|cosine|bm25|rerank|similarity&quot; \
+  libs/python/cua-cli/cua_cli/commands/skills.py \
+  libs/python/cua-cli/cua_cli/commands/mcp.py \
+  libs/typescript/cua-cli/src/commands/skills.ts
+
+# No scope key on a skill (0 results).
+grep -rnE &quot;project_id|workspace|scope|tenant|user_id&quot; \
+  libs/python/cua-cli/cua_cli/commands/skills.py
+
+# Nothing outside the recorder reads the trajectories directory (0 results).
+grep -rnE &quot;_TRAJECTORIES_DIR|\.cua/trajectories&quot; --include=&quot;*.py&quot; --include=&quot;*.ts&quot; . \
+  | grep -v &quot;utils/trajectory_recorder.py&quot;
+
+# The agent library does not import the CLI that owns the store (0 results).
+grep -rn &quot;cua_cli&quot; --include=&quot;*.py&quot; libs/python/agent
+
+# Every occurrence of the record permission, to check what backs it (6 results:
+# the enum, the group, the registration, a test, and two documentation lines).
+grep -rnE &quot;SKILLS_RECORD|skills:record&quot; \
+  --include=&quot;*.py&quot; --include=&quot;*.md&quot; --include=&quot;*.mdx&quot; --include=&quot;*.json&quot; .</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-22</strong> — <a
+href="https://github.com/trycua/cua/commit/9bbfa7dd3e27ca7f1861ede70aaca390174493f9"><code class="commit-id" title="9bbfa7dd3e27ca7f1861ede70aaca390174493f9">9bbfa7dd…</code></a>
+— first reading, at the head of the default branch. Screened before
+anything was read: 1 auto-run surface
+(<code>.vscode/settings.json</code>, carrying formatter, interpreter and
+colour settings, with no <code>runOn: folderOpen</code> anywhere in the
+tree), 23 build-time execution points (four Rust <code>build.rs</code>,
+eight <code>conftest.py</code>, a <code>setup.py</code>, five npm
+manifests and a Makefile), 152 dependency surfaces inside the seven-day
+cooldown and 75 unpinned manifests; <code>.gitattributes</code> was read
+before checkout and carries no <code>filter=</code>, and there is no
+<code>.gitmodules</code>. <code>AGENTS.md</code> and
+<code>CLAUDE.md</code> are present and were treated as data. Nothing was
+installed, built or executed — no benchmark was run and no recording was
+made, so every claim here is read from source. One finding was reported
+to the maintainers through the private channel <code>SECURITY.md</code>
+requires rather than described in full on this page. No capability
+marks.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
