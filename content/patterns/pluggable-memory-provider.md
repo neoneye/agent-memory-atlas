@@ -136,6 +136,32 @@ The record schema is the sharper version of the same point. `model/gen-ai/gen-ai
 
 [RushDB](../../systems/rushdb/) ships the contract without the providers. Its agent-memory contract package is provider-neutral by design — a versioned event schema, deterministic ids, a conformance fixture for other languages, and an eight-step adapter skill with a lifecycle matrix covering pre-inference recall, completed-turn capture, compaction, session end and shutdown. The two runtimes it names are first-class in the protocol's own enum and absent from the repository, occurring in exactly two lines of a reference file. Every hard part of the contract — the durable outbox, the fail-open timeout, the capture exclusions, deactivating a superseded fact — is an adapter obligation, so the conformance matrix is a promise made on an unreviewable implementation's behalf.
 
+[Strands Agents](../../systems/strands-agents/) answers two of this page's
+tradeoffs and confirms the first one exactly. Its `MemoryStore` Protocol has one
+required method, `search`, and four optional ones, and the host detects which a
+backend implements **by inspecting the type** — `_has_method` resolves the name
+on the store's class and returns false when it lands on the Protocol's own stub.
+So the contract reports capabilities without a capability flag anybody has to
+keep in sync, and the host is not forced to assume the weakest backend. Nor is
+it one provider at a time: `MemoryManager` holds a list, fans searches out
+concurrently, and attributes each result to its store — at the documented price
+that results are *"concatenated in store-registration order with no cross-store
+ranking,"* so the injection cap can be filled by whichever store was registered
+first. Extension points live in context objects (`AddMessagesContext`,
+`InjectionQueryContext`) precisely so the method signatures can stay fixed while
+the calling convention grows.
+
+Then the ceiling. **There is no deletion hook**, in either the Python or the
+TypeScript contract, and the `Storage` layer the vended file store sits on
+declares `delete` that three other subsystems call and no memory path does. The
+design doc names the intended substitute — *"Corrections are handled by storing
+updated facts. Newer entries take precedence via recency weighting in search
+results"* — and of the three vended stores one implements recency weighting, as
+a tie-break between equal scores. That is this page's *"Deletion is the hard
+one"* in its purest form: an erasure request reaching a well-built interface
+with nowhere to go, and a correction story that depends on a ranking property
+the contract cannot require.
+
 ## Tests to require
 
 - Delete a memory through the host and prove it is gone from the mounted provider, not just from the host's own store.

@@ -1,0 +1,1032 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="AWS's Python and TypeScript agent
+SDK, whose memory is a store protocol with a background extractor, a
+per-turn injector, a scope key enforced on the read path — and no delete
+anywhere in it.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="Strands
+Agents — Agent Memory Atlas">
+    <meta property="og:description" content="AWS's Python and TypeScript
+agent SDK, whose memory is a store protocol with a background extractor,
+a per-turn injector, a scope key enforced on the read path — and no
+delete anywhere in it.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Strands
+Agents — Agent Memory Atlas">
+    <meta name="twitter:description" content="AWS's Python and
+TypeScript agent SDK, whose memory is a store protocol with a background
+extractor, a per-turn injector, a scope key enforced on the read path —
+and no delete anywhere in it.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>Strands Agents — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Strands Agents",
+      "description": "AWS's Python and TypeScript agent SDK, whose memory is a store protocol with a background extractor, a per-turn injector, a scope key enforced on the read path \u2014 and no delete anywhere in it.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A memory-store protocol inside an agent
+SDK</p>
+          <h1>Strands Agents</h1>
+          <p class="document-deck">AWS's Python and TypeScript agent
+SDK, whose memory is a store protocol with a background extractor, a
+per-turn injector, a scope key enforced on the read path — and no delete
+anywhere in it.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/strands-agents/harness-sdk">
+              <span>Source</span>
+              <strong>strands-agents/harness-sdk</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/strands-agents/harness-sdk/commit/880c5bd412b002254ad230da1394a3bbbca58d9f" title="880c5bd412b002254ad230da1394a3bbbca58d9f">
+              <span>Analyzed revision</span>
+              <code>880c5bd4…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-22</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/strands-agents--harness-sdk" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>strands-agents--harness-sdk</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>2</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Strands Agents is AWS's open-source agent SDK — Apache-2.0, Python
+and TypeScript at close parity, a harness that assembles a working
+agent, a CLI over that harness, an MCP server and a documentation site,
+in one monorepo whose history begins 14 May 2025. Memory is one
+subsystem of it: about 6,700 lines of implementation across the two SDKs
+plus the harness wrappers, and 24 test files holding about 11,300
+lines.</p>
+<p>The design is a <strong>store protocol</strong>.
+<code>MemoryStore</code> declares one required method,
+<code>search</code>, and four optional ones — <code>add</code>,
+<code>add_messages</code>, <code>initialize</code> and
+<code>get_tools</code> — and the manager detects which a store actually
+implements by inspecting its type rather than by asking it to declare a
+capability (<code>_has_method</code> treats an inherited Protocol stub
+as "not implemented"). A <code>MemoryManager</code> holds a list of
+stores, fans searches out concurrently, registers a
+<code>search_memory</code> tool (on by default) and an
+<code>add_memory</code> tool (off by default), and prepends a
+<code>&lt;memory&gt;</code> block to the model call. Three stores are
+vended: markdown files, a JSON record file, and Amazon Bedrock Knowledge
+Bases.</p>
+<p>Two things are unusually well done and one is missing entirely.</p>
+<p><strong>The scope key is real on both sides.</strong>
+<code>BedrockKnowledgeBaseStore</code> stamps
+<code>(scope_metadata_key, scope)</code> onto every document it writes —
+inline for a CUSTOM data source, in a <code>.metadata.json</code>
+sidecar for S3 — and sends
+<code>{"equals": {"key": ..., "value": ...}}</code> as the Bedrock
+retrieval filter on every search. It drops a caller metadata key that
+collides with the scope key rather than letting it be overwritten. Both
+SDKs implement it the same way, and a live integration test in each
+writes under one scope, <strong>confirms the document is retrievable
+there</strong>, and then asserts it is absent from a search under
+another. That positive control is what the atlas's
+<code>negative_eval</code> bar asks for and most implementations do not
+have.</p>
+<p><strong>There is no delete.</strong> Not in the protocol, not in any
+vended store, not in either SDK. <code>Storage</code>, the layer the
+file store sits on, declares <code>async delete(key)</code> and three
+other subsystems call it — the context offloader, the stash and the
+snapshot session manager — and nothing under <code>memory/</code> or
+<code>vended_memory_stores/</code> does. The design document says how
+corrections are meant to work: <em>"Corrections are handled by storing
+updated facts. Newer entries take precedence via recency weighting in
+search results."</em> Of the three vended stores, one implements recency
+weighting, as a tie-break between entries with identical token-overlap
+scores; the other two rank on relevance alone. In the harness's own
+default store a correction is <strong>appended to the same markdown
+file</strong> as the fact it corrects, under the same heading, and both
+are retrieved as one entry.</p>
+<p>And the harness turns this on by default.
+<code>create_harness(memory=True)</code> builds a
+<code>FileMemoryStore</code> under <code>./.agent/memory</code>,
+extracts durable facts from the conversation every few turns with a
+cheap model, and injects up to five entries before
+<strong>every</strong> model call. Nothing a person does can remove what
+it wrote except editing the markdown by hand.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory becomes a memory when a background model call decides it is
+durable.</p>
+<p>There is no candidate state and no promotion ladder. An
+<code>ExtractionTrigger</code> fires — after every invocation, or every
+<em>N</em> invocations, default 5 — and the
+<code>ExtractionCoordinator</code> hands that store's unsaved messages
+to an <code>Extractor</code>, whose default system prompt asks for
+<em>"durable facts worth remembering across future conversations"</em>
+as a JSON array and says to return <code>[]</code> when there is
+nothing. Whatever comes back is written through <code>store.add</code>
+and is, from that moment, indistinguishable from anything else in the
+store.</p>
+<p>The epistemic shape is set by what the protocol does not carry. A
+<code>MemoryEntry</code> is <code>content</code>, a
+<code>store_name</code> the manager fills in, and a free-form
+<code>metadata</code> dict. No id the caller can name later, no validity
+interval, no status, no actor, no provenance beyond which store it came
+from. A caller <em>may</em> put anything in <code>metadata</code> — a
+TypeScript test fixture puts <code>verified: true</code> in one — and
+nothing in either SDK reads it back for a decision. So the store holds
+claims, not beliefs, and the only lifecycle question it can answer is
+"does this match the query".</p>
+<p>That makes the exit question the interesting one, and it has no
+answer. A fact that was true in March and is false in September can be
+written over by a newer fact, and both will be retrieved; the older one
+loses only where a store happens to rank on recency, and only against an
+exact score tie. The marker for this is not a bug but an absence with a
+stated intention behind it — the design doc chose recency weighting as
+the correction mechanism, and the stores that would have to implement it
+mostly do not.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — Every write path ends in the same undifferentiated store and none of them has an exit; the scope predicate is real but sits inside one vended store, and the only gate the SDK offers reaches the optional tool and not the default background write.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: Every write path ends in the same undifferentiated store and none of them has an exit; the scope predicate is real but sits inside one vended store, and the only gate the SDK offers reaches the optional tool and not the default background write.
+flowchart TD
+  CONV[&quot;Conversation messages&lt;br/&gt;buffered with a sequence number&quot;] --&gt; TRIG{&quot;trigger fires?&lt;br/&gt;default: every 5 turns&quot;}
+  TRIG -- &quot;no&quot; --&gt; CONV
+  TRIG -- &quot;yes&quot; --&gt; FILT[&quot;filter: drop toolUse / toolResult&lt;br/&gt;DEFAULT_MEMORY_MESSAGE_FILTER&quot;]
+  FILT --&gt; EXT{&quot;store has an extractor?&quot;}
+  EXT -- &quot;yes, add only&quot; --&gt; MODEL[&quot;ModelExtractor:&lt;br/&gt;a model call returns JSON facts&quot;]
+  EXT -- &quot;no, add_messages&quot; --&gt; RAW[&quot;raw messages handed to the store&lt;br/&gt;(no vended store implements this)&quot;]
+  MODEL --&gt; ADD[&quot;store.add(content, metadata)&quot;]
+  RAW --&gt; ADD
+  TOOL[&quot;add_memory tool&lt;br/&gt;(off by default)&quot;] --&gt; HITL{&quot;HumanInTheLoop&lt;br/&gt;BeforeToolCallEvent&quot;}
+  HITL -- &quot;approved&quot; --&gt; ADD
+  ADD --&gt; STORE[(&quot;The store&lt;br/&gt;no id, no status, no validity&quot;)]
+  STORE --&gt; SEARCH[&quot;MemoryManager.search&lt;br/&gt;fan out, concatenate, no cross-store rank&quot;]
+  SEARCH --&gt; INJ[&quot;prepend up to 5 entries as&lt;br/&gt;escaped &amp;lt;memory&amp;gt; XML, every turn&quot;]
+  SCOPE[&quot;scope stamped on write&quot;] -.-&gt; STORE
+  STORE -.-&gt; PRED{&quot;Bedrock only:&lt;br/&gt;equals filter on scope&quot;}
+  PRED -- &quot;explicit filter set&quot; --&gt; NOPE[&quot;scope predicate dropped;&lt;br/&gt;writes stay scoped&quot;]
+  PRED -- &quot;no explicit filter&quot; --&gt; SEARCH
+  STORE --&gt; EXIT[&quot;No delete. No supersession.&lt;br/&gt;No tombstone. Nothing calls&lt;br/&gt;Storage.delete from here&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The memory subsystem is <code>strands-py/src/strands/memory/</code>
+(2,037 lines across the manager, types and the four extraction modules)
+and <code>strands-py/src/strands/vended_memory_stores/</code> (1,427
+lines, three stores), with the TypeScript equivalents under
+<code>strands-ts/src/memory/</code> (1,846) and
+<code>strands-ts/src/vended-memory-stores/</code> (1,378) — 6,688 lines
+of implementation in total, excluding tests. Above it sit two thin
+harness wrappers: <code>harness-py</code>'s <code>memory.py</code> (136
+lines) and <code>harness-ts</code>'s <code>memory.ts</code> (110), which
+build a <code>MemoryManager</code> over a local file store and fix the
+tool policy.</p>
+<p>Standing it up costs nothing for the local stores:
+<code>FileMemoryStore</code> writes markdown under
+<code>./.strands/memory/&lt;name&gt;/</code> by default, or wherever the
+harness points it, and <code>TestMemoryStore</code> writes one JSON
+file. The third needs AWS — a Bedrock knowledge base id, a data source
+id, an S3 bucket for the S3 path, and IAM for
+<code>GetKnowledgeBase</code>, <code>Retrieve</code>,
+<code>IngestKnowledgeBaseDocuments</code> and <code>PutObject</code>.
+The store calls <code>GetKnowledgeBase</code> during
+<code>initialize</code>, which the manager runs at agent construction
+<em>"so permission or connectivity issues surface early"</em>, and
+caches the knowledge base type because a managed KB takes
+<code>managedSearchConfiguration</code> where a vector one takes
+<code>vectorSearchConfiguration</code>.</p>
+<p>Underneath the file store is a separate <code>Storage</code> protocol
+—
+<code>write</code>/<code>read</code>/<code>delete</code>/<code>list</code>/<code>search</code>
+— with local-file, in-memory and S3 implementations and two scorers, a
+95-line token-overlap <code>keyword.py</code> and a 341-line
+<code>bm25.py</code>. <code>FileMemoryStore</code> uses the namespaced
+wrapper, so a store named <code>agent-memory</code> lands at
+<code>memory/agent-memory/</code>; the harness passes
+<code>LocalFileStorage(memory_dir).namespace("")</code> to flatten that
+back out so files sit directly in <code>./.agent/memory</code>.</p>
+<p>The operational property worth naming is that <strong>memory and
+sessions are different subsystems and the report is about one of
+them</strong>. <code>strands-py/src/strands/session/</code> — file, S3,
+repository and snapshot session managers, with their own tests —
+persists the agent's message history so a conversation resumes. That is
+session persistence, and by this atlas's <a
+href="../../compare/#not-in-scope-conversation-window-management">inclusion
+test</a> it is not agent memory. The memory subsystem is the belief
+store, and the harness's own docstring draws the same line:
+<em>"Persistence is plain files, independent of any session: memory
+survives across sessions and works with sessions off."</em></p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Registration.</strong> <code>MemoryManager.__init__</code>
+takes <code>stores</code>, validates unique names, resolves the tool
+configs and the injection config, and builds the tool list.
+<code>init_agent</code> then runs <code>_init_stores</code> (awaiting
+each store's <code>initialize</code>), <code>_init_extraction</code>
+(building the coordinator and attaching each store's triggers) and
+<code>_init_injection</code>.</p>
+<p><strong>Extraction.</strong>
+<code>ExtractionCoordinator.record</code> buffers every message with a
+monotonic <code>seq</code>. When a trigger calls <code>fire</code>,
+<code>schedule</code> dispatches <code>_extract</code> as a background
+task, capturing the live agent span synchronously because the save runs
+after that span has ended. <code>_extract</code> takes everything past
+the store's high-water mark, <strong>advances the mark before
+writing</strong> so a queued save cannot pick the same messages up,
+filters content blocks, and calls <code>_write</code>. On failure
+<code>_on_save_failed</code> rolls the mark back, increments a
+consecutive-failure count, and after 10 puts the store into a backoff
+where only every third request is let through as a probe.</p>
+<p><strong>The two write shapes.</strong> With an extractor,
+<code>_write</code> runs it and then <code>asyncio.gather</code>s one
+<code>store.add</code> per extracted fact; if any of them fails the
+whole batch raises and retries later, which is why the Protocol tells
+implementers that <em>"extraction writes are at-least-once"</em> and
+stores <em>"should tolerate duplicate writes."</em> Without an
+extractor, the filtered messages go straight to
+<code>store.add_messages</code> along with an
+<code>AddMessagesContext</code> carrying each message's sequence number,
+so a backend can build a retry-stable idempotency key — and the
+docstring explains why a content hash would not do, since <em>"two
+messages share text (e.g. 'ok')"</em>.</p>
+<p><strong>Retrieval and injection.</strong>
+<code>MemoryManager.search</code> gathers <code>store.search</code>
+across every target with <code>return_exceptions=True</code>, logs and
+counts per-store failures, stamps <code>store_name</code> onto each
+entry, and concatenates in target order.
+<code>_provide_memory_context</code> derives a query — the latest user
+message's text on a user turn, otherwise the most recent assistant
+message's — searches for <code>max_entries</code> (default 5), and
+renders <code>_default_injection_format</code>: a
+<code>&lt;memory&gt;</code> block of
+<code>&lt;entry source="..."&gt;</code> elements with both the content
+and the source XML-escaped. A <code>query</code> or <code>format</code>
+callback that raises <strong>fails open</strong>: injection is skipped,
+the turn proceeds.</p>
+<p><strong>The tools.</strong>
+<code>search_memory(query, stores=None)</code> is registered by default.
+<code>add_memory(entries, stores=None)</code> is opt-in and takes a
+<code>wait_for_writes</code> flag; with it false the writes are
+dispatched detached and the model gets <code>{"accepted": n}</code> back
+before anything has landed. Both run through
+<code>_resolve_tool_targets</code>, which keeps in-scope store names and
+drops out-of-scope ones with a warning, raising only when every
+requested name is out of scope.</p>
+<p><strong>The harness.</strong> <code>resolve_memory</code> builds the
+manager with
+<code>injection=MemoryInjectionConfig(trigger="everyTurn")</code> rather
+than the SDK default of <code>"userTurn"</code>, because the harness
+runs multi-step tool loops and an autonomous step should consult memory
+too. A <code>subagent</code> delegate gets the same stores through
+<code>_ReadOnlyStore</code>, which reimplements <code>search</code> and
+<code>initialize</code> and <strong>omits</strong> <code>add</code>,
+<code>add_messages</code>, <code>extraction</code> and
+<code>get_tools</code> — the last of those deliberately, since <em>"a
+store-native tool is an unbounded surface we can't guarantee is
+read-only."</em></p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>The unit is a <code>MemoryEntry</code>: <code>content: str</code>,
+<code>store_name: str | None</code> filled in by the manager,
+<code>metadata: dict[str, Any] | None</code>. That is the whole protocol
+model. There is no id, no created-at, no validity interval, no status
+and no actor, and the manager forwards only
+<code>max_search_results</code> across stores, so a backend-specific
+search field cannot travel through it.</p>
+<p>Each vended store keeps more, and none of it is visible through the
+protocol:</p>
+<ul>
+<li><strong><code>FileMemoryStore</code></strong> derives a filename
+from the first line of the content, slugified and truncated to 50
+characters. If that slug already exists the new facts — every line
+<em>after</em> the heading — are appended to the existing file.
+<code>metadata</code> is accepted and discarded; the docstring says so:
+<em>"Unused; accepted for interface compatibility."</em> On the way back
+out, <code>search</code> invents
+<code>{"path": key, "score": score}</code> as the entry's metadata.</li>
+<li><strong><code>TestMemoryStore</code></strong> keeps a JSON array of
+records with <code>id</code> (a UUID), <code>content</code>,
+<code>metadata</code> and <code>createdAt</code>, and validates on read
+that all three of <code>id</code>, <code>content</code> and
+<code>createdAt</code> are strings. <code>createdAt</code> is written
+time only; there is no second axis anywhere in the subsystem, and a
+search for <code>valid_from</code>, <code>validFrom</code>,
+<code>as_of</code>, <code>asOf</code>, <code>observed_at</code> and
+<code>effective_</code> across both SDKs' memory trees returns
+nothing.</li>
+<li><strong><code>BedrockKnowledgeBaseStore</code></strong> mints a
+document id (a UUID for CUSTOM, the <code>s3://</code> URI for S3) and
+returns it, so a caller <em>does</em> get a stable handle — and there is
+no method on the store that takes one back.</li>
+</ul>
+<p>Scope lives on the third store alone, as <code>scope</code> plus
+<code>scope_metadata_key</code> (default <code>namespace</code>).
+<code>_resolve_attributes</code> puts it first in the attribute list for
+both document shapes, and refuses a caller metadata key that collides
+with it. An <code>access_control_list</code> can be attached to a
+document as well, and when a data source has ACL awareness enabled and
+the store has none configured, the store recognises the Bedrock
+<code>ValidationException</code> and re-raises it as a message naming
+the field to set.</p>
+<p>Nothing anywhere is an append-only record of mutations. Searches,
+adds and extractions all open OpenTelemetry spans —
+<code>start_memory_search_span</code>,
+<code>start_memory_add_span</code>,
+<code>start_memory_extract_span</code>, with a 363-line telemetry test
+beside them — and those go to a trace backend, not into the store the
+<code>audit_log</code> mark asks about.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is per store and the manager does not rank across them.
+<code>search</code> fans out concurrently and concatenates results in
+target order, and the type documentation is explicit about the
+consequence: <em>"results are concatenated in store-registration order
+with no cross-store ranking, so this cap can favor entries from
+earlier-registered stores."</em> With <code>max_entries</code> at 5 and
+two stores, the first-registered one can fill the injection.</p>
+<p>The two local stores rank on token overlap. <code>keyword.py</code>
+scores query tokens against the stored text and sorts on score alone.
+<code>TestMemoryStore</code> sorts on <code>(score, createdAt)</code>
+descending, so recency breaks a tie and nothing more — the docstring
+says <em>"the most recent entry winning ties"</em>, which is a fair
+description of what the code does and a narrower thing than the design
+doc's correction story rests on. The Bedrock store delegates ranking to
+the knowledge base and can apply a
+<code>min_score</code>/<code>max_score</code> bound afterwards, keeping
+a result the knowledge base did not score at all and documenting that
+<em>"a query the knowledge base has no good answer for can legitimately
+return none."</em></p>
+<p>Injection runs before the model call, gated on a trigger —
+<code>userTurn</code> in the SDK, <code>everyTurn</code> in the harness
+— and is where retrieval actually matters, because
+<code>search_memory</code> being registered does not mean the model
+calls it. Two properties are worth copying. The query callback can
+return <code>None</code> or <code>""</code> to skip injection for a
+turn, so "nothing worth looking up" is expressible rather than being a
+wasted search. And both callbacks fail open on an exception: a broken
+formatter costs the injected block, not the turn.</p>
+<p>The default format escapes entry content and source into a
+<code>&lt;memory&gt;</code> block, and the type documentation puts the
+responsibility where it belongs for the override: <em>"a custom
+<code>format</code> that emits markup is responsible for its own
+escaping."</em></p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>The default write does not block the agent and is not awaited
+anywhere.</strong> <code>schedule</code> dispatches a background task
+and returns; the trigger hook runs at <code>HookOrder.SDK_LAST</code>
+after the invocation has settled. A memory is retrievable as soon as the
+store says so, which for Bedrock means after knowledge base indexing —
+the integration tests carry an explicit <code>wait_for_indexed</code>
+helper for exactly that lag, and nothing in the SDK exposes it to an
+application.</p>
+<p><strong>A short run can end with the last turns unsaved.</strong> The
+harness docstring says so and names the remedy:
+<code>await agent.memory_manager.flush()</code> at the shutdown
+boundary, which the CLI does and <em>"a library consumer should do the
+same."</em> <code>flush</code> drains automatic extraction and
+explicitly does <strong>not</strong> await <code>add_memory</code>
+fire-and-forget writes.</p>
+<p><strong>No background pass rewrites the store.</strong> There is no
+consolidation, no deduplication, no reindex and no sweep. The only thing
+that touches an existing record is <code>FileMemoryStore.add</code>
+merging new facts into a file whose slug already exists.</p>
+<p>Three properties of the write are worth stating precisely because
+they interact. Extraction is <strong>at-least-once</strong> by design,
+and the retry granularity is the whole batch: if one of five concurrent
+<code>add</code> calls fails, the mark rolls back and all five facts are
+extracted and written again. <code>FileMemoryStore.add</code> has no
+idempotency — it appends. So the vended store the harness enables by
+default is the one that accumulates duplicates under the contract the
+protocol warns about. And the buffer holding unsaved messages is trimmed
+only past the <em>minimum</em> mark across stores, so <em>"a store stuck
+failing keeps its messages buffered"</em> — bounded, as the comment
+says, by the session, which for a long-running agent is not a small
+bound.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>Two SDKs at close parity, and the parity is the integration story:
+the memory manager, the coordinator, the triggers, the extractor and all
+three vended stores exist in both, with matching behaviour down to the
+timestamp format — <code>TestMemoryStore._now</code> is documented as
+matching JavaScript's <code>toISOString()</code> <em>"so a record
+written by either SDK carries the same timestamp shape"</em>, and the
+store name is sanitised identically for <em>"cross-SDK
+compatibility."</em></p>
+<p>The surfaces are: the SDK (<code>Agent(memory_manager=...)</code>),
+the harness (<code>create_harness(memory=True)</code>, on by default),
+the <code>strands</code> CLI over that harness, an MCP server in
+<code>strands-mcp/</code>, and the two model-facing tools. The subagent
+path is the most interesting one — <code>subagent.py</code> calls
+<code>resolve_memory</code> for the child with
+<code>writable=False</code>, so a delegate reads the parent's memory and
+cannot write to it, <em>"without promoting its throwaway subtask into
+the store."</em></p>
+<p>A store may also contribute its own tools through
+<code>get_tools</code>, which the manager registers alongside its two.
+None of the three vended stores implements it, and the read-only wrapper
+drops it.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Nothing can be deleted, and the substrate could.</strong>
+<code>Storage</code> declares <code>async delete(key)</code>;
+<code>_NamespacedStorage</code> forwards it;
+<code>LocalFileStorage</code>, <code>InMemoryStorage</code> and
+<code>S3Storage</code> implement it; the context offloader, the stash
+and the snapshot session manager call it. A search for
+<code>delete</code>, <code>remove</code>, <code>forget</code>,
+<code>expire</code>, <code>ttl</code>, <code>supersede</code>,
+<code>tombstone</code> and <code>invalidate</code> across
+<code>memory/</code> and <code>vended_memory_stores/</code> in both SDKs
+returns the phrase "fire-and-forget" and one comment about removing
+content blocks before extraction. The capability is one layer down and
+the memory layer does not reach it.</p>
+<p><strong>The correction mechanism is documented and mostly
+unimplemented.</strong> <code>team/designs/0011-memory-manager.md</code>
+line 152: <em>"Corrections are handled by storing updated facts. Newer
+entries take precedence via recency weighting in search results."</em>
+Of the three stores, <code>TestMemoryStore</code> weights recency as a
+tie-break, <code>FileMemoryStore</code> does not weight it at all, and
+the Bedrock store ranks by semantic relevance. In the harness default,
+"I moved to Berlin" extracted in March and "I moved to Lisbon" extracted
+in September both land under a <code># User location</code> heading in
+one file and are injected together as one entry.</p>
+<p><strong>Extraction excludes tool traffic by default, which is the
+right default and not a complete fence.</strong>
+<code>DEFAULT_MEMORY_MESSAGE_FILTER</code> strips <code>toolUse</code>
+and <code>toolResult</code>, and nothing in the SDK or the harness
+overrides it — so a page the agent fetched with <code>web_fetch</code>
+is not itself extracted into durable memory. The assistant's own text
+<em>about</em> that page is, because it is an ordinary text block. So
+the direct vector is closed and the laundered one — the model retelling
+hostile content in its own words, and that retelling becoming a memory
+injected before every subsequent turn — is not. The injected block is
+XML-escaped, which prevents tag confusion and not
+instruction-following.</p>
+<p><strong>The scope predicate has an override that drops it.</strong>
+<code>_resolve_filter</code> returns an explicit <code>filter</code>
+before it considers <code>scope</code>, so a filter set to narrow a
+search by any other attribute removes the tenant predicate entirely
+while writes continue to carry the scope stamp. Both SDKs document the
+asymmetry in the field docstring and a unit test pins the behaviour, so
+this is a chosen design rather than an oversight — but a tenant boundary
+that a second, unrelated feature silently disables is worth stating as
+what it is.</p>
+<p><strong>The human-in-the-loop gate does not reach the default
+write.</strong> <code>HumanInTheLoop</code> and
+<code>CedarAuthorization</code> are real intervention handlers, and
+<code>HumanInTheLoop.before_tool_call</code> hooks
+<code>BeforeToolCallEvent</code>. Extraction is not a tool call — the
+coordinator calls <code>store.add</code> directly from a background task
+— so the path that writes memory by default never passes the gate. The
+optional <code>add_memory</code> tool does, and it is off by default.
+There is no surface anywhere that lists memories for a person to
+approve, reject or remove; the harness's store is markdown a person can
+open in an editor, which is a filesystem and not a review state.
+<code>human_review</code> is withheld on that basis, and naming why is
+more useful than the dash: the machinery exists, it is good, and it is
+on the other side of the boundary from the memory.</p>
+<p><strong>Two marks are carried.</strong> <code>scope_enforced</code>
+and <code>negative_eval</code>, both evidenced in the frontmatter.
+<code>tombstone</code>, <code>bitemporal</code> and
+<code>audit_log</code> have no candidate mechanism at all — the searches
+for validity intervals and for an append-only mutation record return
+nothing in either SDK. <code>trust_state</code> is withheld because
+metadata is free-form and nothing reads it back: a caller can write
+<code>verified: true</code> and a TypeScript test fixture does, and no
+read path in either SDK filters or branches on any metadata key.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I ran nothing.</strong> The screen reported 43 dependency
+surfaces inside the seven-day cooldown, which is an artifact of a
+<code>--depth 1</code> clone dating every file to the tip rather than a
+fact about the repository; either way the posture here is read-only, and
+every claim on this page is read from source at the pinned commit.</p>
+<p>The memory subsystem carries 24 test files and about 11,300 lines
+across both SDKs, and the coverage is genuine rather than nominal.
+<code>test_memory_manager.py</code> alone is 1,556 lines; the Bedrock
+store's unit suite is 1,176. The behaviours that matter are pinned: that
+a store implementing only the Protocol's inherited stub counts as not
+implementing it, that <code>IntervalTrigger</code> rejects
+<code>True</code> as a turn count because <code>bool</code> subclasses
+<code>int</code>, that a metadata key colliding with the scope key is
+dropped and logged, that an explicit filter beats the scope-derived one,
+and that the high-water mark rolls back on failure.</p>
+<p>The one that earns a mark is the pair of live scope-isolation cases
+described in the frontmatter, and what makes them worth copying is the
+ordering: write, wait for indexing, <strong>assert present in scope
+A</strong>, then assert absent in scope B, with the comment stating that
+<em>"absence is only meaningful once the doc is confirmed retrievable in
+scope A above."</em> Read the unit-level scope tests beside them to see
+the difference the mark is drawing — those assert that the right filter
+reached a mock whose <code>retrievalResults</code> is <code>[]</code>,
+which establishes the request shape and nothing about what the knowledge
+base would have returned.</p>
+<p>The gap in the suite is the interaction between the at-least-once
+contract and the store that cannot absorb it. <code>_write</code>'s
+docstring states that a partial batch failure retries the whole batch
+and that <em>"stores should expect duplicate writes"</em>;
+<code>FileMemoryStore.add</code> appends new facts to an existing slug
+with no dedup. No committed case writes the same content twice through
+the file store and asserts what the file holds afterwards.</p>
+<p>There is no paper and no benchmark. <code>arxiv</code>,
+<code>bibtex</code>, <code>@article</code>, <code>citation</code> and
+<code>doi</code> return nothing in the README or
+<code>CONTRIBUTING.md</code>, which is what one expects of a vendor SDK;
+the <code>site/</code> directory carries documentation rather than
+results, and the atlas records this so a reader can tell an absent
+evaluation from an unread one.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Detect an optional method instead of declaring a capability
+flag.</strong> <code>_has_method</code> looks the name up on the store's
+<em>type</em> and returns false when it resolves to the Protocol's own
+stub, so a store that inherits the interface without overriding a method
+is correctly read as not implementing it. The alternative — a
+<code>supports_add: bool</code> the implementer sets — is a second thing
+to keep in sync with the code, and it is wrong the first time someone
+forgets.</p>
+<p><strong>Give the retry a key the content cannot provide.</strong>
+<code>AddMessagesContext</code> carries a per-message sequence number
+precisely so a store can build an idempotency token, and the docstring
+explains why the obvious alternative fails: a content hash <em>"collides
+when two messages share text (e.g. 'ok')"</em>. It also states the
+constraints on the number — gaps are possible, it resets each run — so
+an implementer knows to combine it with a run id rather than trusting it
+alone.</p>
+<p><strong>Attenuate a delegate by removing methods, not by setting a
+flag.</strong> <code>_ReadOnlyStore</code> wraps a store and simply does
+not define <code>add</code>, <code>add_messages</code> or
+<code>get_tools</code>. Because the manager detects sinks by inspection,
+the delegate's manager cannot route a write to it — there is no
+<code>writable=False</code> to be ignored by a future code path. The
+reason for dropping <code>get_tools</code> is the transferable part: a
+store-native tool is an unbounded surface nobody can certify
+read-only.</p>
+<p><strong>Let the injection query return nothing.</strong> A query
+callback returning <code>None</code> or <code>""</code> skips injection
+for that turn. Most systems in this atlas search unconditionally and
+then decide what to do with the results; expressing "there is nothing to
+look up here" costs one branch and saves the whole retrieval.</p>
+<p><strong>Fail open on the cosmetic path and loud on the semantic
+one.</strong> A raising <code>query</code> or <code>format</code>
+callback skips injection and the turn proceeds; a store write failure
+raises <code>AggregateMemoryError</code> naming every store that failed
+and carrying the flattened reasons. Two different failure classes, two
+different answers.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>A correction story in the design doc that one implementation
+supports.</strong> Recency weighting is a reasonable answer to
+supersession-without-delete. It has to be in the stores, and here it is
+in one of three, as a tie-break.</p>
+<p><strong>An override that replaces a security predicate instead of
+narrowing it.</strong> If <code>filter</code> and <code>scope</code> are
+both set, the safe composition is the conjunction. Returning the
+explicit filter alone makes an unrelated feature a scope-disabling
+switch, and documenting the asymmetry does not make the failure less
+total.</p>
+<p><strong>A write contract the shipped default store cannot
+honour.</strong> At-least-once delivery plus an appending store equals
+duplicated facts, and the appending store is the one the harness turns
+on.</p>
+<p><strong>Memory on by default with no way to take anything
+back.</strong> The combination — automatic extraction, automatic
+injection every turn, no delete, no review surface — means the first
+thing an adopter needs after their agent remembers something wrong is
+the one operation the SDK does not have.</p>
+<h3 id="fit">Fit</h3>
+<p>Take this if you are building on Strands already, or if you want a
+memory interface whose shape you can implement against without adopting
+anybody's storage opinion. The protocol is five methods, the tool and
+injection policy is configurable per manager, the extraction cadence is
+a value object you can subclass, and the Python and TypeScript sides are
+close enough that a team split across both is not maintaining two mental
+models.</p>
+<p>Do not take it as the memory layer for anything that will receive a
+correction request from a person — a user profile, an assistant that
+learns preferences, a system with a compliance surface. The absent
+delete is not a gap you can close in your own store either, because the
+protocol has no method for the manager to route to; you would be
+building a second interface beside this one. The honest reading is that
+this is a well-built <em>recall</em> layer for facts nobody will need to
+unsay, and the design documents show a team that knows where the line is
+and has not crossed it yet.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>No delete, no supersession, no tombstone</strong>, in a
+subsystem the harness enables by default and whose substrate already
+implements <code>delete</code>.</li>
+<li><strong>The default store merges a correction into the file it
+corrects.</strong> Same slug, appended lines, one entry on the way
+out.</li>
+<li><strong>An explicit Bedrock <code>filter</code> unscopes search
+while writes stay scoped.</strong> The asymmetry is documented and
+tested, which makes it a decision rather than a defect, and a decision
+that will surface as a cross-tenant read.</li>
+<li><strong>At-least-once extraction into a store with no
+idempotency</strong>, with batch-level retry granularity, and no
+committed test for the duplicate case.</li>
+<li><strong>The approval gate does not reach the default write
+path</strong>, because extraction is not a tool call.</li>
+<li><strong>A failing store's buffer grows for the life of the
+session</strong>, by design and with the comment saying so.</li>
+<li><strong><code>max_entries</code> with no cross-store
+ranking</strong> lets an earlier-registered store crowd out a later one
+regardless of relevance — documented, and still a retrieval property an
+adopter will meet by surprise.</li>
+<li><strong>Nothing records what changed.</strong> Spans go to a trace
+backend; the store holds no history, so "why does the agent believe
+this" has no answer from the store.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>Borrow the protocol. Five methods, optional-by-inspection, with the
+extension points pushed into context objects
+(<code>AddMessagesContext</code>, <code>InjectionQueryContext</code>,
+<code>InjectionFormatContext</code>) so the signatures can stay put —
+that is a well-designed seam and it is worth copying into a memory layer
+that has nothing else in common with this one.</p>
+<p>Borrow the extraction coordinator's bookkeeping too: a per-store
+high-water mark, a per-store serialisation chain, a mark advanced before
+the write and rolled back on failure, and a backoff that probes rather
+than gives up. Most systems in this atlas that extract in the background
+do it with a queue and a prayer.</p>
+<p>What you have to build yourself is the half the protocol does not
+model. If your memory can be wrong — and the atlas's position is that it
+will be — you need an identity for a record, a way to supersede one, a
+way to remove one, and something durable that says what happened. None
+of that can be added inside a store here, because the manager has no
+method to route to and the entry has no id to name. The decision, then,
+is whether your memory is the kind nobody will ask you to change. If it
+is, this is a good layer. If it is not, this is the recall half of a
+system whose correction half you will write.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li><strong>Is <code>add_messages</code> used by anything outside this
+repository?</strong> The branch is carefully specified — sequence
+numbers, idempotency guidance, the no-extractor passthrough — and no
+vended store and no documentation example implements it. The site
+catalog lists an AgentCore memory store as an external integration,
+which is the shape it is aimed at, and that is outside the pin.</li>
+<li><strong>What does the duplicate actually look like?</strong> The
+at-least-once contract and the appending file store are both established
+from the code; the resulting file after a partial batch failure is not,
+and one test would settle it.</li>
+<li><strong>Is recency weighting intended to arrive in the
+stores?</strong> The design doc states it as the correction mechanism
+and <code>TestMemoryStore</code> implements the narrow version. Whether
+<code>FileMemoryStore</code> is meant to follow is not recorded anywhere
+in <code>team/designs/</code>.</li>
+<li><strong>Why does an explicit filter replace the scope filter rather
+than AND with it?</strong> Both SDKs document the choice and a test pins
+it, so it was made deliberately; the reason is not written down.</li>
+<li><strong>Does the manager's fan-out have a per-store
+timeout?</strong> <code>asyncio.gather</code> with
+<code>return_exceptions=True</code> surfaces a failure, and a store that
+hangs holds the injection for the turn. No deadline appears on that
+path.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>strands-py/src/strands/memory/memory_manager.py</code></td>
+<td>775</td>
+<td>Registration, fan-out search, add, both tools, injection, flush</td>
+</tr>
+<tr>
+<td><code>strands-py/src/strands/memory/types.py</code></td>
+<td>343</td>
+<td><code>MemoryStore</code> Protocol, <code>MemoryEntry</code>, the
+config TypedDicts, <code>_has_method</code></td>
+</tr>
+<tr>
+<td><code>strands-py/src/strands/memory/extraction/coordinator.py</code></td>
+<td>336</td>
+<td>High-water marks, per-store chains, backoff, the two write
+shapes</td>
+</tr>
+<tr>
+<td><code>strands-py/src/strands/memory/extraction/types.py</code></td>
+<td>149</td>
+<td><code>Extractor</code>, <code>ExtractionTrigger</code>,
+<code>MemoryMessageFilter</code> and its default</td>
+</tr>
+<tr>
+<td><code>strands-py/src/strands/memory/extraction/model_extractor.py</code></td>
+<td>159</td>
+<td>The fact-extraction prompt and the JSON parse</td>
+</tr>
+<tr>
+<td><code>strands-py/src/strands/memory/extraction/triggers.py</code></td>
+<td>94</td>
+<td><code>InvocationTrigger</code>, <code>IntervalTrigger</code></td>
+</tr>
+<tr>
+<td><code>strands-py/src/strands/vended_memory_stores/bedrock_knowledge_base/store.py</code></td>
+<td>596</td>
+<td>Scope stamping, the retrieval filter, CUSTOM and S3 ingestion,
+ACLs</td>
+</tr>
+<tr>
+<td><code>strands-py/src/strands/vended_memory_stores/test_memory_store/store.py</code></td>
+<td>302</td>
+<td>JSON records with id and <code>createdAt</code>; recency as a
+tie-break</td>
+</tr>
+<tr>
+<td><code>strands-py/src/strands/vended_memory_stores/file_memory_store/store.py</code></td>
+<td>202</td>
+<td>Markdown per slug, append-on-collision, metadata discarded</td>
+</tr>
+<tr>
+<td><code>strands-py/src/strands/storage/storage.py</code></td>
+<td>—</td>
+<td>The <code>Storage</code> Protocol, including the <code>delete</code>
+no memory path calls</td>
+</tr>
+<tr>
+<td><code>strands-py/src/strands/storage/search/keyword.py</code></td>
+<td>95</td>
+<td>Token-overlap scoring, sorted on score alone</td>
+</tr>
+<tr>
+<td><code>strands-ts/src/memory/memory-manager.ts</code></td>
+<td>714</td>
+<td>The TypeScript manager</td>
+</tr>
+<tr>
+<td><code>strands-ts/src/vended-memory-stores/bedrock-knowledge-base/store.ts</code></td>
+<td>740</td>
+<td>The TypeScript Bedrock store, scope and filter at parity</td>
+</tr>
+<tr>
+<td><code>harness-py/src/strands_harness/memory.py</code></td>
+<td>136</td>
+<td><code>resolve_memory</code>, the harness tool policy,
+<code>_ReadOnlyStore</code></td>
+</tr>
+<tr>
+<td><code>harness-ts/src/memory.ts</code></td>
+<td>110</td>
+<td>The TypeScript equivalent</td>
+</tr>
+<tr>
+<td><code>strands-py/tests/strands/memory/test_memory_manager.py</code></td>
+<td>1556</td>
+<td>The manager's unit suite</td>
+</tr>
+<tr>
+<td><code>strands-py/tests/strands/vended_memory_stores/bedrock_knowledge_base/test_store.py</code></td>
+<td>1176</td>
+<td>Scope, filter, ingestion and ACL cases against mocked clients</td>
+</tr>
+<tr>
+<td><code>strands-py/tests_integ/memory/test_bedrock_knowledge_base_store.py</code></td>
+<td>447</td>
+<td>Live KB cases, including the scope-isolation case with its positive
+control</td>
+</tr>
+<tr>
+<td><code>team/designs/0011-memory-manager.md</code></td>
+<td>460</td>
+<td>The design, including the correction story at line 152</td>
+</tr>
+<tr>
+<td><code>team/designs/0017-file-memory-store.md</code></td>
+<td>635</td>
+<td>The file store's design</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Commands run at the repository root, for the absence claims
+above.</p>
+<pre class="sh"><code># No deletion, expiry or supersession anywhere in the memory subsystem
+# (2 results: the phrase &quot;fire-and-forget&quot;, and a comment about removing
+# content blocks before extraction).
+grep -rniE &quot;\b(delete|remove|forget|expire|ttl|supersede|tombstone|invalidate)\b&quot; \
+  strands-py/src/strands/memory/ strands-py/src/strands/vended_memory_stores/ \
+  harness-py/src/strands_harness/memory.py
+
+# Who calls the Storage delete the memory layer does not: the context offloader,
+# the stash, the snapshot session manager, and the namespacing wrapper.
+grep -rn &quot;\.delete(&quot; strands-py/src/
+grep -rn &quot;\.delete(&quot; strands-ts/src/
+
+# No validity interval on either side (0 results).
+grep -rniE &quot;valid_from|validFrom|valid_to|validUntil|as_of|asOf|observed_at|effective_&quot; \
+  strands-py/src/strands/memory strands-py/src/strands/vended_memory_stores \
+  strands-ts/src/memory strands-ts/src/vended-memory-stores
+
+# No append-only mutation record in the store (0 results).
+grep -rniE &quot;audit|event_log|append-only|appendOnly&quot; \
+  strands-py/src/strands/memory strands-py/src/strands/vended_memory_stores \
+  strands-ts/src/memory strands-ts/src/vended-memory-stores
+
+# No discrete epistemic status: every hit is a Promise rejection status, the
+# prose &quot;candidate set&quot;, a ValueError message, or one TS test fixture&#39;s
+# free-form metadata value.
+grep -rniE &quot;\b(verified|unverified|candidate|rejected|trust|provenance|approved|pending_review)\b&quot; \
+  strands-py/src/strands/memory strands-py/src/strands/vended_memory_stores \
+  strands-ts/src/memory strands-ts/src/vended-memory-stores \
+  harness-py/src/strands_harness/memory.py harness-ts/src/memory.ts
+
+# add_messages is declared on the Protocol and implemented by no vended store
+# and no documentation example; the only definitions outside tests is the
+# Protocol&#39;s own raising default.
+grep -rn &quot;def add_messages\|addMessages(&quot; strands-py/src strands-ts/src \
+  harness-py/src harness-ts/src site/docs site/src
+
+# Nothing overrides the default extraction filter that drops tool traffic.
+grep -rn &quot;MemoryMessageFilter\|memoryMessageFilter&quot; \
+  strands-py/src harness-py/src strands-ts/src harness-ts/src
+
+# The recency-weighting claim: one sort in the memory tree carries a time term,
+# and it is TestMemoryStore&#39;s tie-break.
+grep -rniE &quot;recency|recent|created_at|createdAt|timestamp|sort&quot; \
+  strands-py/src/strands/storage/search/ strands-py/src/strands/vended_memory_stores/ \
+  strands-py/src/strands/memory/
+
+# No paper (0 results).
+grep -rniE &quot;arxiv|bibtex|@article|citation|doi&quot; README.md CONTRIBUTING.md</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-22</strong> — <a
+href="https://github.com/strands-agents/harness-sdk/commit/880c5bd412b002254ad230da1394a3bbbca58d9f"><code class="commit-id" title="880c5bd412b002254ad230da1394a3bbbca58d9f">880c5bd4…</code></a>
+— first reading, at the head of the default branch. Screened before
+anything was read: <strong>0 auto-run surfaces</strong>, 27 build-time
+execution points (18 <code>conftest.py</code>, the root
+<code>package.json</code>'s <code>prepare: husky</code>, and seven
+example <code>package.json</code> files whose <code>prepare</code> runs
+<code>npm ci --prefix ../../..</code>), 32 unpinned dependency surfaces
+and 43 inside the seven-day cooldown — the cooldown count is an artifact
+of a <code>--depth 1</code> clone, which dates every file to the tip,
+and not a statement about the repository. <code>.gitattributes</code>
+carries <code>* text=auto eol=lf</code> and no <code>filter=</code>;
+there is no <code>.gitmodules</code>; <code>.claude/</code> and
+<code>.kiro/</code> are symlinks to <code>.agents/</code> and hold no
+settings or hooks; <code>.husky/pre-commit</code> runs the project's own
+build, test, lint, format and type-check scripts and is inert in a
+clone. <code>AGENTS.md</code> and <code>CLAUDE.md</code> are present and
+were treated as data. Nothing was installed, built or executed. Marks:
+<code>scope_enforced</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

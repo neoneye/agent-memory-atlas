@@ -438,6 +438,36 @@ the contract — the durable outbox, the fail-open timeout, the capture
 exclusions, deactivating a superseded fact — is an adapter obligation,
 so the conformance matrix is a promise made on an unreviewable
 implementation's behalf.</p>
+<p><a href="../../systems/strands-agents/">Strands Agents</a> answers
+two of this page's tradeoffs and confirms the first one exactly. Its
+<code>MemoryStore</code> Protocol has one required method,
+<code>search</code>, and four optional ones, and the host detects which
+a backend implements <strong>by inspecting the type</strong> —
+<code>_has_method</code> resolves the name on the store's class and
+returns false when it lands on the Protocol's own stub. So the contract
+reports capabilities without a capability flag anybody has to keep in
+sync, and the host is not forced to assume the weakest backend. Nor is
+it one provider at a time: <code>MemoryManager</code> holds a list, fans
+searches out concurrently, and attributes each result to its store — at
+the documented price that results are <em>"concatenated in
+store-registration order with no cross-store ranking,"</em> so the
+injection cap can be filled by whichever store was registered first.
+Extension points live in context objects
+(<code>AddMessagesContext</code>, <code>InjectionQueryContext</code>)
+precisely so the method signatures can stay fixed while the calling
+convention grows.</p>
+<p>Then the ceiling. <strong>There is no deletion hook</strong>, in
+either the Python or the TypeScript contract, and the
+<code>Storage</code> layer the vended file store sits on declares
+<code>delete</code> that three other subsystems call and no memory path
+does. The design doc names the intended substitute — <em>"Corrections
+are handled by storing updated facts. Newer entries take precedence via
+recency weighting in search results"</em> — and of the three vended
+stores one implements recency weighting, as a tie-break between equal
+scores. That is this page's <em>"Deletion is the hard one"</em> in its
+purest form: an erasure request reaching a well-built interface with
+nowhere to go, and a correction story that depends on a ranking property
+the contract cannot require.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li>Delete a memory through the host and prove it is gone from the

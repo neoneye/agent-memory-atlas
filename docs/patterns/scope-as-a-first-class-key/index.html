@@ -1036,6 +1036,34 @@ their call sites across the tree returns nothing outside the file that
 defines them. An unscoped accessor with no caller is a hazard rather
 than a defect, and the check that separates the two is one command —
 which is the check to run before reporting either.</p>
+<p><a href="../../systems/strands-agents/">Strands Agents</a> has the
+key on both sides and a second feature that turns it off.
+<code>BedrockKnowledgeBaseStore</code> stamps
+<code>(scope_metadata_key, scope)</code> as the first attribute on every
+document it writes — inline for a CUSTOM data source, in a
+<code>.metadata.json</code> sidecar for S3 — and drops a caller metadata
+key that collides with the scope key rather than letting it be
+overwritten, which is the write-side guard this page asks for.
+<code>_resolve_filter</code> derives
+<code>{"equals": {"key": ..., "value": ...}}</code> and
+<code>search</code> sends it to Bedrock on every call. Both SDKs do it
+identically and a live integration test in each writes under one scope,
+confirms the document is retrievable there, and asserts it is absent
+from a search under another.</p>
+<p>The defect is in the composition. <code>_resolve_filter</code> reads
+<code>if self.filter: return self.filter</code> <strong>before</strong>
+it considers <code>scope</code>, so an explicit retrieval filter — set
+to narrow a search by any unrelated attribute — replaces the tenant
+predicate instead of being ANDed with it, while writes go on carrying
+the scope stamp. Both SDKs document the asymmetry in the field docstring
+(<em>"an explicit filter affects search only; writes always scope by
+<code>scope</code>"</em>) and a unit test pins it, so this is a chosen
+design rather than an oversight. It is still the failure this page
+exists for, arriving through the one door nobody guards: not a missing
+predicate, but a second feature whose natural use removes it. Compare
+OpenClaw's <code>scopedPredicate</code>, which composes agent scope and
+user filter into one predicate <em>"so scope cannot be lost"</em> — the
+same two inputs, combined instead of chosen between.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <p>The first of these no longer has to be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a

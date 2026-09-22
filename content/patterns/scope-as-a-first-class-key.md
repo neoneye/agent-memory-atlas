@@ -776,6 +776,30 @@ across the tree returns nothing outside the file that defines them. An unscoped
 accessor with no caller is a hazard rather than a defect, and the check that separates
 the two is one command — which is the check to run before reporting either.
 
+[Strands Agents](../../systems/strands-agents/) has the key on both sides and a
+second feature that turns it off. `BedrockKnowledgeBaseStore` stamps
+`(scope_metadata_key, scope)` as the first attribute on every document it
+writes — inline for a CUSTOM data source, in a `.metadata.json` sidecar for S3 —
+and drops a caller metadata key that collides with the scope key rather than
+letting it be overwritten, which is the write-side guard this page asks for.
+`_resolve_filter` derives `{"equals": {"key": ..., "value": ...}}` and `search`
+sends it to Bedrock on every call. Both SDKs do it identically and a live
+integration test in each writes under one scope, confirms the document is
+retrievable there, and asserts it is absent from a search under another.
+
+The defect is in the composition. `_resolve_filter` reads
+`if self.filter: return self.filter` **before** it considers `scope`, so an
+explicit retrieval filter — set to narrow a search by any unrelated attribute —
+replaces the tenant predicate instead of being ANDed with it, while writes go on
+carrying the scope stamp. Both SDKs document the asymmetry in the field
+docstring (*"an explicit filter affects search only; writes always scope by
+`scope`"*) and a unit test pins it, so this is a chosen design rather than an
+oversight. It is still the failure this page exists for, arriving through the
+one door nobody guards: not a missing predicate, but a second feature whose
+natural use removes it. Compare OpenClaw's `scopedPredicate`, which composes
+agent scope and user filter into one predicate *"so scope cannot be lost"* — the
+same two inputs, combined instead of chosen between.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)
