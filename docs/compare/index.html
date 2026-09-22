@@ -52858,6 +52858,47 @@ read are the probe-tool binding — which credential a probe uses and
 whether the probe result is stored beside the lemma it validated — and
 then whether <code>confidence</code> and <code>applies_to</code> ever
 reach the read path or stop at the write.</li>
+<li><strong><code>augustoolucas/yacao</code> was examined and has no
+report: the only thing its workflow durably writes is a plan for the job
+in hand, and the only thing its code durably writes is a version pin in
+your config.</strong> MIT, 927 lines across 14 files at <a
+href="https://github.com/augustoolucas/yacao/commit/12079c75dd35b2cb2a6a66a5d357909027684dd1"><code class="commit-id" title="12079c75dd35b2cb2a6a66a5d357909027684dd1">12079c75…</code></a>,
+v0.4.3, 107 commits since 22 July 2026. <em>Yet Another Coding Agent
+Orchestrator</em> is a plugin for OpenCode whose whole content is two
+agent definitions and three skills: an orchestrator that clarifies,
+plans and reviews, and a builder subagent that implements one
+self-contained task contract at a time and answers in a fixed four-field
+format — <code>STATUS</code> over <code>complete</code> /
+<code>partial</code> / <code>blocked</code> / <code>escalate</code>,
+<code>CHANGES</code>, <code>VERIFIED</code> (<em>"exact command(s) run
+and their real output (not 'should pass')"</em>) and <code>GAPS</code>.
+It is workflow, and it says so. The vocabulary settles the scope
+question rather than the README: across every <code>.js</code>,
+<code>.md</code> and <code>.json</code> in the tree, <code>memor</code>,
+<code>recall</code>, <code>remember</code>, <code>forget</code>,
+<code>persist</code>, <code>belief</code>, <code>retriev</code>,
+<code>embedding</code>, <code>sqlite</code>, <code>vector</code> and
+<code>knowledge</code> return three incidental hits — <em>memorize</em>
+in the README's prose, a comment about persisting an update-check
+timestamp, and <em>"[r]egisters the agents in memory"</em> meaning
+in-process. The planning skill does write durable files,
+<code>.opencode/plans/plan-&lt;slug&gt;/plan.md</code> and one task
+contract per task, and nothing in the three skills or the two prompts
+reads an earlier plan back: they are a work ledger for the current job,
+which is the line this page already draws for <code>beads</code> and
+<code>oh-my-openagent</code>. <strong>What earns the entry is the other
+durable write.</strong> With <code>autoUpdate</code> on, the plugin
+fetches the latest release tag from the GitHub API and rewrites the
+user's <code>opencode.jsonc</code> in place to pin the plugin spec
+forward, preserving jsonc comments and quote style by rewriting raw text
+rather than reparsing, and <code>updateScope: "all"</code> extends that
+to the project's own config. It defaults to off and the write is
+temp-file-then-rename with the original mode copied — careful work. It
+is still a plugin that edits the file that decides which plugins you
+load, which is worth knowing before the screen in this repository's own
+<a
+href="https://github.com/neoneye/agent-memory-atlas/blob/main/.agents/skills/screen-repository/SKILL.md">screening
+skill</a> is pointed at the next thing that does it less carefully.</li>
 </ul>
 <h4 id="weights-as-memory-at-adapter-granularity">Weights as memory, at
 adapter granularity</h4>
