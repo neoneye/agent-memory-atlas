@@ -279,6 +279,35 @@ contributor from finishing the job.
 
 [Signet AI](../../systems/signetai/) enforces the separation in the schema and then again at the write gate. A migration splits rows into episodic evidence — anything not produced by the daemon's own derived source types — and derived state, stating that saves are *"immutable EPISODIC evidence"* and that *"Only Dreaming derives semantic state from episodic rows"*. The MCP store tool's own description repeats it to the model, adding that a structured payload is *"retained alongside the content as evidence but is not applied to the graph from this tool"*. The gate is in code, not the prompt: `citeEvidence` resolves each operation's quote and source ref against the episodic store, scoped by agent, and requires the stored content to contain the quote; `validateRequestBeforeWrites` refuses the whole batch on the first citation that does not resolve. What distinguishes it from the other instances here is the refusal ledger — the exclusion row records the failure with a class of `quote_mismatch`, `scope_mismatch`, `source_projection` or `incomplete_transcript`, a retry count and a requeue timestamp, so an ungrounded belief is a work item rather than a silence.
 
+[elizaOS](../../systems/elizaos/) carries the strongest version of the backward
+link this page asks for, and closes the loop the others leave open. Every
+extracted fact stores `extractionEvidenceIds` — which messages produced it — and
+`extractionSourceRevisions`, a map from source message id to **the revision that
+was read**. That second field is what turns provenance into a mechanism rather
+than a record: `reviewChangedExtractionSources` compares each fact's stored
+revisions against the current ones and marks any fact whose sources were edited
+or removed `extractionReviewRequired: true`, then a reconciliation pass sets
+`extractionStatus: "source_invalidated"`, stamps the reconciliation id and the
+changed source ids, and adds those sources to a reprocess queue. A read-side
+predicate, `isActiveMemoryEvidence`, then withholds the fact from the FACTS
+provider, from the long-term memory service and from the write-time dedupe pool.
+So a belief whose evidence stopped saying what it said is out of the prompt
+without anybody noticing it was wrong, and the source is queued to be read
+again.
+
+Two details are worth copying beside the shape. The retirement write throws a
+typed error rather than continuing — *"Derived fact could not be retired"* — so a
+failed invalidation is loud instead of leaving a stale belief live. And a
+historical backfill marked `extractionBackfill` attaches provenance to a
+rediscovered row **without** treating old evidence as reconfirmation, which is
+the distinction between learning where a belief came from and deciding it is
+still true.
+
+Where it stops is the value. Retirement is keyed on the row, and the write-time
+dedupe opens its loop with `if (!isActiveMemoryEvidence(candidate)) continue;`,
+so a retired claim does not block the identical text being written again as a
+new fact — see [rejected-value tombstone](../rejected-value-tombstone/).
+
 ## Implementation checklist
 
 - Store the event before starting asynchronous extraction.

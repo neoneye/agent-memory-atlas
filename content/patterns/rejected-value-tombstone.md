@@ -953,6 +953,28 @@ for being wrong does not record it, and recording it does not erase it.
 
 [create-context-graph](../../systems/create-context-graph/)'s session connector gets most of the way and stops at the key. A corrections pass reads a user turn matching one of eight patterns, writes the preceding assistant turn as an alternative carrying a not-chosen flag and a reason, and links it as rejected from a decision — a durable, reasoned record of a value a person rejected, which is more than most of the corpus has. Its name is derived from the session id and the message's index in the transcript, so importing a second session in which the model proposes the same thing creates a second node and consults neither. The distinction this page draws — keyed on the record versus keyed on the value — is the whole difference here, and it is one hash function wide.
 
+[elizaOS](../../systems/elizaos/) is the near-miss that comes closest to having
+built it by accident. It already computes the key: `normalizeFactTextKey`
+canonicalizes a claim to lowercase, letters and numbers only, whitespace
+collapsed, unicode-aware — and `findEquivalentFact` looks that key up against
+the recent fact window, scoped by room and entity, before every fact insert. It
+also already has a retirement state that every read path respects. The two are
+one `continue` apart: the dedupe loop opens with
+`if (!isActiveMemoryEvidence(candidate)) continue;`, so a retired row is skipped
+as a match candidate and the identical normalized text is written again as a new
+fact with a new id.
+
+That leaves the system where this page's problem statement starts. Deletion is
+real — `runtime.deleteMemory`, an agent action and a `DELETE` route — and so is
+evidence-linked retirement, and both are keyed on the record, so *"forget that"*
+survives exactly until the next message asserts the claim again. The change that
+would close it is unusually small for this corpus: write the canonical key the
+dedupe already computes into a rejected-values table, and consult it in the loop
+that already skips inactive rows. The one argument for the current behaviour is
+that fresh evidence arguably *should* revive a claim — which is the tradeoff this
+page's *Tradeoffs* section names, and nothing in the repository states it as a
+decision.
+
 ## Tests to require
 
 - **Run the laundering sequence**: reject a value, supersede the claim with a

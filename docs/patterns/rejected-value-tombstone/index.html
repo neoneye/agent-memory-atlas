@@ -124,7 +124,7 @@ belief.</p>
         <article class="prose" id="article">
 <blockquote>
 <p><strong>This is not an established best practice.</strong>
-58 systems of 626
+58 systems of 627
 carry it, and almost no two arrived the same way: one invented it under
 adversarial pressure, one adopted it from the first, one arrived at a
 weaker form independently, one was driven to it by a regulation, several
@@ -273,7 +273,7 @@ A store written only by explicit user action cannot resurrect a value on
 its own, and supersession is enough.</p>
 <h2 id="seen-in-the-atlas">Seen in the atlas</h2>
 <p><strong>58 systems of
-626 in the atlas have this.</strong> That is still
+627 in the atlas have this.</strong> That is still
 the most striking negative result in the atlas, and it is the reason
 this page exists.</p>
 <p><a href="../../systems/verel/">Verel</a> uses rejected memory records
@@ -395,8 +395,8 @@ has produced this mechanism <strong>once</strong>, in Verel, and copied
 it once — into the system belonging to the person who ran the
 survey.</p>
 <p>That makes the negative result stronger rather than weaker. Two of
-626 would suggest a hard idea that a few teams reach
-independently. One of 626, plus one adoption by a
+627 would suggest a hard idea that a few teams reach
+independently. One of 627, plus one adoption by a
 reader who went looking, suggests an idea that is <em>not</em> being
 reached at all — and that the way it spread was somebody reading another
 project's source.</p>
@@ -1343,6 +1343,29 @@ which the model proposes the same thing creates a second node and
 consults neither. The distinction this page draws — keyed on the record
 versus keyed on the value — is the whole difference here, and it is one
 hash function wide.</p>
+<p><a href="../../systems/elizaos/">elizaOS</a> is the near-miss that
+comes closest to having built it by accident. It already computes the
+key: <code>normalizeFactTextKey</code> canonicalizes a claim to
+lowercase, letters and numbers only, whitespace collapsed, unicode-aware
+— and <code>findEquivalentFact</code> looks that key up against the
+recent fact window, scoped by room and entity, before every fact insert.
+It also already has a retirement state that every read path respects.
+The two are one <code>continue</code> apart: the dedupe loop opens with
+<code>if (!isActiveMemoryEvidence(candidate)) continue;</code>, so a
+retired row is skipped as a match candidate and the identical normalized
+text is written again as a new fact with a new id.</p>
+<p>That leaves the system where this page's problem statement starts.
+Deletion is real — <code>runtime.deleteMemory</code>, an agent action
+and a <code>DELETE</code> route — and so is evidence-linked retirement,
+and both are keyed on the record, so <em>"forget that"</em> survives
+exactly until the next message asserts the claim again. The change that
+would close it is unusually small for this corpus: write the canonical
+key the dedupe already computes into a rejected-values table, and
+consult it in the loop that already skips inactive rows. The one
+argument for the current behaviour is that fresh evidence arguably
+<em>should</em> revive a claim — which is the tradeoff this page's
+<em>Tradeoffs</em> section names, and nothing in the repository states
+it as a decision.</p>
 <h2 id="tests-to-require">Tests to require</h2>
 <ul>
 <li><strong>Run the laundering sequence</strong>: reject a value,

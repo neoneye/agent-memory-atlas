@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="An agent framework whose fact
+store links every extracted claim to the messages it came from, retires
+it when those messages change, and pushes a seven-value scope ladder
+into the same SQL query that paginates.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="elizaOS — Agent Memory Atlas">
+    <meta property="og:description" content="An agent framework whose
+fact store links every extracted claim to the messages it came from,
+retires it when those messages change, and pushes a seven-value scope
+ladder into the same SQL query that paginates.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="elizaOS — Agent Memory Atlas">
+    <meta name="twitter:description" content="An agent framework whose
+fact store links every extracted claim to the messages it came from,
+retires it when those messages change, and pushes a seven-value scope
+ladder into the same SQL query that paginates.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>elizaOS — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "elizaOS",
+      "description": "An agent framework whose fact store links every extracted claim to the messages it came from, retires it when those messages change, and pushes a seven-value scope ladder into the same SQL query that paginates.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">Facts retired when their evidence
+changes</p>
+          <h1>elizaOS</h1>
+          <p class="document-deck">An agent framework whose fact store
+links every extracted claim to the messages it came from, retires it
+when those messages change, and pushes a seven-value scope ladder into
+the same SQL query that paginates.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/elizaOS/eliza">
+              <span>Source</span>
+              <strong>elizaOS/eliza</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/elizaOS/eliza/commit/a7e56b58354643655f258c269549fa939784c862" title="a7e56b58354643655f258c269549fa939784c862">
+              <span>Analyzed revision</span>
+              <code>a7e56b58…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-22</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/elizaOS--eliza" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>elizaOS--eliza</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>4</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip is-present" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Trust state</span></li><li class="cap-chip is-present" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip is-present" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>elizaOS is a TypeScript agent framework and product stack — MIT,
+29,010 tracked files across a runtime, an agent package, a CLI, a
+desktop app, cloud services and 108 first-party plugins, with a git
+history opening on 9 July 2024 under its former owner and a default
+branch of <code>develop</code>. Almost none of that is memory. The parts
+that are, are among the most carefully built in this corpus.</p>
+<p>The memory model is two stores side by side. <code>Memory</code> rows
+live in named tables (<code>messages</code>, <code>facts</code>,
+<code>documents</code>) carrying content, an entity, a room, a world, an
+optional embedding and a <code>metadata.scope</code>.
+<code>LongTermMemory</code> records are a separate typed shape —
+<code>episodic</code> / <code>semantic</code> / <code>procedural</code>,
+with confidence, source and access counters — behind a
+<code>MemoryStorageProvider</code> interface that a database plugin
+registers and <code>MemoryService</code> discovers at init, disabling
+storage-backed features gracefully when none is present.</p>
+<p>Three things make it worth reading.</p>
+<p><strong>Facts are linked to their evidence and retired when it
+changes.</strong> Every extracted fact stores
+<code>extractionEvidenceIds</code> and
+<code>extractionSourceRevisions</code> — which messages produced it, at
+which revision. When a later turn observes that one of those messages
+was edited or removed, <code>reviewChangedExtractionSources</code> flips
+the fact to <code>extractionReviewRequired: true</code>, and the
+reconciliation pass sets
+<code>extractionStatus: "source_invalidated"</code> and queues the
+source for reprocessing. <code>isActiveMemoryEvidence</code> then
+removes it from the FACTS provider, from
+<code>MemoryService.getLongTermMemories</code> and from the write-time
+dedupe pool. The atlas sees plenty of systems that extract beliefs from
+messages; this is the first in a while that notices when the message
+stops saying what it said.</p>
+<p><strong>The scope predicate is compiled into the query, not applied
+after it.</strong> <code>memoryAccessContextConditions</code> returns
+SQL — agent equality, an authorized-room <code>inArray</code>, a
+scope-validity guard and a per-role visibility clause over seven scope
+values — and the comment names the failure it exists to prevent:
+<em>"Every condition returned here is pushed into the same query that
+orders/ranks and paginates so ineligible rows can neither leak nor
+starve an authorized page."</em> An unresolved actor pushes
+<code>sql\</code>false`<code>. An unstamped row defaults to </code>private<code>. Beside it, </code>provenance-envelope.ts<code>refuses to recall an item whose source, account or room cannot be derived from what the connectors stamped — *"nothing defaults to</code>global`."*</p>
+<p><strong>And one absence is the sharpest thing on the page.</strong>
+<code>memory_access_logs</code> is declared as an <em>"append-only log
+of reads/writes against <code>long_term_memories</code>"</em> in
+<code>plugin-sql</code>, declared a <strong>second</strong> time in the
+cloud package with different columns, exported, listed among the tables
+the backup service copies, named in a retention-service comment — and
+written by nothing. There is no insert, no helper, no
+<code>accessType</code> producer anywhere in 29,010 files. The design
+was understood twice and wired zero times.</p>
+<p>Four marks: <code>trust_state</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>negative_eval</code>. Withheld:
+<code>tombstone</code>, <code>audit_log</code>,
+<code>human_review</code>, each for a reason worth more than the
+dash.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A claim becomes a belief by being extracted from a message, and stops
+being one when that message changes.</p>
+<p>That is the loop the whole design turns on. An evaluator runs after a
+turn and asks a model for operations over a two-store fact model:
+<code>add_durable</code> for identity-level claims that do not decay,
+<code>add_current</code> for states that do (<code>feeling</code>,
+<code>physical_state</code>, <code>working_on</code>,
+<code>going_through</code>, <code>schedule_context</code>).
+<code>insertFact</code> mints a <strong>deterministic id</strong> when
+extracting —
+<code>stringToUuid("fact:&lt;agentId&gt;:&lt;entityId&gt;:&lt;roomId&gt;:&lt;evidenceId&gt;:" + stableStringify(args))</code>
+— so re-extracting the same claim from the same evidence resolves to the
+same row rather than a duplicate, and stamps <code>confidence</code>,
+<code>lastConfirmedAt</code>, <code>kind</code>, <code>category</code>,
+<code>keywords</code>, <code>verificationStatus</code> and, for current
+facts, <code>validAt</code>.</p>
+<p>Two status fields then decide whether the fact is read, and the
+interesting thing is which one does the work.
+<code>verificationStatus</code> is the epistemic-sounding one —
+<code>self_reported</code> / <code>confirmed</code> /
+<code>contradicted</code> — and it <em>protects</em>:
+<code>isProtectedMemoryEvidence</code> returns true for
+<code>confirmed</code>, which exempts a fact from retirement.
+<code>extractionStatus</code> is the boring lifecycle one, with a single
+value <code>source_invalidated</code>, and it is what actually filters:
+combined with <code>extractionReviewRequired</code>, it is the predicate
+three separate read paths consult before a fact can reach a prompt. A
+<code>confidence</code> float sits beside both and only ever weights a
+ranking.</p>
+<p>The exit is where the design stops short. Retirement is keyed on the
+<em>record</em>. <code>findEquivalentFact</code>, the write-time dedupe,
+opens its candidate loop with
+<code>if (!isActiveMemoryEvidence(candidate)) continue;</code> — so a
+retired fact does not block a new row carrying identical normalized
+text. Delete is real and reachable, by id, from the runtime, an agent
+action and an HTTP route. Neither one is keyed on the <em>value</em>, so
+the next message that re-asserts the claim writes it back as a new fact
+with a new id.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — A claim becomes a fact by extraction and leaves by one of three exits — none of them keyed on the value, which is why a retired claim returns as a new row the moment a message re-asserts it.</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: A claim becomes a fact by extraction and leaves by one of three exits — none of them keyed on the value, which is why a retired claim returns as a new row the moment a message re-asserts it.
+flowchart TD
+  MSG[&quot;Turn messages&quot;] --&gt; EX[&quot;Fact extractor (model)&lt;br/&gt;add_durable / add_current ops&quot;]
+  EX --&gt; ID[&quot;Deterministic id:&lt;br/&gt;agent + entity + room + evidenceId + claim&quot;]
+  ID --&gt; DED{&quot;findEquivalentFact:&lt;br/&gt;same normalized text,&lt;br/&gt;room and entity?&quot;}
+  DED -- &quot;hit&quot; --&gt; MERGE[&quot;Merge stronger metadata:&lt;br/&gt;confidence, kind, validAt, lastConfirmedAt&quot;]
+  DED -- &quot;skips inactive rows&quot; --&gt; NEW
+  DED -- &quot;miss&quot; --&gt; NEW[&quot;Insert fact&lt;br/&gt;+ evidenceIds + sourceRevisions&lt;br/&gt;+ verificationStatus + validAt&quot;]
+  NEW --&gt; STORE[(&quot;facts table&lt;br/&gt;metadata.scope stamped&quot;)]
+  MERGE --&gt; STORE
+  SRC[&quot;A source message is&lt;br/&gt;edited or removed&quot;] --&gt; REV[&quot;reviewChangedExtractionSources:&lt;br/&gt;extractionReviewRequired = true&quot;]
+  REV --&gt; RECON[&quot;Reconciliation pass:&lt;br/&gt;extractionStatus = source_invalidated&lt;br/&gt;+ reconciliationId, review cleared&quot;]
+  RECON --&gt; STORE
+  STORE --&gt; ACTIVE{&quot;isActiveMemoryEvidence?&quot;}
+  ACTIVE -- &quot;no&quot; --&gt; OUT[&quot;Withheld from FACTS provider,&lt;br/&gt;MemoryService and dedupe&quot;]
+  ACTIVE -- &quot;yes&quot; --&gt; LADDER{&quot;scope ladder,&lt;br/&gt;compiled into the SQL&lt;br/&gt;that also paginates&quot;}
+  LADDER -- &quot;role UNRESOLVED&quot; --&gt; DENY[&quot;sql false — fails closed&quot;]
+  LADDER -- &quot;visible&quot; --&gt; RANK[&quot;Rank: confidence x time weight&lt;br/&gt;durable = 1, current = exp(-age/14d) from validAt&quot;]
+  RANK --&gt; PROMPT[&quot;FACTS block in the prompt&quot;]
+  OUT -.-&gt; REASSERT[&quot;Nothing is keyed on the value,&lt;br/&gt;so the next message re-asserting&lt;br/&gt;the claim writes a new row&quot;]
+  REASSERT --&gt; EX</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p>The memory is spread across three layers and an operator has to stand
+up all three.</p>
+<p><code>packages/core</code> owns the contracts and the policy:
+<code>types/memory.ts</code> re-exports the shared shapes from
+<code>@elizaos/common</code>, <code>types/long-term-memory.ts</code> and
+<code>types/memory-storage.ts</code> define the
+<code>LongTermMemory</code> record and the
+<code>MemoryStorageProvider</code> interface,
+<code>utils/extraction-evidence.ts</code> (47 lines) is the read-side
+status predicate, <code>runtime/fact-write-dedupe.ts</code> (175) the
+write-time guard, and <code>access-control/</code> (4,707 lines across
+eight modules and their tests) the scope ladder, the provenance envelope
+and the audience disclosure rules.</p>
+<p><code>plugins/plugin-sql</code> is the production store: Drizzle over
+Postgres or PGlite, with <code>base.ts</code> at 7,872 lines carrying
+the adapter and the SQL scope predicate, and a schema directory of 38
+tables. <code>plugins/plugin-inmemorydb</code> is the alternative, and
+it matters for this report because it reimplements the same ladder
+through <code>filterMemoryReadByAccessContext</code> at four read sites
+rather than skipping it.</p>
+<p><code>plugins/plugin-assistant</code> is where extraction lives:
+<code>advanced-capabilities/evaluators/reflection-items.ts</code> (1,947
+lines) holds the operation applier and <code>insertFact</code>,
+<code>extraction-reconciliation.ts</code> (220) the retirement pass,
+<code>providers/facts.ts</code> (585) the read path that assembles the
+FACTS block, and <code>advanced-memory/services/memory-service.ts</code>
+(571) the long-term store's service. None of this is in
+<code>core</code>; an adopter who takes the runtime alone gets the
+contracts, the scope ladder and the dedupe, and no extraction at
+all.</p>
+<p>Running it needs Bun and Node at the versions
+<code>package.json</code> pins, plus a Postgres or PGlite database and
+an embedding model for the vector arm. The repository declares two
+submodules — <code>elizaOS/llama.cpp</code> for local inference and
+<code>elizaOS/electrobun</code> for the desktop shell — neither of which
+touches memory; both were left uninitialised for this reading, and every
+absence claim below is scoped to the superproject.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Extraction.</strong> An evaluator hands the turn to a model
+against the schema in <code>factExtractor.schema.ts</code>, which
+declares the operation union and its fields — including
+<code>valid_at</code>, documented as <em>"ISO timestamp of when the
+state began"</em>, and <code>verification_status</code> over the
+three-value enum. <code>applyAddDurable</code> and
+<code>applyAddCurrent</code> look for a dedupe target in the candidate
+pool plus anything inserted this run, strengthen it if found, and
+otherwise call <code>insertFact</code>.</p>
+<p><strong>Evidence stamping.</strong>
+<code>extractionEvidenceMetadata</code> attaches
+<code>extractionEvidenceIds</code> and
+<code>extractionSourceRevisions</code> — a map from source message id to
+the revision that was read. This is what makes retirement possible, and
+it is the field the whole invalidation loop keys on.</p>
+<p><strong>Write-time dedupe.</strong> <code>findEquivalentFact</code>
+canonicalizes the text (<code>toLowerCase</code>, strip everything that
+is not a letter or number, collapse whitespace), pulls the same 120-row
+window the FACTS provider reads, and returns the first active row with
+the same key, room and entity. <code>mergeStrongerFactMetadata</code>
+then folds in whatever the new occurrence carries that is stronger — a
+higher <code>confidence</code>, a <code>kind</code> where there was
+none, a more recent <code>validAt</code> or <code>lastConfirmedAt</code>
+— so <em>"a dedupe hit never drops new information."</em> A backfill
+marked <code>extractionBackfill</code> attaches provenance but is
+explicitly not treated as reconfirmation.</p>
+<p><strong>Retirement.</strong>
+<code>reviewChangedExtractionSources</code> compares each fact's stored
+source revisions against the current ones, skips anything
+<code>isProtectedMemoryEvidence</code> (a <code>confirmed</code> fact,
+or one sourced from <code>MEMORY</code>), and marks the rest
+<code>extractionReviewRequired: true</code> with the changed ids.
+<code>reconcileFactEvidence</code> then writes
+<code>extractionStatus: "source_invalidated"</code>, clears the review
+flag, records <code>extractionReconciliationId</code> and
+<code>extractionChangedSourceIds</code>, and adds the source to a
+reprocess set — and it throws a typed <code>ElizaError</code> when the
+update fails rather than continuing.</p>
+<p><strong>Reading.</strong> <code>providers/facts.ts</code> pulls a
+room pool and a per-entity pool, dedupes by id, filters on
+<code>isActiveMemoryEvidence</code> (and drops private facts on turns
+where <code>shouldMinimizePrivateFactsForTurn</code>), partitions
+durable from current, and ranks each by keyword relevance times a prior
+of <code>confidence × timeWeight</code>. Durable facts get a weight of
+1; current facts decay <code>exp(-ageDays / 14)</code> from their
+effective timestamp, which is <code>validAt</code> where present and
+<code>createdAt</code> otherwise.</p>
+<p><strong>The storage predicate.</strong> Underneath all of it,
+<code>memoryAccessContextConditions</code> compiles the scope ladder
+into the same SQL the adapter uses to order and paginate.</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<p>Two record shapes, and they do not share a table.</p>
+<p><strong><code>Memory</code></strong> — <code>id</code>,
+<code>entityId</code>, <code>agentId</code>, <code>createdAt</code>,
+<code>content</code>, <code>embedding</code>, <code>roomId</code>,
+<code>worldId</code>, <code>unique</code>, <code>similarity</code>,
+<code>sessionId</code>, <code>sessionKey</code>, and a
+<code>metadata</code> union whose base carries <code>type</code>,
+<code>source</code>, <code>scope</code> and <code>timestamp</code>.
+Facts extend that metadata with <code>FactMetadata</code>:
+<code>confidence</code>, <code>lastReinforced</code>,
+<code>sourceTrajectoryId</code>, <code>kind</code>,
+<code>category</code>, <code>structuredFields</code>,
+<code>keywords</code>, <code>validAt</code>,
+<code>lastConfirmedAt</code>, <code>verificationStatus</code>.</p>
+<p><strong><code>LongTermMemory</code></strong> — <code>id</code>,
+<code>agentId</code>, <code>entityId</code>, <code>category</code> over
+the episodic/semantic/procedural enum, <code>content</code>,
+<code>metadata</code>, <code>embedding</code>, <code>confidence</code>,
+<code>source</code>, <code>createdAt</code>, <code>updatedAt</code>,
+<code>lastAccessedAt</code>, <code>accessCount</code>,
+<code>similarity</code>. Its <code>MemoryStorageProvider</code> contract
+has store, get, update and <strong>delete</strong>, and an optional
+<code>supportsIdempotentWrites</code> flag whose comment is precise:
+<em>"Supplied IDs are insert-once identities; replay returns the
+original row."</em></p>
+<p>The fact vocabulary is closed on both axes. <code>FactKind</code> is
+<code>durable</code> or <code>current</code>;
+<code>DurableFactCategory</code> is seven values from
+<code>identity</code> to <code>goal</code>;
+<code>CurrentFactCategory</code> is five from <code>feeling</code> to
+<code>schedule_context</code>. The categories are not decoration — the
+prompt renders current facts as
+<code>[factId] (current.category, since validAt) claim</code>, so the
+model sees the kind, the category and the validity date of each one.</p>
+<p>Two things about the scope field are worth stating. It is a
+seven-value union, not a boolean, and the ladder distinguishes
+<code>private</code> from <code>user-private</code>,
+<code>owner-private</code> and <code>agent-private</code> — different
+answers to <em>whose</em> privacy. And <code>filter.ts</code> resolves
+the row's scoped entity through a <code>COALESCE</code> over
+<code>metadata.scopedToEntityId</code>, <code>metadata.addedBy</code>
+and the row's own <code>entityId</code>, so a row stamped by one party
+on another's behalf still resolves to a subject.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Two arms and a ladder under both.</p>
+<p>The vector arm runs over the embeddings table; the lexical arm is
+keyword scoring in <code>providers/facts.ts</code> and
+<code>packages/retrieval/src/search.ts</code> (2,024 lines) with a
+reranker beside it. What distinguishes the implementation is the
+ordering of the gates.</p>
+<p><code>searchCanonicalConversationMemories</code> runs, in its own
+documented order: provenance validation, then the mandatory scope
+ladder, then destination containment — and the adapter's vector scan is
+<strong>constrained by the attested room before ranking</strong>, with
+the reason stated: <em>"so a global top-K cannot starve eligible
+same-room rows."</em> That is the same starvation problem the SQL
+predicate addresses on the pagination side, answered twice in two
+different layers.</p>
+<p>Ranking of facts is <code>relevance × confidence × timeWeight</code>,
+with ties broken on the prior. Durable facts do not decay by
+construction. Current facts decay with a 14-day exponential from
+<code>validAt</code>, which is the one place in this system where the
+valid-time axis changes an outcome rather than a label.</p>
+<p>The failure modes are handled rather than swallowed. An adapter error
+or an access-context lookup failure propagates as a typed
+<code>unavailable</code> availability — <em>"never an empty 'complete'
+result"</em> — which is the distinction between "nothing matched" and
+"the store did not answer" that most systems in this corpus collapse. A
+retrieval whose provenance cannot be derived is withheld and the item is
+reported in a <code>withheld</code> list rather than silently
+dropped.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p><strong>Extraction runs after the turn, as an evaluator, and does not
+block the reply.</strong> The reconciliation pass runs in the same
+place. There is no queue and no separate worker: an evaluator background
+service drives them.</p>
+<p><strong>A write is idempotent by identity on the extraction
+path</strong> — the deterministic id means re-running the same
+extraction over the same evidence resolves to the same row — and
+<strong>structurally deduped by text</strong> on top of that, for the
+case the ids cannot cover. The dedupe docstring names the live failure
+it closed: <em>"one extraction turn persisted the same claim twice,
+milliseconds apart — a fact row plus a relationship-echo row — and the
+FACTS reader surfaced both."</em> It also names its own limits honestly:
+equivalence is text-and-scope equality after canonicalization, <em>"not
+semantic similarity"</em>, and the candidate pool is bounded to 120 rows
+so the check <em>"degrades to a plain insert (never an error) on rooms
+with very deep fact history."</em></p>
+<p><strong>Nothing rewrites the whole store.</strong> Reconciliation
+touches only facts whose recorded source revisions no longer match, and
+it updates them in place rather than rebuilding.</p>
+<p><strong>Deletion is real and reachable three ways</strong>:
+<code>runtime.deleteMemory(id)</code>, an agent action in
+<code>packages/agent/src/actions/memories.ts</code>, and
+<code>DELETE /api/memories/:id</code>.
+<code>deleteAllMemories(roomIds, tableName)</code> exists on the adapter
+for bulk removal, and <code>runtime.ts</code> carries a comment about
+<code>deleteMemory</code> racing a sweep and shifting pages — so the
+interaction was thought about.</p>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p>The memory surfaces to the agent as the FACTS provider block and to a
+person as an HTTP API and a UI.
+<code>packages/agent/src/api/memory-routes.ts</code> (1,473 lines)
+exposes <code>POST /api/memory/remember</code>,
+<code>GET /api/memory/search</code>,
+<code>GET /api/memories/feed</code>, <code>/browse</code>,
+<code>/by-entity/:id</code>, <code>/stats</code>, and
+<code>DELETE</code>/<code>PATCH</code> on a memory id.
+<code>packages/agent/src/actions/memories.ts</code> (2,142 lines) is the
+model-facing side, and it renders an inactive memory with a marker
+rather than hiding it, so a person browsing sees what was retired.</p>
+<p>The adjacent machinery is where the interesting boundary sits.
+LifeOps ships a persistent human-in-the-loop approval queue —
+<code>approval_requests</code> with <code>state</code>,
+<code>requestedBy</code>, <code>subjectUserId</code> (<em>"Owner whose
+approval is required"</em>), <code>resolvedBy</code>,
+<code>resolutionReason</code> and <code>resolvedAt</code> — and its
+action vocabulary is a closed union of ten: <code>send_message</code>,
+<code>send_email</code>, <code>schedule_event</code>,
+<code>modify_event</code>, <code>cancel_event</code>,
+<code>book_travel</code>, <code>make_call</code>,
+<code>sign_document</code>, <code>execute_workflow</code>,
+<code>spend_money</code>. Every one is an act on the world. None is a
+memory write. The queue is an egress gate, which is a good thing to have
+and a different thing from reviewing what the agent believes.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Provenance is an admission test, not a label.</strong>
+<code>deriveCanonicalProvenance</code> reads source, account, room,
+sender, timestamp, trust and scope from metadata the connectors stamp;
+missing or conflicting required fields produce a typed invalid result
+and <em>"the item is withheld from recall — nothing defaults to
+<code>global</code>."</em> Sender attestation is recorded as the
+structural fact it is (<code>sender-stamped</code>) and explicitly
+<strong>not</strong> labelled connector-verified, with the reasoning
+written down: a nested metadata object at ingestion <em>"is not an
+unforgeable attestation of the platform identity it carries."</em> That
+is an unusually honest treatment of a field most systems would have
+called <code>verified</code>.</p>
+<p><strong>The scope ladder fails closed and cannot be outrun by
+pagination.</strong> Covered in the frontmatter; the property worth
+repeating is that an <code>UNRESOLVED</code> role does not fall back to
+a default tier, it pushes <code>false</code>.</p>
+<p><strong>Where it stops.</strong> <code>tombstone</code> is withheld
+and the reason is one line of code: <code>findEquivalentFact</code>
+skips inactive candidates, so the retired row does not block the
+identical claim being written again. This is defensible as a design — a
+fact re-asserted by fresh evidence arguably <em>should</em> come back —
+but it means "forget that" survives exactly until the next message says
+it again, and nothing in the tree records the value as one that was
+rejected. The deterministic id narrows the window rather than closing
+it: it collapses re-extraction from the <em>same</em> evidence id, and a
+new message is new evidence.</p>
+<p><strong><code>audit_log</code> is withheld on an unwired mechanism,
+twice declared.</strong>
+<code>plugin-sql/src/schema/memoryAccessLogs.ts</code> defines
+<code>memory_access_logs</code> with <code>memoryId</code>,
+<code>memoryType</code>, <code>agentId</code>, <code>accessType</code>
+and <code>accessedAt</code> under a docstring calling it an
+<em>"append-only log of reads/writes against
+<code>long_term_memories</code>."</em>
+<code>packages/cloud/shared/src/db/schemas/advanced-memory.ts</code>
+defines a table of the same name with <code>roomId</code>,
+<code>relevanceScore</code> and <code>wasUseful</code> and
+<strong>no</strong> <code>accessType</code>. The two disagree about
+their own columns. Both are exported; the table name appears in the
+backup service's table list and in a retention-service comment; and a
+search for an insert, for any <code>logMemoryAccess</code>-shaped
+helper, and for an <code>accessType</code> producer returns nothing in
+either package. Even had it been wired, the rubric would read it as the
+retrieval half of the audit pattern rather than a record of mutations —
+but it is not wired, and that is the more useful finding.</p>
+<p><strong><code>human_review</code> is withheld, and the machinery is
+on the other side of the line.</strong>
+<code>extractionReviewRequired: true</code> looks exactly like a review
+state: it withholds the fact from every read path until something
+resolves it. What resolves it is
+<code>extraction-reconciliation.ts</code>, an evaluator — the same class
+of actor that produced the fact. No human is in that loop, and the
+approval queue that does have a human in it accepts no memory action.
+The browse-and-delete API is post-hoc curation, not a state a memory
+waits in.</p>
+<p><strong>One more absence worth naming:</strong>
+<code>verificationStatus: "contradicted"</code> can be emitted by the
+model through the extractor schema and is read by nothing. A fact the
+model believes is contradicted is stored, ranked and injected exactly
+like one it believes is self-reported.</p>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p><strong>I ran nothing.</strong> The screen reported 170 dependency
+surfaces inside the seven-day cooldown, which is an artifact of a
+<code>--depth 1</code> clone dating every file to the tip rather than a
+fact about the repository, and 44 build-time execution points including
+a root <code>postinstall</code> that patches three vendored packages.
+Nothing was installed or built; every claim here is read from source at
+the pinned commit, in a checkout whose two submodules were left
+uninitialised.</p>
+<p>The test coverage around the mechanisms this report credits is real.
+The access-control directory is roughly half tests by line —
+<code>filter.test.ts</code> (413),
+<code>artifact-disclosure.test.ts</code> (506),
+<code>audience-disclosure.test.ts</code> (542),
+<code>audience-egress.test.ts</code> (220),
+<code>provenance-envelope.test.ts</code> (412),
+<code>provenance-conflict-fields.test.ts</code> (192) and the 347-line
+PGlite integration file that earns the <code>negative_eval</code> mark.
+The extraction side carries <code>incremental-extraction.test.ts</code>
+and <code>evaluator-background.test.ts</code>, which assert both
+directions of the retirement state: that a retired fact reads as
+inactive, and — at <code>incremental-extraction.test.ts:864</code> —
+that an un-retired one reads as active again. A suite that asserts the
+flag can be cleared as well as set is rarer than it should be.</p>
+<p>The one gap the report can name is the interaction between retirement
+and re-assertion. <code>findEquivalentFact</code> skipping inactive
+candidates is a deliberate line with no committed case pinning its
+consequence: nothing writes a fact, retires it, feeds the same text
+through extraction again and asserts what the store then holds.</p>
+<p>There is no committed benchmark, no eval harness result, and
+<strong>no paper</strong>. <code>arxiv</code>, <code>bibtex</code>,
+<code>@article</code>, <code>citation</code> and <code>doi</code> across
+every Markdown file in the tree return an unrelated voice-pipeline
+research note and nothing else, and there is no
+<code>CITATION.cff</code>. That is a statement about this artifact at
+this commit, not about whether work was published elsewhere.</p>
+<h2 id="11-patterns-worth-stealing">11. Patterns Worth Stealing</h2>
+<h3 id="steal">Steal</h3>
+<p><strong>Store the revision of every source a belief was derived
+from.</strong> <code>extractionSourceRevisions</code> maps source
+message id to the revision that was read, and it is the single field
+that makes the whole invalidation loop possible. Most systems in this
+corpus store <em>that</em> a memory came from a conversation; storing
+<em>which revision</em> is what lets you notice later that the
+conversation changed underneath the belief.</p>
+<p><strong>Compile the scope predicate into the ranking query.</strong>
+Not "filter the results" — return SQL conditions that go into the same
+statement as the ORDER BY and the LIMIT. The docstring's phrasing is the
+reason: ineligible rows must not be able to <em>starve</em> an
+authorized page, which post-filtering cannot prevent. The same project
+applies the idea a second time by constraining the vector scan to the
+attested room before ranking.</p>
+<p><strong>Fail closed on an unresolved actor, and make the default the
+tightest tier.</strong> <code>UNRESOLVED</code> pushes
+<code>false</code>; a row with no stamped scope is treated as
+<code>private</code>. Both defaults cost nothing and both point the
+failure in the safe direction.</p>
+<p><strong>Distinguish "no results" from "the store did not
+answer."</strong> A typed <code>unavailable</code> availability,
+<em>"never an empty 'complete' result"</em>. An empty array that means
+two different things is how a retrieval outage becomes a confident wrong
+answer.</p>
+<p><strong>Refuse to call a structural fact an attestation.</strong>
+<code>sender-stamped</code> rather than <code>connector-verified</code>,
+with the comment explaining that a nested metadata object at ingestion
+proves presence and not identity. A trust vocabulary is only worth
+having if its strongest value is earned.</p>
+<p><strong>Let a dedupe hit upgrade the kept row.</strong>
+<code>mergeStrongerFactMetadata</code> folds a higher confidence, a
+newly explicit kind and a fresher <code>validAt</code> into the
+surviving row, so collapsing a duplicate never discards what the new
+occurrence knew.</p>
+<h3 id="avoid">Avoid</h3>
+<p><strong>Retiring a record without recording the value.</strong> The
+retirement mechanism here is good and it is keyed on the row. One
+<code>continue</code> in the dedupe loop is the whole difference between
+"this claim was withdrawn" and "this row was withdrawn", and only the
+first survives re-extraction.</p>
+<p><strong>Declaring an audit table and never writing to it — twice,
+with different columns.</strong> If the two declarations had agreed, a
+reader might reasonably assume one of them was live. They do not, and
+neither is.</p>
+<p><strong>Shipping an enum value nothing reads.</strong>
+<code>contradicted</code> is in the type, in the Zod schema, in the
+prompt-facing JSON schema and in a test that the enum parses it. A model
+that uses it is talking to nobody.</p>
+<p><strong>A review flag whose resolver is another evaluator.</strong>
+<code>extractionReviewRequired</code> is a well-built quarantine. Naming
+it <em>review</em> invites the reading that a person is involved, and
+none is.</p>
+<h3 id="fit">Fit</h3>
+<p>Take the access-control layer if you are building multi-party agent
+memory in any language — the scope ladder, the fail-closed actor
+resolution, the SQL compilation and the provenance admission test are
+four separable ideas and the first three transplant cleanly. Take the
+evidence-revision pattern if your memory is distilled from anything a
+user can edit: chat, documents, tickets.</p>
+<p>Do not take the repository as a memory library. The extraction that
+makes the fact store interesting lives in <code>plugin-assistant</code>,
+not in <code>core</code>, so adopting the runtime gets you the contracts
+and the ladder and no facts; and the memory itself is a small fraction
+of a 29,010-file monorepo carrying a desktop app, a cloud service, local
+inference and 108 plugins. This is a framework you build an agent
+inside, not a component you mount beside one.</p>
+<h2 id="12-antipatterns--risks">12. Antipatterns / Risks</h2>
+<ul>
+<li><strong>Retirement is record-keyed and the dedupe skips inactive
+rows</strong>, so a retired claim returns as a new fact the next time a
+message asserts it.</li>
+<li><strong><code>memory_access_logs</code> is declared twice, with
+different columns, and written by nothing.</strong> The backup service
+copies a table that is always empty.</li>
+<li><strong><code>verificationStatus: "contradicted"</code> has no
+reader</strong>, in a schema the model is handed.</li>
+<li><strong>The human approval queue covers ten world-affecting actions
+and no memory operation</strong>, so nothing a person approves governs
+what the agent comes to believe.</li>
+<li><strong>Extraction is model-driven with a confidence the model
+supplies</strong>, and the only thing that later disputes a fact is a
+change to its source messages — not a contradiction from a later
+turn.</li>
+<li><strong>The scope guarantee is split across two layers</strong>,
+<code>metadata.scope</code> here and Postgres RLS on
+<code>entity_id</code>/<code>server_id</code>; a deployment that skips
+RLS is relying on half the design, and <code>filter.ts</code> says
+so.</li>
+<li><strong>The dedupe window is 120 rows</strong>, and the file states
+the degradation: on rooms with deep fact history the structural guard
+quietly stops firing.</li>
+<li><strong><code>facts-and-relationships.ts</code> writes
+<code>validAt</code> as <code>now</code></strong>, so facts from that
+path carry a valid time equal to their record time and lose the axis the
+rest of the system maintains.</li>
+</ul>
+<h2 id="13-build-vs-borrow-takeaways">13. Build-vs-Borrow Takeaways</h2>
+<p>The transferable half of this system is small and does not depend on
+the rest of it. Four ideas, in the order they pay off: stamp the source
+revision on every derived belief; compile the scope predicate into the
+query that ranks and paginates; resolve the actor before the predicate
+and fail closed when you cannot; and treat underivable provenance as a
+reason to withhold rather than a reason to default.</p>
+<p>The half not to borrow is the exit. This system has a delete and a
+retirement and neither is keyed on a value, which is the same gap the
+atlas keeps finding and here it sits next to machinery good enough to
+have closed it — the canonicalized fact key the dedupe already computes
+is, almost exactly, the key a value-level tombstone would need. Writing
+that key into a rejected-values table and consulting it in the same loop
+that already skips inactive rows is a small change to a file that
+already exists.</p>
+<p>If you are building from scratch: start from the evidence link,
+because everything else here is downstream of it. A belief that knows
+which messages made it can be retired automatically, explained to a
+user, and re-derived after a correction. A belief that does not can only
+be deleted by hand.</p>
+<h2 id="14-open-questions">14. Open Questions</h2>
+<ul>
+<li><strong>Is the dedupe's skip of inactive rows deliberate?</strong>
+It reads as a decision — fresh evidence should be able to revive a claim
+— but nothing states it, and the consequence for a user who asked the
+agent to forget something is not recorded anywhere.</li>
+<li><strong>Was <code>memory_access_logs</code> ever written?</strong>
+Two schema definitions that disagree suggest two attempts. The git
+history behind this pin would say, and a shallow clone cannot.</li>
+<li><strong>What consumes <code>lastReinforced</code> and
+<code>sourceTrajectoryId</code>?</strong> Both are declared on
+<code>FactMetadata</code> beside fields this report traced end to end;
+neither was followed here.</li>
+<li><strong>Does the in-memory adapter's ladder stay in lockstep with
+the SQL one?</strong> They are two implementations of one policy, and
+<code>filter.ts</code> asks the documents plugin to keep in lockstep
+with it explicitly while saying nothing about the in-memory path.</li>
+<li><strong>What happens to a fact whose source message is deleted
+rather than edited?</strong> <code>removedMessageIds</code> is handled
+in the review pass; whether the reprocess queue can then produce a
+replacement, or whether the claim simply disappears, was not
+traced.</li>
+</ul>
+<h2 id="15-appendix-file-index">15. Appendix: File Index</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Lines</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plugins/plugin-sql/src/base.ts</code></td>
+<td>7872</td>
+<td>The Drizzle adapter, and <code>memoryAccessContextConditions</code>
+— the scope ladder as SQL</td>
+</tr>
+<tr>
+<td><code>plugins/plugin-assistant/src/features/advanced-capabilities/evaluators/reflection-items.ts</code></td>
+<td>1947</td>
+<td>The operation applier, <code>insertFact</code>,
+<code>reviewChangedExtractionSources</code></td>
+</tr>
+<tr>
+<td><code>packages/agent/src/actions/memories.ts</code></td>
+<td>2142</td>
+<td>The model-facing memory actions, including delete</td>
+</tr>
+<tr>
+<td><code>packages/retrieval/src/search.ts</code></td>
+<td>2024</td>
+<td>Lexical search, with <code>rerank.ts</code> beside it</td>
+</tr>
+<tr>
+<td><code>packages/agent/src/api/memory-routes.ts</code></td>
+<td>1473</td>
+<td>remember, search, feed, browse, by-entity, stats, DELETE/PATCH</td>
+</tr>
+<tr>
+<td><code>packages/core/src/access-control/provenance-envelope.ts</code></td>
+<td>914</td>
+<td>Canonical provenance, the dedupe key, the gated conversation
+search</td>
+</tr>
+<tr>
+<td><code>plugins/plugin-assistant/src/features/advanced-capabilities/providers/facts.ts</code></td>
+<td>585</td>
+<td>The FACTS block: pools, the active filter, kind partition,
+time-weighted ranking</td>
+</tr>
+<tr>
+<td><code>plugins/plugin-assistant/src/features/advanced-memory/services/memory-service.ts</code></td>
+<td>571</td>
+<td>The long-term store's service and its <code>includeInactive</code>
+switch</td>
+</tr>
+<tr>
+<td><code>packages/common/src/memory.ts</code></td>
+<td>583</td>
+<td><code>Memory</code>, <code>MemoryMetadata</code>,
+<code>FactMetadata</code>, the fact and verification vocabularies</td>
+</tr>
+<tr>
+<td><code>packages/core/src/access-control/filter.ts</code></td>
+<td>218</td>
+<td><code>canReadScope</code>, <code>actorFromAccessContext</code>, the
+two filter helpers</td>
+</tr>
+<tr>
+<td><code>plugins/plugin-assistant/src/features/advanced-capabilities/evaluators/extraction-reconciliation.ts</code></td>
+<td>220</td>
+<td>The retirement pass and the reprocess queue</td>
+</tr>
+<tr>
+<td><code>packages/core/src/runtime/fact-write-dedupe.ts</code></td>
+<td>175</td>
+<td><code>normalizeFactTextKey</code>, <code>findEquivalentFact</code>,
+<code>mergeStrongerFactMetadata</code></td>
+</tr>
+<tr>
+<td><code>packages/core/src/utils/extraction-evidence.ts</code></td>
+<td>47</td>
+<td><code>isProtectedMemoryEvidence</code>,
+<code>isActiveMemoryEvidence</code></td>
+</tr>
+<tr>
+<td><code>packages/core/src/types/memory-storage.ts</code></td>
+<td>48</td>
+<td>The <code>MemoryStorageProvider</code> contract, including
+delete</td>
+</tr>
+<tr>
+<td><code>packages/core/src/types/long-term-memory.ts</code></td>
+<td>52</td>
+<td><code>LongTermMemoryCategory</code>, <code>LongTermMemory</code>,
+<code>MemoryConfig</code></td>
+</tr>
+<tr>
+<td><code>plugins/plugin-sql/src/schema/memoryAccessLogs.ts</code></td>
+<td>25</td>
+<td>The append-only access log nothing writes</td>
+</tr>
+<tr>
+<td><code>packages/cloud/shared/src/db/schemas/advanced-memory.ts</code></td>
+<td>—</td>
+<td>A second <code>memory_access_logs</code>, with different columns,
+also unwritten</td>
+</tr>
+<tr>
+<td><code>packages/core/src/access-control/canonical-memory-pglite.integration.test.ts</code></td>
+<td>347</td>
+<td>The recall/denial pair that earns <code>negative_eval</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Commands run at the repository root, for the absence claims above.
+The checkout is the superproject with both submodules uninitialised, so
+each is scoped to it.</p>
+<pre class="sh"><code># Nothing writes memory_access_logs, in either package (0 results each).
+grep -rn &quot;insert(.*memoryAccessLogs\|insert(memoryAccessLogs\|memoryAccessLogs)&quot; --include=&#39;*.ts&#39; .
+grep -rniE &quot;logMemoryAccess|recordMemoryAccess|trackMemoryAccess&quot; --include=&#39;*.ts&#39; .
+# Every surviving reference: two schema files, an export, a native-module stub
+# list, the backup table list, and one retention-service comment.
+grep -rn &quot;memoryAccessLogs\|memory_access_logs&quot; --include=&#39;*.ts&#39; .
+
+# accessType has no producer in the memory sense — every hit is Google Workspace OAuth.
+grep -rn &quot;accessType&quot; --include=&#39;*.ts&#39; . | grep -v &quot;schema/memoryAccessLogs&quot;
+
+# &quot;contradicted&quot; exists in the type union, the extractor&#39;s Zod enum, and a test
+# that the enum parses it. No read path (3 results).
+grep -rn &#39;&quot;contradicted&quot;&#39; --include=&#39;*.ts&#39; --include=&#39;*.tsx&#39; .
+
+# No value-keyed suppression for memory: every tombstone hit is calendar sync or
+# browser-companion revocation.
+grep -rniE &quot;forgetFact|forgetMemory|suppressedFact|factDenylist|neverExtract|doNotStore|redactedFact|tombstone&quot; \
+  --include=&#39;*.ts&#39; --include=&#39;*.tsx&#39; .
+
+# The cited docs/architecture/fact-memory.md does not exist at this commit.
+git ls-files | grep -iE &quot;fact.memory|fact_memory&quot;
+git ls-files docs
+
+# Every caller of the scope ladder, to establish it is on the read path.
+grep -rn &quot;canReadScope\|filterByAccessContext\|filterMemoryReadByAccessContext\|actorFromAccessContext&quot; \
+  --include=&#39;*.ts&#39; --include=&#39;*.tsx&#39; .
+
+# Every consumer of the extraction status predicate.
+grep -rn &quot;isActiveMemoryEvidence\|isProtectedMemoryEvidence&quot; --include=&#39;*.ts&#39; --include=&#39;*.tsx&#39; .
+
+# No paper and no CITATION file: the only arXiv links are in an unrelated
+# voice-pipeline research note.
+grep -rniE &quot;arxiv|CITATION&quot; --include=&#39;*.md&#39; .</code></pre>
+<h2 id="history">History</h2>
+<p><strong>2026-09-22</strong> — <a
+href="https://github.com/elizaOS/eliza/commit/a7e56b58354643655f258c269549fa939784c862"><code class="commit-id" title="a7e56b58354643655f258c269549fa939784c862">a7e56b58…</code></a>
+— first reading, at the head of the default branch <code>develop</code>.
+Screened before anything was read: 1 auto-run surface
+(<code>.gitmodules</code>, declaring <code>elizaOS/llama.cpp</code> and
+<code>elizaOS/electrobun</code>; the clone used
+<code>--recurse-submodules=no</code> and both were left uninitialised,
+so every absence claim on this page is scoped to the superproject), 44
+build-time execution points including a root <code>postinstall</code>
+that runs three vendored-package patch scripts, 155 unpinned dependency
+surfaces and 170 inside the seven-day cooldown — that last count is an
+artifact of a <code>--depth 1</code> clone dating every file to the tip,
+not a statement about the repository. <code>.gitattributes</code>
+carries <code>eol=lf</code> normalisation and no <code>filter=</code>.
+<code>AGENTS.md</code> and two <code>CLAUDE.md</code> files are present
+and were treated as data. Nothing was installed, built or executed.
+Marks: <code>trust_state</code>, <code>bitemporal</code>,
+<code>scope_enforced</code>, <code>negative_eval</code>.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../compare/">Comparative report</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>

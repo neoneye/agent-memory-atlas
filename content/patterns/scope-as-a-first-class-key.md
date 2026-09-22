@@ -800,6 +800,30 @@ natural use removes it. Compare OpenClaw's `scopedPredicate`, which composes
 agent scope and user filter into one predicate *"so scope cannot be lost"* — the
 same two inputs, combined instead of chosen between.
 
+[elizaOS](../../systems/elizaos/) answers the question this page usually has to
+raise as a caveat: what stops an authorized page being starved by rows the
+reader cannot see. `memoryAccessContextConditions` does not filter results — it
+returns SQL conditions that go into the same statement as the ordering and the
+pagination, and the docstring says why: *"Every condition returned here is
+pushed into the same query that orders/ranks and paginates so ineligible rows
+can neither leak nor starve an authorized page."* The predicate is agent
+equality, an authorized-room `inArray` (or a literal `false` when that list is
+empty), a validity guard on the stamped value, and a per-role visibility clause
+over seven scopes — `shared`, `private`, `room`, `global`, `owner-private`,
+`user-private`, `agent-private`. An `UNRESOLVED` actor pushes `sql\`false\``, and
+a row with no stamped scope is read as `private` rather than public. The scoped
+subject is resolved by a `COALESCE` over `metadata.scopedToEntityId`,
+`metadata.addedBy` and the row's own `entityId`, so a row one party stamped on
+another's behalf still resolves to a subject.
+
+The same project applies the idea twice: its conversation search constrains the
+adapter's vector scan to the attested room **before** ranking, *"so a global
+top-K cannot starve eligible same-room rows"*, and its in-memory adapter
+reimplements the ladder at four read sites rather than skipping it. The limit is
+stated in the source rather than left to a reader: `filter.ts` composes with
+Postgres RLS instead of replacing it — RLS gates `entity_id`/`server_id`, this
+gates `metadata.scope` — so a deployment without RLS has half the design.
+
 ## Tests to require
 
 The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)

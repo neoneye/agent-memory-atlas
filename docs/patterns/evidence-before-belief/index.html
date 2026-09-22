@@ -447,6 +447,39 @@ the failure with a class of <code>quote_mismatch</code>,
 <code>incomplete_transcript</code>, a retry count and a requeue
 timestamp, so an ungrounded belief is a work item rather than a
 silence.</p>
+<p><a href="../../systems/elizaos/">elizaOS</a> carries the strongest
+version of the backward link this page asks for, and closes the loop the
+others leave open. Every extracted fact stores
+<code>extractionEvidenceIds</code> — which messages produced it — and
+<code>extractionSourceRevisions</code>, a map from source message id to
+<strong>the revision that was read</strong>. That second field is what
+turns provenance into a mechanism rather than a record:
+<code>reviewChangedExtractionSources</code> compares each fact's stored
+revisions against the current ones and marks any fact whose sources were
+edited or removed <code>extractionReviewRequired: true</code>, then a
+reconciliation pass sets
+<code>extractionStatus: "source_invalidated"</code>, stamps the
+reconciliation id and the changed source ids, and adds those sources to
+a reprocess queue. A read-side predicate,
+<code>isActiveMemoryEvidence</code>, then withholds the fact from the
+FACTS provider, from the long-term memory service and from the
+write-time dedupe pool. So a belief whose evidence stopped saying what
+it said is out of the prompt without anybody noticing it was wrong, and
+the source is queued to be read again.</p>
+<p>Two details are worth copying beside the shape. The retirement write
+throws a typed error rather than continuing — <em>"Derived fact could
+not be retired"</em> — so a failed invalidation is loud instead of
+leaving a stale belief live. And a historical backfill marked
+<code>extractionBackfill</code> attaches provenance to a rediscovered
+row <strong>without</strong> treating old evidence as reconfirmation,
+which is the distinction between learning where a belief came from and
+deciding it is still true.</p>
+<p>Where it stops is the value. Retirement is keyed on the row, and the
+write-time dedupe opens its loop with
+<code>if (!isActiveMemoryEvidence(candidate)) continue;</code>, so a
+retired claim does not block the identical text being written again as a
+new fact — see <a href="../rejected-value-tombstone/">rejected-value
+tombstone</a>.</p>
 <h2 id="implementation-checklist">Implementation checklist</h2>
 <ul>
 <li>Store the event before starting asynchronous extraction.</li>
