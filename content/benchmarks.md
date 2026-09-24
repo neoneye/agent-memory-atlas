@@ -3156,6 +3156,93 @@ controls good enough that the numbers mean what they say, and the rooms and
 the echo chamber are the same author testing the environment and the loop
 rather than the accuracy.
 
+### Memory as an authorization surface, and three numbers that recompute
+
+*Agent Memory Is a Surface for Endogenous Authorization Laundering*
+([arXiv:2609.01836](https://arxiv.org/abs/2609.01836), 1 September 2026),
+Cerruti of ETH Zurich with Okamoto and Erol of Georgia Tech. Read at
+[`51648690bc52d7a9c7ac080a2c67a784fe9d56cb`](https://github.com/tommasocerruti/eal-bench/commit/51648690bc52d7a9c7ac080a2c67a784fe9d56cb),
+103,659 lines of Python across 193 files, 745 committed files under `results/`,
+**and no licence file** — none by any name, and `pyproject.toml` declares no
+`license` field, although the paper describes the benchmark as open-source three
+times.
+
+**The claim is about a mechanism most of this site describes and none of it
+measures.** Persistent memory carries permissions, restrictions and revocations,
+so a compression step that garbles them does not merely lose information — it
+can *grant* authority the underlying history never conferred. The authors call
+this **endogenous authorization laundering**: no attacker, no injection, no
+poisoned document, just provenance washed away by an ordinary memory update, and
+an executor that then acts on the laundered permission. The framing they end on
+is the part worth arguing with: persistent memory is *"not merely a performance
+component, but a part of an LLM agent's effective authorization policy."*
+
+**The headline figures recompute from committed files, which is what earns this
+its place here.** `results/<domain>/paper/counts.json` carries per-seed,
+per-writer, per-condition counts, and pooling the three seeds and five writers
+in the typed-incremental condition gives unauthorized-submission rates of
+**312/1080 = 28.9% in procurement, 200/1920 = 10.4% in cybersecurity and
+490/960 = 51.0% in finance**. The paper's text names 51.0% for finance, and its
+Table 2 reports a false-authority formation rate `P(F)` of 28.3%, 10.4% and
+50.2% for the three domains, stating that each sits *"within 0.8 points of the
+corresponding submission rates"* — against my recomputation the gaps are 0.6,
+0.0 and 0.8 points. I computed those three rates from the committed JSON with my
+own script; I did not install the package, call a provider or run the project's
+analysis command, and the 36 cases behind them are confirmed by the `case_ids`
+in the run manifests rather than taken from the README table.
+
+**The scoring oracle is deterministic, and its ground-truth schema is the
+detail this atlas should sit with.** `domains/procurement/oracle.py` contains no
+reference to any model, judge or client — an action is scored against a hidden
+authorization ledger, not an LLM. The canonical record it scores against carries
+`valid_from`, `valid_until`, `supersedes` and `source_turn_ids`. A benchmark
+built by people who are not writing a memory system, asked to say what a correct
+authorization memory *is*, independently reached for validity intervals,
+supersession and a link back to the source events — which is the vocabulary the
+[capability marks](../capabilities/) here are written in.
+
+**Four design properties are worth copying whatever you are measuring.** Every
+case pairs an authorized request with an unauthorized one, so a system that
+refuses everything scores no better than one that permits everything and no
+negative assertion passes vacuously. Memories are **frozen and hashed** before
+the executor stage, which separates a writer failure from an executor failure
+rather than leaving them confounded. Each domain's `paper/manifest.json` pins
+the release file and every source run **by sha256**, alongside the seeds, the
+model targets, the trial counts, the selection rule and the metric name. And
+`paper/sources/` holds the scoring code itself, content-addressed — the numbers
+ship with the function that produced them.
+
+**The two mitigations are this atlas's own patterns, measured.** Requiring a
+stored permission to be backed by a valid source event is
+[evidence before belief](../patterns/evidence-before-belief/); tracking
+permission changes through bounded event sourcing is the
+[append-only audit](../patterns/append-only-memory-audit/). Both reduce
+laundering, and the paper reports that both also reject more legitimate actions,
+which is the trade this site keeps asking vendors to publish and rarely sees.
+
+**What it does not establish, some of which the project says first.** Thirty-six
+cases across three domains is a small corpus, and the writers and executors are
+a fixed set of hosted models. `P(F)` itself is *not* independently recomputable
+from the repository: it is derived from the final typed memories, and those are
+not committed — `.gitignore` excludes `results/**/*.jsonl`, and the README states
+the consequence plainly, that *"saved aggregates reproduce the published counts,
+while independent trial scoring and bootstrap reanalysis require the
+originals."* The exclusion is also not total in the direction that flatters
+them: 70 JSONL files totalling 1.67 MB **are** committed under
+`results/diagnosis/v2/`, so more of the extension study is checkable than the
+README claims. And there is **no test suite** — no test file under any naming
+convention, no `def test_`, no pytest or unittest import anywhere in 193 Python
+files, with `ruff` as the only dev dependency — so the oracle that decides every
+number in the paper has no committed case pinning its behaviour.
+
+**One connection makes this more than an external result.** The typed memory
+implementation under test is `langmem_profile`, with `langmem==0.0.30` pinned in
+`pyproject.toml` and named as the memory implementation in all three domains'
+release documentation. [LangMem](../systems/langmem/) is reviewed here. The
+failure this benchmark measures is therefore not a failure of a straw memory
+written for the paper, and a reader of that report should know these numbers
+exist.
+
 <a id="contradiction-test"></a>
 
 ## 7. The Contradiction Test

@@ -4019,6 +4019,108 @@ a decay benchmark, run on one store, by that store's author, with
 controls good enough that the numbers mean what they say, and the rooms
 and the echo chamber are the same author testing the environment and the
 loop rather than the accuracy.</p>
+<h3
+id="memory-as-an-authorization-surface-and-three-numbers-that-recompute">Memory
+as an authorization surface, and three numbers that recompute</h3>
+<p><em>Agent Memory Is a Surface for Endogenous Authorization
+Laundering</em> (<a
+href="https://arxiv.org/abs/2609.01836">arXiv:2609.01836</a>, 1
+September 2026), Cerruti of ETH Zurich with Okamoto and Erol of Georgia
+Tech. Read at <a
+href="https://github.com/tommasocerruti/eal-bench/commit/51648690bc52d7a9c7ac080a2c67a784fe9d56cb"><code class="commit-id" title="51648690bc52d7a9c7ac080a2c67a784fe9d56cb">51648690…</code></a>,
+103,659 lines of Python across 193 files, 745 committed files under
+<code>results/</code>, <strong>and no licence file</strong> — none by
+any name, and <code>pyproject.toml</code> declares no
+<code>license</code> field, although the paper describes the benchmark
+as open-source three times.</p>
+<p><strong>The claim is about a mechanism most of this site describes
+and none of it measures.</strong> Persistent memory carries permissions,
+restrictions and revocations, so a compression step that garbles them
+does not merely lose information — it can <em>grant</em> authority the
+underlying history never conferred. The authors call this
+<strong>endogenous authorization laundering</strong>: no attacker, no
+injection, no poisoned document, just provenance washed away by an
+ordinary memory update, and an executor that then acts on the laundered
+permission. The framing they end on is the part worth arguing with:
+persistent memory is <em>"not merely a performance component, but a part
+of an LLM agent's effective authorization policy."</em></p>
+<p><strong>The headline figures recompute from committed files, which is
+what earns this its place here.</strong>
+<code>results/&lt;domain&gt;/paper/counts.json</code> carries per-seed,
+per-writer, per-condition counts, and pooling the three seeds and five
+writers in the typed-incremental condition gives unauthorized-submission
+rates of <strong>312/1080 = 28.9% in procurement, 200/1920 = 10.4% in
+cybersecurity and 490/960 = 51.0% in finance</strong>. The paper's text
+names 51.0% for finance, and its Table 2 reports a false-authority
+formation rate <code>P(F)</code> of 28.3%, 10.4% and 50.2% for the three
+domains, stating that each sits <em>"within 0.8 points of the
+corresponding submission rates"</em> — against my recomputation the gaps
+are 0.6, 0.0 and 0.8 points. I computed those three rates from the
+committed JSON with my own script; I did not install the package, call a
+provider or run the project's analysis command, and the 36 cases behind
+them are confirmed by the <code>case_ids</code> in the run manifests
+rather than taken from the README table.</p>
+<p><strong>The scoring oracle is deterministic, and its ground-truth
+schema is the detail this atlas should sit with.</strong>
+<code>domains/procurement/oracle.py</code> contains no reference to any
+model, judge or client — an action is scored against a hidden
+authorization ledger, not an LLM. The canonical record it scores against
+carries <code>valid_from</code>, <code>valid_until</code>,
+<code>supersedes</code> and <code>source_turn_ids</code>. A benchmark
+built by people who are not writing a memory system, asked to say what a
+correct authorization memory <em>is</em>, independently reached for
+validity intervals, supersession and a link back to the source events —
+which is the vocabulary the <a href="../capabilities/">capability
+marks</a> here are written in.</p>
+<p><strong>Four design properties are worth copying whatever you are
+measuring.</strong> Every case pairs an authorized request with an
+unauthorized one, so a system that refuses everything scores no better
+than one that permits everything and no negative assertion passes
+vacuously. Memories are <strong>frozen and hashed</strong> before the
+executor stage, which separates a writer failure from an executor
+failure rather than leaving them confounded. Each domain's
+<code>paper/manifest.json</code> pins the release file and every source
+run <strong>by sha256</strong>, alongside the seeds, the model targets,
+the trial counts, the selection rule and the metric name. And
+<code>paper/sources/</code> holds the scoring code itself,
+content-addressed — the numbers ship with the function that produced
+them.</p>
+<p><strong>The two mitigations are this atlas's own patterns,
+measured.</strong> Requiring a stored permission to be backed by a valid
+source event is <a href="../patterns/evidence-before-belief/">evidence
+before belief</a>; tracking permission changes through bounded event
+sourcing is the <a
+href="../patterns/append-only-memory-audit/">append-only audit</a>. Both
+reduce laundering, and the paper reports that both also reject more
+legitimate actions, which is the trade this site keeps asking vendors to
+publish and rarely sees.</p>
+<p><strong>What it does not establish, some of which the project says
+first.</strong> Thirty-six cases across three domains is a small corpus,
+and the writers and executors are a fixed set of hosted models.
+<code>P(F)</code> itself is <em>not</em> independently recomputable from
+the repository: it is derived from the final typed memories, and those
+are not committed — <code>.gitignore</code> excludes
+<code>results/**/*.jsonl</code>, and the README states the consequence
+plainly, that <em>"saved aggregates reproduce the published counts,
+while independent trial scoring and bootstrap reanalysis require the
+originals."</em> The exclusion is also not total in the direction that
+flatters them: 70 JSONL files totalling 1.67 MB <strong>are</strong>
+committed under <code>results/diagnosis/v2/</code>, so more of the
+extension study is checkable than the README claims. And there is
+<strong>no test suite</strong> — no test file under any naming
+convention, no <code>def test_</code>, no pytest or unittest import
+anywhere in 193 Python files, with <code>ruff</code> as the only dev
+dependency — so the oracle that decides every number in the paper has no
+committed case pinning its behaviour.</p>
+<p><strong>One connection makes this more than an external
+result.</strong> The typed memory implementation under test is
+<code>langmem_profile</code>, with <code>langmem==0.0.30</code> pinned
+in <code>pyproject.toml</code> and named as the memory implementation in
+all three domains' release documentation. <a
+href="../systems/langmem/">LangMem</a> is reviewed here. The failure
+this benchmark measures is therefore not a failure of a straw memory
+written for the paper, and a reader of that report should know these
+numbers exist.</p>
 <p><a id="contradiction-test"></a></p>
 <h2 id="7-the-contradiction-test">7. The Contradiction Test</h2>
 <p>Forgetting has no benchmark, only <a
