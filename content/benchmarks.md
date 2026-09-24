@@ -885,8 +885,8 @@ disagree about the score by up to seven points — more than the gaps between th
 stores that tie. Agreement is high and the level is not the same, which is the
 distinction a single reported accuracy hides.
 
-The evidence sits in [`a40-labs/memory`](https://github.com/a40-labs/memory) at
-[`f53ad5f64f651e22cd45073ee3e32b546b469858`](https://github.com/a40-labs/memory/commit/f53ad5f64f651e22cd45073ee3e32b546b469858), and the shape of
+The evidence sits in [`a40-labs/memory-bench`](https://github.com/a40-labs/memory-bench) at
+[`f53ad5f64f651e22cd45073ee3e32b546b469858`](https://github.com/a40-labs/memory-bench/commit/f53ad5f64f651e22cd45073ee3e32b546b469858), and the shape of
 that repository is the part worth copying. It publishes the **per-question rows**
 behind every table, with one verification script per benchmark that recomputes
 each figure from those rows against a `PUBLISHED` constant and fails on any
@@ -1633,7 +1633,7 @@ published code can verify, which is the question this page exists to ask.
 [10.1145/3799682.3840567](https://doi.org/10.1145/3799682.3840567), CIKM '26),
 Zerhoudi, Mitrović and Granitzer of the University of Passau, submitted 24
 August 2026. Read at
-[`a6ceb01a3368cee25ef7ebcf05ebdab8c9be24a4`](https://github.com/searchsim-org/knowledge-triage/commit/a6ceb01a3368cee25ef7ebcf05ebdab8c9be24a4),
+[`a6ceb01a3368cee25ef7ebcf05ebdab8c9be24a4`](https://github.com/searchsim-org/cikm26-knowledge-triage/commit/a6ceb01a3368cee25ef7ebcf05ebdab8c9be24a4),
 Apache-2.0, 7,229 lines of Python.
 
 **The finding is one sentence and it is about a mechanism most systems on this

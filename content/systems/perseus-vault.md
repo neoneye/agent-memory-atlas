@@ -640,7 +640,7 @@ middle state load-bearing — **0 all pass, 2 a check could not run (UNVERIFIED,
 never PASS), 3 an invariant is violated** — so a verifier that cannot reach a
 check reports that rather than reporting success. Findings print `path:key`
 only, never values, so running it against a real store does not spill one. This
-is the same discipline the benchmarks page credits `a40-labs/memory` for, and
+is the same discipline the benchmarks page credits `a40-labs/memory-bench` for, and
 the two are the only instances in the corpus.
 
 **A memory red-team harness, honest about being a skeleton.**
