@@ -260,8 +260,38 @@ def sync_one(fork: dict, dry_run: bool) -> dict:
         {"sha": up_sha, "force": True},
     )
     if status != 200:
+        detail = str((payload or {}).get("message"))[:160]
+        # "Object does not exist" is the one failure that is not the fork's
+        # fault and not permanent: ref arithmetic assumes the upstream head has
+        # already reached this fork's object network, and GitHub populates a
+        # fork's objects lazily, so a commit pushed upstream minutes ago can be
+        # unaddressable here while being perfectly readable on the parent.
+        # `merge-upstream` is the one endpoint that FETCHES before it moves a
+        # ref, which is exactly the missing step. On 2026-09-24 two forks failed
+        # this way in one pass — EMI-Group--genesis and CodebuffAI--freebuff —
+        # and re-running only preserved a second branch at the same sha before
+        # failing identically, so a retry loop is not the fix and makes litter.
+        if status == 422 and "does not exist" in detail.lower():
+            merged, _ = request(
+                "POST", f"{API}/repos/{fork_full}/merge-upstream",
+                {"branch": fork_branch},
+            )
+            # Trust nothing it reports. `merge-upstream` will happily MERGE a
+            # diverged branch, and a merge commit on the default branch breaks
+            # the invariant this whole script exists for — main is upstream's
+            # head, byte for byte, or it is not the archive. So re-read the ref
+            # and accept the outcome only when it is that exact sha.
+            if merged in (200, 409):
+                if head_sha(fork_full, fork_branch) == up_sha:
+                    result["status"] = ("preserved-and-reset" if diverged
+                                        else "fast-forwarded")
+                    result["recovered_by"] = "merge-upstream"
+                    return result
+            result["status"] = "update-failed-422-unfetched"
+            result["detail"] = detail
+            return result
         result["status"] = f"update-failed-{status}"
-        result["detail"] = str((payload or {}).get("message"))[:160]
+        result["detail"] = detail
         return result
 
     result["status"] = "preserved-and-reset" if diverged else "fast-forwarded"
