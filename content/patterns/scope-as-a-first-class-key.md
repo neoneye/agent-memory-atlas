@@ -712,6 +712,28 @@ tree over document parts so that redacting one subject's sentence would not
 break every other party's receipt into the same document — a good solution to a
 problem daimon does not have.
 
+**The same move answers the hierarchy case, which is the one most designs reach
+for a copy to solve.** A rule a person means for every repository under one
+directory is, in a strictly per-project store, a rule they re-ratify per
+project — or propagate by writing it into each bucket. Daimon's ruling layers
+do neither. `config.layer_scopes` names the ancestors a project may *read* rules
+from — at or below home, outside every git working tree, and claimed by name in
+the candidate bucket's own root record — and a child inherits their active
+rulings at render time, tagged with the owning directory. Nothing is written
+upward or downward: a child that tries to retire or revise an inherited rule is
+refused and pointed at `--project`, and a child that tries to found an id a
+layer holds active is refused on the one conflict code can detect. The scope key
+stays exactly as narrow as it was; what widened is a read, and the read has no
+copies to delete.
+
+The edge to price before copying it is that a read-through of a *rule* is not
+the same as a read-through of a *fact*. Daimon's rulings can arm an executable
+check on a `PreToolUse` hook, and the layer sync re-arms a layer's checks in
+every repository below it, on machines that never synced the layer directly. The
+scope discipline holds — one human ratification, one bucket, no foreign write —
+but the blast radius of that single human act is the subtree, not the directory.
+Inheriting a rule by reference still inherits its effects.
+
 The authority split layered on top is the part to copy if you do build a
 cross-scope surface. Any channel may ask, revise or report completion; a
 verdict is human-only, *"enforced at the write boundary AND re-checked in the

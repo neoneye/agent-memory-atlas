@@ -7,31 +7,31 @@ page_kind: system
 source_name: "Daily-Nerd/daimon"
 source_url: https://github.com/Daily-Nerd/daimon
 archive_name: "Daily-Nerd--daimon"
-revision: cd84ec2d7fc9d631054242545b8b93bc7e3aaa78
-revision_url: https://github.com/Daily-Nerd/daimon/commit/cd84ec2d7fc9d631054242545b8b93bc7e3aaa78
-analyzed_at: 2026-09-19
+revision: c967baa7084839494f86883407963b25c1eec8c3
+revision_url: https://github.com/Daily-Nerd/daimon/commit/c967baa7084839494f86883407963b25c1eec8c3
+analyzed_at: 2026-09-24
 capabilities: "tombstone, scope_enforced, audit_log, human_review, negative_eval"
 capability_evidence:
   tombstone: "checkpoint store, forget path | plugin/daimon_briefing/cli/lifecycle.py | _cmd_forget appends a tombstone event carrying a content hash rather than the text, before the rewrite, so the rewrite's _drop_forgotten reads it; the supersede-candidate emitter skips values already in the ledger | plugin/tests/test_forget_refutations.py, plugin/tests/test_log_text_privacy.py"
-  scope_enforced: "every store, by project slug, including the one path that crosses projects | plugin/daimon_briefing/store.py, plugin/daimon_briefing/requests.py, plugin/daimon_briefing/config.py | `project_slug` resolves the per-project directory under `~/.daimon` and every read and write is rooted there; every latest-read names a `Route` and an `Admit` rule, both required keywords with no default, and the persist path's reader takes no policy argument at all; a host-set `DAIMON_TENANT_SCOPED` refuses caller-chosen slugs on the CLI and the MCP tools; forget is project-scoped by construction. The cross-project request ledger is the interesting case rather than an exception to it: a request is a row in the **sender's** bucket, the recipient discovers it by read-through at brief time and answers with verdict rows in its own `requests.jsonl` citing the id, so *\\\"every logical request spans two buckets by construction and the joined record is a read-time join. Nobody writes a foreign ledger, and deletion happens once at the source: read-through has no copies to chase\\\"* | plugin/tests/test_isolation.py, plugin/tests/test_read_contract.py (forty route-by-admit cells), plugin/tests/test_requests.py"
+  scope_enforced: "every store, by project slug, including the one path that crosses projects | plugin/daimon_briefing/store.py, plugin/daimon_briefing/requests.py, plugin/daimon_briefing/config.py | `project_slug` resolves the per-project directory under `~/.daimon` and every read and write is rooted there; every latest-read names a `Route` and an `Admit` rule, both required keywords with no default, and the persist path's reader takes no policy argument at all; a host-set `DAIMON_TENANT_SCOPED` refuses caller-chosen slugs on the CLI and the MCP tools; forget is project-scoped by construction; `config.layer_scopes` is the one reader of the ruling-layer path and it returns nothing under `tenant_scoped()`, admits an ancestor only when it sits outside every git working tree and the ancestor's own bucket names that exact directory in its root record, and no write ever lands in a layer's bucket from below — `_guard_layer_only_id` refuses and points the human at `--project` instead. The cross-project request ledger is the interesting case rather than an exception to it: a request is a row in the **sender's** bucket, the recipient discovers it by read-through at brief time and answers with verdict rows in its own `requests.jsonl` citing the id, so *\\\"every logical request spans two buckets by construction and the joined record is a read-time join. Nobody writes a foreign ledger, and deletion happens once at the source: read-through has no copies to chase\\\"* | plugin/tests/test_isolation.py, plugin/tests/test_read_contract.py (forty route-by-admit cells), plugin/tests/test_requests.py, plugin/tests/test_config_layer_scopes.py, plugin/tests/test_ruling_layer_write_verbs.py"
   audit_log: "events.jsonl, plus the refutation, relation and amendment ledgers | plugin/daimon_briefing/store.py | append_event writes one row per lifecycle event; refutations, relations and amendments each carry their own append-only stream with an observed channel on every row | plugin/tests/test_store.py, plugin/tests/test_refutation_authority.py"
-  human_review: "refutation and relation ledgers, and reverify — authority observed from the channel, with a flag that can only narrow it | plugin/daimon_briefing/refutations.py:68-84, plugin/daimon_briefing/cli/_ledger.py:155-170, plugin/daimon_briefing/cli/ruling.py:83-86, plugin/daimon_briefing/relations.py:61-62 | `CHANNEL_AUTHORITY` maps five channels to three authorities — `cli-agent` to agent, `cli-tty`, `ui` and `signed` to human, `mechanical` to mechanical — and activation, overturn and ruling ratification require a human one. What makes it a producer test rather than a label is `_refute_channel`, and its docstring is the clearest statement of the rule this atlas has found in any tree: *\"`--by agent` is a self-declaration of the NARROWER authority … A human path has to show an interactive terminal, and the CLI can mint nothing stronger: `ui` and `signed` are in-process-only, because a channel an agent can reach by shelling out is the deleted `--by human` renamed.\"* So the only flag available lowers your authority; the human path is the absence of that flag plus `sys.stdin.isatty()`, refused with a message naming the missing terminal; and the two strongest channels cannot be reached from a shell at all, by deletion of the flag that once could. `CHANNEL_LABEL` then renders each tier honestly — `agent-proposed`, `ratified (interactive)`, `ratified (ui)`, `ratified (signed)` — never *\"human-ratified\"* unqualified | plugin/tests/test_refutations.py:70-73 (`test_agent_cannot_self_ratify` asserts both the `requires a human channel` refusal and that `records()` is still empty), plugin/tests/test_refutation_authority.py"
-  negative_eval: "refutation guard read path | plugin/tests/test_refutations.py | test_guard_fires_on_exact_issue_anchor_not_broad_topic asserts a broad topical query must not surface an active guard | plugin/tests/test_refutations.py:113"
+  human_review: "refutation and relation ledgers, and reverify — authority observed from the channel, with a flag that can only narrow it | plugin/daimon_briefing/refutations.py:68-84, plugin/daimon_briefing/cli/_ledger.py:156-171, plugin/daimon_briefing/cli/ruling.py:160-163, plugin/daimon_briefing/relations.py:61-62 | `CHANNEL_AUTHORITY` maps five channels to three authorities — `cli-agent` to agent, `cli-tty`, `ui` and `signed` to human, `mechanical` to mechanical — and activation, overturn and ruling ratification require a human one. What makes it a producer test rather than a label is `_refute_channel`, and its docstring is the clearest statement of the rule this atlas has found in any tree: *\"`--by agent` is a self-declaration of the NARROWER authority … A human path has to show an interactive terminal, and the CLI can mint nothing stronger: `ui` and `signed` are in-process-only, because a channel an agent can reach by shelling out is the deleted `--by human` renamed.\"* So the only flag available lowers your authority; the human path is the absence of that flag plus `sys.stdin.isatty()`, refused with a message naming the missing terminal; and the two strongest channels cannot be reached from a shell at all, by deletion of the flag that once could. `CHANNEL_LABEL` then renders each tier honestly — `agent-proposed`, `ratified (interactive)`, `ratified (ui)`, `ratified (signed)` — never *\"human-ratified\"* unqualified. The fold holds the rule a second time on its own: a `ratified` row that applies a pending agent revision to an already-active ruling requires a human channel *in the fold*, not only at the writer, *\"because the fold is the authority for a row that reaches the ledger another way\"*, so a correctly pinned agent-channel row stays inert and arms nothing | plugin/tests/test_refutations.py:70-73 (`test_agent_cannot_self_ratify` asserts both the `requires a human channel` refusal and that `records()` is still empty), plugin/tests/test_refutation_authority.py"
+  negative_eval: "refutation guard read path | plugin/tests/test_refutations.py | test_guard_fires_on_exact_issue_anchor_not_broad_topic asserts a broad topical query must not surface an active guard | plugin/tests/test_refutations.py:132"
 stack_storage: "sqlite, files"
 stack_retrieval: "lexical"
 stack_source: "reviewed"
 matrix:
   memory_unit: "Trust-classed checkpoint item: open question, decision, belief, uncertainty"
   storage: "Per-project JSON checkpoints plus a disposable SQLite FTS5 index"
-  retrieval: "Automatic session-start injection; FTS5/BM25 for `recall`, ranked by importance x decay, with contradiction and supersession as demotion keys and never as filters"
+  retrieval: "Automatic session-start injection; FTS5/BM25 for `recall`, ranked by importance x decay, with contradiction and supersession as tiers applied before the weighting on both read paths — demotion keys and never filters"
   write: "Detached LLM extraction at session end, then deterministic quote and outcome gates"
   update_delete: "A value-keyed tombstone appended before the rewrite, consulted by the supersede-candidate emitter, resolved by content key on rebuild, and reaching the serializer chunk cache and the second negative store"
-  scoping: "Per-project bucket on every read, each latest-read naming a route and an admit rule; cross-project reads only by explicit slug or a host-declared allowlist, and a tenant-scoped flag refuses the caller's slug outright"
-  integration: "Host hooks (Claude Code plugin, Windsurf, Codex), opt-in delivery of cross-project asks into a running session at its next turn boundary, a CLI split into subcommand family modules behind one render seam, a read-only stdio MCP, and a local read-only viewer with search-as-recall"
-  background: "A pre-action hook runs a human-armed ruling check before a matching shell action, fail-open under a five-second budget, and logs every firing; detached serialize child, retry ledger with self-heal, index rebuild"
+  scoping: "Per-project bucket on every read, each latest-read naming a route and an admit rule; cross-project reads only by explicit slug, a host-declared allowlist, or a ruling layer — an ancestor directory outside every git working tree whose own bucket claims it by name, read-only and never written from below; a tenant-scoped flag refuses the caller's slug outright and returns no layers at all"
+  integration: "Host hooks (Claude Code plugin, Windsurf, Codex), opt-in delivery of cross-project asks into a running session at its next turn boundary, rulings ratified once at a directory above a set of repositories and rendered into each one at brief time, a CLI split into subcommand family modules behind one render seam, a read-only stdio MCP whose recall rows name a stale item in plain words, and a local read-only viewer with search-as-recall"
+  background: "A pre-action hook runs a human-armed ruling check before a matching shell action, fail-open under a five-second budget, and logs every firing; a check armed at a ruling layer re-arms in every repository below it on a machine that never synced the layer directly; detached serialize child, retry ledger with self-heal, index rebuild"
   trust: "verbatim vs inferred as a stored field, verified by code against the transcript, with corroboration as a separate axis that can never become a trust class; a candidate/active/overturned ledger carrying both polarities, whose authority is read off the observed write channel and whose polarity is derived from the founding event name rather than any writable field; a candidate/confirmed/rejected relation ledger in shadow mode with no mechanical channel at all; and a contradiction slot on the recall index that only derived world evidence may write, whose cure is recorded rather than erased"
   strengths: "Authority derived from the observed write channel rather than a caller-set flag, with the strongest channels unreachable from the CLI; a surface registry where every file shape declares its delete strategy and a guard refuses an undeclared one; a residue auditor whose third exit code separates cannot-prove from clean; a placebo arm that has refuted the project's own features"
-  risks: "One live checkpoint per project; the chunk cache is purged wholesale because it is keyed by chunk text and cannot be searched by value; the negative-knowledge guard is agent-invoked and advisory, and nothing reaps its ledger by age; the contradiction slot on the index has one writer, the receipt probe, so a stale file, branch or PR claim is flagged in a briefing but never demoted in search"
+  risks: "One live checkpoint per project; the chunk cache is purged wholesale because it is keyed by chunk text and cannot be searched by value; the negative-knowledge guard is agent-invoked and advisory, and nothing reaps its ledger by age; the contradiction slot on the index has one writer, the receipt probe, so a stale file, branch or PR claim is flagged in a briefing but never demoted in search; one ratification at a ruling layer arms a shell-blocking check in every repository beneath it, and only `ruling propose` carries the guard against a directory resolving to a layer the caller did not name"
 ---
 
 ## 1. Executive Summary
@@ -46,7 +46,7 @@ that one loop.
 The design commitment worth reading the code for is this: **every memory item
 carries a trust class, and the trust class is not taken on the model's word.**
 The extraction prompt asks for `trust: "verbatim"` plus an exact `quote`, and
-then `serializer.verify_quotes` (`plugin/daimon_briefing/serializer.py:1207`)
+then `serializer.verify_quotes` (`plugin/daimon_briefing/serializer.py:1231`)
 greps that quote against the rendered transcript. A miss is not a warning — the
 item is *downgraded* to `inferred`, the failure is logged, and a pointer to it is
 appended to a rejection ledger. Plenty of systems in this atlas store a
@@ -56,7 +56,7 @@ model's own trust label as a claim to be falsified before it is stored.
 A second gate goes further, and is the most interesting thing here. Quote
 verification certifies *transcription*, not truth: the model can conclude "the
 tests pass", be wrong, and the transcript will faithfully record it saying so.
-`ground_outcomes` (`serializer.py:1593`) narrows that gap by lexicon — if an
+`ground_outcomes` (`serializer.py:1660`) narrows that gap by lexicon — if an
 item's text asserts a completed outcome (merged, deployed, tests green) and the
 item cites no tool-result message as evidence, the item is downgraded to
 `inferred` even though its quote verified. The comment in the source states the
@@ -143,7 +143,7 @@ as its fragments appear in order. The extraction prompt forbids exactly that —
 verified receipt records whether it happened anyway. `quote_provenance.stitching`
 carries `cross_message` and `cross_role`, each true only when *no* single
 message, or no single role's messages joined in transcript order, can account
-for every matched fragment (`_stitching_flags`, `serializer.py:1018`). The
+for every matched fragment (`_stitching_flags`, `serializer.py:1042`). The
 necessity semantics are the careful part: a flat scan that happened to satisfy
 a fragment across a boundary it did not need to cross is not a stitch. It is
 recording only. The verification outcome is untouched, the format version moved
@@ -176,7 +176,7 @@ id, which is why widening the id could not break it.
 Lifecycle is *not* stored on the item. The checkpoint is append-only in
 practice — `last_verified` is stamped in exactly one place and the docstring
 forbids any other writer — and liveness is a **fold over an event log at read
-time** (`store.resolutions`, `store.py:2359`; `store.is_resolved`, `store.py:2400`):
+time** (`store.resolutions`, `store.py:2547`; `store.is_resolved`, `store.py:2630`):
 
 | Latest event for an id | Effect at read |
 | --- | --- |
@@ -189,12 +189,12 @@ time** (`store.resolutions`, `store.py:2359`; `store.is_resolved`, `store.py:240
 Statuses are free-form by design and readers prefix-match, so an unknown status
 resolves rather than vanishes — the writer bothered to record a lifecycle fact.
 Same-second ties break on event *content*, never file order, so a reordered log
-folds identically (`_tie_wins`, `store.py:2347`).
+folds identically (`_tie_wins`, `store.py:2535`).
 
 Three actors can move an item, and the code is explicit about which is which.
 **Code** downgrades trust classes and emits supersede *candidates*. **The
 model** proposes items and typed `supersedes` links but never writes the
-code-owned fields — `strip_code_owned_keys` (`serializer.py:2258`) deletes any
+code-owned fields — `strip_code_owned_keys` (`serializer.py:2326`) deletes any
 the model emits. **A human** resolves, forgets, and re-opens — and re-opening a
 resolved item requires evidence: either the item's code anchor still checks out
 live, or an explicit `--evidence` string. `_cmd_reverify` refuses otherwise,
@@ -305,6 +305,22 @@ not a ruling"*, and `_guard_ruling_cap` is a single chokepoint every activation
 path routes through, naming the active rulings in its refusal so the operator
 knows what to retire.
 
+The obvious human flow was broken for a while, and the shape of the fix is the
+part to carry. `ruling ratify` on an *already-active* ruling with a pending
+agent revision appended a `ratified` row the fold read as a re-stamp of
+activation: the proposal stayed pending, a check it carried was never armed —
+`ruling checks` reporting `armed 0 of 0 wanted` — and `activated_at` moved on a
+ruling that had never stopped being active. Agent proposes, human ratifies,
+reported success and did nothing. The fold now splits `ratified` into two
+cases, applying the proposal's fields, check and policy the way a human
+`revised` row would when the content pins match and leaving a stale pin inert,
+and refusing before any write when there is nothing pending. What makes it a
+producer test rather than a repair is where the human-channel requirement
+landed: **in the fold, not only at the writer** — the writer already refused a
+non-human caller, and the fold is the authority for a row that reaches the
+ledger by some other route, so a correctly pinned `ratified` row carrying an
+agent channel stays inert and arms nothing.
+
 Since 0.41.0 a ruling can carry a **check**: a script body of at most 8,192
 bytes and a command pattern of at most 200, stored in the row so the check
 travels with the ruling, with an intent of `enforce`, `warn` or `record-only`
@@ -314,9 +330,9 @@ text; a body naming a host-local path — `~/`, `$HOME/`, `/Users/`, `/home/` �
 is refused at propose time, line by line, because such a script *"travels to
 another machine as a script whose real content is a file that is not there."*
 The check's lifecycle follows the ruling's: `active` folds to `armed`,
-`overturned` to `disarmed` (`:913-914`), so only a human ratification arms
+`overturned` to `disarmed` (`:1328-1329`), so only a human ratification arms
 anything, and `ruling check try` runs a check against a command *"arming
-nothing"* (`cli/ruling.py:424`). `checks.sync`, called by every ledger writer
+nothing"* (`cli/ruling.py:691`). `checks.sync`, called by every ledger writer
 that can change what is armed and by `daimon check sync`, is the only writer of
 `~/.daimon/checks/` — a six-key manifest and one executable body per armed
 check at mode `0o500`, written atomically and skipped when the bytes already
@@ -336,9 +352,74 @@ silently — and encodes the recurrence as a regex violation pattern with an
 expiry condition: the scar retires when `listing` grows a *required* polarity
 parameter, making an unscoped call impossible to write.
 
+### A ruling above the project
+
+A ruling holds for one project bucket, which makes a rule a person means for
+every repository under `~/work` a thing they re-ratify per repository.
+`config.layer_scopes` (`config.py:861`) resolves that by naming **ruling
+layers**: the ancestors of a project's resolved root, nearest first, that a
+child may inherit active rulings from. It is the only place that knows the
+shape, and the three conditions it applies are the mechanism.
+
+An ancestor qualifies when it is at or below `Path.home()` — with the
+filesystem root excluded by its own branch rather than as a side effect,
+*"an `HOME=/` misconfiguration must not turn every directory on disk into a
+layer"* — when neither it nor anything above it carries a `.git` entry, and
+when its bucket's **root record** names that exact directory. That record is a
+one-line file holding the absolute resolved directory that first wrote to the
+bucket, stamped by every write path that can create one and never overwritten
+after, declared in `surfaces.py` as a shape that carries no user text and so
+needs no deletion strategy. The containment rule is what keeps a nested repo, a
+submodule and a worktree's scaffolding from becoming layers of one another, and
+the ancestor's bucket is looked up through `store.project_slug` rather than
+`resolve_project_dir`, because the resolver walks the git toplevel and *"that
+is exactly what would collapse a plain ancestor OUTSIDE any repo into whatever
+repo happens to sit below it."*
+
+The direction is one-way. `inherited_active` reads a layer's ledger and returns
+its active rulings tagged with `inherited_from`, deduped nearest-wins, with
+`request_policy` rows dropped; the render names the owner through
+`config.home_relative` as `[from ~/work]` rather than printing the developer's
+full home path. Nothing writes upward: `_guard_layer_only_id` refuses `retire`,
+`ratify` and `revise` against an id that only a layer holds and names the
+`--project` to run them under instead, and `_guard_layer_active_collision`
+refuses a child that tries to found, activate or rename into an id a layer
+already holds active — *"a same-id collision is the only conflict code can
+detect"*, and a prose contradiction between a child's ruling and a layer's is
+left to the ceremony to disclose rather than to code to adjudicate. The
+activation cap counts inherited rows at a child, so a project at seven of its
+own rulings cannot be pushed past the cap by a layer ratified tomorrow.
+`tenant_scoped()` returns no layers at all, which keeps the one shared-home
+mode free of a new ambient read.
+
+The consequence to weigh before copying it is on the check contract above.
+`checks.sync_layers` re-arms a layer's checks *"on a machine that has never
+synced the layer's own project directly"*, so one ratification at `~/work`
+places a shell-blocking `PreToolUse` check in every repository beneath it,
+everywhere that home is checked out. The authority table is untouched — a human
+channel still arms — but the reach of one human act is a subtree rather than a
+directory. Two smaller edges sit beside it. Only `ruling
+propose` carries the guard against a requested directory that resolved
+elsewhere, the other write verbs answering *"unknown ruling"* on a wrong bucket
+and wiring them left as *"a small follow-up if it turns out to matter"*. And a
+bucket with no root record is accepted as a layer when it holds no active
+ruling, because accepting one unconditionally would let an unrelated directory
+sharing a lossy slug — `~/code/my/app` and `~/code/my-app` — inherit a ruling
+meant for the other, while refusing every unstamped bucket would orphan the
+layers that began before the record existed.
+
+The first bug in it is the familiar one. `ruling checks`, `status` and `stats`
+built their "own copy wins" exclusion set from every own state, so a project's
+own copy of a ruling — retired after the rule was promoted to the layer above —
+shadowed the layer's active row, and all three reported the check disarmed
+while the briefing rendered it in force and the hook kept arming it. The
+briefing was right because its reader already filtered to `active`, and the fix
+is `refutations.own_active_ruling_ids`, one helper the three surfaces share so
+they cannot drift from the briefing's answer again.
+
 ### A third store and a fourth
 
-`relations.py` (640 lines) is a project-scoped **typed relation ledger** —
+`relations.py` (644 lines) is a project-scoped **typed relation ledger** —
 `revision-of`, `answers`, `supersedes`, `reclassified-from` — folded from
 `proposed`/`confirmed`/`rejected`/`retracted` events into the matching states.
 It ships in **shadow mode** and the report of that is precise: recall,
@@ -353,7 +434,7 @@ be able to carry item text**. And there is no mechanical channel at all in v1,
 confirmation"* — a negative experimental result spent on removing a capability
 rather than on qualifying it.
 
-`amendments.py` (526 lines) records that a briefed item's state advanced while
+`amendments.py` (628 lines) records that a briefed item's state advanced while
 the item stays open — approved, unblocked, rescoped — *"the verb between"* a
 resolution and a reverify. Its header is an argument against reusing the store
 that was already there: `events.jsonl`'s `source` field is caller-declared with
@@ -404,7 +485,7 @@ flowchart TD
 files: a global `latest.json` and one `<project-slug>/latest.json` per project,
 with `prev-1..N` rotation. Writes are temp-file + `os.replace`, and the
 check-rotate-write pointer sequence is serialized by an `flock` on a sidecar
-dotfile that **fails open** on contention (`store._pointer_lock`, `store.py:131`).
+dotfile that **fails open** on contention (`store._pointer_lock`, `store.py:271`).
 A monotonicity guard rejects a write whose session is older than the pointer's.
 Per-session files are garbage-collected to the newest 100 by default, never
 pruning one a live pointer references.
@@ -453,7 +534,7 @@ rows carrying only `tool_result` blocks are surfaced as `role: "tool"` with a
 capped payload, which is what makes outcome grounding possible on that host and
 nowhere else.
 
-**Extraction.** `serializer.serialize_strict` (`serializer.py:2415`) gates on
+**Extraction.** `serializer.serialize_strict` (`serializer.py:2483`) gates on
 `min_messages` (10 by default; tool rows do not count), renders the transcript,
 and chunks it at 1,200 lines with 100 lines of overlap. Chunks run concurrently
 through the D-019 prompt, each cached by content hash under
@@ -467,7 +548,7 @@ message ids the transcript cannot vouch for) → `derive_stated_by` →
 `pin_imperatives` → `verify_quotes` → `ground_outcomes` →
 `_stamp_llm_provenance`.
 
-**Carry.** `carry.merge` (`carry.py:295`) folds the previous checkpoint's
+**Carry.** `carry.merge` (`carry.py:318`) folds the previous checkpoint's
 unresolved items into the new one **by exact copy, in code**. The docstring
 records the experiment behind that choice: LLM re-emission lost whole items even
 from lossless input, while exact-copy carry held 1.0 fidelity. Items expire by
@@ -487,10 +568,10 @@ runs after the provenance strips on purpose, since carry's freeze prefers
 `verbatim` and a model-claimed verbatim this path can never check must not beat
 genuinely extracted prior content.
 
-**Retrieval.** `recall.search` (`recall.py:1012`) runs an FTS5 `MATCH`, AND-joined
+**Retrieval.** `recall.search` (`recall.py:1105`) runs an FTS5 `MATCH`, AND-joined
 first, retrying OR-joined when AND matches nothing, ordered by
 `invalidated_by IS NOT NULL`, then `superseded_by IS NOT NULL`, then bm25, then
-a silent `frontier` recency tiebreak. `recall.suggest` (`recall.py:1408`) is the
+a silent `frontier` recency tiebreak. `recall.suggest` (`recall.py:1521`) is the
 proactive path behind
 `UserPromptSubmit`, gated hard toward silence: unknown project, fewer than two
 salient terms, or fewer than two distinct shared terms with a matched session all
@@ -543,7 +624,7 @@ the form `{type: "supersedes", target}`.
 (725 lines) declares, per field of the envelope and of an item, the JSON type,
 whether it may be absent or null, who owns it — model or code — and what
 happens to an out-of-contract value: reject, clamp, drop, pass or strip
-(`ITEM_RULES`, `field_table.py:402`). The serializer's validator and its
+(`ITEM_RULES`, `field_table.py:86`). The serializer's validator and its
 normalizers are generated from that table, and the same table renders
 `docs/checkpoint-schema.json` (681 lines), versioned by `format_version`, so a
 consumer that cannot import daimon can test its own normalizers against the
@@ -560,7 +641,7 @@ live serializer constants and to the real on-disk corpus.
 allowed to touch.** It records whose statement an item is, distinct from
 `author`, the machine identity that wrote the checkpoint, and it is derived by
 code from the host's per-message speaker joined through the item's validated
-`source_message_ids` (`derive_stated_by`, `serializer.py:793`). The rule is
+`source_message_ids` (`derive_stated_by`, `serializer.py:797`). The rule is
 unanimity: bindings naming two speakers, or one speaker and one unattributed
 message, yield nothing, because *"picking a winner would manufacture exactly
 the misattribution the field exists to prevent."* A host that owns a whole
@@ -603,10 +684,10 @@ The slug is a directory name, a stamped column in the index, and a
 read-path filter in both. **Every latest-read names two things**: a
 `Route` — the project's own pointer only, or own-then-global — and an
 `Admit` rule — any payload, or only one whose stamp is this project's or
-nobody's (`store.py:1406`, `:1414`). Both are required keywords with no
+nobody's (`store.py:1672`, `:1684`). Both are required keywords with no
 default, *"so an omitted argument is a TypeError instead of a silently
 unsafe answer"*, and the one reader the persist path uses,
-`read_own_stream_latest` (`store.py:1521`), takes no policy argument at
+`read_own_stream_latest` (`store.py:1692`), takes no policy argument at
 all: nothing an environment variable can reach may change what carry
 writes.
 
@@ -618,7 +699,7 @@ with another project's checkpoint on its first session, on the one path
 with no human reader (#784). The injection route falls back to the global
 pointer only when the project is unknown or the operator opted in with
 `DAIMON_BRIEF_GLOBAL_FALLBACK` (`briefing.injection_read_route`,
-`briefing.py:349`), and a refused foreign payload leaves behind a `Marker`
+`briefing.py:424`), and a refused foreign payload leaves behind a `Marker`
 of exactly two header fields, slug and created, *"and NOTHING more"* —
 because stdout inside an agent session is checkpoint input, a wider marker
 would copy foreign content into this project's checkpoint (scar 0055).
@@ -632,13 +713,13 @@ display path keeps its old shape: a header saying activity is elsewhere,
 never a hundred foreign lines under a warning.
 
 **Tenant scope is a host decision, not a caller's.** `DAIMON_TENANT_SCOPED`
-(`config.py:390`) makes every caller-chosen cross-project address a refusal —
+(`config.py:478`) makes every caller-chosen cross-project address a refusal —
 `--slug` and `--all-projects` on the CLI, `slug` and `all_projects` on the MCP
 tools, and `daimon projects` lists only the caller's own bucket — on the
 reasoning that for a host running one daimon home with a project directory per
 person, those surfaces are *"cross-tenant read and enumerate primitives, one
 prompt injection away from every tenant's memory."* `DAIMON_EXTRA_READ_SLUGS`
-(`config.py:411`) is the host declaring, out of band, which other buckets a
+(`config.py:500`) is the host declaring, out of band, which other buckets a
 session may read ambiently; an entry that is not slug-shaped is dropped rather
 than widened into a path, and no write path takes a slug. The refusal is loud
 by design: *"a caller who asked for a scope and silently got their own instead
@@ -654,7 +735,7 @@ makes the git merges conflict-free by construction. Teammates' items are
 attributed and never merged into yours.
 
 **Staleness** has a dedicated read-time signal. `briefing.stale_carried`
-(`briefing.py:624`) flags carried items whose effective last-verified age
+(`briefing.py:730`) flags carried items whose effective last-verified age
 exceeds seven days, and the docstring states the reasoning precisely: a fresh
 checkpoint restating a carried item **is not corroboration**, because both
 sources trace back to the same original extraction.
@@ -682,21 +763,32 @@ from another scope names its origin project in the rendered line.
 **A contradiction is a rank input with one writer.** The index has two
 Graphiti-inspired slots, `superseded_by` and `invalidated_by`, and the module
 docstring is careful about what the second holds: evidence, not a verdict.
-`_apply_verification_invalidations` (`recall.py:663`) folds each bucket's own
+`_apply_verification_invalidations` (`recall.py:670`) folds each bucket's own
 `verification.jsonl` at rebuild and stamps the latest worldcheck receipt
 contradiction per item as `"<check>:<reason>@<ts>"`, latest by timestamp and
 never by line order, bound to this install's `author` so machine-local receipt
 evidence can never brand a teammate's mirrored copy. Only derived world
 evidence may write it: capture-time rejection rows describe the capture rather
 than later disproof, and a model-flagged contradiction has no path to the slot
-at all — *"derived world evidence writes the slot, or nothing does."* `search`
-sorts a contradicted row below a merely superseded one, and among superseded
-rows a person's recorded resolution below a model-authored link; `suggest`
-multiplies the weight by 0.4 for contradiction, 0.7 for a supersession the
+at all — *"derived world evidence writes the slot, or nothing does."*
+
+Both read paths sort the same way, and `suggest` reaches that ordering twice. Its candidate-fetch SQL and its final Python sort
+each apply two boolean tiers before `match_score` is consulted — invalidation
+primary, so every non-invalidated row sorts ahead of every invalidated one, and
+supersession secondary within each half — mirroring `search`'s `ORDER BY`
+literally, while `search` keeps a three-way split inside the superseded half
+that puts a person's recorded resolution below a model-authored link. The tier
+has to bind before the fetch and not only at the end: the candidate window is
+`LIMIT 256`, and a wall of strongly-matching demoted rows can fill it on its
+own and truncate a weaker, better-tiered row away before the Python sort ever
+sees it.
+
+Inside a tier the weights do the work. `suggest`
+multiplies by 0.4 for contradiction, 0.7 for a supersession the
 model's typed link wrote and 0.5 for one a human resolution wrote, stacking
 because the axes are independent — a replaced decision was still right at the
 time, whereas contradiction says a check disagreed with the claim itself
-(`_suggest_weight`, `recall.py:1412`, `_RESOLVED_WEIGHT`). The read side
+(`_suggest_weight`, `recall.py:1495`, `_RESOLVED_WEIGHT`). The read side
 demotes in the order the write side already keeps, the resolution fold
 overwriting the link fold, and an unattributed row — legacy, or a writer the
 fold could not name — takes the model-link rate, *"the weaker claim, never the
@@ -704,15 +796,46 @@ person."* Neither filters, on the ground that the
 evidence is machine-local and *"burial must remain visible and reversible
 rather than silent."*
 
+Invalidation was a weight-only penalty on `suggest` until #1063, and the
+argument that closed it is the sharper version of the same one: a strongly
+matching invalidated row could outrank a weaker live row on weighted score
+alone, and the candidate window carried no tier at all. Four committed cases
+pin the replacement — an invalidated row built to outweigh a live one still
+sorts after it, a row carrying both marks lands in the lowest tier, a wall of
+invalidated matches cannot starve the fetch window, and `suggest` and `search`
+agree on the relative order of one live, one superseded and one invalidated row
+for the same query. That window is also where this design comes closest to the
+filter it refuses: a demoted row past the 256th candidate falls out of the pull
+entirely. It is a consequence of ranking rather than an admission predicate —
+nothing reads the mark and decides what may be returned — but it is the edge at
+which "ranked down, never hidden" is paid for by the truncation instead of by
+the reader.
+
+**The delivery log records the refusals, on surfaces where it recorded only the
+admissions.** Every recall row carries a `rank_score` beside the raw bm25
+`match_score` — the `relevance * weight` product `suggest`'s own sort used, so a
+demoted row does not read identically to a live row with the same raw score — and
+`recall_telemetry` persists it the same way, with a min/median/max block beside
+the existing one in `daimon stats`. The sharper change is the placeholder row.
+`recall-inject` and `action-recall` were *silent* when a pull delivered nothing,
+so a seven-day distribution built from that log could only ever see admissions;
+both now write the honest-empty row `recall-search` has written since #1057,
+carrying `best_refused` — the raw `match_score` of the strongest candidate an
+active gate turned away, `None` when nothing matched at all, and `rank_score`
+always `None` on it because there is no ranked row to read one from. A guard keeps the
+placeholder from being counted as an injection, since nothing was injected.
+A log that records only what was delivered cannot answer what a gate cost, and
+this one had that shape on two of its three surfaces.
+
 The cure is the better half. A passing probe on an item that currently stands
 contradicted appends a `receipt-ok` row, and the fold clears `invalidated_by`
 while writing `cured_by`, because clearing alone had made *"challenged and
 survived"* indistinguishable from *"never questioned"*. The cure row is written
-only when it changes something (`append_receipt_cure`, `store.py:2088`), so the
+only when it changes something (`append_receipt_cure`, `store.py:2212`), so the
 rejection ledger stays a ledger of problems found rather than work done, and
 `verification_counts` excludes it — *"a cure is not a catch."* One resolution of
 "where does this item currently stand", `latest_receipt_verdicts`
-(`store.py:1982`), is shared by the fold that writes the mark and the gate that
+(`store.py:2160`), is shared by the fold that writes the mark and the gate that
 decides whether a cure is worth recording, because *"a recorder deriving from a
 different view than the verifier is the failure this codebase keeps paying
 for."* `superseded_by` gained the same discipline in a `superseded_source`
@@ -791,7 +914,7 @@ to reword.
 form: the item is deleted from the live checkpoint, the checkpoint is rewritten
 and its receipt re-minted, and a `forgotten:<sha256[:12]>` event is appended
 carrying a content hash and never the text. On the next index rebuild,
-`_apply_event_resolutions` (`recall.py:505`) *deletes* every row with that item
+`_apply_event_resolutions` (`recall.py:512`) *deletes* every row with that item
 id across every historical checkpoint, including the FTS5 contentless-delete
 dance. Because ids are content-derived, an identical re-extraction in a future
 session lands on the same id and is suppressed on every read path.
@@ -842,9 +965,20 @@ does not decide to recall at session start.
   separate on purpose: recall skips slash commands, while *"an ask addressed to
   this project is owed regardless of what the user typed."*
 - **Windsurf:** live-validated. **Codex:** live-validated capture since
-  6 August 2026, per the README. **Gemini:** blocked on an upstream issue, and
-  the README says so. A Hermes path shares the brief hook's render.
-- **MCP:** opt-in, read-only, five tools. `daimon_brief` deliberately serves the
+  6 August 2026, per the README. **Gemini:** the host page names a version floor and an
+  unverified half — the upstream `transcript_path` stub was fixed in
+  `gemini-cli` v0.21.0, so the path now arrives, and *"whether a Gemini
+  transcript parses into a checkpoint is unverified by this project"*, with the
+  page telling the reader what to look for and what to report. A Hermes path shares the brief hook's render.
+- **MCP:** opt-in, read-only, five tools. Every `daimon_recall` row carries a
+  `status` field — a plain-words phrase when the row is resolved, superseded,
+  contradicted or cured, `null` when it is live — sharing one parse
+  (`recall.describe_status`) with the CLI's text mode and the hook line, because
+  the tool had returned the raw `superseded_by`, `invalidated_by` and `cured_by`
+  columns and nothing else, so *"a pull and an injection should never describe
+  one item two ways"*. The field is added after telemetry records the delivery,
+  so the recall ledger's row shape is unchanged.
+  `daimon_brief` deliberately serves the
   deterministic render — "a machine consumer wants stable bytes" — and refuses
   to fall back to another project's checkpoint, returning an orientation message
   instead. That refusal is labelled in the source as contamination, not
@@ -856,7 +990,7 @@ does not decide to recall at session start.
 - **The human's half has a surface.** `daimon decide` lists what is waiting on
   a person — undecided asks, quote-verified amendments awaiting confirmation,
   agent-proposed rulings and refutations awaiting ratification — and its
-  composer (`pending.py`, 415 lines) is a pure reader with a structural
+  composer (`pending.py`, 595 lines) is a pure reader with a structural
   admission rule: *"A record belongs here only when some verb's write path
   REFUSES a non-human channel… No guard, no entry."* That test is checkable,
   and it is why an agent's own proposal cannot promote itself onto the queue.
@@ -868,7 +1002,20 @@ does not decide to recall at session start.
   agent session CLI stdout is checkpoint input, so printing another bucket's
   text copies it where the origin project's `forget` cannot reach. Ordering is
   blocking first, then oldest first — *"this is a backlog, and the oldest
-  undecided item is the one rotting."*
+  undecided item is the one rotting."* An amendment row shows what it is about
+  before a person decides: the target item's own text, slug-scoped and capped
+  at 120 characters, the state it is claimed to move from and to
+  (`open → progressed`), and where the quote was found — `in a user turn`,
+  `in tool output`, `agent's own words ⚠`, `source unknown ⚠` — which names the
+  evidence role and never who spoke. Rows sharing evidence collapse into one
+  fan-out card with a confirm line per target and a single `reject all`, and
+  **there is no pre-assembled `confirm all`, on purpose** — the card exists to
+  force the question *"does one quote really close these N things?"*, so *"it
+  must never hand over a one-paste yes — if the human decides yes, they type the
+  ids."* `amend ratify` and `reject`
+  take several ids and check every one against the current fold before the
+  first write, so one unknown or wrong-state id refuses the whole batch with
+  nothing written; the human-channel check is unchanged.
 
 Model agency over memory is deliberately low. The model proposes items and typed
 supersession links inside one constrained JSON emission; it cannot write
@@ -883,7 +1030,7 @@ currently only Claude Code supports — so outcome grounding is silently a no-op
 everywhere else, by design, since absence of evidence about the *host* is not
 evidence against the claim.
 
-**A human verdict now has to be made where a human can be.**
+**A human verdict has to be made where a human can be.**
 `_human_cli_channel` returns *"the observed human channel, or refuse[s] an
 unattended write"* — and what it checks is `sys.stdin.isatty()`. With no
 terminal attached, the write does not proceed: the caller is told that the verb
@@ -1084,6 +1231,21 @@ its own project's attention would have a soft-reject with no record."*
 Suppression affects panel attention only, the row stays visible in `request
 list`, and a later verdict reverses it.
 
+The one way an agent reaches either half is through a ruling a person
+ratified first. A ruling may carry a `request_policy` — `{"to": "<recipient
+slug>", "kind": "info", "verb": "open", "by": "agent"}` for opening an ask,
+and a `verb=accept` shape for answering one — with an exact recipient slug and
+no wildcard, and the validator branches on the verb so mixing the two is
+refused. At the write boundary an agent-channel `open` with `kind=info`
+resolves a covering ruling from the *sending* project's own ledger, stamps the
+row, and re-checks that exact stamped row against the order-aware history
+before appending. The fold re-derives the same answer rather than trusting the
+stamp: a row is `info` only when the ruling was activated in the origin's own
+ledger, the hash matches, and the row's own order falls inside the activation
+interval — and an unreadable or absent ledger reads as no policy, so the row
+folds to `work` rather than to the weaker classification. `--to-human` stays
+refused before any of it.
+
 Two bounds complete it. A human rejection is **sticky per id** — *"a human
 verdict may never be buried by a later sender event"* — so asking again means a
 new request citing `supersedes`, which makes re-asking an append-only fact with
@@ -1108,11 +1270,11 @@ The verdict travels back the same way. An accepted ask moves to an *owed*
 lane with its own event name, kept apart from `delivered` because
 accepting never bumps the revision, so reusing that key *"would drop the
 accepted card with no error and no log line"* (`_RECIPIENT_OWED`,
-`owed_renderable`, `requests.py:1041`); and staleness deliberately does
+`owed_renderable`, `requests.py:2200`); and staleness deliberately does
 not reach it, since *"work does not expire by being ignored."* The
 predicate deciding whether an ask still deserves ambient attention is one
 function shared by the panel and the live path (`_deserves_attention`,
-`requests.py:1014`), named once because *"the day the two filters
+`requests.py:2172`), named once because *"the day the two filters
 disagree, one of them is nudging about an ask the other already decided
 was not worth attention."*
 
@@ -1140,7 +1302,7 @@ escaping exception that happened to exit non-zero would block an action no
 check ever judged. The deny is the deliberate path."* Nothing here widens the
 model's reach: the check is a human's script on a human's ruling, and
 `ruling checks` shows what is armed, in what mode on each host, and whether it
-ever fired (`cli/ruling.py:410`).
+ever fired (`cli/ruling.py:568`).
 
 **A foreign tombstone apply says what it could not reach.**
 `store.apply_foreign_tombstones` walks the checkpoint shapes through
@@ -1150,10 +1312,28 @@ plaintext surface classes kept the value; the interim fix names those
 surfaces from the registry in the output and leaves the issue open for the
 structural fix (#945, `test_foreign_apply_coverage.py`).
 
-**Ten item fields are code-owned and stripped from anything a model authors.**
+**A teammate's tombstone binds the explanation surface too.** `daimon why <id>`
+reads the union of the local ledger and `foreign_forgotten_content_keys()`, the
+same set recall's search and the team read already check, and withholds the
+item text and the stored quote with one line saying so when the item's own
+content key is in it — the id and every axis carrying no text of its own still
+print, and `--json` sends `{"state": "withheld"}` in their place. `why --source`
+counts the union as well, so a project whose only tombstone came from a
+teammate withholds the transcript window exactly as a local one does, and the
+local web viewer honours the same withheld shape rather than rendering the
+object literally. The docstring states the reason better than a summary can:
+`why` *"binds an id straight to its stored text, so it is the one surface that
+could still hand a forgotten value back to anyone still holding that id."* The
+union is computed once per call and reused by both the text withhold and the
+`--source` count, *"so the two never drift to different answers within one
+call"* — the same shared-predicate discipline `latest_receipt_verdicts` and
+`_deserves_attention` are built on.
+
+**Twelve item fields are code-owned and stripped from anything a model authors.**
 `_CODE_OWNED_ITEM_KEYS` is `origin_session`, `origin_author`, `quote_verified`,
 `last_verified`, `quote_provenance`, `pinned`, `id`, `carried_from`,
-`first_seen` and `stated_by`, removed by `strip_code_owned_keys` on both
+`restated_after_resolve`, `first_seen`, `preceding_tool_context` and
+`stated_by`, removed by `strip_code_owned_keys` on both
 capture doors before the code stamps its own values. The reasoning behind `id` is the sharpest of
 them: the id stamper treats any present id as authoritative, so a model-supplied
 one is either an identity the code never derived or, on collision, **a silent
@@ -1172,7 +1352,7 @@ docstring says which.
 
 ## 10. Tests, Evals, and Benchmarks
 
-5,247 tests across 158 files, better than twice the source in lines. Coverage tracks the
+6,500 tests across 186 files, better than twice the source in lines. Coverage tracks the
 design claims closely: `test_quote_verification.py`, `test_carry.py`,
 `test_briefing.py` (withhold semantics, including
 `test_id_bearing_item_never_fuzzy_withheld`), `test_store.py`,
@@ -1181,8 +1361,8 @@ links never guess), `test_redact_leak_gaps.py`, `test_receipts.py`,
 `test_isolation.py` (every path escapes the real `$HOME` under test). I did not
 run the suite.
 
-**The refutation ledger carries 107 of those across four files — 52 in
-`test_refutations.py`, 33 in `test_forget_refutations.py`, 15 in
+**The refutation ledger carries 119 of those across four files — 62 in
+`test_refutations.py`, 35 in `test_forget_refutations.py`, 15 in
 `test_refutation_privacy.py`, 7 in `test_refutation_authority.py` — and they are
 adversarial rather than illustrative.** The seven in
 `test_refutation_authority.py` are all about the CLI's own write boundary:
@@ -1193,16 +1373,16 @@ adversarial rather than illustrative.** The seven in
 
 The properties the channel table exists for are asserted one layer down, against
 `fold` itself, in `test_refutations.py`: `test_agent_cannot_self_ratify`
-(`:70`), `test_agent_overturn_proposal_does_not_disable_active_guard` (`:96`),
-and `test_tampered_agent_ratification_flag_cannot_activate` (`:155`) — a
+(`:70`), `test_agent_overturn_proposal_does_not_disable_active_guard` (`:115`),
+and `test_tampered_agent_ratification_flag_cannot_activate` (`:174`) — a
 hand-edited `ratified: True` on a `cli-agent` row folds to `candidate` anyway,
 because the fold re-derives authority from the channel rather than trusting the
 flag. That is the sharper placement: it holds for a row written by anything,
 not only for one the CLI would have refused to write. The same file covers the
 fold's determinism under reorder
-(`test_malformed_order_does_not_sink_the_ledger`, `:144`), identity
-(`test_a_revision_cannot_take_over_another_records_identity`, `:397`), and guard
-precision (`test_guard_fires_on_exact_issue_anchor_not_broad_topic`, `:113` — a
+(`test_malformed_order_does_not_sink_the_ledger`, `:163`), identity
+(`test_a_revision_cannot_take_over_another_records_identity`, `:489`), and guard
+precision (`test_guard_fires_on_exact_issue_anchor_not_broad_topic`, `:132` — a
 negative retrieval case in the strict sense, asserting that a broad topical
 query must *not* surface an active guard). `test_forget_refutations.py` and
 `test_refutation_privacy.py` bind the second store to the deletion contract, and
@@ -1227,7 +1407,7 @@ mirrored the caller's unfiltered call.
 
 Both were exposed by mutation testing rather than by review reading, which is
 the same lesson one level up from the suite: a test that cannot be shown to fail
-is a claim nobody has checked, and 5,247 of them do not change that for any
+is a claim nobody has checked, and 6,500 of them do not change that for any
 individual one.
 
 **The lesson became a rule with discovery.** `test_gate_controls.py` scans the
@@ -1559,7 +1739,11 @@ they stop working.
   arm settled the `search` half at exactly zero, by construction: a label FTS5
   does not index cannot move a bm25 ranking. `suggest` and the briefing order by
   `effective_weight`, whose trust ceiling is the one place the label changes a
-  rank, and the replay rig is already shaped to run that arm.
+  rank, and the replay rig is already shaped to run that arm. The delivery log
+  became the other half of that instrument when it started recording
+  `rank_score` — the weighted number `suggest` actually sorted on — beside the
+  raw bm25 score, and an honest-empty row naming the strongest candidate a
+  gate refused; neither is aggregated anywhere yet.
 - **How often does a quote stitch?** `quote_provenance.stitching` exists to
   measure the violation rate of a prompt rule before enforcing it. No rate is
   committed, so the rule stays doctrine.
@@ -1582,7 +1766,9 @@ they stop working.
   normalizers and `docs/checkpoint-schema.json` are generated from
 - `plugin/daimon_briefing/store.py` — checkpoint files, pointers, the route-and-admit
   latest-read, ids, redaction, events, the verification ledger and its cure gate
-- `plugin/daimon_briefing/config.py` — every `DAIMON_*` knob and default
+- `plugin/daimon_briefing/config.py` — every `DAIMON_*` knob and default, and
+  `layer_scopes`, the one place that decides which ancestor directories are
+  ruling layers
 
 **Write path**
 - `plugin/daimon_briefing/serializer.py` — D-019 prompt, chunking, all deterministic gates, and the stitching receipt
@@ -1591,7 +1777,11 @@ they stop working.
 - `plugin/daimon_briefing/redact.py` — capture-time secret scrubbing
 
 **Retrieval path**
-- `plugin/daimon_briefing/recall.py` — FTS5 index, search, proactive suggest, the contradiction fold
+- `plugin/daimon_briefing/recall.py` — FTS5 index, search, proactive suggest, the
+  contradiction fold, the two-tier ordering both read paths share, and
+  `describe_status`, the one parse the CLI, the hook line and the MCP tool render
+- `plugin/daimon_briefing/recall_telemetry.py` — the delivery log, its rank
+  scores and its honest-empty rows
 - `plugin/daimon_briefing/scoring.py` — importance x recency x decay, with overdue escalation, and `explain`
 
 **Context assembly**
@@ -1611,7 +1801,8 @@ they stop working.
   read-time joins, live delivery and the owed lane
 - `plugin/daimon_briefing/checks.py`, `checks_runtime.py`, `checks_host.py` — the
   armed-check manifest writer, the stdlib runner and the host profile table;
-  the last two mirrored into `hook/` and `_hooks/`
+  the last two mirrored into `hook/` and `_hooks/`. `sync_layers` and
+  `audit_layers` re-arm and grade a layer's checks from a project below it
 - `plugin/daimon_briefing/buckets.py` — the one-shot bucket migration across the
   0.42.0 path-resolution change, with a receipt alias-aware readers join on
 - `plugin/daimon_briefing/pending.py` — the `decide` queue composer, a pure reader
@@ -1635,7 +1826,7 @@ they stop working.
 - `plugin/daimon_briefing/harvest.py` — zero-LLM scar-candidate drafting
 
 **Tests and evals**
-- `plugin/tests/` — 5,247 tests across 158 files
+- `plugin/tests/` — 6,500 tests across 186 files
 - `benchmark/` — LongMemEval-S harness, reporting policy, committed results
 - `research/experiments/recall-replay-ab/` — the replay A/B rig, its placebo
   arm and its self-verification
@@ -1645,6 +1836,20 @@ they stop working.
   including `gate-491/measurements.json`, a committed refutation of a shipped feature
 
 ## History
+
+**2026-09-24** — [`c967baa7084839494f86883407963b25c1eec8c3`](https://github.com/Daily-Nerd/daimon/commit/c967baa7084839494f86883407963b25c1eec8c3) — re-pinned 26 commits on, through releases 0.48.0 to 0.50.0; 134 files and +11,891 lines. Re-screened at the new pin: the same three auto-run surfaces, three build-time execution paths, one unpinned website manifest and two files inside the seven-day cooldown, with no finding the previous screen did not carry. Nothing was installed, built or run, and the read was made from a full clone. No mark moved — five of seven, `tombstone`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval`, with `trust_state` withdrawn at the previous reading and `bitemporal` absent. The grep over `plugin/daimon_briefing/` for `valid_from`, `valid_to`, `valid_until`, `event_time`, `occurred_at` and `as_of` returns nothing at exit 1, and so does one for `embedding`, `faiss` and `hnsw`, both against a control that returns 23 hits for `invalidated_by`.
+
+The new surface is the **ruling layer** (#1092 and five slices): an ancestor directory of a project, outside every git working tree, at or below home and named by its own bucket's root record, whose active rulings a project below it inherits at brief time. It is a read, never a write — two guards refuse a child that would retire, ratify, revise or found into a layer's id and send the human there with `--project` instead — and `tenant_scoped()` returns no layers at all. Sections 2, 5 and the matrix carry it. The consequence to weigh is on the check contract: `checks.sync_layers` re-arms a layer's checks on a machine that never synced the layer's own project, so one human ratification at `~/work` places a shell-blocking `PreToolUse` check in every repository beneath it. The authority table is unchanged, which is why no mark moved; the reach of one human act is now a subtree, which is why the risks field says so.
+
+Two mechanisms that bear on marks got stronger. `ratify` on an already-active ruling with a pending agent revision had appended a row the fold read as a re-stamp — the proposal stayed pending, its check was never armed, and the flow reported success and did nothing; the fix requires a human channel **in the fold** rather than only at the writer, *"because the fold is the authority for a row that reaches the ledger another way"* (#1097). And `daimon why` now reads the union of local and foreign tombstones before rendering an item's text or stored quote, so an explanation surface stops being the one read path where a teammate's forget did not reach (#1074).
+
+`suggest` stopped treating invalidation as a weight-only penalty. It now applies the same two boolean tiers `search` applies — invalidation primary, supersession secondary — in the candidate-fetch SQL and in the final Python sort, with four committed cases including one that a wall of invalidated matches cannot starve the 256-row fetch window. This is the ranking half of the `trust_state` distinction held harder, not moved: nothing reads the mark and decides what may be returned. Section 6 names the one edge it creates, a demoted row past the 256th candidate falling out of the pull by truncation.
+
+Four claims were wrong at the previous pin rather than overtaken by it, and three were counts. `_CODE_OWNED_ITEM_KEYS` holds **twelve** fields, not ten, and the report's enumeration omitted `restated_after_resolve` and `preceding_tool_context`; the tuple is byte-identical at both commits. `amendments.py` was 545 lines, not 526, and `relations.py` 644, not 640. And fourteen line citations pointed at unrelated lines or blank ones *at the commit the report published* — `verify_quotes`, `ground_outcomes`, `stale_carried`, `injection_read_route`, `latest_receipt_verdicts`, `_deserves_attention` and `owed_renderable` among them, with `field_table.py:402`, `config.py:390` and `config.py:411` naming rows and branches of unrelated functions. Every citation in the body has been re-resolved against this commit, the ranges checked at both ends.
+
+Also in range: a `request_policy` with `verb=open`, so an agent may open a `kind=info` ask only under a ruling a person ratified in the sending project's own ledger, re-derived in the fold rather than trusted from the stamp (#1085); a `status` field on every MCP `daimon_recall` row, sharing one parse with the CLI and the hook line because *"a pull and an injection should never describe one item two ways"* (#1080); `rank_score` and an honest-empty row with `best_refused` on all three recall surfaces, closing a delivery log that could see admissions and never refusals (#1075); `decide` amendment rows carrying the target's text, its claimed state transition and the evidence role, with batch ratify-or-reject atomic across ids and no `confirm all` line on purpose (#1088); and a Gemini host page that replaces a closed upstream blocker with the honest gap, an unverified transcript parse (#1081).
+
+Counts: 6,500 `def test` across 186 files, ~106,700 test lines against ~47,300 source lines; 119 refutation tests across four files; 103 numbered scars.
 
 **2026-09-19** — [`cd84ec2d7fc9d631054242545b8b93bc7e3aaa78`](https://github.com/Daily-Nerd/daimon/commit/cd84ec2d7fc9d631054242545b8b93bc7e3aaa78) — **`trust_state` is withdrawn**, at the unchanged pin, and the project's own comments are the citation. The mark asks for a state that withholds a memory from being treated as true. Daimon has the states and has decided, explicitly and with issue numbers, that they will not withhold: *"Neither is a filter. #112's rule holds for both: an overturned item is still evidence… so it ranks down and renders flagged rather than disappearing."* Supersession and contradiction are two independent multiplicative demotions — 0.7 for a link, 0.5 for a recorded resolution, 0.4 for contradiction evidence — stacked because the axes are independent, and the recall docstring repeats the rule for the auto-inject path: *"Superseded items are INCLUDED, ranked down and flagged… it still never hides a result."* Even the candidate fetch window is annotated as *"not an admission gate"*. That is the ranking half of the distinction this mark exists to draw, held deliberately and argued for. The record's other clause was the `verbatim` versus `inferred` field, which `verify_quotes` checks against the transcript — a write-time provenance genre recording how a line was obtained, not a judgement that can be revised, and the atlas does not award the mark for those. The state machines that do gate — `relations.py`'s candidate / confirmed / rejected / retracted set and the amendment guards that refuse a transition unless the current state is candidate or verified — are write-path transition rules, not admission predicates on a read. Everything else stands: `tombstone`, `scope_enforced`, `audit_log`, `human_review` and `negative_eval` are untouched, and the flagged-not-hidden design remains one of the clearer positions in this corpus on what to do with a claim you no longer trust. Nothing was installed and no suite was run.
 
