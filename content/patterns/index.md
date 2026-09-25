@@ -389,7 +389,7 @@ pattern library reads as ignorance of the field.
 
 **Summarization and compaction.** The single most common answer to context
 overflow, and this library treats it as an **antipattern** rather than a pattern:
-see [chained lossy summarization](../compare/#6-antipatterns-and-failure-modes)
+see [chained lossy summarization](../overview/#6-antipatterns-and-failure-modes)
 in the comparative report. The reasoning is that a summary which replaces its
 source has no per-fact identity, so nothing in it can be corrected, scoped or
 deleted — and the atlas's evidence for that is not theoretical.
@@ -398,7 +398,7 @@ plus one day's notes; [RisuAI](../systems/risuai/) summarizes its own summaries
 and its team replaced that design twice. Compaction is a real and necessary
 technique; the position here is that it belongs to the context window rather than
 to the memory layer, which is also why
-[conversation-window management](../compare/#not-in-scope-conversation-window-management)
+[conversation-window management](../families/#not-in-scope-conversation-window-management)
 is outside this atlas's scope test. **[Evidence before
 belief](./evidence-before-belief/) is the pattern that makes compaction safe** —
 summarize freely once the source survives the summary.
@@ -426,7 +426,7 @@ pruning half of the original entry stays out.
 
 If you think one of these is misfiled, the disagreement is about the scope test
 rather than about the mechanism, and that test is stated at the top of the
-[comparative report](../compare/).
+[comparative report](../overview/#in-short).
 
 ## Composing them
 

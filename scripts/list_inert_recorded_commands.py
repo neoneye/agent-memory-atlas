@@ -134,7 +134,7 @@ def scan_text(text: str) -> list[tuple[int, str]]:
 def collect(project_dir: Path) -> list[tuple[str, int, str]]:
     out = []
     targets = sorted((project_dir / "content" / "systems").glob("*.md"))
-    for extra in ("overview.md", "benchmarks.md", "verdicts.md"):
+    for extra in ("overview.md", "families.md", "appendix.md", "benchmarks.md", "verdicts.md"):
         candidate = project_dir / "content" / extra
         if candidate.is_file():
             targets.append(candidate)

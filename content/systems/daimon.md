@@ -1523,7 +1523,7 @@ generalizes.** Step 8 asserts absence from "recall's SQLite rows", and that is
 the *whole* index — there is no embedding anywhere in `plugin/daimon_briefing/`,
 and the FTS5 database is disposable and rebuilt from the checkpoints. So the
 class of failure described under
-[the layer below delete](../../compare/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector)
+[the layer below delete](../../overview/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector)
 — a soft-deleted vector persisting in an HNSW graph until an unscheduled
 compaction — has nowhere to happen. The atlas's most complete deletion test
 belongs to the system with the least retrieval machinery, and those two facts

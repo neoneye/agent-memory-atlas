@@ -280,7 +280,7 @@ while every triplet survives, with nothing but a log line to say so.
 - **Whole-store passes?** No background pass, but note that every turn with
   entities serializes **both entire JSON files** — cost grows linearly with the
   store on every write, which is fine at demo scale and is the usual reason the
-  atlas flags [flat JSON as a prototype store](../../compare/#flat-json-as-a-prototype-store).
+  atlas flags [flat JSON as a prototype store](../../overview/#flat-json-as-a-prototype-store).
 - **Read path?** Twenty entities plus the graph query result, every turn,
   unbounded by tokens and inserted ahead of the conversation — so it invalidates
   the prompt prefix on each turn.

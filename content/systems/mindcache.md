@@ -346,7 +346,7 @@ carries `overall_score` or `rubric_scores`. The mem0 answers the judge compares
 against are read from a path outside the repository and skipped when missing, so
 the comparison is not reproducible from this tree either.
 
-This is the [published-numbers-without-artifacts](../../compare/#published-benchmark-numbers-without-committed-artifacts)
+This is the [published-numbers-without-artifacts](../../overview/#published-benchmark-numbers-without-committed-artifacts)
 pattern in a sharper form than usual: the claim is not a number that cannot be
 checked, it is a *pass* with no scored artifact anywhere. Three conversations of
 retrieval traces are real evidence of something — that the pipeline runs

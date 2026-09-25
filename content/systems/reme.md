@@ -361,7 +361,7 @@ than most readers would guess, published beside the good ones. BEAM's
 Two things follow for this atlas.
 
 First, ReMe is a counterexample to the
-[published benchmark numbers without committed artifacts](../../compare/#published-benchmark-numbers-without-committed-artifacts)
+[published benchmark numbers without committed artifacts](../../overview/#published-benchmark-numbers-without-committed-artifacts)
 antipattern, and the strongest one in the corpus. The results are in the
 repository, categorised, with the configuration stated and the weak scores
 included. That is what the atlas has been asking for.

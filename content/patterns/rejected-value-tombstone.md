@@ -693,7 +693,7 @@ check on the normalised text of the two statements would make it the value.
 **One sighting outside the corpus, because of where it was found.**
 `os-factory/har` is a harness for running coding agents in isolated worktrees —
 no memory in it, no report, [recorded as an
-exclusion](../../compare/#known-limitations) — and its
+exclusion](../../appendix/#known-limitations) — and its
 Mission Control dashboard carries an `UnregisteredRepository` table whose schema
 comment reads *"Paths removed via unregister — blocks auto-sync re-registration
 until force register."* The delete path writes the path into it before dropping

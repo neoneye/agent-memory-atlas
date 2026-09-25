@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Assert the repositories-inspected list agrees with every report's own pin.
 
-`content/overview.md` publishes one line per repository — the project, and the
+`content/appendix.md` publishes one line per repository — the project, and the
 commit it was read at. That list is the atlas's claim about what was actually
 read, and it is maintained by hand in a file thousands of lines away from the
 frontmatter it has to agree with.
@@ -36,9 +36,9 @@ REVISION = re.compile(r"^revision:\s*([0-9a-f]{40})\s*$", re.M)
 
 def main(root: str) -> int:
     project = Path(root)
-    overview = project / "content" / "overview.md"
-    if not overview.is_file():
-        print(f"Missing {overview}", file=sys.stderr)
+    appendix = project / "content" / "appendix.md"
+    if not appendix.is_file():
+        print(f"Missing {appendix}", file=sys.stderr)
         return 1
 
     # A repository may carry more than one report — `NousResearch/hermes-agent`
@@ -46,11 +46,11 @@ def main(root: str) -> int:
     # two are re-read independently, so one name can legitimately list two pins.
     # Collect every entry per name and let a report match any of them.
     listed: dict[str, list[tuple[str, str]]] = {}
-    for m in ENTRY.finditer(overview.read_text(encoding="utf-8")):
+    for m in ENTRY.finditer(appendix.read_text(encoding="utf-8")):
         listed.setdefault(m.group("name"), []).append((m.group("shown"), m.group("href")))
     if not listed:
         print(
-            "No repositories-inspected entries parsed from content/overview.md. "
+            "No repositories-inspected entries parsed from content/appendix.md. "
             "If the list's format changed, update ENTRY in this script rather "
             "than deleting the check.",
             file=sys.stderr,
@@ -90,7 +90,7 @@ def main(root: str) -> int:
 
     if problems:
         print(
-            "The repositories-inspected list in content/overview.md disagrees "
+            "The repositories-inspected list in content/appendix.md disagrees "
             "with the reports it describes:",
             file=sys.stderr,
         )

@@ -77,7 +77,7 @@ table has a `source` column — `caller`, `machine`, `attributed`,
 and the success-rate math weights caller-sourced outcomes over machine ones.
 That is a direct, built defense against the self-grading failure the atlas
 documents at length ([the reward-inflation
-paper](../../compare/#known-limitations) is the theory; this is one of the few
+paper](../../appendix/#known-limitations) is the theory; this is one of the few
 implementations that acts on it).
 
 The weakness is the same fact read from the other side. The loop is only as good
@@ -431,7 +431,7 @@ caller-sourced outcomes over machine ones and treat unknown provenance as its ow
 category. This is the concrete answer to self-grading: a lesson credited only by
 the machine's assessment of its own output is not trusted the way one credited by
 a caller is. Read against [the reward-inflation
-result](../../compare/#known-limitations) the atlas records, Sonder is one of
+result](../../appendix/#known-limitations) the atlas records, Sonder is one of
 the few systems that has built the distinction the theory says is necessary — a
 de-inflation signal that tracks who is doing the grading.
 

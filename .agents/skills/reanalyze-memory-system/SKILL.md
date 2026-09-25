@@ -163,7 +163,7 @@ different work.
 
 **Nothing moved.** The mechanism is unchanged and no published claim is stale.
 Re-pin `revision`, `revision_url` and `analyzed_at`, update the commit in
-`content/overview.md`'s repositories-inspected list, and say so plainly in a new
+`content/appendix.md`'s repositories-inspected list, and say so plainly in a new
 History entry. This is a real result and worth recording — it is the common case,
 and it is the one a commit-id comparison cannot distinguish from the others.
 "Nothing moved" is still a reading, so it still gets an entry; the check requires
@@ -235,8 +235,9 @@ them, not in a campaign.
 - A new entry at the top of the report's `## History`, dated to `analyzed_at`,
   with the full 40-char sha and what changed — including, when a published claim
   was wrong, what was wrong and in which direction.
-- The system's verdict in `content/overview.md` section 9, if the verdict itself
-  changed. It carries no dated line.
+- The system's paragraph in `content/families.md`, if what it says changed —
+  a mark count stated there is not compared with `capabilities:` by any check,
+  and PLUR's said six for six days after a re-read withdrew one.
 - **The system's entry in `content/verdicts.md`, whenever a mark moved.** This is
   a separate file from the overview and it was on no checklist until 30 August
   2026, so an entry written at a first reading kept its original mark count
@@ -248,7 +249,7 @@ them, not in a campaign.
   the build on a stated count that disagrees with the report, so this line and
   the check were added together; the check cannot see a stale *reason*, which is
   what that example was.
-- The commit link in the repositories-inspected list in the appendix. This is a
+- The commit link in the repositories-inspected list in `content/appendix.md`. This is a
   separate hand edit from the frontmatter and it is the one that gets forgotten —
   three entries had drifted before `scripts/check_inspected_pins.py` existed, all
   three on re-reviewed systems.
@@ -316,7 +317,7 @@ published URL. The repository has a convention for this:
    `docs/systems/<slug>/index.html`, and `scripts/test_site.sh` excludes
    stubs from its one-report-per-content-file count by looking for that
    attribute.
-5. Sweep the old slug out of `content/overview.md`, `site/index.html` and any
+5. Sweep the old slug out of `content/overview.md`, `content/families.md`, `content/appendix.md`, `site/index.html` and any
    pattern page. Generated files (the matrix, the capability grid, the A–Z
    index, `content/systems-index.md`) rebuild themselves — do not hand-edit
    them.

@@ -364,7 +364,7 @@ that no amount of automation removes.
   is a limit of the unit of review rather than of the definitions: the atlas
   reviews repositories, and this failure lives in a dependency they share. The
   evidence is in the
-  [comparative report](../../compare/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector).
+  [comparative report](../../overview/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector).
 - **The scope mark is the shallowest**, for the reason given above.
 - **Seven axes cannot describe a memory system.** They describe the failures this
   atlas has found to be common, expensive, and silent. The reports carry the rest.
@@ -425,7 +425,7 @@ fixed yet.
   2026-08-08 — the rule moved, not the corpus.** [AutoGen](../../systems/autogen/),
   [Sovereign](../../systems/sovereign/) and [Google ADK](../../systems/adk-python/)
   store something durable with no correctable identity and are in anyway. The
-  [comparative report](../../compare/#reading-this-report) now states the
+  [comparative report](../../overview/#reading-this-report) now states the
   exception in the rule instead of leaving it to be found by reading four
   reports against it: a memory contract widely built against is admitted
   *because* it cannot express a correction, since excluding those would remove

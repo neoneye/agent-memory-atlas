@@ -16,7 +16,8 @@ Questions, corrections, and systems worth adding are welcome on Discord: [neoney
 
 - `content/systems/` — individual repository reports.
 - `content/patterns/` — reusable memory architecture pattern guides.
-- `content/overview.md` — cross-system comparative analysis.
+- `content/overview.md` — cross-system comparative analysis, rendered to `/overview/`.
+- `content/families.md`, `content/compare.md`, `content/appendix.md` — the system families, the generated matrix, and the pins, licences and known limitations.
 - `content/methodology/` — the review and synthesis formats.
 - `site/` — the designed homepage and the `/discord.html` invite redirect.
 - `templates/` — the shared document-page template.

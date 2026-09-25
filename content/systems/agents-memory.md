@@ -169,7 +169,7 @@ so each tranche is a new `001-`, `002-` file.
 `REVISE_IN_PLACE_KINDS` and the file already existed, the return value becomes
 `"{loc} — revise this file in place when facts change; do not only append
 bullets"`. The bullet has already been appended. This is
-[tool descriptions as policy](../../compare/#tool-descriptions-as-policy) moved
+[tool descriptions as policy](../../overview/#tool-descriptions-as-policy) moved
 one step later: not a description the model reads before acting, but a sentence
 it reads after the write it should not have made.
 
@@ -232,7 +232,7 @@ fact does not fit, which is the right posture for a store a person also edits.
 a position, not an identity: `delete_memory` pops by index, so every id below the
 removed line shifts, and an id returned by an earlier search silently addresses a
 different fact. The atlas's own antipattern —
-[ranking positions used as identities](../../compare/#ranking-positions-used-as-identities)
+[ranking positions used as identities](../../overview/#ranking-positions-used-as-identities)
 — is about retrieval order rather than file position, and this is the same class
 one layer down.
 

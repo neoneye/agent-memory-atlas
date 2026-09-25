@@ -10,7 +10,7 @@ One entry per system: the best idea, the biggest risk, the component most worth
 lifting, an impression of maturity, and who should and should not copy it. These
 are judgements rather than marks — the evidence behind each is in that system's
 own report, and the mechanisms are compared side by side in the
-[comparative report](../compare/).
+[comparative report](../overview/).
 
 This is a different thing from the comparative report: the comparison argues
 about mechanisms across the corpus, and this argues about whether any one system
@@ -27,7 +27,7 @@ walk away.
 It is prose — written by a model, like everything else here that is not
 generated; the [review method](../methodology/per-repo-report-format/#who-writes-these)
 says who and what follows from it — unlike the [capability index](../capabilities/) and the
-[comparative matrix](../compare/#2-comparative-matrix), which are derived from every report's frontmatter
+[comparative matrix](../compare/), which are derived from every report's frontmatter
 by a script and complete by construction. So completeness here is a fact about today rather
 than a guarantee: nothing fails the build if the next report arrives without an
 entry, and `scripts/check_homepage.py` only notices the count in the sentence

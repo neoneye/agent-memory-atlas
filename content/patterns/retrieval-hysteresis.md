@@ -107,7 +107,7 @@ not intend?** Nobody in this atlas measures it, and it is cheap to measure:
 re-run the same queries after a re-index and count how many top-*k* sets changed.
 The churn paper's uncomfortable half is that the answer being "a lot" may not be
 a defect where recall feeds exploration — see
-[sample instead of rank](../../compare/#sample-instead-of-rank-when-recall-feeds-exploration) — while it plainly is one where recall
+[sample instead of rank](../../overview/#sample-instead-of-rank-when-recall-feeds-exploration) — while it plainly is one where recall
 feeds an answer about a person. Sticky and cooldown damp the flip either way, and
 a system that adopts them should know which of those two it is.
 

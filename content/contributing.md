@@ -48,7 +48,7 @@ The scope bar is one sentence: **memory that outlives a session.** Something is
 stored, retrieved later, and could in principle be scoped, corrected, or
 forgotten. A framework whose "memory" only decides which messages stay in the
 current context window is conversation-window management, and it belongs in the
-*Not in scope* section of the [comparative report](../compare/) as a short
+*Not in scope* section of the [comparative report](../families/#not-in-scope-conversation-window-management) as a short
 example rather than as a report with empty columns. Compaction counts only when
 something survives the session with an identity that could later be corrected.
 
@@ -62,7 +62,7 @@ Two things that look like criteria and are not:
 - **A restrictive licence is a caveat, not an exclusion.** BSL, ELv2, PolyForm
   and "all rights reserved" are stated in section 1 so a reader knows what they
   may do with what they read. A table in the
-  [comparative report](../compare/#what-the-licences-actually-say) collects
+  [comparative report](../appendix/#what-the-licences-actually-say) collects
   every system here whose licence is not an open-source one.
 
 The genuine exclusions are narrow: nothing survives the session, the mechanism

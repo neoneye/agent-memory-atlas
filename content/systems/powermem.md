@@ -390,7 +390,7 @@ than most systems ship and it is genuinely reusable.
 against 17.12s, tokens ~0.9k against 26k — has no committed artifact behind it at
 this commit, and the baseline is identified only as "Baseline". So the numbers are
 claims: the atlas's
-[published benchmark numbers without committed artifacts](../../compare/#published-benchmark-numbers-without-committed-artifacts)
+[published benchmark numbers without committed artifacts](../../overview/#published-benchmark-numbers-without-committed-artifacts)
 note applies, and so does the caution about
 [vendor-run comparisons](../../benchmarks/#vendor-run-comparisons-compare-them-with-them-plus-us),
 since a 65.9% *relative* improvement over an unnamed baseline is the shape that

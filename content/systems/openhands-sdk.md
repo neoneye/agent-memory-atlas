@@ -55,7 +55,7 @@ One mark, and it is the weak form of `scope_enforced`.
 **Most of what looks like memory here is not.** The `View`, the four view
 properties and the condenser pipeline are several thousand lines of careful
 work deciding which events reach the model *within a run*. By this atlas's
-[scope test](../../compare/#not-in-scope-conversation-window-management) —
+[scope test](../../families/#not-in-scope-conversation-window-management) —
 whether the store holds anything that could turn out to be false — that is
 context engineering, not memory: an event cannot be wrong, it happened.
 Section 9a describes it because it is the best-engineered thing in the tree and
@@ -201,7 +201,7 @@ Most of the engineering effort in this tree goes into deciding which events
 reach the model within a run, and it is genuinely good work. It earns no
 capability mark here, because an event is a record of something that happened
 and cannot turn out to be false — the test this atlas uses to separate memory
-from [context engineering](../../compare/#not-in-scope-conversation-window-management).
+from [context engineering](../../families/#not-in-scope-conversation-window-management).
 It is described because a reader comparing frameworks will be shown it as a
 memory feature, and because the central idea transfers.
 

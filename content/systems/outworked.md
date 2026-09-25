@@ -259,7 +259,7 @@ Writes are synchronous, model-initiated, and cost nothing beyond the tool call.
 No extraction prompt, no consolidation pass, no dedupe, no conflict detection.
 The nearest thing to a policy is the `remember` description telling the model
 what the scopes mean, which is
-[tool descriptions as policy](../../compare/#tool-descriptions-as-policy) with
+[tool descriptions as policy](../../overview/#tool-descriptions-as-policy) with
 no backend behind it — nothing validates the scope, and nothing constrains what
 the model considers worth storing.
 

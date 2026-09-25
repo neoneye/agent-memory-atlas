@@ -6,7 +6,7 @@ root: ..
 page_kind: comparison
 ---
 
-The [comparative report](../compare/) says what each system does. This page
+The [comparative report](../overview/) says what each system does. This page
 answers the other question — **which systems actually have X** — for the seven
 mechanisms whose absence causes a failure the system cannot detect.
 

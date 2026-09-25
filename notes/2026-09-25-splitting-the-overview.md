@@ -1,6 +1,8 @@
 # Splitting the overview: what moves, and which page keeps the name
 
-**Status:** decision needed. Nothing has moved. This note is Task 7 of the
+**Status:** decided on 2026-09-25: option B, with the synthesis at
+`/overview/`, and implemented the same day. The measurements below describe
+the page before the split. This note is Task 7 of the
 plan in
 [2026-09-25-written-to-be-checked-not-yet-to-be-read.md](2026-09-25-written-to-be-checked-not-yet-to-be-read.md#implementation-plan).
 Every figure below was measured on 2026-09-25 against the tree at
@@ -143,8 +145,24 @@ system's census from `licence`, `size` and `activity` instead of repeating
 it by hand. That would close the drift the PLUR entry records. It is a
 separate change, and it waits until enough reports carry the fields.
 
-## The decision needed
+## What was built
 
-- A, B, C or none.
-- If B: the synthesis page's URL. `/overview/` matches the file name.
-  `/findings/` matches what the page says.
+B, as described above, with `/overview/` for the synthesis because it matches
+the file path every instruction already names. Three details differ from the
+plan:
+
+- **Headings on the new pages were promoted one level**, with their text
+  unchanged, so every id is the id it had on `/compare/`. The map in
+  `assets/main.js` covers 104 ids; `check_moved_anchors.py` verified all 104
+  against the built pages, and the build and tests passed.
+- **`#2-comparative-matrix` stays on `/compare/`** as an explicit anchor at
+  the top of the page, so the one old fragment that means the matrix does not
+  fall through to the verdict redirect.
+- **The redirect also runs on `hashchange`.** A hash typed on an open
+  `/compare/` page does not reload it, and the first version missed that case.
+
+Twelve links had no fragment and meant a part of the old page rather than the
+table. Each was re-pointed by what its sentence refers to: the inclusion rule,
+a scope boundary, the known limitations, or the report as a whole. Prose that
+located things on the old page ("the matrix below", "the limitations at the
+end", "the scope section above") now links the page it means.

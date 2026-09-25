@@ -260,7 +260,7 @@ unrecorded. The mark is withheld.
 **Prospective memory, partially.** The kanban card is a durable commitment with
 an enforced `todo`/`doing`/`done` lifecycle and a `completed_at` — two of the
 three requirements the atlas's [prospective memory
-section](../../compare/#the-category-almost-nothing-models-prospective-memory)
+section](../../families/#the-category-almost-nothing-models-prospective-memory)
 names, which puts Gobii beside NOOA and MineContext in the emptiest category
 here. The third is missing in both directions: triggers are cron
 (`PersistentAgentCronTrigger`, `PersistentAgentSchedule`), not semantic, and

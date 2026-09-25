@@ -222,7 +222,7 @@ the eviction policy explicable in the same terms as the promotion policy.
 single profile string per user, and `get_raw_user_profile` returns `"None"` — the
 string — when absent.
 
-This is the [core memory as a junk drawer](../../compare/#core-memory-as-a-junk-drawer) risk the atlas names:
+This is the [core memory as a junk drawer](../../overview/#core-memory-as-a-junk-drawer) risk the atlas names:
 a single unstructured blob that everything writes into, with no per-fact
 identity, so nothing can be individually corrected, sourced, or deleted. Asking
 "where did the system get that idea about me" has no answer, because the profile

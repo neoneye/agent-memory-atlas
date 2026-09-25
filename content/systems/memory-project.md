@@ -261,7 +261,7 @@ terms — Chroma's local index is hnswlib-backed and soft-delete only, so *"a
 deleted vector's slot isn't necessarily zeroed or compacted"* and the embedding
 can sit in `.chromadb/<uuid>/data_level0.bin` until a later insert happens to
 take the slot. This is the mechanism set out under
-[the layer below delete](../../compare/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector),
+[the layer below delete](../../overview/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector),
 answered rather than inherited.
 
 **And the rebuild alone is not enough, which the project found by measuring.**

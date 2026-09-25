@@ -42,7 +42,7 @@ generation against HumanEval, MBPP and LeetCode.
 Whether it belongs in this atlas at all is a real question, and the answer
 differs by harness. The HotPotQA and code-generation paths keep reflections in a
 Python list on an object that dies with the process — that is
-[conversation-window management](../../compare/#not-in-scope-conversation-window-management)
+[conversation-window management](../../families/#not-in-scope-conversation-window-management)
 wearing a different hat, and it is out of scope. **The AlfWorld and WebShop paths
 are in scope**, and only just: `main.py` dumps a list of `env_configs` —
 `{name, memory, is_success, skip}` — to `env_results_trial_N.json` after every

@@ -41,7 +41,7 @@ typed memory, LLM extraction, a local database. Two things make it worth its own
 entry.
 
 **It models prospective memory**, which
-[one other system in this atlas](../../compare/#the-category-almost-nothing-models-prospective-memory)
+[one other system in this atlas](../../families/#the-category-almost-nothing-models-prospective-memory)
 does — memory of what the agent has *undertaken to do* rather than of what
 happened. MineContext has a `todo` table with `content`, `start_time`,
 `end_time` as a deadline, `urgency`, `assignee`, `reason`, and a `status` integer

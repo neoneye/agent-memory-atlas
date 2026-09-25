@@ -299,7 +299,7 @@ flush is numbered into one prompt and the model answers `N. VERDICT{tab}…` per
 line, so a flush costs one merge call rather than one per memo. Nothing checks that the rewrite
 retained the facts the old memo held, which is the check the atlas's
 [structural-loss guard on generated
-rewrites](../../compare/#structural-loss-guard-on-generated-rewrites) exists for.
+rewrites](../../overview/#structural-loss-guard-on-generated-rewrites) exists for.
 
 A second rewriting pass, `organize_profile`, fires when a topic exceeds
 `max_profile_subtopics` (15) and merges subtopics into fewer, broader ones. Its

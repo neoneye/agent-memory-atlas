@@ -622,7 +622,7 @@ decision that does not exist — recording the list in a
 between a decision and the lines of code that cite it stays empty. The check
 that ships is the cheap and useful half, and no other system here checks that a
 memory's *identifier* is citable at all — but it runs the opposite direction to
-[verify memory against its subject](../../compare/#verify-memory-against-its-subject),
+[verify memory against its subject](../../overview/#verify-memory-against-its-subject),
 which asks whether the cited code moved rather than whether the citation
 resolves. Both would be worth having; one is here.
 

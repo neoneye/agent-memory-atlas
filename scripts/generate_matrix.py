@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CONTENT = ROOT / "content"
 SYSTEMS = CONTENT / "systems"
-OVERVIEW = ROOT / "content" / "overview.md"
+OVERVIEW = ROOT / "content" / "compare.md"
 
 BEGIN = "<!-- BEGIN GENERATED MATRIX -->"
 END = "<!-- END GENERATED MATRIX -->"
@@ -434,7 +434,7 @@ def build_table() -> str:
 
 def splice(text: str, begin: str, end: str, body: str, label: str) -> str:
     if begin not in text or end not in text:
-        print(f"error: overview.md is missing the {begin} / {end} markers", file=sys.stderr)
+        print(f"error: compare.md is missing the {begin} / {end} markers", file=sys.stderr)
         raise SystemExit(1)
     start = text.index(begin) + len(begin)
     stop = text.index(end)

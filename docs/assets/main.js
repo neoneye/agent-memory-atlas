@@ -232,12 +232,132 @@
   // this page is either a moved verdict or already broken, and /verdicts/ is
   // the only place it can now be. check_verdict_anchors.py asserts every slug
   // resolves there.
-  if (/\/compare\/?$/.test(location.pathname) && location.hash.length > 1) {
+  //
+  // Until 25 September 2026 /compare/ was the whole comparative report. It now
+  // carries the matrix alone: the argument moved to /overview/, the families to
+  // /families/ and the appendix to /appendix/. Every id that left is listed
+  // below with where it went, written when the page was split;
+  // check_moved_anchors.py asserts each target still exists. A listed id wins
+  // over the verdict fallback, and only one redirect is ever issued.
+  const MOVED_FROM_COMPARE = /* BEGIN MOVED ANCHORS */ {
+    "1-high-level-taxonomy": "families/",
+    "10-practical-checklist-for-your-own-system": "overview/#10-practical-checklist-for-your-own-system",
+    "11-appendix": "appendix/",
+    "3-end-to-end-memory-lifecycle-comparison": "overview/#3-end-to-end-memory-lifecycle-comparison",
+    "4-implementation-hotspots-by-repo": "overview/#4-implementation-hotspots-by-repo",
+    "5-design-patterns-that-recur": "overview/#5-design-patterns-that-recur",
+    "6-antipatterns-and-failure-modes": "overview/#6-antipatterns-and-failure-modes",
+    "7-what-seems-to-work": "overview/#7-what-seems-to-work",
+    "8-what-i-would-build": "overview/#8-what-i-would-build",
+    "9-repo-by-repo-verdicts": "overview/#9-repo-by-repo-verdicts",
+    "add-later": "overview/#add-later",
+    "addwrite-path": "overview/#addwrite-path",
+    "agent-runtime-memory": "families/#agent-runtime-memory",
+    "an-audit-log-that-renders-what-it-caught": "overview/#an-audit-log-that-renders-what-it-caught",
+    "background-workers": "overview/#background-workers",
+    "bi-temporal-fact-validity": "overview/#bi-temporal-fact-validity",
+    "bounded-prompt-memory-with-in-turn-consolidation": "overview/#bounded-prompt-memory-with-in-turn-consolidation",
+    "buffered-observation-reflection": "overview/#buffered-observation-reflection",
+    "capture": "overview/#capture",
+    "capture-and-background-work": "overview/#capture-and-background-work",
+    "commands-used": "appendix/#commands-used",
+    "consolidation": "overview/#consolidation",
+    "context-assembly": "overview/#context-assembly",
+    "context-injection": "overview/#context-injection",
+    "core-memory-as-a-junk-drawer": "overview/#core-memory-as-a-junk-drawer",
+    "correction": "overview/#correction",
+    "cross-session-and-cross-agent-persistence": "overview/#cross-session-and-cross-agent-persistence",
+    "decay-and-reinforcement": "overview/#decay-and-reinforcement",
+    "diffusion-instead-of-traversal": "overview/#diffusion-instead-of-traversal",
+    "embeddable-memory-libraries": "families/#embeddable-memory-libraries",
+    "evalstests": "overview/#evalstests",
+    "evidence-first-derived-memory-second": "overview/#evidence-first-derived-memory-second",
+    "evidence-truth-and-correction": "overview/#evidence-truth-and-correction",
+    "explicit-memory-mutation-surfaces": "overview/#explicit-memory-mutation-surfaces",
+    "extraction": "overview/#extraction",
+    "filesystem-wiki-plus-git-history": "overview/#filesystem-wiki-plus-git-history",
+    "flat-json-as-a-prototype-store": "overview/#flat-json-as-a-prototype-store",
+    "forgetting": "overview/#forgetting",
+    "gate-the-expensive-path": "overview/#gate-the-expensive-path",
+    "graph-temporal-and-symbolic-memory": "families/#graph-temporal-and-symbolic-memory",
+    "history": "overview/#history",
+    "host-runtimes-with-pluggable-memory": "families/#host-runtimes-with-pluggable-memory",
+    "hosted-and-service-memory": "families/#hosted-and-service-memory",
+    "hybrid-retrieval": "overview/#hybrid-retrieval",
+    "in-short": "overview/#in-short",
+    "individual-reports": "appendix/#individual-reports",
+    "known-limitations": "appendix/#known-limitations",
+    "local-coding-agent-memory": "families/#local-coding-agent-memory",
+    "local-sqlite-for-inspectable-memory": "overview/#local-sqlite-for-inspectable-memory",
+    "mcp-as-a-universal-adapter": "overview/#mcp-as-a-universal-adapter",
+    "mcpapisdk-surfaces": "overview/#mcpapisdk-surfaces",
+    "memory-governance-loop": "overview/#memory-governance-loop",
+    "memory-policy-as-a-written-artifact": "overview/#memory-policy-as-a-written-artifact",
+    "memory-schema": "overview/#memory-schema",
+    "non-destructive-entity-resolution": "overview/#non-destructive-entity-resolution",
+    "not-in-scope-conversation-window-management": "families/#not-in-scope-conversation-window-management",
+    "not-in-scope-the-kv-cache": "families/#not-in-scope-the-kv-cache",
+    "not-in-scope-the-semantic-response-cache": "families/#not-in-scope-the-semantic-response-cache",
+    "one-score-for-truth-and-reachability": "overview/#one-score-for-truth-and-reachability",
+    "platform-only-claims-hidden-behind-oss-apis": "overview/#platform-only-claims-hidden-behind-oss-apis",
+    "pluggable-memory-provider": "overview/#pluggable-memory-provider",
+    "profiles-and-working-representations": "overview/#profiles-and-working-representations",
+    "promotion-gates-for-the-policy-not-just-the-memory": "overview/#promotion-gates-for-the-policy-not-just-the-memory",
+    "published-benchmark-numbers-without-committed-artifacts": "overview/#published-benchmark-numbers-without-committed-artifacts",
+    "ranking-positions-used-as-identities": "overview/#ranking-positions-used-as-identities",
+    "reading-this-report": "overview/#reading-this-report",
+    "recallk-without-enforcing-k": "overview/#recallk-without-enforcing-k",
+    "recoverable-background-capture": "overview/#recoverable-background-capture",
+    "rehearse-the-correction-before-committing-it": "overview/#rehearse-the-correction-before-committing-it",
+    "repos-inspected": "appendix/#repos-inspected",
+    "research-lineage": "families/#research-lineage",
+    "resolve-do-not-just-detect": "overview/#resolve-do-not-just-detect",
+    "retrieval": "overview/#retrieval",
+    "retrieval-certifying-its-own-outputs": "overview/#retrieval-certifying-its-own-outputs",
+    "salt": "families/#salt",
+    "sample-instead-of-rank-when-recall-feeds-exploration": "overview/#sample-instead-of-rank-when-recall-feeds-exploration",
+    "scope-and-write-destination": "overview/#scope-and-write-destination",
+    "scope-as-a-first-class-key": "overview/#scope-as-a-first-class-key",
+    "searchretrieve-path": "overview/#searchretrieve-path",
+    "semantic-deletion": "overview/#semantic-deletion",
+    "separate-hot-memory-from-archival-memory": "overview/#separate-hot-memory-from-archival-memory",
+    "ship-first": "overview/#ship-first",
+    "skills-as-procedural-memory": "overview/#skills-as-procedural-memory",
+    "storage-and-retrieval": "overview/#storage-and-retrieval",
+    "structural-loss-guard-on-generated-rewrites": "overview/#structural-loss-guard-on-generated-rewrites",
+    "telemetry-mistaken-for-truth": "overview/#telemetry-mistaken-for-truth",
+    "testing-rollout-and-the-decision-record": "overview/#testing-rollout-and-the-decision-record",
+    "the-category-almost-nothing-models-prospective-memory": "families/#the-category-almost-nothing-models-prospective-memory",
+    "the-category-that-competes-on-control-not-accuracy": "families/#the-category-that-competes-on-control-not-accuracy",
+    "the-harnesss-own-output-captured-as-evidence": "overview/#the-harnesss-own-output-captured-as-evidence",
+    "the-layer-below-delete-what-the-storage-engine-does-with-the-vector": "overview/#the-layer-below-delete-what-the-storage-engine-does-with-the-vector",
+    "throwing-away-raw-evidence-too-early": "overview/#throwing-away-raw-evidence-too-early",
+    "tool-descriptions-as-policy": "overview/#tool-descriptions-as-policy",
+    "treating-git-deletion-as-privacy-deletion": "overview/#treating-git-deletion-as-privacy-deletion",
+    "treating-llm-extracted-facts-as-truth": "overview/#treating-llm-extracted-facts-as-truth",
+    "treating-local-json-rewrites-as-durable-storage": "overview/#treating-local-json-rewrites-as-durable-storage",
+    "vector-only-memory": "overview/#vector-only-memory",
+    "verification-and-trust-first-memory": "families/#verification-and-trust-first-memory",
+    "verify-memory-against-its-subject": "overview/#verify-memory-against-its-subject",
+    "weak-correction-semantics": "overview/#weak-correction-semantics",
+    "weights-as-memory-at-adapter-granularity": "appendix/#weights-as-memory-at-adapter-granularity",
+    "what-reaches-the-model-and-what-a-person-can-change": "overview/#what-reaches-the-model-and-what-a-person-can-change",
+    "what-the-licences-actually-say": "appendix/#what-the-licences-actually-say",
+    "zero-llm-capture": "overview/#zero-llm-capture"
+  } /* END MOVED ANCHORS */;
+  const followMovedAnchor = () => {
+    if (!/\/compare\/?$/.test(location.pathname) || location.hash.length < 2) return;
     const id = decodeURIComponent(location.hash.slice(1));
-    if (/^[a-z0-9][a-z0-9-]*$/.test(id) && !document.getElementById(id)) {
+    if (document.getElementById(id)) return;
+    if (Object.prototype.hasOwnProperty.call(MOVED_FROM_COMPARE, id)) {
+      location.replace("../" + MOVED_FROM_COMPARE[id]);
+    } else if (/^[a-z0-9][a-z0-9-]*$/.test(id)) {
       location.replace("../verdicts/" + location.hash);
     }
-  }
+  };
+  followMovedAnchor();
+  // A hash changed on an open /compare/ page does not reload it.
+  window.addEventListener("hashchange", followMovedAnchor);
 
   // ------------------------------------------------- verdict page search
   const verdictSearch = document.querySelector("#verdict-search");

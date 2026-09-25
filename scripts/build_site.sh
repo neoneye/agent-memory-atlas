@@ -29,7 +29,7 @@ python3 "$project_dir/scripts/generate_index.py"
 python3 "$project_dir/scripts/extract_stack.py" --render >/dev/null
 
 rm -rf "$output_dir"
-mkdir -p "$output_dir/assets" "$output_dir/a-z" "$output_dir/compare" "$output_dir/benchmarks" "$output_dir/capabilities" "$output_dir/verdicts" "$output_dir/build" "$output_dir/systems" "$output_dir/patterns" "$output_dir/methodology"
+mkdir -p "$output_dir/assets" "$output_dir/a-z" "$output_dir/compare" "$output_dir/overview" "$output_dir/families" "$output_dir/appendix" "$output_dir/benchmarks" "$output_dir/capabilities" "$output_dir/verdicts" "$output_dir/build" "$output_dir/systems" "$output_dir/patterns" "$output_dir/methodology"
 
 cp "$project_dir/site/index.html" "$output_dir/index.html"
 # /discord.html is a redirect in front of the Discord invite, so the invite code
@@ -145,7 +145,14 @@ render_document() {
   python3 "$project_dir/scripts/wrap_diagrams.py" "$destination"
 }
 
-render_document "$project_dir/content/overview.md" "$output_dir/compare/index.html"
+# The comparative report was one page until 25 September 2026: the argument, the
+# families, the generated matrix and the appendix, 428,000 words with the build
+# order behind 340,000 of them. Each now has its own URL; /compare/ keeps the
+# matrix, which is what the name and the homepage button promise.
+render_document "$project_dir/content/overview.md" "$output_dir/overview/index.html"
+render_document "$project_dir/content/compare.md" "$output_dir/compare/index.html"
+render_document "$project_dir/content/families.md" "$output_dir/families/index.html"
+render_document "$project_dir/content/appendix.md" "$output_dir/appendix/index.html"
 render_document "$project_dir/content/systems-index.md" "$output_dir/a-z/index.html"
 render_document "$project_dir/content/patterns/index.md" "$output_dir/patterns/index.html"
 render_document "$project_dir/content/benchmarks.md" "$output_dir/benchmarks/index.html"

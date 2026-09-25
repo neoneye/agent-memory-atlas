@@ -50,7 +50,7 @@ That makes it the second system here whose memory *is* weights, after
 [Second Me](../second-me/) — and a stricter case than that one, because Second
 Me keeps the documents in SQLite beside the model and can at least delete the
 row. Here the granularity problem the atlas sets out under
-[weights as memory](../../compare/#weights-as-memory-at-adapter-granularity)
+[weights as memory](../../appendix/#weights-as-memory-at-adapter-granularity)
 arrives in its pure form: the unit of identity is the whole model, a correction
 has nothing to name, and the only deletion in the system removes an expert
 because *nothing routed to it lately*, which is a statement about capacity and

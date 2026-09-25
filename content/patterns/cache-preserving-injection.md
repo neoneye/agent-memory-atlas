@@ -214,7 +214,7 @@ on how to write one.
 Note that [MemOS](../../systems/memos/)'s "activation memory: KV/prefix cache" is
 a *different* mechanism — reusing model state rather than positioning text — and
 falls under the KV-cache scope boundary in the
-[comparative report](../../compare/).
+[comparative report](../../families/#not-in-scope-the-kv-cache).
 
 [Signet AI](../../systems/signetai/) splits the session-start payload rather than the memory design. Its session-start handler returns a stable system prompt separately from a dynamic context block, with identity files selected by preset and budgeted per file. A second session-start for the same session hits a dedupe guard and returns a minimal stub rather than re-injecting, on the stated ground that the identity files are already in the context. The invariant block sits ahead of the variable one, and per-turn recall arrives through the prompt-submit hook and the MCP tools instead of being woven into the system prompt.
 

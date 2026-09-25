@@ -46,7 +46,7 @@ Resolve these before writing:
 
 Prefer a local checkout because the report must trace implementation paths. Do not change the source repository. If only a URL is available, clone it to a temporary directory when network access and user authorization allow it.
 
-Confirm the system is in scope before writing. The atlas compares memory that outlives a session: something is stored, retrieved later, and can be scoped, corrected, or forgotten. A framework whose "memory" only decides which messages stay in the current context window is conversation-window management, not agent memory — see the "Not in scope" entry in `content/overview.md`. Such a system belongs in that section as a short example, not as a report with empty matrix columns. Compaction counts only when something survives the session with an identity that could later be corrected. Say so early if a candidate fails this bar, rather than padding a report.
+Confirm the system is in scope before writing. The atlas compares memory that outlives a session: something is stored, retrieved later, and can be scoped, corrected, or forgotten. A framework whose "memory" only decides which messages stay in the current context window is conversation-window management, not agent memory — see the "Not in scope" entry in `content/families.md`. Such a system belongs in that section as a short example, not as a report with empty matrix columns. Compaction counts only when something survives the session with an identity that could later be corrected. Say so early if a candidate fails this bar, rather than padding a report.
 
 **Two things are not part of that bar, and both have been mistaken for it.** *Novelty is not a criterion* — a system whose memory is a well-covered shape still gets a report, because the atlas compares implementations and a competent instance of a common design is evidence about the design. Excluding something for being unoriginal is the error that cost this repository six reports before it was reversed. And a *source-available or restrictive licence is a caveat, not an exclusion* — BSL, ELv2, PolyForm and "all rights reserved" are stated in the `licence` field and again in section 1, so a reader knows what they may do with what they read, and the mechanisms are still analysed. A licence asserted in a README whose file is absent from the tree is worth stating plainly for the same reason. The genuine exclusions are: nothing survives the session, the mechanism is closed-source behind an open wrapper, or there is no inspectable code at a pinned commit at all.
 
@@ -180,7 +180,7 @@ Read `content/methodology/per-repo-report-format.md` completely and fill every s
 
 Make the report opinionated but fair. Explain what makes the design good, what makes it weak, and for which use cases those tradeoffs matter.
 
-**Write about the system, not about the writing of the report.** The reader wants the state of the code at the pinned commit. Sentences about what the atlas noticed, corrected, previously believed, or was right about are process narration and do not belong in a report body — they have been removed from this repository more than once. A fact about the *subject's* own history is different and often the point: "until 31 July 2026 neither variable was assigned anywhere in the repository" describes the system. The test: if a sentence would have to change when the atlas changes rather than when the system changes, cut it. Corrections to previously published claims are logged in the known-limitations list at the end of `content/overview.md`, not narrated in place.
+**Write about the system, not about the writing of the report.** The reader wants the state of the code at the pinned commit. Sentences about what the atlas noticed, corrected, previously believed, or was right about are process narration and do not belong in a report body — they have been removed from this repository more than once. A fact about the *subject's* own history is different and often the point: "until 31 July 2026 neither variable was assigned anywhere in the repository" describes the system. The test: if a sentence would have to change when the atlas changes rather than when the system changes, cut it. Corrections to previously published claims are logged in the known-limitations list in `content/appendix.md`, not narrated in place.
 
 **Every report carries a Mermaid diagram.** Put it at the end of section 2, before `## 3. Architecture`, and draw the mechanism the report is actually about — the epistemic state machine where there is one, the write-to-recall path where there is not, and the place the design fails where that is the finding. A generic boxes-and-arrows of components is worse than none: it takes a reader's attention and returns nothing the prose did not already say. `scripts/check_mermaid.py` fails the build on a report without one, and separately on labels that break the renderer, so quote any label containing `[](){}"` and avoid a second `:` in a stateDiagram transition.
 
@@ -219,16 +219,16 @@ Before integration, verify:
 
 ## Integrate the comparative overview
 
-Read `content/methodology/overview-report-format.md` and the complete `content/overview.md`. Integrate the new system throughout the comparison instead of appending an isolated summary.
+Read `content/methodology/overview-report-format.md`, then the four files the comparison lives in: `content/overview.md` (the argument — In Short, §3–§10 and the method's History), `content/families.md` (the eight families and the scope boundary), `content/compare.md` (the generated matrix and capability tables) and `content/appendix.md` (report links, repositories inspected, licences and known limitations). Integrate the new system throughout the comparison instead of appending an isolated summary.
 
 Review and update every applicable area:
 
 - Title metadata and prose that states the system count.
-- Taxonomy and category membership. The taxonomy has eight families plus a
-  scope boundary; fit the system into an existing family and characterize it in
+- Taxonomy and category membership, in `content/families.md`. The taxonomy has
+  eight families plus a scope boundary; fit the system into an existing family and characterize it in
   place. Do not add a family for a single system — that is what turned the
   taxonomy into a list once already.
-- Comparative matrix — **do not edit the table**. It is generated by
+- Comparative matrix in `content/compare.md` — **do not edit the table**. It is generated by
   `scripts/generate_matrix.py` from a `matrix:` block in each report's
   frontmatter. The scaffolder emits the block with all eleven keys
   (`memory_unit`, `storage`, `retrieval`, `write`, `update_delete`, `scoping`,
@@ -310,9 +310,9 @@ Review and update every applicable area:
 - Lifecycle, retrieval, write, correction, trust, integration, and operations comparisons.
 - Implementation hotspots and patterns worth stealing.
 - Risks, recommendations, and build-vs-borrow conclusions.
-- Individual report links.
-- Repositories inspected, with source and exact commit links.
-- Known limitations and test/benchmark qualification.
+- In `content/appendix.md`: individual report links; repositories inspected,
+  with source and exact commit links; known limitations and test/benchmark
+  qualification.
 
 Preserve nuance. A system can belong to multiple categories, and absence of a feature is not automatically a defect if it is outside the design's intended scope.
 

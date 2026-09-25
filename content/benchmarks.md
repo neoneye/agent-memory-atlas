@@ -138,7 +138,7 @@ come from the store. Nobody in this corpus has done that, and this page has not
 run it either; what is recorded is that the harness half of the problem has a
 general solution and the memory half of it is still an adapter somebody has to
 write. Kitaru itself is not agent memory and carries no report — see the
-[repositories examined](../compare/#known-limitations) list.
+[repositories examined](../appendix/#known-limitations) list.
 
 **Waku Agent's "memory arena"** is the repository-local harness worth singling
 out, because it does the thing this page keeps asking for. It holds the model and
@@ -738,7 +738,7 @@ The seed baselines are run with repairs disabled, and a generated harness is
 regenerated only when execution raises — *"a harness that merely scores low is
 never repaired, since that would be optimising against the benchmark"* — which
 is a rule this page would like to see stated by more harnesses. What the release
-leaves out is recorded in the [scope section](../compare/#known-limitations): the
+leaves out is recorded in the [scope section](../appendix/#known-limitations): the
 cross-task harness archive that the paper's title calls evolution, and the
 training pipeline. The HTML version read here carries no ablation table and no
 limitations section.
@@ -776,7 +776,7 @@ in the README came from the second.
 
 **The shape done carefully is still the shape, and `zvec-ai/zvec-grep` is the
 instance to read for what careful looks like.** It is a workspace search layer
-rather than a memory system — [out of scope](../compare/#known-limitations)
+rather than a memory system — [out of scope](../appendix/#known-limitations)
 here, read at
 [`81a80f478f2d3ec76556cd3c993d0d064cc9580a`](https://github.com/zvec-ai/zvec-grep/commit/81a80f478f2d3ec76556cd3c993d0d064cc9580a)
 — but its `benchmarks/README.md` is the most explicit statement in this corpus
@@ -1093,7 +1093,7 @@ finding: with only 15 correct memories in the bank, *"the '0 demoted' figure is 
 low-count estimate, and we read it accordingly."* Two further cost-matched
 baselines are reported as failures. This is the design this section asks for,
 and the caveat that travels with it is the one recorded in the
-[comparative report](../compare/#known-limitations):
+[comparative report](../appendix/#known-limitations):
 the repository the paper twice names as holding its code, traces and result
 files returns 404, so none of it can be re-run.
 
@@ -1611,7 +1611,7 @@ traces, and a search for any path containing *eval* returns nothing outside
 `node_modules`.
 
 Set that beside `vista-research.github.io`, recorded in the
-[comparative report](../compare/): a harness with **no source at any commit** whose 320 MB
+[comparative report](../appendix/#known-limitations): a harness with **no source at any commit** whose 320 MB
 of published per-run traces let its headline claim be recomputed by a reader who
 never sees the code. The two publish opposite halves of the same evidence, and
 the pairing is the useful part. **A reader can check an implementation or a
@@ -2261,7 +2261,7 @@ OUTDATED/SUPERSEDED information as current, score it LOW (0.0-0.3) even if the
 outdated info was once correct."*
 
 That is a defensible position — this page has argued repeatedly that
-[correction is the phase that goes unbuilt](../compare/), and grading for it is
+[correction is the phase that goes unbuilt](../overview/#in-short), and grading for it is
 closer to right than the recall-only benchmarks above. It is still the case
 that the party defining the metric is the party that wins it, and a reader
 seeing 4.5× should know the axis was chosen by one of the two systems on it.
@@ -2329,7 +2329,7 @@ The mechanism the protocol was built to test — a four-value lifecycle over
 `{ACTIVE, COMPLETED, FOLDED, OBSOLETE}` gating prompt eligibility, and a
 retention score revised by execution outcome and by
 [selection-based decay](../patterns/decay-and-reinforcement/) — is described in
-the [comparative report](../compare/) and on the decay pattern page. It has no
+the [comparative report](../overview/#decay-and-reinforcement) and on the decay pattern page. It has no
 report of its own because there is no repository to pin.
 
 ### ForgetEval — the one benchmark that scores the control plane
@@ -3429,7 +3429,7 @@ The published number was not measuring what it said.
 **Commit the results, not just the harness.** A reproducible harness with no
 committed results reads as measured and is not. The repositories that do it are
 collected under [published benchmark numbers without committed
-artifacts](../compare/#published-benchmark-numbers-without-committed-artifacts),
+artifacts](../overview/#published-benchmark-numbers-without-committed-artifacts),
 and they include some of the most carefully engineered ones.
 
 **Match the budget before you compare the arms.** Two conditions that differ in
@@ -3587,7 +3587,7 @@ not publish, is still the right order to do these things in.
   per-type item counts are not stated here.
 - "Measured nowhere" in §5 means *not found in the systems this atlas has
   reviewed*, at the pinned commits listed in the
-  [comparative report](../compare/). It is a statement about PLACEHOLDER_REPOSITORY_COUNT repositories,
+  [comparative report](../appendix/#repos-inspected). It is a statement about PLACEHOLDER_REPOSITORY_COUNT repositories,
   not about the whole field. That number read **46** until 2026-08-07, having
   been written when the corpus was that size and never revised as it more than
   tripled — the same class of stale numerator this page's own counts are

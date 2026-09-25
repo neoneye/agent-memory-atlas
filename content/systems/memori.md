@@ -304,7 +304,7 @@ there.
 Extraction itself is a hosted call. `AdvancedAugmentation.process()` posts the
 conversation to Memori Labs and receives facts back; `_registry.py` registers no
 other augmentation. This is the cleanest instance in the atlas of
-[platform-only capability behind an open API](../../compare/#platform-only-claims-hidden-behind-oss-apis):
+[platform-only capability behind an open API](../../overview/#platform-only-claims-hidden-behind-oss-apis):
 the schema is open, the drivers are open, the Rust core is open, and the one
 judgement that determines what the memory *contains* is a remote service you
 cannot inspect, run offline, or reproduce.

@@ -31,7 +31,7 @@ matrix:
 ## 1. Executive Summary
 
 LlamaIndex is a Python framework for retrieval and agents, and its
-`llama-index-core/llama_index/core/memory/` is about 2,330 lines, and it clears this atlas's scope bar where [BeeAI](../../compare/) does not: `FactExtractionMemoryBlock` extracts durable facts that survive the conversation, rather than only deciding which messages stay in the window.
+`llama-index-core/llama_index/core/memory/` is about 2,330 lines, and it clears this atlas's scope bar where [BeeAI](../../families/#not-in-scope-conversation-window-management) does not: `FactExtractionMemoryBlock` extracts durable facts that survive the conversation, rather than only deciding which messages stay in the window.
 
 The architecture is a **single token budget split between two tiers, with flow between them**:
 

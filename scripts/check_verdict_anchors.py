@@ -12,8 +12,11 @@ nothing on the page is sent to `/verdicts/`. That fallback is only correct while
 the target actually exists there, which is what this checks — every slug in
 `content/systems/` must be an `id` on the rendered verdicts page.
 
-It also asserts the compare-page stub anchor survives, because the whole reason
-the split was safe is that `#9-repo-by-repo-verdicts` never moved.
+It also asserts the section stub survives. `#9-repo-by-repo-verdicts` stayed on
+`/compare/` through that move; on 25 September 2026 the argument around it
+moved to `/overview/`, and `assets/main.js` sends the old `/compare/` fragment
+there. `check_moved_anchors.py` holds that redirect; this holds the stub it
+lands on.
 
 The claim this exists to stop being made again: the split was reported as
 carrying "none of that exposure" on the strength of checking seventeen inbound
@@ -31,7 +34,7 @@ from pathlib import Path
 def main(root: str) -> int:
     project = Path(root)
     verdicts = project / "docs" / "verdicts" / "index.html"
-    compare = project / "docs" / "compare" / "index.html"
+    compare = project / "docs" / "overview" / "index.html"
     systems = project / "content" / "systems"
 
     for path in (verdicts, compare):
@@ -51,7 +54,7 @@ def main(root: str) -> int:
         )
     if 'id="9-repo-by-repo-verdicts"' not in compare.read_text(encoding="utf-8"):
         problems.append(
-            "/compare/ no longer carries #9-repo-by-repo-verdicts — the stub "
+            "/overview/ no longer carries #9-repo-by-repo-verdicts — the stub "
             "heading is what keeps the section-level deep link alive"
         )
 

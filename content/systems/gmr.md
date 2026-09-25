@@ -361,7 +361,7 @@ reader to ignore the signal. GMR separates them at the type level:
 `Outcome::{Found, NotFound}` is an observation, `Entry::Attempt` with a
 `ReasonClass` and `FailureCode` is a failure, and only a changed `FactAddress`
 with a firing rule is a `Transition`. `does_not_blame_the_anchors_it_never_reached`
-pins it. This is the discipline the atlas's [verify memory against its subject](../../compare/#verify-memory-against-its-subject)
+pins it. This is the discipline the atlas's [verify memory against its subject](../../overview/#verify-memory-against-its-subject)
 pattern asks for, implemented as a runtime rather than a one-off check.
 
 **The audit trail reaches the grounding definition, and the database refuses to

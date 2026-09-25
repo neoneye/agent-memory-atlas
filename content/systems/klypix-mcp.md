@@ -647,7 +647,7 @@ from recall@5 of 15% to 40%, are both reported with n=20 on the project's own
 brain with self-authored, LLM-judged questions — and then: *"The eval harness is
 not in this repo. It lives in the private KLYPIX desktop repository. The numbers
 above are ours to defend, not yours to reproduce from here."* The atlas records
-[published benchmark numbers without committed artifacts](../../compare/#published-benchmark-numbers-without-committed-artifacts) as a
+[published benchmark numbers without committed artifacts](../../overview/#published-benchmark-numbers-without-committed-artifacts) as a
 recurring failure; this is the same absence with the disclosure attached, which
 is the difference between an unverifiable claim and a misleading one. The
 regression is published beside the wins — contextual prefixes on short cards made

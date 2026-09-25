@@ -169,7 +169,7 @@ different subsystems and the report is about one of them**.
 `strands-py/src/strands/session/` — file, S3, repository and snapshot session
 managers, with their own tests — persists the agent's message history so a
 conversation resumes. That is session persistence, and by this atlas's
-[inclusion test](../../compare/#not-in-scope-conversation-window-management) it
+[inclusion test](../../families/#not-in-scope-conversation-window-management) it
 is not agent memory. The memory subsystem is the belief store, and the harness's
 own docstring draws the same line: *"Persistence is plain files, independent of
 any session: memory survives across sessions and works with sessions off."*

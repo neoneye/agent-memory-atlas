@@ -144,7 +144,7 @@ that edit *is* the memory; the model's write goes through the same file with the
 same tools; a diff shows what changed; a PR review catches a bad one; git holds
 the history. There is no store to fall out of sync with the editor because there
 is no store. It gets no report — [recorded as an
-exclusion](../../compare/#known-limitations) — for the reason that makes it
+exclusion](../../appendix/#known-limitations) — for the reason that makes it
 useful here: grepping the checkout for the mechanism returns two files and both
 are documentation, so what implements it is a prompt plus the agent's ordinary
 file tools.

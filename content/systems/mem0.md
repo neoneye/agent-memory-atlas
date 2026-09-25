@@ -343,7 +343,7 @@ reimplementation [Mem0Sharp](../mem0sharp/) surfaced a narrower history table
 that plainly qualified, and the divergence between a port and its original was
 first recorded as a limitation rather than resolved. Re-reading
 `mem0/memory/storage.py` settled it in the original's favour. The lesson is in
-[the atlas's own history](../../compare/#history): a mark can be wrong in the
+[the atlas's own history](../../overview/#history): a mark can be wrong in the
 withholding direction, and nothing in the process was looking for that.
 
 **2026-07-26** — [`31cec11a790868f88c9acafb8b70eb25071f2150`](https://github.com/mem0ai/mem0/commit/31cec11a790868f88c9acafb8b70eb25071f2150) — first reading.

@@ -81,7 +81,7 @@ Does anything need to survive the session at all? If the answer is that the
 model needs the right things *in this conversation*, that is context assembly
 and not memory, and the smallest honest answer is a prompt and a scratchpad.
 The atlas keeps a
-[scope boundary](../compare/#not-in-scope-conversation-window-management) for
+[scope boundary](../families/#not-in-scope-conversation-window-management) for
 exactly this case, because the two get conflated constantly and the second one
 costs an order of magnitude more to build.
 
@@ -104,7 +104,7 @@ change on one page and expensive to change afterwards.
 
 ## 3. Build in an order where each stage stands alone
 
-Taken from [§8 *What I Would Build*](../compare/#8-what-i-would-build), which
+Taken from [§8 *What I Would Build*](../overview/#8-what-i-would-build), which
 carries the table-level schema, the four-state status enum, the ten-step write
 path, the seven-step retrieval path and the context-assembly rules. The staging
 matters more than the schema: **vector search and model-based extraction come
@@ -219,7 +219,7 @@ mixes the deferrable with the whole point of the correctable profile; a product
 that put itself in that row defers bi-temporal validity, not the tombstone.
 
 Operational rules that belong at the stage they apply to, from
-[§10](../compare/#10-practical-checklist-for-your-own-system): keep local state
+[§10](../overview/#10-practical-checklist-for-your-own-system): keep local state
 inspectable while developing, use transactional storage for primary state and
 reserve flat JSON for exports, add background workers only once synchronous
 semantics are settled, version schemas from the start, and provide a

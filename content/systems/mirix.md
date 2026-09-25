@@ -323,7 +323,7 @@ Deduplication is advisory. `check_semantic_memory` and `check_episodic_memory`
 (lines 570 and 288) let an agent fetch rows by id before deciding, but nothing
 requires it — they are tools in a prompt, not a gate on the insert path. That is
 the atlas's [tool descriptions as
-policy](../../compare/#tool-descriptions-as-policy) antipattern in its ordinary
+policy](../../overview/#tool-descriptions-as-policy) antipattern in its ordinary
 form.
 
 Correction is destructive, and the good intention is in the wrong place. The
@@ -435,7 +435,7 @@ The eval tree (`evals/`) runs LongMemEval, RULER, an LRU eval and MAB
 MIRIX on LoCoMo and MemoryAgentBench; **no scored results are committed to this
 repository**, so those numbers are claims rather than artifacts — the atlas's note
 on [published benchmark numbers without committed
-artifacts](../../compare/#published-benchmark-numbers-without-committed-artifacts)
+artifacts](../../overview/#published-benchmark-numbers-without-committed-artifacts)
 applies in its mild form.
 
 The test I would want before trusting this: one that deletes a memory, runs

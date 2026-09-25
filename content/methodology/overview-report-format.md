@@ -8,11 +8,19 @@ page_kind: methodology
 
 Use this format for the cross-repository overview after the individual repo reports are complete. The overview should synthesize implementation evidence across repos, not merely summarize each repo.
 
-Suggested output path:
+The comparison is four pages, and each section below says which one it lives
+in:
 
 ```text
-content/overview.md
+content/overview.md   → /overview/    In Short, Reading This Report, §3–§10, History
+content/families.md   → /families/    §1, the families and the scope boundary
+content/compare.md    → /compare/     §2, the matrix and capability tables, generated
+content/appendix.md   → /appendix/    §11, report links, pins, licences, known limitations
 ```
+
+The argument is the page a builder reads in order, so it carries only the
+argument; the section numbers stay as they are so that §8 and §10 keep meaning
+what `AGENTS.md` says they mean.
 
 ## Title
 
@@ -20,7 +28,7 @@ content/overview.md
 # Agent Memory Systems Comparative Report
 ```
 
-## 1. High-Level Taxonomy
+## 1. High-Level Taxonomy (`content/families.md`)
 
 Group the repositories by design style. Candidate categories:
 
@@ -40,7 +48,7 @@ For each category, explain:
 - What tradeoffs it accepts.
 - Which repos fit, and why.
 
-## 2. Comparative Matrix
+## 2. Comparative Matrix (`content/compare.md`, generated)
 
 Use a table with these columns:
 
@@ -194,7 +202,7 @@ Convert the findings into a build checklist:
 
 This section should be actionable for implementation.
 
-## 11. Appendix
+## 11. Appendix (`content/appendix.md`)
 
 Include:
 

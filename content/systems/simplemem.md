@@ -313,7 +313,7 @@ text path, and no rejection to assert about.
   reproduce section and no committed artifact puts the entire verification cost
   on every reader, and it is the failure the atlas collects under [published
   benchmark numbers without committed
-  artifacts](../../compare/#published-benchmark-numbers-without-committed-artifacts).
+  artifacts](../../overview/#published-benchmark-numbers-without-committed-artifacts).
 - **Annotations nothing reads.** An `author` column and a note that never
   reaches ranking, retrieval or lifecycle is a comment field, and calling it
   review would be generous.

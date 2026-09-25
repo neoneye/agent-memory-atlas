@@ -81,8 +81,8 @@ Removing it from these places is a worse error than leaving it in the body.
 ## Detect
 
 Run all five, over the **body only**. Stop at `## History` — and, in
-`content/overview.md`, stop earlier still, at `### Known Limitations`: everything
-from there to `## History` is the dated correction log, which legitimately
+`content/appendix.md`, stop at `## Known Limitations`: everything
+from there to the end of the page is the dated correction log, which legitimately
 narrates past claims ("previously said", "was wrong", "until <date>"), so
 scanning into it buries the real body hits under dozens of correct ones. The
 sed guards below stop at whichever comes first.
@@ -93,25 +93,25 @@ statement about method, not a narration of a past position.
 
 ```sh
 # 1 — explicit narration
-sed '/^### Known Limitations$/q; /^## History$/q' <file> \
+sed '/^##* Known Limitations$/q; /^## History$/q' <file> \
   | rg -n -i 're-read|re-review|re-pin|previously (said|reported|found|named)|this (report|page) (first|named|called)|the atlas (found|missed|had)'
 
 # 2 — adverbial leakage, high false-positive rate by design
-sed '/^### Known Limitations$/q; /^## History$/q' <file> \
+sed '/^##* Known Limitations$/q; /^## History$/q' <file> \
   | rg -n -i '\b(now|still|no longer|used to|already|newer|earlier|these days|has since|has started|as of this reading|at the time of writing)\b'
 
 # 3 — the project narrating its own trajectory. High yield.
-sed '/^### Known Limitations$/q; /^## History$/q' <file> \
+sed '/^##* Known Limitations$/q; /^## History$/q' <file> \
   | rg -n -i '(atlas|report|corpus|rubric|census)[^.]{0,50}(has now|now documents|has since|has not previously|had not|used to be|previously)|the reason this (report|page)|this atlas.{0,3}s (tooling|screener|scripts|build)|the atlas (can|could|should) (say|said|call|claim)|in a single round'
 
 # 4 — the page reporting or grading its own past claim (the self-report form).
 # A reporting/judgement verb whose subject is the project, or a state the page
 # says it held "until" a past date. Highest yield of the four on correction edits.
-sed '/^### Known Limitations$/q; /^## History$/q' <file> \
+sed '/^##* Known Limitations$/q; /^## History$/q' <file> \
   | rg -n -i '(this|the) (page|report|atlas|headline|tagline|sentence|count|matrix|census|table) [^.]{0,60}\b(said|read|claimed|stated|listed|counted|called it)\b|\bwas (false|wrong|misleading|inaccurate|overstated|stale)\b|\buntil [0-9]{1,2} (january|february|march|april|may|june|july|august|september|october|november|december) [0-9]{4}'
 
 # 5 — freshness stamps: a hardcoded date stamping the page's own currency, which rots
-sed '/^### Known Limitations$/q; /^## History$/q' <file> \
+sed '/^##* Known Limitations$/q; /^## History$/q' <file> \
   | rg -n -i 'last (extended|updated|refreshed|revised|reviewed|synced|edited)\b|(corpus|page|census|list|index|count|table) [^.]{0,30}(as of|updated|extended|refreshed) [0-9]|current as of|as of (today|this writing|the latest)'
 ```
 

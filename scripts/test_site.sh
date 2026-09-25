@@ -7,6 +7,9 @@ site_dir="$project_dir/docs"
 required=(
   "$site_dir/index.html"
   "$site_dir/compare/index.html"
+  "$site_dir/overview/index.html"
+  "$site_dir/families/index.html"
+  "$site_dir/appendix/index.html"
   "$site_dir/benchmarks/index.html"
   "$site_dir/build/index.html"
   "$site_dir/tensions/index.html"
@@ -66,7 +69,7 @@ if [[ "$revision_count" != "$expected_systems" ]]; then
 fi
 
 # The check above proves a report carries a pin; it does not prove the pin
-# agrees with the repositories-inspected list overview.md publishes. A
+# agrees with the repositories-inspected list appendix.md publishes. A
 # re-review updates frontmatter in one file and that list is a hand edit in
 # another, so the two drift apart silently — three entries had, all of them on
 # re-reviewed systems, and every existing check stayed green.
@@ -86,6 +89,17 @@ fi
 # fragment never reaches the server, so external /compare/#<slug> links are
 # caught client-side. That only works while the slug exists on the new page.
 if ! python3 "$project_dir/scripts/check_verdict_anchors.py" "$project_dir"; then
+  exit 1
+fi
+
+# On 25 September 2026 the rest of the comparative report left /compare/ for
+# /overview/, /families/ and /appendix/, and assets/main.js maps every id that
+# moved. The map is only right while each target still exists.
+if ! python3 "$project_dir/scripts/check_moved_anchors.py" --self-test; then
+  echo "check_moved_anchors.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_moved_anchors.py" "$project_dir"; then
   exit 1
 fi
 
@@ -275,7 +289,7 @@ if ! check_output="$(python3 "$project_dir/scripts/generate_matrix.py" --check 2
   exit 1
 fi
 
-matrix_rows="$(grep -c '^| `' "$project_dir/content/overview.md" | tr -d ' ')"
+matrix_rows="$(grep -c '^| `' "$project_dir/content/compare.md" | tr -d ' ')"
 if [[ "$matrix_rows" != "$expected_systems" ]]; then
   echo "Expected $expected_systems matrix rows, found $matrix_rows" >&2
   exit 1
@@ -670,7 +684,8 @@ fi
 # scoped to the sentences that actually rot. Lines quoting the rule are exempt.
 stale_dates="$(
   grep -rniE "(dormant|stale|inactive|unmaintained|abandoned|untouched|quiet|no commits?|last commits?|not been (updated|touched)) [^.]{0,40}(for|in) (the )?(past |last )?(a |an )?(one|two|three|four|five|six|seven|eight|nine|ten|half|[0-9]+)[ a-z-]*(year|month|week)s?|the day of review|\byesterday\b" \
-    "$project_dir/content/systems" "$project_dir/content/overview.md" 2>/dev/null \
+    "$project_dir/content/systems" "$project_dir/content/overview.md" \
+    "$project_dir/content/families.md" "$project_dir/content/appendix.md" 2>/dev/null \
     | grep -v "absolute dates" || true
 )"
 if [[ -n "$stale_dates" ]]; then
