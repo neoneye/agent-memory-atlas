@@ -116,6 +116,18 @@ if ! python3 "$project_dir/scripts/check_verdict_marks.py" "$project_dir"; then
   exit 1
 fi
 
+# The rest of a verdict's maturity line — commits, lines, tests — is copied from
+# the report and left behind by re-reads the same way the mark count was. On
+# 2026-09-25, 52 figures in 40 lines appeared nowhere in their reports. A verdict
+# may round; it may not carry a figure its report does not state.
+if ! python3 "$project_dir/scripts/check_verdict_census.py" --self-test; then
+  echo "check_verdict_census.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_verdict_census.py" "$project_dir"; then
+  exit 1
+fi
+
 # The families page is the third copy of each system's mark count, after the
 # frontmatter and the verdict entry, and nothing compared it: on 2026-09-25
 # thirteen family paragraphs disagreed with their reports after re-reads moved

@@ -9,10 +9,10 @@ A finding is a place execution can happen, not an accusation. Most are ordinary.
 The point is that the surface is now written down instead of discovered by
 typing `npm install`.
 
-**Progress: 626 of 627 screened at the report's current pin.**
+**Progress: 627 of 627 screened at the report's current pin.**
 
 0 further record(s) describe a revision the report has since moved
-off, and 1 report(s) have no record at all.
+off, and 0 report(s) have no record at all.
 Neither counts as screened.
 
 | Result | Count |
@@ -21,7 +21,7 @@ Neither counts as screened.
 | Repositories with a dependency surface inside the cooldown (`FRESH`) | 345 |
 | Repositories with build-time execution (`EXEC`) | 457 |
 | Repositories where the screen saw nothing (`NOTHING SCANNED`) | 6 |
-| Repositories that could not be screened | 1 |
+| Repositories that could not be screened | 0 |
 
 ## Auto-run surfaces
 
@@ -310,10 +310,4 @@ These execute without a command being typed. Read before opening the tree.
 | [`zcode`](../../content/systems/zcode.md) | `.vscode/settings.json`, `.vscode/tasks.json` |
 | [`zep`](../../content/systems/zep.md) | `.cursor/mcp.json` |
 | [`zerostack`](../../content/systems/zerostack.md) | `.gitmodules` |
-
-## Not screened
-
-| System | Status | Detail |
-| --- | --- | --- |
-| `always-on-memory-agent` | clone-failed | fatal: repository 'https://github.com/GoogleCloudPlatform/generative-ai/tree/main/gemini/agents/always-on-memory-agent/' |
 
