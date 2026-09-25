@@ -218,6 +218,16 @@ hold and something else has appeared — a second entry point, a new mode, a
 subsystem that bypasses the mechanism. Extend the report where the new material
 belongs and leave the rest alone.
 
+**Readability pass on what you opened, whichever of the four you are in.** A
+re-pin bumps `analyzed_at`, which puts the report under
+`check_report_shape.py`: fill `licence`, `size` and `activity` from the
+summary's census and delete the census, shorten `description` to one sentence,
+and write the new History entry as the delta, at most 150 words, linking the
+section that carries the evidence. In the sections you edited, apply *Reading
+order* from `content/methodology/per-repo-report-format.md`. Leave untouched
+sections and older History entries alone: they convert when a reading opens
+them, not in a campaign.
+
 ## What must be updated together
 
 - `revision`, `revision_url`, `analyzed_at` in the report frontmatter.

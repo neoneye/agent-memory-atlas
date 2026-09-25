@@ -48,7 +48,7 @@ Prefer a local checkout because the report must trace implementation paths. Do n
 
 Confirm the system is in scope before writing. The atlas compares memory that outlives a session: something is stored, retrieved later, and can be scoped, corrected, or forgotten. A framework whose "memory" only decides which messages stay in the current context window is conversation-window management, not agent memory — see the "Not in scope" entry in `content/overview.md`. Such a system belongs in that section as a short example, not as a report with empty matrix columns. Compaction counts only when something survives the session with an identity that could later be corrected. Say so early if a candidate fails this bar, rather than padding a report.
 
-**Two things are not part of that bar, and both have been mistaken for it.** *Novelty is not a criterion* — a system whose memory is a well-covered shape still gets a report, because the atlas compares implementations and a competent instance of a common design is evidence about the design. Excluding something for being unoriginal is the error that cost this repository six reports before it was reversed. And a *source-available or restrictive licence is a caveat, not an exclusion* — BSL, ELv2, PolyForm and "all rights reserved" are stated in section 1 so a reader knows what they may do with what they read, and the mechanisms are still analysed. A licence asserted in a README whose file is absent from the tree is worth stating plainly for the same reason. The genuine exclusions are: nothing survives the session, the mechanism is closed-source behind an open wrapper, or there is no inspectable code at a pinned commit at all.
+**Two things are not part of that bar, and both have been mistaken for it.** *Novelty is not a criterion* — a system whose memory is a well-covered shape still gets a report, because the atlas compares implementations and a competent instance of a common design is evidence about the design. Excluding something for being unoriginal is the error that cost this repository six reports before it was reversed. And a *source-available or restrictive licence is a caveat, not an exclusion* — BSL, ELv2, PolyForm and "all rights reserved" are stated in the `licence` field and again in section 1, so a reader knows what they may do with what they read, and the mechanisms are still analysed. A licence asserted in a README whose file is absent from the tree is worth stating plainly for the same reason. The genuine exclusions are: nothing survives the session, the mechanism is closed-source behind an open wrapper, or there is no inspectable code at a pinned commit at all.
 
 Inspect repository-level instructions in both repositories before proceeding. Check the atlas worktree and preserve unrelated changes.
 
@@ -207,6 +207,15 @@ Before integration, verify:
 - Every mechanism carrying a capability mark has a producer on a path a user or
   an agent can reach, and any mechanism without one is reported as declared and
   unwired rather than as present.
+- `licence`, `size` and `activity` are filled in the frontmatter (`tests` when
+  there is a count), and the first summary paragraph says what the system is,
+  what is notable and what is weak, with no line, commit or author count.
+- `description` is one sentence of at most 25 words.
+- Every "elsewhere", "another system" or comparison to a named report carries a
+  link.
+- The prose follows *Reading order* in `per-repo-report-format.md`;
+  `list_long_prose.py`, `list_voice_tics.py` and `check_report_shape.py` hold
+  the countable parts.
 
 ## Integrate the comparative overview
 

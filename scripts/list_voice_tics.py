@@ -36,9 +36,9 @@ ELSEWHERE = re.compile(r"\belsewhere\b", re.I)
 LINK = re.compile(r"\]\(")
 SENTENCE = re.compile(r"[^.!?\n]*(?:[.!?]|$)")
 
-#: Set to 1484 on 2026-09-25, across all of content/. Lower it as phrases are
-#: cut; never raise it to admit a new one.
-TIC_CEILING = 1484
+#: Set to 1484 on 2026-09-25, across all of content/, and lowered as phrases
+#: are cut. Never raise it to admit a new one.
+TIC_CEILING = 1481
 
 
 def hits(text: str) -> list[tuple[int, str]]:

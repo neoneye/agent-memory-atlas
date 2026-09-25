@@ -61,6 +61,33 @@ guidance — *"use absolute dates, never 'yesterday'"* — and this atlas quoted
 approvingly before breaking it, which is how it became a rule here too.
 `scripts/test_site.sh` checks for the common phrasings.
 
+## Reading order
+
+The evidence rules above make a claim checkable. These make it findable. The
+reader is the same expert, and nothing here is a gloss. The rules are
+provisional until a reader's comprehension test shows which of them help.
+
+- **Claim, consequence, anchor.** Open an analytical section with what the
+  system does, then what that costs or buys the operator, then the file and
+  line — in parentheses, once, at the end of the sentence. Write the
+  consequence only where the code supports it.
+- **One altitude per paragraph.** Census, finding, mechanism and evidence are
+  different altitudes; a paragraph holds one, or a finding with its evidence.
+- **A scoped positive over a bare absence.** "The filter runs on the search
+  path and not on the context builder", with both anchors, reads better and is
+  harder to get wrong than "nothing filters the context path". The search
+  behind the absence still goes in Recorded Searches.
+- **No intensifiers.** In "it is worth noting that X", X is the sentence; the
+  same holds for "worth naming", "worth reading" and "genuinely". If the
+  sentence needs help, state its consequence. `list_voice_tics.py` holds the
+  count.
+- **One aside per sentence, and split at 40 words.** An aside that carries the
+  point is the sentence. An enumeration joined by semicolons is a list.
+- **A cross-reference is a link or it is cut.** "Elsewhere", "another system
+  here" and "the line this atlas drew" each name a page: name it and link it.
+- **Define a term when its meaning is local to the system**, and trust the
+  reader otherwise.
+
 ## Title
 
 ```md
@@ -74,11 +101,19 @@ Cover:
 - What kind of memory system this is.
 - Primary users and agent model.
 - Core design philosophy.
-- What is genuinely interesting technically.
+- What is notable technically, and what it buys.
 - Where the implementation appears strongest.
 - Where the implementation appears weakest or least proven.
 
 Keep this section concise. It should let a senior engineer decide whether to keep reading.
+
+The first paragraph is three things a reader can stop after: what the system
+is, what is notable, and what is weak. Licence, size, commit activity and test
+counts go in the `licence`, `size`, `activity` and `tests` frontmatter fields,
+which render in the header band; a licence that restricts use, or a dual one,
+is also stated in this section, because it changes what a reader may do.
+`description` is one sentence of at most 25 words. `check_report_shape.py`
+holds all three for any report read on or after its cutover.
 
 ## 2. Mental Model
 
@@ -198,7 +233,8 @@ Memory sits on the critical path of every turn, so say what it costs:
 - Is the write path **synchronous** — does the agent block on an LLM extraction
   before it can continue — or is it deferred?
 - If deferred, what is the lag before a new memory is retrievable? State it even
-  approximately; nothing in this atlas measures it and the gap is worth naming.
+  approximately; nothing in this atlas measures it, so the report's estimate is
+  the only one a reader gets.
 - Does any background pass re-read or rewrite the whole store, and how often?
   A nightly map-reduce over everything has a token bill that scales with the
   corpus rather than with the day's activity.
@@ -249,7 +285,7 @@ Be explicit when a claim appears only in docs and is not backed by code or tests
 
 ## 11. For Your Own Build
 
-One section, three subheads with genuinely different jobs. Do not restate what
+One section, three subheads with different jobs. Do not restate what
 section 9 already assessed — that section says what *this system* is like, this
 one says what *you* should do about it.
 
@@ -302,6 +338,12 @@ narrated:
 **2026-08-03** — [`<full 40-char sha>`](<commit url>) — 41 commits on. The
 mechanism did not move and no mark changed. One published claim was stale: …
 ```
+
+An entry is the pin, what moved, which marks changed and why, and a link to the
+section that now carries the evidence — at most 150 words. The evidence is
+stated once, in the body; an entry that re-describes the mechanism is the body
+leaking into the log. `check_report_shape.py` holds entries dated on or after
+its cutover.
 
 The section exists because the alternative kept happening. Re-review narration
 was written into whatever paragraph it contradicted — "this report previously
