@@ -1,7 +1,7 @@
 # Are the patterns patterns?
 
 **Status:** audit complete, and all five proposals applied on 2026-09-25 (see
-[Applied](#applied) at the end). Three mark questions stay open.
+[Applied](#applied) at the end), with the three mark questions settled.
 **Method:** seven read-only reviewers, three patterns each, all at `4f9fa4874`
 on 2026-09-25. Every pattern page was judged on four tests:
 
@@ -249,7 +249,7 @@ ratchet counts them without verifying any.
 All five proposals were carried out on 2026-09-25, by the same seven reviewers, each editing only its own pages and reports:
 
 - **Pages.** Every verified error is corrected on its page. Superlatives fell from 459 to 433 and filler phrases from 1,481 to 1,472, and both ceilings are lowered to match.
-- **Reports.** Eighteen reports are corrected at their unchanged pins, each with a History entry. Five more than the fifteen listed above surfaced during the fixes: Atomic Agent, Memory Engine, Hermes Agent, Empryo and qwen-code. The rows of that list not fixed are the three mark questions under *Still open*.
+- **Reports.** Eighteen reports are corrected at their unchanged pins, each with a History entry. Five more than the fifteen listed above surfaced during the fixes: Atomic Agent, Memory Engine, Hermes Agent, Empryo and qwen-code. The rows of that list not fixed there are the three mark questions, settled below.
 - **Stances:**
   - The tombstone moves to `mixed`.
   - Editing surfaces and source-diverse context move to `reporting`.
@@ -261,8 +261,12 @@ All five proposals were carried out on 2026-09-25, by the same seven reviewers, 
   - promotion-between-tiers now covers only movement between storage tiers, and says where the line to the trust-state page runs.
 - **Re-read checklist.** `reanalyze-memory-system` now requires a grep for the slug across the patterns, families, verdicts and overview pages whenever a mark or mechanism moves.
 
+**Mark questions, settled the same day:**
+- ELAI's `bitemporal` is withdrawn. Both validity bounds are record times, the test on which Helm and Atomic Agent were refused.
+- llm-wiki-memory's `human_review` stands. It rests on a PreToolUse hook that reads the user's own turn off disk, and `gate.claudeHookEnabled` defaults to `true`. It does not rest on its editor, so the audit's reason for questioning it was wrong.
+- openyak carries no `human_review`. One stale body sentence claimed it; that sentence is corrected.
+
 **Still open:**
-- ELAI's `bitemporal`, and the `human_review` marks of llm-wiki-memory and openyak. These are mark decisions, not corrections.
 - Several unverified superlatives that nothing contradicts. The reviewers listed them and left them.
 - The meta-narrative that was already on the scope page.
 

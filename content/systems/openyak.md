@@ -269,7 +269,9 @@ the settings tab.
 debounce, and `PUT` lets them replace the document outright. Together with the
 delete dialog and the inline editor, that is a person editing the same text the
 model reads — [memory as an editing surface](../../patterns/memory-as-an-editing-surface/)
-rather than a viewer over a store, and the atlas's `human_review` mark.
+rather than a viewer over a store. It is not a `human_review` surface: editing a
+document the model already reads is authoring after the fact, and nothing waits
+for a person before it takes effect.
 
 `POST /export` exists and is the only path by which a document leaves the
 database.
@@ -411,6 +413,8 @@ honest signal of the intended scale.
 **Licence** — `LICENSE` (Apache-2.0).
 
 ## History
+
+**2026-09-25** — [`bd88bff824c29fc48024eb19b7435cb2c065e432`](https://github.com/openyak/openyak/commit/bd88bff824c29fc48024eb19b7435cb2c065e432) — same commit. Section 8 still called the document editor "the atlas's `human_review` mark" after the 2026-09-18 entry withdrew it; the sentence now says why an editing surface is authoring rather than review. No mark moved.
 
 **2026-09-18** — checked against `ab052e4cd4a94d2432a20b5fc433e80ce8bdc698` and **not re-pinned**, with the mark reconsidered on its own terms.
 

@@ -59,7 +59,10 @@ FLAGS = {flag for flag, _, _ in CAPABILITIES}
 #: number is the whole mechanism: it can only go up, and it is edited by hand in
 #: the same commit that earns it, so raising it is a deliberate act with a diff
 #: rather than a side effect of a build.
-COVERAGE_FLOOR = 1265
+#: A withdrawn mark takes its evidence record with it, so a withdrawal lowers the
+#: floor by exactly its records, in the same commit, named here: 1265 -> 1264 on
+#: 2026-09-25 for ELAI's `bitemporal`.
+COVERAGE_FLOOR = 1264
 
 #: Reports analyzed on or after this date must carry an evidence record for
 #: *every* mark they declare. The floor above only stops coverage falling; it

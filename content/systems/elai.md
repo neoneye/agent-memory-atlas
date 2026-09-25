@@ -1,7 +1,7 @@
 ---
 title: "ELAI"
-eyebrow: "Wire-dark bi-temporal facts in an abandoned harness"
-description: "An abandoned, privacy-filtered archive of a Rust agent harness whose memory crate is a bi-temporal SQLite fact table with per-type trust decay, a compile-time role firewall on injection, tier-driven and NLI-judged contradiction closure and a two-stage write guard — where the only writer of a fact on a live path is a person typing /remember behind a flag that expired before the archive was published, the automatic extractor counts candidates and never stores one, and the trust tiers that the tests defend filter nothing that any live query asks for."
+eyebrow: "Wire-dark temporal facts in an abandoned harness"
+description: "An abandoned, privacy-filtered archive of a Rust agent harness whose memory crate is a SQLite fact table with validity and ingestion times with per-type trust decay, a compile-time role firewall on injection, tier-driven and NLI-judged contradiction closure and a two-stage write guard — where the only writer of a fact on a live path is a person typing /remember behind a flag that expired before the archive was published, the automatic extractor counts candidates and never stores one, and the trust tiers that the tests defend filter nothing that any live query asks for."
 root: ../..
 page_kind: system
 source_name: "DITlieD/ELAI-archive"
@@ -10,10 +10,9 @@ archive_name: "DITlieD--ELAI-archive"
 revision: 26bf2bc72d030a2d5ec022f04e1f9603bb285ae1
 revision_url: https://github.com/DITlieD/ELAI-archive/commit/26bf2bc72d030a2d5ec022f04e1f9603bb285ae1
 analyzed_at: 2026-09-18
-capabilities: "scope_enforced, bitemporal, audit_log, negative_eval"
+capabilities: "scope_enforced, audit_log, negative_eval"
 capability_evidence:
   scope_enforced: "every fact read | .elai_cc/crates/memory/src/store.rs:193-248, .elai_cc/crates/memory/src/retrieval.rs:154-168, .elai_cc/crates/cli/src/report_fns.rs:1355-1359 | `list_current` carries `WHERE user_id = ?1 AND valid_to_ms IS NULL`; `get_relevant_facts` then hard-excludes rows whose `seat_id` differs from the filter's and project rows whose `project_id` differs, and the live prompt assembler passes the seat on every call; a role outside the compile-time allowlist gets no query at all | .elai_cc/crates/contracts/tests/j59_per_seat_memory_contract.rs (`contract_b_two_seats_filter_excludes_other`, `contract_c_cross_seat_read_returns_empty`), .elai_cc/crates/memory/tests/extract_and_retrieve_smoke.rs:120-161 (`project_scope_filter_isolates_projects`), .elai_cc/crates/memory/src/retrieval.rs:298-333"
-  bitemporal: "the memory_facts row | .elai_cc/crates/memory/src/fact.rs:166-172, .elai_cc/crates/memory/src/store.rs:305-364,:402-413, .elai_cc/crates/memory/src/semantic_contradiction.rs:379-391 | `ingested_at_ms` is written once and never changes; `valid_from_ms` and `valid_to_ms` bound the validity interval, `supersede` closes the old row at the supersession time and links it by `superseded_by`, and the semantic pass closes an older contradicted row at the newer row's `valid_from_ms` rather than at the tick — an event time distinct from the write; no live producer sets `valid_from_ms` to anything but the write time | .elai_cc/crates/memory/tests/bi_temporal_round_trip.rs (`supersede_closes_old_and_links`), .elai_cc/crates/memory/tests/semantic_contradiction_smoke.rs (`above_threshold_contradiction_soft_closes_older_with_event_time`), .elai_cc/crates/contracts/tests/h33_memory_governance_contract.rs (`soft_close_sets_valid_to_ms`, `supersede_closes_old_row_and_inserts_new`)"
   audit_log: "memory mutations in the harness's own journal | .elai_cc/crates/orchestrator/src/ssb/store.rs:339-351, .elai_cc/crates/orchestrator/src/ssb/payloads.rs:19153-19167, .elai_cc/crates/cli/src/memory_cmd.rs:234-239, .elai_cc/crates/dashboard-v2/src-tauri/src/commands_e5.rs:361-381, .elai_cc/crates/cli/src/user_memory_capture.rs:401-442 | the session state board is a SQLite table whose writer connection panics on any UPDATE or DELETE under a debug build; `elai memory delete` and the dashboard's forget write a `MemoryGovernanceEvent` (Forgotten, Pinned, Unpinned, WriteStamped, RetrievalFiltered, FirewallBlocked), `/remember` writes `UserDecisionSuperseded` with the fact-id pair and never the value, and the live tick writes `MemoryEvolutionRun` and `MemoryConflictDetected` rows; the append-only hook is compiled out of release builds | .elai_cc/crates/contracts/tests/h31_user_memory_contract.rs (`schema_version_and_action_type_bijection`), .elai_cc/crates/contracts/tests/h33_memory_governance_contract.rs (`schema_version_is_at_least_211_and_action_type_bijection_holds`)"
   negative_eval: "retrieval, as committed cases | .elai_cc/crates/memory/tests/prompt_injection_fixture.rs:17-110, .elai_cc/crates/contracts/tests/h31_user_memory_contract.rs, .elai_cc/crates/contracts/tests/j59_per_seat_memory_contract.rs | a T2 row carrying an injected instruction must not appear in a safety-critical query while a T0 row for the same project must, and the same T2 row must appear in an open query so the case proves a filter and not a deletion; a superseded value must never be retrieved beside its replacement; a second seat's rows must not be returned to the first | the safety-critical filter the first case defends is set `true` by no code outside tests, so the property it proves is one no live query asks for"
 stack_storage: "sqlite"
@@ -57,7 +56,7 @@ E-5 and extended by plans C-48, E-1, F-5, F-12, H-31, H-32, H-33, I-13,
 J-21, J-59 and J-93. The centre is one SQLite table, `memory_facts`
 (`store.rs:22-51`): a fact is a typed key–value pair with an extractor
 confidence, a `trust_score` that decays exponentially at a per-type
-rate, a bi-temporal `valid_from`/`valid_to`/`ingested_at` triple, a
+rate, a `valid_from`/`valid_to`/`ingested_at` triple, a
 non-empty list of evidence pointers enforced at insert
 (`fact.rs:240-244`), a `superseded_by` link, a provenance tier T0–T3 and
 a last-validated stamp. Around it: a regex blocklist and credential
@@ -92,9 +91,9 @@ the write quarantine is an in-memory vector nobody constructs; the
 raw-evidence tier is built empty on each read; and the two MemGPT tools
 are schema definitions registered nowhere.
 
-Four marks: `scope_enforced`, `bitemporal`, `audit_log`,
-`negative_eval`. `trust_state`, `tombstone` and `human_review` withheld,
-each for a stated reason in section 9. No paper of its own; the crate
+Three marks: `scope_enforced`, `audit_log`, `negative_eval`.
+`bitemporal`, `trust_state`, `tombstone` and `human_review` withheld, each for a
+stated reason in section 9. No paper of its own; the crate
 cites fourteen.
 
 ## 2. Mental Model
@@ -141,7 +140,7 @@ with the instruction *"Honour them; do not re-ask,"* and domain
 knowledge and mistakes follow only if their citations still resolve.
 
 ```mermaid
-%% caption: two live writers behind two guards feed one bi-temporal table; the every-fourth-turn tick decays, quarantines and closes contradicted rows; a compile-time role firewall and a flag stand between the table and the prompt; the dotted mechanisms are declared in the crate and reach no live path
+%% caption: two live writers behind two guards feed one fact table; the every-fourth-turn tick decays, quarantines and closes contradicted rows; a compile-time role firewall and a flag stand between the table and the prompt; the dotted mechanisms are declared in the crate and reach no live path
 flowchart TB
     R["/remember · elai remember<br/>ELAI_USER_MEMORY_ENABLE=1 (expired 2026-09-01)"] --> G1["classify: regex blocklist<br/>+ credential skip-list"]
     I["elai memory insert (no flag)"] --> G1
@@ -474,13 +473,16 @@ in Rust, seat passed by the live assembler, and a role allowlist in
 front of all of it; the cross-seat contract test reads back an empty
 set from a populated store.
 
-**Bitemporal — awarded, narrowly.** Three timestamps, one of them
-immutable; supersession and the judged close write `valid_to` as an
-event time, and the judged close uses the newer row's start rather
-than the tick's clock. No live writer sets `valid_from` to anything but
-the write time, so validity start and record time never differ, and
-the closed row's record of *when it was closed* is the journal's, not
-the table's.
+**Bitemporal — withheld.** Three timestamps, one of them immutable;
+supersession and the judged close write `valid_to` as an event time, and the
+judged close uses the newer row's start rather than the tick's clock. But no
+live writer sets `valid_from` to anything but the write time, and `valid_to` is
+taken from the newer row's `valid_from`, which is that row's write time — so
+every validity bound is a record time, and no caller can land a fact whose
+validity began before its row. That is the test on which
+[Helm](../helm/) and [Atomic Agent](../atomic-agent/) are refused the mark,
+and the [bi-temporal pattern](../../patterns/bi-temporal-fact-validity/) states
+it. The schema and the event-time close are what a builder should take.
 
 **Audit — awarded, with the hook's scope stated.** Every live mutation
 journals a typed row in the session state board, including the ones
@@ -720,6 +722,8 @@ rg -n -i 'arxiv|bibtex|citation|doi' ../../README.md ../../BENCHMARKS.md        
 ```
 
 ## History
+
+**2026-09-25** — [`26bf2bc72d030a2d5ec022f04e1f9603bb285ae1`](https://github.com/DITlieD/ELAI-archive/commit/26bf2bc72d030a2d5ec022f04e1f9603bb285ae1) — same commit. **`bitemporal` is withdrawn.** The record had it "awarded, narrowly" while stating that no live writer sets `valid_from` to anything but the write time; `valid_to` comes from the newer row's `valid_from`, so both bounds are record times. Helm and Atomic Agent are refused the mark on exactly that, and the ruling now reads the same way here. Three marks stand.
 
 **2026-09-18** — re-read at the same commit; nothing upstream has moved.
 `negative_eval` stands, and `prompt_injection_t2_blocked_from_safety_critical`
