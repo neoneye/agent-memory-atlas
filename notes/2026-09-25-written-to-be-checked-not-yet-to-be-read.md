@@ -1,7 +1,11 @@
 # Written to be checked, not yet to be read
 
-**Status:** proposal, with an [implementation plan](#implementation-plan) at
-the end. Nothing in it has landed. Measurements are from the tree at
+**Status:** implemented on 2026-09-25 as the [plan](#implementation-plan) at
+the end describes, in `76cd3ae62` (prose ratchet), `292651c83` (tic ceiling),
+`daeab93d1` (header band and PLUR), `c589e320b` (report shape),
+`ce3fd5417` (reading order in the format and skills) and `65994d5a3` (Read
+these first). The overview split waits on its decision note. The voice rules
+are provisional, because the comprehension test's outcome is not recorded. Measurements are from the tree at
 `879c679e6`, 2026-09-25, using the method in the [appendix](#method).
 **Builds on:** [2026-09-07-a-reader-bounced-on-the-form.md](2026-09-07-a-reader-bounced-on-the-form.md),
 which diagnosed one report. This note covers the whole site: reports, pattern
@@ -344,7 +348,7 @@ control failed the way its step says it should.
 them. The docstring defines the counting method, which replaces the one in
 this note's [Method](#method) (list items now count).
 
-- [ ] **Step 1: Create the script.**
+- [x] **Step 1: Create the script.**
 
 ```python
 #!/usr/bin/env python3
@@ -441,8 +445,10 @@ def load_baseline() -> dict[str, tuple[int, int]]:
 
 
 def write_baseline(rows: dict[str, tuple[int, int]]) -> None:
-    kept = {k: list(v) for k, v in sorted(rows.items()) if v != (0, 0)}
-    BASELINE.write_text(json.dumps(kept, indent=1) + "\n")
+    # One report per line, so a --lower shows up in a diff as the lines it moved.
+    lines = [f"  {json.dumps(k)}: [{v[0]}, {v[1]}]"
+             for k, v in sorted(rows.items()) if v != (0, 0)]
+    BASELINE.write_text("{\n" + ",\n".join(lines) + "\n}\n")
 
 
 def regressions(now, base) -> list[str]:
@@ -537,11 +543,11 @@ if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
 ```
 
-- [ ] **Step 2: Run the self-test.**
+- [x] **Step 2: Run the self-test.**
   `python3 scripts/list_long_prose.py --self-test` should print
   `self-test: 9 controls passed`.
 
-- [ ] **Step 3: Prove the self-test can fail.**
+- [x] **Step 3: Prove the self-test can fail.**
 
 ```bash
 T=$(mktemp -d) && sed 's/^PARAGRAPH_LIMIT = 150/PARAGRAPH_LIMIT = 1500/' scripts/list_long_prose.py > $T/p.py && python3 $T/p.py --self-test; echo "exit=$?"; rm -rf $T
@@ -550,7 +556,7 @@ T=$(mktemp -d) && sed 's/^PARAGRAPH_LIMIT = 150/PARAGRAPH_LIMIT = 1500/' scripts
   Expected: `self-test failed: a 151-word paragraph counts: got (0, 1),
   expected (1, 1)` and `exit=1`.
 
-- [ ] **Step 4: Measure, then write the baseline.**
+- [x] **Step 4: Measure, then write the baseline.**
   `python3 scripts/list_long_prose.py .` prints the totals and the ten longest
   units. On 2026-09-25 that was `920 paragraphs over 150 words, 1799 sentences
   over 60, in 550 reports`, and the longest was a 626-word History entry in
@@ -558,7 +564,7 @@ T=$(mktemp -d) && sed 's/^PARAGRAPH_LIMIT = 150/PARAGRAPH_LIMIT = 1500/' scripts
   `python3 scripts/list_long_prose.py --check .`. Expected: `long prose at or
   under baseline in <N> reports`.
 
-- [ ] **Step 5: Negative control on a scratch copy of the corpus.**
+- [x] **Step 5: Negative control on a scratch copy of the corpus.**
 
 ```bash
 T=$(mktemp -d) && mkdir -p $T/content && cp -R content/systems $T/content/ && python3 -c "print('\n\n' + ' '.join(['word'] * 200) + '.')" >> $T/content/systems/plur.md && python3 scripts/list_long_prose.py --check $T; echo "exit=$?"; rm -rf $T
@@ -568,7 +574,7 @@ T=$(mktemp -d) && mkdir -p $T/content && cp -R content/systems $T/content/ && py
   `exit=1`. The leading blank lines matter. Without them the words join the
   last paragraph, and only the sentence count moves.
 
-- [ ] **Step 6: Wire it in.** In `scripts/test_site.sh`, directly after the
+- [x] **Step 6: Wire it in.** In `scripts/test_site.sh`, directly after the
   `list_inert_recorded_commands.py --check` block:
 
 ```bash
@@ -585,10 +591,10 @@ if ! python3 "$project_dir/scripts/list_long_prose.py" --check "$project_dir"; t
 fi
 ```
 
-- [ ] **Step 7: Build and test** with the gated chain. Expected:
+- [x] **Step 7: Build and test** with the gated chain. Expected:
   `chain exit=0`.
 
-- [ ] **Step 8: Commit and push.**
+- [x] **Step 8: Commit and push.**
 
 ```bash
 git add scripts/list_long_prose.py scripts/prose_baseline.json scripts/test_site.sh && git commit -m "Hold each report's long paragraphs and sentences to a ratchet, History included" && git push origin HEAD:main
@@ -607,7 +613,7 @@ script's own directory first on `sys.path`. None of its imports reach
 `scripts/queue.py`, the file that shadows the stdlib module in
 `licence_drift.py`.
 
-- [ ] **Step 1: Create the script.**
+- [x] **Step 1: Create the script.**
 
 ```python
 #!/usr/bin/env python3
@@ -648,8 +654,9 @@ ELSEWHERE = re.compile(r"\belsewhere\b", re.I)
 LINK = re.compile(r"\]\(")
 SENTENCE = re.compile(r"[^.!?\n]*(?:[.!?]|$)")
 
-#: Set when this check shipped; lower it as phrases are cut. Never raise it.
-TIC_CEILING = 0
+#: Set to 1484 on 2026-09-25, across all of content/, and lowered as phrases
+#: are cut. Never raise it to admit a new one.
+TIC_CEILING = 1481
 
 
 def hits(text: str) -> list[tuple[int, str]]:
@@ -719,15 +726,15 @@ if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
 ```
 
-- [ ] **Step 2: Run the self-test.** Expected: `self-test: 6 controls
+- [x] **Step 2: Run the self-test.** Expected: `self-test: 6 controls
   passed`.
 
-- [ ] **Step 3: Prove it can fail.** Put a copy in a scratch directory with
+- [x] **Step 3: Prove it can fail.** Put a copy in a scratch directory with
   `list_superlatives.py` beside it, delete `if LINK.search(s.group(0)):
   continue`, and run `--self-test`. Expected: `self-test failed: linked
   elsewhere does not: got 1`.
 
-- [ ] **Step 4: Set the ceiling from today's count.**
+- [x] **Step 4: Set the ceiling from today's count.**
 
 ```bash
 N=$(python3 scripts/list_voice_tics.py . | head -1 | cut -d' ' -f1) && sed -i '' "s/^TIC_CEILING = .*/TIC_CEILING = $N/" scripts/list_voice_tics.py && python3 scripts/list_voice_tics.py --check .
@@ -738,7 +745,7 @@ N=$(python3 scripts/list_voice_tics.py . | head -1 | cut -d' ' -f1) && sed -i ''
   reading*, 98 *worth noting*, 84 *worth knowing*. Expected: `<N> voice tics
   (ceiling <N>).`
 
-- [ ] **Step 5: Wire it in** after Task 1's block:
+- [x] **Step 5: Wire it in** after Task 1's block:
 
 ```bash
 # Phrases that announce significance instead of stating the consequence, and
@@ -753,7 +760,7 @@ if ! python3 "$project_dir/scripts/list_voice_tics.py" --check "$project_dir"; t
 fi
 ```
 
-- [ ] **Step 6: Build and test, then commit and push.** The message is
+- [x] **Step 6: Build and test, then commit and push.** The message is
   "Ceiling on throat-clearing phrases and unlinked references to the corpus".
 
 ---
@@ -770,7 +777,7 @@ string: `licence` (an SPDX identifier from `licence_drift.SPDX`, or an
 expression such as `"MIT OR Apache-2.0"`), `size`, `activity` and `tests`.
 Task 4 requires the first three on any report read after the cutover.
 
-- [ ] **Step 1: Template.** In `templates/document.html`, insert this between
+- [x] **Step 1: Template.** In `templates/document.html`, insert this between
   the `$endif$` that closes the source/revision `document-meta` and
   `$if(stance)$`. The existing `.document-meta` rules in `assets/main.css`
   already style a second row; the stance pill uses one.
@@ -786,7 +793,7 @@ Task 4 requires the first three on any report read after the cutover.
           $endif$
 ```
 
-- [ ] **Step 2: Scaffold.** In `render_report`, after the `analyzed_at` line:
+- [x] **Step 2: Scaffold.** In `render_report`, after the `analyzed_at` line:
 
 ```python
         # Rendered in the header band, so the summary can open with the finding.
@@ -798,7 +805,7 @@ Task 4 requires the first three on any report read after the cutover.
         'tests: ""\n'
 ```
 
-- [ ] **Step 3: `licence_drift.py` reads the field first.** Add beside
+- [x] **Step 3: `licence_drift.py` reads the field first.** Add beside
   `SPDX`:
 
 ```python
@@ -818,7 +825,7 @@ FRONTMATTER_LICENCE = re.compile(r'^licence:\s*"?([^"\n]+?)"?\s*$', re.M)
             claim = stated(body)
 ```
 
-- [ ] **Step 4: Convert PLUR.** In `content/systems/plur.md`:
+- [x] **Step 4: Convert PLUR.** In `content/systems/plur.md`:
   - Add to the frontmatter, after `analyzed_at`:
 
 ```yaml
@@ -859,7 +866,7 @@ back.
     and left the summary's count, which no check compares with
     `capabilities:`.
 
-- [ ] **Step 5: Verify.**
+- [x] **Step 5: Verify.**
 
 ```bash
 python3 scripts/licence_drift.py --slug plur
@@ -872,7 +879,7 @@ python3 scripts/licence_drift.py --slug plur
   `npm run serve` in the browser pane at desktop width and at 375px. The band
   must wrap without horizontal scroll.
 
-- [ ] **Step 6: `remove-meta-narrative` over both content files, then commit
+- [x] **Step 6: `remove-meta-narrative` over both content files, then commit
   and push.** The message is "Header band for licence, size, activity and
   tests; PLUR converted and its summary's mark count corrected".
 
@@ -886,7 +893,7 @@ python3 scripts/licence_drift.py --slug plur
 **Interfaces:** consumes the band fields from Task 3. `CUTOVER` is the date
 this task lands, written as a literal.
 
-- [ ] **Step 1: Create the script.** Set `CUTOVER` to the commit date.
+- [x] **Step 1: Create the script.** Set `CUTOVER` to the commit date.
 
 ```python
 #!/usr/bin/env python3
@@ -919,7 +926,9 @@ import re
 import sys
 from pathlib import Path
 
-CUTOVER = "2026-09-26"  # the date this lands
+#: The day this check shipped. Reports and History entries dated before it are
+#: not held; they convert when a reading next opens them.
+CUTOVER = "2026-09-25"
 DESCRIPTION_LIMIT = 25
 HISTORY_LIMIT = 150
 REQUIRED_FACTS = ("licence", "size", "activity")
@@ -1016,12 +1025,12 @@ if __name__ == "__main__":
     sys.exit(main(next((a for a in args if not a.startswith("--")), ".")))
 ```
 
-- [ ] **Step 2: Self-test.** Expected: `self-test: 8 controls passed`. Prove
+- [x] **Step 2: Self-test.** Expected: `self-test: 8 controls passed`. Prove
   it can fail by setting `HISTORY_LIMIT = 1500` on a scratch copy. Expected:
   `self-test failed: a long new History entry fails: got 0 problems,
   expected 1`.
 
-- [ ] **Step 3: Positive and negative control on a scratch copy.** Bump two
+- [x] **Step 3: Positive and negative control on a scratch copy.** Bump two
   reports' `analyzed_at` to `CUTOVER`. PLUR has been converted; vestige has
   not.
 
@@ -1036,7 +1045,7 @@ T=$(mktemp -d) && mkdir -p $T/content && cp -R content/systems $T/content/ && C=
   corpus shows the pool re-pins will convert. On 2026-09-25 that was 564
   descriptions, 424 summaries and 748 History entries.
 
-- [ ] **Step 4: Wire it in** after Task 2's block:
+- [x] **Step 4: Wire it in** after Task 2's block:
 
 ```bash
 # Reports read or re-read from the cutover on open with the finding: the census
@@ -1051,7 +1060,7 @@ if ! python3 "$project_dir/scripts/check_report_shape.py" "$project_dir"; then
 fi
 ```
 
-- [ ] **Step 5: Build and test, then commit and push.** The message is
+- [x] **Step 5: Build and test, then commit and push.** The message is
   "From the cutover on, a report opens with the finding and its History entry
   states the delta".
 
@@ -1063,7 +1072,7 @@ fi
 `.agents/skills/add-memory-system/SKILL.md` and
 `.agents/skills/reanalyze-memory-system/SKILL.md`.
 
-- [ ] **Step 1: Format document, new section** after *Dates are absolute,
+- [x] **Step 1: Format document, new section** after *Dates are absolute,
   never relative*. Write it as *provisional* unless the question in *Before
   starting* came back answered.
 
@@ -1094,7 +1103,7 @@ reader is the same expert; nothing here is a gloss.
   reader otherwise.
 ```
 
-- [ ] **Step 2: Format document, Executive Summary.** Replace *"What is
+- [x] **Step 2: Format document, Executive Summary.** Replace *"What is
   genuinely interesting technically."* with *"What is notable technically,
   and what it buys."* Add below the bullet list:
 
@@ -1107,7 +1116,7 @@ is also stated in this section, because it changes what a reader may do.
 `description` is one sentence of at most 25 words.
 ```
 
-- [ ] **Step 3: Format document, History.** After the example entry, add:
+- [x] **Step 3: Format document, History.** After the example entry, add:
 
 ```markdown
 An entry is the pin, what moved, which marks changed and why, and a link to
@@ -1117,7 +1126,7 @@ leaking into the log. `check_report_shape.py` holds entries dated on or after
 its cutover.
 ```
 
-- [ ] **Step 4: `add-memory-system`.** In the paragraph that says a licence is
+- [x] **Step 4: `add-memory-system`.** In the paragraph that says a licence is
   *"stated in section 1"*, change it to *"stated in the `licence` field, and
   in section 1 when it restricts use"*. Add to the *Before integration,
   verify* list:
@@ -1131,7 +1140,7 @@ its cutover.
   a link.
 ```
 
-- [ ] **Step 5: `reanalyze-memory-system`.** After the four outcomes in
+- [x] **Step 5: `reanalyze-memory-system`.** After the four outcomes in
   *Decide the shape, then write*, add:
 
 ```markdown
@@ -1144,7 +1153,7 @@ Leave untouched sections and older History entries alone: they are converted
 when a reading opens them, not by a campaign.
 ```
 
-- [ ] **Step 6: `remove-meta-narrative`, then the gated chain, then commit and
+- [x] **Step 6: `remove-meta-narrative`, then the gated chain, then commit and
   push.** The message is "Reading order: the voice rules, and the summary and
   History shapes, in the format and the skills".
 
@@ -1160,7 +1169,7 @@ when a reading opens them, not by a campaign.
 `.agents/skills/use-the-atlas/SKILL.md` (line 50) and
 `.agents/skills/add-memory-system/SKILL.md` (line 312).
 
-- [ ] **Step 1: Create the script.**
+- [x] **Step 1: Create the script.**
 
 ```python
 #!/usr/bin/env python3
@@ -1172,7 +1181,9 @@ page — 9,778 of 11,342 words on the rejected-value tombstone on 2026-09-25 —
 and a catalogue that long is no longer a pointer to anything.
 
 Rule: a catalogue over CATALOGUE_LIMIT words opens with `### Read these first`,
-holding 1 to MAX_EXEMPLARS bullets, each linking a system report. The block is
+holding 1 to MAX_EXEMPLARS bullets, each linking a system report, and nothing
+else: a heading closes it, or the catalogue below renders as part of the short
+list and the entry point is gone again. The block is
 validated wherever it appears, whatever the catalogue's length. Choosing the
 exemplars is a judgement this cannot check; it checks that the list exists,
 sits first, stays short and points at reports.
@@ -1209,6 +1220,11 @@ def problems(name: str, text: str) -> list[str]:
         return []
     items = [i for i in BULLET.split(block.group(1))[1:] if i.strip()]
     out = []
+    loose = [l for l in block.group(1).split("\n")
+             if l.strip() and not l.startswith(("- ", "  "))]
+    if loose:
+        out.append(f"{name}: 'Read these first' holds more than its list; close it "
+                   "with a heading before the catalogue")
     if not 1 <= len(items) <= MAX_EXEMPLARS:
         out.append(f"{name}: 'Read these first' has {len(items)} entries (1 to {MAX_EXEMPLARS})")
     out += [f"{name}: exemplar {n} links no system report"
@@ -1222,7 +1238,10 @@ def self_test() -> int:
     cases = [
         ("a long catalogue without the block fails", f"## Seen in the atlas\n\n{big}\n", 1),
         ("a short catalogue without it passes", "## Seen in the atlas\n\nA few systems.\n", 0),
-        ("a block of three passes", f"## Seen in the atlas\n\n### Read these first\n\n{item * 3}\n{big}\n", 0),
+        ("a block of three passes",
+         f"## Seen in the atlas\n\n### Read these first\n\n{item * 3}\n### Every instance\n\n{big}\n", 0),
+        ("a block the catalogue runs on into fails",
+         f"## Seen in the atlas\n\n### Read these first\n\n{item * 3}\nThe catalogue.\n", 1),
         ("a block of six fails", f"## Seen in the atlas\n\n### Read these first\n\n{item * 6}\n", 1),
         ("an unlinked exemplar fails", "## Seen in the atlas\n\n### Read these first\n\n- A seals its log.\n", 1),
         ("a block placed below the catalogue fails",
@@ -1256,13 +1275,13 @@ if __name__ == "__main__":
     sys.exit(main(next((a for a in args if not a.startswith("--")), ".")))
 ```
 
-- [ ] **Step 2: Self-test** (expect `self-test: 6 controls passed`). Then run
+- [x] **Step 2: Self-test** (expect `self-test: 7 controls passed`). Then run
   the check against the tree. It should fail on exactly four pages: at
   2026-09-25 those were `append-only-memory-audit.md` (4,258 words),
   `rejected-value-tombstone.md` (9,774), `scope-as-a-first-class-key.md`
   (8,550) and `trust-state-machine.md` (3,597). That failure is the red step.
 
-- [ ] **Step 3: Write the four lists.** For each page, list the systems its
+- [x] **Step 3: Write the four lists.** For each page, list the systems its
   catalogue links, with the first sentence of each paragraph:
 
 ```bash
@@ -1283,22 +1302,25 @@ PY
   catalogue already calls a system the sharpest or the richest, that is a
   candidate. Each bullet is one line: a link to the report, then a clause
   taken from the catalogue's own claim about it. **No claim that is not
-  already in the catalogue.** Form:
+  already in the catalogue.** Close the list with a heading, or the whole
+  catalogue renders under it. Form:
 
 ```markdown
 ### Read these first
 
-- [Magic Context](../../systems/magic-context/) — <the catalogue's own clause for why>.
+- [Magic Context](../../systems/magic-context/) — two independent axes rather than one status column.
+
+### Every instance
 ```
 
-- [ ] **Step 4: Pointers.** `AGENTS.md` line 33: *"The last one names the
+- [x] **Step 4: Pointers.** `AGENTS.md` line 33: *"The last one names the
   systems worth reading"* becomes *"The last one opens with* Read these first*,
   three to five systems to start from"*. Make the same change in
   `use-the-atlas` step 3. In `add-memory-system` line 312, add: *"Add the
   system to* Read these first *only if it displaces one there on the
   criteria that list states; the list stays at five or fewer."*
 
-- [ ] **Step 5: Wire it in** after Task 4's block, with a comment in the same
+- [x] **Step 5: Wire it in** after Task 4's block, with a comment in the same
   style that names the 9,774-word catalogue. Then `remove-meta-narrative`
   over the four pages, the gated chain, and commit and push. The message is
   "Read these first above every pattern catalogue over 3,000 words".
@@ -1310,7 +1332,7 @@ PY
 **Files:** create `notes/<date>-splitting-the-overview.md`. No code, and
 nothing moves until the maintainer approves the note.
 
-- [ ] **Step 1: Inventory the anchors that would move** out of §1, §2
+- [x] **Step 1: Inventory the anchors that would move** out of §1, §2
   and §11, and every link into them from outside those sections:
 
 ```bash
@@ -1332,7 +1354,7 @@ for s in secs:
 for f in glob.glob("content/**/*.md", recursive=True) + glob.glob("site/**/*", recursive=True) + ["AGENTS.md"]:
     if f.endswith("overview.md") or not f.endswith((".md", ".html")):
         continue
-    for a in re.findall(r"overview/?#([\w\-]+)", open(f).read()):
+    for a in re.findall(r"compare/?#([\w\-]+)", open(f).read()):
         if a in moving:
             inbound[(f, a)] += 1
 print(len(moving), "anchors in the moving sections;", sum(inbound.values()), "links into them from outside those sections")
@@ -1341,22 +1363,22 @@ for (f, a), n in sorted(inbound.items(), key=lambda x: -x[1]):
 PY
 ```
 
-  At 2026-09-25 this printed `27 anchors in the moving sections; 6 links into
-  them`, all from the overview's own kept sections: two to
-  `#2-comparative-matrix`, and one each to the licence appendix and to three
-  scope sections. Nothing outside the overview links into it, so the
-  inbound-anchor cost is six edits, not a redirect scheme. Before trusting
-  the count, build once and compare one computed slug with its `id=` in
-  `docs/overview/index.html`. Pandoc's GFM ids and the slug lambda can
-  differ on punctuation.
+  The overview renders to `/compare/`, so every link from another page is
+  `compare/#<id>`. Search for that form, not `overview/#`. At 2026-09-25 the
+  first version of this step searched `overview/#`, found nothing outside the
+  page, and printed `6 links`. The note written from the corrected search found
+  55 external links and 31 internal cross-section links. Before trusting any
+  count, build once and compare one computed slug with its `id=` in
+  `docs/compare/index.html`.
 
-- [ ] **Step 2: Write the note.** Cover what stays (*In Short*, *Reading This
+- [x] **Step 2: Write the note.** Cover what stays (*In Short*, *Reading This
   Report*, §3–§10, History — about 41,000 words at 2026-09-25), the three new
-  pages and their URLs, and the six links from Step 1 rewritten to point at
-  the new pages, which `check_anchors.py` then checks. Also cover which `AGENTS.md` and `use-the-atlas`
-  sentences change, and what it would take to reverse.
+  pages and their URLs, how every link from Step 1 that changes page gets
+  rewritten (which `check_anchors.py` then checks), which `AGENTS.md` and
+  `use-the-atlas` sentences change, and what it would take to reverse.
+  Written as [2026-09-25-splitting-the-overview.md](2026-09-25-splitting-the-overview.md).
 
-- [ ] **Step 3: Commit and push the note**, and stop.
+- [x] **Step 3: Commit and push the note**, and stop.
 
 ### What the plan leaves open
 

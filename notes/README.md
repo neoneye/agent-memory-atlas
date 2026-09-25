@@ -8,6 +8,14 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-25-splitting-the-overview.md](2026-09-25-splitting-the-overview.md) —
+  decision needed. `content/overview.md` renders to `/compare/` and holds
+  three kinds of page: a 41,000-word synthesis, a 218,049-word table generated
+  from frontmatter, and two registers (Known Limitations and Repos Inspected,
+  73,587 words). Other pages link into it 55 times, all as `compare/#`.
+  Recommends making `/compare/` the matrix alone and giving the synthesis its
+  own page at the same file path, with §1 and §11 on pages of their own. The
+  fallback is a reorder that fixes only the build order.
 - [2026-09-25-written-to-be-checked-not-yet-to-be-read.md](2026-09-25-written-to-be-checked-not-yet-to-be-read.md) —
   the site-wide follow-up to the 2026-09-07 reader feedback. The point is
   present and correct but arrives second: 507 of 627 summaries open with a
