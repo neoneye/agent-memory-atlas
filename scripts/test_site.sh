@@ -116,6 +116,18 @@ if ! python3 "$project_dir/scripts/check_verdict_marks.py" "$project_dir"; then
   exit 1
 fi
 
+# The families page is the third copy of each system's mark count, after the
+# frontmatter and the verdict entry, and nothing compared it: on 2026-09-25
+# thirteen family paragraphs disagreed with their reports after re-reads moved
+# a mark. Only the phrasings that unambiguously mean "carries" are read.
+if ! python3 "$project_dir/scripts/check_family_marks.py" --self-test; then
+  echo "check_family_marks.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_family_marks.py" "$project_dir"; then
+  exit 1
+fi
+
 # The same failure one level in: `capabilities:` and the prose on top of it are
 # edited at different times, so a re-score can award a mark and leave the section
 # that argued against it standing. Four reports were in that state when this

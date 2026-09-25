@@ -220,8 +220,10 @@ belongs and leave the rest alone.
 
 **Readability pass on what you opened, whichever of the four you are in.** A
 re-pin bumps `analyzed_at`, which puts the report under
-`check_report_shape.py`: fill `licence`, `size` and `activity` from the
-summary's census and delete the census, shorten `description` to one sentence,
+`check_report_shape.py`: measure `licence`, `size`, `activity` and `tests`
+at the new pin — never copy them from the summary, whose census describes
+whichever reading wrote it — reproduce the old figure at the old pin first so
+the method is the same one, and delete the census from the summary, shorten `description` to one sentence,
 and write the new History entry as the delta, at most 150 words, linking the
 section that carries the evidence. In the sections you edited, apply *Reading
 order* from `content/methodology/per-repo-report-format.md`. Leave untouched

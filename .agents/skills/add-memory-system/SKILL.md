@@ -172,11 +172,14 @@ Read `content/methodology/per-repo-report-format.md` completely and fill every s
 8. Agent Integration
 9. Reliability, Safety, and Trust
 10. Tests, Evals, and Benchmarks
-11. Patterns Worth Stealing
-12. Antipatterns / Risks
-13. Build-vs-Borrow Takeaways
-14. Open Questions
-15. Appendix: File Index
+11. For Your Own Build, with `### Steal`, `### Avoid` and `### Fit`
+12. Open Questions
+13. Appendix: File Index, and the command list behind every absence claim
+
+These are the headings `scripts/scaffold_report.py` writes. Reports read
+before the format settled carry *Patterns Worth Stealing*, *Antipatterns /
+Risks* and *Build-vs-Borrow Takeaways* as sections 11–13; do not copy that
+shape into a new report, and fold it into section 11 when a re-read opens it.
 
 Make the report opinionated but fair. Explain what makes the design good, what makes it weak, and for which use cases those tradeoffs matter.
 

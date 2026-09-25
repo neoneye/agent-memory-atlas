@@ -11,9 +11,9 @@ revision: e26901c1376a5c9c37f94c1c7d84714e66e82797
 revision_url: https://github.com/plur-ai/plur/commit/e26901c1376a5c9c37f94c1c7d84714e66e82797
 analyzed_at: 2026-09-19
 licence: "Apache-2.0"
-size: "66,632 lines of TypeScript in ten packages"
-activity: "927 commits by thirteen authors, 19 March – 8 September 2026"
-tests: "4,893 cases in 82,289 lines"
+size: "68,932 lines of TypeScript in eleven packages"
+activity: "939 commits by thirteen authors, 19 March – 18 September 2026"
+tests: "5,085 cases in 85,302 lines"
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   trust_state: "a commitment of draft that withholds an engram from injection while leaving it retrievable | packages/core/src/inject.ts:172-173, :657, :697, packages/mcp/src/tools.ts:1048, :1147, packages/core/src/index.ts:3440, :3489, packages/core/src/feedback.ts:45-53 | `commitment` is a five-value field — exploring, leaning, decided, locked, draft — and `skipForApproval` returns true for `draft`, which the injection loop uses to `continue` past the engram in both its selection and its spreading-activation pass; the producer is agent-reachable, since `plur_learn` and `plur_learn_batch` both take a `commitment` argument that reaches the persisted shape, and feedback cannot launder the value because `nextCommitment` returns an unrecognised state untouched. Combined with `status: retired`, filtered at index.ts:4837, the ladder is candidate, accepted, rejected | packages/core/test/draft-approval-gate.test.ts:38-67, packages/core/test/feedback.test.ts:126-129"
@@ -403,9 +403,9 @@ text gone edits the YAML.
 
 ## 10. Tests, Evals, and Benchmarks
 
-4,893 cases in 396 files and 82,289 lines against 66,632 lines of source, with
-dedicated adversarial, meta and fixture directories under the core package's
-tests. Exclusion assertions number 337, concentrated in named files for the
+5,085 `it`/`test` cases in 417 files and 85,302 lines against 68,932 lines of
+source, with dedicated adversarial, meta and fixture directories under the core
+package's tests. `.not.toContain` assertions number 347, concentrated in named files for the
 draft gate, scope pushdown, read-side visibility, supersession, validity
 instants and the pinned quota.
 
@@ -503,7 +503,7 @@ numbers from this checkout.
 | `benchmark/micro.ts` | 313 | The only file in `benchmark/`: a latency micro-benchmark |
 | `packages/core/test/draft-approval-gate.test.ts` | — | The three draft exclusions (38-67) |
 | `packages/core/test/reference-count.test.ts` | — | The retired-dedup behaviour, asserted (149-155) |
-| tests | 82,289 in 396 files | 4,893 cases, 337 exclusion assertions |
+| tests | 85,302 in 417 files | 5,085 cases, 347 `.not.toContain` assertions |
 
 **Searches recorded for the negative claims**
 
@@ -518,6 +518,8 @@ git show 19b74b5 --stat                                              # the harne
 ```
 
 ## History
+
+**2026-09-25** — census re-measured at the same pin, [`e26901c1376a5c9c37f94c1c7d84714e66e82797`](https://github.com/plur-ai/plur/commit/e26901c1376a5c9c37f94c1c7d84714e66e82797). The header band, section 10, the file index, the family paragraph and the verdict carried the first reading's figures from `d005139`. At this pin: 939 commits by thirteen authors between 19 March and 18 September 2026, 68,932 lines of TypeScript, 85,302 lines of tests in 417 files, 5,085 `it`/`test` cases and 347 `.not.toContain` assertions. Each counting method first reproduced the published line, file and author counts at `d005139`; the case count reproduced within fifteen, so the method is named where the number appears. Counted by reading the tree; nothing was built or run. No mark moved.
 
 **2026-09-19** — re-pinned to [`e26901c1376a5c9c37f94c1c7d84714e66e82797`](https://github.com/plur-ai/plur/commit/e26901c1376a5c9c37f94c1c7d84714e66e82797), release 0.20.1, four commits on. **`human_review` is withdrawn; five marks stand.** The four files the mark rested on — `packages/mcp/src/tools.ts`, `packages/core/src/inject.ts`, `packages/cli/src/commands/tensions.ts`, `packages/core/src/schemas/tension.ts` — carry byte-identical blobs at both pins, so this is a correction to the previous reading rather than upstream drift. That reading's own evidence record contained the refutation: *"or the same three actions through the MCP tool."* `plur_tensions` declares `action: confirm | dismiss | resolve` on the agent's tool surface, the handler calls the same core functions the CLI calls with no actor on either path, and after a scan the tool's reply tells the model to work the queue. The producing agent can therefore adjudicate the contradiction between two engrams it wrote, and an unresolved tension withholds nothing — it adds a `warnings` field to the injection result. The adjudication ledger is still described in sections 4 and 9, where it stands on its own. The withholding mechanism in this system is the draft commitment, and that is `trust_state`, already awarded. New in the range and now in section 9: a `.plur.yaml` in a cloned repository may name a `remote_url` and a `remote_token`, and `resolveProjectRemoteFromConfig` adopts them only from a directory an explicit `plur trust` has covered, failing closed on any error and printing the refusal unconditionally. Screened again first: thirty-four files, three auto-run surfaces, one build-time execution point, thirteen unpinned surfaces, fifteen dependency files inside the cooldown, a `CLAUDE.md` recorded as data. Nothing installed, built or run.
 
