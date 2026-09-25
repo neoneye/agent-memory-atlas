@@ -518,6 +518,7 @@ href="../systems/open-graph-memory/"><code>open-graph-memory</code></a></li>
 <li><a href="../systems/funes/"><code>funes</code></a></li>
 <li><a href="../systems/deus/"><code>deus</code></a></li>
 <li><a href="../systems/gastown/"><code>gastown</code></a></li>
+<li><a href="../systems/beads/"><code>beads</code></a></li>
 </ul>
 <h2 id="repos-inspected">Repos Inspected</h2>
 <ul>
@@ -4857,6 +4858,19 @@ href="https://github.com/gastownhall/beads/commit/6a3f515ced18406c189c55fff789a4
 whose screen reported six auto-run surfaces; that clone was read with
 <code>grep</code> and <code>sed</code> only. Nothing was installed,
 built or executed.</li>
+<li><a href="https://github.com/gastownhall/beads">gastownhall/beads</a>
+at <a
+href="https://github.com/gastownhall/beads/commit/a1bc167b54922b7a3953b23d4427aa7fb46409fc"><code class="commit-id" title="a1bc167b54922b7a3953b23d4427aa7fb46409fc">a1bc167b…</code></a>
+— read only, at the head of <code>main</code>, a commit dated 25
+September 2026. MIT. Screened before reading: 6 auto-run surfaces
+(<code>.claude/settings.json</code> with two PreToolUse command filters,
+<code>.claude-plugin/</code>, <code>.devcontainer/</code>,
+<code>.githooks/</code>, <code>.github/copilot-instructions.md</code>),
+3 build-time execution points and 11 dependency files inside the
+cooldown, every file in the depth-1 clone dating to the tip;
+<code>AGENTS.md</code> and <code>CLAUDE.md</code> were treated as data.
+Only the memory plane was read. Nothing was installed, built or
+executed.</li>
 </ul>
 <h2 id="what-the-licences-actually-say">What the licences actually
 say</h2>
@@ -4957,6 +4971,19 @@ benchmarks, the papers cited by arXiv id — is read from the sources
 linked inline.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <ul>
+<li><strong>The Gas Town report described a write path that does not run
+against any current <code>bd</code>.</strong> Published on 2026-09-25
+with <code>gt remember</code> storing rows through
+<code>bd kv set</code>, it was read against beads <code>v1.0.5</code>,
+the version <code>go.mod</code> names, while <code>gt</code> installs
+<code>bd@latest</code> at runtime. Every beads release from v1.1.0 (4
+July 2026) refuses a <code>memory.</code>-prefixed key in
+<code>kv set</code> and <code>kv clear</code>, so at the 23 July pin
+<code>gt remember</code> and <code>gt forget</code> exit 1. Corrected
+the same day in <a href="../systems/gastown/">Gas Town</a>. The check
+that would have caught it: when a subject execs an engine it installs as
+latest, read the engine at the pin's date, not at the version its
+manifest names.</li>
 <li><strong>The scope note on beads described its issues and missed its
 memory.</strong> The note in <a
 href="../families/#not-in-scope-conversation-window-management">the
@@ -4966,11 +4993,10 @@ database, at a pin whose <code>cmd/bd/memory.go</code> already defined
 <code>bd forget</code> and <code>bd recall</code> over
 <code>kv.memory.*</code> rows injected by <code>bd prime</code>. Those
 rows state what is the case and can be false, so they are memory by the
-note's own test. Corrected on 2026-09-25, when the <a
-href="../systems/gastown/">Gas Town</a> report read that keyspace at
-beads <code>v1.0.5</code>; the note now says the issues stay out and the
-memory is covered there. The search that would have caught it is
-<code>grep -rln 'remember' cmd/</code>.</li>
+note's own test. Corrected on 2026-09-25: the issues stay out, and the
+memory plane has its own <a href="../systems/beads/">beads</a> report
+beside <a href="../systems/gastown/">Gas Town</a>'s. The search that
+would have caught it is <code>grep -rln 'remember' cmd/</code>.</li>
 <li><strong>Eight reports kept the census of an earlier pin in some
 sections and a newer one in others.</strong> Re-pins updated one
 sentence and left the rest; the verdicts then copied whichever they met

@@ -136,7 +136,7 @@ commits on main by 371 contributors, 16 December 2025 – 23 July
             <div class="meta-pill fact-pill"><span>Tests</span><strong>5,840
 Go test functions in 225,753 lines</strong></div>
           </div>
-                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (44%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>0</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Negative evals</span></li></ul></div>
                   </div>
         <div class="hero-contours" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
@@ -163,8 +163,21 @@ beside that: <code>gt remember</code> writes a typed string —
 <code>reference</code> or <code>general</code> — into beads' key-value
 store, and <code>gt prime</code>, which a SessionStart hook runs at the
 start of every agent session, prints every stored memory into context
-with feedback first. It is weak where it is small. Nothing ranks, bounds
-or attributes a memory. The destination is whichever database the
+with feedback first.</p>
+<p><strong>At this commit the write path does not work against a current
+<code>bd</code>.</strong> Every beads release from v1.1.0 (4 July 2026)
+rejects a <code>bd kv set</code> or <code>bd kv clear</code> key that
+starts with <code>memory.</code>, reserving that namespace for
+<code>bd remember</code>. <code>gt remember</code> and
+<code>gt forget</code> build exactly such keys, and <code>gt</code>
+installs <code>bd@latest</code>, so both exit with an error while
+<code>gt memories</code> and <code>gt prime</code> still read. Two open
+issues report it, <a
+href="https://github.com/gastownhall/gastown/issues/4762">gastownhall/gastown#4762</a>
+and <a
+href="https://github.com/gastownhall/gastown/issues/4879">gastownhall/gastown#4879</a>.</p>
+<p>The design around the break is weak where it is small. Nothing ranks,
+bounds or attributes a memory. The destination is whichever database the
 working directory resolves to, not one the caller names. A key derived
 from the first five words overwrites any other memory that begins the
 same way.</p>
@@ -175,7 +188,7 @@ the reason — memory held in Dolt is visible to every agent reading the
 same database, where a <code>MEMORY.md</code> belongs to one project
 path and one runtime
 (<code>internal/templates/roles/mayor.md.tmpl:267-293</code>).</p>
-<p>Three findings shape the rest of this report.</p>
+<p>Three more findings shape the rest of this report.</p>
 <ul>
 <li><strong>The scope is physical, and narrower than the prompt
 says.</strong> The mayor template tells the agent memories are
@@ -319,8 +332,24 @@ is on <code>PATH</code>, checks it against
 <code>github.com/steveyegge/beads/cmd/bd@latest</code> when it is
 missing (<code>internal/deps/beads.go:19-22</code>). This report reads
 beads at <a
-href="https://github.com/gastownhall/beads/commit/6a3f515ced18406c189c55fff789a4925bfaa35c"><code>v1.0.5</code></a>
-as the reference; a later <code>bd</code> may behave differently.</p>
+href="https://github.com/gastownhall/beads/commit/6a3f515ced18406c189c55fff789a4925bfaa35c"><code>v1.0.5</code></a>,
+the version <code>go.mod</code> names and the last release whose
+<code>kv set</code> accepts a <code>memory.</code> key.</p>
+<p><strong>A later <code>bd</code> breaks the write path.</strong> Beads
+commit <a
+href="https://github.com/gastownhall/beads/commit/387959695d2e112e57b5d21398b409cc0517b018"><code class="commit-id" title="387959695d2e112e57b5d21398b409cc0517b018">38795969…</code></a>,
+dated 20 June 2026 and first released in v1.1.0 on 4 July, adds a guard
+to <code>validateKVKey</code>: a key starting with <code>memory.</code>
+is refused with <em>"reserved for persistent memories; use 'bd remember'
+/ 'bd forget'"</em>. Its reason is Dolt merge behaviour:
+<code>kv.memory.*</code> conflicts auto-resolve to the remote side, so a
+generic kv value there could be silently overridden on pull.
+<code>kv set</code> and <code>kv clear</code> both call the validator,
+and <code>kv list</code> does not. With any <code>bd</code> from v1.1.0
+on, <code>gt remember</code> and <code>gt forget</code> therefore exit 1
+and <code>gt prime</code> and <code>gt memories</code> keep reading
+whatever rows exist. The guard is described in the <a
+href="../beads/">beads</a> report.</p>
 <p>Two daemon jobs touch the memory rows without being about memory. The
 JSONL git backup exports each database's <code>config</code> table,
 among its supplemental tables, every 15 minutes and pushes the result to
@@ -515,7 +544,9 @@ background writer, no deduplication beyond the exact key, and no
 consolidation. The call spawns two <code>bd</code> processes — a
 <code>get</code> then a <code>set</code> — each opening a connection to
 the Dolt server, so it costs one short blocking shell command. No model
-call is made.</p>
+call is made. Everything in this section describes the path as it runs
+against <code>bd</code> v1.0.5. Against v1.1.0 or later the
+<code>set</code> is refused and nothing is written (section 3).</p>
 <p><strong>Update is by key collision, and an auto-key collides on the
 first five words.</strong> When the key exists, <code>runRemember</code>
 changes its verb from <code>Stored</code> to <code>Updated</code> and
@@ -666,7 +697,10 @@ memories go missing.</p>
 <p>No test executes <code>runRemember</code>, <code>runForget</code> or
 <code>runMemories</code>. Nothing covers the auto-key overwrite, the
 type-order delete, or the writer's and reader's environment policies
-against each other.</p>
+against each other. The injection tests use a stub <code>bd</code>, so
+no test here runs against a real <code>bd</code>. That is how a
+<code>bd</code> release that refuses every write key
+<code>gt remember</code> builds leaves the suite green.</p>
 <p><code>gt-model-eval/</code> is a promptfoo harness over patrol-role
 decisions; none of its cases touches memory. No paper or citation block
 exists in the tree, and no benchmark result is committed.</p>
@@ -837,7 +871,12 @@ build-time execution points (<code>Makefile</code>, an npm
 <code>postinstall</code>), no unpinned surface, nothing inside the
 cooldown, and <code>AGENTS.md</code> recorded as data. Beads' screen
 found six auto-run surfaces; the clone was read with <code>grep</code>
-and <code>sed</code> only. Nothing was installed, built or run.</p>
+and <code>sed</code> only. Nothing was installed, built or run. The same
+day, reading beads at its own head for the <a href="../beads/">beads</a>
+report found that every beads release from v1.1.0 refuses the
+<code>memory.</code> keys <code>gt remember</code> and
+<code>gt forget</code> write; section 3 and the executive summary now
+carry it, and two upstream issues confirm it.</p>
         </article>
       </div>
     </main>

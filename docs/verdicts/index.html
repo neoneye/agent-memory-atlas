@@ -129,7 +129,7 @@ any one system is worth your time. Reading it end to end is not the
 point; find the system you are weighing.</p>
 <!-- BEGIN GENERATED VERDICT COUNT -->
 
-<p><strong>This page covers all 628 reports.</strong></p>
+<p><strong>This page covers all 629 reports.</strong></p>
 <!-- END GENERATED VERDICT COUNT --> Six judgements each: the best idea,
 
 <p>the biggest risk, the most reusable component, an impression of
@@ -25361,6 +25361,53 @@ where query and record share surface form, associative recall where they
 share none — names a gap most retrieval designs do not distinguish, and
 the fix is separable from everything else here.</li>
 </ul>
+<h3 id="beads"><a href="../systems/beads/"><code>beads</code></a></h3>
+<ul>
+<li>Best idea: <strong>make every verb report what was actually
+there.</strong> <code>RememberInTx</code> and <code>ForgetInTx</code>
+probe the row and act on it inside one transaction, so
+<code>Updated</code> versus <code>Remembered</code>, and the text
+<code>bd forget</code> prints, describe the real row rather than an
+earlier read — the package comment calls the replaced
+<code>existing, _ :=</code> pattern <em>"hopeful rather than true"</em>.
+Beside it, a prime that cannot read the store injects <em>"persistent
+memories were NOT injected this session"</em> instead of an empty
+section.</li>
+<li>Biggest risk: <strong>the remote wins a same-key edit, and says so
+only on stderr.</strong> Memories sync with the Dolt <code>config</code>
+table, and a pull whose only conflicts are <code>kv.memory.</code> rows
+resolves with <code>--theirs</code>. A local correction — or a local
+<code>forget</code> — made while another clone edited the same key is
+superseded. The notice names the keys, on the standard error of whatever
+process ran the pull, which in a hook-driven agent may be nobody.</li>
+<li>Most reusable component:
+<code>internal/memoryapi/memoryapi.go</code> — 160 lines holding the key
+derivation (frozen and pinned by a golden table, because a change
+re-keys every memory), the content and key refusals, and the case-folded
+filter, importable without a database and shared by every route.</li>
+<li>Second risk: <strong>the caps drop alphabetically, and import skips
+the validation.</strong> <code>--max-memories</code> and
+<code>--max-memory-chars</code> keep whole memories in key order, so
+what an agent loses at session start depends on how its keys sort.
+<code>bd import</code> writes the storage key itself and checks only for
+an empty key, so a whitespace-only key becomes a row that
+<code>recall</code> and <code>forget</code> refuse.</li>
+<li>Maturity impression: MIT, 359,675 lines of Go outside tests and
+10,836 commits on main from 489 contributors since October 2025, of
+which the memory plane is about 1,500 lines. One mark,
+<code>negative_eval</code>, on a CI-run integration journey asserting a
+forgotten memory leaves the listing and a search leaves out an unrelated
+one, each after a positive control. Contract tests hold three storage
+routes to one behaviour; one embedded case asserts nothing.</li>
+<li>Study when: you want a shared key-value memory for coding agents
+whose four operations are exactly right, and want to see how carefully a
+small plane can be specified — the comments explain every quirk they
+preserve.</li>
+<li>Do not copy when: memories must be found by relevance, attributed,
+dated, or kept on one machine. Everything injects, nothing says who
+wrote it, and every clone of the remote holds every memory with its
+history.</li>
+</ul>
 <h3 id="gastown"><a
 href="../systems/gastown/"><code>gastown</code></a></h3>
 <ul>
@@ -25373,7 +25420,16 @@ crew member records reaches the next polecat in that rig without a file
 being copied. The role prompt's <em>"What NOT to save"</em> list —
 nothing derivable from code, git history or docs — is the only bound,
 and it is the right one for a store that injects everything.</li>
-<li>Biggest risk: <strong>a key built from the first five words is an
+<li>Biggest risk: <strong>the write path fails against every current
+<code>bd</code>.</strong> Beads v1.1.0 (4 July 2026) reserves the
+<code>memory.</code> key prefix for <code>bd remember</code>,
+<code>gt remember</code> and <code>gt forget</code> write through
+<code>bd kv set</code> and <code>kv clear</code> under exactly that
+prefix, and <code>gt</code> installs <code>bd@latest</code> — so at a
+pin dated 23 July both exit 1 while prime keeps reading. The only tests
+that reach the path use a stub <code>bd</code>, which is how the suite
+stayed green; two upstream issues report it.</li>
+<li>Third risk: <strong>a key built from the first five words is an
 update.</strong> With no <code>--key</code>, <code>autoKey</code> slugs
 the opening five words, and an existing key is overwritten with the verb
 changed from <code>Stored</code> to <code>Updated</code> and the

@@ -16,20 +16,20 @@ activity: "7,770 commits on main by 371 contributors, 16 December 2025 – 23 Ju
 tests: "5,840 Go test functions in 225,753 lines"
 capabilities: ""
 stack_storage: "dolt"
-stack_retrieval: ""
+stack_retrieval: "lexical"
 stack_source: "reviewed"
 matrix:
   memory_unit: "One string under a key of the form memory.TYPE.SLUG, TYPE one of feedback, user, project, reference, general. No author, timestamp, source or status on the row"
   storage: "A row in the config table of beads' Dolt database, key prefixed kv. by bd. One Dolt SQL server per town, one database per rig plus hq for the town"
   retrieval: "None by relevance. gt prime lists every memory row in the database the working directory resolves to and prints them all, grouped by type with feedback first; gt memories filters by substring"
-  write: "Explicit: an agent or a person runs gt remember, which shells out to bd kv set. The key is a caller slug or the first five words of the text, and an existing key is overwritten"
+  write: "Explicit: an agent or a person runs gt remember, which shells out to bd kv set. The key is a caller slug or the first five words of the text, and an existing key is overwritten. Against bd v1.1.0 or later the call is rejected, because those releases reserve the memory. key prefix"
   update_delete: "Overwrite in place under the same key; gt forget runs bd kv clear, a hard delete. No tombstone, no revision kept in the store; the JSONL backup's git history retains deleted text"
   scoping: "Physical: the Dolt database a process's working directory resolves to through .beads/redirect, so the town and each rig hold separate memory sets. No scope key on the row and no predicate on the read"
   integration: "SessionStart hook runs gt prime --hook for Claude Code, Gemini, Codex, OpenCode and others; the town-root CLAUDE.md and the mayor role template tell agents to use gt remember instead of Claude Code's auto-memory"
   background: "None for memory. A JSONL backup exports the config table every 15 minutes and pushes it to git; a compactor flattens Dolt history once it passes 2,000 commits"
   trust: "None. The feedback type is printed under a header asserting user origin, and any agent that can run gt remember chooses the type"
   strengths: "Small and legible; type order puts corrections first in the injected block; one env policy strips inherited database selectors on the read path; the sandbox allowlist, derived from a per-command annotation, keeps memory writes off the sandboxed polecat path by default"
-  risks: "An auto-key collision on the first five words overwrites a different memory; the compaction fast path re-injects nothing; the working directory, not the caller, chooses the destination while the mayor prompt promises town-wide sharing; a read failure is silent; injection is unbounded"
+  risks: "gt remember and gt forget fail against every bd release from v1.1.0, which gt installs as latest; an auto-key collision on the first five words overwrites a different memory; the compaction fast path re-injects nothing; the working directory, not the caller, chooses the destination while the mayor prompt promises town-wide sharing; a read failure is silent; injection is unbounded"
 ---
 
 ## 1. Executive Summary
@@ -42,10 +42,21 @@ everything it persists is work state. Its memory is one small mechanism beside
 that: `gt remember` writes a typed string — `feedback`, `user`, `project`,
 `reference` or `general` — into beads' key-value store, and `gt prime`, which a
 SessionStart hook runs at the start of every agent session, prints every stored
-memory into context with feedback first. It is weak where it is small. Nothing
-ranks, bounds or attributes a memory. The destination is whichever database the
-working directory resolves to, not one the caller names. A key derived from the
-first five words overwrites any other memory that begins the same way.
+memory into context with feedback first.
+
+**At this commit the write path does
+not work against a current `bd`.** Every beads release from v1.1.0 (4 July 2026)
+rejects a `bd kv set` or `bd kv clear` key that starts with `memory.`, reserving
+that namespace for `bd remember`. `gt remember` and `gt forget` build exactly
+such keys, and `gt` installs `bd@latest`, so both exit with an error while
+`gt memories` and `gt prime` still read. Two open issues report it,
+[gastownhall/gastown#4762](https://github.com/gastownhall/gastown/issues/4762)
+and [gastownhall/gastown#4879](https://github.com/gastownhall/gastown/issues/4879).
+
+The design around the break is weak where it is small. Nothing ranks, bounds or
+attributes a memory. The destination is whichever database the working
+directory resolves to, not one the caller names. A key derived from the first
+five words overwrites any other memory that begins the same way.
 
 The design decision is explicit in the role prompts: this store *replaces*
 Claude Code's filesystem auto-memory, and borrows its four types and its
@@ -53,7 +64,7 @@ Claude Code's filesystem auto-memory, and borrows its four types and its
 Dolt is visible to every agent reading the same database, where a `MEMORY.md`
 belongs to one project path and one runtime (`internal/templates/roles/mayor.md.tmpl:267-293`).
 
-Three findings shape the rest of this report.
+Three more findings shape the rest of this report.
 
 - **The scope is physical, and narrower than the prompt says.** The mayor
   template tells the agent memories are *"shared across all agents in the
@@ -162,8 +173,21 @@ separate table.
 package — `gt` execs whatever `bd` is on `PATH`, checks it against
 `MinBeadsVersion = "0.57.0"`, and installs `github.com/steveyegge/beads/cmd/bd@latest`
 when it is missing (`internal/deps/beads.go:19-22`). This report reads beads at
-[`v1.0.5`](https://github.com/gastownhall/beads/commit/6a3f515ced18406c189c55fff789a4925bfaa35c)
-as the reference; a later `bd` may behave differently.
+[`v1.0.5`](https://github.com/gastownhall/beads/commit/6a3f515ced18406c189c55fff789a4925bfaa35c),
+the version `go.mod` names and the last release whose `kv set` accepts a
+`memory.` key.
+
+**A later `bd` breaks the write path.** Beads commit
+[`387959695d2e112e57b5d21398b409cc0517b018`](https://github.com/gastownhall/beads/commit/387959695d2e112e57b5d21398b409cc0517b018),
+dated 20 June 2026 and first released in v1.1.0 on 4 July, adds a guard to
+`validateKVKey`: a key starting with `memory.` is refused with *"reserved for
+persistent memories; use 'bd remember' / 'bd forget'"*. Its reason is Dolt
+merge behaviour: `kv.memory.*` conflicts auto-resolve to the remote side, so a
+generic kv value there could be silently overridden on pull. `kv set` and
+`kv clear` both call the validator, and `kv list` does not. With any `bd`
+from v1.1.0 on, `gt remember` and `gt forget` therefore exit 1 and `gt prime`
+and `gt memories` keep reading whatever rows exist. The guard is described in
+the [beads](../beads/) report.
 
 Two daemon jobs touch the memory rows without being about memory. The JSONL git
 backup exports each database's `config` table, among its supplemental tables,
@@ -309,6 +333,8 @@ remember and runs a command; there is no extraction, no background writer, no
 deduplication beyond the exact key, and no consolidation. The call spawns two
 `bd` processes — a `get` then a `set` — each opening a connection to the Dolt
 server, so it costs one short blocking shell command. No model call is made.
+Everything in this section describes the path as it runs against `bd` v1.0.5.
+Against v1.1.0 or later the `set` is refused and nothing is written (section 3).
 
 **Update is by key collision, and an auto-key collides on the first five
 words.** When the key exists, `runRemember` changes its verb from `Stored` to
@@ -453,7 +479,9 @@ which is where the memories go missing.
 
 No test executes `runRemember`, `runForget` or `runMemories`. Nothing covers the
 auto-key overwrite, the type-order delete, or the writer's and reader's
-environment policies against each other.
+environment policies against each other. The injection tests use a stub `bd`,
+so no test here runs against a real `bd`. That is how a `bd` release that
+refuses every write key `gt remember` builds leaves the suite green.
 
 `gt-model-eval/` is a promptfoo harness over patrol-role decisions; none of its
 cases touches memory. No paper or citation block exists in the tree, and no
@@ -569,4 +597,4 @@ Checked against the checkout at the pinned revision, and beads at `v1.0.5`.
 
 ## History
 
-**2026-09-25** — [`649b832b7672bc7a2dbef26f5983aba6198b819b`](https://github.com/gastownhall/gastown/commit/649b832b7672bc7a2dbef26f5983aba6198b819b) — first reading, at the head of `main`, a commit dated 23 July 2026. No mark awarded; section 9 names each near-miss. Beads was read at [`v1.0.5`](https://github.com/gastownhall/beads/commit/6a3f515ced18406c189c55fff789a4925bfaa35c) for the storage engine. Screened before reading: one auto-run surface (`.githooks/`, inert unless `core.hooksPath` points at it; its `pre-push` restricts push targets), two build-time execution points (`Makefile`, an npm `postinstall`), no unpinned surface, nothing inside the cooldown, and `AGENTS.md` recorded as data. Beads' screen found six auto-run surfaces; the clone was read with `grep` and `sed` only. Nothing was installed, built or run.
+**2026-09-25** — [`649b832b7672bc7a2dbef26f5983aba6198b819b`](https://github.com/gastownhall/gastown/commit/649b832b7672bc7a2dbef26f5983aba6198b819b) — first reading, at the head of `main`, a commit dated 23 July 2026. No mark awarded; section 9 names each near-miss. Beads was read at [`v1.0.5`](https://github.com/gastownhall/beads/commit/6a3f515ced18406c189c55fff789a4925bfaa35c) for the storage engine. Screened before reading: one auto-run surface (`.githooks/`, inert unless `core.hooksPath` points at it; its `pre-push` restricts push targets), two build-time execution points (`Makefile`, an npm `postinstall`), no unpinned surface, nothing inside the cooldown, and `AGENTS.md` recorded as data. Beads' screen found six auto-run surfaces; the clone was read with `grep` and `sed` only. Nothing was installed, built or run. The same day, reading beads at its own head for the [beads](../beads/) report found that every beads release from v1.1.0 refuses the `memory.` keys `gt remember` and `gt forget` write; section 3 and the executive summary now carry it, and two upstream issues confirm it.

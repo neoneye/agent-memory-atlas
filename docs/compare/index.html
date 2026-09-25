@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
     <meta name="description" content="One row per system for all
-628, generated from each report's frontmatter —
+629, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -15,7 +15,7 @@ beside it.">
     <meta property="og:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta property="og:description" content="One row per system for all
-628, generated from each report's frontmatter —
+629, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -24,7 +24,7 @@ beside it.">
     <meta name="twitter:title" content="Comparative
 Matrix — Agent Memory Atlas">
     <meta name="twitter:description" content="One row per system for all
-628, generated from each report's frontmatter —
+629, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.">
@@ -49,7 +49,7 @@ beside it.">
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "Comparative Matrix",
-      "description": "One row per system for all 628, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
+      "description": "One row per system for all 629, generated from each report's frontmatter \u2014 memory unit, storage, retrieval, writes, update and delete, scoping, integration, background work and trust \u2014 with the capability tables beside it.",
       "isPartOf": {
         "@type": "WebSite",
         "name": "Agent Memory Atlas",
@@ -107,7 +107,7 @@ beside it.">
           <p class="eyebrow">Every system, side by side</p>
           <h1>Comparative Matrix</h1>
           <p class="document-deck">One row per system for all
-628, generated from each report's frontmatter —
+629, generated from each report's frontmatter —
 memory unit, storage, retrieval, writes, update and delete, scoping,
 integration, background work and trust — with the capability tables
 beside it.</p>
@@ -128,7 +128,7 @@ beside it.</p>
 <p><a id="2-comparative-matrix"></a></p>
 <p><strong>Looking for a specific mechanism rather than a specific
 system?</strong> The <a href="../capabilities/">capability index</a>
-filters all 628 systems by the seven mechanisms
+filters all 629 systems by the seven mechanisms
 judged against strict definitions, combining them with
 <strong>and</strong> — it answers "tombstone <em>and</em> scope
 enforced" in one click, which is the question this table cannot be
@@ -2992,6 +2992,43 @@ reindex</td>
 <td>Inspectable portable memory with rebuildable indexes</td>
 <td>Bidirectional sync complexity; agent can write unsupported
 claims</td>
+</tr>
+<tr>
+<td><code>beads</code></td>
+<td>One string under a caller-named or derived key, stored as a
+kv.memory. row in the config table. No author, timestamp, type, source
+or status</td>
+<td>The config table of the workspace's Dolt database, beside settings
+and generic kv rows; embedded, a local SQL server, or a proxied
+server</td>
+<td>None by relevance. bd prime injects every memory in alphabetical key
+order, optionally capped by count or bytes; bd memories filters by
+case-folded substring over key and value; bd recall reads one key</td>
+<td>Explicit: bd remember, POST /v0/beads/memories, or bd import. The
+key is the caller's, verbatim, or the first eight words of the content
+capped at 60 bytes; an existing key is overwritten and reported as
+Updated</td>
+<td>Overwrite in place; bd forget and DELETE /v0/beads/memories/{key}
+delete the one row. Each write is one Dolt commit. No tombstone</td>
+<td>Physical: one Dolt database per workspace, or the shared
+beads_global database. No key on the row; every clone of a workspace's
+remote shares its memories</td>
+<td>SessionStart hook installers for Claude Code, Codex, Gemini and
+Cursor run bd prime, which re-fires after compaction; an HTTP API behind
+a shared bearer token; export and import as JSONL</td>
+<td>None. Memories travel with Dolt push and pull, and a merge conflict
+on memory rows alone is resolved to the remote's value</td>
+<td>None. Every memory is injected as a heading and its text</td>
+<td>Read-then-write in one transaction, so Updated and Forgot report the
+row that was really there; a guard against storing a command name or a
+bare key as content; a read failure is announced in the injected block,
+not silent; opt-in injection caps with an elision banner; kv set refuses
+the memory prefix</td>
+<td>Remote-wins conflict resolution overwrites a local edit on pull,
+announced only on stderr; caps drop memories alphabetically rather than
+by use or age; import bypasses the key validation and can store a row
+recall and forget refuse; memories replicate to every clone and
+remote</td>
 </tr>
 <tr>
 <td><code>beever-atlas</code></td>
@@ -8137,7 +8174,8 @@ the working directory resolves to and prints them all, grouped by type
 with feedback first; gt memories filters by substring</td>
 <td>Explicit: an agent or a person runs gt remember, which shells out to
 bd kv set. The key is a caller slug or the first five words of the text,
-and an existing key is overwritten</td>
+and an existing key is overwritten. Against bd v1.1.0 or later the call
+is rejected, because those releases reserve the memory. key prefix</td>
 <td>Overwrite in place under the same key; gt forget runs bd kv clear, a
 hard delete. No tombstone, no revision kept in the store; the JSONL
 backup's git history retains deleted text</td>
@@ -8157,11 +8195,12 @@ origin, and any agent that can run gt remember chooses the type</td>
 block; one env policy strips inherited database selectors on the read
 path; the sandbox allowlist, derived from a per-command annotation,
 keeps memory writes off the sandboxed polecat path by default</td>
-<td>An auto-key collision on the first five words overwrites a different
-memory; the compaction fast path re-injects nothing; the working
-directory, not the caller, chooses the destination while the mayor
-prompt promises town-wide sharing; a read failure is silent; injection
-is unbounded</td>
+<td>gt remember and gt forget fail against every bd release from v1.1.0,
+which gt installs as latest; an auto-key collision on the first five
+words overwrites a different memory; the compaction fast path re-injects
+nothing; the working directory, not the caller, chooses the destination
+while the mayor prompt promises town-wide sharing; a read failure is
+silent; injection is unbounded</td>
 </tr>
 <tr>
 <td><code>gbrain</code></td>
@@ -26750,7 +26789,7 @@ system that never claims to model belief.</li>
 <p><strong>Rejected-value tombstone</strong> — A durable record of a
 <em>rejected value</em>, keyed on the value, so later extraction cannot
 silently re-assert it.</p>
-<p><em>58 of 628:</em> <a
+<p><em>58 of 629:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/anda-db/"><code>anda-db</code></a>, <a
@@ -26812,7 +26851,7 @@ href="../systems/wenlan/"><code>wenlan</code></a></p>
 <p><strong>Explicit trust state</strong> — Discrete epistemic status as
 a field rather than a confidence score, including at least one state
 that withholds a memory from being treated as true.</p>
-<p><em>161 of 628:</em> <a
+<p><em>161 of 629:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
 <a href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
@@ -26980,7 +27019,7 @@ href="../systems/weknora/"><code>weknora</code></a>, <a
 href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a></p>
 <p><strong>Bi-temporal validity</strong> — When a fact was true tracked
 separately from when the system recorded or expired it.</p>
-<p><em>105 of 628:</em> <a
+<p><em>105 of 629:</em> <a
 href="../systems/agent-memory-doctrine/"><code>agent-memory-doctrine</code></a>,
 <a
 href="../systems/agent-memory-dotnet/"><code>agent-memory-dotnet</code></a>,
@@ -27093,7 +27132,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 merely available as a tag. This certifies that the key reaches the query
 — not that the boundary is authenticated, nor that a caller cannot widen
 it by passing a different argument.</p>
-<p><em>296 of 628:</em> <a
+<p><em>296 of 629:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/acontext/"><code>acontext</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
@@ -27404,7 +27443,7 @@ href="../systems/zep/"><code>zep</code></a></p>
 event record of memory <em>mutations</em> in the system's own store.
 Logs of retrieval or feedback are the other half of the pattern and do
 not count here, nor does git history.</p>
-<p><em>211 of 628:</em> <a
+<p><em>211 of 629:</em> <a
 href="../systems/a-memory/"><code>a-memory</code></a>, <a
 href="../systems/agent-context-os/"><code>agent-context-os</code></a>,
 <a
@@ -27624,7 +27663,7 @@ href="../systems/yantrikdb-engine/"><code>yantrikdb-engine</code></a>,
 <p><strong>Human review surface</strong> — A place where a person
 inspects, approves, or adjudicates memory content before or after it
 takes effect.</p>
-<p><em>87 of 628:</em> <a
+<p><em>87 of 629:</em> <a
 href="../systems/agent-mesh/"><code>agent-mesh</code></a>, <a
 href="../systems/aimee/"><code>aimee</code></a>, <a
 href="../systems/areev/"><code>areev</code></a>, <a
@@ -27715,7 +27754,7 @@ href="../systems/yacmemo/"><code>yacmemo</code></a></p>
 <p><strong>Negative retrieval assertion</strong> — Committed evaluation
 cases asserting that particular material must <em>not</em> be
 retrieved.</p>
-<p><em>346 of 628:</em> <a
+<p><em>347 of 629:</em> <a
 href="../systems/7layermem/"><code>7layermem</code></a>, <a
 href="../systems/adk-python/"><code>adk-python</code></a>, <a
 href="../systems/aeris/"><code>aeris</code></a>, <a
@@ -27756,6 +27795,7 @@ href="../systems/artesian/"><code>artesian</code></a>, <a
 href="../systems/aukora-kernel/"><code>aukora-kernel</code></a>, <a
 href="../systems/aurora/"><code>aurora</code></a>, <a
 href="../systems/basemode/"><code>basemode</code></a>, <a
+href="../systems/beads/"><code>beads</code></a>, <a
 href="../systems/beever-atlas/"><code>beever-atlas</code></a>, <a
 href="../systems/bitterbot-desktop/"><code>bitterbot-desktop</code></a>,
 <a href="../systems/brain-db/"><code>brain-db</code></a>, <a
@@ -28091,8 +28131,8 @@ collapses "how sure am I" into "how findable is this" — see <a
 href="../patterns/decay-and-reinforcement/">decay and
 reinforcement</a>.</p>
 <p><strong>Negative evidence is almost never tested.</strong>
-346 repositories of
-628 assert that particular material must
+347 repositories of
+629 assert that particular material must
 <em>not</em> be retrieved — the assertion every scope, deletion and
 correction claim in this document ultimately rests on. Read together
 rather than one at a time, they split cleanly in two, and the split says
@@ -28165,7 +28205,7 @@ the one a coding agent actually wastes time on.</p>
 <p><strong>Only these ten probe the question the atlas is actually
 asking.</strong> A boundary test proves the filter works; a content test
 proves a value that was rejected, disputed or forbidden stays gone. 12
-of 628 is the real figure for the second kind, and
+of 629 is the real figure for the second kind, and
 the two newest are the cheap version of it: a <em>superseded</em> value
 is easy to assert about, because the row is still there to filter on.
 The expensive assertion is that a value the system destroyed does not

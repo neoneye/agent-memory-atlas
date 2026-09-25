@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23101b2a%27/%3E%3Ccircle cx=%2712%27 cy=%2711%27 r=%273%27 fill=%27%234a5f4a%27/%3E%3Ccircle cx=%2721%27 cy=%2714%27 r=%273%27 fill=%27%23d8a24a%27/%3E%3Ccircle cx=%2714%27 cy=%2721%27 r=%273%27 fill=%27%23c4736a%27/%3E%3C/svg%3E">
+    <meta name="description" content="A Dolt-backed issue tracker for
+coding agents whose memory is a flat key-value plane, injected whole at
+session start, with the remote winning clone conflicts.">
+    <meta name="theme-color" content="#101b2a">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Agent Memory Atlas">
+    <meta property="og:title" content="beads — Agent Memory Atlas">
+    <meta property="og:description" content="A Dolt-backed issue tracker
+for coding agents whose memory is a flat key-value plane, injected whole
+at session start, with the remote winning clone conflicts.">
+    <meta property="og:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="beads — Agent Memory Atlas">
+    <meta name="twitter:description" content="A Dolt-backed issue
+tracker for coding agents whose memory is a flat key-value plane,
+injected whole at session start, with the remote winning clone
+conflicts.">
+    <meta name="twitter:image" content="https://neoneye.github.io/agent-memory-atlas/assets/og.png">
+    <title>beads — Agent Memory Atlas</title>
+    <!-- Schema.org, so an assistant summarising this page can tell a technical
+         article from a product page and cite it as one. `TechArticle` rather
+         than `Article` because every page here is a claim about code at a
+         commit, and `isBasedOn` points at the repository those claims were read
+         from — the provenance a citation should carry.
+
+         Deliberately not here: chunk-boundary comments and directives addressed
+         to whatever model parses the page. This atlas screens other people's
+         repositories for text aimed at a reading agent and records it as data
+         rather than as commands (screen_repo.py's AGENT finding), and two of its
+         own acceptance tests — prompt.recall_is_fenced_as_data and
+         prompt.model_ignores_embedded_instructions — exist because stored text
+         that executes as instruction is a defect. Writing such directives into
+         its own pages would be the thing it tests against. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "beads",
+      "description": "A Dolt-backed issue tracker for coding agents whose memory is a flat key-value plane, injected whole at session start, with the remote winning clone conflicts.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Agent Memory Atlas",
+        "url": "https://neoneye.github.io/agent-memory-atlas/"
+      },
+      "isBasedOn": "https://github.com/neoneye/agent-memory-atlas",
+      "license": "https://github.com/neoneye/agent-memory-atlas/blob/main/LICENSE",
+      "inLanguage": "en"
+    }
+    </script>
+    <!-- Google Analytics is NOT loaded here, deliberately. Nothing in this head
+         contacts Google, and the measurement id lives in assets/main.js, which
+         injects the tag only after a reader clicks Allow.
+
+         This was Consent Mode v2 with every signal defaulted to denied, which
+         still loaded gtag.js on the first paint. Google documents that a denied
+         analytics_storage sends cookieless pings anyway, so the banner's promise
+         — "Nothing is collected until you choose" — was false for every reader
+         who never chose. Basic consent mode is the only arrangement that makes
+         that sentence true, and a site arguing for scope-before-ranking does not
+         get to measure people while it decides whether it has to ask. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/main.css">
+  </head>
+  <body class="document-page" data-root="../..">
+    <div class="reading-progress" aria-hidden="true"><span></span></div>
+    <header class="site-header">
+      <a class="brand" href="../../">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-name">Agent Memory Atlas</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="../../#systems">Systems</a>
+        <a href="../../a-z/">A–Z</a>
+        <a href="../../build/">Build</a>
+        <a href="../../tensions/">Tensions</a>
+        <a href="../../patterns/">Patterns</a>
+        <a href="../../capabilities/">Capabilities</a>
+        <a href="../../verdicts/">Verdicts</a>
+        <a href="../../overview/">Overview</a>
+        <a href="../../compare/">Compare</a>
+        <a href="../../benchmarks/">Benchmarks</a>
+        <a href="../../methodology/atlas-rubric/">Rubric</a>
+        <a href="../../methodology/per-repo-report-format/">Method</a>
+        <a class="nav-source" href="https://github.com/neoneye/agent-memory-atlas">GitHub <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="document-hero">
+        <div class="document-hero-inner">
+          <p class="eyebrow">A key-value memory plane inside a Dolt
+issue tracker</p>
+          <h1>beads</h1>
+          <p class="document-deck">A Dolt-backed issue tracker for
+coding agents whose memory is a flat key-value plane, injected whole at
+session start, with the remote winning clone conflicts.</p>
+                    <div class="document-meta">
+            <a class="meta-pill" href="https://github.com/gastownhall/beads">
+              <span>Source</span>
+              <strong>gastownhall/beads</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+            <a class="meta-pill revision-pill" href="https://github.com/gastownhall/beads/commit/a1bc167b54922b7a3953b23d4427aa7fb46409fc" title="a1bc167b54922b7a3953b23d4427aa7fb46409fc">
+              <span>Analyzed revision</span>
+              <code>a1bc167b…</code>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                        <div class="meta-pill">
+              <span>Analyzed on</span>
+              <strong>2026-09-25</strong>
+            </div>
+                                    <a class="meta-pill" href="https://github.com/agent-memory-atlas-archive/gastownhall--beads" title="A fork of the source, taken by this atlas, so the reading stays checkable if the original moves or disappears">
+              <span>Archived fork</span>
+              <strong>gastownhall--beads</strong>
+              <svg class="ext-arrow" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2.8 7.2 7.2 2.8M3.9 2.8h3.3v3.3"/></svg>
+            </a>
+                      </div>
+                              <div class="document-meta document-facts">
+            <div class="meta-pill fact-pill"><span>Licence</span><strong>MIT</strong></div>
+            <div class="meta-pill fact-pill"><span>Size</span><strong>359,675
+lines of Go outside tests; the memory plane is about 1,500 of
+them</strong></div>
+            <div class="meta-pill fact-pill"><span>Activity</span><strong>10,836
+commits on main by 489 contributors, 12 October 2025 – 25 September
+2026</strong></div>
+            <div class="meta-pill fact-pill"><span>Tests</span><strong>9,375
+Go test functions in 501,634 lines</strong></div>
+          </div>
+                                        <div class="capability-strip"><p class="cap-legend">Carries <b>1</b> of 7 rubric mechanisms.<span> Most systems here carry none or one (45%), and a dash means the mechanism was not found at this commit — not that the system needed it. Each mark is one LLM reviewer's reading of the code at this commit rather than a run of it — <a href="../../methodology/atlas-rubric/#known-limits">known limits</a>.</span></p><ul class="cap-chips"><li class="cap-chip" title="Rejected-value tombstone — A durable record of a *rejected value*, keyed on the value, so later extraction cannot silently re-assert it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Tombstone</span></li><li class="cap-chip" title="Explicit trust state — Discrete epistemic status as a field rather than a confidence score, including at least one state that withholds a memory from being treated as true."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Trust state</span></li><li class="cap-chip" title="Bi-temporal validity — When a fact was true tracked separately from when the system recorded or expired it."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Bi-temporal</span></li><li class="cap-chip" title="Scope enforced in retrieval — A stored scope key (user, project, agent, tenant) applied as a filter on the read path, not merely available as a tag. This certifies that the key reaches the query — not that the boundary is authenticated, nor that a caller cannot widen it by passing a different argument."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Scope enforced</span></li><li class="cap-chip" title="Append-only mutation audit — A named append-only event record of memory *mutations* in the system&#x27;s own store. Logs of retrieval or feedback are the other half of the pattern and do not count here, nor does git history."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Mutation audit</span></li><li class="cap-chip" title="Human review surface — A place where a person inspects, approves, or adjudicates memory content before or after it takes effect."><span class="cap-mark" aria-hidden="true">—</span><span class="cap-name">Human review</span></li><li class="cap-chip is-present" title="Negative retrieval assertion — Committed evaluation cases asserting that particular material must *not* be retrieved."><span class="cap-mark" aria-hidden="true">✓</span><span class="cap-name">Negative evals</span></li></ul></div>
+                  </div>
+        <div class="hero-contours" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </section>
+
+      <div class="document-shell">
+        <aside class="toc-shell" aria-label="On this page">
+          <div class="toc">
+            <p>On this page</p>
+            <nav id="table-of-contents"></nav>
+          </div>
+        </aside>
+        <article class="prose" id="article">
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>beads is a distributed, Dolt-backed issue tracker for coding agents:
+issues, dependencies, molecules and a ready queue, served by the
+<code>bd</code> CLI, an HTTP API and a Python MCP server. Beside the
+issues sits a small memory plane: <code>bd remember</code> stores a
+string under a key, <code>bd prime</code> — which the installers wire to
+the SessionStart hook of Claude Code, Codex, Gemini and Cursor — injects
+every memory into each session, and <code>bd forget</code> deletes
+one.</p>
+<p>What is notable is the care taken over a few hundred lines. Every
+write reads and replaces in one transaction, and is one Dolt commit. A
+prime that cannot read the store says so in the injected text. The
+key-derivation rule is frozen with a golden table, because changing it
+would silently re-key every memory.</p>
+<p>What is weak is what the plane does not attempt. There is no type,
+provenance, time or status, no ranking, and injection is complete unless
+an operator sets a cap. When two clones edit the same memory, the pull
+resolves the conflict to the remote's value and says so only on
+stderr.</p>
+<p>The plane is small by design. It is one role,
+<code>memoryops.Memories</code>, with four operations —
+<code>Remember</code>, <code>Recall</code>, <code>Forget</code>,
+<code>List</code> — implemented for the server-backed store, the
+embedded store and the proxied unit-of-work route, and proven to agree
+by contract tests
+(<code>internal/storage/{dolt,embeddeddolt,uow}/memories_contract_test.go</code>).</p>
+<p>The issues are not memory and this report does not cover them; the <a
+href="../../families/#not-in-scope-conversation-window-management">scope
+note</a> says why. The memories are, because a memory such as <em>"auth
+module uses JWT not sessions"</em> is a claim that can be wrong.</p>
+<p><a href="../gastown/">Gas Town</a>, the multi-agent orchestrator
+built on beads, writes into the same <code>kv.memory.</code> namespace
+with its own typed keys through <code>bd kv set</code>. From v1.1.0,
+released 4 July 2026, <code>validateKVKey</code> refuses any generic key
+under <code>memory.</code> (<code>cmd/bd/kv.go:31-39</code>), so that
+path fails and only <code>bd remember</code> writes a memory.</p>
+<p>One mark: <code>negative_eval</code>, on an integration journey that
+asserts a forgotten memory drops out of the listing and a search leaves
+out an unrelated memory, each after a positive control. Section 9 names
+the six withheld.</p>
+<h2 id="2-mental-model">2. Mental Model</h2>
+<p>A memory is a string under a key. It becomes a belief when
+<code>bd remember</code> commits: there is no candidate state, no
+extraction and no model call. It stops being one when
+<code>bd forget</code> deletes the row, when a later
+<code>remember</code> under the same key replaces the text, or when a
+pull resolves a conflict on that key to the remote's value. Nothing
+expires or decays.</p>
+<p><strong>The key is the identity, and it is derived from the words
+when not given.</strong> <code>DeriveKey</code> lowercases, collapses
+every non-alphanumeric run to one hyphen, keeps eight segments and caps
+at 60 bytes (<code>internal/memoryapi/memoryapi.go:53-73</code>).
+Re-remembering the same sentence therefore updates it in place. A
+different sentence that opens with the same eight words replaces it too,
+reported as <code>Updated</code>. The function's comment forbids tidying
+it, because a change would leave every old memory in place under a key
+nobody derives any more.</p>
+<p><strong>Two guards keep the wrong string from becoming a
+memory.</strong> A single token matching a <code>bd</code> command name
+is refused as <em>"looks like a command, not something to remember"</em>
+(<code>cmd/bd/memory.go:91-107</code>, <code>:283-290</code>). A bare
+token equal to its own derived key is read as a recall of that key
+rather than stored as content, and refused when nothing is stored under
+it (<code>:114-135</code>, <code>:319-325</code>). Both exist because
+agents type <code>bd remember &lt;key&gt;</code> expecting to read.</p>
+<p><strong>Across clones, the remote is the tie-breaker.</strong>
+Memories are rows in the Dolt <code>config</code> table, and that table
+is committed before a pull so they sync
+(<code>internal/storage/versioncontrolops/mergesettle.go:391-396</code>).
+When every conflicted config row is a memory, the merge resolves the
+table with <code>--theirs</code> (<code>:484-492</code>,
+<code>:531-545</code>): the local edit is superseded and a notice naming
+the keys goes to stderr. A conflict that touches any other config key is
+left to the operator. A local <code>forget</code> against a remote edit
+of the same key is a delete/modify conflict and resolves the same way,
+so the memory returns.</p>
+<p>Injected memories carry no qualifier. Each is a <code>###</code>
+heading and its text, under <em>"Persistent Memories"</em>, so the model
+reads them as settled.</p>
+<figure class="diagram"><figcaption class="diagram-caption">Diagram — how a string becomes a beads memory, how it reaches a session, and the three ways it stops being one</figcaption><details class="diagram-source"><summary>Diagram source</summary><pre class="mermaid"><code>%% caption: how a string becomes a beads memory, how it reaches a session, and the three ways it stops being one
+flowchart TD
+    R[&quot;bd remember &#39;text&#39; [--key k]&quot;] --&gt; G1{&quot;single token naming&lt;br/&gt;a bd command?&quot;}
+    G1 -- &quot;yes, no --key&quot; --&gt; REF1[&quot;refused&quot;]
+    G1 -- &quot;no&quot; --&gt; G2{&quot;text equals its own&lt;br/&gt;derived key?&quot;}
+    G2 -- &quot;yes, key exists&quot; --&gt; REC[&quot;read instead:&lt;br/&gt;same as bd recall&quot;]
+    G2 -- &quot;yes, nothing stored&quot; --&gt; REF2[&quot;refused&quot;]
+    G2 -- &quot;no&quot; --&gt; TX[&quot;one transaction: probe row,&lt;br/&gt;write kv.memory.key,&lt;br/&gt;report Remembered or Updated&quot;]
+    H[&quot;POST /v0/beads/memories&quot;] --&gt; TX
+    I[&quot;bd import: _type memory&quot;] --&gt; RAW[&quot;SetConfig on&lt;br/&gt;kv.memory.key,&lt;br/&gt;no key validation&quot;]
+    TX --&gt; DC[&quot;one Dolt commit&quot;]
+    RAW --&gt; DC
+    DC --&gt; P{&quot;SessionStart hook:&lt;br/&gt;bd prime --hook-json&quot;}
+    P -- &quot;store readable&quot; --&gt; INJ[&quot;every memory, alphabetical,&lt;br/&gt;truncated at an optional&lt;br/&gt;count or byte cap&quot;]
+    P -- &quot;store unreadable&quot; --&gt; BAN[&quot;banner: memories were&lt;br/&gt;NOT injected this session&quot;]
+    DC --&gt; PULL{&quot;bd dolt pull:&lt;br/&gt;same key edited&lt;br/&gt;on both sides?&quot;}
+    PULL -- &quot;only memory rows&lt;br/&gt;in conflict&quot; --&gt; THEIRS[&quot;remote value wins,&lt;br/&gt;notice on stderr&quot;]
+    F[&quot;bd forget key&quot;] --&gt; DEL[&quot;row deleted,&lt;br/&gt;one Dolt commit&quot;]</code></pre></details></figure>
+<h2 id="3-architecture">3. Architecture</h2>
+<p><code>bd</code> is a Go CLI over Dolt, the SQL database with
+git-style history. A workspace is a <code>.beads/</code> directory whose
+data lives in an embedded Dolt engine, a local Dolt SQL server, or
+behind a proxied server that <code>bd</code> reaches through a
+unit-of-work provider (<code>cmd/bd/memory.go:26-72</code>).
+<code>bd serve</code> exposes the same roles over HTTP.</p>
+<p>The memory plane adds no storage of its own. A memory is a row in the
+<code>config</code> table under <code>kv.memory.&lt;key&gt;</code>, the
+constants living in one package so the CLI and the merge resolver cannot
+drift (<code>internal/storage/kvkeys/kvkeys.go</code>). The same table
+holds workspace settings such as <code>issue_prefix</code> and generic
+<code>bd kv</code> values under <code>kv.</code>.
+<code>MemoriesFromConfig</code> narrows on the full
+<code>kv.memory.</code> prefix, and its comment names the two silent
+mistakes it avoids: filtering on <code>kv.</code> and trimming a
+different length than it matched
+(<code>internal/storage/memoryops/memories.go:58-75</code>).</p>
+<p>Durability differs by route. On the direct routes the store runs the
+row write and leaves the Dolt commit to the CLI's post-run epilogue,
+which fires because <code>noteDirectMemoryWrite</code> sets the write
+flag (<code>memory.go:74-78</code>;
+<code>memoryops/memories.go:26-31</code>). The proxied route commits per
+write. Tests pin one commit per <code>remember</code> and per
+<code>forget</code> on both routes (section 10).</p>
+<p>Nothing runs in the background for memory. Memories leave a machine
+only when Dolt pushes or when <code>bd export --include-memories</code>
+writes them to JSONL; plain <code>bd export</code> excludes them
+<em>"because they may contain sensitive agent context"</em>
+(<code>cmd/bd/export.go:39-47</code>).</p>
+<h3 id="deployment-and-ergonomics">Deployment and ergonomics</h3>
+<p>One binary; embedded mode needs nothing else, and server mode needs a
+Dolt SQL server that <code>bd</code> can start. No API key is required.
+The store is readable with <code>bd memories</code>,
+<code>bd recall</code>, SQL against <code>config</code>, or an exported
+JSONL file, and a wrong memory is fixed by re-running
+<code>bd remember --key</code> with the same key.</p>
+<h2 id="4-essential-implementation-paths">4. Essential Implementation
+Paths</h2>
+<p><strong>Write.</strong> <code>rememberCmd</code>
+(<code>cmd/bd/memory.go:237-350</code>) runs the two guards, opens the
+role through <code>openMemories</code>, and calls <code>Remember</code>.
+The storage body is <code>RememberInTx</code>
+(<code>internal/storage/memoryops/memories.go:90-103</code>): probe the
+row with <code>configRowExistsInTx</code>, write with
+<code>issueops.SetConfigInTx</code>, return <code>replaced</code>, all
+in the caller's transaction. A probe failure fails the write. Key
+resolution is <code>memoryapi.ResolveKey</code>
+(<code>memoryapi.go:110-132</code>): an explicit key is used verbatim
+unless it is empty after trimming, otherwise <code>DeriveKey</code>.</p>
+<p><strong>Read, one key.</strong> <code>recallCmd</code> →
+<code>RecallInTx</code> (<code>memories.go:105-107</code>). A key stored
+as the empty string reads as not found.</p>
+<p><strong>Read, all.</strong> <code>memoriesCmd</code> →
+<code>List</code> → <code>ListInTx</code> (<code>:143-149</code>) →
+<code>MemoriesFromConfig</code>, then <code>FilterMemories</code> for a
+search term, case-folded on both sides
+(<code>memoryapi.go:144-160</code>).</p>
+<p><strong>Inject.</strong> <code>formatMemoriesForPrime</code>
+(<code>cmd/bd/prime.go:433-474</code>) reads the plane through the same
+role, or renders an unavailable or timeout banner.
+<code>renderPrimeMemories</code> (<code>:530-588</code>) sorts keys,
+emits whole memories until a count or byte cap binds, always emits at
+least one, and heads the block with <em>"showing N of M,
+alphabetical"</em> when anything was elided. Caps come from flags or the
+<code>prime.max-memories</code> and <code>prime.max-memory-chars</code>
+config keys, unlimited by default (<code>:501-517</code>). A custom
+<code>.beads/PRIME.md</code> replaces the workflow text and keeps the
+memories section (<code>:184-198</code>).</p>
+<p><strong>Forget.</strong> <code>forgetCmd</code> →
+<code>ForgetInTx</code> (<code>memories.go:120-133</code>): read, then
+delete the one encoded key, returning what was there. There is no prefix
+sweep, so forgetting <code>a</code> leaves <code>a-b</code>.</p>
+<p><strong>HTTP.</strong> <code>GET /v0/beads/memories</code>,
+<code>POST /v0/beads/memories</code>,
+<code>GET /v0/beads/memories/{key}</code> and
+<code>DELETE /v0/beads/memories/{key}</code>, with capabilities
+<code>memories.list</code>, <code>.remember</code>, <code>.get</code>
+and <code>.forget</code>
+(<code>internal/httpapi/routes.go:654-733</code>; handlers in
+<code>internal/httpapi/memories.go</code>). Authentication is a file of
+bearer tokens, each of which <em>"grants the whole surface"</em>
+(<code>internal/httpapi/auth.go</code>).</p>
+<p><strong>Import and export.</strong> <code>bd import</code> classifies
+<code>_type: memory</code> lines and writes each with
+<code>store.SetConfig(kvPrefix + memoryPrefix + mem.Key, …)</code>
+(<code>cmd/bd/import.go:298-311</code>, <code>:359-365</code>; the
+proxied twin is <code>import_proxied_server.go:118-124</code>).
+<code>bd export</code> reads them back on request.</p>
+<p><strong>Merge.</strong> <code>TryAutoResolveMergeConflicts</code>
+classifies conflicted tables and, for <code>config</code>, calls
+<code>configConflictsAreMemoryConvergent</code>
+(<code>mergesettle.go:662-682</code>) before resolving with
+<code>--theirs</code> (<code>:531-545</code>).</p>
+<p><strong>Hook installation.</strong> <code>bd setup claude</code>
+registers <code>bd prime --hook-json</code> on SessionStart and removes
+older PreCompact registrations, because <em>"SessionStart also fires
+after compaction with source=compact"</em>
+(<code>cmd/bd/setup/claude.go:272-300</code>).</p>
+<h2 id="5-memory-data-model">5. Memory Data Model</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Where</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>key</td>
+<td><code>config.key</code></td>
+<td><code>kv.memory.</code> + the user key, verbatim — spaces, capitals
+and punctuation survive</td>
+</tr>
+<tr>
+<td>value</td>
+<td><code>config.value</code></td>
+<td>the content, byte for byte; an empty value reads as absent</td>
+</tr>
+</tbody>
+</table></div>
+<p>The role's result types carry <code>Key</code>, <code>Value</code>,
+<code>Replaced</code> and <code>Found</code>
+(<code>memoryops/memories.go</code>), and nothing else is stored. There
+is no author, although <code>bd</code> resolves an actor for Dolt commit
+messages. There is no timestamp beyond the commit graph, no type or
+category, and no link to the issue or session a memory came from.</p>
+<p><strong>Scope is the database.</strong> A workspace's memories are
+visible to every agent and every clone that opens it, and to every clone
+that pulls from its remote. The <code>--global</code> flag selects a
+shared <code>beads_global</code> database instead
+(<code>cmd/bd/main.go:892</code>). There is no key on the row and no
+predicate on any read.</p>
+<p><strong>The storage encoding is written out in four more
+places.</strong> <code>StorageKey</code> calls itself <em>"THE ONE
+ENCODE IN THE TREE"</em> (<code>memoryops/memories.go:45-56</code>), and
+<code>import.go:361</code>, <code>import_proxied_server.go:121</code>,
+<code>export.go:278</code> and <code>export_auto.go:805</code> each
+spell <code>kvPrefix + memoryPrefix</code> inline. They agree today
+because they share constants. The import copies also skip
+<code>ResolveKey</code>: import drops a record only when key or value is
+empty (<code>import.go:306</code>). A whitespace-only key is therefore
+stored, and that is the row <code>ResolveKey</code>'s own comment calls
+<em>"unrecallable, unforgettable, reachable only through
+<code>bd config unset</code>"</em> (<code>memoryapi.go:115-127</code>).
+This was read, not reproduced.</p>
+<h2 id="6-retrieval-mechanics">6. Retrieval Mechanics</h2>
+<p>Retrieval is key lookup, full listing, or a substring filter. Nothing
+ranks. Injection is the whole plane in byte order of the key, which is
+stable and cache-friendly within a session.</p>
+<p>The optional caps decide what is dropped by the same alphabetical
+order. With <code>--max-memories 20</code>, the twenty memories whose
+keys sort first are injected and the rest are named in a count; age, use
+and importance play no part. The banner tells the model how to find the
+rest (<code>bd memories &lt;keyword&gt;</code>), which turns recall of
+an elided memory into a search the agent must think to run.</p>
+<p>Every SessionStart re-injects, including the one Claude Code fires
+after compaction. Prime has no branch on the hook source, and the
+installer removed the separate PreCompact registration for that
+reason.</p>
+<p>A store that cannot be read produces <em>"Skipped: beads storage
+unavailable (…) — persistent memories were NOT injected this session.
+Run <code>bd doctor</code>"</em> (<code>prime.go:624-630</code>), and a
+deadline produces a timeout banner. Only an empty healthy store and the
+absence of a workspace stay silent (<code>:425-432</code>).</p>
+<p><code>bd memories</code> returns every memory whose key or value
+contains the term, case-folded; the listing truncates each value to 120
+characters, and <code>bd recall</code> returns the full text.</p>
+<h2 id="7-write-mechanics">7. Write Mechanics</h2>
+<p>Writes are explicit and synchronous: a CLI call, an HTTP POST, or an
+import. No model is called and nothing is extracted, deduplicated beyond
+the key, or consolidated. A <code>remember</code> is one transaction and
+one Dolt commit, visible to the next prime in the workspace at once, and
+to other clones after a push and pull.</p>
+<p><strong>Update is by key.</strong> An explicit <code>--key</code>
+targets a memory deliberately. A derived key targets whatever memory
+shares the first eight words, and the command reports
+<code>Updated</code> without showing the text it replaced. The replaced
+value survives in Dolt history until a compaction flattens it.</p>
+<p><strong>Delete is by key</strong>, one row, one commit. The deleted
+text stays in Dolt history, and in any JSONL export or clone taken
+earlier. A later pull that carries a remote edit of the same key
+restores it (section 2).</p>
+<p><strong>Agent-generated content is handled like a person's.</strong>
+The two guards catch mistyped commands, not wrong claims. Nothing
+filters content, and the HTTP surface accepts writes from any holder of
+any token.</p>
+<h3 id="operational-cost">Operational cost</h3>
+<ul>
+<li>Write: synchronous, one transaction, one Dolt commit, no model
+call.</li>
+<li>Background: none for memory. Replication rides Dolt push and
+pull.</li>
+<li>Read: one <code>List</code> per prime. Injection is unbounded by
+default and bounded by the two caps when set, once per SessionStart
+including after compaction.</li>
+</ul>
+<h2 id="8-agent-integration">8. Agent Integration</h2>
+<p><code>bd setup</code> installs SessionStart hooks for Claude Code,
+Codex, Gemini and Cursor, each running <code>bd prime --hook-json</code>
+(<code>cmd/bd/setup/claude.go:272-300</code> and siblings).
+<code>bd prime --memories-only</code> exists for hosts that want only
+the memory section, and <code>--no-memories</code> for those that want
+none. The Python MCP server under <code>integrations/beads-mcp/</code>
+describes itself as a <em>"Task Tracker and Memory System"</em>; no tool
+in <code>src/beads_mcp/</code> names remember, recall or forget.</p>
+<p>The agent has the four verbs with no confirmation on any of them. The
+prime text tells it how to update in place with
+<code>bd remember --key</code> and how to browse.</p>
+<h2 id="9-reliability-safety-and-trust">9. Reliability, Safety, and
+Trust</h2>
+<p><strong>Transactions are honest.</strong> The probe and the act share
+one transaction, so <code>Updated</code>, <code>Forgot</code> and the
+value <code>forget</code> prints describe the row that was actually
+there. The package comment explains that the earlier
+<code>GetConfig</code>-then-<code>SetConfig</code> path with
+<code>existing, _ :=</code> made them <em>"hopeful rather than
+true"</em> (<code>memoryops/memories.go:1-15</code>).</p>
+<p><strong>Conflict resolution trades correctness for convergence,
+deliberately.</strong> Every clone pulling from one remote ends with the
+remote's value, which is the property a shared plane needs. The cost is
+that a local correction made while another clone edited the same key is
+lost. The only record is one stderr line at pull time, which an agent
+running <code>bd</code> in a hook may never surface.</p>
+<p><strong>No provenance.</strong> A memory cannot say who wrote it,
+when, or why, so an agent cannot weigh it, and an injected memory reads
+as a rule. The HTTP token model and the absence of a content filter mean
+anything that can reach the write path can install one.</p>
+<p><strong>Privacy.</strong> Export excludes memories by default. Dolt
+push does not, and every clone and remote holds every memory and its
+history.</p>
+<p><strong>Uncertainty is not representable.</strong></p>
+<p>Capability marks:</p>
+<ul>
+<li><code>negative_eval</code> — awarded; evidence in section 10.</li>
+<li><code>tombstone</code> — <code>forget</code> deletes the row.
+Nothing keyed on the rejected text prevents re-storing it, and a remote
+edit can bring it back.</li>
+<li><code>trust_state</code> — no status field.</li>
+<li><code>bitemporal</code> — no time field; Dolt's commit graph records
+when a value changed, not when it was true.</li>
+<li><code>scope_enforced</code> — the partition is the database. There
+is no scope key on the row and no predicate on a read.</li>
+<li><code>audit_log</code> — each memory write is a Dolt commit, which
+is version history. No memory event exists:
+<code>HookFiringStore.Memories</code> passes through because the hook
+vocabulary is issue-shaped
+(<code>internal/storage/hook_memories.go</code>), and telemetry spans go
+to a trace backend.</li>
+<li><code>human_review</code> — <code>bd memories</code> displays, and
+the same verbs are open to the agent.</li>
+</ul>
+<h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
+Benchmarks</h2>
+<p>Nothing was built or run for this report; everything below is from
+reading the tests at the pin.</p>
+<p><strong>The negative case.</strong>
+<code>TestProxiedServerMemory</code> →
+<code>remember_memories_forget_recall_journey</code>
+(<code>cmd/bd/memory_proxied_integration_test.go:35-124</code>) stores
+<code>dolt-phantoms</code> and a derived-key memory, asserts
+<code>bd memories phantom</code> contains the first and not the second
+(<code>:77-84</code>), then forgets <code>dolt-phantoms</code> and
+asserts a full <code>bd memories</code> no longer lists it
+(<code>:102-110</code>). The positive side is asserted first each time,
+so an empty result fails. The suite skips without
+<code>BEADS_TEST_PROXIED_SERVER=1</code>, and the CI workflow sets it
+(<code>.github/workflows/main.yml:920</code>).</p>
+<p><strong>Commit shape.</strong>
+<code>remember_creates_dolt_commit</code> asserts exactly one Dolt
+commit per proxied <code>remember</code> (<code>:177-192</code>). The
+embedded <code>write_verbs_flag_the_auto_commit_epilogue</code> asserts
+one per <code>remember</code>, one per <code>forget</code>, and none for
+a <code>forget</code> of an absent key
+(<code>cmd/bd/memory_embedded_test.go:294-325</code>). Its comment names
+the failure it exists for: a working-set row <em>"recalls and lists
+exactly like a committed one"</em>, so every other assertion would pass
+without it.</p>
+<p><strong>Meaning, without a database.</strong>
+<code>internal/memoryapi/memoryapi_test.go</code> pins
+<code>DeriveKey</code> with a golden table and a cap property, and
+covers the refusals and the filter.
+<code>internal/storage/memoryops/memories_test.go</code> asserts the
+plane excludes settings rows, generic <code>kv.</code> rows and a key
+that merely contains the prefix, and keeps a memory named after a
+setting (<code>:33-73</code>). <code>prime_memory_caps_test.go</code>
+covers both caps, the whole-memory boundary, the first-memory guarantee
+and the banner.</p>
+<p><strong>A case that asserts nothing.</strong>
+<code>memories_search_no_match</code>
+(<code>memory_embedded_test.go:264-268</code>) runs a search for a term
+nothing contains and ends <code>_ = out</code>, with the comment
+<em>"Should succeed but show no results or empty"</em>. It fails only if
+the command errors.</p>
+<p><strong>Not covered.</strong> The merge resolver's memory branch was
+not traced to a test in this reading. No test imports a whitespace-only
+memory key. No retrieval-quality evaluation exists, which is consistent
+with a plane that does not rank. No paper or citation block is in the
+tree.</p>
+<h2 id="11-for-your-own-build">11. For Your Own Build</h2>
+<h3 id="steal">Steal</h3>
+<ul>
+<li><strong>Probe and act in one transaction, and report what the probe
+saw.</strong> The verb in the reply (<code>Remembered</code> or
+<code>Updated</code>, <code>Forgot</code> with the old text) is a claim;
+make it a true one.</li>
+<li><strong>Freeze the key derivation and pin it with a golden
+table.</strong> Any change to a content-derived key re-keys every memory
+silently; the comment and the test here treat that as the invariant it
+is.</li>
+<li><strong>Refuse the common wrong call at the door.</strong> A single
+word that names a command, and a bare key typed as content, are what
+agents actually send.</li>
+<li><strong>Make a failed read loud in the injected text.</strong> "No
+memories" and "memories not loaded" must look different to the model and
+to the operator.</li>
+<li><strong>Cap injection at whole-memory boundaries, always emit one,
+and say what was elided and how to find it.</strong></li>
+<li><strong>Reserve the namespace.</strong> The generic key-value
+command refuses the memory prefix, so no other writer can place rows
+there that the merge rule would then treat as memories.</li>
+</ul>
+<h3 id="avoid">Avoid</h3>
+<ul>
+<li><strong>Resolving concurrent edits to the remote without telling the
+reader.</strong> Convergence is right for a shared plane; losing a
+correction with only a stderr line is not. Record the superseded value
+somewhere a person will see.</li>
+<li><strong>Eliding by key order.</strong> If a cap must drop memories,
+drop by something that means something — age, last use, a pin.</li>
+<li><strong>A second encode path that skips validation.</strong> Import
+writes the storage key itself and accepts what the validated path
+refuses.</li>
+<li><strong>Reserving a namespace another project writes into, without a
+migration.</strong> <a href="../gastown/">Gas Town</a> wrote its typed
+memories under <code>memory.</code> through the generic command; the
+reservation broke that path in a minor release, and the suite on each
+side stayed green.</li>
+</ul>
+<h3 id="fit">Fit</h3>
+<p>This suits a single developer or a small team whose agents already
+use beads for work tracking and want a handful of durable rules injected
+every session, synced with the issues at no extra cost. The engineering
+is careful, and the plane is deliberately primitive. A reader who needs
+memories to be found rather than listed, attributed, dated or kept out
+of other clones needs those layers, and nothing here provides them.
+Anyone reaching for beads only for memory is taking on a Dolt-backed
+issue tracker to get a key-value table.</p>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Is the <code>--theirs</code> memory resolution covered by a test?
+None was found in this reading; <code>mergesettle</code> is large and
+its tests were not read.</li>
+<li>Does the Dolt compaction beads documents flatten memory history, and
+on what schedule by default?</li>
+<li>How many memories do real workspaces hold, and how often are the
+caps set?</li>
+<li>Does the proxied server enforce anything per client beyond the
+shared token?</li>
+</ul>
+<h2 id="appendix-file-index">Appendix: File Index</h2>
+<ul>
+<li><strong>Role and meaning:</strong>
+<code>memoryops/memories.go</code>, <code>memoryops/errors.go</code>,
+<code>internal/memoryapi/memoryapi.go</code>,
+<code>internal/storage/kvkeys/kvkeys.go</code>.</li>
+<li><strong>Storage:</strong>
+<code>internal/storage/memoryops/memories.go</code>,
+<code>internal/storage/dolt/memories.go</code>,
+<code>internal/storage/embeddeddolt/memories.go</code>,
+<code>internal/storage/uow/memories.go</code>,
+<code>internal/storage/hook_memories.go</code>.</li>
+<li><strong>CLI:</strong> <code>cmd/bd/memory.go</code>,
+<code>cmd/bd/kv.go</code>, <code>cmd/bd/prime.go</code>,
+<code>cmd/bd/import.go</code>,
+<code>cmd/bd/import_proxied_server.go</code>,
+<code>cmd/bd/export.go</code>, <code>cmd/bd/setup/claude.go</code>.</li>
+<li><strong>HTTP:</strong>
+<code>internal/httpapi/routes.go:654-733</code>,
+<code>internal/httpapi/memories.go</code>,
+<code>internal/httpapi/auth.go</code>.</li>
+<li><strong>Replication:</strong>
+<code>internal/storage/versioncontrolops/mergesettle.go:380-400, 480-545, 650-700</code>.</li>
+<li><strong>Tests:</strong>
+<code>cmd/bd/memory_proxied_integration_test.go</code>,
+<code>cmd/bd/memory_embedded_test.go</code>,
+<code>cmd/bd/prime_memory_caps_test.go</code>,
+<code>internal/memoryapi/memoryapi_test.go</code>,
+<code>internal/storage/memoryops/memories_test.go</code>,
+<code>internal/storage/*/memories_contract_test.go</code>.</li>
+</ul>
+<h3 id="recorded-searches">Recorded searches</h3>
+<p>Checked against the checkout at the pinned revision.</p>
+<ul>
+<li><code>rg -n '\.Remember\(|RememberInTx\(|\.Forget\(|ForgetInTx\(' --type go -g '!*_test.go'</code>
+— callers in <code>cmd/bd/memory.go</code>,
+<code>internal/httpapi/memories.go</code>, the telemetry wrapper and the
+two store bodies; no background writer.</li>
+<li><code>rg -n 'kvPrefix \+ memoryPrefix|MemoryConfigKeyPrefix \+' --type go -g '!*_test.go'</code>
+— <code>import.go:361</code>, <code>import_proxied_server.go:121</code>,
+<code>export.go:278</code>, <code>export_auto.go:805</code>, beside
+<code>StorageKey</code>.</li>
+<li><code>rg -n -i 'remember|memories|forget|recall' integrations/beads-mcp/src/beads_mcp/*.py</code>
+— one match, the module docstring; no memory tool.</li>
+<li><code>rg -n -i 'memor' internal/audit/*.go -g '!*_test.go'</code> —
+no match.</li>
+<li><code>rg -n 'BEADS_TEST_PROXIED_SERVER' .github/</code> — set in
+<code>main.yml:920</code>; the shard script documents that tests skip
+without it.</li>
+<li><code>grep -rliE 'arxiv|bibtex|@article|@misc|doi\.org' . --exclude-dir=.git --exclude-dir=node_modules</code>
+— no match, and no <code>CITATION.cff</code>.</li>
+</ul>
+<h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — <a
+href="https://github.com/gastownhall/beads/commit/a1bc167b54922b7a3953b23d4427aa7fb46409fc"><code class="commit-id" title="a1bc167b54922b7a3953b23d4427aa7fb46409fc">a1bc167b…</code></a>
+— first reading, at the head of <code>main</code>, a commit from the
+same day. One mark, <code>negative_eval</code>. Screened before reading:
+six auto-run surfaces (<code>.claude/settings.json</code> with two
+PreToolUse command filters, <code>.claude-plugin/</code>,
+<code>.devcontainer/</code>, <code>.githooks/</code>,
+<code>.github/copilot-instructions.md</code>), three build-time
+execution points, eleven dependency files inside the cooldown — every
+file in a depth-1 clone dates to the tip — and <code>AGENTS.md</code>
+and <code>CLAUDE.md</code> recorded as data. Read with <code>grep</code>
+and <code>sed</code>; nothing installed, built or run. The issue tracker
+is out of scope and only the memory plane is covered.</p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="../../">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-name">Agent Memory Atlas</span>
+        </a>
+        <p>Code-grounded notes for people building agents that remember.</p>
+      </div>
+      <div class="footer-links">
+        <a href="../../patterns/">Design patterns</a>
+        <a href="../../capabilities/">Capability index</a>
+        <a href="../../verdicts/">Repo-by-repo verdicts</a>
+        <a href="../../overview/">Comparative report</a>
+        <a href="../../compare/">Comparative matrix</a>
+        <a href="../../families/">System families</a>
+        <a href="../../appendix/">Pins and known limitations</a>
+        <a href="../../benchmarks/">Benchmarking memory</a>
+        <a href="../../methodology/per-repo-report-format/">Review method</a>
+        <a href="../../contributing/">Contributing</a>
+        <button class="footer-consent" type="button" data-consent-reopen>Cookie choice</button>
+        <a href="../../discord.html">Discord</a>
+        <a href="https://github.com/neoneye/agent-memory-atlas">Source</a>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Pinned exactly, not to `mermaid@11`. Every diagram in this atlas is
+      // rendered in the reader's browser by whatever the CDN serves, and a
+      // floating major-version range meant a minor release upstream could break
+      // hundreds of diagrams hours after a green build here, with nothing in
+      // the repository having changed. `check_mermaid.py` cannot catch that: it
+      // is two regexes for syntax errors already seen once, not a parser, so
+      // the renderer is the only thing that knows and it runs after publish.
+      // A pin turns "the CDN changed" into a diff.
+      //
+      // Raising it is a deliberate edit: bump the version, rebuild, and open a
+      // report page with a state diagram and one with a flowchart before
+      // pushing.
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.esm.min.mjs";
+      const diagrams = document.querySelectorAll("pre.mermaid");
+      diagrams.forEach((pre) => {
+        const holder = document.createElement("div");
+        holder.className = "mermaid";
+        holder.textContent = pre.textContent;
+        // The build folds the source into a <details> inside the figure so an
+        // unrendered page reads as a captioned diagram rather than as loose
+        // edge labels. With a renderer available the rendered diagram takes
+        // that slot, and the source disclosure goes away.
+        const source = pre.closest("details.diagram-source");
+        if (source) {
+          source.replaceWith(holder);
+        } else {
+          pre.replaceWith(holder);
+        }
+      });
+      if (diagrams.length) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "base",
+          themeVariables: {
+            fontFamily: "Manrope, sans-serif",
+            primaryColor: "#e7efe9",
+            primaryTextColor: "#101b2a",
+            primaryBorderColor: "#3d6b59",
+            lineColor: "#739080",
+            secondaryColor: "#f4e2bd",
+            tertiaryColor: "#f7f4ec"
+          }
+        });
+      }
+    </script>
+    <script src="../../assets/main.js"></script>
+  </body>
+</html>
