@@ -139,6 +139,13 @@ def render_report(
         f"revision: {revision}\n"
         f"revision_url: {repository_url}/commit/{revision}\n"
         f"analyzed_at: {analyzed_at}\n"
+        # Rendered in the header band, so the summary can open with the finding.
+        # check_report_shape.py requires the first three on any report read
+        # after its cutover.
+        'licence: ""\n'
+        'size: ""\n'
+        'activity: ""\n'
+        'tests: ""\n'
         # Both blocks are required. generate_matrix.py fails the build if the
         # matrix block is absent or incomplete, and if `capabilities` is
         # missing entirely — an empty string means "assessed, carries none",

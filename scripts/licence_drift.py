@@ -101,6 +101,11 @@ SPDX = re.compile(
     r"MulanPSL-2\.0|Unlicense|CC0|WTFPL|ISC|Zlib)\b")
 CONTEXT = re.compile(r"licen[cs]e|licensed|released under|ships under", re.I)
 
+#: The header-band field. Preferred over the prose when it holds one SPDX id; a
+#: compound expression falls back to the sentence in section 1, which is where
+#: a restrictive or dual licence is still stated.
+FRONTMATTER_LICENCE = re.compile(r'^licence:\s*"?([^"\n]+?)"?\s*$', re.M)
+
 ALIASES = {"Apache 2.0": "Apache-2.0", "Elastic License 2.0": "Elastic-2.0",
            "Business Source License": "BUSL-1.1"}
 
@@ -163,7 +168,11 @@ def reports(slugs: list[str] | None):
         if not url or not rev or "/tree/" in url.group(1):
             continue
         body = text.split("---", 2)[2] if text.startswith("---") else text
-        claim = stated(body)
+        field = FRONTMATTER_LICENCE.search(text)
+        if field and SPDX.fullmatch(field.group(1)):
+            claim = ALIASES.get(field.group(1), field.group(1))
+        else:
+            claim = stated(body)
         if not claim:
             continue
         repo = url.group(1).replace("https://github.com/", "").rstrip("/")

@@ -1,7 +1,7 @@
 ---
 title: "PLUR"
 eyebrow: "A draft is written but not injected"
-description: "A local-first shared memory where the agent authors plain-text engrams into a YAML file that is the source of truth, a commitment of draft withholds one from injection while leaving it retrievable, validity time sits beside record time and both are filtered on read, every mutation appends to a monthly JSONL history that never syncs, and a retired engram is deliberately invisible to the content-hash dedup that would have stopped it coming back."
+description: "A local-first shared memory for coding agents: plain-text engrams in one YAML file, where a draft stays retrievable but is never injected."
 root: ../..
 page_kind: system
 source_name: "plur-ai/plur"
@@ -10,6 +10,10 @@ archive_name: "plur-ai--plur"
 revision: e26901c1376a5c9c37f94c1c7d84714e66e82797
 revision_url: https://github.com/plur-ai/plur/commit/e26901c1376a5c9c37f94c1c7d84714e66e82797
 analyzed_at: 2026-09-19
+licence: "Apache-2.0"
+size: "66,632 lines of TypeScript in ten packages"
+activity: "927 commits by thirteen authors, 19 March – 8 September 2026"
+tests: "4,893 cases in 82,289 lines"
 capabilities: "trust_state, bitemporal, scope_enforced, audit_log, negative_eval"
 capability_evidence:
   trust_state: "a commitment of draft that withholds an engram from injection while leaving it retrievable | packages/core/src/inject.ts:172-173, :657, :697, packages/mcp/src/tools.ts:1048, :1147, packages/core/src/index.ts:3440, :3489, packages/core/src/feedback.ts:45-53 | `commitment` is a five-value field — exploring, leaning, decided, locked, draft — and `skipForApproval` returns true for `draft`, which the injection loop uses to `continue` past the engram in both its selection and its spreading-activation pass; the producer is agent-reachable, since `plur_learn` and `plur_learn_batch` both take a `commitment` argument that reaches the persisted shape, and feedback cannot launder the value because `nextCommitment` returns an unrecognised state untouched. Combined with `status: retired`, filtered at index.ts:4837, the ladder is candidate, accepted, rejected | packages/core/test/draft-approval-gate.test.ts:38-67, packages/core/test/feedback.test.ts:126-129"
@@ -36,17 +40,17 @@ matrix:
 
 ## 1. Executive Summary
 
-PLUR is a local-first shared memory for coding agents — Apache-2.0, 927 commits
-between 19 March and 8 September 2026 by thirteen authors, 66,632 lines of
-TypeScript outside tests across ten packages, beside 82,289 lines of tests
-holding 4,893 cases. The screen found three auto-run surfaces — two plugin
-manifests and a hooks directory — one build-time execution point and twelve
-unpinned surfaces; nothing was installed or run, and the read was made from a
-full clone. The store is plain files under `~/.plur`, with `engrams.yaml` as the
-source of truth and SQLite, PGLite or Postgres attachable as an index the code
-describes as a cache rather than truth.
+PLUR is a local-first shared memory for coding agents: the agent writes
+plain-text engrams into `~/.plur/engrams.yaml`, which is the source of truth,
+and SQLite, PGLite or Postgres attach only as an index the code describes as a
+cache rather than truth. What sets it apart is a commitment level on every
+engram, where `draft` keeps a lesson retrievable and searchable but out of the
+model's context. Its weak points come after that: nothing in this tree can
+approve a draft, the direct correction path overwrites without a record, and a
+retired engram is deliberately invisible to the dedup that would stop it coming
+back.
 
-**Six of seven marks, and the one that decides the character of the system is
+**Five of seven marks, and the one that decides the character of the system is
 `trust_state`.** An engram carries a `commitment` — exploring, leaning, decided,
 locked or draft — and `skipForApproval` returns true for `draft`
 (`packages/core/src/inject.ts:172-173`), which the injection loop uses to skip
@@ -57,7 +61,7 @@ takes a `commitment` argument that flows into the persisted shape, and feedback
 cannot launder the value because the transition function returns an unrecognised
 state untouched.
 
-The other five. `bitemporal` on a temporal block the schema calls bi-temporal
+The other four. `bitemporal` on a temporal block the schema calls bi-temporal
 anchoring, with `valid_from` and `valid_until` beside `learned_at` and
 `ingested_at`, filtered by the retrieval path and the injection gate
 independently of the record timestamps. `scope_enforced` on a scope with two
