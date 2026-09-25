@@ -70,10 +70,10 @@ able to move a memory between them is worse than one honest bucket.
 
 ### Read these first
 
-- [Graphify](../../systems/graphify/) — the cheapest working instance and the one to copy when starting: three states, none supplied by a model, all derived.
-- [CLIO](../../systems/clio/) — what full enforcement looks like, and then what happens when the input to it is wrong.
-- [Magic Context](../../systems/magic-context/) — two independent axes rather than one status column.
-- [Daimon](../../systems/daimon/) — two states, `verbatim` and `inferred`, where a transition is made by code disproving the model.
+- [OmniIntelligence](../../systems/omniintelligence/) — `candidate`, `provisional`, `validated` and `deprecated` on one column, with a lifecycle filter on all three injection queries.
+- [AgentDatabase](../../systems/agentdatabase/) — a `disputed` state that takes a claim out of service without anyone deciding it is wrong, and a status that gates what the agent boots with.
+- [Hats](../../systems/one-agent-many-hats/) — a `canary` state between `draft` and `active`, injected into a deterministic half of runs so the other half is a control group.
+- [Magic Context](../../systems/magic-context/) — a lifecycle status the reads filter on, beside a verification status that gates nothing: the difference between a state and a label.
 - [Membrane](../../systems/membrane/) — the enum without the read predicate, which is the failure this page exists to name.
 
 ### Every instance

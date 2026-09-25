@@ -76,7 +76,7 @@ audit trails that disagree are worse than one.
 
 ### Read these first
 
-- [Atomic Agent](../../systems/atomic-agent/) — the clearest implementation, and its shape is the one to copy.
+- [Midas](../../systems/midas/) — a hash-chained log of every SQLite mutation, with committed tests on the chain itself and no memory content in the entries.
 - [aimee](../../systems/aimee/) — append-only enforced twice by independent means, triggers and a `SELECT`-only runtime role, with a statement of which one an attacker can remove.
 - [Palazzo](../../systems/palazzo/) — the log entry is a precondition of the mutation rather than a consequence of it.
 - [CSM](../../systems/csm/) — distinguishes considered, returned and injected memories in what it records.

@@ -8,6 +8,17 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-25-are-the-patterns-patterns.md](2026-09-25-are-the-patterns-patterns.md) —
+  all twenty-one pattern pages audited against the corpus and, for the
+  load-bearing claims, the pinned code. Eighteen are real patterns; explicit
+  write destination restates the scope page, promotion between tiers restates
+  the trust-state page, and skills-as-procedural-memory has one instance of its
+  own definition. Six stances are wrong, the tombstone's most visibly: 25
+  consulted instances under an "advocacy — one or two" label. 87 verified
+  errors, mostly contradicted "only" claims and pages left behind by re-reads,
+  plus fifteen report defects. The trust-state and audit exemplar picks made
+  that morning cited systems without the mark; they are replaced and now
+  checked.
 - [2026-09-25-splitting-the-overview.md](2026-09-25-splitting-the-overview.md) —
   decided and built: option B. `content/overview.md` rendered to `/compare/` and held
   three kinds of page: a 41,000-word synthesis, a 218,049-word table generated
