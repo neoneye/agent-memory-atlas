@@ -36,7 +36,7 @@ matrix:
 ## 1. Executive Summary
 
 Arcon is a local-first "cognitive architecture for a persistent digital
-companion" — about 15,900 lines of TypeScript across seven packages, 24 commits
+companion" — about 27,000 lines of TypeScript across seven packages, 42 commits
 since 29 May 2026, running against local Ollama with a SQLite store. Its pitch
 is that memory alone is not enough: identity, mood, emotion, relationships and
 interests should shape what the companion says before it says it, and each has
@@ -355,11 +355,11 @@ in the memory path: extracted content becomes a candidate and, if reviewed
 
 ## 10. Tests, Evals, and Benchmarks
 
-252 cases across 26 files, using `node:test` and `node:assert` — memory
+543 cases across 52 files, using `node:test` and `node:assert` — memory
 extractor, pipeline, ranking, repository, retriever, entity graph, context
 builder, two phase suites for retrieval and reflection, plus the personality
 engines and the voice package. I did not run them.
-For a 24-commit project this is a good ratio, and the pipeline and repository
+For a 42-commit project this is a good ratio, and the pipeline and repository
 suites cover the decision branches.
 
 **The negative retrieval tests carry their controls, and that is what earns the
@@ -476,6 +476,8 @@ this reading agrees with it for reasons the README does not list.
   vacuous negative), `packages/personality/tests/`, `packages/ai/tests/`
 
 ## History
+
+**2026-09-25** — [`f04a5e493510a7b293f8ef986064f9c95afa427e`](https://github.com/vmDeshpande/Arcon/commit/f04a5e493510a7b293f8ef986064f9c95afa427e) — census re-measured at the same commit, read and never run. The commits API's last page gives 42 commits reachable from this pin, 27 at `ef74011` and 24 at `7bbbbc5`, so the second re-read was 15 commits on. TypeScript anywhere in the tree, tests included, counts 26,981 lines from a depth-1 fetch; the same count gives 15,946 at `7bbbbc5`, the summary's first-reading figure. `*.test.ts` files number 52 with 543 `it` and `test` calls; the same count gives 26 files and 252 calls at `ef74011`, section 10's figure. No mark moved.
 
 **2026-09-19** — [`f04a5e493510a7b293f8ef986064f9c95afa427e`](https://github.com/vmDeshpande/Arcon/commit/f04a5e493510a7b293f8ef986064f9c95afa427e) — `trust_state` re-tested, and the record's negative half was wrong in four places, all of them wrong when it was written rather than changed since: `packages/memory/src/personal-memory.ts` is byte-for-byte at the same line numbers at the previous pin. It said `CONTRADICTED` is assigned by nothing, `OBSOLETE` likewise, `MemorySourceType.USER_CONFIRMED` has no writer anywhere, and a `PENDING_CONFIRMATION` memory has no path out of the state. Each of the four has a writer in that file, and the four together are a guarded state machine: `markContradicted` (`:286-300`), `confirmMemory` (`:314-339`), `rejectMemory` (`:347-366`) and `resolveContradiction` (`:368-394`). Every one refuses to act on a row that is not already in the status it transitions from, and every one writes a mutation row carrying the previous status, the new status and a source of user or system. `confirmMemory` is what stamps `USER_CONFIRMED` and increments `evidenceCount`. `packages/memory/tests/memory-lifecycle.test.ts:135-205` walks the contradiction states end to end. The effect the report described is real and the reason given was not. The four are library methods, mirrored on the pipeline (`memory-pipeline.ts:386-393`), and nothing above the library calls them: `apps/server` imports `MemoryRepository` and `MemoryPipeline` and exposes no route for any of them, and there is no CLI. So a pending memory is unresolvable from a running Arcon and resolvable from the API in one call — the dead end is in the surface, not in the state machine. The declared-versus-written table, section 1, the matrix rows and the verdict entry were corrected. Screened again first; nothing was installed and no suite was run.
 

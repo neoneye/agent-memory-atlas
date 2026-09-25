@@ -36,10 +36,10 @@ matrix:
 
 ## 1. Executive Summary
 
-repowise is a codebase intelligence layer — roughly 284,000 lines of Python
+repowise is a codebase intelligence layer — roughly 362,000 lines of Python
 across a core, a server and a CLI, plus TypeScript for a dashboard, a VS Code
-extension and a web UI, AGPL-3.0, 1,310 commits and 64 contributors since 23
-March 2026, at version 0.44.0. The premise is that an agent spends most of its
+extension and a web UI, AGPL-3.0, 1,743 commits and 94 contributors since 23
+March 2026, at version 0.51.0. The premise is that an agent spends most of its
 budget rediscovering a repository it has already been told about, so the
 repository is indexed once into five layers and served over MCP.
 
@@ -458,6 +458,8 @@ was true anyway.
 | `docs/BENCHMARKS.md` | Ten rows, one of them a loss, two of them "not measured" |
 
 ## History
+
+**2026-09-25** — [`04e1dc67afdaf4c491e846a1fc75805931e132e8`](https://github.com/repowise-dev/repowise/commit/04e1dc67afdaf4c491e846a1fc75805931e132e8) — census re-measured at the same commit, read and never run. The commits API gives 1,743 commits reachable from this pin with 94 distinct author logins, the oldest dated 23 March 2026; the same method gives 1,310 and 64 at `370793f`, the first reading's figures. The root `pyproject.toml` declares 0.51.0. Python under `packages/core`, `packages/server` and `packages/cli` counts 362,402 lines from a depth-1 fetch, against 284,136 at `370793f`. The summary and the verdict carried the first reading's figures and now state these. No mark moved.
 
 **2026-09-19** — re-pinned to [`04e1dc67afdaf4c491e846a1fc75805931e132e8`](https://github.com/repowise-dev/repowise/commit/04e1dc67afdaf4c491e846a1fc75805931e132e8), 30 commits on. All five marks stand; `human_review`'s anchors all moved and were re-verified. `record_acceptance` is now at `crud/authority.py:480` and the module states its own invariant at `:495` — *"The only writer of `decision_acceptances`"* — with the single `DecisionAcceptance(` construction at `:564` inside it. The mark was producer-tested rather than carried forward: the MCP server's nineteen tool modules are all reads and analyses, so nothing on the agent's declared surface accepts a decision, and the read path still joins the acceptance table — `test_an_active_status_without_an_acceptance_is_a_candidate` is the assertion that makes it checkable. The limit is recorded as what it is: the accepter's identity is self-declared and unverified, and a general shell can drive the CLI, which this atlas treats as distinct from an approve verb the agent holds. Screened again first; nothing was installed and no suite was run.
 

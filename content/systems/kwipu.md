@@ -31,13 +31,13 @@ matrix:
 ## 1. Executive Summary
 
 Kwipu is a local Graph RAG over a folder of Markdown notes, built for an
-Obsidian vault and indifferent to whether it is one. MIT; 22 commits between
-21 April and 18 May 2026 by two authors, nothing since; 1,273 lines in
-`geode_graph.py`, 436 in `lang_config.py`, 99 in `kwipu_mcp_server.py`;
-Python 3.11 on LlamaIndex with Ollama for both the generation and the
-embedding model. The screen found no auto-run surface and one unpinned
-manifest — six requirements with no version at all — and nothing was
-installed or run.
+Obsidian vault and indifferent to whether it is one. MIT; 24 commits by two
+authors, 22 between 21 April and 18 May 2026 and two on 7 September; 1,828
+lines in `geode_graph.py`, 436 in `lang_config.py`, 146 in
+`kwipu_mcp_server.py`; Python 3.11 on LlamaIndex with Ollama for both the
+generation and the embedding model. The screen found no auto-run surface and
+no unpinned manifest — `requirements.txt` pins all ten requirements with
+`==` — and nothing was installed or run.
 
 The memory is a LlamaIndex `PropertyGraphIndex` persisted to
 `storage_graph/` (`geode_graph.py:91`). A note becomes a document keyed by
@@ -388,10 +388,10 @@ Python. The project has been quiet since May 2026.
 
 | Path | Lines | What it holds |
 | --- | --- | --- |
-| `geode_graph.py` | 1,273 | Constants and prompt (`:88-138`), `BM25ChunkRetriever` (`:165`), `TemporalMetadataRetriever` (`:271`), `ReadWriteLock` (`:340`), frontmatter and wikilink extraction (`:369-563`), `WritHerGraphRAG` (`:566-943`), hash cache and `FileWatcher` (`:949-1110`), Ollama preflight (`:1113`), REPL (`:1171`) |
+| `geode_graph.py` | 1,828 | Constants and prompt (`:88-138`), `BM25ChunkRetriever` (`:165`), `TemporalMetadataRetriever` (`:271`), `ReadWriteLock` (`:340`), frontmatter and wikilink extraction (`:369-563`), `WritHerGraphRAG` (`:566-943`), hash cache and `FileWatcher` (`:949-1110`), Ollama preflight (`:1113`), REPL (`:1171`) |
 | `lang_config.py` | 436 | Stop words, month names, temporal keywords, relation patterns and fallbacks per language, `tokenize`, `detect_language`, `extract_date_tokens`, `infer_relation` |
-| `kwipu_mcp_server.py` | 99 | FastMCP server, lazy engine in fast mode (`:72`), `query_graph` (`:81-92`) |
-| `requirements.txt` | 8 | Six unpinned requirements, `rich`, `mcp` |
+| `kwipu_mcp_server.py` | 146 | FastMCP server, lazy engine in fast mode (`:72`), `query_graph` (`:81-92`) |
+| `requirements.txt` | 10 | Ten requirements, each pinned with `==`, `rich` and `mcp` among them |
 | `knowledge_base/examples/` | 8 files | The example vault |
 
 Searches behind the absence claims above, run from the repository root:
@@ -407,6 +407,8 @@ rg -c -i 'arxiv|doi\.org|citation' README.md                          # 0: no pa
 ```
 
 ## History
+
+**2026-09-25** — [`01dd7d40fd5b071fc158aec4fcd69b85be4c0a22`](https://github.com/benmaster82/Kwipu/commit/01dd7d40fd5b071fc158aec4fcd69b85be4c0a22) — census re-measured at the same commit, read and never run. The commits API lists 24 commits reachable from this pin by two author logins: 22 from 21 April to 18 May 2026 and two on 7 September. Raw files at the pin give 1,828 lines in `geode_graph.py` and 146 in `kwipu_mcp_server.py`, against 1,273 and 99 at `908f0e4`; `lang_config.py` is 436 at both. `requirements.txt` holds ten requirements, each pinned with `==`. `def test_` counts 75 across the six files under `tests/`, matching section 10. The summary, the file index, the verdict and the family paragraph now state these. No mark moved.
 
 **2026-09-17** — [`01dd7d40fd5b071fc158aec4fcd69b85be4c0a22`](https://github.com/benmaster82/Kwipu/commit/01dd7d40fd5b071fc158aec4fcd69b85be4c0a22) — re-read two commits on, 42 files and +15,937 lines, almost all of it a test suite where the previous reading found none. Marks unchanged at none.
 

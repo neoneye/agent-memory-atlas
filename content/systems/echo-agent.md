@@ -35,7 +35,7 @@ matrix:
 ## 1. Executive Summary
 
 Echo Agent is a **self-hostable long-running agent** with memory as a
-first-class subsystem: 94,427 lines of Python in the package, 409 test files,
+first-class subsystem: 94,427 lines of Python in the package, 514 test files,
 MIT, bilingual documentation with the Chinese README as the primary one. The
 memory layer alone has eighteen modules with names that read like this atlas's
 table of contents — `contradiction.py`, `forgetting.py`, `consolidator.py`,
@@ -278,7 +278,7 @@ in `memory_audit.jsonl` where no one asks.
 
 ## 10. Tests, Evals, and Benchmarks
 
-360 test files against 76,594 lines of package source, and the memory modules
+514 test files against 94,427 lines of package Python, and the memory modules
 have dedicated suites. I did not run them.
 
 **Committed cases do assert that particular material must not be retrieved**,
@@ -380,9 +380,11 @@ supersession channel) are among them.
 - `echo_agent/memory/reviewer.py` — the LLM reviewer and its rejection mapping
 
 **Tests**
-- `tests/` — 360 files
+- `tests/` — 514 test files
 
 ## History
+
+**2026-09-25** — [`f612b74f5721a80237a709a3f625303722388a4b`](https://github.com/fuyuxiang/echo-agent/commit/f612b74f5721a80237a709a3f625303722388a4b) — census re-measured at the same commit from a depth-1 fetch, read and never run. Python under `echo_agent/` counts 94,427 lines across 370 files, matching the summary; section 10 and the file index carried the first reading's 76,594 lines and 360 files. `tests/` holds 514 `test_*.py` files counted recursively; 409 is the number of Python files directly under `tests/`, which misses its ten subdirectories. All three places now state 94,427 lines and 514 test files. No mark moved.
 
 **2026-09-18** — [`f612b74f5721a80237a709a3f625303722388a4b`](https://github.com/fuyuxiang/echo-agent/commit/f612b74f5721a80237a709a3f625303722388a4b) — re-read at the same commit; `main` has not moved since 1 September 2026. The scope and negative-evaluation anchors were re-verified and hold, including `_visible_in_session`'s fail-closed branch for a USER entry with no `source_session`. The `audit_log` record pointed at the wrong file: `_append_audit` is in `echo_agent/memory/service.py:432-464`, not `store.py`, and the record now carries what it writes, that `agent/loop.py:301` wires it unconditionally in production, and the two limits — rotation splits the trail across files, and the append sits in a `try` whose `except` logs at debug, so a failed audit is silent while the mutation proceeds. One claim is narrowed rather than reversed: the report said no rejected-value record exists, and none is keyed on the value, but `_reject` does append an entry with the operation, the entry id, the provenance word, the reason and `ok: false` — the refusals are written down, just nowhere a later write consults. The withheld marks were re-tested and stay withheld for the reasons the report already gives: provenance ranks *write* authority rather than filtering the read path, and the reviewer is an `LLMProvider`.
 

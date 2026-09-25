@@ -38,8 +38,9 @@ matrix:
 
 ## 1. Executive Summary
 
-Provem is 21,444 lines of Python with 7,658 lines of tests, positioned not as a
-memory but as a **governance layer over one** — right-to-erasure, tenant
+Provem is 25,506 lines of Python under `src/` with 12,111 lines of tests,
+positioned not as a memory but as a **governance layer over one** —
+right-to-erasure, tenant
 isolation, injection defense and a tamper-evident audit, able to run over Mem0 or
 Graphiti or as its own store. Its README states the thesis in a sentence: the
 hard question is no longer *"can I find it?"* but *"am I allowed to use it?"*
@@ -453,6 +454,8 @@ rather than no longer serves it.
 - Licensing: `LICENSE` (Apache 2.0), declared in `pyproject.toml` as `license = "Apache-2.0"` with `license-files`, and the open/closed boundary in `LICENSING.md`.
 
 ## History
+
+**2026-09-25** — [`f6ce1b69c27a8c7eee78a0d15d6cb018d836922f`](https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f) — census re-measured at the same commit from a depth-1 fetch, read and never run. The summary's 21,444 and 7,658 are the first reading's figures: at `fc722f0` Python under `src/` counts exactly 21,444 lines and `tests/` 7,658, which fixes the definition. At this pin the same count gives 25,506 lines across 52 files under `src/`, and 12,111 lines across 48 files under `tests/`, matching section 10. The summary and the verdict now carry those figures. No mark moved.
 
 **2026-09-19** — [`f6ce1b69c27a8c7eee78a0d15d6cb018d836922f`](https://github.com/BernhardJackiewicz/provem/commit/f6ce1b69c27a8c7eee78a0d15d6cb018d836922f) — `trust_state` re-tested at the unchanged pin. The `approved` gate is where the record said and appears at six sites across the review and consolidation-eval paths. Two things are added. The vocabulary's middle is doing real work: `needs_more_evidence` and `deferred` sit between approved and rejected, so a reviewer can decline to admit an item without ruling against it, and the auto-reviewer returns a named blocker and a confidence with every verdict — a high-risk item is refused with the reason `high_risk_requires_human_review` rather than being silently held. And the read side has the strongest form of withholding this sweep has found: `RecallResult` carries an `abstained` flag and the recall path returns `answer=None, abstained=True` rather than the best of a contested set, with `abstain_on_conflict` as the default source-conflict policy. Declining to answer is a stronger act than filtering a list, and the suite is built so it cannot be gamed — the module notes that the equal-trust, no-history one-against-one case is deliberately kept out of the governed arm, so a policy that simply abstained on everything could not look calibrated. Nothing was installed and no suite was run.
 

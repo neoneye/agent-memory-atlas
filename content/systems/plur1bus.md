@@ -37,7 +37,7 @@ matrix:
 
 ## 1. Executive Summary
 
-PLUR1BUS is an MIT-licensed memory plugin for OpenClaw, at release 7.12.57 — 13,284 lines in `index.js`, 78,099 across 263 files in `lib/`, and more again in `tests/` and `test/`, which is the first unusual thing about it: the test suite is larger than the implementation it covers, across 361 test files.
+PLUR1BUS is an MIT-licensed memory plugin for OpenClaw, at release 7.12.61 — 13,306 lines in `index.js`, 78,217 across 263 files in `lib/`, and more again in `tests/` and `test/`, which is the first unusual thing about it: the test suite is larger than the implementation it covers, across 472 test files.
 
 The second unusual thing is the ratio of care to surface. `openclaw.plugin.json` declares fifty top-level configuration groups, covering dreaming, emotional state, persona voice, an Obsidian vault bridge, skill mining, reminders, a semantic lens, conversation reactivation, and a proactive governor. Underneath that is a correction path — `lib/safe-update.js`, 480 lines — that is more disciplined than most of the dedicated memory systems in this atlas: a content change is refused unless the caller supplies both an update source and a quoted piece of evidence, the replacement row is written and made durable *before* the old row is marked superseded, and the whole transition is appended to a reconsolidation event log keyed by an idempotency hash.
 
@@ -150,8 +150,8 @@ stateDiagram-v2
 
 An OpenClaw v6 plugin, loaded from `index.js`, requiring Node ≥ 22.5 and a running OpenClaw gateway. Nothing else has to be stood up: LanceDB is embedded, the neo store is JSONL on disk, and the caches use the `node:sqlite` module built into Node rather than a dependency.
 
-- **`index.js`** (12,418 lines) — plugin entry, hook registration, chat commands, and the wiring between every subsystem below.
-- **`lib/`** (254 files, 73,743 lines) — `recall-pipeline.js` (1,903), `neo-arch.js` (2,356), `obsidian-control-room.js` (3,918) and `obsidian-bridge.js` (2,035) dominate; `safe-update.js`, `acl-middleware.js`, `memory-history.js` and `contradiction-detector.js` carry the correction path.
+- **`index.js`** (13,306 lines) — plugin entry, hook registration, chat commands, and the wiring between every subsystem below.
+- **`lib/`** (263 files, 78,217 lines) — `obsidian-control-room.js` (3,954), `neo-arch.js` (3,500), `obsidian-bridge.js` (2,360) and `recall-pipeline.js` (2,094) dominate; `safe-update.js`, `acl-middleware.js`, `memory-history.js` and `contradiction-detector.js` carry the correction path.
 - **`lib/jobs/`** — fifteen background jobs: daily consolidation, garbage collection, conflict resolution, skill mining, critical-push classification, memory compaction, reflection.
 - **`lib/dreaming/`** — `light-dream.js`, `rem-dream.js`, `dream-narrative.js`.
 - **`lib/setup/feature-cron-plan.js`**, **`scripts/setup-feature-crons.mjs`** — cron registration through the host's public plugin API; see below.
@@ -351,7 +351,7 @@ Gaps:
 
 The memory tests need no framework: `npm test` is `node --check` on selected modules followed by `node --test` over `tests/` and `test/`, and the regression files import only node builtins and in-tree modules, so they run without the `@lancedb/lancedb` install the screen refuses. At the previous pin three such files were executed (27 passing across 7 suites) with a negative control — restoring `lib/neo-arch.js` from the older pin failed 5 of 7 in the dedup file, confirming the tests discriminate rather than merely pass. At this pin the dependency surface was again inside the seven-day cooldown, so nothing was installed or run; the new behaviour was read from the source and its committed tests.
 
-436 test files under `tests/` and `test/` — larger than the implementation, and the twelve largest additions since the previous pin are the new subsystems: `valid-time.test.js` (1,721 lines), `epistemic-status.test.js` (974), `tombstone.test.js` (509), and a family of `tombstone-*` files covering torn writes, the registry cache, scope, query recovery and the forget scripts.
+472 test files under `tests/` and `test/` — larger than the implementation, and the twelve largest additions since the previous pin are the new subsystems: `valid-time.test.js` (1,721 lines), `epistemic-status.test.js` (974), `tombstone.test.js` (509), and a family of `tombstone-*` files covering torn writes, the registry cache, scope, query recovery and the forget scripts.
 
 What is covered, by name: ACL call-site adapters and ownership binding, shared-memory recall and the share store, sensitive-read authorization, `safe-update` data loss, the DB adapter's `updateCard` data loss, dedupe and status-filter regressions, contradiction detection across four files, the embedding cache, the LLM result cache, cron bootstrap and the direct-dispatch patch, GC's `neverForget` guard, Obsidian command gating, vault confirmation, review authority, and zero-mutation guarantees.
 
@@ -393,7 +393,7 @@ This suits one specific reader: someone running OpenClaw for themselves or a sma
 
 Walk away if you need multi-tenant guarantees. The read-path ACL is good, but derived records are unscoped by the code's own admission, background jobs write across the store, and the failure mode of a scope gap is unrecoverable. Walk away if you cannot accept a `postinstall` that patches your host.
 
-The part worth taking whatever you are building is `lib/safe-update.js`. It is 414 lines, has one dependency on the rest of the system, and is the most complete answer in this atlas to "what does it take to change a memory without losing the old one".
+The part worth taking whatever you are building is `lib/safe-update.js`. It is 480 lines, has one dependency on the rest of the system, and is the most complete answer in this atlas to "what does it take to change a memory without losing the old one".
 
 ## 12. Open Questions
 
@@ -423,6 +423,8 @@ The part worth taking whatever you are building is `lib/safe-update.js`. It is 4
 - Tests cited: `tests/crr-status-filter.test.js`, `tests/b13-acl-callsite-adapters.test.js`, `tests/gc-neverforget-guard.test.js`, `tests/safe-update-dataloss.test.js`, `tests/valid-time.test.js`, `tests/tombstone-e2e.test.js`, `tests/correct-tombstone-guard.test.js`, `tests/semantic-lens-status-filter.test.js`, `tests/rem-dream-acl-partition.test.js`, `tests/cron-plugin-direct-dispatch-wiring.test.js`, `tests/host-patch-skip.test.js`, `tests/release-750-compat.test.js`, `tests/critical-classifier-double-push.test.js`.
 
 ## History
+
+**2026-09-25** — [`c381fd57fd80df193bc615f405704132dd89884e`](https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/c381fd57fd80df193bc615f405704132dd89884e) — census re-measured at the same commit from a depth-1 fetch, read and never run. `package.json` and `openclaw.plugin.json` both declare 7.12.61. `index.js` counts 13,306 lines; `lib/` holds 263 files and 78,217 lines; `lib/safe-update.js` counts 480. The tree at this pin holds 472 `*.test.js` files, 459 under `tests/` and 13 under `test/`; the trees API gives 436 at `6317fd9`, where section 10's figure and the file index's 254 `lib/` files came from. The summary, section 10, the file index and section 11 carried figures from earlier pins and now state these. No mark moved.
 
 **2026-09-19** — re-pinned to [`c381fd57fd80df193bc615f405704132dd89884e`](https://github.com/Cyb3rb1ade/openclaw-plur1bus-memory/commit/c381fd57fd80df193bc615f405704132dd89884e), release 7.12.61, eight commits on. **`human_review` is withdrawn; six marks stand.** The previous record read *"`/correct` and `/forget` require a confirmation token bound to the resolved target, the `/critical` review surface carries a per-card ACL, and an Obsidian vault mirrors cards for review outside the chat."* Each clause is true of the chat surface and none of them survives the producer test, which asks whether a memory waits in a state until an actor the producing agent cannot be resolves it. The confirmation token guards the chat commands; the model's own `memory_forget` tool (`index.js:11574`) tombstones a card with no token, gated only by `security.allowModelDestructiveMemoryOps`, which is read as `!== false` and pinned to `true` by `tests/config-audit.test.js:424` — and the block message the flag unlocks says why that matters. The `/critical` ACL is real, but `confirmed` is read by one function that builds the pending list and by no read path, so nothing is withheld while it is pending, and `autoAcceptStale` confirms every card older than 24 hours on a daily cron the shipped plan registers under the same switch. The Obsidian vault carries human edits *into* memory, which is the opposite direction from a review gate. Found in the same pass and now in section 9: `merge-proposals.jsonl` is written by the compaction job and read by nothing in the repository, so proposal-only merging means the detected duplicates are never merged. The destructive-command actor check in `lib/security.js:89` is unusually good and is described rather than marked. Line anchors re-mapped across `index.js` (12,418 to 13,306 lines) and `lib/db-adapter.js`. Screened again before reading: six files, no auto-run surface, one build-time execution point, three dependency files inside the cooldown, an agent-addressed instruction file recorded as data. Nothing installed, built or run.
 

@@ -34,7 +34,7 @@ matrix:
 ## 1. Executive Summary
 
 LoreKit is **a shared lesson store for coding agents**, built as a hosted
-product with the whole stack in the repository: a Supabase Postgres schema in 37
+product with the whole stack in the repository: a Supabase Postgres schema in 106
 migrations, an MCP server as an edge function, a Next.js dashboard, a CLI, and
 marketplace plugins for Claude Code, Cursor and Codex. MIT licensed and
 self-hostable. The pitch is cross-machine, cross-tool continuity — one agent
@@ -175,7 +175,7 @@ An NX monorepo shipping five packages and three plugins.
 **Storage** is Supabase Postgres: a `memories` table with a generated
 `tsvector` column and a GIN index, plus `orgs`, `org_scope_bindings`,
 `api_tokens`, `webhook_secrets`, `audit_log`, `user_limits`, `plans` and
-`usage_events` across 37 migrations. There is no vector extension and no
+`usage_events` across 106 migrations. There is no vector extension and no
 embedding column — full-text search is the only content-based retrieval.
 
 **The MCP surface** is a Supabase edge function (`supabase/functions/mcp/`)
@@ -187,7 +187,7 @@ convention rather than by build, which is a standing hazard the code at least
 names.
 
 **The local mode is a second implementation, not a fallback.** The CLI
-(13,377 lines of dependency-free `.mjs`) carries its own two-tier Markdown store:
+(40,594 lines of dependency-free `.mjs`) carries its own two-tier Markdown store:
 a per-user tier at `~/.lorekit/` and an opt-in per-repo tier at `<repo>/.lorekit/`,
 one file per `scope+key` under a directory derived from the scope. So the
 project maintains two storage engines with different substrates behind one
@@ -473,7 +473,7 @@ answer content questions.
 
 ## 10. Tests, Evals, and Benchmarks
 
-**90 test files, 1,184 cases** across the monorepo, concentrated where the risk
+**298 test files** across the monorepo, concentrated where the risk
 is: scope validation, TTL parsing and bounds, token auth, org permissions,
 limits, audit shape, archive lifecycle, and an `edge-parity.spec.ts` that exists
 to catch drift between the two MCP implementations.
@@ -627,6 +627,8 @@ and `retrospective.md`;
 `org-permissions.spec.ts`.
 
 ## History
+
+**2026-09-25** — [`07d2ce84baf6b6ba01b1424cc1253a4de4ee144d`](https://github.com/mthines/lorekit/commit/07d2ce84baf6b6ba01b1424cc1253a4de4ee144d) — census re-measured at the same commit, read and never run. The trees API gives 106 `.sql` files under `supabase/migrations/`, the last `00111`, and 298 `*.spec.*` or `*.test.*` files; the same counts at `08e3065` give 37 and 90, the first reading's figures. `.mjs` under `packages/cli/`, tests included, counts 40,594 lines from a depth-1 fetch, against 13,377 at `08e3065`. The 1,184 cases did not reproduce: a static count of `it` and `test` calls gives 1,144 at `08e3065`, so the figure is dropped rather than re-measured by a different method. No mark moved.
 
 **2026-09-19** — re-pinned to [`07d2ce84baf6b6ba01b1424cc1253a4de4ee144d`](https://github.com/mthines/lorekit/commit/07d2ce84baf6b6ba01b1424cc1253a4de4ee144d). `human_review` is **withdrawn**. The gate it rested on is a confirmation prompt on the destructive purge — the record quoted the source saying exactly that, *"the gate is therefore a confirmation, not a preview"* — and a confirmation is a permission step rather than a state a memory waits in. It also guards destruction rather than admission, and its non-interactive form is `--yes`, a flag the caller supplies. The reasoning that produced it is better than the mark it cannot earn and stays in section 7 in full, including why no dry run is possible and why *"an agent loop must not be able to trigger one by omission."* The tree carries no admission state on a lesson at this pin. `scope_enforced` and `audit_log` stand. Screened again first; nothing was installed and no suite was run.
 

@@ -1573,8 +1573,8 @@ reports nothing. (An earlier version of this entry said the same of
 three memory statuses and of <code>USER_CONFIRMED</code>; that was wrong
 — each has a guarded writer in <code>personal-memory.ts</code>, and the
 gap is that nothing above the library calls them.)</li>
-<li>Maturity impression: ~15,900 lines of TypeScript, seven packages,
-252 tests, local Ollama, and a README that says it is not
+<li>Maturity impression: ~27,000 lines of TypeScript, seven packages,
+543 tests, local Ollama, and a README that says it is not
 production-ready. Four capability marks — <code>trust_state</code>,
 <code>scope_enforced</code>, <code>audit_log</code> and
 <code>negative_eval</code>; the last was awarded at the second reading
@@ -2424,7 +2424,7 @@ they previously corrected.</li>
 <code>memory/types.py</code>, plus the audit call on the
 <em>refused</em> write path that lets you verify the guard is
 running.</li>
-<li>Maturity impression: 94,427 lines of Python under 409 test files,
+<li>Maturity impression: 94,427 lines of Python under 514 test files,
 eighteen memory modules named for the problems this atlas tracks, and a
 graph layer added at migrations 6 and 8 rather than designed in. Primary
 documentation and several load-bearing comments are Chinese.</li>
@@ -2549,11 +2549,12 @@ four-level scope key, an authenticated tenancy boundary, and a table
 that makes "this repo's lessons belong to the team" a row instead of a
 convention.</li>
 <li>Maturity impression: Migrations written like design documents with
-numbered decisions, 90 test files, RLS on every table, hashed and scoped
-tokens, HMAC-verified webhook ingest with an explicit no-timing-oracle
-note, and a spec that parses the newest action-CHECK migration and fails
-when it disagrees with the TypeScript audit vocabulary — beside five
-entrenchment guards of which one is enforced by code.</li>
+numbered decisions, 298 test files, RLS on every table, hashed and
+scoped tokens, HMAC-verified webhook ingest with an explicit
+no-timing-oracle note, and a spec that parses the newest action-CHECK
+migration and fails when it disagrees with the TypeScript audit
+vocabulary — beside five entrenchment guards of which one is enforced by
+code.</li>
 <li>Study when: you need shared agent memory for more than one person
 and have to answer who changed what, or you want the cleanest separation
 of a scope key from a tenancy boundary in this atlas.</li>
@@ -4882,10 +4883,10 @@ exercises.</li>
 file that retires claims it cannot back, naming the retired figure, why
 it failed, and the artifact that replaced it, including downgrading its
 own "signed results" to "content-hashed".</li>
-<li>Maturity impression: Roughly 63,000 lines of Rust, 592 inline tests,
-all seven capability marks, and a count claim that is derived from the
-source registry and asserted across five published surfaces by a CI job
-rather than by a command in a Markdown file.</li>
+<li>Maturity impression: Roughly 156,000 lines of Rust, 1,340 inline
+tests, all seven capability marks, and a count claim that is derived
+from the source registry and asserted across five published surfaces by
+a CI job rather than by a command in a Markdown file.</li>
 <li>Study when: you are deciding what a defensible benchmark claim looks
 like, or you want bi-temporal history and a hash-chained journal in a
 single local binary.</li>
@@ -4912,11 +4913,11 @@ the rows, append the term's token set to a per-tenant erased registry,
 emit an erasure certificate, and exclude any later record whose tokens
 are a superset. A value-keyed tombstone with a normalized, forgiving
 key.</li>
-<li>Maturity impression: 21,000 lines with 12,111 lines of tests, a
-claim register that marks its own claims <code>Unsupported</code> and
-"Rejected for now", a research journal of negative results, and two of
-four deployment tiers published as losing — one below the no-memory
-baseline.</li>
+<li>Maturity impression: 25,506 lines of Python under <code>src/</code>
+with 12,111 lines of tests, a claim register that marks its own claims
+<code>Unsupported</code> and "Rejected for now", a research journal of
+negative results, and two of four deployment tiers published as losing —
+one below the no-memory baseline.</li>
 <li>Study when: governance is your actual problem, or you want to see
 what a defensible claim looks like when the repository itself fails CI
 if the README drifts.</li>
@@ -8607,9 +8608,11 @@ has no seam where a correction would attach.</li>
 <h3 id="ollama"><a
 href="../systems/ollama/"><code>ollama</code></a></h3>
 <ul>
-<li>Status: the built-in agent and its skill memory were removed from
-Ollama on 11 September 2026 (#18393); the entries below describe the
-design as it stood before.</li>
+<li>Status: at the pinned commit Ollama has no memory subsystem. On 11
+September 2026 #18393 removed the built-in agent — the
+<code>agent/</code> package and the <code>cmd/tui/chat</code> interface,
+about 24,900 lines — and with it everything below, which describes the
+design as it stood at the previous reading.</li>
 <li>Best idea: the catalog and the content are separated on purpose.
 <code>SkillCatalog.SystemContext()</code> puts one
 <code>- name: description</code> line per skill into the system prompt,
@@ -8632,11 +8635,11 @@ explicit user activation bypasses the gate. Almost everything else in
 this atlas gates the write and lets recall run unattended; for memory
 that will be followed rather than considered, this is the right way
 round.</li>
-<li>Maturity impression: MIT, four files in one Go package for the whole
-memory surface, inside a 1,233-file repository that is otherwise an
-inference engine. 16 test functions on the loader covering precedence,
-malformed front matter, the 1 MiB ceiling and the empty-file case.
-Nothing evaluates whether the model picks the right skill from a
+<li>Maturity impression: MIT; while it shipped, the whole memory surface
+was four files in one Go package, inside a 1,233-file repository that is
+otherwise an inference engine. 16 test functions on the loader covered
+precedence, malformed front matter, the 1 MiB ceiling and the empty-file
+case. Nothing evaluated whether the model picks the right skill from a
 description, which is the only quality question the design raises.</li>
 <li>Study when: your durable memory is procedural — curated playbooks —
 and you want it to cost four files and no database, or you are choosing
@@ -9139,7 +9142,7 @@ for a content duplicate, and the recall path deduplicates by <em>newest
 revision</em> rather than first appearance, because in an append-only
 log the first copy of a record is the one from before the decision.</li>
 <li>Maturity impression: MIT, release 7.12.61, 13,306 lines in
-<code>index.js</code> and 78,099 across <code>lib/</code> under 436 test
+<code>index.js</code> and 78,217 across <code>lib/</code> under 472 test
 files — a suite larger than the implementation whose assertions are
 denials, absences and removals rather than permissions. Six of seven
 capability marks. <code>human_review</code> was withdrawn on the
@@ -10167,18 +10170,18 @@ answer for an admitted non-answer, and carries its own bug in its
 docstring: the hedge markers used an ASCII apostrophe, the model emits
 U+2019, and every apostrophe-bearing marker missed until two Unicode
 apostrophes were normalized first.</li>
-<li>Maturity impression: AGPL-3.0; at the earlier count, roughly 284,000
-lines of Python across core, server and CLI plus TypeScript surfaces and
-1,310 commits since 23 March 2026. The benchmark page is the maturity
-signal: a 112-instance corpus split 70/42 by instance id "pinned before
-any of it started" with the 42 sealed until final measurement,
-deterministic grading with no LLM judge, the unflattering precision
-column published beside the coverage column, one row headed <strong>we
-lose</strong> by 22x on indexing time, and two capability comparisons
-labelled "not measured" because the project would "rather write 'not
-measured' than let a checkmark do a number's job". The harnesses and
-graded cells live in a separate <code>repowise-bench</code> repository,
-so this tree holds the claim rather than the proof.</li>
+<li>Maturity impression: AGPL-3.0; roughly 362,000 lines of Python
+across core, server and CLI plus TypeScript surfaces and 1,743 commits
+since 23 March 2026. The benchmark page is the maturity signal: a
+112-instance corpus split 70/42 by instance id "pinned before any of it
+started" with the 42 sealed until final measurement, deterministic
+grading with no LLM judge, the unflattering precision column published
+beside the coverage column, one row headed <strong>we lose</strong> by
+22x on indexing time, and two capability comparisons labelled "not
+measured" because the project would "rather write 'not measured' than
+let a checkmark do a number's job". The harnesses and graded cells live
+in a separate <code>repowise-bench</code> repository, so this tree holds
+the claim rather than the proof.</li>
 <li>Study when: you are storing claims a model produced about code and
 need a rule for which of them may be persisted. The gate is 110 lines
 and separable, and the three-axis split underneath it — lifecycle
@@ -14258,10 +14261,10 @@ temporal keywords, date forms and relation patterns for six languages
 behind <code>tokenize</code>, <code>detect_language</code>,
 <code>extract_date_tokens</code> and <code>infer_relation</code>, with
 no model in the path.</li>
-<li>Maturity impression: MIT, 22 commits from 21 April to 18 May 2026 by
-two authors and nothing since, Python 3.11 on LlamaIndex, six unpinned
-requirements, 75 test functions across six files, no benchmark. No
-capability mark.</li>
+<li>Maturity impression: MIT, 24 commits by two authors, 22 from 21
+April to 18 May 2026 and two on 7 September, Python 3.11 on LlamaIndex,
+ten requirements pinned with <code>==</code>, 75 test functions across
+six files, no benchmark. No capability mark.</li>
 <li>Study when: you want to ask a local Obsidian vault questions with
 file citations and no cloud, or you want a worked example of structural
 extraction ahead of a model.</li>

@@ -51,7 +51,7 @@ orphaned fork network is reparented onto a surviving sibling rather than left
 headless, so the fork's `parent` reads `johan--/mneme`, an unrelated repository,
 and the project's own 2026-09-06 head sits on a preserved branch beside `main`.
 
-Perseus Vault is roughly 63,000 lines of Rust over 666 commits, MIT-licensed,
+Perseus Vault is roughly 156,000 lines of Rust over 822 commits, MIT-licensed,
 shipping one binary and one SQLite file with no services. It exposes memory
 through an MCP stdio server plus LangGraph, CrewAI and AutoGen adapters, stores
 entities with bi-temporal bounds, retrieves with BM25 and dense vectors fused by
@@ -551,8 +551,9 @@ Gaps:
 
 ## 10. Tests, Evals, and Benchmarks
 
-592 `#[test]` functions inline across `src/`, plus three integration files under
-`tests/`. Nothing was run for this review — the suite is Rust and the benchmark
+1,340 test functions inline across `src/` — 1,305 `#[test]` and 35
+`#[tokio::test]` — plus eight integration files under `tests/`, seven of them
+Rust. Nothing was run for this review — the suite is Rust and the benchmark
 harness calls `gpt-4o-2024-08-06` for both answering and judging, so reproducing
 the LongMemEval figure means paying for 500 questions × 3 runs × 2 model calls.
 
@@ -789,6 +790,8 @@ background consolidation passes are the leg no committed test walks.
   `integrations/autogen/`.
 
 ## History
+
+**2026-09-25** — [`9c829207a4b44a8e679ba912b4c1c5608c8f1e36`](https://github.com/agent-memory-atlas-archive/Perseus-Computing-LLC--perseus-vault/commit/9c829207a4b44a8e679ba912b4c1c5608c8f1e36) — census re-measured at the same commit from a depth-1 fetch of the atlas's fork, read and never run. The commits API gives 822 commits reachable from the pin; `.rs` files count 155,638 lines, 153,257 of them under `src/`, which holds 1,305 `#[test]` and 35 `#[tokio::test]` attributes; `tests/` holds seven Rust files and one Python file. The same counts at `60d7ac4` give 666 commits, 63,262 lines and 586 `#[test]`, which is where the summary and section 10 came from. No mark moved.
 
 **2026-09-19** — `trust_state` re-tested at the unchanged pin, read from the atlas's fork since the upstream and the commit both still return 404. Nothing has moved; the corrections are the atlas's own. The record named the field and the vocabulary and cited the test, and the test is a good one — `recall_filters_by_epistemic_state_on_all_paths` asserts in both directions, that a candidate is absent from a verified-only query and a verified entity absent from a candidate query, on the FTS and dense arms alike, which is the negative control most systems in this corpus leave out. Two things belong beside it. The write-side polarity is right in a way worth copying: a value outside the vocabulary coerces to `candidate`, the least-trusted member, so an unrecognised state fails closed, and an enriched memory is pushed back to `candidate` unless it already sits in a terminal state. The read-side polarity is the weaker one, and the record should say so: the filter runs only when the caller supplies a state, so a recall naming none returns every state, `rejected` included, and the same field separately feeds a `trust_rank` in the projection. Naming a state to narrow a default that admits everything is a different guarantee from a flag that widens a default that excludes, and this system has the first. The mark stands on a predicate that exists, is reachable from the MCP surface and is tested both ways; the limit is that nothing applies it unasked. Nothing was installed and no suite was run.
 

@@ -144,7 +144,7 @@ entrenchment doctrine that lives entirely in a skill file.</p>
 <h2 id="1-executive-summary">1. Executive Summary</h2>
 <p>LoreKit is <strong>a shared lesson store for coding agents</strong>,
 built as a hosted product with the whole stack in the repository: a
-Supabase Postgres schema in 37 migrations, an MCP server as an edge
+Supabase Postgres schema in 106 migrations, an MCP server as an edge
 function, a Next.js dashboard, a CLI, and marketplace plugins for Claude
 Code, Cursor and Codex. MIT licensed and self-hostable. The pitch is
 cross-machine, cross-tool continuity — one agent learns something, every
@@ -286,7 +286,7 @@ column and a GIN index, plus <code>orgs</code>,
 <code>org_scope_bindings</code>, <code>api_tokens</code>,
 <code>webhook_secrets</code>, <code>audit_log</code>,
 <code>user_limits</code>, <code>plans</code> and
-<code>usage_events</code> across 37 migrations. There is no vector
+<code>usage_events</code> across 106 migrations. There is no vector
 extension and no embedding column — full-text search is the only
 content-based retrieval.</p>
 <p><strong>The MCP surface</strong> is a Supabase edge function
@@ -299,7 +299,7 @@ updated <em>"in the same commit"</em> — duplication managed by
 convention rather than by build, which is a standing hazard the code at
 least names.</p>
 <p><strong>The local mode is a second implementation, not a
-fallback.</strong> The CLI (13,377 lines of dependency-free
+fallback.</strong> The CLI (40,594 lines of dependency-free
 <code>.mjs</code>) carries its own two-tier Markdown store: a per-user
 tier at <code>~/.lorekit/</code> and an opt-in per-repo tier at
 <code>&lt;repo&gt;/.lorekit/</code>, one file per <code>scope+key</code>
@@ -611,11 +611,11 @@ everywhere — which is the right privacy answer and the reason the log
 cannot answer content questions.</p>
 <h2 id="10-tests-evals-and-benchmarks">10. Tests, Evals, and
 Benchmarks</h2>
-<p><strong>90 test files, 1,184 cases</strong> across the monorepo,
-concentrated where the risk is: scope validation, TTL parsing and
-bounds, token auth, org permissions, limits, audit shape, archive
-lifecycle, and an <code>edge-parity.spec.ts</code> that exists to catch
-drift between the two MCP implementations.</p>
+<p><strong>298 test files</strong> across the monorepo, concentrated
+where the risk is: scope validation, TTL parsing and bounds, token auth,
+org permissions, limits, audit shape, archive lifecycle, and an
+<code>edge-parity.spec.ts</code> that exists to catch drift between the
+two MCP implementations.</p>
 <p>The archive lifecycle suite is the best of it, driving a small
 in-memory row store through archive → restore → purge and asserting the
 negative cases: <em>"purge does not remove rows archived within the
@@ -769,6 +769,19 @@ have caught a drift or missed one.</li>
 <code>scope.spec.ts</code>, <code>ttl.spec.ts</code>,
 <code>org-permissions.spec.ts</code>.</p>
 <h2 id="history">History</h2>
+<p><strong>2026-09-25</strong> — <a
+href="https://github.com/mthines/lorekit/commit/07d2ce84baf6b6ba01b1424cc1253a4de4ee144d"><code class="commit-id" title="07d2ce84baf6b6ba01b1424cc1253a4de4ee144d">07d2ce84…</code></a>
+— census re-measured at the same commit, read and never run. The trees
+API gives 106 <code>.sql</code> files under
+<code>supabase/migrations/</code>, the last <code>00111</code>, and 298
+<code>*.spec.*</code> or <code>*.test.*</code> files; the same counts at
+<code>08e3065</code> give 37 and 90, the first reading's figures.
+<code>.mjs</code> under <code>packages/cli/</code>, tests included,
+counts 40,594 lines from a depth-1 fetch, against 13,377 at
+<code>08e3065</code>. The 1,184 cases did not reproduce: a static count
+of <code>it</code> and <code>test</code> calls gives 1,144 at
+<code>08e3065</code>, so the figure is dropped rather than re-measured
+by a different method. No mark moved.</p>
 <p><strong>2026-09-19</strong> — re-pinned to <a
 href="https://github.com/mthines/lorekit/commit/07d2ce84baf6b6ba01b1424cc1253a4de4ee144d"><code class="commit-id" title="07d2ce84baf6b6ba01b1424cc1253a4de4ee144d">07d2ce84…</code></a>.
 <code>human_review</code> is <strong>withdrawn</strong>. The gate it
