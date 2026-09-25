@@ -298,18 +298,18 @@ unhelpful ratings put a fact below every default retrieval path —
 permanently, with no tombstone and no record that suppression occurred.
 Reinforcement became deletion because reachability and belief were the
 same number.</p>
-<p><a href="../../systems/helix-agi/">Helix AGI</a> is the only system
-here that documents finding this loop in its own running store and
-cutting it. A belief's mass originally included its relation count;
-related beliefs get co-injected, and co-injection creates more
-relations, so the comment in <code>memory/belief_store.py</code> records
-the cycle it produced — <em>"relations → mass ↑ → gravity ↑ →
-co-injection → more relations"</em> — and the fix, which is to leave
-cluster gravity to emerge from spatial density instead of inflating an
-individual score. The general lesson is narrow and reusable: <strong>a
-reinforcement signal that is itself caused by reachability is a feedback
-loop, not a measurement</strong>, and the way to find one is to ask
-which of your inputs the previous ranking already decided.</p>
+<p><a href="../../systems/helix-agi/">Helix AGI</a> documents finding
+this loop in its own running store and cutting it. A belief's mass
+originally included its relation count; related beliefs get co-injected,
+and co-injection creates more relations, so the comment in
+<code>memory/belief_store.py</code> records the cycle it produced —
+<em>"relations → mass ↑ → gravity ↑ → co-injection → more
+relations"</em> — and the fix, which is to leave cluster gravity to
+emerge from spatial density instead of inflating an individual score.
+The general lesson is narrow and reusable: <strong>a reinforcement
+signal that is itself caused by reachability is a feedback loop, not a
+measurement</strong>, and the way to find one is to ask which of your
+inputs the previous ranking already decided.</p>
 <p><a href="../../systems/verel/">Verel</a> is the reference for the
 separation itself. The safest implementation shape is to keep
 reinforcement as append-only events and derive the score, so a rule can
@@ -345,18 +345,17 @@ narrow instance — recall there feeds a search loop, not belief — and the
 transferable point is the test nobody wrote: a controller meant to
 loosen selection as diversity falls needs an assertion on its direction,
 and here no test exercises the diversity function at all.</p>
-<p><a href="../../systems/nooa-memory/">NOOA Memory</a> is the only
-system here that closes the reinforcement loop rather than noting it.
-Retrieval bumps a <code>strength</code> counter that slows Ebbinghaus
-decay and leaves <code>confidence</code> untouched — rehearsal is not
-belief — and its paper adds the part that matters: "<strong>injected
-memories are not reinforced, so what the harness surfaces does not
-distort the usage signal</strong>". Spontaneous injection runs at a
-fixed cadence of about one per turn and does not count as use. A system
-whose ranker reinforces whatever the ranker chose to show is measuring
-its own decisions and calling it usage; separating deliberate reads from
-injections is the cheap fix, and it is a one-line distinction at the
-call site.</p>
+<p><a href="../../systems/nooa-memory/">NOOA Memory</a> closes the
+reinforcement loop rather than noting it. Retrieval bumps a
+<code>strength</code> counter that slows Ebbinghaus decay and leaves
+<code>confidence</code> untouched — rehearsal is not belief — and its
+paper adds the part that matters: "<strong>injected memories are not
+reinforced, so what the harness surfaces does not distort the usage
+signal</strong>". Spontaneous injection runs at a fixed cadence of about
+one per turn and does not count as use. A system whose ranker reinforces
+whatever the ranker chose to show is measuring its own decisions and
+calling it usage; separating deliberate reads from injections is the
+cheap fix, and it is a one-line distinction at the call site.</p>
 <p><a href="../../systems/helm/">Helm</a> keeps the two signals apart
 correctly and then damages a third. Retrieval cannot raise confidence —
 it only slows loss: <code>log1p(access_count)</code> is subtracted from

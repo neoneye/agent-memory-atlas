@@ -141,8 +141,7 @@ most often RRF's `k = 60`.
 
 [Helm](../../systems/helm/) is the smallest correct instance — both arms and the
 fusion are about sixty lines of JavaScript over rows already in memory, with no
-FTS extension and no vector store — and it is the clearest place in the atlas to
-see that **fusion quality is bounded by candidate generation, not by the fusion
+FTS extension and no vector store — and it is a clear place to see that **fusion quality is bounded by candidate generation, not by the fusion
 rule.** Its RRF is textbook (k=60, no score normalization, which is the right
 refusal when you have no relevance data to calibrate against), and its belief
 weight is applied as a multiplier rather than a filter so a low-confidence row is

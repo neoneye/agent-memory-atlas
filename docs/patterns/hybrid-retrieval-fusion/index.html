@@ -320,13 +320,12 @@ nobody has defended, most often RRF's <code>k = 60</code>.</p>
 <p><a href="../../systems/helm/">Helm</a> is the smallest correct
 instance — both arms and the fusion are about sixty lines of JavaScript
 over rows already in memory, with no FTS extension and no vector store —
-and it is the clearest place in the atlas to see that <strong>fusion
-quality is bounded by candidate generation, not by the fusion
-rule.</strong> Its RRF is textbook (k=60, no score normalization, which
-is the right refusal when you have no relevance data to calibrate
-against), and its belief weight is applied as a multiplier rather than a
-filter so a low-confidence row is penalized instead of excluded. Then
-every arm runs over
+and it is a clear place to see that <strong>fusion quality is bounded by
+candidate generation, not by the fusion rule.</strong> Its RRF is
+textbook (k=60, no score normalization, which is the right refusal when
+you have no relevance data to calibrate against), and its belief weight
+is applied as a multiplier rather than a filter so a low-confidence row
+is penalized instead of excluded. Then every arm runs over
 <code>SELECT … WHERE expired_at IS NULL ORDER BY updated DESC LIMIT 500</code>
 — a hard window ordered by <strong>recency</strong>. Past a few hundred
 active facts, the memories that stop being candidates are the ones

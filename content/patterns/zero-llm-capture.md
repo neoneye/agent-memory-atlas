@@ -205,7 +205,7 @@ is richer than your emitters, shrink the vocabulary or write the emitters —
 leaving the gap open produces a store that looks well-designed and answers
 nothing.
 
-[Midas](../../systems/midas/) is the strongest form here, because it removes the
+[Midas](../../systems/midas/) is a strong form, because it removes the
 model from *both* ends: nothing is extracted at ingest and nothing is rewritten
 at query. Recall returns the verbatim source turn, which is what makes its
 `recall@k` computable against gold supporting turns at all — a metric a system

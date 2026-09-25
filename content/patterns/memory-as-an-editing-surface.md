@@ -107,7 +107,7 @@ over *machine-written* memory here, and carries all five verbs: edit text,
 delete-from-here, merge with a union of source ids, pin via `isImportant`, and
 bulk re-summarise **with the result previewed before it is accepted**. That last
 one is the same operation its 2023 generation performed silently on a threshold,
-which is the clearest before-and-after of this pattern in the corpus.
+which makes a clear before-and-after of this pattern.
 
 **[Soul of Waifu](../../systems/soul-of-waifu/)** is the cautionary version, and
 it shows both ways the gap can close. At

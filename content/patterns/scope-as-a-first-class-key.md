@@ -134,12 +134,9 @@ under the scope predicate, below, is a second re-check of the same kind. The
 `MemoryStore` Protocol is public and third-party implementations are expected,
 so this one treats its own backend as untrusted and re-checks the boundary on the
 way back. A custom store that forgets the prefix produces a loud crash instead of
-a cross-tenant read. The cost is a prefix comparison per returned path, and it
-converts the most expensive silent failure in this atlas into the cheapest loud
-one.
+a cross-tenant read. The cost is a prefix comparison per returned path, and it converts an expensive silent failure into a cheap loud one.
 
-**[CAMEL](../../systems/camel/) is the cleanest counterexample in the atlas, and
-it is what this pattern's failure looks like when nothing is obviously wrong.**
+**[CAMEL](../../systems/camel/) is a clean counterexample, and it is what this pattern's failure looks like when nothing is obviously wrong.**
 `MemoryRecord` carries an `agent_id`. `AgentMemory` exposes it as a property with
 a setter, `ChatAgent` propagates it down, `write_records` stamps it onto every
 record, `to_dict` and `from_dict` round-trip it, and `__repr__` prints it. Then
@@ -301,7 +298,7 @@ scope, searches under another, and asserts the id is absent, while
 boundary and an organization boundary at once. That earns `negative_eval`, which
 this atlas awards on exactly this shape — a committed case establishing that
 named material stayed out of a result set that is otherwise populated — and which
-a good number of systems here now carry. The test is what the mark is for; being
+a good number of systems here carry. The test is what the mark is for; being
 rare is not what makes it worth copying.
 
 The counterexamples are as instructive as the implementations.
@@ -578,7 +575,7 @@ third. Reading the function that enforces scope tells you nothing about whether 
 runs. Read the call site, the signature the model is shown, and the surface a
 remote caller actually has.
 
-**Somebody has now built the defect on purpose, which is the strongest evidence
+**Somebody has built the defect on purpose, which is the strongest evidence
 available that it is a class rather than three coincidences.**
 [MythologIQ's Agent Memory](../../systems/agent-memory-doctrine/) ships a
 substrate stub that deliberately reproduces the permissive semantics of the
@@ -865,7 +862,7 @@ gates `metadata.scope` — so a deployment without RLS has half the design.
 
 ## Tests to require
 
-The first of these no longer has to be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)
+The first of these need not be written by hand. [promptfoo](https://github.com/promptfoo/promptfoo)
 ships a red-team plugin, `promptfoo:redteam:cross-session-leak`
 (`src/redteam/plugins/crossSessionLeak.ts`, read on 2026-08-09 at
 [`49c0f6d77496c022c6d32e362522993bb0d72d42`](https://github.com/promptfoo/promptfoo/commit/49c0f6d77496c022c6d32e362522993bb0d72d42)),
@@ -898,7 +895,7 @@ Systems here that wrote that test by hand earn `negative_eval` for it — MIRIX,
 Honcho, Scope Recall and Strands above among them.
 [vLLM Semantic Router](../../systems/vllm-semantic-router/)'s version stores a PIN
 and a password for two users and checks both the storage layer and the live
-retrieval path. That anyone can now generate the same case against a running
+retrieval path. That anyone can generate the same case against a running
 system, without reading its code, changes what a missing scope filter costs to
 discover — and it is a generator rather than a proof: it tests the deployment in
 front of it, not the read path underneath.

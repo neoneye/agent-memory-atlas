@@ -37,8 +37,8 @@ LINK = re.compile(r"\]\(")
 SENTENCE = re.compile(r"[^.!?\n]*(?:[.!?]|$)")
 
 #: Set to 1484 on 2026-09-25, across all of content/, and lowered as phrases
-#: are cut (1470 after the pattern-page corrections the same day). Never raise it to admit a new one.
-TIC_CEILING = 1470
+#: are cut (1469 after the pattern-page corrections the same day). Never raise it to admit a new one.
+TIC_CEILING = 1469
 
 
 def hits(text: str) -> list[tuple[int, str]]:

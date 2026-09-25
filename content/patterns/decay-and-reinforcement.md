@@ -171,8 +171,7 @@ unhelpful ratings put a fact below every default retrieval path — permanently,
 with no tombstone and no record that suppression occurred. Reinforcement became
 deletion because reachability and belief were the same number.
 
-[Helix AGI](../../systems/helix-agi/) is the only system here that documents
-finding this loop in its own running store and cutting it. A belief's mass
+[Helix AGI](../../systems/helix-agi/) documents finding this loop in its own running store and cutting it. A belief's mass
 originally included its relation count; related beliefs get co-injected, and
 co-injection creates more relations, so the comment in `memory/belief_store.py`
 records the cycle it produced — *"relations → mass ↑ → gravity ↑ → co-injection →
@@ -213,8 +212,7 @@ test nobody wrote: a controller meant to loosen selection as diversity falls
 needs an assertion on its direction, and here no test exercises the diversity
 function at all.
 
-[NOOA Memory](../../systems/nooa-memory/) is the only system here that closes the
-reinforcement loop rather than noting it. Retrieval bumps a `strength` counter
+[NOOA Memory](../../systems/nooa-memory/) closes the reinforcement loop rather than noting it. Retrieval bumps a `strength` counter
 that slows Ebbinghaus decay and leaves `confidence` untouched — rehearsal is not
 belief — and its paper adds the part that matters: "**injected memories are not
 reinforced, so what the harness surfaces does not distort the usage signal**".

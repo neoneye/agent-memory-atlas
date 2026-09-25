@@ -101,8 +101,7 @@ wire-to-store absorb through `absorb_gate`, which forces the hallucination flag 
 the local default because a remote peer must not be able to set or clear its own
 verdict.
 
-[OpenSRE](../../systems/opensre/) is the smallest complete instance here, and it
-is worth reading for what it puts in the gate rather than for the gate itself.
+[OpenSRE](../../systems/opensre/) is a small complete instance, and what it puts in the gate matters more than the gate itself.
 Two writers — an agent tool and an automatic post-turn extractor — reach one
 `save_memory`, which takes a directory lock, preserves `created_at`, writes
 through a temp file and an atomic replace. The policy in front of it is what

@@ -255,13 +255,12 @@ third-party implementations are expected, so this one treats its own
 backend as untrusted and re-checks the boundary on the way back. A
 custom store that forgets the prefix produces a loud crash instead of a
 cross-tenant read. The cost is a prefix comparison per returned path,
-and it converts the most expensive silent failure in this atlas into the
-cheapest loud one.</p>
-<p><strong><a href="../../systems/camel/">CAMEL</a> is the cleanest
-counterexample in the atlas, and it is what this pattern's failure looks
-like when nothing is obviously wrong.</strong> <code>MemoryRecord</code>
-carries an <code>agent_id</code>. <code>AgentMemory</code> exposes it as
-a property with a setter, <code>ChatAgent</code> propagates it down,
+and it converts an expensive silent failure into a cheap loud one.</p>
+<p><strong><a href="../../systems/camel/">CAMEL</a> is a clean
+counterexample, and it is what this pattern's failure looks like when
+nothing is obviously wrong.</strong> <code>MemoryRecord</code> carries
+an <code>agent_id</code>. <code>AgentMemory</code> exposes it as a
+property with a setter, <code>ChatAgent</code> propagates it down,
 <code>write_records</code> stamps it onto every record,
 <code>to_dict</code> and <code>from_dict</code> round-trip it, and
 <code>__repr__</code> prints it. Then
@@ -435,8 +434,8 @@ across a scope boundary and an organization boundary at once. That earns
 <code>negative_eval</code>, which this atlas awards on exactly this
 shape — a committed case establishing that named material stayed out of
 a result set that is otherwise populated — and which a good number of
-systems here now carry. The test is what the mark is for; being rare is
-not what makes it worth copying.</p>
+systems here carry. The test is what the mark is for; being rare is not
+what makes it worth copying.</p>
 <p>The counterexamples are as instructive as the implementations. <a
 href="../../systems/holographic/">Holographic</a> describes itself as a
 "single-user Hermes memory plugin" and has no scope column at all;
@@ -742,7 +741,7 @@ another, an absent query parameter in the third. Reading the function
 that enforces scope tells you nothing about whether it runs. Read the
 call site, the signature the model is shown, and the surface a remote
 caller actually has.</p>
-<p><strong>Somebody has now built the defect on purpose, which is the
+<p><strong>Somebody has built the defect on purpose, which is the
 strongest evidence available that it is a class rather than three
 coincidences.</strong> <a
 href="../../systems/agent-memory-doctrine/">MythologIQ's Agent
@@ -1142,7 +1141,7 @@ it — RLS gates <code>entity_id</code>/<code>server_id</code>, this gates
 <code>metadata.scope</code> — so a deployment without RLS has half the
 design.</p>
 <h2 id="tests-to-require">Tests to require</h2>
-<p>The first of these no longer has to be written by hand. <a
+<p>The first of these need not be written by hand. <a
 href="https://github.com/promptfoo/promptfoo">promptfoo</a> ships a
 red-team plugin, <code>promptfoo:redteam:cross-session-leak</code>
 (<code>src/redteam/plugins/crossSessionLeak.ts</code>, read on
@@ -1181,11 +1180,11 @@ system</em> from the outside, so there is no harness to diverge.</p>
 Strands above among them. <a
 href="../../systems/vllm-semantic-router/">vLLM Semantic Router</a>'s
 version stores a PIN and a password for two users and checks both the
-storage layer and the live retrieval path. That anyone can now generate
-the same case against a running system, without reading its code,
-changes what a missing scope filter costs to discover — and it is a
-generator rather than a proof: it tests the deployment in front of it,
-not the read path underneath.</p>
+storage layer and the live retrieval path. That anyone can generate the
+same case against a running system, without reading its code, changes
+what a missing scope filter costs to discover — and it is a generator
+rather than a proof: it tests the deployment in front of it, not the
+read path underneath.</p>
 <ul>
 <li>Cross-user, cross-agent, and cross-project leakage.</li>
 <li>Dedupe and conflict behavior for identical keys in different

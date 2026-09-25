@@ -338,9 +338,7 @@ that judgement — see [gate the expensive path](./gate-the-expensive-path/) and
 the [trust-state machine](./trust-state-machine/) — is where the quality
 actually comes from. Correct memory full of trivia is still a bad product.
 
-No system in the atlas has all four. Filter the
-[homepage](../#systems) by tombstone and scope to see how quickly the corpus
-thins out.
+Filter the [homepage](../#systems) by tombstone and scope to see how quickly the corpus thins out before evidence and a governed gateway are even asked for.
 
 **And be clear about what that thinning means.** PLACEHOLDER_PATTERN_TOMBSTONE_COUNT of PLACEHOLDER_TOTAL_COUNT systems carry a tombstone, so this stack describes almost nobody. Two readings are available and
 this atlas cannot settle between them: either the field has not yet paid for a
