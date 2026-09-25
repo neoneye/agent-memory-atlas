@@ -154,6 +154,18 @@ if ! python3 "$project_dir/scripts/list_inert_recorded_commands.py" --check "$pr
   exit 1
 fi
 
+# The 2026-09-07 reader feedback was a wall of text. A hand-split campaign
+# cleared the worst of it on 2026-09-17 and nothing held it: eight days later
+# the History sections alone had gone from 475 paragraphs over 120 words to 864.
+# Per-report ratchet, History included; a new report's baseline is zero.
+if ! python3 "$project_dir/scripts/list_long_prose.py" --self-test; then
+  echo "list_long_prose.py cannot demonstrate that its counter still works." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/list_long_prose.py" --check "$project_dir"; then
+  exit 1
+fi
+
 # check_anchors.py follows fragments and stops there, so a relative href that
 # points at nothing has never been checked. Thirty were broken when this was
 # written — mostly sibling reports written `./verel/` from inside
