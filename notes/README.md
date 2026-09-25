@@ -17,7 +17,10 @@ when the work happens.
   120 words in eight days because no guardrail was built. Seven voice rules
   (claim, consequence, anchor; a scoped positive over a bare absence; a
   cross-reference is a link or it is cut), five structural changes, and five
-  ratchets to hold them. No campaign rewrite.
+  ratchets to hold them. No campaign rewrite. Ends with a seven-task
+  implementation plan whose four check scripts were run against the tree
+  while it was written, including the negative controls; drafting it found
+  PLUR's summary still counting a mark withdrawn on 2026-09-19.
 - [2026-09-17-the-instrument-that-narrowed-the-thing-it-measured.md](2026-09-17-the-instrument-that-narrowed-the-thing-it-measured.md) —
   three of four re-reads in one pass had published a count or an absence the
   repository did not support, each measured through a filter nobody knew was
