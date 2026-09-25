@@ -8,6 +8,16 @@ clobbered by a build.
 Convention: `YYYY-MM-DD-{name}.md`, dated when the note was written rather than
 when the work happens.
 
+- [2026-09-25-written-to-be-checked-not-yet-to-be-read.md](2026-09-25-written-to-be-checked-not-yet-to-be-read.md) —
+  the site-wide follow-up to the 2026-09-07 reader feedback. The point is
+  present and correct but arrives second: 507 of 627 summaries open with a
+  census, `## Seen in the atlas` is 86–89% of the largest pattern pages, and
+  the overview's build order sits behind about 340,000 words. Long paragraphs
+  are returning through History, which went from 475 to 864 paragraphs over
+  120 words in eight days because no guardrail was built. Seven voice rules
+  (claim, consequence, anchor; a scoped positive over a bare absence; a
+  cross-reference is a link or it is cut), five structural changes, and five
+  ratchets to hold them. No campaign rewrite.
 - [2026-09-17-the-instrument-that-narrowed-the-thing-it-measured.md](2026-09-17-the-instrument-that-narrowed-the-thing-it-measured.md) —
   three of four re-reads in one pass had published a count or an absence the
   repository did not support, each measured through a filter nobody knew was
