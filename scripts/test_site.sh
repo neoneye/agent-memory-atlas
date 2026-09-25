@@ -188,6 +188,18 @@ if ! python3 "$project_dir/scripts/check_report_shape.py" "$project_dir"; then
   exit 1
 fi
 
+# AGENTS.md sends a builder to a pattern page's "Seen in the atlas" for the
+# systems worth reading, and on the rejected-value tombstone that section was
+# 9,774 of the page's words. A catalogue over 3,000 words opens with a short
+# "Read these first" list, closed by a heading, of at most five linked reports.
+if ! python3 "$project_dir/scripts/check_pattern_exemplars.py" --self-test; then
+  echo "check_pattern_exemplars.py cannot demonstrate that it still fails." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/check_pattern_exemplars.py" "$project_dir"; then
+  exit 1
+fi
+
 # check_anchors.py follows fragments and stops there, so a relative href that
 # points at nothing has never been checked. Thirty were broken when this was
 # written — mostly sibling reports written `./verel/` from inside

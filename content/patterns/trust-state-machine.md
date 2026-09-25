@@ -68,6 +68,16 @@ able to move a memory between them is worse than one honest bucket.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [Graphify](../../systems/graphify/) — the cheapest working instance and the one to copy when starting: three states, none supplied by a model, all derived.
+- [CLIO](../../systems/clio/) — what full enforcement looks like, and then what happens when the input to it is wrong.
+- [Magic Context](../../systems/magic-context/) — two independent axes rather than one status column.
+- [Daimon](../../systems/daimon/) — two states, `verbatim` and `inferred`, where a transition is made by code disproving the model.
+- [Membrane](../../systems/membrane/) — the enum without the read predicate, which is the failure this page exists to name.
+
+### Every instance
+
 [Portable Handoff](../../systems/portable-handoff/) contributes the enforcement
 half without the filtering half, and both are worth taking separately. Its
 `Trust` enum is `verified · observed · claimed · inferred · untrusted` and its

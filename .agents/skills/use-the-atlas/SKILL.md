@@ -47,7 +47,8 @@ Do not read the system reports. Read these, in order:
    naming the failure that hurts for that shape, each with a *what you can defer*
    paragraph.
 3. The pattern pages you selected — `Cost to adopt`, `Tradeoffs`,
-   `Implementation checklist`, `Tests to require`, `Seen in the atlas`.
+   `Implementation checklist`, `Tests to require`, `Seen in the atlas` — start
+   from its *Read these first* list where the page has one.
 4. `content/overview.md` § 8 *What I Would Build* (ship-first order) and § 10
    *Practical Checklist*.
 5. `content/benchmarks.md` § 6 and § 7 when you need the deletion and

@@ -74,6 +74,16 @@ audit trails that disagree are worse than one.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [Atomic Agent](../../systems/atomic-agent/) — the clearest implementation, and its shape is the one to copy.
+- [aimee](../../systems/aimee/) — append-only enforced twice by independent means, triggers and a `SELECT`-only runtime role, with a statement of which one an attacker can remove.
+- [Palazzo](../../systems/palazzo/) — the log entry is a precondition of the mutation rather than a consequence of it.
+- [CSM](../../systems/csm/) — distinguishes considered, returned and injected memories in what it records.
+- [Helix AGI](../../systems/helix-agi/) — the counterexample that shows why coverage comes before tamper-evidence.
+
+### Every instance
+
 **[Aura](../../systems/aura/) and [aimee](../../systems/aimee/) are the two that
 are tamper-evident, and between them they mark the upper bound of this pattern.**
 Every other audit on this page is append-only by file handle: opened `O_APPEND`,

@@ -30,8 +30,9 @@ sufficient one. Read five things, in this order.
 
 3. **The pattern pages you selected.** Each carries `Cost to adopt`,
    `Tradeoffs`, `Implementation checklist`, `Tests to require`, and
-   `Seen in the atlas`. The last one names the systems worth reading — that is
-   your entry point into the corpus, and the only one you need.
+   `Seen in the atlas`. The last one opens with *Read these first* where the
+   catalogue is long — three to five systems to start from, each with the reason
+   — and that is your entry point into the corpus, and the only one you need.
 
 4. **[`content/overview.md`](content/overview.md) §8 *What I Would Build* and §10
    *Practical Checklist*.** §8 gives a build order in which each stage works on

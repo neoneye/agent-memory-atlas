@@ -93,6 +93,16 @@ painful, so be honest about whether that is true.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [Outworked](../../systems/outworked/) — the cheapest instance of the key, and a clean demonstration of what the key alone does not buy.
+- [OpenClaw](../../systems/openclaw/) — enforcement in SQL, in one line.
+- [Pydantic AI Harness](../../systems/pydantic-ai-harness/) — adds the step most instances miss: a check that the filter worked.
+- [CAMEL](../../systems/camel/) — what this pattern's failure looks like when nothing is obviously wrong.
+- [remem-mcp](../../systems/remem-mcp/) — the whole argument in one missing `??`.
+
+### Every instance
+
 [Outworked](../../systems/outworked/) is the cheapest possible instance of the
 key and a clean demonstration of what the key alone does not buy. Every read is
 `WHERE scope = ?` against a `UNIQUE(scope, key)` table, and the three scopes —

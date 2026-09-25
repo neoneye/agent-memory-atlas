@@ -130,6 +130,15 @@ enough.
 
 ## Seen in the atlas
 
+### Read these first
+
+- [Memory Compiler](../../systems/memory-compiler/) — the cheapest complete instance, and the one that shows where the cost actually lands.
+- [Noosphere](../../systems/noosphere/) — the form this page argues for, keyed by an HMAC and checked under every retained key version, so rotating the secret cannot readmit a refused value.
+- [Argos](../../systems/argos/) — two value-keyed records, both checked on both write paths.
+- [MemoryOps AI](../../systems/memoryops-ai/) — a near-miss, and the argument that the expensive half of the pattern is not the hard half.
+
+### Every instance
+
 **PLACEHOLDER_PATTERN_TOMBSTONE_COUNT systems of PLACEHOLDER_TOTAL_COUNT in the atlas have this.** That is still the most
 striking negative result in the atlas, and it is the reason this page exists.
 

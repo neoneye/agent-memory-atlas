@@ -318,7 +318,7 @@ Preserve nuance. A system can belong to multiple categories, and absence of a fe
 
 ## Review the pattern library
 
-Read `content/patterns/index.md` and every pattern page that overlaps the new system. Update the "Seen in the atlas" evidence when the repository provides a strong example, counterexample, or failure mode.
+Read `content/patterns/index.md` and every pattern page that overlaps the new system. Update the "Seen in the atlas" evidence when the repository provides a strong example, counterexample, or failure mode. Add the system to that section's *Read these first* list only if it displaces an entry on the list's own criteria — the cleanest complete implementation, the most instructive failure, the smallest version that works — and keep the list at five or fewer; `check_pattern_exemplars.py` requires the list on any catalogue over 3,000 words.
 
 Add a dedicated pattern page only when the implementation reveals a reusable architectural move that is not already covered. A good pattern page must explain:
 
