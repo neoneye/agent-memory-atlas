@@ -166,6 +166,17 @@ if ! python3 "$project_dir/scripts/list_long_prose.py" --check "$project_dir"; t
   exit 1
 fi
 
+# Phrases that announce significance instead of stating the consequence, and
+# "elsewhere" with no link: on 2026-09-25, 280 of 281 in the reports had none.
+# Same ratchet as the superlatives: the total may fall and may not rise.
+if ! python3 "$project_dir/scripts/list_voice_tics.py" --self-test; then
+  echo "list_voice_tics.py cannot demonstrate that its matcher still works." >&2
+  exit 1
+fi
+if ! python3 "$project_dir/scripts/list_voice_tics.py" --check "$project_dir"; then
+  exit 1
+fi
+
 # check_anchors.py follows fragments and stops there, so a relative href that
 # points at nothing has never been checked. Thirty were broken when this was
 # written — mostly sibling reports written `./verel/` from inside
